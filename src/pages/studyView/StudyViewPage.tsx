@@ -81,8 +81,10 @@ import {
 import { VirtualStudyModal } from 'pages/studyView/virtualStudy/VirtualStudyModal';
 import PlotsTab from 'shared/components/plots/PlotsTab';
 import HomePage from 'pages/SingleCell/HomePage';
-function SuspenseWrapper(Component: any) {
-    return (props: any) => (
+function SuspenseWrapper<P extends JSX.IntrinsicAttributes>(
+    Component: React.ComponentType<P>
+) {
+    return (props: P) => (
         <React.Suspense fallback={null}>
             <Component {...props} />
         </React.Suspense>
@@ -702,9 +704,8 @@ export default class StudyViewPage extends React.Component<
                                         ></StudySummaryTab>
                                     </MSKTab>
 
-                                    {this.store.genericAssayProfiles.result &&
-                                        this.store.genericAssayProfiles.result
-                                            .length > 0 &&
+                                    {this.store.genericAssayProfiles.result
+                                        .length > 0 &&
                                         this.store.studyIdToStudy.result &&
                                         Object.values(
                                             this.store.studyIdToStudy.result

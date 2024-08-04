@@ -1,5 +1,9 @@
 import { makeAutoObservable } from 'mobx';
 import { DataBin } from 'pages/studyView/StudyViewUtils';
+import {
+    GenericAssayDataBin,
+    GenericAssayData,
+} from 'cbioportal-ts-api-client';
 interface Option {
     value: string;
     label: string;
@@ -9,6 +13,9 @@ interface Option {
     dataType: string;
     genericAssayEntityId: string;
     patientLevel: boolean;
+}
+interface PatientData {
+    [key: string]: { stableId: string; value: number }[];
 }
 interface ChartInfo {
     name: string;
@@ -22,7 +29,10 @@ interface ChartInfo {
 interface Entity {
     stableId: string;
 }
-
+interface SampleOption {
+    value: string;
+    label: string;
+}
 interface gaData {
     uniqueSampleKey: string;
     uniquePatientKey: string;
@@ -34,6 +44,7 @@ interface gaData {
     genericAssayStableId: string;
     stableId: string;
 }
+
 const colors = [
     '#00BCD4', // Cyan (High contrast, good accessibility)
     '#FF9800', // Orange (Warm, contrasting)
@@ -64,7 +75,7 @@ class SingleCellStore {
     selectedEntity: Entity | null = null;
     dataBins: DataBin[] | null = null;
     chartType: string | null = null;
-    pieChartData: any[] = [];
+    pieChartData: GenericAssayData[] = [];
     tooltipEnabled: boolean = false;
     downloadSvg: boolean = false;
     downloadPdf: boolean = false;
@@ -72,38 +83,40 @@ class SingleCellStore {
     BarDownloadData: gaData[] = [];
     stackEntity: string = '';
     studyIdToStudy: string = '';
-    hoveredSampleId: any = [];
-    currentTooltipData: any = [];
+    hoveredSampleId: string = '';
+    currentTooltipData: {
+        [key: string]: { [key: string]: React.ReactNode };
+    } = {};
     map: { [key: string]: string } = {};
-    dynamicWidth: any = 0;
-    increaseCount: any = 0;
-    decreaseCount: any = 0;
+    dynamicWidth: number = 0;
+    increaseCount: number = 0;
+    decreaseCount: number = 0;
     resizeEnabled: boolean = false;
     isHorizontal: boolean = false;
     isVisible: boolean = false;
     tooltipHovered: boolean = false;
-    selectedSamples: any[] = [];
-    dropdownOptions: any[] = [];
-    isReverse: any = false;
-    initialWidth: any = 0;
-    heading: any = '';
-    isHovered: boolean = false; // Changed to boolean and initialized to false
-    hoveredSliceIndex: number = -1; // Changed to number and initialized to -1
-    stableIdBin: any = '';
-    profileTypeBin: any = '';
-    databinState: any[] = [];
+    selectedSamples: SampleOption[] = [];
+    dropdownOptions: SampleOption[] = [];
+    isReverse: boolean = false;
+    initialWidth: number = 0;
+    heading: string = '';
+    isHovered: boolean = false;
+    hoveredSliceIndex: number = -1;
+    stableIdBin: string = '';
+    profileTypeBin: string = '';
+    databinState: GenericAssayDataBin[] = [];
 
     constructor() {
         makeAutoObservable(this);
     }
 
-    setSelectedOption(option: any) {
+    setSelectedOption(option: string) {
         this.selectedOption = option;
     }
-    setEntityNames(names: any) {
+    setEntityNames(names: string[]) {
         this.entityNames = names;
     }
-    setMolecularProfiles(value: any) {
+    setMolecularProfiles(value: Option[]) {
         this.molecularProfiles = value;
     }
     setChartInfo(value: ChartInfo) {
@@ -118,10 +131,10 @@ class SingleCellStore {
     setChartType(value: string | null) {
         this.chartType = value;
     }
-    setPieChartData(value: any) {
+    setPieChartData(value: GenericAssayData[]) {
         this.pieChartData = value;
     }
-    setTooltipEnabled(value: any) {
+    setTooltipEnabled(value: boolean) {
         this.tooltipEnabled = value;
     }
     setDownloadSvg(value: boolean) {
@@ -142,22 +155,24 @@ class SingleCellStore {
     setStudyIdToStudy(value: string) {
         this.studyIdToStudy = value;
     }
-    setHoveredSampleId(value: any) {
+    setHoveredSampleId(value: string) {
         this.hoveredSampleId = value;
     }
-    setCurrentTooltipData(value: any) {
+    setCurrentTooltipData(value: {
+        [key: string]: { [key: string]: React.ReactNode };
+    }) {
         this.currentTooltipData = value;
     }
     setMap(value: { [key: string]: string }) {
         this.map = value;
     }
-    setDynamicWidth(value: any) {
+    setDynamicWidth(value: number) {
         this.dynamicWidth = value;
     }
-    setIncreaseCount(value: any) {
+    setIncreaseCount(value: number) {
         this.increaseCount = value;
     }
-    setDecreaseCount(value: any) {
+    setDecreaseCount(value: number) {
         this.decreaseCount = value;
     }
     setResizeEnabled(value: boolean) {
@@ -172,34 +187,34 @@ class SingleCellStore {
     setTooltipHovered(value: boolean) {
         this.tooltipHovered = value;
     }
-    setSelectedSamples(value: any[]) {
+    setSelectedSamples(value: SampleOption[]) {
         this.selectedSamples = value;
     }
-    setDropdownOptions(value: any[]) {
+    setDropdownOptions(value: SampleOption[]) {
         this.dropdownOptions = value;
     }
-    setIsReverse(value: any) {
+    setIsReverse(value: boolean) {
         this.isReverse = value;
     }
-    setInitialWidth(value: any) {
+    setInitialWidth(value: number) {
         this.initialWidth = value;
     }
-    setHeading(value: any) {
+    setHeading(value: string) {
         this.heading = value;
     }
     setIsHovered(value: boolean) {
         this.isHovered = value;
     }
-    setHoveredSliceIndex(value: any) {
-        this.hoveredSliceIndex = parseInt(value);
+    setHoveredSliceIndex(value: number) {
+        this.hoveredSliceIndex = value;
     }
-    setStableIdBin(value: any) {
+    setStableIdBin(value: string) {
         this.stableIdBin = value;
     }
-    setProfileTypeBin(value: any) {
+    setProfileTypeBin(value: string) {
         this.profileTypeBin = value;
     }
-    setDatabinState(value: any[]) {
+    setDatabinState(value: GenericAssayDataBin[]) {
         this.databinState = value;
     }
     increaseWidth() {
@@ -216,5 +231,5 @@ class SingleCellStore {
 }
 
 const singleCellStore = new SingleCellStore();
-export { singleCellStore, colors };
+export { singleCellStore, colors, SampleOption, PatientData };
 export default singleCellStore;

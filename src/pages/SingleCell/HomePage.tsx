@@ -1,7 +1,5 @@
 import React, { Component, useRef } from 'react';
 import _ from 'lodash';
-// import Dropdown from 'react-bootstrap/Dropdown';
-// import DropdownButton from 'react-bootstrap/DropdownButton';
 import { toast, Zoom } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Dropdown, DropdownButton } from 'react-bootstrap';
@@ -12,7 +10,7 @@ import {
 import autobind from 'autobind-decorator';
 import Select from 'react-select';
 import ReactSelect from 'react-select1';
-import singleCellStore from './SingleCellStore';
+import singleCellStore, { SampleOption } from './SingleCellStore';
 import {
     ChartMeta,
     ChartMetaDataTypeEnum,
@@ -28,6 +26,7 @@ import {
     GenericAssayMeta,
     GenericAssayDataMultipleStudyFilter,
     GenericAssayFilter,
+    GenericAssayData,
 } from 'cbioportal-ts-api-client';
 import PieChart from './PieChart';
 import BarChart from './BarChart';
@@ -69,18 +68,17 @@ interface Entity {
 }
 
 interface HomePageProps {
-    store: StudyViewPageStore; // Assuming StudyViewPageStore is the type of your store
+    store: StudyViewPageStore;
 }
 interface MolecularProfileDataItem {
     sampleId: string;
-    // Add other properties if needed
 }
 
 interface HomePageState {
     selectedOption: string | null;
     entityNames: string[];
     molecularProfiles: Option[];
-
+    studyViewFilterFlag: boolean;
     chartInfo: {
         name: string;
         description: string;
@@ -91,36 +89,37 @@ interface HomePageState {
         patientLevel: boolean;
     };
     selectedEntity: Entity | null;
-    selectedValue: string | null; // Added selectedValue to store the selected molecular profile
-    dataBins: DataBin[] | null; // State variable to hold data bins
+    selectedValue: string | null;
+    dataBins: DataBin[] | null;
     chartType: string | null;
-    pieChartData: any[]; // State variable to hold the selected chart type
+    pieChartData: GenericAssayData[];
     tooltipEnabled: boolean;
     downloadSvg: boolean;
     downloadPdf: boolean;
     downloadOption: string;
     BarDownloadData: gaData[];
     stackEntity: any;
-    studyIdToStudy: any;
-    hoveredSampleId: any;
-    currentTooltipData: any;
+    studyIdToStudy: string;
+    hoveredSampleId: string;
+    currentTooltipData: { [key: string]: { [key: string]: React.ReactNode } };
     map: { [key: string]: string };
-    dynamicWidth: any;
-    increaseCount: any;
-    decreaseCount: any;
+    dynamicWidth: number;
+    increaseCount: number;
+    decreaseCount: number;
     resizeEnabled: boolean;
     isHorizontal: boolean;
     isVisible: boolean;
     tooltipHovered: boolean;
-    selectedSamples: any;
-    dropdownOptions: any;
-    isReverse: any;
+    selectedSamples: SampleOption[];
+    dropdownOptions: SampleOption[];
+    isReverse: boolean;
     initialWidth: any;
     heading: any;
     isHovered: any;
     hoveredSliceIndex: any;
-    stableIdBin: any;
-    profileTypeBin: any;
+    selectedSamplesResult: any;
+    stableIdBin: string;
+    profileTypeBin: string;
     databinState: any;
 }
 
@@ -129,6 +128,8 @@ class HomePage extends Component<HomePageProps, HomePageState> {
         super(props);
         this.state = {
             selectedOption: null,
+            selectedSamplesResult: props.store.selectedSamples.result,
+            studyViewFilterFlag: false,
             entityNames: [],
             molecularProfiles: [],
             chartInfo: {
@@ -141,9 +142,9 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                 patientLevel: false,
             },
             selectedEntity: null,
-            selectedValue: null, // Initialize selectedValue as null
-            dataBins: null, // Initialize dataBins as null
-            chartType: null, // Initialize chartType as null
+            selectedValue: null,
+            dataBins: null,
+            chartType: null,
             pieChartData: [],
             tooltipEnabled: false,
             downloadSvg: false,
@@ -152,8 +153,8 @@ class HomePage extends Component<HomePageProps, HomePageState> {
             BarDownloadData: [],
             stackEntity: '',
             studyIdToStudy: '',
-            hoveredSampleId: [],
-            currentTooltipData: [],
+            hoveredSampleId: '',
+            currentTooltipData: {},
             map: {},
             dynamicWidth: 0,
             increaseCount: 0,
@@ -175,16 +176,20 @@ class HomePage extends Component<HomePageProps, HomePageState> {
         };
     }
     async fetchGenericAssayData(
-        selectedValue: string,
+        selectedValue: any,
         names: string[],
         sampleId: string[]
     ) {
         const { store } = this.props;
+        const selectedPatientIds = this.props.store.selectedSamples.result.map(
+            (sample: any) => sample.sampleId
+        );
+
         const params = {
             molecularProfileId: selectedValue,
             genericAssayFilter: {
                 genericAssayStableIds: names,
-                sampleIds: sampleId,
+                sampleIds: selectedPatientIds,
             } as GenericAssayFilter,
         };
 
@@ -194,7 +199,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
             );
             return resp;
         } catch (error) {
-            console.error('Error fetching generic assay data', error);
+            toast.error('Error fetching generic assay data');
         }
     }
 
@@ -209,15 +214,19 @@ class HomePage extends Component<HomePageProps, HomePageState> {
         this.setState({ isReverse: event.target.checked });
     }
     async fetchDataBins(genericAssayEntityId: string, profileType: string) {
-        let temp = this.props.store.genericAssayProfileOptionsByType.result;
-        let id = temp[profileType];
-        let tempstudyId = id[0].value;
         singleCellStore.setHeading(profileType);
         singleCellStore.setStableIdBin(genericAssayEntityId);
-        singleCellStore.setProfileTypeBin(tempstudyId);
+        singleCellStore.setProfileTypeBin(
+            this.props.store.genericAssayProfileOptionsByType.result[
+                profileType
+            ][0].value
+        );
         this.setState({ heading: profileType });
         this.setState({ stableIdBin: genericAssayEntityId });
-        this.setState({ profileTypeBin: tempstudyId });
+        this.setState({
+            profileTypeBin: this.props.store.genericAssayProfileOptionsByType
+                .result[profileType][0].value,
+        });
         const { store } = this.props;
         const gaDataBins = await internalClient.fetchGenericAssayDataBinCountsUsingPOST(
             {
@@ -226,7 +235,10 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                     genericAssayDataBinFilters: [
                         {
                             stableId: genericAssayEntityId,
-                            profileType: tempstudyId,
+                            profileType: this.props.store
+                                .genericAssayProfileOptionsByType.result[
+                                profileType
+                            ][0].value,
                         },
                     ] as any,
                     studyViewFilter: store.filters,
@@ -262,9 +274,6 @@ class HomePage extends Component<HomePageProps, HomePageState> {
         singleCellStore.setStackEntity('');
         const selectedValue = event.value;
         const studyId = 'gbm_cptac_2021';
-        // const selectedProfile = this.state.molecularProfiles.find(
-        //     profile => profile.value === selectedValue
-        // );
         const selectedProfile = singleCellStore.molecularProfiles.find(
             profile => profile.value === selectedValue
         );
@@ -275,9 +284,6 @@ class HomePage extends Component<HomePageProps, HomePageState> {
             const { store } = this.props;
             const entities =
                 store.genericAssayEntitiesGroupedByProfileId.result;
-            let entityName = '';
-            let entityId = '';
-
             const entityArray = entities
                 ? entities[selectedProfile.genericAssayEntityId]
                 : [];
@@ -295,11 +301,15 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                         names,
                         extractedData
                     );
-                    singleCellStore.setPieChartData(pieChartData as any[]);
-                    this.setState({ pieChartData: pieChartData as any[] });
+                    singleCellStore.setPieChartData(
+                        pieChartData as GenericAssayData[]
+                    );
+                    this.setState({
+                        pieChartData: pieChartData as GenericAssayData[],
+                    });
                 })
                 .catch(error => {
-                    console.error('Failed to fetch data:', error);
+                    toast.error('Failed to fetch data:');
                 });
 
             const newChartInfo = {
@@ -326,7 +336,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                 }
             );
         } else {
-            singleCellStore.setSelectedOption(null);
+            singleCellStore.setSelectedOption('');
             singleCellStore.setEntityNames([]);
             this.setState({
                 selectedOption: null,
@@ -352,8 +362,6 @@ class HomePage extends Component<HomePageProps, HomePageState> {
     @autobind
     async handleEntitySelectChange(event: any) {
         const selectedEntityId = event.value;
-
-        // const { selectedOption } = this.state;
         const selectedOption = singleCellStore.selectedOption;
         let studyId = '';
         const data = this.props.store.genericAssayProfiles.result;
@@ -363,8 +371,8 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                 item.molecularAlterationType === 'GENERIC_ASSAY' &&
                 item.genericAssayType.startsWith('SINGLE_CELL')
             ) {
-                studyId = item.studyId; // Store the studyId in the variable
-                break; // Exit the loop once the desired item is found
+                studyId = item.studyId;
+                break;
             }
         }
 
@@ -394,8 +402,6 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                 this.setState(
                     { selectedEntity: newSelectedEntity },
                     async () => {
-                        // Log the selected entity's stableId
-                        // Update chartInfo with the new entity
                         this.setState(
                             prevState => ({
                                 chartInfo: {
@@ -415,8 +421,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                     }
                 );
             } else {
-                // Handle the case when newSelectedEntity is undefined or null
-                console.error('Selected entity is invalid.');
+                toast.error('Selected entity is invalid.');
             }
         }
     }
@@ -441,8 +446,8 @@ class HomePage extends Component<HomePageProps, HomePageState> {
             ) {
                 singleCellStore.setStudyIdToStudy(item.studyId);
                 this.setState({ studyIdToStudy: item.studyId });
-                studyId = item.studyId; // Store the studyId in the variable
-                break; // Exit the loop once the desired item is found
+                studyId = item.studyId;
+                break;
             }
         }
 
@@ -520,8 +525,6 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                 } as GenePanelDataMultipleStudyFilter,
             }
         );
-
-        // Assuming 'data' is the array of 'MolecularProfileDataItem'
         return data as MolecularProfileDataItem[];
     }
 
@@ -563,10 +566,9 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                         isLoading: false,
                         position: 'top-center',
                         autoClose: 3500,
-                        // closeButton: true
                     });
                 }, 700);
-                return null; // Prevent state update
+                return null;
             }
 
             return {
@@ -601,27 +603,63 @@ class HomePage extends Component<HomePageProps, HomePageState> {
         singleCellStore.setSelectedSamples(selectedSampleIds);
         this.setState({ selectedSamples: selectedSampleIds });
     };
+    componentDidUpdate(prevProps: any) {
+        const selectedPatientIds = this.props.store.selectedSamples.result.map(
+            (sample: any) => sample.sampleId
+        );
+
+        if (this.state.studyViewFilterFlag) {
+            this.setState({ studyViewFilterFlag: false });
+            const fetchData = async () => {
+                try {
+                    const pieChartData = await this.fetchGenericAssayData(
+                        this.state.selectedValue,
+                        this.state.entityNames,
+                        selectedPatientIds
+                    );
+                    if (
+                        !pieChartData ||
+                        (Array.isArray(pieChartData) && pieChartData.length < 1)
+                    ) {
+                        const toastId = toast.loading('Processing...', {
+                            theme: 'light',
+                            position: 'top-center',
+                            transition: Zoom,
+                        });
+                        setTimeout(() => {
+                            toast.update(toastId, {
+                                render: `No single cell data in selected samples.`,
+                                type: 'warning',
+                                theme: 'light',
+                                isLoading: false,
+                                position: 'top-center',
+                                autoClose: 3500,
+                            });
+                        }, 700);
+                        return;
+                    }
+                    this.setState({
+                        pieChartData: pieChartData as GenericAssayData[],
+                    });
+                    singleCellStore.setPieChartData(
+                        pieChartData as GenericAssayData[]
+                    );
+                    this.setState({ studyViewFilterFlag: false });
+                } catch (error) {
+                    toast.error('Error fetching pie chart data');
+                }
+            };
+            fetchData();
+        }
+    }
+
     render() {
-        const {
-            // selectedOption,
-            // entityNames,
-            // molecularProfiles,
-            selectedEntity,
-            selectedValue,
-            // dataBins,
-            // chartType,
-            pieChartData,
-            // tooltipEnabled,
-            // downloadSvg,
-            // downloadPdf,
-            // BarDownloadData,
-        } = this.state;
+        const { selectedEntity, selectedValue, pieChartData } = this.state;
         const selectedOption = singleCellStore.selectedOption;
         const entityNames = singleCellStore.entityNames;
         const molecularProfiles = singleCellStore.molecularProfiles;
         const dataBins = singleCellStore.dataBins;
         const chartType = singleCellStore.chartType;
-        // const pieChartData=singleCellStore.pieChartData
         const tooltipEnabled = singleCellStore.tooltipEnabled;
         const downloadSvg = singleCellStore.downloadSvg;
         const downloadPdf = singleCellStore.downloadPdf;
@@ -632,8 +670,6 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                 option.profileType &&
                 option.profileType.startsWith('SINGLE_CELL')
         );
-
-        // Map filtered options to format expected by react-select
 
         const options = filteredOptions.map(option => ({
             value: option.value,
@@ -651,7 +687,6 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                 <div className="chart-configurations">
                     <h2>Chart Configurations</h2>
                     <div>
-                        {/* Dropdown for selecting molecular profile */}
                         <div className="dropdown-container">
                             <ReactSelect
                                 value={selectedOption || ''}
@@ -678,19 +713,17 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                         },
                                     ]}
                                     placeholder="Select type of chart..."
-                                    isDisabled={!selectedOption} // Disable if selectedOption is falsy
+                                    isDisabled={!selectedOption}
                                     clearable={false}
                                     searchable={true}
                                 />
                             </div>
                         )}
 
-                        {/* Dropdown for selecting entity */}
                         {chartType === 'bar' && (
                             <div className="dropdown-container">
                                 <ReactSelect
                                     id="entitySelect"
-                                    // className="custom-dropdown"
                                     onChange={this.handleEntitySelectChange}
                                     value={
                                         selectedEntity
@@ -709,70 +742,6 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                         label: entityName.replace(/_/g, ' '),
                                     }))}
                                     placeholder="Select cell type..."
-                                    isDisabled={!selectedOption}
-                                    clearable={false}
-                                    searchable={true}
-                                />
-                            </div>
-                        )}
-
-                        {chartType === 'stack' && (
-                            <div className="dropdown-container">
-                                {/* <select
-                                    id="entitySelect"
-                                    className="custom-dropdown"
-                                    onChange={
-                                        this.handleEntitySelectChangeStack
-                                    }
-                                    value={
-                                        this.state.stackEntity
-                                            ? this.state.stackEntity
-                                            : ''
-                                    }
-                                    disabled={!selectedOption}
-                                >
-                                    <option value="" disabled hidden>
-                                        {selectedOption &&
-                                        selectedOption.includes('type')
-                                            ? 'Sort by cell type...'
-                                            : selectedOption &&
-                                              selectedOption.includes('cycle')
-                                            ? 'Sort by cycle phase...'
-                                            : 'Sort by ...'}
-                                    </option>
-                                    {entityNames.map(entityName => (
-                                        <option
-                                            key={entityName}
-                                            value={entityName}
-                                        >
-                                            {entityName.replace(/_/g, ' ')}
-                                        </option>
-                                    ))}
-                                </select> */}
-                                <ReactSelect
-                                    id="entitySelect"
-                                    // className="custom-dropdown"
-                                    onChange={
-                                        this.handleEntitySelectChangeStack
-                                    }
-                                    value={
-                                        singleCellStore.stackEntity
-                                            ? singleCellStore.stackEntity
-                                            : ''
-                                    }
-                                    options={entityNames.map(entityName => ({
-                                        value: entityName,
-                                        label: entityName.replace(/_/g, ' '),
-                                    }))}
-                                    placeholder={
-                                        selectedOption &&
-                                        selectedOption.includes('type')
-                                            ? 'Sort by cell type...'
-                                            : selectedOption &&
-                                              selectedOption.includes('cycle')
-                                            ? 'Sort by cycle phase...'
-                                            : 'Sort by ...'
-                                    }
                                     isDisabled={!selectedOption}
                                     clearable={false}
                                     searchable={true}
@@ -804,8 +773,46 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                 </label>
                             </div>
                         )}
+
                         {chartType === 'stack' && (
                             <>
+                                <div className="dropdown-container">
+                                    <ReactSelect
+                                        id="entitySelect"
+                                        onChange={
+                                            this.handleEntitySelectChangeStack
+                                        }
+                                        value={
+                                            singleCellStore.stackEntity
+                                                ? singleCellStore.stackEntity
+                                                : ''
+                                        }
+                                        options={entityNames.map(
+                                            entityName => ({
+                                                value: entityName,
+                                                label: entityName.replace(
+                                                    /_/g,
+                                                    ' '
+                                                ),
+                                            })
+                                        )}
+                                        placeholder={
+                                            selectedOption &&
+                                            selectedOption.includes('type')
+                                                ? 'Sort by cell type...'
+                                                : selectedOption &&
+                                                  selectedOption.includes(
+                                                      'cycle'
+                                                  )
+                                                ? 'Sort by cycle phase...'
+                                                : 'Sort by ...'
+                                        }
+                                        isDisabled={!selectedOption}
+                                        clearable={false}
+                                        searchable={true}
+                                    />
+                                </div>
+
                                 <div className="checkbox-wrapper-3">
                                     <input
                                         type="checkbox"
@@ -830,46 +837,19 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                         Resize Graph
                                     </label>
                                 </div>
-                            </>
-                        )}
-                        {chartType == 'stack' && (
-                            <div className="checkbox-wrapper-4">
-                                <input
-                                    type="checkbox"
-                                    id="cbx-4"
-                                    checked={this.state.isHorizontal}
-                                    onChange={this.toggleAxes}
-                                />
-                                <label htmlFor="cbx-4" className="toggle">
-                                    <span></span>
-                                </label>
-                                <label
-                                    htmlFor="cbx-4"
-                                    className="toggle-label"
-                                    style={{
-                                        fontWeight: 'normal',
-                                        fontSize: '14px',
-                                        marginLeft: '10px',
-                                    }}
-                                >
-                                    Toggle axes
-                                </label>
-                            </div>
-                        )}
-                        {chartType == 'stack' &&
-                            singleCellStore.stackEntity != '' && (
-                                <div className="checkbox-wrapper-5">
+
+                                <div className="checkbox-wrapper-4">
                                     <input
                                         type="checkbox"
-                                        id="cbx-5"
-                                        checked={this.state.isReverse}
-                                        onChange={this.handleReverseChange}
+                                        id="cbx-4"
+                                        checked={this.state.isHorizontal}
+                                        onChange={this.toggleAxes}
                                     />
-                                    <label htmlFor="cbx-5" className="toggle">
+                                    <label htmlFor="cbx-4" className="toggle">
                                         <span></span>
                                     </label>
                                     <label
-                                        htmlFor="cbx-5"
+                                        htmlFor="cbx-4"
                                         className="toggle-label"
                                         style={{
                                             fontWeight: 'normal',
@@ -877,39 +857,69 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                             marginLeft: '10px',
                                         }}
                                     >
-                                        Reverse sort
+                                        Toggle axes
                                     </label>
                                 </div>
-                            )}
-                        {chartType === 'stack' && this.state.resizeEnabled && (
-                            <div className="throttle-container">
-                                <label className="throttle-label">
-                                    {this.state.isHorizontal
-                                        ? 'Height:'
-                                        : 'Width:'}
-                                </label>
 
-                                <button
-                                    className="throttle-button"
-                                    onClick={this.decreaseWidth}
-                                >
-                                    -
-                                </button>
-                                <input
-                                    type="number"
-                                    className="throttle-input"
-                                    value={this.state.dynamicWidth}
-                                    onChange={this.handleWidthChange}
-                                    min="10"
-                                    max="100"
-                                />
-                                <button
-                                    className="throttle-button"
-                                    onClick={this.increaseWidth}
-                                >
-                                    +
-                                </button>
-                            </div>
+                                {singleCellStore.stackEntity != '' && (
+                                    <div className="checkbox-wrapper-5">
+                                        <input
+                                            type="checkbox"
+                                            id="cbx-5"
+                                            checked={this.state.isReverse}
+                                            onChange={this.handleReverseChange}
+                                        />
+                                        <label
+                                            htmlFor="cbx-5"
+                                            className="toggle"
+                                        >
+                                            <span></span>
+                                        </label>
+                                        <label
+                                            htmlFor="cbx-5"
+                                            className="toggle-label"
+                                            style={{
+                                                fontWeight: 'normal',
+                                                fontSize: '14px',
+                                                marginLeft: '10px',
+                                            }}
+                                        >
+                                            Reverse sort
+                                        </label>
+                                    </div>
+                                )}
+
+                                {this.state.resizeEnabled && (
+                                    <div className="throttle-container">
+                                        <label className="throttle-label">
+                                            {this.state.isHorizontal
+                                                ? 'Height:'
+                                                : 'Width:'}
+                                        </label>
+
+                                        <button
+                                            className="throttle-button"
+                                            onClick={this.decreaseWidth}
+                                        >
+                                            -
+                                        </button>
+                                        <input
+                                            type="number"
+                                            className="throttle-input"
+                                            value={this.state.dynamicWidth}
+                                            onChange={this.handleWidthChange}
+                                            min="10"
+                                            max="100"
+                                        />
+                                        <button
+                                            className="throttle-button"
+                                            onClick={this.increaseWidth}
+                                        >
+                                            +
+                                        </button>
+                                    </div>
+                                )}
+                            </>
                         )}
                     </div>
                 </div>
@@ -932,16 +942,6 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                 >
                     {chartType == 'stack' && (
                         <>
-                            {/* <h2
-                                style={{
-                                    textAlign: 'center',
-                                }}
-                            >
-                                {dataBins && dataBins.length > 0
-                                    ? dataBins[0].id.replace(/_/g, ' ')
-                                    : 'No Data'}
-                            </h2> */}
-
                             <Select
                                 placeholder="Select SampleId.."
                                 options={this.state.dropdownOptions}
@@ -962,8 +962,6 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                             />
                         </>
                     )}
-
-                    {/* Display fetched data bins */}
                     {dataBins && (
                         <div
                             className="custom-scrollbar"
@@ -1001,8 +999,6 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                       }
                             }
                         >
-                            {/* <PieChart dataBins={dataBins} pieChartData={pieChartData} /> */}
-
                             {chartType === 'bar' ? (
                                 <BarChart
                                     singleCellStore={singleCellStore}
@@ -1014,12 +1010,45 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                     }
                                 />
                             ) : chartType === 'pie' ? (
-                                <PieChart singleCellStore={singleCellStore} />
+                                <PieChart
+                                    singleCellStore={singleCellStore}
+                                    pieChartData={pieChartData}
+                                    store={this.props.store}
+                                    studyViewFilterFlag={
+                                        this.state.studyViewFilterFlag
+                                    }
+                                    setStudyViewFilterFlag={(value: any) =>
+                                        this.setState({
+                                            studyViewFilterFlag: value,
+                                        })
+                                    }
+                                />
                             ) : chartType === 'stack' ? (
                                 <>
                                     <StackedBarChart
+                                        store={this.props.store}
                                         dataBins={dataBins}
                                         pieChartData={pieChartData}
+                                        studyViewFilterFlag={
+                                            this.state.studyViewFilterFlag
+                                        }
+                                        setStudyViewFilterFlag={(value: any) =>
+                                            this.setState({
+                                                studyViewFilterFlag: value,
+                                            })
+                                        }
+                                        setPieChartData={(
+                                            value: GenericAssayData[]
+                                        ) =>
+                                            this.setState({
+                                                pieChartData: value,
+                                            })
+                                        }
+                                        setSelectedOption={(value: any) =>
+                                            singleCellStore.setSelectedOption(
+                                                value
+                                            )
+                                        }
                                         stackEntity={this.state.stackEntity}
                                         studyIdToStudy={
                                             this.state.studyIdToStudy
@@ -1027,7 +1056,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                         hoveredSampleId={
                                             this.state.hoveredSampleId
                                         }
-                                        setHoveredSampleId={(value: any) =>
+                                        setHoveredSampleId={(value: string) =>
                                             this.setState({
                                                 hoveredSampleId: value,
                                             })
@@ -1035,17 +1064,21 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                         currentTooltipData={
                                             this.state.currentTooltipData
                                         }
-                                        setCurrentTooltipData={(value: any) =>
+                                        setCurrentTooltipData={(value: {
+                                            [key: string]: {
+                                                [key: string]: React.ReactNode;
+                                            };
+                                        }) =>
                                             this.setState({
                                                 currentTooltipData: value,
                                             })
                                         }
                                         map={this.state.map}
-                                        setMap={(value: any) =>
-                                            this.setState({ map: value })
-                                        }
+                                        setMap={(value: {
+                                            [key: string]: string;
+                                        }) => this.setState({ map: value })}
                                         dynamicWidth={this.state.dynamicWidth}
-                                        setDynamicWidth={(value: any) =>
+                                        setDynamicWidth={(value: number) =>
                                             this.setState({
                                                 dynamicWidth: value,
                                             })
@@ -1062,13 +1095,13 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                             })
                                         }
                                         isVisible={this.state.isVisible}
-                                        setIsVisible={(value: any) =>
+                                        setIsVisible={(value: boolean) =>
                                             this.setState({ isVisible: value })
                                         }
                                         tooltipHovered={
                                             this.state.tooltipHovered
                                         }
-                                        setTooltipHovered={(value: any) =>
+                                        setTooltipHovered={(value: boolean) =>
                                             this.setState({
                                                 tooltipHovered: value,
                                             })
@@ -1076,7 +1109,9 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                         selectedSamples={
                                             this.state.selectedSamples
                                         }
-                                        setSelectedSamples={(value: any) => {
+                                        setSelectedSamples={(
+                                            value: SampleOption[]
+                                        ) => {
                                             this.setState({
                                                 selectedSamples: value,
                                             });
@@ -1084,7 +1119,9 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                         dropdownOptions={
                                             this.state.dropdownOptions
                                         }
-                                        setDropdownOptions={(value: any) => {
+                                        setDropdownOptions={(
+                                            value: SampleOption[]
+                                        ) => {
                                             this.setState({
                                                 dropdownOptions: value,
                                             });
@@ -1108,23 +1145,25 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                         <StackToolTip
                             studyIdToStudy={this.state.studyIdToStudy}
                             hoveredSampleId={this.state.hoveredSampleId}
-                            setHoveredSampleId={(value: any) =>
+                            setHoveredSampleId={(value: string) =>
                                 this.setState({ hoveredSampleId: value })
                             }
                             currentTooltipData={this.state.currentTooltipData}
-                            setCurrentTooltipData={(value: any) =>
-                                this.setState({ currentTooltipData: value })
-                            }
+                            setCurrentTooltipData={(value: {
+                                [key: string]: {
+                                    [key: string]: React.ReactNode;
+                                };
+                            }) => this.setState({ currentTooltipData: value })}
                             map={this.state.map}
-                            setMap={(value: any) =>
+                            setMap={(value: { [key: string]: string }) =>
                                 this.setState({ map: value })
                             }
                             isVisible={this.state.isVisible}
-                            setIsVisible={(value: any) =>
+                            setIsVisible={(value: boolean) =>
                                 this.setState({ isVisible: value })
                             }
                             tooltipHovered={this.state.tooltipHovered}
-                            setTooltipHovered={(value: any) =>
+                            setTooltipHovered={(value: boolean) =>
                                 this.setState({ tooltipHovered: value })
                             }
                         />
@@ -1139,7 +1178,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                             textAlign: 'center',
                         }}
                     >
-                        <PieToolTip singleCellStore={singleCellStore} />
+                        <PieToolTip />
                     </div>
                 )}
             </div>

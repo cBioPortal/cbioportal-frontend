@@ -10,71 +10,65 @@ import { handleDownloadSVG, handleDownloadPDF } from './downloadUtils';
 import './styles.css';
 import Select from 'react-select';
 import _ from 'lodash';
-import { colors } from './SingleCellStore';
+import singleCellStore, { SampleOption, colors } from './SingleCellStore';
+import {
+    DataBinMethodConstants,
+    StudyViewPageStore,
+} from 'pages/studyView/StudyViewPageStore';
+import { DataBin } from 'pages/studyView/StudyViewUtils';
+import { GenericAssayData } from 'cbioportal-ts-api-client';
 
 interface DataItem {
     stableId: string;
     value: number;
 }
-interface DataBin {
-    id: string;
-    count: number;
-    end?: number;
-    start?: number;
-    specialValue?: string;
-}
-
-interface PatientData {
-    [key: string]: DataItem[];
-}
-
 interface StackedBarChartProps {
-    pieChartData: any[];
+    store: StudyViewPageStore;
+    pieChartData: GenericAssayData[];
     dataBins: DataBin[];
+    studyViewFilterFlag: boolean;
+    setStudyViewFilterFlag: (value: any) => void;
     stackEntity: any;
-    studyIdToStudy: any;
-    hoveredSampleId: any;
-    setHoveredSampleId: (value: any) => void;
+    studyIdToStudy: string;
+    hoveredSampleId: string;
+    setPieChartData: (value: GenericAssayData[]) => void;
+    setHoveredSampleId: (value: string) => void;
     currentTooltipData: { [key: string]: { [key: string]: React.ReactNode } };
-    setCurrentTooltipData: (value: any) => void;
+    setCurrentTooltipData: (value: {
+        [key: string]: { [key: string]: React.ReactNode };
+    }) => void;
     map: { [key: string]: string };
-    setMap: (value: any) => void;
-    dynamicWidth: any;
-    setDynamicWidth: (value: any) => void;
+    setMap: (value: { [key: string]: string }) => void;
+    dynamicWidth: number;
+    setDynamicWidth: (value: number) => void;
     setInitialWidth: (value: any) => void;
     isHorizontal: any;
     setIsHorizontal: (value: any) => void;
-    isVisible: any;
-    setIsVisible: (value: any) => void;
-    tooltipHovered: any;
-    setTooltipHovered: (value: any) => void;
-    selectedSamples: any;
-    setSelectedSamples: (value: any) => void;
-    dropdownOptions: any;
-    setDropdownOptions: (value: any) => void;
-    isReverse: any;
+    isVisible: boolean;
+    setIsVisible: (value: boolean) => void;
+    tooltipHovered: boolean;
+    setTooltipHovered: (value: boolean) => void;
+    selectedSamples: SampleOption[];
+    setSelectedSamples: (value: SampleOption[]) => void;
+    dropdownOptions: SampleOption[];
+    setDropdownOptions: (value: SampleOption[]) => void;
+    isReverse: boolean;
+    setSelectedOption: (value: any) => void;
 }
 
-interface BarDatum {
+interface StackedBarDatum {
     sampleId: string;
     stableId: string;
     value: number;
-}
-
-interface datachange {
-    sampleId: string;
-    stableId: string;
-    value: number;
-    color: string;
-}
-
-interface VictoryEventProps {
-    index: number;
 }
 
 const StackedBarChart: React.FC<StackedBarChartProps> = ({
+    store,
     pieChartData,
+    setPieChartData,
     dataBins,
+    studyViewFilterFlag,
+    setStudyViewFilterFlag,
     stackEntity,
     studyIdToStudy,
     hoveredSampleId,
@@ -97,24 +91,14 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
     dropdownOptions,
     setDropdownOptions,
     isReverse,
+    setSelectedOption,
 }) => {
     const [selectedSortingSample, setSelectedSortingSample] = useState('');
-    // const [isHorizontal, setIsHorizontal] = useState(true);
-    const handleSampleSelectionChange = (selectedOptions: any) => {
-        const selectedSampleIds = selectedOptions
-            ? selectedOptions.map((option: any) => option.value)
-            : [];
-        setSelectedSamples(selectedSampleIds);
-        // Log selected options
-    };
-
     const [isHovered, setIsHovered] = useState<boolean>(false);
     const [hoveredSliceIndex, setHoveredSliceIndex] = useState<number | null>(
         null
     );
-    // const [currentTooltipData, setCurrentTooltipData] = useState([]);
     const [tooltipVisible, setTooltipVisible] = useState<boolean>(false);
-    // const [tooltipHovered, setTooltipHovered] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(true);
     const [downloadOptionsVisible, setDownloadOptionsVisible] = useState<
         boolean
@@ -123,9 +107,7 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
     const [tooltipArraystate, setToolArraystate] = useState([] as any);
     const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
     const [noOfBars, setNoOfBars] = useState(0);
-    // const [dynamicWidth,setDynamicWidth]=useState(0);
     const chartRef = useRef<HTMLDivElement>(null);
-
     let differentSampleIds: string[] = [];
     let differentStableIds: string[] = [];
     function calculatePercentageForPieChartData(data: any) {
@@ -167,7 +149,7 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
         }
     }
 
-    let stableIdData: { [key: string]: BarDatum[] } = {};
+    let stableIdData: { [key: string]: StackedBarDatum[] } = {};
 
     for (let i = 0; i < differentStableIds.length; i++) {
         let stableId = differentStableIds[i];
@@ -178,7 +160,7 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
                 stableIdData[stableId].push({
                     sampleId: pieChartData[j].sampleId,
                     stableId: pieChartData[j].stableId,
-                    value: parseFloat(pieChartData[j].value), // Ensure the value is a number
+                    value: parseFloat(pieChartData[j].value),
                 });
             }
         }
@@ -200,8 +182,10 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
         label: sampleId,
     }));
     useEffect(() => {
+        setStudyViewFilterFlag(true);
+    }, [store.selectedSamples.result]);
+    useEffect(() => {
         const stableIdColorMap: { [key: string]: string } = {};
-
         let colorIndex = 0;
         let formattedData = Object.keys(stableIdData).map(stableId => {
             if (!stableIdColorMap[stableId]) {
@@ -219,7 +203,6 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
         setDropdownOptions(sampleOptions);
     }, []);
     const stableIdColorMap: { [key: string]: string } = {};
-
     let colorIndex = 0;
     let formattedData = Object.keys(stableIdData).map(stableId => {
         if (!stableIdColorMap[stableId]) {
@@ -250,12 +233,11 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
     }
     const mappedData: any = {};
     for (let i = 0; i < differentSampleIds.length; i++) {
-        mappedData[differentSampleIds[i]] = tooltipArray[i] || null; // Assign null if there's no corresponding tooltipData
+        mappedData[differentSampleIds[i]] = tooltipArray[i] || null;
     }
 
     const tooltipUtilArray = () => {
         const tooltipArray: any[] = [];
-
         const formattedDatastate = Object.keys(stableIdData).map(stableId => {
             if (!stableIdColorMap[stableId]) {
                 stableIdColorMap[stableId] = colors[colorIndex % colors.length];
@@ -284,41 +266,49 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
         return tooltipArray;
     };
     const updatedTooltiparray = tooltipUtilArray();
+
     useEffect(() => {
         setFormattedDatastate(formattedData);
         setNoOfBars(formattedData[0].length);
-        let temp = formattedData[0].length * 47;
+        let temp = formattedData[0].length * 47 + 200;
         setDynamicWidth(temp);
-        setInitialWidth(temp - 40);
+        setInitialWidth(temp - 30);
         const updatedTooltiparray = tooltipUtilArray();
         for (let i = 0; i < differentSampleIds.length; i++) {
-            mappedData[differentSampleIds[i]] = updatedTooltiparray[i] || null; // Assign null if there's no corresponding tooltipData
+            mappedData[differentSampleIds[i]] = updatedTooltiparray[i] || null;
+        }
+
+        setToolArraystate(updatedTooltiparray);
+        setDropdownOptions(sampleOptions);
+    }, [pieChartData]);
+    useEffect(() => {
+        setFormattedDatastate(formattedData);
+        setNoOfBars(formattedData[0].length);
+        let temp = formattedData[0].length * 47 + 200;
+        setDynamicWidth(temp);
+        setInitialWidth(temp - 25);
+        const updatedTooltiparray = tooltipUtilArray();
+        for (let i = 0; i < differentSampleIds.length; i++) {
+            mappedData[differentSampleIds[i]] = updatedTooltiparray[i] || null;
         }
 
         setToolArraystate(updatedTooltiparray);
     }, []);
     function sortFormattedData(formattedData: any, stableIdToBeSorted: any) {
         // Step 1: Find the array corresponding to the stableIdToBeSorted
-
         const sortedArray = formattedData.find(
             (arr: any) => arr[0]?.stableId === stableIdToBeSorted
         );
 
         if (!sortedArray) {
-            console.error(
-                `StableId ${stableIdToBeSorted} not found in formattedData.`
-            );
             return formattedData;
         }
-
         // Step 2: Sort the array by the y value
-
         if (!isReverse) {
             sortedArray.sort((a: any, b: any) => a.y - b.y);
         } else {
             sortedArray.sort((a: any, b: any) => b.y - a.y);
         }
-
         // Step 3: Create a mapping of x values to the sorted order
         const sortedOrder = sortedArray.map((item: any) => item.x);
 
@@ -331,7 +321,6 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
 
             return sortedOrder.map((xValue: any) => xToDataMap[xValue]);
         });
-
         return reorderedData;
     }
     function sortToolTipData(formattedData: any) {
@@ -358,10 +347,8 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
             if (svg) {
                 handleDownloadSVG({ current: svg });
             } else {
-                console.log('SVG Element not found within chartRef');
             }
         } else {
-            console.log('chartRef is not defined');
         }
     };
 
@@ -391,26 +378,7 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
     };
-    // const sampleOptions = differentSampleIds.map(sampleId => ({
-    //     value: sampleId,
-    //     label: sampleId,
-    // }));
-    const sortingOptions = differentStableIds.map(stableId => ({
-        value: stableId,
-        label: stableId,
-    }));
 
-    const handleSortingSampleSelectionChange = (selectedOption: any) => {
-        setSelectedSortingSample(selectedOption);
-        const sortedFormattedData = sortFormattedData(
-            formattedDatastate,
-            selectedOption.value
-        );
-        setFormattedDatastate(sortedFormattedData);
-
-        const updatedTooltiparray = sortToolTipData(formattedDatastate);
-        setToolArraystate(updatedTooltiparray);
-    };
     useEffect(() => {
         if (stackEntity !== '') {
             const sortedFormattedData = sortFormattedData(
@@ -430,7 +398,6 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
             }
 
             if (found) {
-                // Swap the first array with the array at index temp
                 [sortedFormattedData[0], sortedFormattedData[temp]] = [
                     sortedFormattedData[temp],
                     sortedFormattedData[0],
@@ -449,14 +416,13 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
         } else if (isVisible) {
             timeout = setTimeout(() => {
                 setIsVisible(false);
-            }, 2000); // Tooltip will remain visible for 3 seconds after hover ends
+            }, 2000);
         }
         return () => clearTimeout(timeout);
     }, [isHovered, tooltipHovered]);
     const [tooltipStyle, setTooltipStyle] = useState({});
     const tooltipRef = useRef<HTMLDivElement | null>(null);
     useEffect(() => {
-        // Calculate filteredFormattedData based on selectedSamples
         const filteredFormattedData = formattedDatastate.map((elem: any) =>
             selectedSamples.length > 0
                 ? elem.filter((dataItem: any) =>
@@ -466,16 +432,14 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
         );
         if (filteredFormattedData && filteredFormattedData.length > 0) {
             setNoOfBars(filteredFormattedData[0].length);
-            let temp = filteredFormattedData[0].length * 47 + 150;
+            let temp = filteredFormattedData[0].length * 47 + 200;
             setDynamicWidth(temp);
-            setInitialWidth(temp - 40);
+            setInitialWidth(temp - 25);
         }
     }, [selectedSamples, formattedDatastate]);
     return (
         <>
             <div style={{ textAlign: 'center', position: 'relative' }}>
-                {/* <button onClick={toggleAxes} style={{ marginBottom: '10px' }}>Swap Axes</button> */}
-
                 <div
                     style={{
                         display: 'flex',
@@ -491,22 +455,6 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
                             height: 'auto',
                         }}
                     >
-                        {/* <Select
-                            placeholder="Select SampleId.."
-                            options={dropdownOptions}
-                            isMulti
-                            onChange={handleSampleSelectionChange}
-                            value={selectedSamples.map((sampleId:any) => ({
-                                value: sampleId,
-                                label: sampleId,
-                            }))}
-                            style={{
-                                padding: '10px',
-                                marginTop: '5px',
-                                marginBottom: '5px',
-                                width: '350px',
-                            }}
-                        /> */}
                         <div
                             ref={chartRef}
                             style={{
@@ -516,15 +464,14 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
                             <VictoryChart
                                 domainPadding={20}
                                 height={isHorizontal ? dynamicWidth : 600}
-                                width={isHorizontal ? 740 : dynamicWidth}
+                                width={isHorizontal ? 980 : dynamicWidth}
                                 padding={{
                                     top: 10,
-                                    bottom: isHorizontal ? 40 : 150,
-                                    left: isHorizontal ? 190 : 60,
-                                    right: 80,
-                                }} // Adjust chart padding as needed
+                                    bottom: isHorizontal ? 40 : 160,
+                                    left: isHorizontal ? 210 : 60,
+                                    right: 120,
+                                }}
                             >
-                                {/* Y-Axis (dependentAxis) */}
                                 <VictoryAxis
                                     style={{
                                         tickLabels: {
@@ -538,8 +485,6 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
                                     dependentAxis={isHorizontal ? true : false}
                                     domain={[0, 1]}
                                 />
-
-                                {/* X-Axis (independentAxis) */}
                                 <VictoryAxis
                                     style={{
                                         tickLabels: {
@@ -741,142 +686,6 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
                             )}
                         </div>
                     </div>
-
-                    {/* <div style={{ flex: '0 0 18%', position: 'relative' }}>
-                    {(isVisible || tooltipHovered) && (
-                        <div
-                        style={{
-                            position: 'absolute',
-                            top: `${tooltipPosition.y}px`,
-                            pointerEvents: 'auto',
-                            transform: 'translateX(-420px)',
-                            margin: 'auto',
-                            transition:
-                                'opacity 0.5s ease-in-out, transform 0.5s ease-in-out',
-                            backgroundColor: 'white',
-                            width: '350px',
-                            boxShadow: '0 0 10px rgba(0,0,0,0.2)',
-                            zIndex: 220,
-                            opacity: isVisible ? 1 : 0,
-                        }}
-
-                            onMouseEnter={() => setTooltipHovered(true)}
-                            onMouseLeave={() => setTooltipHovered(false)}
-                        >
-                            <div
-                                className="custom-scrollbar"
-                                style={{
-                                    height: 'max-content',
-                                    overflowY: 'auto',
-                                    resize: 'both',
-                                    overflow: 'auto',
-                                    backgroundColor: 'white',
-                                    pointerEvents: 'auto',
-                                }}
-                            >
-                                <h3
-                                    style={{
-                                        marginTop: '125px',
-                                        paddingTop: '7px',
-                                    }}
-                                >
-                                    {hoveredSampleId ? hoveredSampleId : ''}
-                                </h3>
-                                <table
-                                    style={{
-                                        borderCollapse: 'collapse',
-                                        width: '100%',
-                                        textAlign: 'center',
-                                    }}
-                                >
-                                    <thead>
-                                        <tr>
-                                            <th
-                                                style={{
-                                                    padding: '8px',
-                                                    textAlign: 'center',
-                                                }}
-                                            >
-                                                Color
-                                            </th>
-                                            <th
-                                                style={{
-                                                    padding: '8px',
-                                                    textAlign: 'center',
-                                                }}
-                                            >
-                                                Type of Cell
-                                            </th>
-                                            <th
-                                                style={{
-                                                    padding: '8px',
-                                                    textAlign: 'center',
-                                                }}
-                                            >
-                                                Value
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {Object.entries(currentTooltipData).map(
-                                            ([index, item]) => (
-                                                <tr key={index}>
-                                                    {Object.entries(item).map(
-                                                        ([key, value]) => (
-                                                            <React.Fragment
-                                                                key={key}
-                                                            >
-                                                                <td
-                                                                    style={{
-                                                                        padding:
-                                                                            '8px',
-                                                                    }}
-                                                                >
-                                                                    <div
-                                                                        style={{
-                                                                            width:
-                                                                                '23px',
-                                                                            height:
-                                                                                '23px',
-                                                                            backgroundColor:
-                                                                                map[
-                                                                                    key
-                                                                                ],
-                                                                            textAlign:
-                                                                                'center',
-                                                                        }}
-                                                                    ></div>
-                                                                </td>
-                                                                <td
-                                                                    style={{
-                                                                        padding:
-                                                                            '8px',
-                                                                    }}
-                                                                >
-                                                                    {key}
-                                                                </td>
-                                                                <td
-                                                                    style={{
-                                                                        padding:
-                                                                            '8px',
-                                                                    }}
-                                                                >
-                                                                    {
-                                                                        value as React.ReactNode
-                                                                    }
-                                                                </td>
-                                                            </React.Fragment>
-                                                        )
-                                                    )}
-                                                </tr>
-                                            )
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    )}
-                </div> */}
                 </div>
             </div>
             <div

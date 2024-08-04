@@ -265,7 +265,6 @@ export default class PieChart extends React.Component<IPieChartProps, {}>
             )})`,
         }));
         const colorScale = this.props.data.map(data => data.color);
-        console.log(colorScale, 'colorScale1');
 
         // override the legend style without mutating the actual theme object
         const theme = _.cloneDeep(CBIOPORTAL_VICTORY_THEME);
@@ -300,7 +299,6 @@ export default class PieChart extends React.Component<IPieChartProps, {}>
     public render() {
         return (
             <>
-                {console.log(this.props.onUserSelection)}
                 <DefaultTooltip
                     placement={this.props.placement}
                     overlay={

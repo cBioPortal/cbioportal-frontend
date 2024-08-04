@@ -59,12 +59,9 @@ const BarChart: React.FC<BarChartProps> = observer(
         const {
             dataBins,
             BarDownloadData,
-            // selectedEntity,
             heading,
             stableIdBin,
             profileTypeBin,
-            // databinState,
-            // setDatabinState,
         } = singleCellStore;
         const state = useLocalObservable(() => ({
             downloadOptionsVisible: false,
@@ -194,18 +191,15 @@ const BarChart: React.FC<BarChartProps> = observer(
         const handleCloseXAxisValuesModal = () => {
             state.setShowXAxisValuesModal(false);
         };
-        // const [editValues, setEditValues] = useState(formattedXAxisLabels);
 
         useEffect(() => {
             state.setEditValues(formattedXAxisLabels);
         }, [formattedXAxisLabels]);
         const isCommaSeparatedNumeric = (input: string) => {
-            const trimmedInput = input.replace(/\s/g, ''); // Remove all whitespace
-            const regex = /^(\d+(\.\d+)?(,\d+(\.\d+)?)*|\d*\.?\d+)?$/; // Allow decimals and commas
+            const trimmedInput = input.replace(/\s/g, '');
+            const regex = /^(\d+(\.\d+)?(,\d+(\.\d+)?)*|\d*\.?\d+)?$/;
             return regex.test(trimmedInput);
         };
-
-        // State for validation message
         const [validationMessage, setValidationMessage] = useState('');
         const handleSave = () => {
             if (!isCommaSeparatedNumeric(state.editValues)) {
@@ -213,10 +207,9 @@ const BarChart: React.FC<BarChartProps> = observer(
                     'Please enter valid comma-separated numeric values.'
                 );
             } else {
-                // fetchDataBins(editValues);
                 const editedValuesArray = state.editValues
-                    .split(',') // Split by commas
-                    .map((value: any) => Number(value.trim())); // Convert each trimmed substring to a number
+                    .split(',')
+                    .map((value: any) => Number(value.trim()));
 
                 fetchDataBins(editedValuesArray);
                 setValidationMessage('');
@@ -596,7 +589,7 @@ const BarChart: React.FC<BarChartProps> = observer(
                                     onClick={handleSave}
                                     style={{
                                         marginRight: '10px',
-                                        padding: '8px 16px', // Adjusted padding to make the button smaller
+                                        padding: '8px 16px',
                                         backgroundColor: '#007bff',
                                         color: '#fff',
                                         border: 'none',
@@ -626,7 +619,7 @@ const BarChart: React.FC<BarChartProps> = observer(
                                 <button
                                     onClick={handleCloseXAxisValuesModal}
                                     style={{
-                                        padding: '8px 16px', // Adjusted padding to make the button smaller
+                                        padding: '8px 16px',
                                         backgroundColor: '#6c757d',
                                         color: '#fff',
                                         border: 'none',

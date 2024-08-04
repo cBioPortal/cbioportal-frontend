@@ -80,24 +80,6 @@
     background-color: #e6f7ff; /* Light bluish color on hover */
 }
 
-/* In your global CSS file (e.g., styles.css) */
-
-/* For Webkit-based browsers */
-/* ::-webkit-scrollbar {
-    width: 6px;
-}
-::-webkit-scrollbar-track {
-    background: #f1f1f1;
-}
-::-webkit-scrollbar-thumb {
-    background-color: #888;
-    border-radius: 10px;
-    border: 2px solid #f1f1f1;
-}
-::-webkit-scrollbar-thumb:hover {
-    background: #555;
-} */
-
 .checkbox-wrapper-3 {
     display: flex;
     align-items: center;
@@ -457,7 +439,7 @@
     width: 20%;
     padding: 20px;
     background-color: #eeeeee;
-    max-height: 350px;
+    max-height: 400px;
     border-right: 1px solid #ccc;
     margin-top: 10px;
 }
@@ -493,24 +475,6 @@
 .custom-option:hover {
     background-color: #333; /* Change background color on hover to light black */
 }
-
-/* In your global CSS file (e.g., styles.css) */
-
-/* For Webkit-based browsers */
-/* ::-webkit-scrollbar {
-    width: 6px;
-}
-::-webkit-scrollbar-track {
-    background: #f1f1f1;
-}
-::-webkit-scrollbar-thumb {
-    background-color: #888;
-    border-radius: 10px;
-    border: 2px solid #f1f1f1;
-}
-::-webkit-scrollbar-thumb:hover {
-    background: #555;
-} */
 
 /* For Firefox */
 .custom-scrollbar {

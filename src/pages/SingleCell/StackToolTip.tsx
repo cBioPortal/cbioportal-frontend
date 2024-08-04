@@ -1,27 +1,22 @@
-import {
-    VictoryStack,
-    VictoryBar,
-    VictoryChart,
-    VictoryAxis,
-    VictoryTooltip,
-} from 'victory';
 import React, { useState, useEffect, useRef } from 'react';
 import Select from 'react-select';
 import _ from 'lodash';
 import { Link } from 'react-router-dom';
 
 interface StackToolTipProps {
-    hoveredSampleId: any;
-    setHoveredSampleId: (value: any) => void;
+    hoveredSampleId: string;
+    setHoveredSampleId: (value: string) => void;
     currentTooltipData: { [key: string]: { [key: string]: React.ReactNode } };
-    setCurrentTooltipData: (value: any) => void;
+    setCurrentTooltipData: (value: {
+        [key: string]: { [key: string]: React.ReactNode };
+    }) => void;
     map: { [key: string]: string };
-    setMap: (value: any) => void;
-    isVisible: any;
-    setIsVisible: (value: any) => void;
-    tooltipHovered: any;
-    setTooltipHovered: (value: any) => void;
-    studyIdToStudy: any;
+    setMap: (value: { [key: string]: string }) => void;
+    isVisible: boolean;
+    setIsVisible: (value: boolean) => void;
+    tooltipHovered: boolean;
+    setTooltipHovered: (value: boolean) => void;
+    studyIdToStudy: string;
 }
 
 const StackToolTip: React.FC<StackToolTipProps> = ({
@@ -38,7 +33,7 @@ const StackToolTip: React.FC<StackToolTipProps> = ({
     studyIdToStudy,
 }) => {
     const url = `/patient?sampleId=${hoveredSampleId}&studyId=${studyIdToStudy}`;
-
+    console.log(hoveredSampleId, 'this is hoveredsampleID');
     return (
         <>
             {(isVisible || tooltipHovered) && (
@@ -52,8 +47,8 @@ const StackToolTip: React.FC<StackToolTipProps> = ({
                             backgroundColor: 'white',
                             width: '340px',
                             zIndex: 220,
-                            boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)', // Enhanced shadow for 3D effect
-                            borderRadius: '10px', // Rounded corners
+                            boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)',
+                            borderRadius: '10px',
                             position: 'relative',
                         }}
                         onMouseEnter={() => setTooltipHovered(true)}
@@ -63,15 +58,15 @@ const StackToolTip: React.FC<StackToolTipProps> = ({
                             style={{
                                 content: '""',
                                 position: 'absolute',
-                                left: '-10px', // Position the triangle to the left of the tooltip
-                                top: '50%', // Center the triangle vertically
-                                transform: 'translateY(-50%)', // Center the triangle vertically
+                                left: '-10px',
+                                top: '50%',
+                                transform: 'translateY(-50%)',
                                 width: '0',
                                 height: '0',
-                                borderTop: '10px solid transparent', // Triangle pointing to the right
+                                borderTop: '10px solid transparent',
                                 borderBottom: '10px solid transparent',
-                                borderRight: '10px solid rgba(0, 0, 0, 0.15)', // Color of the triangle
-                                zIndex: 219, // Ensure the triangle is under the tooltip shadow
+                                borderRight: '10px solid rgba(0, 0, 0, 0.15)',
+                                zIndex: 219,
                             }}
                         ></div>
                         <div
