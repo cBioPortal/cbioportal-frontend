@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { lazy, Suspense } from 'react';
 import _ from 'lodash';
 import { inject, Observer, observer } from 'mobx-react';
 import { MSKTab, MSKTabs } from '../../shared/components/MSKTabs/MSKTabs';
@@ -79,7 +80,20 @@ import {
 } from 'shared/lib/customTabs/customTabHelpers';
 import { VirtualStudyModal } from 'pages/studyView/virtualStudy/VirtualStudyModal';
 import PlotsTab from 'shared/components/plots/PlotsTab';
-
+import HomePage from 'pages/SingleCell/HomePage';
+function SuspenseWrapper<P extends JSX.IntrinsicAttributes>(
+    Component: React.ComponentType<P>
+) {
+    return (props: P) => (
+        <React.Suspense fallback={null}>
+            <Component {...props} />
+        </React.Suspense>
+    );
+}
+const LazyHomePage = SuspenseWrapper(
+    // @ts-ignore
+    React.lazy(() => import('pages/SingleCell/HomePage'))
+);
 export interface IStudyViewPageProps {
     routing: any;
     appStore: AppStore;
@@ -120,10 +134,12 @@ export default class StudyViewPage extends React.Component<
     private enableCustomSelectionInTabs = [
         StudyViewPageTabKeyEnum.SUMMARY,
         StudyViewPageTabKeyEnum.CLINICAL_DATA,
+        StudyViewPageTabKeyEnum.SINGLECELL,
         StudyViewPageTabKeyEnum.CN_SEGMENTS,
     ];
     private enableAddChartInTabs = [
         StudyViewPageTabKeyEnum.SUMMARY,
+        StudyViewPageTabKeyEnum.SINGLECELL,
         StudyViewPageTabKeyEnum.CLINICAL_DATA,
     ];
 
@@ -170,6 +186,7 @@ export default class StudyViewPage extends React.Component<
 
         const query = props.routing.query;
         const hash = props.routing.location.hash;
+
         // clear hash if any
         props.routing.location.hash = '';
         const newStudyViewFilter: StudyViewURLQuery = _.pick(query, [
@@ -449,9 +466,21 @@ export default class StudyViewPage extends React.Component<
         },
     });
 
+    private GenericAssayPromise = remoteData({
+        await: () => {
+            return [..._.values(this.store.genericAssayDataCountPromises)];
+        },
+        invoke: async () => {
+            return await sleep(10);
+        },
+    });
     @computed
     get addChartButtonText() {
         if (this.store.currentTab === StudyViewPageTabKeyEnum.SUMMARY) {
+            return getButtonNameWithDownPointer('Charts');
+        } else if (
+            this.store.currentTab === StudyViewPageTabKeyEnum.SINGLECELL
+        ) {
             return getButtonNameWithDownPointer('Charts');
         } else if (
             this.store.currentTab === StudyViewPageTabKeyEnum.CLINICAL_DATA
@@ -674,8 +703,35 @@ export default class StudyViewPage extends React.Component<
                                             store={this.store}
                                         ></StudySummaryTab>
                                     </MSKTab>
+
+                                    {this.store.genericAssayProfiles.result
+                                        .length > 0 &&
+                                        this.store.studyIdToStudy.result &&
+                                        Object.values(
+                                            this.store.studyIdToStudy.result
+                                        ).length == 1 &&
+                                        this.store.genericAssayProfiles.result.some(
+                                            (profile: any) =>
+                                                profile.genericAssayType.startsWith(
+                                                    'SINGLE_CELL'
+                                                )
+                                        ) && (
+                                            <MSKTab
+                                                key={1}
+                                                id={
+                                                    StudyViewPageTabKeyEnum.SINGLECELL
+                                                }
+                                                linkText={
+                                                    StudyViewPageTabDescriptions.SINGLECELL
+                                                }
+                                            >
+                                                <LazyHomePage
+                                                    store={this.store}
+                                                />
+                                            </MSKTab>
+                                        )}
                                     <MSKTab
-                                        key={1}
+                                        key={2}
                                         id={
                                             StudyViewPageTabKeyEnum.CLINICAL_DATA
                                         }
@@ -689,8 +745,9 @@ export default class StudyViewPage extends React.Component<
                                     >
                                         <ClinicalDataTab store={this.store} />
                                     </MSKTab>
+
                                     <MSKTab
-                                        key={2}
+                                        key={3}
                                         id={StudyViewPageTabKeyEnum.HEATMAPS}
                                         linkText={
                                             StudyViewPageTabDescriptions.HEATMAPS
@@ -706,7 +763,7 @@ export default class StudyViewPage extends React.Component<
                                         />
                                     </MSKTab>
                                     <MSKTab
-                                        key={3}
+                                        key={4}
                                         id={StudyViewPageTabKeyEnum.CN_SEGMENTS}
                                         linkText={
                                             StudyViewPageTabDescriptions.CN_SEGMENTS
@@ -720,7 +777,7 @@ export default class StudyViewPage extends React.Component<
                                         <CNSegments store={this.store} />
                                     </MSKTab>
                                     <MSKTab
-                                        key={4}
+                                        key={5}
                                         id={
                                             StudyViewPageTabKeyEnum.FILES_AND_LINKS
                                         }
@@ -735,7 +792,7 @@ export default class StudyViewPage extends React.Component<
                                         </div>
                                     </MSKTab>
                                     <MSKTab
-                                        key={5}
+                                        key={6}
                                         id={StudyViewPageTabKeyEnum.PLOTS}
                                         linkText={
                                             <span>
