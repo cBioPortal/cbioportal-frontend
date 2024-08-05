@@ -132,9 +132,7 @@ describe('Mutation Table', function() {
             // mutations table should be visiable after oncokb icon shows up,
             // also need to wait for mutations to be sorted properly
             await (
-                await getElement(
-                    'tr:nth-child(1) [data-test=oncogenic-icon-image]'
-                )
+                await getElement('[data-test=oncogenic-icon-image]')
             ).waitForDisplayed({ timeout: 300000 });
         });
 
@@ -142,13 +140,11 @@ describe('Mutation Table', function() {
             // filter the table
             await setInputText(
                 '[class*=tableSearchInput]',
-                'NSCLC-B00016-Tumor'
+                'LUAD-B00416-Tumor'
             );
             await (
-                await getElement(
-                    'tr:nth-child(1) [data-test=oncogenic-icon-image]'
-                )
-            ).waitForDisplayed({ timeout: 60000 });
+                await getElement('[data-test=oncogenic-icon-image]')
+            ).waitForDisplayed({ timeout: 10000 });
             // show the gnomad column
             await (await getElement('button*=Columns')).scrollIntoView();
             // click on column button
@@ -159,23 +155,25 @@ describe('Mutation Table', function() {
             );
             // wait for gnomad checkbox appear
             await (
-                await getElement('//label[div/text()="gnomAD"]/input')
+                await getElement('[data-test="add-chart-option-gnomad"] input')
             ).waitForDisplayed({
-                timeout: 60000,
+                timeout: 10000,
             });
             // click "GNOMAD"
             await setCheckboxChecked(
                 true,
-                '//label[div/text()="gnomAD"]/input'
+                '[data-test="add-chart-option-gnomad"] input'
             );
             // close columns menu
             await clickElement('//button[contains(text(), "Columns")]');
+
+            await browser.pause(10000);
             // find frequency
             // TODO: not sure why this is not working
             const frequency =
                 '[data-test2="LUAD-B00416-Tumor"][data-test="gnomad-column"] span';
             await getElement(frequency, {
-                timeout: 60000,
+                timeout: 10000,
             });
             // wait for gnomad frequency show in the column
             browser.waitUntil(
@@ -185,16 +183,13 @@ describe('Mutation Table', function() {
                     ).getText();
                     return textFrequency.length >= 1;
                 },
-                600000,
+                10000,
                 'Frequency data not in Gnoamd column'
             );
             // mouse over the frequency
-            await (await getElement(frequency)).moveTo({
-                xOffset: 0,
-                yOffset: 0,
-            });
+            await (await getElement(frequency)).moveTo();
             // wait for gnomad table showing up
-            await getElement('[data-test="gnomad-table"]', { timeout: 300000 });
+            await getElement('[data-test="gnomad-table"]', { timeout: 10000 });
             // check if the gnomad table show up
             let res;
             await browser.waitUntil(
@@ -204,7 +199,7 @@ describe('Mutation Table', function() {
                     );
                     return res == 9;
                 },
-                60000,
+                10000,
                 `Failed: There's 9 allele frequency rows in table (${res} found)`
             );
         });
