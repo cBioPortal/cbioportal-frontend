@@ -725,7 +725,7 @@ export default class StudyViewPage extends React.Component<
                                             StudyViewPageTabKeyEnum.FILES_AND_LINKS
                                         }
                                         linkText={RESOURCES_TAB_NAME}
-                                        hide={!this.shouldShowResources}
+                                        // hide={!this.shouldShowResources}
                                     >
                                         <div>
                                             <ResourcesTab
