@@ -7,6 +7,8 @@ import { StudyViewPageStore } from '../StudyViewPageStore';
 import { ResourceData } from 'cbioportal-ts-api-client';
 import ResourceTable from 'shared/components/resources/ResourceTable';
 
+import { FilesAndLinks } from './FilesAndLinks';
+
 export interface IResourcesTabProps {
     store: StudyViewPageStore;
     openResource: (resource: ResourceData) => void;
@@ -52,15 +54,21 @@ export default class ResourcesTab extends React.Component<
 
     render() {
         return (
-            <div className="resourcesTab">
-                <FeatureTitle
-                    title={RESOURCES_TAB_NAME}
-                    isLoading={this.studyResources.isPending}
-                    className={'pull-left'}
-                />
-                <br />
-                <br />
-                <div>{this.studyResources.component}</div>
+            <div>
+                <div className="resourcesTab">
+                    <FeatureTitle
+                        title={RESOURCES_TAB_NAME}
+                        isLoading={this.studyResources.isPending}
+                        className={'pull-left'}
+                    />
+                    <br />
+                    <br />
+                    <div>{this.studyResources.component}</div>
+                </div>
+
+                <div>
+                    <FilesAndLinks store={this.props.store}></FilesAndLinks>
+                </div>
             </div>
         );
     }
