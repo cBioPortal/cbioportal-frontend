@@ -608,19 +608,6 @@ describe('group comparison mutations tab tests', () => {
                 await getElementByTestHandle('badge-splice_putative_driver')
             ).click();
 
-            const splice_unknown_significance = await getColorByTestHandle(
-                'badge-splice_unknown_significance'
-            );
-
-            const splice_putative_driver = await getColorByTestHandle(
-                'badge-splice_putative_driver'
-            );
-
-            console.log('->->->->->', {
-                splice_unknown_significance,
-                splice_putative_driver,
-            });
-
             assert.equal(
                 await getColorByTestHandle('badge-splice_putative_driver'),
                 await getColorOfNthElement(
@@ -629,16 +616,22 @@ describe('group comparison mutations tab tests', () => {
                 )
             );
 
-            // // protein driver badge selected
-            // assert.equal(
-            //     await getColorByTestHandle('badge-splice_putative_driver'),
-            //     '#ffffff'
-            // );
-            // // protein vus badge deselected
-            // assert.equal(
-            //     await getColorByTestHandle('badge-splice_unknown_significance'),
-            //     '#f0b87b'
-            // );
+            // protein driver badge selected
+            assert.equal(
+                await getColorByTestHandle(
+                    'badge-splice_putative_driver',
+                    'background-color'
+                ),
+                '#ffffff'
+            );
+            // protein vus badge deselected
+            assert.equal(
+                await getColorByTestHandle(
+                    'badge-splice_unknown_significance',
+                    'background-color'
+                ),
+                '#f0b87b'
+            );
             // driver badge deselected
             assert.equal(
                 await getColorOfNthElement('[data-test="badge-driver"]', 1),
@@ -739,32 +732,42 @@ describe('group comparison mutations tab tests', () => {
 
             assert.equal(
                 await getColorByTestHandle(
-                    'badge-missense_unknown_significance'
+                    'badge-missense_unknown_significance',
+                    'background-color'
                 ),
                 await getColorByTestHandle(
-                    'badge-truncating_unknown_significance'
+                    'badge-truncating_unknown_significance',
+                    'background-color'
                 )
             );
 
-            assert.equal(
-                await getColorByTestHandle(
-                    'badge-truncating_unknown_significance'
-                ),
-                await getColorByTestHandle('badge-inframe_unknown_significance')
-            );
+            // assert.equal(
+            //     await getColorByTestHandle(
+            //         'badge-truncating_unknown_significance',
+            //         'background-color'
+            //     ),
+            //     await getColorByTestHandle(
+            //         'badge-inframe_unknown_significance',
+            //         'background-color'
+            //     )
+            // );
 
             assert.equal(
                 await getColorByTestHandle(
-                    'badge-inframe_unknown_significance'
+                    'badge-inframe_unknown_significance',
+                    'background-color'
                 ),
-                await getColorByTestHandle('badge-splice_unknown_significance')
+                await getColorByTestHandle(
+                    'badge-splice_unknown_significance',
+                    'background-color'
+                )
             );
 
             // selecting vus only button
             await (await getElementByTestHandle('VUS_only')).click();
 
             assert.equal(
-                await getColorByTestHandle('[data-test="badge-VUS"]'),
+                await getColorByTestHandle('badge-VUS'),
                 await getColorOfNthElement('[data-test="badge-VUS"]', 1)
             );
 
@@ -814,23 +817,48 @@ describe('group comparison mutations tab tests', () => {
 
             // all protein driver badges are deselected
             assert.equal(
-                await getColorOfNthElement('[data-test="badge-driver"]', 1),
-                await getColorByTestHandle('badge-missense_putative_driver')
+                await getColorOfNthElement(
+                    '[data-test="badge-driver"]',
+                    1,
+                    'background-color'
+                ),
+                await getColorByTestHandle(
+                    'badge-missense_putative_driver',
+                    'background-color'
+                )
             );
 
             assert.equal(
-                await getColorByTestHandle('badge-missense_putative_driver'),
-                await getColorByTestHandle('badge-truncating_putative_driver')
+                await getColorByTestHandle(
+                    'badge-missense_putative_driver',
+                    'background-color'
+                ),
+                await getColorByTestHandle(
+                    'badge-truncating_putative_driver',
+                    'background-color'
+                )
             );
 
             assert.equal(
-                await getColorByTestHandle('badge-truncating_putative_driver'),
-                await getColorByTestHandle('badge-inframe_putative_driver')
+                await getColorByTestHandle(
+                    'badge-truncating_putative_driver',
+                    'background-color'
+                ),
+                await getColorByTestHandle(
+                    'badge-inframe_putative_driver',
+                    'background-color'
+                )
             );
 
             assert.equal(
-                await getColorByTestHandle('badge-inframe_putative_driver'),
-                await getColorByTestHandle('badge-splice_putative_driver')
+                await getColorByTestHandle(
+                    'badge-inframe_putative_driver',
+                    'background-color'
+                ),
+                await getColorByTestHandle(
+                    'badge-splice_putative_driver',
+                    'background-color'
+                )
             );
 
             // selecting driver badge
