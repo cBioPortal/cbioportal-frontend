@@ -442,7 +442,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     private dummyScrollPane: HTMLDivElement;
     private scrollingDummyPane = false;
     @observable plotElementWidth = 0;
-
+    @observable SortByDropDownOptions: { value: string; label: string }[] = [];
+    @observable sortByOption: string = '';
     @observable boxPlotSortByMedian = false;
     @observable.ref searchCaseInput: string;
     @observable.ref searchMutationInput: string;
@@ -464,7 +465,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     >({}, { deep: false });
     @observable _horzGenericAssaySearchText: string = '';
     @observable _vertGenericAssaySearchText: string = '';
-
+    @action.bound
+    private updateDropDownOptions(option: { value: string; label: string }[]) {
+        this.SortByDropDownOptions = option;
+    }
     @action.bound
     private onClickLegendItem(ld: LegendDataWithId<any>) {
         if (this.highlightedLegendItems.has(ld.highlighting!.uid)) {
@@ -2888,6 +2892,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     }
 
     @action.bound
+    private handleSortByChange(option: any) {
+        this.sortByOption = option.value;
+    }
+
+    @action.bound
     private onSortOrderButtonPressed() {
         this._waterfallPlotSortOrder =
             this.waterfallPlotSortOrder === 'ASC' ? 'DESC' : 'ASC';
@@ -4580,6 +4589,22 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                             </div>
                         </div>
                     )}
+                    {DiscreteVsDiscretePlotType.StackedBar && (
+                        <div className="form-group">
+                            <label>Sort By</label>
+                            <div style={{ display: 'flex' }}>
+                                <ReactSelect
+                                    name="Sort By"
+                                    value={this.sortByOption}
+                                    onChange={this.handleSortByChange}
+                                    options={this.SortByDropDownOptions}
+                                    clearable={false}
+                                    searchable={true}
+                                    placeholder="Sort by..."
+                                />
+                            </div>
+                        </div>
+                    )}
                     {showStackedBarHorizontalOption && (
                         <div className="checkbox">
                             <label>
@@ -5547,6 +5572,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                     horizontalBars={this.horizontalBars}
                                     percentage={isPercentage}
                                     stacked={isStacked}
+                                    SortByDropDownOptions={
+                                        this?.SortByDropDownOptions
+                                    }
+                                    updateDropDownOptions={
+                                        this?.updateDropDownOptions
+                                    }
+                                    sortByOption={this?.sortByOption}
                                 />
                             );
                         }
