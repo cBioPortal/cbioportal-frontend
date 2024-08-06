@@ -25,10 +25,12 @@ import {
     NumericGeneMolecularData,
     Patient,
     PatientIdentifier,
+    PatientTreatmentReport,
     PatientTreatmentRow,
     Sample,
     SampleClinicalDataCollection,
     SampleIdentifier,
+    SampleTreatmentReport,
     SampleTreatmentRow,
     StructuralVariantFilterQuery,
     StudyViewFilter,
@@ -4536,26 +4538,29 @@ export async function getGenesCNADownloadData(
 }
 
 export async function getPatientTreatmentDownloadData(
-    promise: MobxPromise<PatientTreatmentRow[]>
+    promise: MobxPromise<PatientTreatmentReport>
 ): Promise<string> {
     if (promise.result) {
         const header = ['Treatment', '#'];
         let data = [header.join('\t')];
-        _.each(promise.result, (record: PatientTreatmentRow) => {
-            let rowData = [record.treatment, record.count];
-            data.push(rowData.join('\t'));
-        });
+        _.each(
+            promise.result.patientTreatments,
+            (record: PatientTreatmentRow) => {
+                let rowData = [record.treatment, record.count];
+                data.push(rowData.join('\t'));
+            }
+        );
         return data.join('\n');
     } else return '';
 }
 
 export async function getSampleTreatmentDownloadData(
-    promise: MobxPromise<SampleTreatmentRow[]>
+    promise: MobxPromise<SampleTreatmentReport>
 ): Promise<string> {
     if (promise.result) {
         const header = ['Treatment', 'Pre/Post', '#'];
         let data = [header.join('\t')];
-        _.each(promise.result, (record: SampleTreatmentRow) => {
+        _.each(promise.result.treatments, (record: SampleTreatmentRow) => {
             let rowData = [record.treatment, record.time, record.count];
             data.push(rowData.join('\t'));
         });
