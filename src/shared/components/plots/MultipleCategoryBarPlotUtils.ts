@@ -98,6 +98,51 @@ export function sortDataByCategory<D>(
         }
     });
 }
+function sortDataByOption(
+    data: IMultipleCategoryBarPlotData[],
+    sortByOption: string
+): IMultipleCategoryBarPlotData[] {
+    const sortedEntityData = data.find(
+        item => item.minorCategory === sortByOption
+    );
+
+    if (sortedEntityData) {
+        // Sorting the counts array of the sortedEntity
+        sortedEntityData.counts.sort((a, b) => b.count - a.count);
+
+        // Get the sorted order of major categories
+        const sortedMajorCategories = sortedEntityData.counts.map(
+            item => item.majorCategory
+        );
+
+        // Reorder the counts arrays of the other minor categories
+        data.forEach(item => {
+            if (item.minorCategory !== sortByOption) {
+                // Create a mapping of majorCategory to count object
+                const countMap: { [key: string]: any } = {};
+                item.counts.forEach(count => {
+                    countMap[count.majorCategory] = count;
+                });
+
+                // Reorder the counts array according to sortedMajorCategories
+                item.counts = sortedMajorCategories.map(
+                    category =>
+                        countMap[category] || {
+                            majorCategory: category,
+                            count: 0,
+                            percentage: 0,
+                        }
+                );
+            }
+        });
+
+        // Move the sortedEntityData to the front
+        data = data.filter(item => item.minorCategory !== sortByOption);
+        data.unshift(sortedEntityData);
+    }
+
+    return data;
+}
 
 export function makeBarSpecs(
     data: IMultipleCategoryBarPlotData[],
@@ -107,7 +152,8 @@ export function makeBarSpecs(
     categoryCoord: (categoryIndex: number) => number,
     horizontalBars: boolean,
     stacked: boolean,
-    percentage: boolean
+    percentage: boolean,
+    sortByOption: string | undefined
 ): {
     fill: string;
     data: {
@@ -119,11 +165,19 @@ export function makeBarSpecs(
         percentage: number;
     }[]; // one data per major category, in correct order - either specified, or alphabetical
 }[] {
-    // one bar spec per minor category, in correct order - either specified, or alphabetical
-    data = sortDataByCategory(data, d => d.minorCategory, minorCategoryOrder);
-    // reverse the order of stacked or horizontal bars
-    if ((!horizontalBars && stacked) || (horizontalBars && !stacked)) {
-        data = _.reverse(data);
+    if (sortByOption && sortByOption != '') {
+        data = sortDataByOption(data, sortByOption);
+    } else {
+        // one bar spec per minor category, in correct order - either specified, or alphabetical
+        data = sortDataByCategory(
+            data,
+            d => d.minorCategory,
+            minorCategoryOrder
+        );
+        // reverse the order of stacked or horizontal bars
+        if ((!horizontalBars && stacked) || (horizontalBars && !stacked)) {
+            data = _.reverse(data);
+        }
     }
     return data.map(({ minorCategory, counts }) => {
         const fill = getColor(minorCategory);
@@ -134,14 +188,16 @@ export function makeBarSpecs(
         );
         return {
             fill,
-            data: sortedCounts.map((obj, index) => ({
-                x: categoryCoord(index),
-                y: percentage ? obj.percentage : obj.count,
-                majorCategory: obj.majorCategory,
-                minorCategory: minorCategory,
-                count: obj.count,
-                percentage: obj.percentage,
-            })),
+            data: (sortByOption != '' ? counts : sortedCounts).map(
+                (obj, index) => ({
+                    x: categoryCoord(index),
+                    y: percentage ? obj.percentage : obj.count,
+                    majorCategory: obj.majorCategory,
+                    minorCategory: minorCategory,
+                    count: obj.count,
+                    percentage: obj.percentage,
+                })
+            ),
         };
     });
 }
