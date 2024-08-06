@@ -672,6 +672,49 @@
         "operationId": "fetchPatientTreatmentCountsUsing"
       }
     },
+    "/api/column-store/treatments/sample-counts/fetch": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "default": "Agent",
+            "enum": [
+              "Agent",
+              "AgentClass",
+              "AgentTarget"
+            ],
+            "in": "query",
+            "name": "tier",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "studyViewFilter",
+            "schema": {
+              "$ref": "#/definitions/StudyViewFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/SampleTreatmentReport"
+            }
+          }
+        },
+        "tags": [
+          "study-view-column-store-controller"
+        ],
+        "operationId": "fetchSampleTreatmentCountsUsing"
+      }
+    },
     "/api/cosmic-counts/fetch": {
       "post": {
         "consumes": [
@@ -5904,6 +5947,21 @@
         },
         "treatment": {
           "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "SampleTreatmentReport": {
+      "properties": {
+        "totalSamples": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "treatments": {
+          "items": {
+            "$ref": "#/definitions/SampleTreatmentRow"
+          },
+          "type": "array"
         }
       },
       "type": "object"

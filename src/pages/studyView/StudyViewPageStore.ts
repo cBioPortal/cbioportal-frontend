@@ -64,7 +64,6 @@ import {
     OredPatientTreatmentFilters,
     OredSampleTreatmentFilters,
     Patient,
-    PatientTreatmentRow,
     ResourceData,
     Sample,
     SampleFilter,
@@ -9477,9 +9476,9 @@ export class StudyViewPageStore
                         }, new Set<String>()).size;
                 };
                 if (!_.isEmpty(this.sampleTreatments.result)) {
-                    ret['SAMPLE_TREATMENTS'] = calculateSampleCount(
-                        this.sampleTreatments.result
-                    );
+                    ret[
+                        'SAMPLE_TREATMENTS'
+                    ] = this.sampleTreatments.result!.totalSamples;
                 }
                 if (!_.isEmpty(this.patientTreatments.result)) {
                     ret[
@@ -9487,9 +9486,9 @@ export class StudyViewPageStore
                     ] = this.patientTreatments.result!.totalPatients;
                 }
                 if (!_.isEmpty(this.sampleTreatmentGroups.result)) {
-                    ret['SAMPLE_TREATMENT_GROUPS'] = calculateSampleCount(
-                        this.sampleTreatmentGroups.result
-                    );
+                    ret[
+                        'SAMPLE_TREATMENT_GROUPS'
+                    ] = this.sampleTreatments.result!.totalSamples;
                 }
                 if (!_.isEmpty(this.patientTreatmentGroups.result)) {
                     ret[
@@ -9497,9 +9496,9 @@ export class StudyViewPageStore
                     ] = this.patientTreatmentGroups.result!.totalPatients;
                 }
                 if (!_.isEmpty(this.sampleTreatmentTarget.result)) {
-                    ret['SAMPLE_TREATMENT_TARGET'] = calculateSampleCount(
-                        this.sampleTreatmentTarget.result
-                    );
+                    ret[
+                        'SAMPLE_TREATMENT_TARGET'
+                    ] = this.sampleTreatments.result!.totalSamples;
                 }
                 if (!_.isEmpty(this.patientTreatmentTarget.result)) {
                     ret[
@@ -10432,11 +10431,11 @@ export class StudyViewPageStore
         await: () => [this.shouldDisplaySampleTreatments],
         invoke: () => {
             if (this.shouldDisplaySampleTreatments.result) {
-                return this.internalClient.getAllSampleTreatmentsUsingPOST({
+                return this.internalClient.fetchSampleTreatmentCountsUsing({
                     studyViewFilter: this.filters,
                 });
             }
-            return Promise.resolve([]);
+            return Promise.resolve(undefined);
         },
     });
 

@@ -30,6 +30,7 @@ import {
     Sample,
     SampleClinicalDataCollection,
     SampleIdentifier,
+    SampleTreatmentReport,
     SampleTreatmentRow,
     StructuralVariantFilterQuery,
     StudyViewFilter,
@@ -4554,12 +4555,12 @@ export async function getPatientTreatmentDownloadData(
 }
 
 export async function getSampleTreatmentDownloadData(
-    promise: MobxPromise<SampleTreatmentRow[]>
+    promise: MobxPromise<SampleTreatmentReport>
 ): Promise<string> {
     if (promise.result) {
         const header = ['Treatment', 'Pre/Post', '#'];
         let data = [header.join('\t')];
-        _.each(promise.result, (record: SampleTreatmentRow) => {
+        _.each(promise.result.treatments, (record: SampleTreatmentRow) => {
             let rowData = [record.treatment, record.time, record.count];
             data.push(rowData.join('\t'));
         });
