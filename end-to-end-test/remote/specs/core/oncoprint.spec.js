@@ -463,7 +463,7 @@ describe('oncoprint', function() {
         it('should sort patients and samples by custom case list order correctly', async () => {
             async function doCustomCaseOrderTest() {
                 // now we're on results page
-                await waitForOncoprint();
+                await waitForOncoprint(100000);
 
                 // make sure we are in sample mode
                 await clickElement(
@@ -518,16 +518,17 @@ describe('oncoprint', function() {
             }
 
             await goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
-
             await browser.pause(5000);
 
             // select Colorectal TCGA and Adrenocortical Carcinoma TCGA
             const inputSelector =
                 'div[data-test=study-search] input[type="text"]';
-            await getElement(inputSelector, { timeout: 20000 });
+            await (await getElement(inputSelector)).waitForDisplayed({
+                timeout: 100000,
+            });
             await setInputText(inputSelector, 'colorectal tcga nature');
             await waitForNumberOfStudyCheckboxes(1);
-            await getElement('[data-test="StudySelect"]', { timeout: 20000 });
+            await getElement('[data-test="StudySelect"]', { timeout: 10000 });
             await clickElement('[data-test="StudySelect"] input');
 
             await setInputText(
@@ -539,17 +540,22 @@ describe('oncoprint', function() {
                 'Adrenocortical Carcinoma (TCGA, Firehose Legacy)'
             );
 
-            await getElement('[data-test="StudySelect"]', { timeout: 10000 });
+            await (
+                await getElement('[data-test="StudySelect"]')
+            ).waitForDisplayed();
+            await browser.pause(1000); // let things trigger
             await clickElement('[data-test="StudySelect"] input');
 
             await clickQueryByGeneButton();
 
             await browser.pause(10000); // let things trigger
-            const molecularProfileSelector = await (
-                await getElement('[data-test="molecularProfileSelector"]', {
+            const molecularProfileSelector = await getElement(
+                '[data-test="molecularProfileSelector"]',
+                {
                     timeout: 20000,
-                })
-            ).waitForDisplayed({ timeout: 20000 });
+                }
+            );
+
             await molecularProfileSelector.waitForExist({ timeout: 10000 });
             // Check for the "Mutations" checkbox
             const mutationsLabel = await molecularProfileSelector.$(

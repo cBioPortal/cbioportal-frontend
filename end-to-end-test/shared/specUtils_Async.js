@@ -591,7 +591,7 @@ async function clickQueryByGeneButton() {
     //     timeout: 5000
     // });
     //const el = await getElementByTestHandle('queryByGeneButton');
-    await clickElement('handle=queryByGeneButton');
+    await clickElement('[data-test=queryByGeneButton]');
 
     const body = await $('body');
     await body.scrollIntoView();
