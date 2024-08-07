@@ -430,7 +430,28 @@ export default class MultipleCategoryBarPlot extends React.Component<
 
     @computed get labels() {
         if (this.data.length > 0) {
-            if (this.props.sortByOption != '') {
+            if (this.props.sortByOption == 'SortByTotalSum') {
+                const majorCategoryCounts: any = {};
+
+                this.data.forEach(item => {
+                    item.counts.forEach(countItem => {
+                        const { majorCategory, count } = countItem;
+                        if (!majorCategoryCounts[majorCategory]) {
+                            majorCategoryCounts[majorCategory] = 0;
+                        }
+                        majorCategoryCounts[majorCategory] += count;
+                    });
+                });
+                const sortedMajorCategories = Object.keys(
+                    majorCategoryCounts
+                ).sort(
+                    (a, b) => majorCategoryCounts[b] - majorCategoryCounts[a]
+                );
+                return sortedMajorCategories;
+            } else if (
+                this.props.sortByOption != '' &&
+                this.props.sortByOption != 'alphabetically'
+            ) {
                 const sortedEntityData = this.data.find(
                     item => item.minorCategory === this.props.sortByOption
                 );
