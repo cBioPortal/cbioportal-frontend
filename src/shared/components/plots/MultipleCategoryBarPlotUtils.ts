@@ -107,24 +107,17 @@ function sortDataByOption(
     );
 
     if (sortedEntityData) {
-        // Sorting the counts array of the sortedEntity
         sortedEntityData.counts.sort((a, b) => b.count - a.count);
-
-        // Get the sorted order of major categories
         const sortedMajorCategories = sortedEntityData.counts.map(
             item => item.majorCategory
         );
-
-        // Reorder the counts arrays of the other minor categories
+        console.log(sortedEntityData, 'sortedEntityData');
         data.forEach(item => {
             if (item.minorCategory !== sortByOption) {
-                // Create a mapping of majorCategory to count object
                 const countMap: { [key: string]: any } = {};
                 item.counts.forEach(count => {
                     countMap[count.majorCategory] = count;
                 });
-
-                // Reorder the counts array according to sortedMajorCategories
                 item.counts = sortedMajorCategories.map(
                     category =>
                         countMap[category] || {
