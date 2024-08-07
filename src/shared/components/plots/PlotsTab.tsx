@@ -465,10 +465,17 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     >({}, { deep: false });
     @observable _horzGenericAssaySearchText: string = '';
     @observable _vertGenericAssaySearchText: string = '';
+
+    private defaultOptions = [
+        { value: 'SortByTotalSum', label: '# samples' },
+        { value: 'alphabetically', label: 'Alphabetically' },
+    ];
+
     @action.bound
     private updateDropDownOptions(option: { value: string; label: string }[]) {
-        this.SortByDropDownOptions = option;
+        this.SortByDropDownOptions = [...this.defaultOptions, ...option];
     }
+
     @action.bound
     private onClickLegendItem(ld: LegendDataWithId<any>) {
         if (this.highlightedLegendItems.has(ld.highlighting!.uid)) {
