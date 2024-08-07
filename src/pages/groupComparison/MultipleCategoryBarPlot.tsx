@@ -430,6 +430,22 @@ export default class MultipleCategoryBarPlot extends React.Component<
 
     @computed get labels() {
         if (this.data.length > 0) {
+            if (this.props.sortByOption != '') {
+                const sortedEntityData = this.data.find(
+                    item => item.minorCategory === this.props.sortByOption
+                );
+                if (sortedEntityData) {
+                    // Sorting the counts array of the sortedEntity
+                    sortedEntityData.counts.sort((a, b) => b.count - a.count);
+
+                    // Get the sorted order of major categories
+                    const sortedMajorCategories = sortedEntityData.counts.map(
+                        item => item.majorCategory
+                    );
+                    return sortedMajorCategories;
+                }
+            }
+
             return sortDataByCategory(
                 this.data[0].counts.map(c => c.majorCategory),
                 x => x,
