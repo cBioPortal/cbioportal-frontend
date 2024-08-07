@@ -1213,14 +1213,7 @@ export default class ResultsViewOncoprint extends React.Component<
 
                                 this.jupyterFileName = studyIds.join('&');
 
-                                // const jupyterNotebookTool = window.open(
-                                //     buildCBioPortalPageUrl('/jupyternotebook')
-                                // ) as any;
-                                // jupyterNotebookTool.clientPostedData = {
-                                //     fileContent: allGenesMutationsCsv,
-                                //     fileName: studyIds.join('&') + '.csv',
-                                // };
-
+                                // sending content to the modal
                                 this.openJupyterNotebookModal();
                             }
                         );

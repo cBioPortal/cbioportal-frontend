@@ -63,23 +63,33 @@ class JupyterNoteBookModal extends React.Component<
 
         const { fileContent, fileName } = this.props;
 
-        const data = JSON.stringify({
+        const data = {
+            type: 'from-cbioportal-to-jupyterlite',
             fileContent: fileContent,
             filename: `${fileName}.csv`,
             folderName: folderName,
-        });
-
-        localStorage.setItem('jupyterData', data);
+        };
 
         const jupyterNotebookTool = window.open(
-            buildCBioPortalPageUrl('/jupyternotebook'),
+            'https://silver-granita-b9be62.netlify.app/lite/lab/index.html',
             '_blank'
         );
 
-        // (jupyterNotebookTool as any).jupyterData = data;
+        if (jupyterNotebookTool) {
+            const receiveMessage = (event: MessageEvent) => {
+                if (event.data.type === 'jupyterlite-ready') {
+                    console.log('Now sending the data...');
+                    jupyterNotebookTool.postMessage(data, '*');
+                    window.removeEventListener('message', receiveMessage);
+                    this.props.handleClose();
+                }
+            };
+
+            window.addEventListener('message', receiveMessage);
+        }
 
         this.setState({ folderName: '', validated: false, errorMessage: '' });
-        this.props.handleClose();
+        // this.props.handleClose();
     };
 
     render() {
