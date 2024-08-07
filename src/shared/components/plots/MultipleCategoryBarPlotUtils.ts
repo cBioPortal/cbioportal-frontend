@@ -111,7 +111,6 @@ function sortDataByOption(
         const sortedMajorCategories = sortedEntityData.counts.map(
             item => item.majorCategory
         );
-        console.log(sortedEntityData, 'sortedEntityData');
         data.forEach(item => {
             if (item.minorCategory !== sortByOption) {
                 const countMap: { [key: string]: any } = {};
