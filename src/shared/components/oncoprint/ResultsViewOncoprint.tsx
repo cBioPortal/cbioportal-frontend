@@ -15,7 +15,7 @@ import {
     remoteData,
     svgToPdfDownload,
 } from 'cbioportal-frontend-commons';
-import { getRemoteDataGroupStatus } from 'cbioportal-utils';
+import { getRemoteDataGroupStatus, Mutation } from 'cbioportal-utils';
 import Oncoprint, {
     ClinicalTrackSpec,
     ClinicalTrackConfig,
@@ -59,7 +59,7 @@ import { getServerConfig } from 'config/config';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { OncoprintJS, RGBAColor, TrackGroupIndex, TrackId } from 'oncoprintjs';
 import fileDownload from 'react-file-download';
-import tabularDownload from './tabularDownload';
+import tabularDownload, { getTabularDownloadData } from './tabularDownload';
 import classNames from 'classnames';
 import {
     clinicalAttributeIsLocallyComputed,
@@ -99,6 +99,7 @@ import ClinicalTrackColorPicker from './ClinicalTrackColorPicker';
 import { hexToRGBA, rgbaToHex } from 'shared/lib/Colors';
 import classnames from 'classnames';
 import { OncoprintColorModal } from './OncoprintColorModal';
+import JupyterNoteBookModal from 'pages/staticPages/tools/oncoprinter/JupyterNotebookModal';
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -773,6 +774,22 @@ export default class ResultsViewOncoprint extends React.Component<
         this.mouseInsideBounds = false;
     }
 
+    // jupyternotebook modal handling:
+
+    @observable public showJupyterNotebookModal = false;
+    @observable private jupyterFileContent = '';
+    @observable private jupyterFileName = '';
+
+    @action
+    private openJupyterNotebookModal = () => {
+        this.showJupyterNotebookModal = true;
+    };
+
+    @action
+    private closeJupyterNotebookModal = () => {
+        this.showJupyterNotebookModal = false;
+    };
+
     private buildControlsHandlers() {
         return {
             onSelectColumnType: (type: OncoprintAnalysisCaseType) => {
@@ -1120,6 +1137,84 @@ export default class ResultsViewOncoprint extends React.Component<
                                     clinical: clinicalInput,
                                     heatmap: heatmapInput,
                                 };
+                            }
+                        );
+                        break;
+                    case 'jupyterNoteBook':
+                        onMobxPromise(
+                            [
+                                this.props.store.sampleKeyToSample,
+                                this.props.store.patientKeyToPatient,
+                                this.props.store.mutationsByGene,
+                                this.props.store.studyIds,
+                            ],
+                            (
+                                sampleKeyToSample: {
+                                    [sampleKey: string]: Sample;
+                                },
+                                patientKeyToPatient: any,
+                                mutationsByGenes: {
+                                    [gene: string]: Mutation[];
+                                },
+                                studyIds: string[]
+                            ) => {
+                                const allGenesMutations = Object.values(
+                                    mutationsByGenes
+                                ).reduce(
+                                    (acc, geneArray) => [...acc, ...geneArray],
+                                    []
+                                );
+
+                                function convertToCSV(jsonArray: Mutation[]) {
+                                    // Define the fields to keep
+                                    const fieldsToKeep = [
+                                        'hugoGeneSymbol',
+                                        'alterationType',
+                                        'chr',
+                                        'startPosition',
+                                        'endPosition',
+                                        'referenceAllele',
+                                        'variantAllele',
+                                        'proteinChange',
+                                        'proteinPosStart',
+                                        'proteinPosEnd',
+                                        'mutationType',
+                                        'oncoKbOncogenic',
+                                        'patientId',
+                                        'sampleId',
+                                        'isHotspot',
+                                    ];
+
+                                    // Create the header
+                                    const csvHeader = fieldsToKeep.join(',');
+
+                                    // Create the rows
+                                    const csvRows = jsonArray
+                                        .map(item => {
+                                            return fieldsToKeep
+                                                .map(field => {
+                                                    return (
+                                                        item[
+                                                            field as keyof Mutation
+                                                        ] || ''
+                                                    );
+                                                })
+                                                .join(',');
+                                        })
+                                        .join('\n');
+                                    return `${csvHeader}\r\n${csvRows}`;
+                                }
+
+                                const allGenesMutationsCsv = convertToCSV(
+                                    allGenesMutations
+                                );
+
+                                this.jupyterFileContent = allGenesMutationsCsv;
+
+                                this.jupyterFileName = studyIds.join('&');
+
+                                // sending content to the modal
+                                this.openJupyterNotebookModal();
                             }
                         );
                         break;
@@ -2333,6 +2428,13 @@ export default class ResultsViewOncoprint extends React.Component<
                         </div>
                     </div>
                 </div>
+
+                <JupyterNoteBookModal
+                    show={this.showJupyterNotebookModal}
+                    handleClose={this.closeJupyterNotebookModal}
+                    fileContent={this.jupyterFileContent}
+                    fileName={this.jupyterFileName}
+                />
             </div>
         );
     }
