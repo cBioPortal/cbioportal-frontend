@@ -55,7 +55,7 @@ export default class ResourcesTab extends React.Component<
     render() {
         return (
             <div>
-                <div className="resourcesTab">
+                <div className="resourcesTab" style={{ display: 'none' }}>
                     <FeatureTitle
                         title={RESOURCES_TAB_NAME}
                         isLoading={this.studyResources.isPending}
@@ -65,9 +65,13 @@ export default class ResourcesTab extends React.Component<
                     <br />
                     <div>{this.studyResources.component}</div>
                 </div>
-
-                <div>
-                    <FilesAndLinks store={this.props.store}></FilesAndLinks>
+                <div className="resourcesTab">
+                    <div className="resourcesSection">
+                        <h4 className="blackHeader">
+                            Patient and Sample Resources
+                        </h4>
+                        <FilesAndLinks store={this.props.store}></FilesAndLinks>
+                    </div>
                 </div>
             </div>
         );

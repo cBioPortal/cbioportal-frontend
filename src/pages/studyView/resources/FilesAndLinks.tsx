@@ -6,9 +6,10 @@ import {
 import { observer } from 'mobx-react';
 import _, { forEach } from 'lodash';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
+import { Else, If, Then } from 'react-if';
+import { WindowWidthBox } from '../../../shared/components/WindowWidthBox/WindowWidthBox';
+import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import {
-    getPatientViewUrl,
-    getSampleViewUrl,
     getSampleViewUrlWithPathname,
     getPatientViewUrlWithPathname,
 } from 'shared/api/urls';
@@ -16,12 +17,7 @@ import { getAllClinicalDataByStudyViewFilter } from '../StudyViewUtils';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
 import { isUrl, remoteData } from 'cbioportal-frontend-commons';
 import { makeObservable, observable } from 'mobx';
-import {
-    ResourceData,
-    Sample,
-    StudyViewFilter,
-} from 'cbioportal-ts-api-client';
-import { PatientViewPageStore } from 'pages/patientView/clinicalInformation/PatientViewPageStore';
+import { ResourceData, StudyViewFilter } from 'cbioportal-ts-api-client';
 
 export interface IFilesLinksTable {
     store: StudyViewPageStore;
@@ -59,7 +55,6 @@ async function fetchResourceDataOfPatient(patientIds: Map<string, string>) {
 
 async function fetchFilesLinksData(
     filters: StudyViewFilter,
-    sampleSetByKey: { [sampleId: string]: Sample },
     sampleIdResourceData: { [sampleId: string]: ResourceData[] },
     searchTerm: string | undefined,
     sortAttributeId: string | undefined,
@@ -118,9 +113,10 @@ async function fetchFilesLinksData(
         return item;
     });
 
+    const sortedData = _.orderBy(data, 'resourcesPerPatient', 'desc');
     return {
-        totalItems: items.length,
-        data: _.values(data),
+        totalItems: sortedData.length,
+        data: _.values(sortedData),
     };
 }
 
@@ -170,12 +166,11 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
         };
     }
 
-    @observable clinicalDataTabSearchTerm: string | undefined = undefined;
+    @observable searchTerm: string | undefined = undefined;
 
     readonly getData = remoteData({
         await: () => [
             this.props.store.selectedSamples,
-            this.props.store.sampleSetByKey,
             this.props.store.resourceDefinitions,
             this.props.store.sampleResourceData,
         ],
@@ -186,9 +181,8 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
             }
             const sampleData = await fetchFilesLinksData(
                 this.props.store.filters,
-                this.props.store.sampleSetByKey.result!,
                 this.props.store.sampleResourceData.result!,
-                undefined,
+                this.searchTerm,
                 'patientId',
                 'asc',
                 RECORD_LIMIT
@@ -200,7 +194,7 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
 
     readonly columns = remoteData({
         invoke: async () => {
-            let defaultColumns: Column<{ [id: string]: string }>[] = [
+            let defaultColumns: Column<{ [id: string]: any }>[] = [
                 {
                     ...this.getDefaultColumnConfig('patientId', 'Patient ID'),
                     render: (data: { [id: string]: string }) => {
@@ -239,28 +233,24 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
 
                 {
                     ...this.getDefaultColumnConfig(
-                        'numberOfResourcePerPatient',
-                        'Number of Resource Per Patient'
-                    ),
-                    render: (data: { [id: string]: string }) => {
-                        return <div>{data.resourcesPerPatient}</div>;
-                    },
-                },
-
-                {
-                    ...this.getDefaultColumnConfig(
                         'typeOfResource',
                         'Type Of Resource'
                     ),
                     render: (data: { [id: string]: string }) => {
                         return (
-                            <a
-                                href={data.url}
-                                target="_blank"
-                                //
-                            >
-                                {data.typeOfResource}
-                            </a>
+                            <div>
+                                <a href={data.url} target="_blank">
+                                    <i
+                                        className={`fa fa-external-link fa-sm`}
+                                        style={{
+                                            marginRight: 5,
+                                            color: 'black',
+                                            fontSize: 10,
+                                        }}
+                                    />
+                                    {data.typeOfResource}
+                                </a>
+                            </div>
                         );
                     },
                 },
@@ -274,8 +264,18 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
                         return <div>{data.description}</div>;
                     },
                 },
-            ];
 
+                {
+                    ...this.getDefaultColumnConfig(
+                        'resourcesPerPatient',
+                        'Number of Resource Per Patient',
+                        true
+                    ),
+                    render: (data: { [id: string]: number }) => {
+                        return <div>{data.resourcesPerPatient}</div>;
+                    },
+                },
+            ];
             return defaultColumns;
         },
         default: [],
@@ -284,16 +284,38 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
     public render() {
         return (
             <span data-test="files-links-data-content">
-                <FilesLinksTableComponent
-                    initialItemsPerPage={20}
-                    data={this.getData.result?.data || []}
-                    columns={this.columns.result}
-                    showColumnVisibility={false}
-                    //showFilter={false}
-                    showCountHeader={false}
-                    showFilterClearButton={false}
-                    showCopyDownload={false}
-                />
+                <WindowWidthBox offset={60}>
+                    <If condition={this.getData.isPending}>
+                        <Then>
+                            <LoadingIndicator
+                                isLoading={true}
+                                size={'big'}
+                                center={true}
+                            />
+                        </Then>
+                        <Else>
+                            <FilesLinksTableComponent
+                                initialItemsPerPage={20}
+                                headerComponent={
+                                    <div className={'positionAbsolute'}>
+                                        <strong>
+                                            {this.getData.result?.totalItems}{' '}
+                                            resources
+                                        </strong>
+                                    </div>
+                                }
+                                data={this.getData.result?.data || []}
+                                columns={this.columns.result}
+                                showColumnVisibility={false}
+                                showCountHeader={false}
+                                showFilterClearButton={false}
+                                showCopyDownload={false}
+                                initialSortColumn={'resourcesPerPatient'}
+                                initialSortDirection={'desc'}
+                            />
+                        </Else>
+                    </If>
+                </WindowWidthBox>
             </span>
         );
     }
