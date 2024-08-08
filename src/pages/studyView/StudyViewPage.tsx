@@ -377,6 +377,17 @@ export default class StudyViewPage extends React.Component<
         }
     }
 
+    @computed get shouldShowSampleResources() {
+        if (this.store.sampleResourceData.isComplete) {
+            return _.some(
+                this.store.sampleResourceData.result,
+                data => data.length > 0
+            );
+        } else {
+            return false;
+        }
+    }
+
     @computed get shouldShowResources() {
         if (this.store.resourceIdToResourceData.isComplete) {
             return _.some(
@@ -725,7 +736,7 @@ export default class StudyViewPage extends React.Component<
                                             StudyViewPageTabKeyEnum.FILES_AND_LINKS
                                         }
                                         linkText={RESOURCES_TAB_NAME}
-                                        // hide={!this.shouldShowResources}
+                                        hide={!this.shouldShowSampleResources}
                                     >
                                         <div>
                                             <ResourcesTab
