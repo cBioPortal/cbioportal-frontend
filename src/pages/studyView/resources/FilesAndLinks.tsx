@@ -162,7 +162,17 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
                 data: { [id: string]: string },
                 filterString: string,
                 filterStringUpper: string
-            ) => (data[key] || '').toUpperCase().includes(filterStringUpper),
+            ) => {
+                if (data[key]) {
+                    if (!isNumber) {
+                        return (data[key] || '')
+                            .toUpperCase()
+                            .includes(filterStringUpper);
+                    }
+                }
+
+                return false;
+            },
         };
     }
 
