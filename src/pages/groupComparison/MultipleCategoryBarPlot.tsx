@@ -26,6 +26,7 @@ import {
     makePlotData,
     makeBarSpecs,
     sortDataByCategory,
+    getSortedMajorCategories,
 } from '../../shared/components/plots/MultipleCategoryBarPlotUtils';
 import * as ReactDOM from 'react-dom';
 import { Popover } from 'react-bootstrap';
@@ -58,7 +59,7 @@ export interface IMultipleCategoryBarPlotProps {
     svgRef?: (svgContainer: SVGElement | null) => void;
     pValue: number | null;
     qValue: number | null;
-    SortByDropDownOptions?: { value: string; label: string }[];
+    sortByDropDownOptions?: { value: string; label: string }[];
     updateDropDownOptions?: (
         option: { value: string; label: string }[]
     ) => void;
@@ -430,43 +431,16 @@ export default class MultipleCategoryBarPlot extends React.Component<
 
     @computed get labels() {
         if (this.data.length > 0) {
-            if (this.props.sortByOption == 'SortByTotalSum') {
-                const majorCategoryCounts: any = {};
-
-                this.data.forEach(item => {
-                    item.counts.forEach(countItem => {
-                        const { majorCategory, count } = countItem;
-                        if (!majorCategoryCounts[majorCategory]) {
-                            majorCategoryCounts[majorCategory] = 0;
-                        }
-                        majorCategoryCounts[majorCategory] += count;
-                    });
-                });
-                const sortedMajorCategories = Object.keys(
-                    majorCategoryCounts
-                ).sort(
-                    (a, b) => majorCategoryCounts[b] - majorCategoryCounts[a]
-                );
-                return sortedMajorCategories;
-            } else if (
-                this.props.sortByOption != '' &&
-                this.props.sortByOption != 'alphabetically'
+            if (
+                this.props.sortByOption === 'SortByTotalSum' ||
+                (this.props.sortByOption !== '' &&
+                    this.props.sortByOption !== 'alphabetically')
             ) {
-                const sortedEntityData = this.data.find(
-                    item => item.minorCategory === this.props.sortByOption
+                return getSortedMajorCategories(
+                    this.data,
+                    this.props.sortByOption
                 );
-                if (sortedEntityData) {
-                    // Sorting the counts array of the sortedEntity
-                    sortedEntityData.counts.sort((a, b) => b.count - a.count);
-
-                    // Get the sorted order of major categories
-                    const sortedMajorCategories = sortedEntityData.counts.map(
-                        item => item.majorCategory
-                    );
-                    return sortedMajorCategories;
-                }
             }
-
             return sortDataByCategory(
                 this.data[0].counts.map(c => c.majorCategory),
                 x => x,

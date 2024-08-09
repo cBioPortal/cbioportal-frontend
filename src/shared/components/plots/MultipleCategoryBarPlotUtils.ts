@@ -98,11 +98,11 @@ export function sortDataByCategory<D>(
         }
     });
 }
-function sortDataByOption(
+export function getSortedMajorCategories(
     data: IMultipleCategoryBarPlotData[],
-    sortByOption: string
-): IMultipleCategoryBarPlotData[] {
-    if (sortByOption == 'SortByTotalSum') {
+    sortByOption: string | undefined
+): string[] {
+    if (sortByOption === 'SortByTotalSum') {
         const majorCategoryCounts: any = {};
 
         data.forEach(item => {
@@ -114,10 +114,30 @@ function sortDataByOption(
                 majorCategoryCounts[majorCategory] += count;
             });
         });
-        const sortedMajorCategories = Object.keys(majorCategoryCounts).sort(
+
+        return Object.keys(majorCategoryCounts).sort(
             (a, b) => majorCategoryCounts[b] - majorCategoryCounts[a]
         );
+    } else if (sortByOption !== '' && sortByOption !== 'alphabetically') {
+        const sortedEntityData = data.find(
+            item => item.minorCategory === sortByOption
+        );
+        if (sortedEntityData) {
+            sortedEntityData.counts.sort((a, b) => b.count - a.count);
 
+            return sortedEntityData.counts.map(item => item.majorCategory);
+        }
+    }
+
+    return [];
+}
+export function sortDataByOption(
+    data: IMultipleCategoryBarPlotData[],
+    sortByOption: string
+): IMultipleCategoryBarPlotData[] {
+    const sortedMajorCategories = getSortedMajorCategories(data, sortByOption);
+
+    if (sortByOption === 'SortByTotalSum' || sortedMajorCategories.length > 0) {
         const reorderCounts = (counts: any) => {
             return sortedMajorCategories.map(category => {
                 return counts.find(
@@ -129,37 +149,16 @@ function sortDataByOption(
         data.forEach(item => {
             item.counts = reorderCounts(item.counts);
         });
-        return data;
-    }
 
-    const sortedEntityData = data.find(
-        item => item.minorCategory === sortByOption
-    );
-    if (sortedEntityData) {
-        sortedEntityData.counts.sort((a, b) => b.count - a.count);
-        const sortedMajorCategories = sortedEntityData.counts.map(
-            item => item.majorCategory
-        );
-        data.forEach(item => {
-            if (item.minorCategory !== sortByOption) {
-                const countMap: { [key: string]: any } = {};
-                item.counts.forEach(count => {
-                    countMap[count.majorCategory] = count;
-                });
-                item.counts = sortedMajorCategories.map(
-                    category =>
-                        countMap[category] || {
-                            majorCategory: category,
-                            count: 0,
-                            percentage: 0,
-                        }
-                );
+        if (sortByOption !== 'SortByTotalSum') {
+            const sortedEntityData = data.find(
+                item => item.minorCategory === sortByOption
+            );
+            if (sortedEntityData) {
+                data = data.filter(item => item.minorCategory !== sortByOption);
+                data.unshift(sortedEntityData);
             }
-        });
-
-        // Move the sortedEntityData to the front
-        data = data.filter(item => item.minorCategory !== sortByOption);
-        data.unshift(sortedEntityData);
+        }
     }
 
     return data;
@@ -188,8 +187,8 @@ export function makeBarSpecs(
 }[] {
     if (
         sortByOption &&
-        sortByOption != '' &&
-        sortByOption != 'alphabetically'
+        sortByOption !== '' &&
+        sortByOption !== 'alphabetically'
     ) {
         data = sortDataByOption(data, sortByOption);
     } else {
