@@ -53,7 +53,7 @@ function waitForPatientView(timeout) {
     });
 }
 
-async function waitForOncoprint(timeout) {
+async function waitForOncoprint(timeout = 100000) {
     await browser.pause(500); // give oncoprint time to disappear
     await browser.waitUntil(
         async () => {

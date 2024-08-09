@@ -27,18 +27,11 @@ describe('merged tracks', () => {
         await goToUrlAndSetLocalStorage(
             `${CBIOPORTAL_URL}/results/oncoprint?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=coadread_tcga&case_set_id=coadread_tcga_cnaseq&data_priority=0&gene_list=%255B%2522RAS%2522%2520KRAS%2520NRAS%2520HRAS%255D&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_mutations&tab_index=tab_visualize`
         );
-        await browser.pause(10000);
-        await waitForOncoprint({
-            timeout: 1000000,
-        });
+        await waitForOncoprint();
     });
     it('oncoprint loads and expands a merged track', async () => {
         const trackOptionsElts = await getNthOncoprintTrackOptionsElements(1);
-
-        await (await getElement(trackOptionsElts.button_selector)).isDisplayed({
-            timeout: 30000,
-        });
-        // open menu
+        await (await getElement(trackOptionsElts.button_selector)).moveTo();
         await clickElement(trackOptionsElts.button_selector);
         await waitForElementDisplayed(trackOptionsElts.dropdown_selector, {
             timeout: 10000,

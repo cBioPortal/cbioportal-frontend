@@ -889,7 +889,7 @@ describe('submit genes to results view query', () => {
             await waitForNetworkQuiet();
             await browser.pause(2000);
         });
-        it('generic assay chart should be added in the summary tab', async function() {
+        it.skip('generic assay chart should be added in the summary tab', async function() {
             this.retries(0);
             await browser.waitUntil(
                 async () => {

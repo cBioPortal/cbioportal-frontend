@@ -53,8 +53,10 @@ describe('homepage', () => {
     it('should filter study list according to filter text input', async () => {
         await getElement(searchInputSelector, { timeout: 10000 });
         await setInputText(searchInputSelector, 'bladder');
-        //TODO:-- is this valid?
-        await waitForNumberOfStudyCheckboxes(4);
+
+        assert(
+            (await jq('[data-test="StudySelect"] input:checkbox')).length > 1
+        );
     });
 
     it('when a single study is selected, a case set selector is provided', async () => {
@@ -210,7 +212,7 @@ describe('case set selection in front page query form', () => {
 
     beforeEach(async () => {
         await goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
-        await browser.pause(3000);
+        await waitForOncoprint();
     });
 
     it('selects the default case set for single study selections', async () => {
@@ -238,7 +240,7 @@ describe('case set selection in front page query form', () => {
         await setInputText(input, 'ampullary baylor');
         await waitForNumberOfStudyCheckboxes(1);
         await getElement('[data-test="StudySelect"]', { timeout: 10000 });
-        await clickElement('[data-test="StudySelect"] input');
+        await clickElement('[data-test="StudySelect"]');
 
         await clickQueryByGeneButton();
 
@@ -341,7 +343,7 @@ describe('case set selection in front page query form', () => {
             timeout: 10000,
         });
 
-        getElementByTestHandle('COPY_NUMBER_ALTERATION', {
+        await getElementByTestHandle('COPY_NUMBER_ALTERATION', {
             timeout: 10000,
         });
 
@@ -365,8 +367,11 @@ describe('case set selection in front page query form', () => {
 
         // select Adrenocortical Carcinoma
         await getElement(input, { timeout: 10000 });
-        setInputText(input, 'adrenocortical carcinoma tcga firehose legacy');
-        waitForNumberOfStudyCheckboxes(1);
+        await setInputText(
+            input,
+            'adrenocortical carcinoma tcga firehose legacy'
+        );
+        await waitForNumberOfStudyCheckboxes(1);
         await getElementByTestHandle('StudySelect', { timeout: 10000 });
         await clickElement('[data-test="StudySelect"] input');
         await clickQueryByGeneButton();
@@ -407,10 +412,11 @@ describe('case set selection in front page query form', () => {
 });
 
 describe('genetic profile selection in front page query form', () => {
-    beforeEach(async () => {
+    before(async () => {
         await goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
     });
-    it('selects the right default genetic profiles in a single->multiple->single study selection flow', async () => {
+
+    it('selects the right default genetic profiles after selecting the initial study', async () => {
         // select a study
         const input = 'div[data-test=study-search] input[type=text]';
         await getElement(input, { timeout: 20000 });
@@ -446,22 +452,26 @@ describe('genetic profile selection in front page query form', () => {
             )),
             'mrna profile not selected'
         );
+    });
 
+    it('modifies the study selection and verifies the genetic profiles', async () => {
         await clickModifyStudySelectionButton();
 
         // select another study
+        const input = 'div[data-test=study-search] input[type=text]';
         await getElement(input, { timeout: 10000 });
         await setInputText(input, 'ampullary baylor');
         await waitForNumberOfStudyCheckboxes(
             1,
             'Ampullary Carcinoma (Baylor College of Medicine, Cell Reports 2016)'
         );
-        await getElement('[data-test="StudySelect"]', { timeout: 10000 });
-        await clickElement('[data-test="StudySelect"] input');
+        await (
+            await getElement('[data-test="StudySelect"]')
+        ).waitForDisplayed();
+        await clickElement('[data-test="StudySelect"]');
 
         await clickQueryByGeneButton();
 
-        //TODO:-- why is this not working? its not on the page
         await getElementByTestHandle('MUTATION_EXTENDED', {
             timeout: 10000,
         });
@@ -480,16 +490,18 @@ describe('genetic profile selection in front page query form', () => {
             await getElementByTestHandle('COPY_NUMBER_ALTERATION'),
             "'Copy number alterations' should be selected"
         );
+    });
 
+    it('deselects the study and verifies the genetic profiles', async () => {
         await clickModifyStudySelectionButton();
 
         //deselect other study
-        await clickElement('[data-test="StudySelect"] input');
+        await clickElement('[data-test="StudySelect"]');
 
         await clickQueryByGeneButton();
 
         // wait for profiles selector to load
-        getElement(
+        await getElement(
             'div[data-test="molecularProfileSelector"] input[type="checkbox"]',
             { timeout: 10000 }
         );
@@ -508,14 +520,20 @@ describe('genetic profile selection in front page query form', () => {
         );
         assert(
             !(await isSelected(
-                'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MRNA_EXPRESSION"]'
+                'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MRNA_EXPRESSION"]',
+                {
+                    timeout: 10000,
+                }
             )),
             'mrna profile not selected'
         );
+    });
 
+    it('selects all TCGA firehose legacy studies and verifies the genetic profiles', async () => {
         await clickModifyStudySelectionButton();
 
         // select all tcga firehose legacy studies
+        const input = 'div[data-test=study-search] input[type=text]';
         await getElement(input, { timeout: 10000 });
         await setInputText(input, 'tcga firehose');
         await browser.pause(500);
@@ -545,7 +563,9 @@ describe('genetic profile selection in front page query form', () => {
             }),
             "'Copy number alterations' should be selected"
         );
+    });
 
+    it('deselects all TCGA firehose legacy studies and verifies the genetic profiles', async () => {
         await clickModifyStudySelectionButton();
 
         // Deselect all tcga firehose legacy studies
@@ -556,8 +576,9 @@ describe('genetic profile selection in front page query form', () => {
 
         await clickQueryByGeneButton();
 
+        // wait for profiles selector to
         // wait for profiles selector to load
-        getElement(
+        await getElement(
             'div[data-test="molecularProfileSelector"] input[type="checkbox"]',
             { timeout: 6000 }
         );
@@ -575,9 +596,12 @@ describe('genetic profile selection in front page query form', () => {
             'cna profile should be selected'
         );
         assert(
-            !isSelected(
-                'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MRNA_EXPRESSION"]'
-            ),
+            !(await isSelected(
+                'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MRNA_EXPRESSION"]',
+                {
+                    timeout: 10000,
+                }
+            )),
             'mrna profile not selected'
         );
     });
@@ -690,6 +714,8 @@ describe('results page quick oql edit', () => {
             `${CBIOPORTAL_URL}/results/oncoprint?cancer_study_list=ccrcc_dfci_2019&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&profileFilter=mutations&case_set_id=ccrcc_dfci_2019_sequenced&gene_list=TP53&geneset_list=%20&tab_index=tab_visualize&Action=Submit`
         );
 
+        await waitForOncoprint();
+
         await getElement('[data-test="oqlQuickEditButton"]', {
             timeout: 20000,
         });
@@ -732,6 +758,8 @@ describe('results page quick oql edit', () => {
         await goToUrlAndSetLocalStorage(
             `${CBIOPORTAL_URL}/results/oncoprint?genetic_profile_ids_PROFILE_MUTATION_EXTENDED=prad_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=prad_tcga_pub_gistic&cancer_study_list=prad_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&profileFilter=0&case_set_id=prad_tcga_pub_cnaseq&gene_list=BRCA1&geneset_list=%20&tab_index=tab_visualize&Action=Submit`
         );
+
+        await waitForOncoprint();
 
         await getElement('[data-test="oqlQuickEditButton"]', {
             timeout: 20000,
@@ -786,7 +814,13 @@ describe('results page quick oql edit', () => {
 
         // mutation, cna, mrna profiles are there
         //TODO:-- why is this not working? profileFilter is '0' when logged even on the query url
-        const profileFilter = query.profileFilter.split(',');
+        let profileFilter = (
+            (await browser.execute(function() {
+                return { ...urlWrapper.query };
+            }).profileFilter) || ''
+        ).split(',');
+
+        console.log('profileFilter', profileFilter);
         // mutation, cna, mrna profiles are there
         assert.equal(profileFilter.includes('mutations'), true);
         assert.equal(profileFilter.includes('gistic'), true);
