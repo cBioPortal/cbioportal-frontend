@@ -442,8 +442,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     private dummyScrollPane: HTMLDivElement;
     private scrollingDummyPane = false;
     @observable plotElementWidth = 0;
-    @observable SortByDropDownOptions: { value: string; label: string }[] = [];
-    @observable sortByOption: string = '';
+    @observable sortByDropDownOptions: { value: string; label: string }[] = [];
+    @observable sortByOption: string = 'alphabetically';
     @observable boxPlotSortByMedian = false;
     @observable.ref searchCaseInput: string;
     @observable.ref searchMutationInput: string;
@@ -467,13 +467,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     @observable _vertGenericAssaySearchText: string = '';
 
     private defaultOptions = [
-        { value: 'SortByTotalSum', label: '# samples' },
         { value: 'alphabetically', label: 'Alphabetically' },
+        { value: 'SortByTotalSum', label: 'Number of samples' },
     ];
 
     @action.bound
     private updateDropDownOptions(option: { value: string; label: string }[]) {
-        this.SortByDropDownOptions = [...this.defaultOptions, ...option];
+        this.sortByDropDownOptions = [...this.defaultOptions, ...option];
     }
 
     @action.bound
@@ -4604,7 +4604,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                     name="Sort By"
                                     value={this.sortByOption}
                                     onChange={this.handleSortByChange}
-                                    options={this.SortByDropDownOptions}
+                                    options={this.sortByDropDownOptions}
                                     clearable={false}
                                     searchable={true}
                                     placeholder="Sort by..."
@@ -5579,13 +5579,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                     horizontalBars={this.horizontalBars}
                                     percentage={isPercentage}
                                     stacked={isStacked}
-                                    SortByDropDownOptions={
-                                        this?.SortByDropDownOptions
+                                    sortByDropDownOptions={
+                                        this.sortByDropDownOptions
                                     }
                                     updateDropDownOptions={
-                                        this?.updateDropDownOptions
+                                        this.updateDropDownOptions
                                     }
-                                    sortByOption={this?.sortByOption}
+                                    sortByOption={this.sortByOption}
                                 />
                             );
                         }
