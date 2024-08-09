@@ -71,7 +71,7 @@ class JupyterNoteBookModal extends React.Component<
         };
 
         const jupyterNotebookTool = window.open(
-            'https://silver-granita-b9be62.netlify.app/lite/lab/index.html',
+            'https://cbio-jupyter.netlify.app/lite/lab/index.html',
             '_blank'
         );
 

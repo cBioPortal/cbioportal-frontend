@@ -100,6 +100,7 @@ import { hexToRGBA, rgbaToHex } from 'shared/lib/Colors';
 import classnames from 'classnames';
 import { OncoprintColorModal } from './OncoprintColorModal';
 import JupyterNoteBookModal from 'pages/staticPages/tools/oncoprinter/JupyterNotebookModal';
+import { convertToCSV } from 'shared/lib/calculation/JSONtoCSV';
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -1070,6 +1071,8 @@ export default class ResultsViewOncoprint extends React.Component<
                                 this.genesetHeatmapTracks,
                                 this.props.store
                                     .clinicalAttributeIdToClinicalAttribute,
+                                this.props.store.mutationsByGene,
+                                this.props.store.studyIds,
                             ],
                             (
                                 samples: Sample[],
@@ -1080,7 +1083,11 @@ export default class ResultsViewOncoprint extends React.Component<
                                 genesetHeatmapTracks: IGenesetHeatmapTrackSpec[],
                                 attributeIdToAttribute: {
                                     [attributeId: string]: ClinicalAttribute;
-                                }
+                                },
+                                mutationsByGenes: {
+                                    [gene: string]: Mutation[];
+                                },
+                                studyIds: string[]
                             ) => {
                                 const caseIds =
                                     this.oncoprintAnalysisCaseType ===
@@ -1132,10 +1139,21 @@ export default class ResultsViewOncoprint extends React.Component<
                                 const oncoprinterWindow = window.open(
                                     buildCBioPortalPageUrl('/oncoprinter')
                                 ) as any;
+
+                                // extra data that needs to be send for jupyter-notebook
+                                const allMutations = Object.values(
+                                    mutationsByGenes
+                                ).reduce(
+                                    (acc, geneArray) => [...acc, ...geneArray],
+                                    []
+                                );
+
                                 oncoprinterWindow.clientPostedData = {
                                     genetic: geneticInput,
                                     clinical: clinicalInput,
                                     heatmap: heatmapInput,
+                                    mutations: JSON.stringify(allMutations),
+                                    studyIds: JSON.stringify(studyIds),
                                 };
                             }
                         );
@@ -1165,48 +1183,27 @@ export default class ResultsViewOncoprint extends React.Component<
                                     []
                                 );
 
-                                function convertToCSV(jsonArray: Mutation[]) {
-                                    // Define the fields to keep
-                                    const fieldsToKeep = [
-                                        'hugoGeneSymbol',
-                                        'alterationType',
-                                        'chr',
-                                        'startPosition',
-                                        'endPosition',
-                                        'referenceAllele',
-                                        'variantAllele',
-                                        'proteinChange',
-                                        'proteinPosStart',
-                                        'proteinPosEnd',
-                                        'mutationType',
-                                        'oncoKbOncogenic',
-                                        'patientId',
-                                        'sampleId',
-                                        'isHotspot',
-                                    ];
-
-                                    // Create the header
-                                    const csvHeader = fieldsToKeep.join(',');
-
-                                    // Create the rows
-                                    const csvRows = jsonArray
-                                        .map(item => {
-                                            return fieldsToKeep
-                                                .map(field => {
-                                                    return (
-                                                        item[
-                                                            field as keyof Mutation
-                                                        ] || ''
-                                                    );
-                                                })
-                                                .join(',');
-                                        })
-                                        .join('\n');
-                                    return `${csvHeader}\r\n${csvRows}`;
-                                }
+                                const fieldsToKeep = [
+                                    'hugoGeneSymbol',
+                                    'alterationType',
+                                    'chr',
+                                    'startPosition',
+                                    'endPosition',
+                                    'referenceAllele',
+                                    'variantAllele',
+                                    'proteinChange',
+                                    'proteinPosStart',
+                                    'proteinPosEnd',
+                                    'mutationType',
+                                    'oncoKbOncogenic',
+                                    'patientId',
+                                    'sampleId',
+                                    'isHotspot',
+                                ];
 
                                 const allGenesMutationsCsv = convertToCSV(
-                                    allGenesMutations
+                                    allGenesMutations,
+                                    fieldsToKeep
                                 );
 
                                 this.jupyterFileContent = allGenesMutationsCsv;
