@@ -98,6 +98,71 @@ export function sortDataByCategory<D>(
         }
     });
 }
+export function getSortedMajorCategories(
+    data: IMultipleCategoryBarPlotData[],
+    sortByOption: string | undefined
+): string[] {
+    if (sortByOption === 'SortByTotalSum') {
+        const majorCategoryCounts: any = {};
+
+        data.forEach(item => {
+            item.counts.forEach(countItem => {
+                const { majorCategory, count } = countItem;
+                if (!majorCategoryCounts[majorCategory]) {
+                    majorCategoryCounts[majorCategory] = 0;
+                }
+                majorCategoryCounts[majorCategory] += count;
+            });
+        });
+
+        return Object.keys(majorCategoryCounts).sort(
+            (a, b) => majorCategoryCounts[b] - majorCategoryCounts[a]
+        );
+    } else if (sortByOption !== '' && sortByOption !== 'alphabetically') {
+        const sortedEntityData = data.find(
+            item => item.minorCategory === sortByOption
+        );
+        if (sortedEntityData) {
+            sortedEntityData.counts.sort((a, b) => b.count - a.count);
+
+            return sortedEntityData.counts.map(item => item.majorCategory);
+        }
+    }
+
+    return [];
+}
+export function sortDataByOption(
+    data: IMultipleCategoryBarPlotData[],
+    sortByOption: string
+): IMultipleCategoryBarPlotData[] {
+    const sortedMajorCategories = getSortedMajorCategories(data, sortByOption);
+
+    if (sortByOption === 'SortByTotalSum' || sortedMajorCategories.length > 0) {
+        const reorderCounts = (counts: any) => {
+            return sortedMajorCategories.map(category => {
+                return counts.find(
+                    (countItem: any) => countItem.majorCategory === category
+                );
+            });
+        };
+
+        data.forEach(item => {
+            item.counts = reorderCounts(item.counts);
+        });
+
+        if (sortByOption !== 'SortByTotalSum') {
+            const sortedEntityData = data.find(
+                item => item.minorCategory === sortByOption
+            );
+            if (sortedEntityData) {
+                data = data.filter(item => item.minorCategory !== sortByOption);
+                data.unshift(sortedEntityData);
+            }
+        }
+    }
+
+    return data;
+}
 
 export function makeBarSpecs(
     data: IMultipleCategoryBarPlotData[],
@@ -107,7 +172,8 @@ export function makeBarSpecs(
     categoryCoord: (categoryIndex: number) => number,
     horizontalBars: boolean,
     stacked: boolean,
-    percentage: boolean
+    percentage: boolean,
+    sortByOption: string | undefined
 ): {
     fill: string;
     data: {
@@ -119,11 +185,23 @@ export function makeBarSpecs(
         percentage: number;
     }[]; // one data per major category, in correct order - either specified, or alphabetical
 }[] {
-    // one bar spec per minor category, in correct order - either specified, or alphabetical
-    data = sortDataByCategory(data, d => d.minorCategory, minorCategoryOrder);
-    // reverse the order of stacked or horizontal bars
-    if ((!horizontalBars && stacked) || (horizontalBars && !stacked)) {
-        data = _.reverse(data);
+    if (
+        sortByOption &&
+        sortByOption !== '' &&
+        sortByOption !== 'alphabetically'
+    ) {
+        data = sortDataByOption(data, sortByOption);
+    } else {
+        // one bar spec per minor category, in correct order - either specified, or alphabetical
+        data = sortDataByCategory(
+            data,
+            d => d.minorCategory,
+            minorCategoryOrder
+        );
+        // reverse the order of stacked or horizontal bars
+        if ((!horizontalBars && stacked) || (horizontalBars && !stacked)) {
+            data = _.reverse(data);
+        }
     }
     return data.map(({ minorCategory, counts }) => {
         const fill = getColor(minorCategory);
@@ -134,7 +212,10 @@ export function makeBarSpecs(
         );
         return {
             fill,
-            data: sortedCounts.map((obj, index) => ({
+            data: (sortByOption != '' && sortByOption != 'alphabetically'
+                ? counts
+                : sortedCounts
+            ).map((obj, index) => ({
                 x: categoryCoord(index),
                 y: percentage ? obj.percentage : obj.count,
                 majorCategory: obj.majorCategory,
