@@ -123,7 +123,6 @@ describe('Mutation Table', function() {
         });
     });
 
-    // TODO: this test is not working, need to fix
     describe('try getting GNOMAD from genome nexus', function() {
         this.retries(0);
         before(async () => {

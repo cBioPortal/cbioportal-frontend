@@ -81,7 +81,7 @@ describe('Patient View Genomic Evolution tab screenshot tests', () => {
     it('pvge only show highlighted in line chart', async () => {
         await setCheckboxChecked(false, 'input[data-test="VAFSequentialMode"]');
         await setCheckboxChecked(true, 'input[data-test="VAFOnlyHighlighted"]');
-
+        await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
         const res = await browser.checkElement('[data-test=VAFChartWrapper]');
         assertScreenShotMatch(res);
     });
