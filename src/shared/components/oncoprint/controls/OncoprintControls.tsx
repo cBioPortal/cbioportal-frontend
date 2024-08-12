@@ -440,6 +440,7 @@ export default class OncoprintControls extends React.Component<
             case EVENT_KEY.openJupyterNotebook:
                 this.props.handlers.onClickDownload &&
                     this.props.handlers.onClickDownload('jupyterNoteBook');
+                break;
             case EVENT_KEY.viewNGCHM:
                 if (
                     this.props.state.ngchmButtonActive &&
