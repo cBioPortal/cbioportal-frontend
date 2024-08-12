@@ -17,7 +17,7 @@ export class CustomButtonConfig implements ICustomButtonConfig {
     visualize_href?: string;
     visualize_title?: string;
     visualize_description?: string;
-    visualize_image_src?: string;    
+    visualize_image_src?: string;
 
     public static parseCustomButtonConfigs(
         customButtonsJson: string
@@ -26,7 +26,8 @@ export class CustomButtonConfig implements ICustomButtonConfig {
             return [];
         } else {
             return JSON.parse(customButtonsJson).map(
-                (item: any) => new CustomButtonConfig(item as ICustomButtonConfig)
+                (item: any) =>
+                    new CustomButtonConfig(item as ICustomButtonConfig)
             );
         }
     }
@@ -35,13 +36,14 @@ export class CustomButtonConfig implements ICustomButtonConfig {
      * Creates a new instance of the CustomButtonConfig class.
      * @param config - The configuration object for the custom button.
      */
-    constructor(config : ICustomButtonConfig) {
+    constructor(config: ICustomButtonConfig) {
         this.id = config.id;
         this.name = config.name;
         this.tooltip = config.tooltip;
         this.image_src = config.image_src;
         this.required_user_agent = config.required_user_agent;
-        this.required_installed_font_family = config.required_installed_font_family;
+        this.required_installed_font_family =
+            config.required_installed_font_family;
         this.url_format = config.url_format;
         this.visualize_href = config.visualize_href;
         this.visualize_title = config.visualize_title;
