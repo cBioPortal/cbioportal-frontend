@@ -778,8 +778,8 @@ export default class ResultsViewOncoprint extends React.Component<
     // jupyternotebook modal handling:
 
     @observable public showJupyterNotebookModal = false;
-    @observable private jupyterFileContent = '';
-    @observable private jupyterFileName = '';
+    @observable private jupyterFileContent: string | undefined = '';
+    @observable private jupyterFileName: string | undefined = '';
 
     @action
     private openJupyterNotebookModal = () => {
@@ -789,6 +789,8 @@ export default class ResultsViewOncoprint extends React.Component<
     @action
     private closeJupyterNotebookModal = () => {
         this.showJupyterNotebookModal = false;
+        this.jupyterFileContent = undefined;
+        this.jupyterFileName = undefined;
     };
 
     private buildControlsHandlers() {
@@ -2426,12 +2428,14 @@ export default class ResultsViewOncoprint extends React.Component<
                     </div>
                 </div>
 
-                <JupyterNoteBookModal
-                    show={this.showJupyterNotebookModal}
-                    handleClose={this.closeJupyterNotebookModal}
-                    fileContent={this.jupyterFileContent}
-                    fileName={this.jupyterFileName}
-                />
+                {this.jupyterFileContent && this.jupyterFileName && (
+                    <JupyterNoteBookModal
+                        show={this.showJupyterNotebookModal}
+                        handleClose={this.closeJupyterNotebookModal}
+                        fileContent={this.jupyterFileContent}
+                        fileName={this.jupyterFileName}
+                    />
+                )}
             </div>
         );
     }
