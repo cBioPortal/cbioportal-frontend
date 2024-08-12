@@ -126,7 +126,9 @@ export class CustomButton extends React.Component<ICustomButtonProps, {}> {
         );
 
         if (this.props.downloadDataAsync) {
-            this.props.downloadDataAsync()?.then(data => this.handleDataReady(data));
+            this.props
+                .downloadDataAsync()
+                ?.then(data => this.handleDataReady(data));
         } else {
             console.error(this.config.name + ': downloadData is not defined');
         }

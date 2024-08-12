@@ -102,8 +102,7 @@ export class SimpleCopyDownloadControls extends React.Component<
     private downloadDataAsPromise = (): Promise<string | undefined> => {
         const data = this.props.downloadData?.();
         return Promise.resolve(data);
-    }
-
+    };
 
     private handleDownload() {
         if (this.props.downloadData) {

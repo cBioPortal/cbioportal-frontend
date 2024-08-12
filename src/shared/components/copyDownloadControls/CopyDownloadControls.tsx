@@ -113,7 +113,7 @@ export class CopyDownloadControls extends React.Component<
         } else {
             return Promise.resolve(undefined);
         }
-    }
+    };
 
     public downloadIndicatorModal(): JSX.Element {
         return (
