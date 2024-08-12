@@ -277,8 +277,7 @@ describe('case set selection in front page query form', () => {
 
     // Helper function for selecting the second study
     async function selectSecondStudy() {
-        await getElementByTestHandle('StudySelect', { timeout: 10000 });
-        await clickElement('[data-test="StudySelect"]');
+        await clickElement('.studyItem_acc_tcga', { timeout: 10000 });
 
         await clickQueryByGeneButton();
 
@@ -306,8 +305,8 @@ describe('case set selection in front page query form', () => {
             1,
             'Ampullary Carcinoma (Baylor College of Medicine, Cell Reports 2016)'
         );
-        await getElementByTestHandle('StudySelect', { timeout: 10000 });
-        await clickElement('[data-test="StudySelect"] input');
+
+        await clickElement('.studyItem_ampca_bcm_2016', { timeout: 10000 });
 
         await clickQueryByGeneButton();
 
