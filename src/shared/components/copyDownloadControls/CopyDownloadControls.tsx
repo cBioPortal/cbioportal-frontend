@@ -90,7 +90,7 @@ export class CopyDownloadControls extends React.Component<
                     copyLabel={this.props.copyLabel}
                     downloadLabel={this.props.downloadLabel}
                     handleDownload={this.handleDownload}
-                    downloadData={this.downloadDataAsStringAsync()}
+                    downloadDataAsync={this.downloadDataAsStringAsync}
                     handleCopy={this.handleCopy}
                     copyButtonRef={(el: HTMLButtonElement) => {
                         this._copyButton = el;
@@ -107,9 +107,11 @@ export class CopyDownloadControls extends React.Component<
      * Wrapper around downloadData() to return as a Promise<string> for ICopyDownloadButtonsProps
      * see TECH_DOWNLOADDATA
      */
-    private downloadDataAsStringAsync(): Promise<string> | undefined {
+    private downloadDataAsStringAsync = (): Promise<string | undefined> => {
         if (this.props.downloadData) {
             return this.props.downloadData().then(data => data.text);
+        } else {
+            return Promise.resolve(undefined);
         }
     }
 

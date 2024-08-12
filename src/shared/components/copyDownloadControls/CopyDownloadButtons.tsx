@@ -94,7 +94,7 @@ export class CopyDownloadButtons extends React.Component<
                         key={tool.id}
                         toolConfig={tool}
                         baseTooltipProps={this.baseTooltipProps}
-                        downloadData={this.props.downloadData}
+                        downloadDataAsync={this.props.downloadDataAsync}
                         overlayClassName={this.props.className}
                     />
                 );

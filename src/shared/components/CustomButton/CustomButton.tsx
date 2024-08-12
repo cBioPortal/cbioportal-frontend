@@ -80,7 +80,12 @@ export class CustomButton extends React.Component<ICustomButtonProps, {}> {
      * OPTIMIZE: compress the data or use a more efficient format
      * @param data The data to pass to the handler.
      */
-    handleDataReady(data: string) {
+    handleDataReady(data: string | undefined) {
+        if (!data) {
+            console.log('CustomButton: data is undefined');
+            return;
+        }
+
         const urlParametersLaunch: CustomButtonUrlParameters = {
             dataLength: data.length.toString(),
         };
@@ -120,8 +125,8 @@ export class CustomButton extends React.Component<ICustomButtonProps, {}> {
             'CustomButton.handleLaunchStart:' + this.props.toolConfig.id
         );
 
-        if (this.props.downloadData) {
-            this.props.downloadData.then(data => this.handleDataReady(data));
+        if (this.props.downloadDataAsync) {
+            this.props.downloadDataAsync()?.then(data => this.handleDataReady(data));
         } else {
             console.error(this.config.name + ': downloadData is not defined');
         }

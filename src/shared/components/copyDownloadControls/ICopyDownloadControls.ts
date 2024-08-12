@@ -22,5 +22,5 @@ export interface ICopyDownloadInputsProps {
     handleCopy?: () => void;
     // expose downloadData() to allow button to handle the data on it's own.
     // TECH_DOWNLOADDATA: CopyDownloadButtons.downloadData needs to be async so it can work with either async context (IAsyncCopyDownloadControlsProps) or synchronous context (SimpleCopyDownloadControls)
-    downloadData?: Promise<string>;
+    downloadDataAsync?: () => Promise<string | undefined>;
 }

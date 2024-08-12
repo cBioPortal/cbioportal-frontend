@@ -45,7 +45,7 @@ describe('CustomButton Component', () => {
         },
         baseTooltipProps: {},
         overlayClassName: '',
-        downloadData: Promise.resolve(testData),
+        downloadDataAsync: () => Promise.resolve(testData),
         urlFormatOverrides: {},
     };
 
