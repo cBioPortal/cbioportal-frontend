@@ -245,14 +245,14 @@ export function getGenomeNexusHgvsgUrl(
         : `${getServerConfig().genomenexus_website_url}/variant/${hgvsg}`;
 }
 
-export function getSessionUrl() {
+export function getSessionUrl(path = 'api/session') {
     if (getServerConfig() && getServerConfig().hasOwnProperty('apiRoot')) {
         // TODO: remove this after switch to AWS. This is a hack to use proxy
         // session-service from non apiRoot. We'll have to come up with a better
         // solution for auth portals
-        return buildCBioPortalPageUrl('api/session');
+        return buildCBioPortalPageUrl(path);
     } else {
-        return buildCBioPortalAPIUrl('api/session');
+        return buildCBioPortalAPIUrl(path);
     }
 }
 

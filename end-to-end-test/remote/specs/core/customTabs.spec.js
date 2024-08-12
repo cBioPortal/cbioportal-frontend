@@ -1,13 +1,18 @@
-var assert = require('assert');
-
-var goToUrlAndSetLocalStorage = require('../../../shared/specUtils')
-    .goToUrlAndSetLocalStorage;
-var setServerConfiguration = require('../../../shared/specUtils')
-    .setServerConfiguration;
+const assert = require('assert');
+const {
+    setServerConfiguration,
+    goToUrlAndSetLocalStorage,
+    getElement,
+    clickElement,
+} = require('../../../shared/specUtils_Async');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
-function customTabBase(location) {
+const getBrowserHeight = async () => {
+    return Number((await browser.getWindowSize()).height);
+};
+
+const customTabBase = location => {
     return [
         {
             title: 'Sync Tab',
@@ -33,58 +38,81 @@ function customTabBase(location) {
            }`,
         },
     ];
-}
+};
 
-function goToUrlWithCustomTabConfig(url, custom_tabs) {
-    browser.url(`${CBIOPORTAL_URL}/blank`);
-    setServerConfiguration({
-        custom_tabs,
-    });
-    goToUrlAndSetLocalStorage(url);
-}
+const goToUrlWithCustomTabConfig = async (url, custom_tabs) => {
+    await browser.url(`${CBIOPORTAL_URL}/blank`);
+    setServerConfiguration({ custom_tabs });
+    await goToUrlAndSetLocalStorage(url);
+};
 
-function runTests(pageName, url, tabLocation) {
+const waitForMainTabs = async () => {
+    await browser.waitUntil(
+        async () => {
+            return await (await getElement('.mainTabs')).isDisplayed();
+        },
+        { timeout: 50000 }
+    );
+};
+
+const runTests = async (pageName, url, tabLocation) => {
     describe(`${pageName} Custom Tabs`, () => {
-        it.skip('Sync and async hide/show works', function() {
+        before(
+            async () =>
+                await browser.setWindowSize(2000, await getBrowserHeight())
+        );
+
+        it.skip('Sync and async hide/show works', async function() {
             this.retries(0);
 
-            goToUrlWithCustomTabConfig(url, customTabBase(tabLocation));
+            await goToUrlWithCustomTabConfig(url, customTabBase(tabLocation));
 
-            browser.execute(() => {
-                window.renderCustomTab1 = function(div, tab) {
-                    $(div).append(
+            await browser.execute(() => {
+                window.renderCustomTab1 = async function(div, tab) {
+                    (await getElement(div)).append(
                         `<div>this is the content for ${tab.title}</div>`
                     );
                 };
             });
 
-            $('.mainTabs').waitForDisplayed();
+            await waitForMainTabs();
 
             assert.equal(
-                $('=Async Tab').isDisplayed(),
+                await (await getElement('=Async Tab')).isDisplayed(),
                 false,
                 'We do NOT see async tab initially'
             );
 
-            assert($('=Sync Tab').isDisplayed(), 'We see sync tab immediately');
+            assert(
+                await (await getElement('=Sync Tab')).isDisplayed(),
+                'We see sync tab immediately'
+            );
 
-            browser.pause(6000);
+            await browser.pause(6000);
 
             assert(
-                $('=Async Tab').isDisplayed(),
+                await (await getElement('=Async Tab')).isDisplayed(),
                 'Async tab displays after pause'
             );
 
-            $('=Sync Tab').click();
+            await (await getElement('=Sync Tab')).click();
 
-            assert($('div=this is the content for Sync Tab').isDisplayed());
+            assert(
+                await (
+                    await getElement('div=this is the content for Sync Tab')
+                ).isDisplayed()
+            );
 
-            $('=Async Tab').click();
+            await (await getElement('=Async Tab')).click();
 
-            assert($('div=this is the content for Async Tab').isDisplayed());
+            assert(
+                await (
+                    await getElement('div=this is the content for Async Tab')
+                ).isDisplayed()
+            );
         });
 
-        it('Tab page location configuration is obeyed', () => {
+        it('Tab page location configuration is obeyed', async () => {
             const conf = [
                 {
                     title: 'Patient Tab',
@@ -102,26 +130,26 @@ function runTests(pageName, url, tabLocation) {
                 },
             ];
 
-            goToUrlWithCustomTabConfig(url, conf);
+            await goToUrlWithCustomTabConfig(url, conf);
 
-            browser.setWindowSize(2000, browser.getWindowSize().height);
+            await browser.setWindowSize(2500, await getBrowserHeight());
 
-            $('.mainTabs').waitForDisplayed();
+            await waitForMainTabs();
 
             assert.equal(
-                $('=Patient Tab').isDisplayed(),
+                await (await getElement('=Patient Tab')).isDisplayed(),
                 false,
                 'We do NOT see hidden tab'
             );
 
             assert.equal(
-                $('=Result Tab').isDisplayed(),
+                await (await getElement('=Result Tab')).isDisplayed(),
                 true,
                 'We do see showing tab'
             );
         });
 
-        it('Hide property indeed hides custom tab', () => {
+        it('Hide property indeed hides custom tab', async () => {
             const conf = [
                 {
                     title: 'Hidden Tab',
@@ -141,26 +169,26 @@ function runTests(pageName, url, tabLocation) {
                 },
             ];
 
-            goToUrlWithCustomTabConfig(url, conf);
+            await goToUrlWithCustomTabConfig(url, conf);
 
-            browser.setWindowSize(2000, browser.getWindowSize().height);
+            await browser.setWindowSize(2000, Number(await getBrowserHeight()));
 
-            $('.mainTabs').waitForDisplayed();
+            await waitForMainTabs();
 
             assert.equal(
-                $('=Hidden Tab').isDisplayed(),
+                await (await getElement('=Hidden Tab')).isDisplayed(),
                 false,
                 'We do NOT see hidden tab'
             );
 
             assert.equal(
-                $('=Showing Tab').isDisplayed(),
+                await (await getElement('=Showing Tab')).isDisplayed(),
                 true,
                 'We do see showing tab'
             );
         });
 
-        it('Routing directly to conditional tab forces it to show', () => {
+        it('Routing directly to conditional tab forces it to show', async () => {
             const conf = [
                 {
                     title: 'Async Tab',
@@ -188,33 +216,46 @@ function runTests(pageName, url, tabLocation) {
                 },
             ];
 
-            goToUrlWithCustomTabConfig(url.replace(/\?/, '/customTab1?'), conf);
+            await goToUrlWithCustomTabConfig(
+                url.replace(/\?/, '/customTab1?'),
+                conf
+            );
+            await waitForMainTabs();
 
-            $('.mainTabs').waitForDisplayed();
+            // TODO: why are we assert
+            assert.equal(
+                await (
+                    await getElement('[data-test=LoadingIndicator]', {
+                        timeout: 5000,
+                    })
+                ).isDisplayed(),
+                true,
+                'tab loading indicator is showing'
+            );
 
+            // TODO: this is not a quality test
             // when we are directly routed to tab
             // the navigation tab button DOES show
             // even though hideAsync is still pending
+
             assert.equal(
-                $('=Async Tab').isDisplayed(),
+                await (
+                    await getElement('=Async Tab', {
+                        timeout: 5000,
+                    })
+                ).isDisplayed(),
                 true,
                 'We see pending custom tab button when routed to it'
             );
 
             assert.equal(
-                $('[data-test=LoadingIndicator]').isDisplayed(),
-                true,
-                'tab loading indicator is showing'
-            );
-
-            assert.equal(
-                $('=Async Tab 2').isDisplayed(),
+                await (await getElement('=Async Tab 2')).isDisplayed(),
                 false,
                 'We do not see the second custom tab button'
             );
         });
 
-        it('Remounts tab only when tracked url param changes (part of hash in url wrapper)', function() {
+        it('Remounts tab only when tracked url param changes (part of hash in url wrapper)', async () => {
             const conf = [
                 {
                     title: 'Async Tab',
@@ -231,39 +272,49 @@ function runTests(pageName, url, tabLocation) {
                 },
             ];
 
-            goToUrlWithCustomTabConfig(url, conf);
+            await goToUrlWithCustomTabConfig(url, conf);
 
-            browser.setWindowSize(1600, browser.getWindowSize().height);
+            await waitForMainTabs();
 
-            browser.execute(() => {
-                window.renderCustomTab1 = function(div, tab) {
+            await browser.setWindowSize(2000, await getBrowserHeight());
+
+            await browser.execute(() => {
+                window.renderCustomTab1 = div => {
                     $(div).append(`<div>First render</div>`);
                 };
             });
 
             // offset to avoid overlapping elements
-            $('=Async Tab').click();
+            await clickElement('=Async Tab');
 
-            browser.pause(1000);
+            await browser.pause(1000);
 
-            assert($('div=First render').isDisplayed());
+            assert(await (await getElement('div=First render')).isDisplayed());
 
             // redefine custom tab render
             // so we can see when it's called
-            browser.execute(() => {
-                window.renderCustomTab1 = function(div, tab) {
+            await browser.execute(() => {
+                window.renderCustomTab1 = function(div, _tab) {
                     $(div).append(`<div>Second render</div>`);
                 };
             });
 
+            await browser.pause(2000);
+
             // switch to new tab and then back
-            $$('.mainTabs .tabAnchor')[0].click();
-            $('=Async Tab').click();
+            await clickElement('.mainTabs .tabAnchor');
+            await clickElement('=Async Tab');
+
+            const render1 = await (
+                await getElement('div=First render')
+            ).isDisplayed();
+            const render2 = await (
+                await getElement('div=Second render')
+            ).isDisplayed();
 
             // we haven't re-mounted the tab
             assert(
-                $('div=First render').isDisplayed() &&
-                    !$('div=Second render').isDisplayed(),
+                !render2 && render1,
                 "merely switching tabs didn't call mount function"
             );
 
@@ -279,33 +330,37 @@ function runTests(pageName, url, tabLocation) {
             // kinda annoying, i know
             switch (tabLocation) {
                 case 'RESULTS_PAGE':
-                    browser.execute(() => {
+                    await browser.execute(() => {
                         window.urlWrapper.updateRoute({
                             gene_list: 'BRAF KRAS',
                         });
                     });
                     break;
                 case 'PATIENT_PAGE':
-                    $('.nextPageBtn').isDisplayed() &&
-                        $('.nextPageBtn').click();
+                    await (await getElement('.nextPageBtn')).isDisplayed();
+                    await clickElement('.nextPageBtn');
                     break;
                 case 'COMPARISON_PAGE':
-                    $("[data-test='groupSelectorButtonMSI/CIMP']").click();
+                    await clickElement(
+                        "[data-test='groupSelectorButtonMSI/CIMP']"
+                    );
                     break;
                 case 'STUDY_PAGE':
                     // For study page, I do not see a way to evoke a remount (eg. by changing query params)
                     break;
             }
 
-            $('div=Second render').waitForDisplayed();
+            await browser.pause(2000);
+
+            await (await getElement('div=Second render')).waitForDisplayed();
 
             assert(
-                $('div=Second render').isDisplayed(),
+                await (await getElement('div=Second render')).isDisplayed(),
                 'changing query causes custom tab to remount'
             );
         });
     });
-}
+};
 
 const resultsUrl = `${CBIOPORTAL_URL}/results?cancer_study_list=coadread_tcga_pub&cancer_study_id=coadread_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&Z_SCORE_THRESHOLD=2.0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS%20NRAS%20BRAF`;
 
@@ -345,63 +400,70 @@ describe('Patient Cohort View Custom Tab Tests', () => {
         },
     ];
 
-    it('Navigating between patients changes tab contents', function() {
+    it('Navigating between patients changes tab contents', async function() {
         this.retries(0);
 
-        goToUrlWithCustomTabConfig(patientUrl, conf);
+        await goToUrlWithCustomTabConfig(patientUrl, conf);
 
-        $('a=Summary').waitForDisplayed();
+        await (await getElement('a=Summary')).waitForDisplayed();
 
-        const asyncExists = $('a=Async Tab').isExisting();
+        const asyncExists = await (
+            await getElement('a=Async Tab')
+        ).isExisting();
 
         if (asyncExists) {
             assert.fail("Async exists when it shouldn't!");
         }
 
-        $('=Sync Tab').click();
+        await clickElement('=Sync Tab');
 
         assert.equal(
-            $('div=tab for patient TCGA-AP-A053').isDisplayed(),
+            await (
+                await getElement('div=tab for patient TCGA-AP-A053')
+            ).isDisplayed(),
             true,
             'We first patient'
         );
 
-        browser.pause(11000);
+        await browser.pause(11000);
 
         assert.equal(
-            $('=Async Tab').isDisplayed(),
+            await (await getElement('=Async Tab')).isDisplayed(),
             true,
             'Async tab has showed up'
         );
 
-        $('.nextPageBtn').click();
+        await clickElement('.nextPageBtn');
 
-        $('.mainTabs').waitForDisplayed();
+        await (await getElement('.mainTabs')).waitForDisplayed();
 
         assert.equal(
-            $('=Async Tab').isDisplayed(),
+            await (await getElement('=Async Tab')).isDisplayed(),
             false,
             'Async is hidden again (pending)'
         );
 
         assert.equal(
-            $('div=tab for patient TCGA-BG-A0M8').isDisplayed(),
+            await (
+                await getElement('div=tab for patient TCGA-BG-A0M8')
+            ).isDisplayed(),
             true,
             'We see next patient'
         );
 
-        $('.prevPageBtn').waitForDisplayed();
+        await (await getElement('.prevPageBtn')).waitForDisplayed();
 
-        $('.prevPageBtn').click();
+        await clickElement('.prevPageBtn');
 
-        $('div=tab for patient TCGA-AP-A053').waitForDisplayed();
+        await (
+            await getElement('div=tab for patient TCGA-AP-A053')
+        ).waitForDisplayed();
     });
 });
 
-runTests('ResultsView', resultsUrl, 'RESULTS_PAGE');
-
-runTests('StudyView', studyUrl, 'STUDY_PAGE');
-
-runTests('PatientView', patientUrl, 'PATIENT_PAGE');
-
-runTests('ComparisonPage', comparisonUrl, 'COMPARISON_PAGE');
+describe('It runs test for the respective Tab views', async () => {
+    await runTests('ResultsView', resultsUrl, 'RESULTS_PAGE');
+    await runTests('StudyView', studyUrl, 'STUDY_PAGE');
+    await runTests('PatientView', patientUrl, 'PATIENT_PAGE');
+    await runTests('ComparisonPage', comparisonUrl, 'COMPARISON_PAGE');
+});
