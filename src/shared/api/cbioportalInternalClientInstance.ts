@@ -84,5 +84,7 @@ proxyColumnStore(internalClientColumnStore, 'fetchClinicalDataDensityPlot');
 proxyColumnStore(internalClientColumnStore, 'fetchMutationDataCounts');
 proxyColumnStore(internalClientColumnStore, 'fetchPatientTreatmentCounts');
 proxyColumnStore(internalClientColumnStore, 'fetchSampleTreatmentCounts');
+proxyColumnStore(internalClientColumnStore, 'fetchClinicalDataDensityPlot');
+proxyColumnStore(internalClientColumnStore, 'getClinicalEventTypeCounts');
 
 export default internalClient;
