@@ -34,7 +34,7 @@ import classnames from 'classnames';
 import { toConditionalPrecisionWithMinimum } from 'shared/lib/FormatUtils';
 import { IStringAxisData } from 'shared/components/plots/PlotsTabUtils';
 import WindowStore from 'shared/components/window/WindowStore';
-
+import { SortByOptions } from 'shared/components/plots/PlotsTab';
 export interface IMultipleCategoryBarPlotProps {
     svgId?: string;
     domainPadding?: number;
@@ -432,9 +432,9 @@ export default class MultipleCategoryBarPlot extends React.Component<
     @computed get labels() {
         if (this.data.length > 0) {
             if (
-                this.props.sortByOption === 'SortByTotalSum' ||
+                this.props.sortByOption === SortByOptions.SortByTotalSum ||
                 (this.props.sortByOption !== '' &&
-                    this.props.sortByOption !== 'alphabetically')
+                    this.props.sortByOption !== SortByOptions.Alphabetically)
             ) {
                 return getSortedMajorCategories(
                     this.data,
