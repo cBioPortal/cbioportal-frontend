@@ -112,14 +112,13 @@ export function getSortedMajorCategories(
 
         data.forEach(item => {
             item.counts.forEach(countItem => {
-                const { majorCategory, count } = countItem;
+                const { majorCategory, percentage, count } = countItem;
                 if (!majorCategoryCounts[majorCategory]) {
                     majorCategoryCounts[majorCategory] = 0;
                 }
                 majorCategoryCounts[majorCategory] += count;
             });
         });
-        console.log(majorCategoryCounts, 'this is major');
         return Object.keys(majorCategoryCounts).sort(
             (a, b) => majorCategoryCounts[b] - majorCategoryCounts[a]
         );
@@ -131,7 +130,7 @@ export function getSortedMajorCategories(
             item => item.minorCategory === sortByOption
         );
         if (sortedEntityData) {
-            sortedEntityData.counts.sort((a, b) => b.count - a.count);
+            sortedEntityData.counts.sort((a, b) => b.percentage - a.percentage);
 
             return sortedEntityData.counts.map(item => item.majorCategory);
         }
@@ -147,7 +146,6 @@ export function sortDataByOption(
 
     if (sortByOption === 'SortByTotalSum' || sortedMajorCategories.length > 0) {
         const reorderCounts = (counts: CountItem[]): CountItem[] => {
-            console.log('Counts structure:', counts);
             return sortedMajorCategories
                 .map(category =>
                     counts.find(
