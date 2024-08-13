@@ -4596,7 +4596,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                             </div>
                         </div>
                     )}
-                    {DiscreteVsDiscretePlotType.StackedBar && (
+                    {this.stackedBar && (
                         <div className="form-group">
                             <label>Sort By</label>
                             <div style={{ display: 'flex' }}>
