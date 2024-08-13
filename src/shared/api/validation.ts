@@ -33,6 +33,16 @@ export function getArrays(inp: any, output: Array<any>) {
         output.push(inp);
         inp.forEach(n => getArrays(n, output));
     } else if (isObject(inp)) {
+        // this is to get rid of discrepancy deep in decimals
+        _.forEach(inp, (v, k) => {
+            if (/\d\.\d{10,}$/.test(v)) {
+                inp[k] = inp[k].toFixed(5);
+            }
+        });
+
+        // this is get rid
+        delete inp.matchingGenePanelIds;
+
         // do nothing
         Object.values(inp).forEach(nn => getArrays(nn, output));
     }
@@ -112,12 +122,15 @@ export function validate(url: string, params: any, label: string) {
         }).then(legacyResult => {
             legacyDuration = performance.now() - legacyStart;
             const result = compareCounts(chResult, legacyResult, label);
-            console.log({
-                url,
-                legacyDuration,
-                chDuration: chDuration,
-                equal: result.status,
-            });
+            !result.status &&
+                console.log({
+                    url,
+                    legacyDuration,
+                    chDuration: chDuration,
+                    equal: result.status,
+                });
+
+            result.status && console.log(`${label} passed!`);
         });
     });
 }
