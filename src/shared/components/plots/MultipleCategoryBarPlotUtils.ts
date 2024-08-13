@@ -1,7 +1,12 @@
 import { IStringAxisData } from './PlotsTabUtils';
+import { SortByOptions } from './PlotsTab';
 import _ from 'lodash';
 import { IMultipleCategoryBarPlotData } from '../../../pages/groupComparison/MultipleCategoryBarPlot';
-
+interface CountItem {
+    majorCategory: string;
+    count: number;
+    percentage: number;
+}
 export function makePlotData(
     horzData: IStringAxisData['data'],
     vertData: IStringAxisData['data'],
@@ -103,7 +108,7 @@ export function getSortedMajorCategories(
     sortByOption: string | undefined
 ): string[] {
     if (sortByOption === 'SortByTotalSum') {
-        const majorCategoryCounts: any = {};
+        const majorCategoryCounts: { [key: string]: number } = {};
 
         data.forEach(item => {
             item.counts.forEach(countItem => {
@@ -114,11 +119,14 @@ export function getSortedMajorCategories(
                 majorCategoryCounts[majorCategory] += count;
             });
         });
-
+        console.log(majorCategoryCounts, 'this is major');
         return Object.keys(majorCategoryCounts).sort(
             (a, b) => majorCategoryCounts[b] - majorCategoryCounts[a]
         );
-    } else if (sortByOption !== '' && sortByOption !== 'alphabetically') {
+    } else if (
+        sortByOption !== '' &&
+        sortByOption !== SortByOptions.Alphabetically
+    ) {
         const sortedEntityData = data.find(
             item => item.minorCategory === sortByOption
         );
@@ -138,15 +146,19 @@ export function sortDataByOption(
     const sortedMajorCategories = getSortedMajorCategories(data, sortByOption);
 
     if (sortByOption === 'SortByTotalSum' || sortedMajorCategories.length > 0) {
-        const reorderCounts = (counts: any) => {
-            return sortedMajorCategories.map(category => {
-                return counts.find(
-                    (countItem: any) => countItem.majorCategory === category
-                );
-            });
+        const reorderCounts = (counts: CountItem[]): CountItem[] => {
+            console.log('Counts structure:', counts);
+            return sortedMajorCategories
+                .map(category =>
+                    counts.find(
+                        (countItem: CountItem) =>
+                            countItem.majorCategory === category
+                    )
+                )
+                .filter((item): item is CountItem => item !== undefined); // Filter out undefined values
         };
 
-        data.forEach(item => {
+        data.forEach((item: IMultipleCategoryBarPlotData) => {
             item.counts = reorderCounts(item.counts);
         });
 
@@ -157,11 +169,13 @@ export function sortDataByOption(
             if (sortedEntityData) {
                 data = data.filter(item => item.minorCategory !== sortByOption);
                 data.unshift(sortedEntityData);
+            } else {
+                return data; // Early return if no sorted entity found
             }
         }
     }
 
-    return data;
+    return data; // Return the sorted data
 }
 
 export function makeBarSpecs(
@@ -188,7 +202,7 @@ export function makeBarSpecs(
     if (
         sortByOption &&
         sortByOption !== '' &&
-        sortByOption !== 'alphabetically'
+        sortByOption !== SortByOptions.Alphabetically
     ) {
         data = sortDataByOption(data, sortByOption);
     } else {
@@ -212,7 +226,8 @@ export function makeBarSpecs(
         );
         return {
             fill,
-            data: (sortByOption != '' && sortByOption != 'alphabetically'
+            data: (sortByOption != '' &&
+            sortByOption != SortByOptions.Alphabetically
                 ? counts
                 : sortedCounts
             ).map((obj, index) => ({

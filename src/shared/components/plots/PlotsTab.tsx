@@ -210,6 +210,11 @@ export enum DiscreteVsDiscretePlotType {
     Table = 'Table',
 }
 
+export enum SortByOptions {
+    Alphabetically = 'alphabetically',
+    SortByTotalSum = 'SortByTotalSum',
+}
+
 export enum MutationCountBy {
     MutationType = 'MutationType',
     MutatedVsWildType = 'MutatedVsWildType',
@@ -443,7 +448,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     private scrollingDummyPane = false;
     @observable plotElementWidth = 0;
     @observable sortByDropDownOptions: { value: string; label: string }[] = [];
-    @observable sortByOption: string = 'alphabetically';
+    @observable sortByOption: string = SortByOptions.Alphabetically;
     @observable boxPlotSortByMedian = false;
     @observable.ref searchCaseInput: string;
     @observable.ref searchMutationInput: string;
@@ -467,8 +472,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     @observable _vertGenericAssaySearchText: string = '';
 
     private defaultOptions = [
-        { value: 'alphabetically', label: 'Alphabetically' },
-        { value: 'SortByTotalSum', label: 'Number of samples' },
+        { value: SortByOptions.Alphabetically, label: 'Alphabetically' },
+        { value: SortByOptions.SortByTotalSum, label: 'Number of samples' },
     ];
 
     @action.bound
@@ -4596,7 +4601,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                             </div>
                         </div>
                     )}
-                    {this.stackedBar && (
+                    {this.discreteVsDiscretePlotType == 'StackedBar' && (
                         <div className="form-group">
                             <label>Sort By</label>
                             <div style={{ display: 'flex' }}>
