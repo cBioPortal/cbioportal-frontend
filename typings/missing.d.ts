@@ -2,6 +2,7 @@
 declare module '*.scss';
 declare module '*.json';
 declare module '*.md';
+declare module '*.svg';
 
 // these packages are missing typings
 declare module 'fmin';
