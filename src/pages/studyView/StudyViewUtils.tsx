@@ -49,7 +49,9 @@ import {
 } from './StudyViewPageStore';
 import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
 import { Layout } from 'react-grid-layout';
-import internalClient from 'shared/api/cbioportalInternalClientInstance';
+import internalClient, {
+    getInteralClient,
+} from 'shared/api/cbioportalInternalClientInstance';
 import defaultClient from 'shared/api/cbioportalClientInstance';
 import client from 'shared/api/cbioportalClientInstance';
 import {
@@ -2541,7 +2543,7 @@ export function getSamplesByExcludingFiltersOnChart(
             updatedFilter.sampleIdentifiers = queriedSampleIdentifiers;
         }
     }
-    return internalClient.fetchFilteredSamplesUsingPOST({
+    return getInteralClient().fetchFilteredSamplesUsingPOST({
         studyViewFilter: updatedFilter,
     });
 }
@@ -3184,7 +3186,7 @@ export async function getAllClinicalDataByStudyViewFilter(
     const [remoteClinicalDataCollection, totalItems]: [
         SampleClinicalDataCollection,
         number
-    ] = await internalClient
+    ] = await getInteralClient()
         .fetchClinicalDataClinicalTableUsingPOSTWithHttpInfo({
             studyViewFilter,
             pageSize: pageSize | 500,
@@ -4075,7 +4077,7 @@ export async function invokeGenericAssayDataCount(
     chartInfo: GenericAssayChart,
     filters: StudyViewFilter
 ) {
-    const result: GenericAssayDataCountItem[] = await internalClient.fetchGenericAssayDataCountsUsingPOST(
+    const result: GenericAssayDataCountItem[] = await getInteralClient().fetchGenericAssayDataCountsUsingPOST(
         {
             genericAssayDataCountFilter: {
                 genericAssayDataFilters: [
@@ -4137,12 +4139,16 @@ export async function invokeGenomicDataCount(
                 projection: 'SUMMARY',
             },
         };
-        result = await internalClient.fetchMutationDataCountsUsingPOST(params);
+        result = await getInteralClient().fetchMutationDataCountsUsingPOST(
+            params
+        );
         getDisplayedValue = transformMutatedType;
         getDisplayedColor = (value: string) =>
             getMutationColorByCategorization(transformMutatedType(value));
     } else {
-        result = await internalClient.fetchGenomicDataCountsUsingPOST(params);
+        result = await getInteralClient().fetchGenomicDataCountsUsingPOST(
+            params
+        );
         getDisplayedValue = getCNAByAlteration;
         getDisplayedColor = (value: string | number) =>
             getCNAColorByAlteration(getCNAByAlteration(value));
@@ -4196,7 +4202,7 @@ export async function invokeMutationDataCount(
         },
     } as any;
 
-    const result = await internalClient.fetchMutationDataCountsUsingPOST(
+    const result = await getInteralClient().fetchMutationDataCountsUsingPOST(
         params
     );
 

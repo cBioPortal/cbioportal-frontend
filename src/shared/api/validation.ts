@@ -42,6 +42,7 @@ export function getArrays(inp: any, output: Array<any>) {
 
         // this is get rid
         delete inp.matchingGenePanelIds;
+        delete inp.cytoband;
 
         // do nothing
         Object.values(inp).forEach(nn => getArrays(nn, output));
@@ -62,6 +63,7 @@ export function deepSort(inp: any) {
                 'value',
                 'hugoGeneSymbol',
                 'uniqueSampleKey',
+                'alteration',
             ];
             fields.forEach(f => attemptSort(f, arr));
         }
