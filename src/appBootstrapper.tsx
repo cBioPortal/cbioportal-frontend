@@ -144,7 +144,9 @@ browserWindow.postLoadForMskCIS = () => {};
 (browserWindow as any).$3Dmol = { notrack: true };
 
 // make sure lodash doesn't overwrite (or set) global underscore
-_.noConflict();
+//_.noConflict();
+
+getBrowserWindow()._ = _;
 
 const routingStore = new ExtendedRoutingStore();
 

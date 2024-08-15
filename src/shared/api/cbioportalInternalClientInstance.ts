@@ -25,7 +25,7 @@ function proxyColumnStore(client: any, endpoint: string) {
         const endpoints = [
             'ClinicalDataCounts',
             'MutatedGenes',
-            'CaseList',
+            //'CaseList',
             'ClinicalDataBin',
             'MolecularProfileSample',
             'CNAGenes',

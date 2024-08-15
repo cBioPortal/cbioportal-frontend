@@ -12,7 +12,7 @@ export const isObject = (value: any) => {
     );
 };
 
-export function dynamicSort(property: string) {
+export function dynamicSortSingle(property: string) {
     var sortOrder = 1;
     if (property[0] === '-') {
         sortOrder = -1;
@@ -26,6 +26,31 @@ export function dynamicSort(property: string) {
             a[property] < b[property] ? -1 : a[property] > b[property] ? 1 : 0;
         return result * sortOrder;
     };
+}
+
+export function dynamicSort(property: string[]) {
+    if (property.length === 1) {
+        return dynamicSortSingle(property[0]);
+    } else {
+        const prop1 = property[0];
+        const prop2 = property[1];
+        return function(a: any, b: any) {
+            /* next line works with strings and numbers,
+             * and you may want to customize it to your needs
+             */
+            let af = a[prop1];
+            let bf = b[prop1];
+            let as = a[prop2];
+            let bs = b[prop2];
+
+            // If first value is same
+            if (af == bf) {
+                return as < bs ? -1 : as > bs ? 1 : 0;
+            } else {
+                return af < bf ? -1 : 1;
+            }
+        };
+    }
 }
 
 export function getArrays(inp: any, output: Array<any>) {
@@ -43,6 +68,7 @@ export function getArrays(inp: any, output: Array<any>) {
         // this is get rid
         delete inp.matchingGenePanelIds;
         delete inp.cytoband;
+        delete inp.numberOfProfiledCases;
 
         // do nothing
         Object.values(inp).forEach(nn => getArrays(nn, output));
@@ -50,7 +76,12 @@ export function getArrays(inp: any, output: Array<any>) {
     return output;
 }
 
-export function deepSort(inp: any) {
+const sortFields: Record<string, string> = {
+    ClinicalDataBin: 'attributeId,specialValue',
+    FilteredSamples: 'patientId,sampleId',
+};
+
+export function deepSort(inp: any, label: string) {
     const arrs = getArrays(inp, []);
 
     arrs.forEach(arr => {
@@ -58,47 +89,38 @@ export function deepSort(inp: any) {
         if (!isObject(arr[0])) {
             arr.sort();
         } else {
-            const fields = [
-                'attributeId',
-                'value',
-                'hugoGeneSymbol',
-                'uniqueSampleKey',
-                'alteration',
-            ];
-            fields.forEach(f => attemptSort(f, arr));
+            if (sortFields[label]) {
+                attemptSort(sortFields[label].split(','), arr);
+            } else {
+                const fields = [
+                    'attributeId',
+                    'value',
+                    'hugoGeneSymbol',
+                    'uniqueSampleKey',
+                    'alteration',
+                ];
+                fields.forEach(f => attemptSort([f], arr));
+            }
         }
     });
 
     return inp;
 }
 
-function attemptSort(key: string, arr: any) {
-    if (key in arr[0]) arr.sort(dynamicSort(key));
+function attemptSort(keys: string[], arr: any) {
+    arr.sort(dynamicSort(keys));
 }
 
 export function compareCounts(clData: any, legacyData: any, label: string) {
-    const clDataSorted = deepSort(clData);
-    const legacyDataSorted = deepSort(legacyData);
+    const clDataSorted = deepSort(clData, label);
+    const legacyDataSorted = deepSort(legacyData, label);
 
     const result =
         JSON.stringify(clDataSorted) === JSON.stringify(legacyDataSorted);
 
-    if (result === false) {
-        _.forEach(clDataSorted, (cl: any, i: number) => {
-            if (JSON.stringify(cl) !== JSON.stringify(legacyDataSorted[i])) {
-                console.log(
-                    `first invalid item (${label})`,
-                    'Clickhouse:',
-                    cl,
-                    'Legacy:',
-                    legacyDataSorted[i]
-                );
-                return false;
-            }
-        });
-    }
-
     return {
+        clDataSorted,
+        legacyDataSorted,
         status: result,
     };
 }
@@ -124,6 +146,9 @@ export function validate(url: string, params: any, label: string) {
         }).then(legacyResult => {
             legacyDuration = performance.now() - legacyStart;
             const result = compareCounts(chResult, legacyResult, label);
+
+            !result.status && console.group(`${label} failed :(`);
+
             !result.status &&
                 console.log({
                     url,
@@ -132,7 +157,34 @@ export function validate(url: string, params: any, label: string) {
                     equal: result.status,
                 });
 
-            result.status && console.log(`${label} passed!`);
+            result.status &&
+                console.log(
+                    `${label} passed :) ch: ${chDuration.toFixed(
+                        0
+                    )} legacy: ${legacyDuration.toFixed(0)}`
+                );
+
+            if (!result.status) {
+                _.forEach(result.clDataSorted, (cl: any, i: number) => {
+                    if (
+                        JSON.stringify(cl) !==
+                        JSON.stringify(result.legacyDataSorted[i])
+                    ) {
+                        console.log(
+                            `First invalid item (${label})`,
+                            'Clickhouse:',
+                            cl,
+                            'Legacy:',
+                            result.legacyDataSorted[i]
+                        );
+                        return false;
+                    }
+                });
+                console.log('legacy', result.legacyDataSorted);
+                console.log('CH', result.clDataSorted);
+            }
+
+            !result.status && console.groupEnd();
         });
     });
 }

@@ -183,7 +183,7 @@ export default class StudyViewPage extends React.Component<
         const query = props.routing.query;
         const hash = props.routing.location.hash;
         // clear hash if any
-        props.routing.location.hash = '';
+        //props.routing.location.hash = '';
         const newStudyViewFilter: StudyViewURLQuery = _.pick(query, [
             'id',
             'studyId',
