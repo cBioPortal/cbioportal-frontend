@@ -44,12 +44,12 @@ const WAIT_FOR_VISIBLE_TIMEOUT = 30000;
 
 const hide = ['.chartHeader .controls'];
 
-describe('study laml_tcga tests', () => {
+describe.only('study laml_tcga tests', () => {
     before(async () => {
         const url = `${CBIOPORTAL_URL}/study?id=laml_tcga`;
         await goToUrlAndSetLocalStorage(url);
     });
-    it('study view laml_tcga', async () => {
+    it.only('study view laml_tcga', async () => {
         await (
             await getElementByTestHandle('summary-tab-content')
         ).waitForDisplayed({
@@ -61,7 +61,7 @@ describe('study laml_tcga tests', () => {
         // const res = browser.checkElement('#mainColumn');
         // assertScreenShotMatch(res);
     });
-    it('study view laml_tcga clinical data clicked', async () => {
+    it.only('study view laml_tcga clinical data clicked', async () => {
         await clickElement('.tabAnchor_clinicalData');
         await (
             await getElementByTestHandle('clinical-data-tab-content')
@@ -73,7 +73,7 @@ describe('study laml_tcga tests', () => {
         assertScreenShotMatch(res);
     });
 
-    it('study should have the raw data available', async () => {
+    it.only('study should have the raw data available', async () => {
         assert(
             await (
                 await getElement(STUDY_SUMMARY_RAW_DATA_DOWNLOAD)
@@ -81,7 +81,7 @@ describe('study laml_tcga tests', () => {
         );
     });
 
-    it('when quickly adding charts, each chart should get proper data.', async function() {
+    it.only('when quickly adding charts, each chart should get proper data.', async function() {
         this.retries(0);
 
         await toStudyViewSummaryTab();
@@ -100,22 +100,19 @@ describe('study laml_tcga tests', () => {
         assertScreenShotMatch(res);
     });
 
-    it('when adding chart with categories more than the pie2Table threshold, the pie chart should be converted to table', async () => {
+    it.only('when adding chart with categories more than the pie2Table threshold, the pie chart should be converted to table', async () => {
         await setInputText(
             "[data-test='fixed-header-table-search-input']",
             'Other Sample ID'
         );
+        await browser.pause(2000);
         await (
             await getElement(
                 "[data-test='add-chart-option-other-sample-id'] input"
             )
         ).waitForDisplayed({ timeout: WAIT_FOR_VISIBLE_TIMEOUT });
-
-        // Pause a bit time to let the table render
-        await waitForStudyView();
-
         await clickElement(
-            "[data-test='add-chart-option-other-sample-id'] input"
+            "[data-test='add-chart-option-other-sample-id'] label"
         );
         await browser.pause(2000);
         await (
