@@ -6,9 +6,61 @@ import { PageLayout } from 'shared/components/PageLayout/PageLayout';
 import './styles.scss';
 import styles from './visualize.module.scss';
 import { getNCBIlink } from 'cbioportal-frontend-commons';
+import { getCustomButtonConfigs } from 'shared/components/CustomButton/CustomButtonServerConfig';
 
 @observer
 export default class Visualize extends React.Component<{}, {}> {
+    /**
+     * Display the 'visualize_html' data associated with serverConfig.download_custom_buttons_json
+     * @returns JSX.element
+     */
+    customButtonsSection() {
+        const displayButtons = getCustomButtonConfigs().filter(
+            button => button.visualize_href
+        );
+        if (!displayButtons || displayButtons.length === 0) {
+            return;
+        }
+
+        return (
+            <>
+                <hr />
+
+                <h2>3rd party tools not maintained by cBioPortal community</h2>
+
+                <div
+                    style={{ display: 'flex' }}
+                    className={styles.customToolArray}
+                >
+                    {displayButtons.map((button, index) => (
+                        <div key={index} style={{ marginTop: 20 }}>
+                            <h2>
+                                <a href={button.visualize_href} target="_blank">
+                                    {button.visualize_title}
+                                </a>
+                            </h2>
+                            <p>
+                                {button.visualize_description}
+                                <a href={button.visualize_href} target="_blank">
+                                    Try it!
+                                </a>
+                            </p>
+                            {button.visualize_image_src && (
+                                <a href={button.visualize_href} target="_blank">
+                                    <img
+                                        className="tile-image top-image"
+                                        alt={button.visualize_title}
+                                        src={button.visualize_image_src}
+                                    />
+                                </a>
+                            )}
+                        </div>
+                    ))}
+                </div>
+            </>
+        );
+    }
+
     public render() {
         return (
             <PageLayout className={'whiteBackground staticPage'}>
@@ -128,6 +180,8 @@ export default class Visualize extends React.Component<{}, {}> {
                         </a>
                     </div>
                 </div>
+
+                {this.customButtonsSection()}
             </PageLayout>
         );
     }

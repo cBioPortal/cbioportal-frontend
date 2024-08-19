@@ -34,5 +34,7 @@ export class CategoryBarChartAxisLabel extends BarChartAxisLabelIgnoreType {
 }
 
 // we need to ignore the type of CategoryBarChartAxisLabel to avoid typescript error
+// TS2605: JSX element type 'BarChartAxisLabel' is not a constructor function for JSX elements.
+// we get this error because VictoryLabel cannot be resolved as a valid react component (due to missing victory types)
 const CategoryBarChartAxisLabelIgnoreType = CategoryBarChartAxisLabel as any;
 export default CategoryBarChartAxisLabelIgnoreType;

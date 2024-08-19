@@ -73,6 +73,9 @@ export default class OncoprinterStore {
     @observable hideGermlineMutations = false;
     @observable customDriverWarningHidden: boolean;
 
+    @observable _mutations: string | undefined = undefined;
+    @observable _studyIds: string | undefined = undefined;
+
     @observable _userSelectedClinicalTracksColors: {
         [trackLabel: string]: {
             [attributeValue: string]: RGBAColor;
@@ -203,6 +206,19 @@ export default class OncoprinterStore {
         this.setSampleIdOrder(samples);
 
         this.initialize();
+    }
+
+    @action public setJupyterInput(mutations: string, studyIds: string) {
+        this._mutations = mutations;
+        this._studyIds = studyIds;
+    }
+
+    @computed get mutationsDataProps() {
+        if (this._mutations) return JSON.parse(this._mutations);
+    }
+
+    @computed get studyIdProps() {
+        if (this._studyIds) return JSON.parse(this._studyIds);
     }
 
     @computed get parsedGeneticInputLines() {

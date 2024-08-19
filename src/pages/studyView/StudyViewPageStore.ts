@@ -9894,6 +9894,8 @@ export class StudyViewPageStore
         uniqueKey: string,
         data: ClinicalDataCount[] | string[]
     ): void {
+        // Aggregate the total count and the count of 'NA'
+        // values from the ClinicalDataCount[] array
         const { totalCount, naCount } = (data as (
             | ClinicalDataCount
             | string
@@ -9914,6 +9916,7 @@ export class StudyViewPageStore
             { totalCount: 0, naCount: 0 }
         );
 
+        // Determine the proportion of 'NA' values relative to the total data count
         const naProportion = totalCount > 0 ? naCount / totalCount : 0;
 
         if (
@@ -9924,7 +9927,8 @@ export class StudyViewPageStore
             )
         ) {
             this.changeChartVisibility(uniqueKey, true);
-
+            // Display the data as a table if it exceeds the defined threshold
+            // or contains specific table attributes
             if (
                 data.length > STUDY_VIEW_CONFIG.thresholds.pieToTable ||
                 STUDY_VIEW_CONFIG.tableAttrs.includes(uniqueKey)
@@ -9938,7 +9942,10 @@ export class StudyViewPageStore
                     ChartTypeEnum.PIE_CHART,
                     ChartTypeEnum.TABLE,
                 ]);
-            } else if (
+            }
+            // Use a bar chart if the data is exceeds the pie chart
+            // threshold or if 'NA' values are greater than 50%
+            else if (
                 data.length > STUDY_VIEW_CONFIG.thresholds.pieToBar ||
                 naProportion > 0.5
             ) {
@@ -9957,7 +9964,9 @@ export class StudyViewPageStore
                     ChartTypeEnum.BAR_CATEGORICAL_CHART,
                     ChartTypeEnum.TABLE,
                 ]);
-            } else {
+            }
+            // Default to a pie chart for simpler data sets
+            else {
                 this.chartsType.set(uniqueKey, ChartTypeEnum.PIE_CHART);
                 this.chartsDimension.set(
                     uniqueKey,

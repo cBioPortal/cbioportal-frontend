@@ -38,6 +38,8 @@ import ClinicalTrackColorPicker from 'shared/components/oncoprint/ClinicalTrackC
 import classnames from 'classnames';
 import { getDefaultClinicalAttributeColoringForStringDatatype } from './OncoprinterToolUtils';
 import { OncoprintColorModal } from 'shared/components/oncoprint/OncoprintColorModal';
+import JupyterNoteBookModal from './JupyterNotebookModal';
+import { convertToCSV } from 'shared/lib/calculation/JSONtoCSV';
 
 interface IOncoprinterProps {
     divId: string;
@@ -72,6 +74,20 @@ export default class Oncoprinter extends React.Component<
     private controlsState: IOncoprintControlsState;
 
     @observable.ref public oncoprint: OncoprintJS | undefined = undefined;
+
+    @observable public showJupyterNotebookModal = false;
+    @observable private jupyterFileContent = '';
+    @observable private jupyterFileName = '';
+
+    @action
+    private openJupyterNotebookModal = () => {
+        this.showJupyterNotebookModal = true;
+    };
+
+    @action
+    private closeJupyterNotebookModal = () => {
+        this.showJupyterNotebookModal = false;
+    };
 
     constructor(props: IOncoprinterProps) {
         super(props);
@@ -280,6 +296,44 @@ export default class Oncoprinter extends React.Component<
                             file += `${caseId}\n`;
                         }
                         fileDownload(file, `OncoPrintSamples.txt`);
+                        break;
+                    case 'jupyterNoteBook':
+                        const fieldsToKeep = [
+                            'hugoGeneSymbol',
+                            'alterationType',
+                            'chr',
+                            'startPosition',
+                            'endPosition',
+                            'referenceAllele',
+                            'variantAllele',
+                            'proteinChange',
+                            'proteinPosStart',
+                            'proteinPosEnd',
+                            'mutationType',
+                            'oncoKbOncogenic',
+                            'patientId',
+                            'sampleId',
+                            'isHotspot',
+                        ];
+
+                        if (
+                            this.props.store._mutations &&
+                            this.props.store._studyIds
+                        ) {
+                            const allGenesMutationsCsv = convertToCSV(
+                                this.props.store.mutationsDataProps,
+                                fieldsToKeep
+                            );
+
+                            this.jupyterFileContent = allGenesMutationsCsv;
+
+                            this.jupyterFileName = this.props.store.studyIdProps.join(
+                                '&'
+                            );
+
+                            this.openJupyterNotebookModal();
+                        }
+
                         break;
                 }
             },
@@ -569,6 +623,12 @@ export default class Oncoprinter extends React.Component<
                         </div>
                     </div>
                 </div>
+                <JupyterNoteBookModal
+                    show={this.showJupyterNotebookModal}
+                    handleClose={this.closeJupyterNotebookModal}
+                    fileContent={this.jupyterFileContent}
+                    fileName={this.jupyterFileName}
+                />
             </div>
         );
     }

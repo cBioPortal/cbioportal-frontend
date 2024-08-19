@@ -494,7 +494,9 @@ describe('study view lgg_tcga study tests', () => {
                 });
                 jsApiHover(pieChart);
 
-                const changeChartItem = $(pieChart + ' .dropdown-item');
+                const changeChartItem = $(
+                    pieChart + ' .controls .dropdown-item'
+                );
                 changeChartItem.moveTo();
 
                 browser.waitUntil(() => {
@@ -510,7 +512,9 @@ describe('study view lgg_tcga study tests', () => {
                 });
                 jsApiHover(pieChart);
 
-                const changeChartItem = $(pieChart + ' .dropdown-item');
+                const changeChartItem = $(
+                    pieChart + ' .controls .dropdown-item'
+                );
                 changeChartItem.moveTo();
 
                 const submenuItems = changeChartItem.$$(
