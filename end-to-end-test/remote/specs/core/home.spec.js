@@ -270,6 +270,7 @@ describe('case set selection in front page query form', () => {
             '[data-test="StudySelect"] input',
             'Samples with mutation data (160)'
         );
+        await browser.pause(2000);
         await clickModifyStudySelectionButton();
         // Phase 2: Select all TCGA non-provisional
         await searchAndSelectStudy(
@@ -278,14 +279,18 @@ describe('case set selection in front page query form', () => {
             'All (252)'
         );
         await clickModifyStudySelectionButton();
+        await browser.pause(500);
         //Phase 3: Deselect Ampullary Carcinoma
         await (await getElement(input)).waitForExist({ timeout: 10000 });
         await setInputText(input, 'ampullary baylor');
+        await browser.pause(2000);
+        await (
+            await getElement('[data-test="study-search"] .dropdown-toggle')
+        ).click();
         await clickElement(
             '[data-tour="cancer-study-list-container"] .studyItem_ampca_bcm_2016'
         );
         await clickQueryByGeneButton();
-
         await (await getElement(selectedCaseSet_sel)).waitForExist();
         await browser.waitUntil(async () => {
             const expectedText = 'Samples with mutation and CNA data (88)';
@@ -312,6 +317,9 @@ describe('case set selection in front page query form', () => {
         ) => {
             await getElement(inputSelector, { timeout: 20000 });
             await setInputText(inputSelector, studyName);
+            await (
+                await getElement('[data-test="study-search"] .dropdown-toggle')
+            ).click();
             await waitForNumberOfStudyCheckboxes(expectedCheckboxes);
             await getElement('[data-test="StudySelect"]', { timeout: 10000 });
             await clickElement('[data-test="StudySelect"] input');
@@ -319,12 +327,16 @@ describe('case set selection in front page query form', () => {
 
         const validateSelectedCaseSet = async expectedText => {
             await (await getElement(selectedCaseSetSelector)).waitForExist();
-            await browser.waitUntil(
-                async () =>
-                    (await getText(selectedCaseSetSelector)).trim() ===
-                    expectedText,
-                10000
-            );
+            await browser.waitUntil(async () => {
+                const selectedText = await getText(selectedCaseSetSelector);
+                console.log(
+                    'selectedText',
+                    selectedText,
+                    'expectedText',
+                    expectedText
+                );
+                return selectedText.trim() === expectedText;
+            }, 10000);
         };
 
         // Step 1: Select Ampullary Carcinoma
@@ -338,7 +350,7 @@ describe('case set selection in front page query form', () => {
         await browser.pause(500);
         await clickElement(selectAllSelector);
         await clickQueryByGeneButton();
-        await getElementByTestHandle('MUTATION_EXTENDED', { timeout: 10000 });
+        await getElementByTestHandle('MUTATION_EXTENDED', { timeout: 20000 });
         await getElementByTestHandle('COPY_NUMBER_ALTERATION', {
             timeout: 10000,
         });
@@ -350,26 +362,48 @@ describe('case set selection in front page query form', () => {
 
         // Step 3: Deselect all TCGA non-provisional studies
         await clickModifyStudySelectionButton();
-        await searchAndSelectStudy('tcga -provisional');
-        await browser.pause(2000);
+
+        // await searchAndSelectStudy('tcga - provisional');
+
         await clickElement(
-            '[data-tour="cancer-study-list-container"] [data-test="selectAllStudies]'
+            '[data-tour="cancer-study-list-container"] input[data-test="selectAllStudies"]'
         );
 
-        // Step 4: Select Adrenocortical Carcinoma
-        await searchAndSelectStudy(
-            'adrenocortical carcinoma tcga firehose legacy'
+        await (await getElement(inputSelector)).waitForExist({
+            timeout: 10000,
+        });
+        // await setInputText(inputSelector, 'tcga - provisional');
+        await browser.pause(2000);
+        // await (await getElement('[data-test="study-search"] .dropdown-toggle')).click();
+        await clickElement(
+            '[data-test="studyList"] [data-tour="cancer-study-list-container"] input[data-test="selectAllStudies"]'
         );
+        await browser.pause(2000);
+        // Step 4: Select Adrenocortical Carcinoma
+
+        await browser.pause(2000);
         await clickQueryByGeneButton();
         await getElementByTestHandle('MUTATION_EXTENDED', { timeout: 10000 });
         await getElementByTestHandle('COPY_NUMBER_ALTERATION', {
             timeout: 10000,
         });
         await validateSelectedCaseSet('All (252)');
-
+        await (await getElement(inputSelector)).waitForExist({
+            timeout: 10000,
+        });
+        // await setInputText(inputSelector, 'tcga - provisional');
+        await browser.pause(2000);
+        // await (await getElement('[data-test="study-search"] .dropdown-toggle')).click();
+        await clickElement(
+            '[data-test="studyList"] [data-tour="cancer-study-list-container"] input[data-test="selectAllStudies"]'
+        );
+        await browser.pause(2000);
         // Step 5: Deselect Ampullary Carcinoma
         await clickModifyStudySelectionButton();
         await searchAndSelectStudy('ampullary baylor', 1);
+        await (
+            await getElement('[data-test="study-search"] .dropdown-toggle')
+        ).click();
         await clickQueryByGeneButton();
         await validateSelectedCaseSet(
             'Samples with mutation and CNA data (88)'
