@@ -629,7 +629,11 @@ describe('sorting', () => {
         const TP53HeatmapElements = await getNthOncoprintTrackOptionsElements(
             8
         );
+        await (await getElement(TP53HeatmapElements.button_selector)).moveTo();
         await clickElement(TP53HeatmapElements.button_selector); // open track menu
+        await (
+            await getElement(TP53HeatmapElements.dropdown_selector)
+        ).moveTo();
         await waitForElementDisplayed(TP53HeatmapElements.dropdown_selector, {
             timeout: 1000,
         }); // wait for menu to appear
