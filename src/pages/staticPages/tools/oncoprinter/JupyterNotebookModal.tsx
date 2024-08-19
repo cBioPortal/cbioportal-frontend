@@ -103,6 +103,7 @@ class JupyterNoteBookModal extends React.Component<
                 </Modal.Header>
                 <Modal.Body>
                     <Form
+                        id="jupyterform"
                         onSubmit={e =>
                             this.handleSubmit(
                                 (e as unknown) as React.FormEvent<
@@ -134,12 +135,14 @@ class JupyterNoteBookModal extends React.Component<
                                 </div>
                             )}
                         </FormGroup>
-                        <Modal.Footer>
-                            <Button onClick={handleClose}>Close</Button>
-                            <Button type="submit">Open Jupyter Notebook</Button>
-                        </Modal.Footer>
                     </Form>
                 </Modal.Body>
+                <Modal.Footer>
+                    <Button onClick={handleClose}>Close</Button>
+                    <Button type="submit" form="jupyterform">
+                        Open Jupyter Notebook
+                    </Button>
+                </Modal.Footer>
             </Modal>
         );
     }
