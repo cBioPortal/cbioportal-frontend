@@ -3,6 +3,8 @@ import { If } from 'react-if';
 import { Button, ButtonGroup } from 'react-bootstrap';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { ICopyDownloadInputsProps } from './ICopyDownloadControls';
+import { getCustomButtonConfigs } from 'shared/components/CustomButton/CustomButtonServerConfig';
+import { CustomButton } from '../CustomButton/CustomButton';
 
 export interface ICopyDownloadButtonsProps extends ICopyDownloadInputsProps {
     copyButtonRef?: (el: HTMLButtonElement | null) => void;
@@ -78,6 +80,27 @@ export class CopyDownloadButtons extends React.Component<
         );
     }
 
+    customButtons() {
+        // TECH: <If condition={this.props.showDownload}> was not working with returning multiple items in JSX.Element[], so moved the conditional here.
+        if (!this.props.showDownload) {
+            return null;
+        }
+
+        return getCustomButtonConfigs()
+            .filter(tool => tool.isAvailable?.() ?? true)
+            .map((tool, index: number) => {
+                return (
+                    <CustomButton
+                        key={tool.id}
+                        toolConfig={tool}
+                        baseTooltipProps={this.baseTooltipProps}
+                        downloadDataAsync={this.props.downloadDataAsync}
+                        overlayClassName={this.props.className}
+                    />
+                );
+            });
+    }
+
     public render() {
         return (
             <span className={this.props.className}>
@@ -86,6 +109,7 @@ export class CopyDownloadButtons extends React.Component<
                     <If condition={this.props.showDownload}>
                         {this.downloadButton()}
                     </If>
+                    {this.customButtons()}
                 </ButtonGroup>
             </span>
         );
