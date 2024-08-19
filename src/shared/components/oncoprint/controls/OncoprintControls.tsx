@@ -1163,7 +1163,8 @@ export default class OncoprintControls extends React.Component<
                             name={EVENT_KEY.openJupyterNotebook}
                             onClick={this.onButtonClick}
                         >
-                            Open in JupyterNoteBook
+                            Open in JupyterNoteBook{' '}
+                            <strong className={'beta-text'}>Beta!</strong>
                         </button>
                     )}
             </CustomDropdown>

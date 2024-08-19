@@ -99,7 +99,7 @@ class JupyterNoteBookModal extends React.Component<
         return (
             <Modal show={show} onHide={handleClose}>
                 <Modal.Header closeButton>
-                    <Modal.Title>Enter Folder Name</Modal.Title>
+                    <Modal.Title>Enter Session Name</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Form
