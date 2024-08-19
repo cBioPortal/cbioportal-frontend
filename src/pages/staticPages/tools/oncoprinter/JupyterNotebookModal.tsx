@@ -99,7 +99,7 @@ class JupyterNoteBookModal extends React.Component<
         return (
             <Modal show={show} onHide={handleClose}>
                 <Modal.Header closeButton>
-                    <Modal.Title>Enter Session Name</Modal.Title>
+                    <Modal.Title>Enter Notebook Name</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Form
@@ -114,11 +114,11 @@ class JupyterNoteBookModal extends React.Component<
                     >
                         <FormGroup controlId="formFolderName">
                             <ControlLabel className="py-2">
-                                Session Name
+                                Notebook Name
                             </ControlLabel>
                             <FormControl
                                 type="text"
-                                placeholder="Enter Session Name"
+                                placeholder="Enter Notebook Name"
                                 value={folderName}
                                 onChange={e =>
                                     this.handleChange(
