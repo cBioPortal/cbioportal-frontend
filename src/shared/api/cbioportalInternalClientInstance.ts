@@ -4,6 +4,7 @@ import { getBrowserWindow } from 'cbioportal-frontend-commons';
 import { toJS } from 'mobx';
 import { validate } from 'shared/api/validation';
 import _ from 'lodash';
+import { makeTest } from 'shared/api/testMaker';
 
 function proxyColumnStore(client: any, endpoint: string) {
     if (getBrowserWindow().location.search.includes('legacy')) {
@@ -25,7 +26,7 @@ function proxyColumnStore(client: any, endpoint: string) {
         const endpoints = [
             'ClinicalDataCounts',
             'MutatedGenes',
-            //'CaseList',
+            'CaseList',
             'ClinicalDataBin',
             'MolecularProfileSample',
             'CNAGenes',
@@ -48,7 +49,54 @@ function proxyColumnStore(client: any, endpoint: string) {
                     '?' +
                     _.map(arguments[4], (v, k) => `${k}=${v}&`).join('');
 
-                validate(url, params, matchedMethod[0]);
+                setTimeout(() => {
+                    makeTest(params, url);
+                }, 1000);
+
+                // validate(url, params, matchedMethod[0]).then((result)=>{
+                //
+                //     !result.status && console.group(`${result.label} failed :(`);
+                //
+                //     !result.status &&
+                //     console.log({
+                //         url,
+                //         legacyDuration: result.legacyDuration,
+                //         chDuration: result.chDuration,
+                //         equal: result.status,
+                //     });
+                //
+                //     result.status &&
+                //     console.log(
+                //         `${result.label} passed :) ch: ${result.chDuration.toFixed(
+                //             0
+                //         )} legacy: ${result.legacyDuration.toFixed(0)}`
+                //     );
+                //
+                //     if (!result.status) {
+                //         _.forEach(result.clDataSorted, (cl: any, i: number) => {
+                //             if (
+                //                 JSON.stringify(cl) !==
+                //                 JSON.stringify(result.legacyDataSorted[i])
+                //             ) {
+                //                 console.log(
+                //                     `First invalid item (${result.label})`,
+                //                     'Clickhouse:',
+                //                     cl,
+                //                     'Legacy:',
+                //                     result.legacyDataSorted[i]
+                //                 );
+                //                 return false;
+                //             }
+                //         });
+                //         console.log('legacy', result.legacyDataSorted);
+                //         console.log('CH', result.clDataSorted);
+                //     }
+                //
+                //     !result.status && console.groupEnd();
+                //
+                // });
+                //
+                //
             };
         }
 

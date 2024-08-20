@@ -122,13 +122,14 @@ export function compareCounts(clData: any, legacyData: any, label: string) {
         clDataSorted,
         legacyDataSorted,
         status: result,
+        label,
     };
 }
 
 export function validate(url: string, params: any, label: string) {
     const clStart = performance.now();
     let chDuration: number, legacyDuration: number;
-    $.ajax({
+    return $.ajax({
         method: 'post',
         url: url,
         data: JSON.stringify(params),
@@ -138,53 +139,17 @@ export function validate(url: string, params: any, label: string) {
         chDuration = performance.now() - clStart;
         const legacyStart = performance.now();
 
-        $.ajax({
+        return $.ajax({
             method: 'post',
             url: legacyUrl,
             data: JSON.stringify(params),
             contentType: 'application/json',
         }).then(legacyResult => {
             legacyDuration = performance.now() - legacyStart;
-            const result = compareCounts(chResult, legacyResult, label);
-
-            !result.status && console.group(`${label} failed :(`);
-
-            !result.status &&
-                console.log({
-                    url,
-                    legacyDuration,
-                    chDuration: chDuration,
-                    equal: result.status,
-                });
-
-            result.status &&
-                console.log(
-                    `${label} passed :) ch: ${chDuration.toFixed(
-                        0
-                    )} legacy: ${legacyDuration.toFixed(0)}`
-                );
-
-            if (!result.status) {
-                _.forEach(result.clDataSorted, (cl: any, i: number) => {
-                    if (
-                        JSON.stringify(cl) !==
-                        JSON.stringify(result.legacyDataSorted[i])
-                    ) {
-                        console.log(
-                            `First invalid item (${label})`,
-                            'Clickhouse:',
-                            cl,
-                            'Legacy:',
-                            result.legacyDataSorted[i]
-                        );
-                        return false;
-                    }
-                });
-                console.log('legacy', result.legacyDataSorted);
-                console.log('CH', result.clDataSorted);
-            }
-
-            !result.status && console.groupEnd();
+            const result: any = compareCounts(chResult, legacyResult, label);
+            result.chDuration = chDuration;
+            result.legacyDuration = legacyDuration;
+            return result;
         });
     });
 }
