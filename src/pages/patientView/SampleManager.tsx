@@ -253,6 +253,11 @@ class SampleManager {
                 color = styles.sampleColorXenograft;
             } else if (
                 this.clinicalDataLegacyCleanAndDerived[sample.id]
+                    .DERIVED_NORMALIZED_CASE_TYPE === 'Organoid'
+            ) {
+                color = styles.sampleColorOrganoid;
+            } else if (
+                this.clinicalDataLegacyCleanAndDerived[sample.id]
                     .DERIVED_NORMALIZED_CASE_TYPE === 'Plasma'
             ) {
                 color = styles.sampleColorPlasma;

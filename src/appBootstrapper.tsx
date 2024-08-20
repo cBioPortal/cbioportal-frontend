@@ -217,6 +217,25 @@ let render = (key?: number) => {
         browserWindow.isMSKCIS = true;
     }
 
+    // @ts-ignore
+    if (stores.appStore.serverConfig.app_name === 'public-portal') {
+        stores.appStore.serverConfig.download_custom_buttons_json = `[
+        {
+            "id": "avm",
+            "name": "AVM for cBioPortal",
+            "tooltip": "Launch AVM for cBioPortal with data (copied to clipboard)",
+            "image_src": "https://aquminmedical.com/images/content/AquminLogoSimple.png",
+            "required_user_agent": "Win",
+            "required_installed_font_family": "AVMInstalled",
+            "url_format": "avm://?importclipboard&-AutoMode=true&-ProjectNameHint={studyName}&-ImportDataLength={dataLength}",
+            "visualize_title": "AVM for cBioPortal (Windows)",
+            "visualize_href": "https://bit.ly/avm-cbioportal",
+            "visualize_description": "Windows software that loads data into 3D Landscapes for interactive visualization and pathway analysis. Download table data directly from cBioPortal.",
+            "visualize_image_src": "https://github.com/user-attachments/assets/5c17f5ed-0357-4ffa-a6e1-5a9d435dd3c5"
+        }
+    ]`;
+    }
+
     if (stores.appStore.serverConfig.app_name === 'mskcc-portal') {
         datadogLogs.init({
             clientToken: 'pub9a94ebb002f105ff44d8e427b6549775',
