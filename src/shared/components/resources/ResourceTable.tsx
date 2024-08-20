@@ -60,11 +60,18 @@ const ResourceTable = observer(
                         {sampleId && <th>Sample ID</th>}
                         <th>Resource</th>
                         <th></th>
-                        <th>Description</th>
+                        {resourceTable.data.length > 0 && <th>Description</th>}
                     </tr>
                 </thead>
                 <tbody>
-                    {resourceTable.data.map(resource => (
+
+                { resourceTable.data.length === 0 ? (
+                        <tr>
+                            <td colSpan={3} style={{ textAlign: 'center' }}>
+                                There are no results
+                            </td>
+                        </tr>
+                    ) : (resourceTable.data.map(resource => (
                         <tr>
                             {sampleId && <td>{sampleId}</td>}
                             <td>
