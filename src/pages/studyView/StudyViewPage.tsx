@@ -847,7 +847,7 @@ export default class StudyViewPage extends React.Component<
                                             structuralVariants={
                                                 this.store.structuralVariants
                                             }
-                                            hugoGeneSymbols={
+                                            allHugoGeneSymbols={
                                                 this.store.allHugoGeneSymbols
                                             }
                                             selectedGenericAssayEntitiesGroupByMolecularProfileId={
