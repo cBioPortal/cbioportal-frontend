@@ -2,6 +2,8 @@ import { getBrowserWindow, hashString } from 'cbioportal-frontend-commons';
 import { toJS } from 'mobx';
 import _ from 'lodash';
 
+export const SAVE_TEST_KEY = 'save_test_enabled';
+
 export async function makeTest(data: any, url: string) {
     const hash = hashString(JSON.stringify({ data, url }));
 
@@ -48,19 +50,15 @@ export async function makeTest(data: any, url: string) {
             .fullUrl,
     };
 
-    saveTest(hash, entry);
+    if (getBrowserWindow().localStorage.getItem(SAVE_TEST_KEY))
+        saveTest(hash, entry);
 }
 
 function saveTest(hash: number, entry: any) {
-    const testCache = JSON.parse(
-        getBrowserWindow().localStorage.testCache || '{}'
-    );
+    const testCache = JSON.parse(getBrowserWindow().testCache || '{}');
 
     if (!(hash in testCache)) {
         testCache[hash] = JSON.stringify(entry);
-        getBrowserWindow().localStorage.setItem(
-            'testCache',
-            JSON.stringify(testCache)
-        );
+        getBrowserWindow().testCache = JSON.stringify(testCache);
     }
 }

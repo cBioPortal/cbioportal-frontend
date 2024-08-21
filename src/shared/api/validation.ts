@@ -147,6 +147,8 @@ export function validate(url: string, params: any, label: string) {
         }).then(legacyResult => {
             legacyDuration = performance.now() - legacyStart;
             const result: any = compareCounts(chResult, legacyResult, label);
+            result.url = url;
+            result.data = params;
             result.chDuration = chDuration;
             result.legacyDuration = legacyDuration;
             return result;
