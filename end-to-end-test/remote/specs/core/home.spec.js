@@ -207,7 +207,6 @@ describe('select all/deselect all functionality in study selector', () => {
 });
 
 describe('case set selection in front page query form', function() {
-    this.retries(0);
     const selectedCaseSet_sel =
         'div[data-test="CaseSetSelector"] span.Select-value-label[aria-selected="true"]';
 
@@ -235,7 +234,8 @@ describe('case set selection in front page query form', function() {
         );
     });
 
-    it('selects the right default case sets in a single->multiple->single study selection flow', async () => {
+    it('selects the right default case sets in a single->multiple->single study selection flow', async function() {
+        this.retries(0);
         const input = 'div[data-test=study-search] input[type=text]';
         async function searchAndSelectStudy(
             studyName,
@@ -305,53 +305,59 @@ describe('case set selection in front page query form', function() {
             return selectedText === expectedText;
         }, 10000);
     });
+});
 
-    it('selects the right default case sets in a single->select all filtered->single study selection flow', async () => {
-        const inputSelector = 'div[data-test=study-search] input[type=text]';
-        const selectAllSelector =
-            'div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]';
-        const selectedCaseSetSelector = selectedCaseSet_sel;
+describe('selects the right default case sets in a single->select all filtered->single study selection flow', () => {
+    before(async () => {
+        await goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
+    });
+    const inputSelector = 'div[data-test=study-search] input[type=text]';
+    const selectAllSelector =
+        'div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]';
+    const selectedCaseSetSelector =
+        'div[data-test="CaseSetSelector"] span.Select-value-label[aria-selected="true"]';
 
-        const searchAndSelectStudy = async (
-            studyName,
-            expectedCheckboxes = 1
-        ) => {
-            await getElement(inputSelector, { timeout: 20000 });
-            await setInputText(inputSelector, studyName);
-            await (
-                await getElement('[data-test="study-search"] .dropdown-toggle')
-            ).click();
-            await waitForNumberOfStudyCheckboxes(expectedCheckboxes);
-            await getElement('[data-test="StudySelect"]', { timeout: 10000 });
-            await clickElement('[data-test="StudySelect"] input');
-        };
+    const searchAndSelectStudy = async (studyName, expectedCheckboxes = 1) => {
+        await getElement(inputSelector, { timeout: 20000 });
+        await setInputText(inputSelector, studyName);
+        await (
+            await getElement('[data-test="study-search"] .dropdown-toggle')
+        ).click();
+        await waitForNumberOfStudyCheckboxes(expectedCheckboxes);
+        await getElement('[data-test="StudySelect"]', { timeout: 10000 });
+        // await clickElement('[data-test="StudySelect"] input');
+    };
 
-        const validateSelectedCaseSet = async expectedText => {
-            await (await getElement(selectedCaseSetSelector)).waitForExist();
-            await browser.waitUntil(async () => {
-                const selectedText = await getText(selectedCaseSetSelector);
-                console.log(
-                    'selectedText',
-                    selectedText,
-                    'expectedText',
-                    expectedText
-                );
-                return selectedText.trim() === expectedText;
-            }, 10000);
-        };
+    const validateSelectedCaseSet = async expectedText => {
+        await (await getElement(selectedCaseSetSelector)).waitForExist();
+        await browser.waitUntil(async () => {
+            const selectedText = await getText(selectedCaseSetSelector);
+            console.log(
+                'selectedText',
+                selectedText,
+                'expectedText',
+                expectedText
+            );
+            return selectedText.trim() === expectedText;
+        }, 10000);
+    };
 
-        // Step 1: Select Ampullary Carcinoma
+    it('Step 1: Select Ampullary Carcinoma', async function() {
         await searchAndSelectStudy('ampullary baylor');
+        await clickElement('[data-test="StudySelect"] input');
         await clickQueryByGeneButton();
         await validateSelectedCaseSet('Samples with mutation data (160)');
+    });
 
-        // Step 2: Select all TCGA non-provisional studies
+    it('Step 2: Select all TCGA non-provisional studies', async function() {
         await clickModifyStudySelectionButton();
         await searchAndSelectStudy('tcga -provisional');
         await browser.pause(500);
         await clickElement(selectAllSelector);
         await clickQueryByGeneButton();
-        await getElementByTestHandle('MUTATION_EXTENDED', { timeout: 20000 });
+        await getElementByTestHandle('MUTATION_EXTENDED', {
+            timeout: 20000,
+        });
         await getElementByTestHandle('COPY_NUMBER_ALTERATION', {
             timeout: 10000,
         });
@@ -360,51 +366,40 @@ describe('case set selection in front page query form', function() {
                 /All \(\d+\)/.test(await getText(selectedCaseSetSelector)),
             10000
         );
+    });
 
-        // Step 3: Deselect all TCGA non-provisional studies
+    it('Step 3: Deselect all TCGA non-provisional studies', async function() {
         await clickModifyStudySelectionButton();
+        await clickElement(
+            '[data-tour="cancer-study-list-container"] input[data-test="selectAllStudies"]'
+        );
+        await clickQueryByGeneButton();
+        validateSelectedCaseSet('Samples with mutation data (160)');
+    });
 
-        // await searchAndSelectStudy('tcga - provisional');
+    it('Step 4: Select Adrenocortical Carcinoma', async function() {
+        await browser.pause(2000);
+        await clickModifyStudySelectionButton();
+        await searchAndSelectStudy(
+            'adrenocortical carcinoma tcga firehose legacy'
+        );
+        await waitForNumberOfStudyCheckboxes(
+            1,
+            'Adrenocortical Carcinoma (TCGA, Firehose Legacy)'
+        );
+        await clickElement('[data-test="StudySelect"] input');
+        await clickQueryByGeneButton();
+        await validateSelectedCaseSet('All (252)');
+    });
 
+    it('Step 5: Deselect Ampullary Carcinoma', async function() {
+        await clickModifyStudySelectionButton();
+        await searchAndSelectStudy('ampullary baylor');
+        await browser.pause(2000);
         await clickElement(
             '[data-tour="cancer-study-list-container"] input[data-test="selectAllStudies"]'
         );
 
-        await (await getElement(inputSelector)).waitForExist({
-            timeout: 10000,
-        });
-        // await setInputText(inputSelector, 'tcga - provisional');
-        await browser.pause(2000);
-        // await (await getElement('[data-test="study-search"] .dropdown-toggle')).click();
-        await clickElement(
-            '[data-test="studyList"] [data-tour="cancer-study-list-container"] input[data-test="selectAllStudies"]'
-        );
-        await browser.pause(2000);
-        // Step 4: Select Adrenocortical Carcinoma
-
-        await browser.pause(2000);
-        await clickQueryByGeneButton();
-        await getElementByTestHandle('MUTATION_EXTENDED', { timeout: 10000 });
-        await getElementByTestHandle('COPY_NUMBER_ALTERATION', {
-            timeout: 10000,
-        });
-        await validateSelectedCaseSet('All (252)');
-        await (await getElement(inputSelector)).waitForExist({
-            timeout: 10000,
-        });
-        // await setInputText(inputSelector, 'tcga - provisional');
-        await browser.pause(2000);
-        // await (await getElement('[data-test="study-search"] .dropdown-toggle')).click();
-        await clickElement(
-            '[data-test="studyList"] [data-tour="cancer-study-list-container"] input[data-test="selectAllStudies"]'
-        );
-        await browser.pause(2000);
-        // Step 5: Deselect Ampullary Carcinoma
-        await clickModifyStudySelectionButton();
-        await searchAndSelectStudy('ampullary baylor', 1);
-        await (
-            await getElement('[data-test="study-search"] .dropdown-toggle')
-        ).click();
         await clickQueryByGeneButton();
         await validateSelectedCaseSet(
             'Samples with mutation and CNA data (88)'
