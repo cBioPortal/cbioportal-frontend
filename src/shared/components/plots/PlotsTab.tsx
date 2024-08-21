@@ -330,7 +330,8 @@ export interface IPlotsTabProps {
     driverAnnotationSettings: DriverAnnotationSettings;
     studyIdToStudy?: MobxPromiseUnionTypeWithDefault<_.Dictionary<CancerStudy>>;
     structuralVariants?: MobxPromiseUnionType<StructuralVariant[]>;
-    hugoGeneSymbols: string[] | MobxPromiseUnionTypeWithDefault<string[]>;
+    hugoGeneSymbols?: string[];
+    allHugoGeneSymbols?: MobxPromiseUnionTypeWithDefault<string[]>;
     selectedGenericAssayEntitiesGroupByMolecularProfileId: {
         [molecularProfileId: string]: string[];
     };
@@ -3812,15 +3813,16 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         }
         let genericAssayOptionsCount: number = 0;
         let filteredGenericAssayOptionsCount: number = 0;
+        const hugoGeneSymbols: string[] = this.props.hugoGeneSymbols
+            ? this.props.hugoGeneSymbols
+            : this.props.allHugoGeneSymbols!.result;
         if (vertical && this.vertGenericAssayOptions.result) {
             genericAssayOptions =
                 this.makeGenericAssayGroupOptions(
                     this.vertGenericAssayOptions.result,
                     selectedEntities,
                     this._vertGenericAssaySearchText,
-                    Array.isArray(this.props.hugoGeneSymbols)
-                        ? this.props.hugoGeneSymbols
-                        : this.props.hugoGeneSymbols.result,
+                    hugoGeneSymbols,
                     this.horzSelection.selectedGeneOption?.label,
                     GENERIC_ASSAY_CONFIG.genericAssayConfigByType[
                         axisSelection.dataType!
@@ -3848,9 +3850,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     this.horzGenericAssayOptions.result,
                     selectedEntities,
                     this._horzGenericAssaySearchText,
-                    Array.isArray(this.props.hugoGeneSymbols)
-                        ? this.props.hugoGeneSymbols
-                        : this.props.hugoGeneSymbols.result,
+                    hugoGeneSymbols,
                     this.vertSelection.selectedGeneOption?.label,
                     GENERIC_ASSAY_CONFIG.genericAssayConfigByType[
                         axisSelection.dataType!
@@ -3893,7 +3893,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 options = options.filter(stringCompare).slice(0, 10);
                 const genes = await fetchGenes(options.map(o => o.label));
                 const coverageInformationPromise = getCoverageInformation(
-                    this.props.genePanelDataForAllProfiles?.result || [],
+                    this.props.genePanelDataForAllProfiles!.result!,
                     this.props.sampleKeyToSample.result!,
                     this.props.patients.result!,
                     genes
