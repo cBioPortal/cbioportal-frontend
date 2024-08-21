@@ -72,10 +72,7 @@ function runResultsTestSuite(prefix, options = {}) {
         await waitForElementDisplayed('.borderedChart svg', { timeout: 20000 });
         const res = await browser.checkElement(
             '[data-test="mutationsTabDiv"]',
-            '',
-            {
-                viewportChangePause: 4000,
-            }
+            ''
         ); // hide these things because the timing of data loading makes this test so flaky
         assertScreenShotMatch(res);
     });

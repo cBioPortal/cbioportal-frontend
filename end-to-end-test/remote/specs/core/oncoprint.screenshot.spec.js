@@ -370,11 +370,10 @@ describe('sorting', () => {
             CBIOPORTAL_URL +
                 '/index.do?cancer_study_id=gbm_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=gbm_tcga_pub_cnaseq&gene_list=TP53%20MDM2%20MDM4&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=gbm_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=gbm_tcga_pub_cna_rae&clinicallist=FRACTION_GENOME_ALTERED%2CDFS_MONTHS%2CKARNOFSKY_PERFORMANCE_SCORE%2COS_STATUS&heatmap_track_groups=gbm_tcga_pub_mrna_median_Zscores%2CTP53%2CMDM2%2CMDM4%3Bgbm_tcga_pub_mrna_merged_median_Zscores%2CTP53%2CMDM2%2CMDM4'
         );
-        await browser.pause(2000);
         await waitForOncoprint();
-
         // first get rid of the Profiled track
         const profiledElements = await getNthOncoprintTrackOptionsElements(5);
+        await (await getElement(profiledElements.button_selector)).moveTo();
         await clickElement(profiledElements.button_selector);
         await waitForElementDisplayed(profiledElements.dropdown_selector, {
             timeout: 1000,
