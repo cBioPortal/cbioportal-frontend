@@ -2,7 +2,7 @@ import * as React from 'react';
 import _ from 'lodash';
 import json from './data.json';
 import { useCallback, useEffect } from 'react';
-import { validate } from 'shared/api/validation';
+import { reportValidationResult, validate } from 'shared/api/validation';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
 import { observer } from 'mobx-react';
 import { useLocalObservable } from 'mobx-react-lite';
@@ -13,12 +13,12 @@ getBrowserWindow().showTest = function() {};
 const CACHE_KEY: string = 'testCache';
 
 function getCache() {
-    return getBrowserWindow()[CACHE_KEY];
+    return getBrowserWindow()[CACHE_KEY] || {};
     //return localStorage.getItem(CACHE_KEY);
 }
 
 function clearCache() {
-    delete getBrowserWindow()[CACHE_KEY];
+    getBrowserWindow()[CACHE_KEY] = {};
     //localStorage.removeItem(CACHE_KEY);
 }
 
@@ -27,7 +27,7 @@ export const RFC80Test = observer(function() {
         tests: [],
     }));
 
-    const clearCache = useCallback(() => {
+    const clearCacheCallback = useCallback(() => {
         clearCache();
     }, []);
 
@@ -40,34 +40,48 @@ export const RFC80Test = observer(function() {
     }, []);
 
     const runTests = useCallback(() => {
+        console.group('Running specs');
+        const promises: Promise<any>[] = [];
         json.forEach((suite: any) => {
             suite.tests.forEach((test: any) => {
                 test.url = test.url.replace(
                     /column-store\/api/,
                     'column-store'
                 );
-                validate(test.url, test.data, test.filterUrl).then(report => {
-                    if (report.status) {
-                        console.log('Test passed', test.url);
-                    } else {
-                        console.log('Test failed', test.url, report);
-                    }
-                });
+
+                promises.push(
+                    // @ts-ignore
+                    validate(test.url, test.data, test.label).then(
+                        (report: any) => {
+                            report.test = test;
+                            reportValidationResult(report);
+                            // if (report.status) {
+                            //     console.log('Test passed', test.url);
+                            // } else {
+                            //     console.log('Test failed', test.url, report);
+                            // }
+                        }
+                    )
+                );
             });
+        });
+
+        Promise.all(promises).then(() => {
+            console.groupEnd();
         });
     }, []);
 
     useEffect(() => {
         if (getCache()) {
-            const tests = JSON.parse(getCache() || '[]');
-            const parsed = _.values(tests).map((j: any) => JSON.parse(j));
+            const tests = getCache();
+            const parsed = _.values(tests).map((j: any) => j);
             store.tests = parsed;
         }
 
         const checker = setInterval(() => {
             if (getCache()) {
-                const tests = JSON.parse(getCache() || '[]');
-                const parsed = _.values(tests).map((j: any) => JSON.parse(j));
+                const tests = getCache();
+                const parsed = _.values(tests);
                 store.tests = parsed;
             } else {
                 store.tests = [];
@@ -83,6 +97,7 @@ export const RFC80Test = observer(function() {
     {   
         "name":"",
         "note":"",
+        "studies":[],
         "tests":[
             ${store.tests.map((t: any) => JSON.stringify(t)).join(',\n\n')}
         ]
@@ -103,7 +118,7 @@ export const RFC80Test = observer(function() {
                 zIndex: 10000,
             }}
         >
-            <button onClick={clearCache}>
+            <button onClick={clearCacheCallback}>
                 Clear Test Cache ({store.tests.length})
             </button>
             <button onClick={toggleListener}>Listen</button>

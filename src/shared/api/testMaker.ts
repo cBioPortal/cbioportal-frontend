@@ -4,7 +4,7 @@ import _ from 'lodash';
 
 export const SAVE_TEST_KEY = 'save_test_enabled';
 
-export async function makeTest(data: any, url: string) {
+export async function makeTest(data: any, url: string, label: string) {
     const hash = hashString(JSON.stringify({ data, url }));
 
     const filterString = $('.userSelections')
@@ -45,6 +45,7 @@ export async function makeTest(data: any, url: string) {
         filterString,
         data,
         url,
+        label,
         studies: toJS(getBrowserWindow().studyViewPageStore.studyIds),
         filterUrl: (await getBrowserWindow().studyPage.getBookmarkUrl())
             .fullUrl,
@@ -55,10 +56,10 @@ export async function makeTest(data: any, url: string) {
 }
 
 function saveTest(hash: number, entry: any) {
-    const testCache = JSON.parse(getBrowserWindow().testCache || '{}');
+    const testCache = getBrowserWindow().testCache || {};
 
     if (!(hash in testCache)) {
-        testCache[hash] = JSON.stringify(entry);
-        getBrowserWindow().testCache = JSON.stringify(testCache);
+        testCache[hash] = entry;
+        getBrowserWindow().testCache = testCache;
     }
 }

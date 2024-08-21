@@ -155,3 +155,46 @@ export function validate(url: string, params: any, label: string) {
         });
     });
 }
+
+export function reportValidationResult(result: any) {
+    !result.status && console.group(`${result.label} failed :(`);
+
+    !result.status &&
+        console.log({
+            url: result.url,
+            test: result.test,
+            studies: result?.test?.studies,
+            legacyDuration: result.legacyDuration,
+            chDuration: result.chDuration,
+            equal: result.status,
+        });
+
+    result.status &&
+        console.log(
+            `${result.label} passed :) ch: ${result.chDuration.toFixed(
+                0
+            )} legacy: ${result.legacyDuration.toFixed(0)}`
+        );
+
+    if (!result.status) {
+        _.forEach(result.clDataSorted, (cl: any, i: number) => {
+            if (
+                JSON.stringify(cl) !==
+                JSON.stringify(result.legacyDataSorted[i])
+            ) {
+                console.log(
+                    `First invalid item (${result.label})`,
+                    'Clickhouse:',
+                    cl,
+                    'Legacy:',
+                    result.legacyDataSorted[i]
+                );
+                return false;
+            }
+        });
+        console.log('legacy', result.legacyDataSorted);
+        console.log('CH', result.clDataSorted);
+    }
+
+    !result.status && console.groupEnd();
+}
