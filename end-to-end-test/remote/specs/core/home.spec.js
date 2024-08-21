@@ -206,7 +206,8 @@ describe('select all/deselect all functionality in study selector', () => {
     });
 });
 
-describe('case set selection in front page query form', () => {
+describe('case set selection in front page query form', function() {
+    this.retries(0);
     const selectedCaseSet_sel =
         'div[data-test="CaseSetSelector"] span.Select-value-label[aria-selected="true"]';
 
