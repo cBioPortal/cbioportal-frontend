@@ -25,16 +25,16 @@ function proxyColumnStore(client: any, endpoint: string) {
 
         const endpoints = [
             'ClinicalDataCounts',
-            // 'MutatedGenes',
-            // 'CaseList',
-            // 'ClinicalDataBin',
-            // 'MolecularProfileSample',
-            // 'CNAGenes',
-            // 'StructuralVariantGenes',
-            // 'FilteredSamples',
-            // 'ClinicalDataDensity',
-            // 'MutationDataCounts',
-            // 'GenomicDataCounts',
+            'MutatedGenes',
+            'CaseList',
+            'ClinicalDataBin',
+            'MolecularProfileSample',
+            'CNAGenes',
+            'StructuralVariantGenes',
+            'FilteredSamples',
+            'ClinicalDataDensity',
+            'MutationDataCounts',
+            'GenomicDataCounts',
         ];
 
         const matchedMethod = method.match(new RegExp(endpoints.join('|')));
