@@ -126,7 +126,12 @@ export function compareCounts(clData: any, legacyData: any, label: string) {
     };
 }
 
-export function validate(url: string, params: any, label: string) {
+export function validate(
+    url: string,
+    params: any,
+    label: string,
+    hash: number
+) {
     const clStart = performance.now();
     let chDuration: number, legacyDuration: number;
     return $.ajax({
@@ -148,6 +153,7 @@ export function validate(url: string, params: any, label: string) {
             legacyDuration = performance.now() - legacyStart;
             const result: any = compareCounts(chResult, legacyResult, label);
             result.url = url;
+            result.hash = hash;
             result.data = params;
             result.chDuration = chDuration;
             result.legacyDuration = legacyDuration;
@@ -156,8 +162,9 @@ export function validate(url: string, params: any, label: string) {
     });
 }
 
-export function reportValidationResult(result: any) {
-    !result.status && console.group(`${result.label} failed :(`);
+export function reportValidationResult(result: any, prefix = '') {
+    !result.status &&
+        console.group(`${prefix} ${result.label} ${result.hash} failed :(`);
 
     !result.status &&
         console.log({
@@ -171,7 +178,9 @@ export function reportValidationResult(result: any) {
 
     result.status &&
         console.log(
-            `${result.label} passed :) ch: ${result.chDuration.toFixed(
+            `${prefix} ${result.label} (${
+                result.hash
+            }) passed :) ch: ${result.chDuration.toFixed(
                 0
             )} legacy: ${result.legacyDuration.toFixed(0)}`
         );

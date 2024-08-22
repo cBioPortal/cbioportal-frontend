@@ -1,6 +1,6 @@
 import * as React from 'react';
 import _ from 'lodash';
-import json from '../../../apiTests/specs/data.json';
+import json from '../../../apiTests/merged-tests.json';
 import { useCallback, useEffect } from 'react';
 import { reportValidationResult, validate } from 'shared/api/validation';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
@@ -40,30 +40,40 @@ export const RFC80Test = observer(function() {
     }, []);
 
     const runTests = useCallback(() => {
-        console.group('Running specs');
-        const promises: Promise<any>[] = [];
-        json.forEach((suite: any) => {
-            suite.tests.forEach((test: any) => {
-                test.url = test.url.replace(
-                    /column-store\/api/,
-                    'column-store'
-                );
+        const totalCount = _(json)
+            .flatMap('suites')
+            .flatMap('tests')
+            .value().length;
 
-                promises.push(
-                    // @ts-ignore
-                    validate(test.url, test.data, test.label).then(
-                        (report: any) => {
+        console.group(`Running specs (${totalCount})`);
+
+        let place = 0;
+
+        const promises: Promise<any>[] = [];
+        json.map((f: any) => f.suites).forEach((suite: any) => {
+            suite.forEach((col: any) =>
+                col.tests.forEach((test: any) => {
+                    test.url = test.url.replace(
+                        /column-store\/api/,
+                        'column-store'
+                    );
+
+                    promises.push(
+                        // @ts-ignore
+                        validate(
+                            test.url,
+                            test.data,
+                            test.label,
+                            test.hash
+                        ).then((report: any) => {
                             report.test = test;
-                            reportValidationResult(report);
-                            // if (report.status) {
-                            //     console.log('Test passed', test.url);
-                            // } else {
-                            //     console.log('Test failed', test.url, report);
-                            // }
-                        }
-                    )
-                );
-            });
+                            place = place + 1;
+                            const prefix = `${place} of ${totalCount}`;
+                            reportValidationResult(report, prefix);
+                        })
+                    );
+                })
+            );
         });
 
         Promise.all(promises).then(() => {
