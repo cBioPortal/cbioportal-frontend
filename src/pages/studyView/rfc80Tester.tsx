@@ -28,6 +28,7 @@ export const RFC80Test = observer(function() {
     const store = useLocalObservable<any>(() => ({
         tests: [],
         show: !!localStorage.getItem(RFC_TEST_SHOW),
+        listening: !!localStorage.getItem(SAVE_TEST_KEY),
     }));
 
     const clearCacheCallback = useCallback(() => {
@@ -35,6 +36,7 @@ export const RFC80Test = observer(function() {
     }, []);
 
     const toggleListener = useCallback(() => {
+        store.listening = !store.listening;
         if (getBrowserWindow().localStorage.getItem(SAVE_TEST_KEY)) {
             getBrowserWindow().localStorage.removeItem(SAVE_TEST_KEY);
         } else {
@@ -160,7 +162,9 @@ export const RFC80Test = observer(function() {
             <button onClick={clearCacheCallback}>
                 Clear Test Cache ({store.tests.length})
             </button>
-            <button onClick={toggleListener}>Listen</button>
+            <button onClick={toggleListener}>
+                {store.listening ? 'Stop Listening' : 'Listen'}
+            </button>
             <button onClick={runTests}>Run tests</button>
             {
                 <textarea
