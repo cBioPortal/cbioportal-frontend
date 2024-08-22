@@ -4,8 +4,20 @@ import _ from 'lodash';
 
 export const SAVE_TEST_KEY = 'save_test_enabled';
 
+export function urlChopper(url: string) {
+    try {
+        if (typeof url === 'string') {
+            return url.match(/[^\/]*\/\/[^\/]*(\/.*)/)![1];
+        } else {
+            return url;
+        }
+    } catch (ex) {
+        return url;
+    }
+}
+
 export async function makeTest(data: any, url: string, label: string) {
-    const hash = hashString(JSON.stringify({ data, url }));
+    const hash = hashString(JSON.stringify({ data, url: urlChopper(url) }));
 
     const filterString = $('.userSelections')
         .find('*')
@@ -47,7 +59,9 @@ export async function makeTest(data: any, url: string, label: string) {
         url,
         label,
         studies: toJS(getBrowserWindow().studyViewPageStore.studyIds),
-        filterUrl: getBrowserWindow().studyPage.studyViewFullUrlWithFilter,
+        filterUrl: urlChopper(
+            getBrowserWindow().studyPage.studyViewFullUrlWithFilter
+        ),
     };
 
     if (getBrowserWindow().localStorage.getItem(SAVE_TEST_KEY))
