@@ -52,6 +52,8 @@ export async function makeTest(data: any, url: string, label: string) {
 
     if (getBrowserWindow().localStorage.getItem(SAVE_TEST_KEY))
         saveTest(hash, entry);
+
+    return entry;
 }
 
 function saveTest(hash: number, entry: any) {

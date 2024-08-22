@@ -1,6 +1,6 @@
 import { CBioPortalAPIInternal } from 'cbioportal-ts-api-client';
 import { getLoadConfig } from 'config/config';
-import { getBrowserWindow } from 'cbioportal-frontend-commons';
+import { getBrowserWindow, hashString } from 'cbioportal-frontend-commons';
 import { toJS } from 'mobx';
 import { reportValidationResult, validate } from 'shared/api/validation';
 import _ from 'lodash';
@@ -52,8 +52,8 @@ function proxyColumnStore(client: any, endpoint: string) {
                 setTimeout(() => {
                     makeTest(params, url, matchedMethod[0]);
                 }, 1000);
-
-                validate(url, params, matchedMethod[0], 0).then(
+                const hash = hashString(JSON.stringify({ data: params, url }));
+                validate(url, params, matchedMethod[0], hash).then(
                     (result: any) => {
                         reportValidationResult(result);
                     }
