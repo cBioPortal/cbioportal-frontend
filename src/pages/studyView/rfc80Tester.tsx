@@ -12,6 +12,8 @@ getBrowserWindow().showTest = function() {};
 
 const CACHE_KEY: string = 'testCache';
 
+const RFC_TEST_SHOW: string = 'RFC_TEST_SHOW';
+
 function getCache() {
     return getBrowserWindow()[CACHE_KEY] || {};
     //return localStorage.getItem(CACHE_KEY);
@@ -25,6 +27,7 @@ function clearCache() {
 export const RFC80Test = observer(function() {
     const store = useLocalObservable<any>(() => ({
         tests: [],
+        show: !!localStorage.getItem(RFC_TEST_SHOW),
     }));
 
     const clearCacheCallback = useCallback(() => {
@@ -37,6 +40,13 @@ export const RFC80Test = observer(function() {
         } else {
             getBrowserWindow().localStorage.setItem(SAVE_TEST_KEY, 'true');
         }
+    }, []);
+
+    const toggleShow = useCallback(() => {
+        !!localStorage.getItem(RFC_TEST_SHOW)
+            ? localStorage.removeItem(RFC_TEST_SHOW)
+            : localStorage.setItem(RFC_TEST_SHOW, 'true');
+        store.show = !store.show;
     }, []);
 
     const runTests = useCallback(() => {
@@ -113,6 +123,24 @@ export const RFC80Test = observer(function() {
         ]
     }`;
 
+    if (!store.show) {
+        return (
+            <div
+                className={'positionAbsolute'}
+                style={{
+                    top: 0,
+                    right: 0,
+                    border: '1px solid #dddddd',
+                    background: 'white',
+                    overflow: 'scroll',
+                    zIndex: 10000,
+                }}
+            >
+                <button onClick={toggleShow}>Show</button>
+            </div>
+        );
+    }
+
     return (
         <div
             className={'positionAbsolute'}
@@ -128,6 +156,7 @@ export const RFC80Test = observer(function() {
                 zIndex: 10000,
             }}
         >
+            <button onClick={toggleShow}>Hide</button>
             <button onClick={clearCacheCallback}>
                 Clear Test Cache ({store.tests.length})
             </button>
