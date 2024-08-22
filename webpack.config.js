@@ -598,9 +598,9 @@ if (isTest) {
 }
 // End Testing
 
-if (isDev) {
-    mergeApiTestJson();
+mergeApiTestJson();
 
+if (isDev) {
     watch('./apiTests/specs', async function(event, filename) {
         if (event === 'change') {
             mergeApiTestJson();
