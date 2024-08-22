@@ -47,12 +47,13 @@ export async function makeTest(data: any, url: string, label: string) {
         url,
         label,
         studies: toJS(getBrowserWindow().studyViewPageStore.studyIds),
-        filterUrl: (await getBrowserWindow().studyPage.getBookmarkUrl())
-            .fullUrl,
+        filterUrl: getBrowserWindow().studyPage.studyViewFullUrlWithFilter,
     };
 
     if (getBrowserWindow().localStorage.getItem(SAVE_TEST_KEY))
         saveTest(hash, entry);
+
+    return entry;
 }
 
 function saveTest(hash: number, entry: any) {
