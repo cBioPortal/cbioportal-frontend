@@ -621,12 +621,12 @@ async function mergeApiTestJson() {
         .then(r => console.log('merged-tests.json written'));
 }
 
-mergeApiTestJson();
+//mergeApiTestJson();
 
-watch('./apiTests/specs', async function(event, filename) {
-    if (event === 'change') {
-        mergeApiTestJson();
-    }
-});
+// watch('./apiTests/specs', async function(event, filename) {
+//     if (event === 'change') {
+//         mergeApiTestJson();
+//     }
+// });
 
 module.exports = config;
