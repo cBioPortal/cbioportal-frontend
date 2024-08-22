@@ -6,6 +6,8 @@ var ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 var TerserPlugin = require('terser-webpack-plugin');
 var { TypedCssModulesPlugin } = require('typed-css-modules-webpack-plugin');
 
+const fsProm = require('fs/promises');
+
 var commit = '"unknown"';
 var version = '"unknown"';
 // Don't show COMMIT/VERSION on Heroku (crashes, because no git dir)
@@ -41,6 +43,8 @@ const dotenv = require('dotenv');
 
 const webpack = require('webpack');
 const path = require('path');
+const { watch } = require('fs');
+const fs = require('fs/promises');
 
 const join = path.join;
 const resolve = path.resolve;
@@ -592,5 +596,37 @@ if (isTest) {
     config.resolve.alias.sinon = 'sinon/pkg/sinon';
 }
 // End Testing
+
+async function mergeApiTestJson() {
+    const files = (await fsProm.readdir('./apiTests/specs')).map(fileName => {
+        return path.join('./apiTests/specs', fileName);
+    });
+
+    const jsons = files.map(path => {
+        return fsProm.readFile(path).then(data => {
+            try {
+                const json = JSON.parse(data);
+                return { file: path, suites: json };
+            } catch (ex) {
+                console.log('invalid apiTest json spec');
+                return [];
+            }
+        });
+    });
+
+    Promise.all(jsons)
+        .then(d => {
+            fsProm.writeFile('./apiTests/merged-tests.json', JSON.stringify(d));
+        })
+        .then(r => console.log('merged-tests.json written'));
+}
+
+mergeApiTestJson();
+
+watch('./apiTests/specs', async function(event, filename) {
+    if (event === 'change') {
+        mergeApiTestJson();
+    }
+});
 
 module.exports = config;

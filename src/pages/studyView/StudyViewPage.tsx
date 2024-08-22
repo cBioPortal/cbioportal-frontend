@@ -81,6 +81,7 @@ import {
 } from 'shared/lib/customTabs/customTabHelpers';
 import { VirtualStudyModal } from 'pages/studyView/virtualStudy/VirtualStudyModal';
 import PlotsTab from 'shared/components/plots/PlotsTab';
+import { RFC80Test } from 'pages/studyView/rfc80Tester';
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -1263,6 +1264,7 @@ export default class StudyViewPage extends React.Component<
                         isLoggedIn={this.props.appStore.isLoggedIn}
                     />
                 )}
+                <RFC80Test />
             </PageLayout>
         );
     }

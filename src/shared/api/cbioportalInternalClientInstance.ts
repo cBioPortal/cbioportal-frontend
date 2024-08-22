@@ -2,8 +2,9 @@ import { CBioPortalAPIInternal } from 'cbioportal-ts-api-client';
 import { getLoadConfig } from 'config/config';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
 import { toJS } from 'mobx';
-import { validate } from 'shared/api/validation';
+import { reportValidationResult, validate } from 'shared/api/validation';
 import _ from 'lodash';
+import { makeTest } from 'shared/api/testMaker';
 
 function proxyColumnStore(client: any, endpoint: string) {
     if (getBrowserWindow().location.search.includes('legacy')) {
@@ -25,7 +26,7 @@ function proxyColumnStore(client: any, endpoint: string) {
         const endpoints = [
             'ClinicalDataCounts',
             'MutatedGenes',
-            //'CaseList',
+            'CaseList',
             'ClinicalDataBin',
             'MolecularProfileSample',
             'CNAGenes',
@@ -48,7 +49,15 @@ function proxyColumnStore(client: any, endpoint: string) {
                     '?' +
                     _.map(arguments[4], (v, k) => `${k}=${v}&`).join('');
 
-                validate(url, params, matchedMethod[0]);
+                setTimeout(() => {
+                    makeTest(params, url, matchedMethod[0]);
+                }, 1000);
+
+                validate(url, params, matchedMethod[0], 0).then(
+                    (result: any) => {
+                        reportValidationResult(result);
+                    }
+                );
             };
         }
 
