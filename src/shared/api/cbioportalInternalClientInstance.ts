@@ -4,7 +4,7 @@ import { getBrowserWindow, hashString } from 'cbioportal-frontend-commons';
 import { toJS } from 'mobx';
 import { reportValidationResult, validate } from 'shared/api/validation';
 import _ from 'lodash';
-import { makeTest } from 'shared/api/testMaker';
+import { makeTest, urlChopper } from 'shared/api/testMaker';
 
 function proxyColumnStore(client: any, endpoint: string) {
     if (getBrowserWindow().location.search.includes('legacy')) {
@@ -50,9 +50,12 @@ function proxyColumnStore(client: any, endpoint: string) {
                     _.map(arguments[4], (v, k) => `${k}=${v}&`).join('');
 
                 setTimeout(() => {
-                    makeTest(params, url, matchedMethod[0]);
+                    makeTest(params, urlChopper(url), matchedMethod[0]);
                 }, 1000);
-                const hash = hashString(JSON.stringify({ data: params, url }));
+
+                const hash = hashString(
+                    JSON.stringify({ data: params, url: urlChopper(url) })
+                );
                 validate(url, params, matchedMethod[0], hash).then(
                     (result: any) => {
                         reportValidationResult(result);
