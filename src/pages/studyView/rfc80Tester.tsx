@@ -1,6 +1,6 @@
 import * as React from 'react';
 import _ from 'lodash';
-import json from './data.json';
+import json from '../../../apiTests/specs/data.json';
 import { useCallback, useEffect } from 'react';
 import { reportValidationResult, validate } from 'shared/api/validation';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
