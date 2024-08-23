@@ -58,7 +58,7 @@ function proxyColumnStore(client: any, endpoint: string) {
                 );
                 validate(url, params, matchedMethod[0], hash).then(
                     (result: any) => {
-                        reportValidationResult(result);
+                        reportValidationResult(result, 'LIVE');
                     }
                 );
             };

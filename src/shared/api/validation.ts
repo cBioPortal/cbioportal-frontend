@@ -164,10 +164,10 @@ export function validate(
 
 export function reportValidationResult(result: any, prefix = '') {
     !result.status &&
-        console.group(`${prefix} ${result.label} ${result.hash} failed :(`);
+        console.group(`${prefix} ${result.label} (${result.hash}) failed :(`);
 
     !result.status &&
-        console.log({
+        console.log('failed test', {
             url: result.url,
             test: result.test,
             studies: result?.test?.studies,
