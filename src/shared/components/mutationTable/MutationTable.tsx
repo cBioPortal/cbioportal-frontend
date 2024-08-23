@@ -478,7 +478,9 @@ export default class MutationTable<
                 this.props.genomeNexusCache ? (
                     AlphaMissenseColumnFormatter.renderFunction(
                         d,
-                        this.props.genomeNexusCache
+                        // this.props.genomeNexusCache
+                        this.props.indexedVariantAnnotations,
+                        this.props.selectedTranscriptId
                     )
                 ) : (
                     <span></span>
@@ -486,12 +488,13 @@ export default class MutationTable<
             download: (d: Mutation[]) =>
                 AlphaMissenseColumnFormatter.download(
                     d,
-                    this.props.genomeNexusCache as GenomeNexusCache
+                    this.props.indexedVariantAnnotations
                 ),
             sortBy: (d: Mutation[]) =>
                 AlphaMissenseColumnFormatter.getSortValue(
                     d,
-                    this.props.genomeNexusCache as GenomeNexusCache
+                    this.props.indexedVariantAnnotations
+                    // this.props.genomeNexusCache as GenomeNexusCache
                 ),
             visible: false,
             tooltip: (
