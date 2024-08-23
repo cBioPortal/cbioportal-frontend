@@ -26,20 +26,19 @@ export class CustomButton extends React.Component<ICustomButtonProps, {}> {
         };
     }
 
-    /** 
-     * extract the study name from the current context. 
+    /**
+     * extract the study name from the current context.
      * @returns the name of the study for the current context; null if cannot be determined
-     *  
+     *
      * CODEP: There are two contexts we can handle:
      * 1) GroupComparisonPage - stores reference in window.groupComparisonPage:
-     *     groupComparisonPage.store.displayedStudies 
+     *     groupComparisonPage.store.displayedStudies
      * 2) ResultsViewPage - stores reference in window.resultsViewPageStore:
      *     resultsViewPageStore.queriedStudies
      * Both are likely MobxPromiseInputParamsWithDefault<CustomStudy[]> objects.
      */
     getSingleStudyName(): string | null {
-
-        var studies : CancerStudy[]|null = null;
+        var studies: CancerStudy[] | null = null;
         const groupComparisonPage = (window as any).groupComparisonPage;
         if (groupComparisonPage != null) {
             studies = groupComparisonPage.store.displayedStudies.result;
@@ -57,10 +56,10 @@ export class CustomButton extends React.Component<ICustomButtonProps, {}> {
         switch (studies.length) {
             case 0:
                 return null;
-            case 1: 
+            case 1:
                 return studies[0].name;
             default:
-                return "Combined Studies";
+                return 'Combined Studies';
         }
     }
 
