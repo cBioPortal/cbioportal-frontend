@@ -327,6 +327,10 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
                             )!.samples = newSamples;
                             this.setState({ mtbs: newMtbs });
                         }}
+                        value={mtb.samples.map(sampleId => ({
+                            label: sampleId,
+                            value: sampleId,
+                        }))}
                     />
                     <span className={styles.edit}>
                         <Button
@@ -396,15 +400,32 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
             therapyRecommendationToDelete.id
         );
         const newMtbs = this.state.mtbs.slice();
-        newMtbs.find(
-            x => x.id === mtbId
-        )!.therapyRecommendations = newMtbs
+        let m = newMtbs.find(x => x.id === mtbId)!;
+        m.therapyRecommendations = newMtbs
             .find(x => x.id === mtbId)!
             .therapyRecommendations.filter(
                 (therapyRecommendation: ITherapyRecommendation) =>
                     therapyRecommendationToDelete.id !==
                     therapyRecommendation.id
             );
+        m.samples = [];
+        m.therapyRecommendations.forEach(y => {
+            y.reasoning.clinicalData?.forEach(c => {
+                if (
+                    c.sampleId! != undefined &&
+                    !m.samples.includes(c.sampleId!)
+                ) {
+                    m.samples.push(c.sampleId!);
+                }
+            });
+            y.reasoning.geneticAlterations?.forEach(g => {
+                g.sampleIds!.forEach(s => {
+                    if (!m.samples.includes(s)) {
+                        m.samples.push(s);
+                    }
+                });
+            });
+        });
         this.setState({ mtbs: newMtbs });
         return true;
     };
@@ -442,17 +463,52 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
         );
         const newMtbs = this.state.mtbs.slice();
         if (index === -1) {
-            newMtbs
-                .find(x => x.id === mtbId)!
-                .therapyRecommendations.unshift(therapyRecommendationToAdd);
+            let y = newMtbs.find(x => x.id === mtbId)!;
+            y.therapyRecommendations.unshift(therapyRecommendationToAdd);
+
+            therapyRecommendationToAdd.reasoning.clinicalData?.forEach(c => {
+                if (
+                    c.sampleId! != undefined &&
+                    !y.samples.includes(c.sampleId!)
+                ) {
+                    y.samples.push(c.sampleId!);
+                }
+                console.log('sid', c.sampleId);
+            });
+            therapyRecommendationToAdd.reasoning.geneticAlterations?.forEach(
+                g => {
+                    g.sampleIds!.forEach(s => {
+                        if (!y.samples.includes(s)) {
+                            y.samples.push(s);
+                        }
+                    });
+                }
+            );
         } else {
-            newMtbs
-                .find(x => x.id === mtbId)!
-                .therapyRecommendations.splice(
-                    index,
-                    0,
-                    therapyRecommendationToAdd
-                );
+            let y = newMtbs.find(x => x.id === mtbId)!;
+            y.therapyRecommendations.splice(
+                index,
+                0,
+                therapyRecommendationToAdd
+            );
+            therapyRecommendationToAdd.reasoning.clinicalData?.forEach(c => {
+                if (
+                    c.sampleId! != undefined &&
+                    !y.samples.includes(c.sampleId!)
+                ) {
+                    y.samples.push(c.sampleId!);
+                }
+                console.log('sid', c.sampleId);
+            });
+            therapyRecommendationToAdd.reasoning.geneticAlterations?.forEach(
+                g => {
+                    g.sampleIds!.forEach(s => {
+                        if (!y.samples.includes(s)) {
+                            y.samples.push(s);
+                        }
+                    });
+                }
+            );
         }
         this.setState({ mtbs: newMtbs });
         return true;
