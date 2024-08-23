@@ -84,14 +84,15 @@ export function patientViewTabs(
                 <HelpWidget path={urlWrapper.routing.location.pathname} />
             }
         >
-            {tabs(pageInstance, sampleManager)}
+            {tabs(pageInstance, sampleManager, urlWrapper)}
         </MSKTabs>
     );
 }
 
 export function tabs(
     pageComponent: PatientViewPageInner,
-    sampleManager: SampleManager | null
+    sampleManager: SampleManager | null,
+    urlWrapper: PatientViewUrlWrapper
 ) {
     const tabs: JSX.Element[] = [];
     tabs.push(
@@ -689,7 +690,7 @@ export function tabs(
                     }
                     samples={
                         pageComponent.patientViewPageStore
-                            .samplesWithCountDataAvailable
+                            .samplesWithDataAvailable
                     }
                     samplesNotProfiled={
                         pageComponent.patientViewPageStore

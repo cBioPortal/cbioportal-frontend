@@ -149,12 +149,22 @@ export class ClinicalDataTab extends React.Component<
 
     @computed
     get clinicalDataSortAttributeId(): string | undefined {
-        return this.clinicalDataSortCriteria?.field
-            ? this.props.store.clinicalAttributeDisplayNameToClinicalAttribute
-                  .result![this.clinicalDataSortCriteria.field][
-                  'clinicalAttributeId'
-              ]
-            : undefined;
+        switch (this.clinicalDataSortCriteria?.field) {
+            // these first two are special cases where we are not filtering
+            // by an attribute
+            case 'Patient ID':
+                return 'patientId';
+            case 'Sample ID':
+                return 'sampleId';
+            default:
+                return this.clinicalDataSortCriteria?.field
+                    ? this.props.store
+                          .clinicalAttributeDisplayNameToClinicalAttribute
+                          .result![this.clinicalDataSortCriteria.field][
+                          'clinicalAttributeId'
+                      ]
+                    : undefined;
+        }
     }
 
     @computed
@@ -174,7 +184,6 @@ export class ClinicalDataTab extends React.Component<
             if (this.props.store.selectedSamples.result.length === 0) {
                 return Promise.resolve({ totalItems: 0, data: [] });
             }
-
             const sampleClinicalData = await fetchClinicalDataForStudyViewClinicalDataTab(
                 this.props.store.filters,
                 this.props.store.sampleSetByKey.result!,

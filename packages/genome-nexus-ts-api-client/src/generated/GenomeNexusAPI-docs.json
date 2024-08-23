@@ -1348,6 +1348,18 @@
         }
       }
     },
+    "AlphaMissense": {
+      "type": "object",
+      "properties": {
+        "pathogenicity": {
+          "type": "string"
+        },
+        "score": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
     "ArticleAbstract": {
       "type": "object",
       "properties": {
@@ -3309,6 +3321,9 @@
         "transcript_id"
       ],
       "properties": {
+        "alphaMissense": {
+          "$ref": "#/definitions/AlphaMissense"
+        },
         "amino_acids": {
           "type": "string",
           "description": "Amino acids"
@@ -3413,6 +3428,9 @@
         "transcriptId"
       ],
       "properties": {
+        "alphaMissense": {
+          "$ref": "#/definitions/AlphaMissense"
+        },
         "aminoAcidAlt": {
           "type": "string",
           "description": "Alt Amino Acid"
@@ -3725,6 +3743,9 @@
         "variant"
       ],
       "properties": {
+        "alphaMissense": {
+          "$ref": "#/definitions/AlphaMissense"
+        },
         "assemblyName": {
           "type": "string",
           "description": "Assembly name"
