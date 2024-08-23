@@ -55,7 +55,7 @@ function generateTheme() {
     return theme;
 }
 
-const VICTORY_THEME = generateTheme();
+export const VICTORY_THEME = generateTheme();
 const TILT_ANGLE = 50;
 
 @observer

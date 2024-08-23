@@ -83,6 +83,7 @@ import {
 } from 'pages/studyView/table/StructuralVariantMultiSelectionTable';
 import { StructVarGenePair } from 'pages/studyView/StructVarUtils';
 import { Modal } from 'react-bootstrap';
+import LineChart from './lineChart/LineChart';
 
 export interface AbstractChart {
     toSVGDOMNode: () => Element;
@@ -335,6 +336,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     logScaleChecked: this.props.logScaleChecked,
                     isShowNAChecked: this.props.isShowNAChecked,
                     showNAToggle: this.props.showNAToggle,
+                    showChartChangeOptions: true,
                 };
                 break;
             }
@@ -364,6 +366,12 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             }
             case ChartTypeEnum.TABLE: {
                 controls = { showPieIcon: true };
+                break;
+            }
+            case ChartTypeEnum.LINE_CHART: {
+                controls = {
+                    showChartChangeOptions: true,
+                };
                 break;
             }
             case ChartTypeEnum.SURVIVAL: {
@@ -564,6 +572,23 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         showNAChecked={this.props.store.isShowNAChecked(
                             this.props.chartMeta.uniqueKey
                         )}
+                    />
+                );
+            }
+            case ChartTypeEnum.LINE_CHART: {
+                return () => (
+                    <LineChart
+                        width={getWidthByDimension(
+                            this.props.dimension,
+                            this.borderWidth
+                        )}
+                        height={getHeightByDimension(
+                            this.props.dimension,
+                            this.chartHeaderHeight
+                        )}
+                        ref={this.handlers.ref}
+                        data={this.props.promise.result}
+                        onUserSelection={this.handlers.onDataBinSelection}
                     />
                 );
             }
