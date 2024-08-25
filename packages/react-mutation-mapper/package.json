@@ -42,7 +42,7 @@
     "cbioportal-frontend-commons": "^0.5.66",
     "cbioportal-utils": "^0.3.41",
     "classnames": "^2.2.5",
-    "genome-nexus-ts-api-client": "^1.1.32",
+    "genome-nexus-ts-api-client": "^1.1.33",
     "jquery": "^3.2.1",
     "lodash": "^4.17.15",
     "memoize-weak-decorator": "^1.0.3",
