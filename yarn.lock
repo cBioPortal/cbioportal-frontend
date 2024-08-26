@@ -11536,6 +11536,14 @@ genfun@^5.0.0:
   resolved "https://registry.yarnpkg.com/genfun/-/genfun-5.0.0.tgz#9dd9710a06900a5c4a5bf57aca5da4e52fe76537"
   integrity sha512-KGDOARWVga7+rnB3z9Sd2Letx515owfk0hSxHGuqjANb1M+x2bGZGqHLiozPsYMdM2OubeMni/Hpwmjq6qIUhA==
 
+genome-nexus-ts-api-client@^1.1.32:
+  version "1.1.33"
+  resolved "https://registry.yarnpkg.com/genome-nexus-ts-api-client/-/genome-nexus-ts-api-client-1.1.33.tgz#aea3eafe6ca59e0187c25c487b7fb9f9b704bdde"
+  integrity sha512-wrbDKoVjw9etDChfacrNStlORqWlS/k2dA5DzlxFEfen3WYO7QtXAFLVSxpjanA/3sGQnVqaxreZzjTPDXhs1A==
+  dependencies:
+    superagent "^3.8.3"
+    typescript "4.0.3"
+
 gensync@^1.0.0-beta.2:
   version "1.0.0-beta.2"
   resolved "https://registry.yarnpkg.com/gensync/-/gensync-1.0.0-beta.2.tgz#32a6ee76c3d7f52d46b2b1ae5d93fea8580a25e0"

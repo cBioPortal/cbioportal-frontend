@@ -78,7 +78,6 @@ export default class ResultsViewMutationTable extends MutationTable<
             MutationTableColumnType.DBSNP,
             MutationTableColumnType.SIGNAL,
             MutationTableColumnType.ALPHAMISSENSE,
-
         ],
         columnVisibilityProps: {},
     };
