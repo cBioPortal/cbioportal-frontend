@@ -2,6 +2,8 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import { Collapse } from 'react-collapse';
 import classnames from 'classnames';
+import { action, computed, observable, makeObservable } from 'mobx';
+
 
 @observer
 export default class UnknownStudiesWarning extends React.Component<
@@ -16,10 +18,11 @@ export default class UnknownStudiesWarning extends React.Component<
         };
     }
 
-    toggleStudiesCollapse = () => {
-        this.setState(prevState => ({
-            studiesCollapsed: !prevState.studiesCollapsed
-        }));
+    @observable studiesCollapsed = false;
+
+    @action.bound
+    toggleStudiesCollapse() {
+        this.studiesCollapsed = !this.studiesCollapsed;
     }
 
     render() {
@@ -34,7 +37,6 @@ export default class UnknownStudiesWarning extends React.Component<
 
                     <div
                         style={{
-                            width: '100%',
                             display: 'flex',
                             alignItems: 'center',
                         }}
