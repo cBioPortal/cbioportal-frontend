@@ -26,22 +26,40 @@ export class CustomButton extends React.Component<ICustomButtonProps, {}> {
         };
     }
 
-    // RETURNS: the name of the study for the current context, if exactly one study; null otherwise
+    /**
+     * extract the study name from the current context.
+     * @returns the name of the study for the current context; null if cannot be determined
+     *
+     * CODEP: There are two contexts we can handle:
+     * 1) GroupComparisonPage - stores reference in window.groupComparisonPage:
+     *     groupComparisonPage.store.displayedStudies
+     * 2) ResultsViewPage - stores reference in window.resultsViewPageStore:
+     *     resultsViewPageStore.queriedStudies
+     * Both are likely MobxPromiseInputParamsWithDefault<CustomStudy[]> objects.
+     */
     getSingleStudyName(): string | null {
-        // extract the study name from the current context
-        // CODEP: GroupComparisonPag stores a reference in the window, so when we are embedded there we can get details about which studies
+        var studies: CancerStudy[] | null = null;
         const groupComparisonPage = (window as any).groupComparisonPage;
-        if (!groupComparisonPage) {
+        if (groupComparisonPage != null) {
+            studies = groupComparisonPage.store.displayedStudies.result;
+        } else {
+            const resultsViewPageStore = (window as any).resultsViewPageStore;
+            if (resultsViewPageStore != null) {
+                studies = resultsViewPageStore.queriedStudies.result;
+            }
+        }
+
+        if (studies == null) {
             return null;
         }
 
-        const studies: CancerStudy[] =
-            groupComparisonPage.store.displayedStudies.result;
-
-        if (studies.length === 1) {
-            return studies[0].name;
-        } else {
-            return null;
+        switch (studies.length) {
+            case 0:
+                return null;
+            case 1:
+                return studies[0].name;
+            default:
+                return 'Combined Studies';
         }
     }
 
