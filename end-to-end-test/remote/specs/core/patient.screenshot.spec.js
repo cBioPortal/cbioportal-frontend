@@ -12,7 +12,7 @@ const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 describe('Patient Cohort View Custom Tab Tests', () => {
     const patientUrl = `${CBIOPORTAL_URL}/patient?studyId=coadread_tcga_pub&caseId=TCGA-A6-2670#navCaseIds=coadread_tcga_pub:TCGA-A6-2670,coadread_tcga_pub:TCGA-A6-2672`;
 
-    it.only('Patient page valid after cohort navigation', async () => {
+    it('Patient page valid after cohort navigation', async () => {
         await goToUrlAndSetLocalStorage(patientUrl);
 
         await waitForNetworkQuiet();
