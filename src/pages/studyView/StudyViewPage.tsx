@@ -868,6 +868,11 @@ export default class StudyViewPage extends React.Component<
                                                     .result
                                             }
                                             patients={this.store.patients}
+                                            clinicalAttributes_customCharts={
+                                                this.store
+                                                    .clinicalAttributes_customCharts
+                                                    .result
+                                            }
                                         />
                                     </MSKTab>
 

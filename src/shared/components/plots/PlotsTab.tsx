@@ -277,6 +277,7 @@ export interface IPlotsTabProps {
     sampleKeyToSample: MobxPromise<_.Dictionary<Sample>>;
     genes: MobxPromise<Gene[]>;
     clinicalAttributes: MobxPromise<ExtendedClinicalAttribute[]>;
+    clinicalAttributes_customCharts?: ExtendedClinicalAttribute[];
     genesets: MobxPromise<Geneset[]>;
     genericAssayEntitiesGroupByMolecularProfileId: MobxPromise<{
         [profileId: string]: GenericAssayMeta[];
@@ -2063,10 +2064,20 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         },
     });
 
+    readonly clinicalAttributes = remoteData<ExtendedClinicalAttribute[]>({
+        await: () => [this.props.clinicalAttributes],
+        invoke: () => {
+            return Promise.resolve([
+                ...this.props.clinicalAttributes.result!,
+                ...(this.props.clinicalAttributes_customCharts || []),
+            ]);
+        },
+    });
+
     readonly coloringMenuOmnibarOptions = remoteData<
         (ColoringMenuOmnibarOption | ColoringMenuOmnibarGroup)[]
     >({
-        await: () => [this.props.genes, this.props.clinicalAttributes],
+        await: () => [this.props.genes, this.clinicalAttributes],
         invoke: () => {
             const allOptions: (
                 | Omit<ColoringMenuOmnibarOption, 'value'>
@@ -2088,7 +2099,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
 
             allOptions.push({
                 label: 'Clinical Attributes',
-                options: this.props.clinicalAttributes
+                options: this.clinicalAttributes
                     .result!.filter(a => {
                         return (
                             a.clinicalAttributeId !==
@@ -2408,12 +2419,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     readonly clinicalAttributeIdToClinicalAttribute = remoteData<{
         [clinicalAttributeId: string]: ClinicalAttribute;
     }>({
-        await: () => [this.props.clinicalAttributes, this.props.studyIds],
+        await: () => [this.props.studyIds, this.clinicalAttributes],
         invoke: () => {
             let _map: {
                 [clinicalAttributeId: string]: ClinicalAttribute;
             } = _.keyBy(
-                this.props.clinicalAttributes.result,
+                this.clinicalAttributes.result!,
                 c => c.clinicalAttributeId
             );
             return Promise.resolve(_map);
@@ -2423,11 +2434,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     readonly clinicalAttributesGroupByclinicalAttributeId = remoteData<{
         [clinicalAttributeId: string]: ClinicalAttribute[];
     }>({
-        await: () => [this.props.clinicalAttributes],
+        await: () => [this.clinicalAttributes],
         invoke: () => {
             return Promise.resolve(
                 _.groupBy(
-                    this.props.clinicalAttributes.result,
+                    this.clinicalAttributes.result!,
                     c => c.clinicalAttributeId
                 )
             );
@@ -2435,12 +2446,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     });
 
     readonly clinicalAttributeOptions = remoteData({
-        await: () => [this.props.clinicalAttributes],
+        await: () => [this.clinicalAttributes],
         invoke: () =>
             Promise.resolve(
-                makeClinicalAttributeOptions(
-                    this.props.clinicalAttributes.result!
-                )
+                makeClinicalAttributeOptions(this.clinicalAttributes.result!)
             ),
     });
 
