@@ -24,13 +24,13 @@ describe('Patient Cohort View Custom Tab Tests', () => {
         const res = await browser.checkDocument();
         assertScreenShotMatch(res);
 
-        // // now reload so that we get to the patient via direct initial load (not cohort navigation)
-        // await browser.url(await browser.getUrl());
-        //
-        // await waitForNetworkQuiet();
-        //
-        // // check that it matches again
-        // const res2 = await browser.checkDocument();
-        // assertScreenShotMatch(res2);
+        // now reload so that we get to the patient via direct initial load (not cohort navigation)
+        await browser.url(await browser.getUrl());
+
+        await waitForNetworkQuiet();
+
+        // check that it matches again
+        const res2 = await browser.checkDocument();
+        assertScreenShotMatch(res2);
     });
 });
