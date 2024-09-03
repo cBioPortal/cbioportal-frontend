@@ -87,8 +87,11 @@ $tl-fontsize: 12px;
         > div {
             white-space: nowrap;
             border-bottom: 1px dashed #eee;
-            padding-right: 10px;
+            padding-right: 18px;
             padding-top: 2px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%; // Modify to test the ellipsis and tooltip
         }
     }
 }
