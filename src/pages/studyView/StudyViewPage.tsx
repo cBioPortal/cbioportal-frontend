@@ -99,11 +99,7 @@ export class StudyResultsSummary extends React.Component<
                 <strong data-test="selected-patients">
                     {this.props.store.selectedPatients.length.toLocaleString()}
                 </strong>
-                &nbsp;<strong>patients</strong>&nbsp;|&nbsp;
-                <strong data-test="selected-samples">
-                    {this.props.store.selectedSamples.result.length.toLocaleString()}
-                </strong>
-                &nbsp;<strong>samples</strong>
+                &nbsp;<strong>patients</strong>
             </div>
         );
     }
@@ -526,42 +522,6 @@ export default class StudyViewPage extends React.Component<
         );
     }
 
-    readonly resourceTabs = MakeMobxView({
-        await: () => [
-            this.store.resourceDefinitions,
-            this.store.resourceIdToResourceData,
-        ],
-        render: () => {
-            const openDefinitions = this.store.resourceDefinitions.result!.filter(
-                d => this.store.isResourceTabOpen(d.resourceId)
-            );
-            const sorted = _.sortBy(openDefinitions, d => d.priority);
-            const resourceDataById = this.store.resourceIdToResourceData
-                .result!;
-
-            const tabs: JSX.Element[] = sorted.reduce((list, def) => {
-                const data = resourceDataById[def.resourceId];
-                if (data && data.length > 0) {
-                    list.push(
-                        <MSKTab
-                            key={getStudyViewResourceTabId(def.resourceId)}
-                            id={getStudyViewResourceTabId(def.resourceId)}
-                            linkText={def.displayName}
-                            onClickClose={this.closeResourceTab}
-                        >
-                            <ResourceTab
-                                resourceData={resourceDataById[def.resourceId]}
-                                urlWrapper={this.urlWrapper}
-                            />
-                        </MSKTab>
-                    );
-                }
-                return list;
-            }, [] as JSX.Element[]);
-            return tabs;
-        },
-    });
-
     @computed get customTabs() {
         return buildCustomTabs(this.customTabsConfigs);
     }
@@ -674,205 +634,6 @@ export default class StudyViewPage extends React.Component<
                                             store={this.store}
                                         ></StudySummaryTab>
                                     </MSKTab>
-                                    <MSKTab
-                                        key={1}
-                                        id={
-                                            StudyViewPageTabKeyEnum.CLINICAL_DATA
-                                        }
-                                        linkText={
-                                            StudyViewPageTabDescriptions.CLINICAL_DATA
-                                        }
-                                        hide={
-                                            this.store.selectedSamples.result
-                                                .length === 0
-                                        }
-                                    >
-                                        <ClinicalDataTab store={this.store} />
-                                    </MSKTab>
-                                    <MSKTab
-                                        key={2}
-                                        id={StudyViewPageTabKeyEnum.HEATMAPS}
-                                        linkText={
-                                            StudyViewPageTabDescriptions.HEATMAPS
-                                        }
-                                        hide={
-                                            this.store.MDACCHeatmapStudyMeta
-                                                .result.length === 0
-                                        }
-                                    >
-                                        <IFrameLoader
-                                            className="mdacc-heatmap-iframe"
-                                            url={`https://bioinformatics.mdanderson.org/TCGA/NGCHMPortal/?${this.store.MDACCHeatmapStudyMeta.result[0]}`}
-                                        />
-                                    </MSKTab>
-                                    <MSKTab
-                                        key={3}
-                                        id={StudyViewPageTabKeyEnum.CN_SEGMENTS}
-                                        linkText={
-                                            StudyViewPageTabDescriptions.CN_SEGMENTS
-                                        }
-                                        hide={
-                                            this.store.hasCNSegmentData
-                                                .isPending ||
-                                            !this.store.hasCNSegmentData.result
-                                        }
-                                    >
-                                        <CNSegments store={this.store} />
-                                    </MSKTab>
-                                    <MSKTab
-                                        key={4}
-                                        id={
-                                            StudyViewPageTabKeyEnum.FILES_AND_LINKS
-                                        }
-                                        linkText={RESOURCES_TAB_NAME}
-                                        hide={!this.shouldShowResources}
-                                    >
-                                        <div>
-                                            <ResourcesTab
-                                                store={this.store}
-                                                openResource={this.openResource}
-                                            />
-                                        </div>
-                                    </MSKTab>
-                                    <MSKTab
-                                        key={5}
-                                        id={StudyViewPageTabKeyEnum.PLOTS}
-                                        linkText={
-                                            <span>
-                                                {
-                                                    StudyViewPageTabDescriptions.PLOTS
-                                                }{' '}
-                                                <strong className={'beta-text'}>
-                                                    Beta!
-                                                </strong>
-                                            </span>
-                                        }
-                                    >
-                                        <PlotsTab
-                                            filteredSamplesByDetailedCancerType={
-                                                this.store
-                                                    .filteredSamplesByDetailedCancerType
-                                            }
-                                            mutations={this.store.mutations}
-                                            studies={
-                                                this.store
-                                                    .queriedPhysicalStudies
-                                            }
-                                            molecularProfileIdSuffixToMolecularProfiles={
-                                                this.store
-                                                    .molecularProfileIdSuffixToMolecularProfiles
-                                            }
-                                            entrezGeneIdToGene={
-                                                this.store.entrezGeneIdToGeneAll
-                                            }
-                                            sampleKeyToSample={
-                                                this.store.sampleSetByKey
-                                            }
-                                            genes={this.store.allGenes}
-                                            clinicalAttributes={
-                                                this.store.clinicalAttributes
-                                            }
-                                            genesets={this.store.genesets}
-                                            genericAssayEntitiesGroupByMolecularProfileId={
-                                                this.store
-                                                    .genericAssayEntitiesGroupedByProfileId
-                                            }
-                                            studyIds={
-                                                this.store
-                                                    .queriedPhysicalStudyIds
-                                            }
-                                            molecularProfilesWithData={
-                                                this.store
-                                                    .molecularProfilesInStudies
-                                            }
-                                            molecularProfilesInStudies={
-                                                this.store
-                                                    .molecularProfilesInStudies
-                                            }
-                                            annotatedCnaCache={
-                                                this.store.annotatedCnaCache
-                                            }
-                                            annotatedMutationCache={
-                                                this.store
-                                                    .annotatedMutationCache
-                                            }
-                                            structuralVariantCache={
-                                                this.store
-                                                    .structuralVariantCache
-                                            }
-                                            studyToMutationMolecularProfile={
-                                                this.store
-                                                    .studyToMutationMolecularProfile
-                                            }
-                                            studyToMolecularProfileDiscreteCna={
-                                                this.store
-                                                    .studyToMolecularProfileDiscreteCna
-                                            }
-                                            clinicalDataCache={
-                                                this.store.clinicalDataCache
-                                            }
-                                            patientKeyToFilteredSamples={
-                                                this.store
-                                                    .patientKeyToFilteredSamples
-                                            }
-                                            numericGeneMolecularDataCache={
-                                                this.store
-                                                    .numericGeneMolecularDataCache
-                                            }
-                                            coverageInformation={
-                                                this.store.coverageInformation
-                                            }
-                                            filteredSamples={
-                                                this.store.selectedSamples
-                                            }
-                                            genesetMolecularDataCache={
-                                                this.store
-                                                    .genesetMolecularDataCache
-                                            }
-                                            genericAssayMolecularDataCache={
-                                                this.store
-                                                    .genericAssayMolecularDataCache
-                                            }
-                                            studyToStructuralVariantMolecularProfile={
-                                                this.store
-                                                    .studyToStructuralVariantMolecularProfile
-                                            }
-                                            driverAnnotationSettings={
-                                                this.store
-                                                    .driverAnnotationSettings
-                                            }
-                                            studyIdToStudy={
-                                                this.store.studyIdToStudy.result
-                                            }
-                                            structuralVariants={
-                                                this.store.structuralVariants
-                                                    .result
-                                            }
-                                            hugoGeneSymbols={
-                                                this.store.allHugoGeneSymbols
-                                                    .result
-                                            }
-                                            selectedGenericAssayEntitiesGroupByMolecularProfileId={
-                                                this.store
-                                                    .selectedGenericAssayEntitiesGroupByMolecularProfileId
-                                            }
-                                            molecularProfileIdToMolecularProfile={
-                                                this.store
-                                                    .molecularProfileIdToMolecularProfile
-                                            }
-                                            urlWrapper={this.urlWrapper}
-                                            hasNoQueriedGenes={true}
-                                            genePanelDataForAllProfiles={
-                                                this.store
-                                                    .genePanelDataForAllProfiles
-                                                    .result
-                                            }
-                                            patients={this.store.patients}
-                                        />
-                                    </MSKTab>
-
-                                    {this.resourceTabs.component}
-                                    {this.customTabs}
                                 </MSKTabs>
 
                                 <div
@@ -945,82 +706,6 @@ export default class StudyViewPage extends React.Component<
                                             position: 'relative',
                                         }}
                                     >
-                                        {this.enableCustomSelectionInTabs.includes(
-                                            this.store.currentTab
-                                        ) && (
-                                            <>
-                                                <DefaultTooltip
-                                                    visible={
-                                                        this
-                                                            .showCustomSelectTooltip
-                                                    }
-                                                    trigger={['click']}
-                                                    placement={'bottomLeft'}
-                                                    onVisibleChange={visible =>
-                                                        (this.showCustomSelectTooltip = !!visible)
-                                                    }
-                                                    destroyTooltipOnHide={true}
-                                                    overlay={() => (
-                                                        <div
-                                                            style={{
-                                                                width: '350px',
-                                                            }}
-                                                        >
-                                                            <CustomCaseSelection
-                                                                allSamples={
-                                                                    this.store
-                                                                        .samples
-                                                                        .result
-                                                                }
-                                                                selectedSamples={
-                                                                    this.store
-                                                                        .selectedSamples
-                                                                        .result
-                                                                }
-                                                                disableGrouping={
-                                                                    true
-                                                                }
-                                                                queriedStudies={
-                                                                    this.store
-                                                                        .queriedPhysicalStudyIds
-                                                                        .result
-                                                                }
-                                                                onSubmit={(
-                                                                    chart: CustomChartData
-                                                                ) => {
-                                                                    this.showCustomSelectTooltip = false;
-                                                                    this.store.updateCustomSelect(
-                                                                        chart
-                                                                    );
-                                                                }}
-                                                            />
-                                                        </div>
-                                                    )}
-                                                >
-                                                    <button
-                                                        className={classNames(
-                                                            'btn btn-primary btn-sm',
-                                                            {
-                                                                active: this
-                                                                    .showCustomSelectTooltip,
-                                                            }
-                                                        )}
-                                                        aria-pressed={
-                                                            this
-                                                                .showCustomSelectTooltip
-                                                        }
-                                                        data-test="custom-selection-button"
-                                                        style={{
-                                                            marginLeft: '10px',
-                                                        }}
-                                                    >
-                                                        {getButtonNameWithDownPointer(
-                                                            'Custom Selection'
-                                                        )}
-                                                    </button>
-                                                </DefaultTooltip>
-                                            </>
-                                        )}
                                         {getServerConfig()
                                             .skin_show_settings_menu && (
                                             <DefaultTooltip
@@ -1168,9 +853,6 @@ export default class StudyViewPage extends React.Component<
                                                 </button>
                                             </Modal.Footer>
                                         </Modal>
-
-                                        {ServerConfigHelpers.sessionServiceIsEnabled() &&
-                                            this.groupsButton}
                                     </div>
                                     <StudyViewPageSettingsMenu
                                         store={this.store}
