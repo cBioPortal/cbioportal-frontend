@@ -59,7 +59,6 @@ const ScatterBoxPlot: React.FC<ScatterBoxPlotProps> = ({
         allScatterData.push(...scatterData);
         allBoxPlotData.push(boxPlotData);
     });
-    console.log(allScatterData, allBoxPlotData, 'hiad');
 
     const handleDownload = () => {
         const element = document.getElementById('div-to-download');
@@ -199,9 +198,7 @@ const ScatterBoxPlot: React.FC<ScatterBoxPlotProps> = ({
                         data={allBoxPlotData}
                         x="x"
                         y="y"
-                        labels={(data: any) =>
-                            console.log(data, 'this is scatterdata')
-                        }
+                        labels={(datum: any) => datum.label}
                         boxWidth={45}
                         style={{
                             min: { stroke: '#999999' },

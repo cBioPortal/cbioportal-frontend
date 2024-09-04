@@ -36,6 +36,7 @@ import PieToolTip from './PieToolTip';
 import BoxPlot from './BoxPlot';
 import './styles.css';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
+import ComparisonScatterPlot from './ComparisonScatterPlot';
 
 interface Option {
     value: string;
@@ -83,6 +84,11 @@ interface MolecularProfileDataItem {
     sampleId: string;
     // Add other properties if needed
 }
+
+type CellOption = {
+    value: string;
+    label: string;
+};
 
 interface HomePageState {
     selectedOption: string | null;
@@ -142,6 +148,15 @@ interface HomePageState {
     boxPlotData: any;
     scatterColor: string;
     loader: boolean;
+    isComparision: boolean;
+    compareGene1: string;
+    compareGene2: string;
+    cellOptions: CellOption[];
+    geneCellSelect: string;
+    gene1Map: any;
+    gene2Map: any;
+    gene1Data: any;
+    gene2Data: any;
 }
 
 class HomePage extends Component<HomePageProps, HomePageState> {
@@ -204,6 +219,15 @@ class HomePage extends Component<HomePageProps, HomePageState> {
             boxPlotData: [],
             scatterColor: 'Default',
             loader: false,
+            isComparision: false,
+            compareGene1: '',
+            compareGene2: '',
+            cellOptions: [],
+            geneCellSelect: '',
+            gene1Map: [],
+            gene2Map: [],
+            gene1Data: [],
+            gene2Data: [],
         };
     }
 
@@ -238,21 +262,18 @@ class HomePage extends Component<HomePageProps, HomePageState> {
     handleReverseChange(event: React.ChangeEvent<HTMLInputElement>) {
         this.setState({ isReverse: event.target.checked });
     }
+
+    @autobind
+    handleIsCompareChange(event: React.ChangeEvent<HTMLInputElement>) {
+        this.setState({ isComparision: event.target.checked });
+    }
     async fetchDataBins(genericAssayEntityId: string, profileType: string) {
         let temp = this.props.store.genericAssayProfileOptionsByType.result;
-        console.log(temp, profileType, 'before id');
         let id = temp[profileType];
         let tempstudyId = id[0].value;
         this.setState({ heading: profileType });
         this.setState({ stableIdBin: genericAssayEntityId });
         this.setState({ profileTypeBin: tempstudyId });
-        console.log(id, tempstudyId, 'this is the id');
-
-        console.log(
-            genericAssayEntityId,
-            profileType,
-            'here are function parameters'
-        );
         const { store } = this.props;
         const gaDataBins = await internalClient.fetchGenericAssayDataBinCountsUsingPOST(
             {
@@ -268,10 +289,8 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                 },
             }
         );
-        console.log(gaDataBins, 'gaDataBins');
 
         const dataBins = convertGenericAssayDataBinsToDataBins(gaDataBins);
-        console.log(dataBins, 'convertedDataBins');
 
         // Update the dataBins state with fetched data
         this.setState({ databinState: dataBins });
@@ -292,21 +311,12 @@ class HomePage extends Component<HomePageProps, HomePageState> {
     }
     @autobind
     async handleSelectChange(event: any) {
-        console.log('i am claed', event);
         this.setState({ stackEntity: '' });
-        console.log(this.state.entityNames, 'entityNames');
         const selectedValue = event.value;
         if (event.value == 'gene_expression') {
             this.setState({ selectedValue: selectedValue });
             this.setState({ selectedOption: selectedValue });
-
-            console.log(
-                selectedValue,
-                this.state.selectedValue,
-                'selectedoptionss'
-            );
         } else {
-            console.log(event.value, 'this is event.target.value');
             const studyId = 'gbm_cptac_2021';
             const selectedProfile = this.state.molecularProfiles.find(
                 profile => profile.value === selectedValue
@@ -329,15 +339,8 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                     : [];
                 const names = entityArray.map((entity: any) => entity.stableId);
                 this.setState({ entityNames: names, selectedEntity: null });
-
-                console.log(names, 'here are the names');
                 this.retrieveAllProfiledSamples(selectedValue)
                     .then(async MolecularProfileData => {
-                        console.log(
-                            MolecularProfileData,
-                            'this is molecularProfileData'
-                        );
-
                         const extractedData: string[] = (
                             MolecularProfileData ?? []
                         ).map(({ sampleId }) => sampleId);
@@ -347,10 +350,6 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                             extractedData
                         );
                         this.setState({ pieChartData: pieChartData as any[] });
-                        console.log(
-                            extractedData,
-                            'this is the extracted data'
-                        );
                     })
                     .catch(error => {
                         console.error('Failed to fetch data:', error);
@@ -372,7 +371,6 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                         chartInfo: newChartInfo,
                     },
                     async () => {
-                        console.log(this.state.chartInfo);
                         await this.fetchDataBins(
                             newChartInfo.genericAssayEntityId,
                             newChartInfo.profileType
@@ -395,7 +393,6 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                     },
                 });
             }
-            console.log(this.state.entityNames, 'emtit');
         }
     }
 
@@ -416,7 +413,6 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                 item.molecularAlterationType === 'GENERIC_ASSAY' &&
                 item.genericAssayType.startsWith('SINGLE_CELL')
             ) {
-                console.log(item.studyId); // Log the studyId to console
                 studyId = item.studyId; // Store the studyId in the variable
                 break; // Exit the loop once the desired item is found
             }
@@ -426,20 +422,13 @@ class HomePage extends Component<HomePageProps, HomePageState> {
         const selectedMolecularProfile = Molecularprofiles.find(
             (profile: any) => profile.molecularProfileId === selectedOption
         );
-        console.log(selectedMolecularProfile, 'here is the selected profile');
 
         const BarchartDownloadData = await this.getGenericAssayDataAsClinicalData(
             selectedMolecularProfile,
             selectedEntityId
         );
         this.setState({ BarDownloadData: BarchartDownloadData });
-        console.log(BarchartDownloadData, 'hereisbarchartdownloaddata');
 
-        console.log(
-            selectedEntityId,
-            selectedOption,
-            'these are from entity change'
-        );
         const { store } = this.props;
 
         if (
@@ -456,10 +445,6 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                     { selectedEntity: newSelectedEntity },
                     async () => {
                         // Log the selected entity's stableId
-                        console.log(
-                            'Selected entity stableId:',
-                            newSelectedEntity.stableId
-                        );
 
                         // Update chartInfo with the new entity
                         this.setState(
@@ -555,7 +540,6 @@ class HomePage extends Component<HomePageProps, HomePageState> {
     handleGeneChange = (selectedOption: any) => {
         this.setState({ loader: true });
         const selectedGene = selectedOption.value;
-
         if (selectedGene && this.state.transformedData[selectedGene]) {
             // Group by cellname for the selected gene
             const groupedByCellname = this.state.transformedData[
@@ -581,11 +565,6 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                 cellIndex++;
             }
 
-            console.log(
-                `Data for gene '${selectedGene}' grouped by cellname:`,
-                groupedByCellname
-            );
-
             // Update selectedGene state
             this.setState({ selectedGene });
             this.setState({ boxPlotData: groupedByCellname });
@@ -594,13 +573,98 @@ class HomePage extends Component<HomePageProps, HomePageState> {
         }
         this.setState({ loader: false });
     };
+    processGeneData(
+        transformedData: any,
+        selectedGene: string,
+        addJitter: (value: number) => number
+    ) {
+        if (selectedGene && transformedData[selectedGene]) {
+            const groupedByCellname = transformedData[selectedGene].reduce(
+                (acc: any, tuple: any) => {
+                    const { cellname, ...rest } = tuple;
+                    if (!acc[cellname]) {
+                        acc[cellname] = [];
+                    }
+                    acc[cellname].push(rest);
+                    return acc;
+                },
+                {}
+            );
+
+            // Add 'x' property to each element based on the cellname index
+            let cellIndex = 1;
+            for (let cellname in groupedByCellname) {
+                groupedByCellname[cellname] = groupedByCellname[cellname].map(
+                    (item: any) => ({
+                        ...item,
+                        x: addJitter(0),
+                    })
+                );
+                cellIndex++;
+            }
+
+            return groupedByCellname;
+        }
+
+        return null;
+    }
+
+    generateComparePlot(gene1: string, gene2: string) {
+        const groupedByCellname1 = this.processGeneData(
+            this.state.transformedData,
+            gene1,
+            this.addJitter.bind(this)
+        );
+        if (groupedByCellname1) {
+            this.setState({ gene1Map: groupedByCellname1 });
+
+            const cellNamesArray = Object.keys(groupedByCellname1);
+            const cellOptions = cellNamesArray.map(cellname => ({
+                value: cellname,
+                label: cellname,
+            }));
+            this.setState({ cellOptions: cellOptions });
+        }
+
+        const groupedByCellname2 = this.processGeneData(
+            this.state.transformedData,
+            gene2,
+            this.addJitter.bind(this)
+        );
+        if (groupedByCellname2) {
+            this.setState({ gene2Map: groupedByCellname2 });
+        }
+    }
+    handleGene1Change = (selectedOption: any) => {
+        this.setState({ compareGene1: selectedOption.value });
+        if (this.state.compareGene2) {
+            this.generateComparePlot(
+                selectedOption.value,
+                this.state.compareGene2
+            );
+        }
+    };
+    handleGene2Change = (selectedOption: any) => {
+        this.setState({ compareGene2: selectedOption.value });
+        if (this.state.compareGene1) {
+            this.generateComparePlot(
+                this.state.compareGene1,
+                selectedOption.value
+            );
+        }
+    };
+
+    handleGeneCellChange = (selectedOption: any) => {
+        this.setState({ geneCellSelect: selectedOption.value });
+        this.setState({ gene1Data: this.state.gene1Map[selectedOption.value] });
+        this.setState({ gene2Data: this.state.gene2Map[selectedOption.value] });
+    };
 
     handleNestedKeyChangeBox = (selectedOption: any) => {
         const selectedNestedKeyBox = selectedOption.value;
         const { selectedIdBox, selectedKeyBox } = this.state;
         const selectedObjectBox =
             jsondata[selectedIdBox][selectedKeyBox][selectedNestedKeyBox];
-        console.log(selectedObjectBox);
         this.setState({ selectedNestedKeyBox, selectedObjectBox });
     };
     async componentDidMount() {
@@ -608,7 +672,6 @@ class HomePage extends Component<HomePageProps, HomePageState> {
         const { store } = this.props;
         let studyId = 'gbm_cptac_2021';
         const data = this.props.store.genericAssayProfiles.result;
-        console.log(jsondata, 'hereisdataatata');
 
         let transformedData: any = {};
 
@@ -893,7 +956,6 @@ class HomePage extends Component<HomePageProps, HomePageState> {
 
         this.setState({ transformedData });
 
-        console.log(transformedData, 'genenames', jsondata);
         const geneToSelect = 'CSF3R';
 
         if (transformedData[geneToSelect]) {
@@ -909,11 +971,6 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                 },
                 {}
             );
-
-            console.log(
-                `Data for gene '${geneToSelect}' grouped by cellname:`,
-                groupedByCellname
-            );
         } else {
             console.log(`Gene '${geneToSelect}' not found in the data.`);
         }
@@ -922,17 +979,13 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                 item.molecularAlterationType === 'GENERIC_ASSAY' &&
                 item.genericAssayType.startsWith('SINGLE_CELL')
             ) {
-                console.log(item.studyId); // Log the studyId to console
                 this.setState({ studyIdToStudy: item.studyId });
                 studyId = item.studyId; // Store the studyId in the variable
                 break; // Exit the loop once the desired item is found
             }
         }
-        console.log('Found studyId:', studyId);
 
         const Molecularprofiles = await this.molecularProfiles([studyId]);
-
-        console.log(Molecularprofiles, 'this is molecularprofiles');
 
         const molecularProfileOptions = Molecularprofiles.map(
             (profile: any) => ({
@@ -947,7 +1000,6 @@ class HomePage extends Component<HomePageProps, HomePageState> {
             })
         );
 
-        console.log(molecularProfileOptions, 'hereistheanswer');
         this.setState({ molecularProfiles: molecularProfileOptions });
 
         this.setState({ loader: false });
@@ -968,7 +1020,6 @@ class HomePage extends Component<HomePageProps, HomePageState> {
     ) {
         const molecularProfiles = { 0: selectedMolecularProfiles };
 
-        console.log(molecularProfiles, 'molecularprof');
         if (_.isEmpty(molecularProfiles)) {
             return [];
         }
@@ -977,7 +1028,6 @@ class HomePage extends Component<HomePageProps, HomePageState> {
             molecularProfile => molecularProfile.studyId
         );
         const samples = this.props.store.samples.result;
-        console.log(samples, 'here are samples');
         const filteredSamples = samples.filter(
             (sample: any) => sample.studyId in molecularProfileMapByStudyId
         );
@@ -989,11 +1039,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                         .molecularProfileId,
             })
         );
-        console.log(
-            genericAssayEntityId,
-            sampleMolecularIdentifiers,
-            'SAMPLEMOL'
-        );
+
         const gaDataList = await client.fetchGenericAssayDataInMultipleMolecularProfilesUsingPOST(
             {
                 projection: 'DETAILED',
@@ -1015,7 +1061,6 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                 } as GenePanelDataMultipleStudyFilter,
             }
         );
-        console.log('all the profiles are here', data);
 
         // Assuming 'data' is the array of 'MolecularProfileDataItem'
         return data as MolecularProfileDataItem[];
@@ -1093,7 +1138,6 @@ class HomePage extends Component<HomePageProps, HomePageState> {
             ? selectedOptions.map((option: any) => option.value)
             : [];
         this.setState({ selectedSamples: selectedSampleIds });
-        console.log(selectedSampleIds);
     };
     render() {
         const {
@@ -1116,6 +1160,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
             selectedKeyBox,
             selectedNestedKeyBox,
             transformedData,
+            isComparision,
         } = this.state;
         const geneOptions = Object.keys(transformedData).map(gene => ({
             value: gene,
@@ -1149,7 +1194,10 @@ class HomePage extends Component<HomePageProps, HomePageState> {
         ];
         const chartOptions =
             this.state.selectedOption === 'gene_expression'
-                ? [{ value: 'box', label: 'Box Plot' }]
+                ? [
+                      { value: 'box', label: 'Box Plot' },
+                      { value: 'comparison', label: 'Co-expression plot' },
+                  ]
                 : [
                       { value: 'pie', label: 'Pie Chart' },
                       { value: 'bar', label: 'Histogram' },
@@ -1170,7 +1218,6 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                 ) : (
                     <>
                         <div className="home-page-container">
-                            {console.log(this.props.store, 'this is tore')}
                             <div className="chart-configurations">
                                 <h2>Chart Configurations</h2>
                                 <div>
@@ -1239,11 +1286,6 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                                 clearable={false}
                                                 searchable={true}
                                             />
-
-                                            {console.log(
-                                                entityNames,
-                                                'hereareentitynames'
-                                            )}
                                         </div>
                                     )}
                                     {chartType === 'box' && (
@@ -1377,6 +1419,91 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                             )}
                                         </div>
                                     )}
+
+                                    {chartType === 'comparison' && (
+                                        <div>
+                                            <div className="dropdown-container">
+                                                <ReactSelect
+                                                    id="geneSelect1"
+                                                    onChange={
+                                                        this.handleGene1Change
+                                                    }
+                                                    value={
+                                                        this.state.compareGene1
+                                                            ? {
+                                                                  value: this
+                                                                      .state
+                                                                      .compareGene1,
+                                                                  label: this
+                                                                      .state
+                                                                      .compareGene1,
+                                                              }
+                                                            : null
+                                                    }
+                                                    options={geneOptions}
+                                                    placeholder="Select first gene..."
+                                                    isClearable={true}
+                                                    isSearchable={true}
+                                                />
+                                            </div>
+                                            <div className="dropdown-container">
+                                                <ReactSelect
+                                                    id="geneSelect2"
+                                                    onChange={
+                                                        this.handleGene2Change
+                                                    }
+                                                    value={
+                                                        this.state.compareGene2
+                                                            ? {
+                                                                  value: this
+                                                                      .state
+                                                                      .compareGene2,
+                                                                  label: this
+                                                                      .state
+                                                                      .compareGene2,
+                                                              }
+                                                            : null
+                                                    }
+                                                    options={geneOptions}
+                                                    placeholder="Select second gene..."
+                                                    isClearable={true}
+                                                    isSearchable={true}
+                                                />
+                                            </div>
+                                            {this.state.compareGene1 &&
+                                                this.state.compareGene2 && (
+                                                    <div className="dropdown-container">
+                                                        <ReactSelect
+                                                            id="geneCellSelect"
+                                                            onChange={
+                                                                this
+                                                                    .handleGeneCellChange
+                                                            }
+                                                            value={
+                                                                this.state
+                                                                    .geneCellSelect
+                                                                    ? {
+                                                                          value: this
+                                                                              .state
+                                                                              .geneCellSelect,
+                                                                          label: this
+                                                                              .state
+                                                                              .geneCellSelect,
+                                                                      }
+                                                                    : null
+                                                            }
+                                                            options={
+                                                                this.state
+                                                                    .cellOptions
+                                                            }
+                                                            placeholder="Select Cell type..."
+                                                            isClearable={true}
+                                                            isSearchable={true}
+                                                        />
+                                                    </div>
+                                                )}
+                                        </div>
+                                    )}
                                     {chartType === 'stack' && (
                                         <div className="dropdown-container">
                                             {/* <select
@@ -1448,10 +1575,6 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                                 clearable={false}
                                                 searchable={true}
                                             />
-                                            {console.log(
-                                                entityNames,
-                                                'hereareentitynames'
-                                            )}
                                         </div>
                                     )}
 
@@ -1548,7 +1671,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                             </label>
                                         </div>
                                     )}
-                                    {chartType == 'stack' &&
+                                    {chartType == 'pie' &&
                                         this.state.stackEntity != '' && (
                                             <div className="checkbox-wrapper-5">
                                                 <input
@@ -1633,7 +1756,8 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                         ? {
                                               width: '48%',
                                           }
-                                        : chartType == 'box'
+                                        : chartType == 'box' ||
+                                          chartType == 'comparison'
                                         ? {
                                               width: '78%',
                                           }
@@ -1677,7 +1801,8 @@ class HomePage extends Component<HomePageProps, HomePageState> {
 
                                 {/* Display fetched data bins */}
                                 {((dataBins && chartType != 'box') ||
-                                    chartType == 'box') && (
+                                    chartType == 'box' ||
+                                        chartType == 'comparison') && (
                                     <div
                                         className="custom-scrollbar"
                                         style={
@@ -1709,7 +1834,8 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                                       paddingBottom: '10px',
                                                       marginLeft: '6px',
                                                   }
-                                                : chartType == 'box'
+                                                : chartType == 'box' ||
+                                                  chartType == 'comparison'
                                                 ? {
                                                       width: '100%',
                                                       border:
@@ -1718,7 +1844,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                                       marginTop: '20px',
                                                       marginLeft: '10px',
                                                       borderRadius: '5px',
-                                                      height: '700px',
+                                                      height: '900px',
                                                       overflow: 'scroll',
                                                   }
                                                 : {
@@ -1922,6 +2048,28 @@ class HomePage extends Component<HomePageProps, HomePageState> {
                                                     }
                                                     scatterColor={
                                                         this.state.scatterColor
+                                                    }
+                                                />
+                                            </>
+                                        ) : chartType === 'comparison' &&
+                                          this.state.geneCellSelect ? (
+                                            <>
+                                                <ComparisonScatterPlot
+                                                    gene1Data={
+                                                        this.state.gene1Data
+                                                    }
+                                                    gene2Data={
+                                                        this.state.gene2Data
+                                                    }
+                                                    selectedGene1={
+                                                        this.state.compareGene1
+                                                    }
+                                                    selectedGene2={
+                                                        this.state.compareGene2
+                                                    }
+                                                    geneCellSelect={
+                                                        this.state
+                                                            .geneCellSelect
                                                     }
                                                 />
                                             </>
