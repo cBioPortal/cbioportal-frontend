@@ -162,26 +162,6 @@ export default class ActionButtons extends React.Component<
                 )}
 
                 <DefaultTooltip
-                    trigger={['hover']}
-                    placement={'top'}
-                    overlay={<span>View selected cases</span>}
-                >
-                    <button
-                        className="btn btn-default btn-sm"
-                        disabled={this.props.store.selectedPatients?.length < 1}
-                        onClick={this.openCases}
-                        data-event={serializeEvent({
-                            category: 'studyPage',
-                            action: 'viewPatientCohort',
-                            label: this.props.store.queriedPhysicalStudyIds
-                                .result,
-                        })}
-                    >
-                        <i className="fa fa-user-circle-o"></i>
-                    </button>
-                </DefaultTooltip>
-
-                <DefaultTooltip
                     placement={'top'}
                     trigger={['hover']}
                     overlay={<span>{this.virtualStudyButtonTooltip}</span>}
@@ -201,36 +181,6 @@ export default class ActionButtons extends React.Component<
                         <i className="fa fa-bookmark"></i>
                     </button>
                 </DefaultTooltip>
-
-                {getServerConfig().skin_hide_download_controls ===
-                    DownloadControlOption.SHOW_ALL && (
-                    <DefaultTooltip
-                        trigger={['hover']}
-                        placement={'top'}
-                        overlay={<span>{this.downloadButtonTooltip}</span>}
-                    >
-                        <button
-                            className="btn btn-default btn-sm"
-                            disabled={!this.props.loadingComplete}
-                            onClick={this.initiateDownload}
-                            data-event={serializeEvent({
-                                category: 'studyPage',
-                                action: 'dataDownload',
-                                label: this.props.store.queriedPhysicalStudyIds
-                                    .result,
-                            })}
-                        >
-                            <If condition={this.downloadingData}>
-                                <Then>
-                                    <i className="fa fa-spinner fa-spin"></i>
-                                </Then>
-                                <Else>
-                                    <i className="fa fa-download"></i>
-                                </Else>
-                            </If>
-                        </button>
-                    </DefaultTooltip>
-                )}
             </div>
         );
     }

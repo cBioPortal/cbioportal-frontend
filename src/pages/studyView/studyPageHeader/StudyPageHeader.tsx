@@ -64,7 +64,6 @@ export default class StudyPageHeader extends React.Component<
                             this.props.store.isMixedReferenceGenome
                         }
                     />
-                    <RightPanel store={this.props.store} />
                 </div>
 
                 {this.props.store.clinicalAttributeIdToDataType.isComplete && (
