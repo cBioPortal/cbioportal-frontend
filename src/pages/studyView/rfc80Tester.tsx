@@ -51,7 +51,7 @@ export const RFC80Test = observer(function() {
         store.show = !store.show;
     }, []);
 
-    const runTests = useCallback(() => {
+    const runTests = useCallback(async () => {
         const FILE_FILTER = /clinical-data-filters/;
 
         const files: any[] = FILE_FILTER
@@ -71,8 +71,10 @@ export const RFC80Test = observer(function() {
         console.groupEnd();
 
         let place = 0;
+        let errors: any[] = [];
+        let skips: any[] = [];
 
-        const promises: Promise<any>[] = [];
+        const invokers: (() => Promise<any>)[] = [] as any;
         files
             .map((f: any) => f.suites)
             .forEach((suite: any) => {
@@ -83,27 +85,42 @@ export const RFC80Test = observer(function() {
                             'column-store'
                         );
 
-                        promises.push(
+                        invokers.push(
                             // @ts-ignore
-                            validate(
-                                test.url,
-                                test.data,
-                                test.label,
-                                test.hash
-                            ).then((report: any) => {
-                                report.test = test;
-                                place = place + 1;
-                                const prefix = `${place} of ${totalCount}`;
-                                reportValidationResult(report, prefix);
-                            })
+                            () =>
+                                validate(
+                                    test.url,
+                                    test.data,
+                                    test.label,
+                                    test.hash
+                                ).then((report: any) => {
+                                    report.test = test;
+                                    place = place + 1;
+                                    const prefix = `${place} of ${totalCount}`;
+
+                                    if (test.skip) {
+                                        skips.push(test.hash);
+                                    } else if (!report.status)
+                                        errors.push(test.hash);
+                                    reportValidationResult(report, prefix);
+                                })
                         );
                     })
                 );
             });
 
-        Promise.all(promises).then(() => {
-            console.groupEnd();
-        });
+        for (const el of invokers) {
+            await el();
+        }
+
+        console.group('FINAL REPORT');
+        console.log(`FAILED: ${errors.length} (${errors.join(',')})`);
+        console.log(`SKIPPED: ${skips.length}  (${skips.join(',')})`);
+        console.groupEnd();
+
+        //Promise.all(promises).then(() => {
+        console.groupEnd();
+        // });
     }, []);
 
     useEffect(() => {

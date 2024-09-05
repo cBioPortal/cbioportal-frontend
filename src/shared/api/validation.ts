@@ -163,8 +163,12 @@ export function validate(
 }
 
 export function reportValidationResult(result: any, prefix = '') {
+    const skipMessage = result.test.skip ? `(SKIPPED ${result.test.skip})` : '';
+
     !result.status &&
-        console.group(`${prefix} ${result.label} (${result.hash}) failed :(`);
+        console.groupCollapsed(
+            `${prefix} ${result.label} (${result.hash}) ${skipMessage} failed :(`
+        );
 
     !result.status &&
         console.log('failed test', {
