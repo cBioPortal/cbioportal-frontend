@@ -52,41 +52,54 @@ export const RFC80Test = observer(function() {
     }, []);
 
     const runTests = useCallback(() => {
-        const totalCount = _(json)
+        const FILE_FILTER = /clinical-data-filters/;
+
+        const files: any[] = FILE_FILTER
+            ? json.filter((f: any) => FILE_FILTER.test(f.file))
+            : json;
+
+        const totalCount = _(files)
             .flatMap('suites')
             .flatMap('tests')
             .value().length;
 
-        console.group(`Running specs (${totalCount})`);
+        console.group(`Running specs (${files.length} of ${totalCount})`);
+
+        console.groupCollapsed('specs');
+        console.log('raw', json);
+        console.log('filtered', files);
+        console.groupEnd();
 
         let place = 0;
 
         const promises: Promise<any>[] = [];
-        json.map((f: any) => f.suites).forEach((suite: any) => {
-            suite.forEach((col: any) =>
-                col.tests.forEach((test: any) => {
-                    test.url = test.url.replace(
-                        /column-store\/api/,
-                        'column-store'
-                    );
+        files
+            .map((f: any) => f.suites)
+            .forEach((suite: any) => {
+                suite.forEach((col: any) =>
+                    col.tests.forEach((test: any) => {
+                        test.url = test.url.replace(
+                            /column-store\/api/,
+                            'column-store'
+                        );
 
-                    promises.push(
-                        // @ts-ignore
-                        validate(
-                            test.url,
-                            test.data,
-                            test.label,
-                            test.hash
-                        ).then((report: any) => {
-                            report.test = test;
-                            place = place + 1;
-                            const prefix = `${place} of ${totalCount}`;
-                            reportValidationResult(report, prefix);
-                        })
-                    );
-                })
-            );
-        });
+                        promises.push(
+                            // @ts-ignore
+                            validate(
+                                test.url,
+                                test.data,
+                                test.label,
+                                test.hash
+                            ).then((report: any) => {
+                                report.test = test;
+                                place = place + 1;
+                                const prefix = `${place} of ${totalCount}`;
+                                reportValidationResult(report, prefix);
+                            })
+                        );
+                    })
+                );
+            });
 
         Promise.all(promises).then(() => {
             console.groupEnd();
