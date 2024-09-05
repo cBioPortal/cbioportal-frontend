@@ -45,6 +45,40 @@ To build all packages the main project depends on (must be done prior to start o
 yarn run buildModules
 ```
 
+### Running the Application with a Self-Signed Certificate
+
+When running the application locally, you might encounter issues with SSL due to the self-signed certificate being used. Most browsers will block access to `localhost` when an untrusted certificate is detected. To bypass this and allow local development, you can start your browser in "insecure mode."
+
+#### For Google Chrome:
+1. Close all instances of Chrome.
+2. Open a terminal or command prompt.
+3. Run the following command:
+
+   - **Windows:**
+     ```bash
+     chrome.exe --ignore-certificate-errors --disable-web-security
+     ```
+
+   - **macOS:**
+     ```bash
+     open -na "Google Chrome" --args --ignore-certificate-errors --disable-web-security
+     ```
+
+   - **Linux:**
+     ```bash
+     google-chrome --ignore-certificate-errors --disable-web-security
+     ```
+
+#### For Mozilla Firefox:
+1. Open Firefox.
+2. Type `about:config` in the address bar and press Enter.
+3. Search for `security.tls.version.min` and set it to `1`.
+4. Search for `security.tls.version.fallback-limit` and set it to `1`.
+5. Confirm any warnings, and restart Firefox.
+
+> **Note:** Running the browser in insecure mode should only be used for local development purposes.
+> **Warning:** Running your browser in insecure mode can expose you to security risks. Do this only for local development purposes and revert any changes made when done.
+
 To start the dev server with hot reload enabled
 ```
 # set the environment variables you want based on what branch you're branching
