@@ -8,6 +8,8 @@ import { observer } from 'mobx-react';
 import { useLocalObservable } from 'mobx-react-lite';
 import { SAVE_TEST_KEY } from 'shared/api/testMaker';
 
+const FILE_FILTER = /genie-public/;
+
 getBrowserWindow().showTest = function() {};
 
 const CACHE_KEY: string = 'testCache';
@@ -52,8 +54,6 @@ export const RFC80Test = observer(function() {
     }, []);
 
     const runTests = useCallback(async () => {
-        const FILE_FILTER = /clinical-data-filters/;
-
         const files: any[] = FILE_FILTER
             ? json.filter((f: any) => FILE_FILTER.test(f.file))
             : json;
@@ -73,6 +73,7 @@ export const RFC80Test = observer(function() {
         let place = 0;
         let errors: any[] = [];
         let skips: any[] = [];
+        let passed: any[] = [];
 
         const invokers: (() => Promise<any>)[] = [] as any;
         files
@@ -87,8 +88,8 @@ export const RFC80Test = observer(function() {
 
                         invokers.push(
                             // @ts-ignore
-                            () =>
-                                validate(
+                            () => {
+                                return validate(
                                     test.url,
                                     test.data,
                                     test.label,
@@ -102,8 +103,12 @@ export const RFC80Test = observer(function() {
                                         skips.push(test.hash);
                                     } else if (!report.status)
                                         errors.push(test.hash);
+                                    else if (report.status)
+                                        passed.push(test.hash);
+
                                     reportValidationResult(report, prefix);
-                                })
+                                });
+                            }
                         );
                     })
                 );
@@ -114,6 +119,7 @@ export const RFC80Test = observer(function() {
         }
 
         console.group('FINAL REPORT');
+        console.log(`PASSED: ${passed.length} of ${totalCount}`);
         console.log(`FAILED: ${errors.length} (${errors.join(',')})`);
         console.log(`SKIPPED: ${skips.length}  (${skips.join(',')})`);
         console.groupEnd();
