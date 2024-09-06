@@ -1,14 +1,11 @@
 import * as React from 'react';
 import _ from 'lodash';
-import json from '../../../api-e2e/merged-tests.json';
 import { useCallback, useEffect } from 'react';
 import { reportValidationResult, validate } from 'shared/api/validation';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
 import { observer } from 'mobx-react';
 import { useLocalObservable } from 'mobx-react-lite';
 import { SAVE_TEST_KEY } from 'shared/api/testMaker';
-
-getBrowserWindow().showTest = function() {};
 
 const CACHE_KEY: string = 'testCache';
 
@@ -61,6 +58,16 @@ export const RFC80Test = observer(function() {
     }, []);
 
     const runTests = useCallback(async () => {
+        let json = [];
+
+        try {
+            json = await $.getJSON(
+                'https://localhost:3000/common/merged-tests.json'
+            );
+        } catch (ex) {
+            alert('merged-tests.json not found');
+        }
+
         const fileFilter = $('#apiTestFilter')
             .val()
             ?.toString();

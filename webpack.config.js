@@ -175,6 +175,7 @@ var config = {
                 { from: './common-dist', to: 'reactapp' },
                 { from: './src/rootImages', to: 'images' },
                 { from: './src/common', to: 'common' },
+                { from: './api-e2e/json', to: 'common' },
                 {
                     from: './src/globalStyles/prefixed-bootstrap.min.css',
                     to: 'reactapp/prefixed-bootstrap.min.css',
