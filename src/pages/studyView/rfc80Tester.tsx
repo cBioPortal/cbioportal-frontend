@@ -120,7 +120,6 @@ export const RFC80Test = observer(function() {
                                     } else if (report.status)
                                         passed.push(test.hash);
 
-                                    console.log('validating');
                                     reportValidationResult(report, prefix);
                                 });
                             }
