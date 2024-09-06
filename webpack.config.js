@@ -45,7 +45,7 @@ const webpack = require('webpack');
 const path = require('path');
 const { watch } = require('fs');
 const fs = require('fs/promises');
-const { mergeApiTestJson } = require('./apiTests/mergeJson');
+const { mergeApiTestJson } = require('./api-e2e/mergeJson');
 
 const join = path.join;
 const resolve = path.resolve;

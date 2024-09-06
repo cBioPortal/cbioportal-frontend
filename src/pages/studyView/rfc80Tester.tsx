@@ -1,6 +1,6 @@
 import * as React from 'react';
 import _ from 'lodash';
-import json from '../../../apiTests/merged-tests.json';
+import json from '../../../api-e2e/merged-tests.json';
 import { useCallback, useEffect } from 'react';
 import { reportValidationResult, validate } from 'shared/api/validation';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
@@ -14,6 +14,8 @@ const CACHE_KEY: string = 'testCache';
 
 const RFC_TEST_SHOW: string = 'RFC_TEST_SHOW';
 
+const LIVE_VALIDATE_KEY: string = 'LIVE_VALIDATE_KEY';
+
 function getCache() {
     return getBrowserWindow()[CACHE_KEY] || {};
     //return localStorage.getItem(CACHE_KEY);
@@ -21,7 +23,6 @@ function getCache() {
 
 function clearCache() {
     getBrowserWindow()[CACHE_KEY] = {};
-    //localStorage.removeItem(CACHE_KEY);
 }
 
 export const RFC80Test = observer(function() {
@@ -29,6 +30,7 @@ export const RFC80Test = observer(function() {
         tests: [],
         show: !!localStorage.getItem(RFC_TEST_SHOW),
         listening: !!localStorage.getItem(SAVE_TEST_KEY),
+        validate: !!localStorage.getItem(LIVE_VALIDATE_KEY),
     }));
 
     const clearCacheCallback = useCallback(() => {
@@ -51,46 +53,98 @@ export const RFC80Test = observer(function() {
         store.show = !store.show;
     }, []);
 
-    const runTests = useCallback(() => {
-        const totalCount = _(json)
+    const toggleLiveValidate = useCallback(() => {
+        !!localStorage.getItem(LIVE_VALIDATE_KEY)
+            ? localStorage.removeItem(LIVE_VALIDATE_KEY)
+            : localStorage.setItem(LIVE_VALIDATE_KEY, 'true');
+        store.validate = !store.validate;
+    }, []);
+
+    const runTests = useCallback(async () => {
+        const fileFilter = $('#apiTestFilter')
+            .val()
+            ?.toString();
+
+        const files: any[] = fileFilter?.trim().length
+            ? json.filter((f: any) => new RegExp(fileFilter).test(f.file))
+            : json;
+
+        const totalCount = _(files)
             .flatMap('suites')
             .flatMap('tests')
             .value().length;
 
-        console.group(`Running specs (${totalCount})`);
+        console.group(`Running specs (${files.length} of ${totalCount})`);
+
+        console.groupCollapsed('specs');
+        console.log('raw', json);
+        console.log('filtered', files);
+        console.groupEnd();
 
         let place = 0;
+        let errors: any[] = [];
+        let skips: any[] = [];
+        let passed: any[] = [];
+        let httpErrors: any[] = [];
 
-        const promises: Promise<any>[] = [];
-        json.map((f: any) => f.suites).forEach((suite: any) => {
-            suite.forEach((col: any) =>
-                col.tests.forEach((test: any) => {
-                    test.url = test.url.replace(
-                        /column-store\/api/,
-                        'column-store'
-                    );
+        const invokers: (() => Promise<any>)[] = [] as any;
+        files
+            .map((f: any) => f.suites)
+            .forEach((suite: any) => {
+                suite.forEach((col: any) =>
+                    col.tests.forEach((test: any) => {
+                        test.url = test.url.replace(
+                            /column-store\/api/,
+                            'column-store'
+                        );
 
-                    promises.push(
-                        // @ts-ignore
-                        validate(
-                            test.url,
-                            test.data,
-                            test.label,
-                            test.hash
-                        ).then((report: any) => {
-                            report.test = test;
-                            place = place + 1;
-                            const prefix = `${place} of ${totalCount}`;
-                            reportValidationResult(report, prefix);
-                        })
-                    );
-                })
-            );
-        });
+                        invokers.push(
+                            // @ts-ignore
+                            () => {
+                                return validate(
+                                    test.url,
+                                    test.data,
+                                    test.label,
+                                    test.hash
+                                ).then((report: any) => {
+                                    report.test = test;
+                                    place = place + 1;
+                                    const prefix = `${place} of ${totalCount}`;
 
-        Promise.all(promises).then(() => {
-            console.groupEnd();
-        });
+                                    if (test?.skip) {
+                                        skips.push(test.hash);
+                                    } else if (!report.status) {
+                                        report.httpError
+                                            ? httpErrors.push(test.hash)
+                                            : errors.push(test.hash);
+                                    } else if (report.status)
+                                        passed.push(test.hash);
+
+                                    console.log('validating');
+                                    reportValidationResult(report, prefix);
+                                });
+                            }
+                        );
+                    })
+                );
+            });
+
+        for (const el of invokers) {
+            await el();
+        }
+
+        console.group('FINAL REPORT');
+        console.log(`PASSED: ${passed.length} of ${totalCount}`);
+        console.log(`FAILED: ${errors.length} (${errors.join(',')})`);
+        console.log(
+            `HTTP ERRORS: ${httpErrors.length} (${httpErrors.join(',')})`
+        );
+        console.log(`SKIPPED: ${skips.length}  (${skips.join(',')})`);
+        console.groupEnd();
+
+        //Promise.all(promises).then(() => {
+        console.groupEnd();
+        // });
     }, []);
 
     useEffect(() => {
@@ -165,7 +219,14 @@ export const RFC80Test = observer(function() {
             <button onClick={toggleListener}>
                 {store.listening ? 'Stop Listening' : 'Listen'}
             </button>
+            <button onClick={toggleLiveValidate}>
+                {store.validate ? 'Stop Validate' : 'Validate'}
+            </button>
             <button onClick={runTests}>Run tests</button>
+            <input
+                placeholder={'spec name filter'}
+                id={'apiTestFilter'}
+            ></input>
             {
                 <textarea
                     style={{ width: '100%', height: '1000px' }}

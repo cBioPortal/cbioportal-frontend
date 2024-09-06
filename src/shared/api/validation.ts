@@ -134,37 +134,56 @@ export function validate(
 ) {
     const clStart = performance.now();
     let chDuration: number, legacyDuration: number;
+
     return $.ajax({
         method: 'post',
         url: url,
         data: JSON.stringify(params),
         contentType: 'application/json',
-    }).then(chResult => {
-        const legacyUrl = url.replace(/column-store\//, '');
-        chDuration = performance.now() - clStart;
-        const legacyStart = performance.now();
-
-        return $.ajax({
-            method: 'post',
-            url: legacyUrl,
-            data: JSON.stringify(params),
-            contentType: 'application/json',
-        }).then(legacyResult => {
-            legacyDuration = performance.now() - legacyStart;
-            const result: any = compareCounts(chResult, legacyResult, label);
+    })
+        .then(chResult => {
+            const legacyUrl = url.replace(/column-store\//, '');
+            chDuration = performance.now() - clStart;
+            const legacyStart = performance.now();
+            return $.ajax({
+                method: 'post',
+                url: legacyUrl,
+                data: JSON.stringify(params),
+                contentType: 'application/json',
+            }).then(legacyResult => {
+                legacyDuration = performance.now() - legacyStart;
+                const result: any = compareCounts(
+                    chResult,
+                    legacyResult,
+                    label
+                );
+                result.url = url;
+                result.hash = hash;
+                result.data = params;
+                result.chDuration = chDuration;
+                result.legacyDuration = legacyDuration;
+                return result;
+            });
+        })
+        .catch(() => {
+            const result: any = {};
             result.url = url;
             result.hash = hash;
+            result.status = false;
             result.data = params;
-            result.chDuration = chDuration;
-            result.legacyDuration = legacyDuration;
+            result.httpError = true;
             return result;
         });
-    });
 }
 
 export function reportValidationResult(result: any, prefix = '') {
+    const skipMessage =
+        result.test && result.test.skip ? `(SKIPPED ${result.test.skip})` : '';
+
     !result.status &&
-        console.group(`${prefix} ${result.label} (${result.hash}) failed :(`);
+        console.groupCollapsed(
+            `${prefix} ${result.label} (${result.hash}) ${skipMessage} failed :(`
+        );
 
     !result.status &&
         console.log('failed test', {
@@ -174,6 +193,7 @@ export function reportValidationResult(result: any, prefix = '') {
             legacyDuration: result.legacyDuration,
             chDuration: result.chDuration,
             equal: result.status,
+            httpError: result.httpError,
         });
 
     result.status &&
