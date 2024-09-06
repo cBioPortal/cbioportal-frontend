@@ -211,18 +211,17 @@ export function reportValidationResult(result: any, prefix = '') {
                 JSON.stringify(cl) !==
                 JSON.stringify(result.legacyDataSorted[i])
             ) {
-                console.log(
-                    `First invalid item (${result.label})`,
-                    'Clickhouse:',
-                    cl,
-                    'Legacy:',
-                    result.legacyDataSorted[i]
-                );
+                console.groupCollapsed(`First invalid item (${result.label})`);
+                console.log('Clickhouse:', cl);
+                console.log('Legacy:', result.legacyDataSorted[i]);
+                console.groupEnd();
                 return false;
             }
         });
+        console.groupCollapsed('All Data');
         console.log('legacy', result.legacyDataSorted);
         console.log('CH', result.clDataSorted);
+        console.groupEnd();
     }
 
     !result.status && console.groupEnd();
