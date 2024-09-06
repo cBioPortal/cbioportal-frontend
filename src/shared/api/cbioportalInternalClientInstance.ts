@@ -38,7 +38,7 @@ function proxyColumnStore(client: any, endpoint: string) {
         ];
 
         const matchedMethod = method.match(new RegExp(endpoints.join('|')));
-        if (localStorage.validateClickhouse && matchedMethod) {
+        if (localStorage.getItem('LIVE_VALIDATE_KEY') && matchedMethod) {
             this.request = function() {
                 const params = toJS(arguments[2]);
 

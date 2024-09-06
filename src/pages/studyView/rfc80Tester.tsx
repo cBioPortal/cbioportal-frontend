@@ -1,6 +1,6 @@
 import * as React from 'react';
 import _ from 'lodash';
-import json from '../../../apiTests/merged-tests.json';
+import json from '../../../api-e2e/merged-tests.json';
 import { useCallback, useEffect } from 'react';
 import { reportValidationResult, validate } from 'shared/api/validation';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
@@ -8,13 +8,13 @@ import { observer } from 'mobx-react';
 import { useLocalObservable } from 'mobx-react-lite';
 import { SAVE_TEST_KEY } from 'shared/api/testMaker';
 
-const FILE_FILTER = /genie-public/;
-
 getBrowserWindow().showTest = function() {};
 
 const CACHE_KEY: string = 'testCache';
 
 const RFC_TEST_SHOW: string = 'RFC_TEST_SHOW';
+
+const LIVE_VALIDATE_KEY: string = 'LIVE_VALIDATE_KEY';
 
 function getCache() {
     return getBrowserWindow()[CACHE_KEY] || {};
@@ -23,7 +23,6 @@ function getCache() {
 
 function clearCache() {
     getBrowserWindow()[CACHE_KEY] = {};
-    //localStorage.removeItem(CACHE_KEY);
 }
 
 export const RFC80Test = observer(function() {
@@ -31,6 +30,7 @@ export const RFC80Test = observer(function() {
         tests: [],
         show: !!localStorage.getItem(RFC_TEST_SHOW),
         listening: !!localStorage.getItem(SAVE_TEST_KEY),
+        validate: !!localStorage.getItem(LIVE_VALIDATE_KEY),
     }));
 
     const clearCacheCallback = useCallback(() => {
@@ -53,9 +53,20 @@ export const RFC80Test = observer(function() {
         store.show = !store.show;
     }, []);
 
+    const toggleLiveValidate = useCallback(() => {
+        !!localStorage.getItem(LIVE_VALIDATE_KEY)
+            ? localStorage.removeItem(LIVE_VALIDATE_KEY)
+            : localStorage.setItem(LIVE_VALIDATE_KEY, 'true');
+        store.validate = !store.validate;
+    }, []);
+
     const runTests = useCallback(async () => {
-        const files: any[] = FILE_FILTER
-            ? json.filter((f: any) => FILE_FILTER.test(f.file))
+        const fileFilter = $('#apiTestFilter')
+            .val()
+            ?.toString();
+
+        const files: any[] = fileFilter?.trim().length
+            ? json.filter((f: any) => new RegExp(fileFilter).test(f.file))
             : json;
 
         const totalCount = _(files)
@@ -74,6 +85,7 @@ export const RFC80Test = observer(function() {
         let errors: any[] = [];
         let skips: any[] = [];
         let passed: any[] = [];
+        let httpErrors: any[] = [];
 
         const invokers: (() => Promise<any>)[] = [] as any;
         files
@@ -99,13 +111,16 @@ export const RFC80Test = observer(function() {
                                     place = place + 1;
                                     const prefix = `${place} of ${totalCount}`;
 
-                                    if (test.skip) {
+                                    if (test?.skip) {
                                         skips.push(test.hash);
-                                    } else if (!report.status)
-                                        errors.push(test.hash);
-                                    else if (report.status)
+                                    } else if (!report.status) {
+                                        report.httpError
+                                            ? httpErrors.push(test.hash)
+                                            : errors.push(test.hash);
+                                    } else if (report.status)
                                         passed.push(test.hash);
 
+                                    console.log('validating');
                                     reportValidationResult(report, prefix);
                                 });
                             }
@@ -121,6 +136,9 @@ export const RFC80Test = observer(function() {
         console.group('FINAL REPORT');
         console.log(`PASSED: ${passed.length} of ${totalCount}`);
         console.log(`FAILED: ${errors.length} (${errors.join(',')})`);
+        console.log(
+            `HTTP ERRORS: ${httpErrors.length} (${httpErrors.join(',')})`
+        );
         console.log(`SKIPPED: ${skips.length}  (${skips.join(',')})`);
         console.groupEnd();
 
@@ -201,7 +219,14 @@ export const RFC80Test = observer(function() {
             <button onClick={toggleListener}>
                 {store.listening ? 'Stop Listening' : 'Listen'}
             </button>
+            <button onClick={toggleLiveValidate}>
+                {store.validate ? 'Stop Validate' : 'Validate'}
+            </button>
             <button onClick={runTests}>Run tests</button>
+            <input
+                placeholder={'spec name filter'}
+                id={'apiTestFilter'}
+            ></input>
             {
                 <textarea
                     style={{ width: '100%', height: '1000px' }}
