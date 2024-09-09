@@ -769,6 +769,9 @@ export default class StudyViewPage extends React.Component<
                                             clinicalAttributes={
                                                 this.store.clinicalAttributes
                                             }
+                                            customAttributes={
+                                                this.store.customAttributes
+                                            }
                                             genesets={this.store.genesets}
                                             genericAssayEntitiesGroupByMolecularProfileId={
                                                 this.store

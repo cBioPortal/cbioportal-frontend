@@ -1093,7 +1093,7 @@ export class ResultsViewPageStore extends AnalysisStore
             this.studyIds,
             this.clinicalAttributes_profiledIn,
             this.clinicalAttributes_comparisonGroupMembership,
-            this.clinicalAttributes_customCharts,
+            this.customAttributes,
             this.samples,
             this.patients,
         ],
@@ -1142,7 +1142,7 @@ export class ResultsViewPageStore extends AnalysisStore
                 ...specialAttributes,
                 ...this.clinicalAttributes_profiledIn.result!,
                 ...this.clinicalAttributes_comparisonGroupMembership.result!,
-                ...this.clinicalAttributes_customCharts.result!,
+                ...this.customAttributes.result!,
             ];
         },
     });
@@ -1187,7 +1187,7 @@ export class ResultsViewPageStore extends AnalysisStore
             this.studyToDataQueryFilter,
             this.clinicalAttributes_profiledIn,
             this.clinicalAttributes_comparisonGroupMembership,
-            this.clinicalAttributes_customCharts,
+            this.customAttributes,
         ],
         invoke: async () => {
             let clinicalAttributeCountFilter: ClinicalAttributeCountFilter;
@@ -1270,7 +1270,7 @@ export class ResultsViewPageStore extends AnalysisStore
                 );
             }
             // add counts for custom chart clinical attributes
-            for (const attr of this.clinicalAttributes_customCharts.result!) {
+            for (const attr of this.customAttributes.result!) {
                 ret[attr.clinicalAttributeId] = attr.data!.filter(
                     d => d.value !== 'NA'
                 ).length;
@@ -2723,7 +2723,64 @@ export class ResultsViewPageStore extends AnalysisStore
         default: [],
     });
 
-    readonly clinicalAttributes_customCharts = remoteData({
+    readonly plotClinicalAttributes = remoteData<ExtendedClinicalAttribute[]>({
+        await: () => [
+            this.studyIds,
+            this.clinicalAttributes_profiledIn,
+            this.clinicalAttributes_comparisonGroupMembership,
+            this.samples,
+            this.patients,
+        ],
+        invoke: async () => {
+            const serverAttributes = await client.fetchClinicalAttributesUsingPOST(
+                {
+                    studyIds: this.studyIds.result!,
+                }
+            );
+            const specialAttributes = [
+                {
+                    clinicalAttributeId: SpecialAttribute.MutationSpectrum,
+                    datatype: CLINICAL_ATTRIBUTE_FIELD_ENUM.DATATYPE_COUNTS_MAP,
+                    description:
+                        'Number of point mutations in the sample counted by different types of nucleotide changes.',
+                    displayName: 'Mutation spectrum',
+                    patientAttribute: false,
+                    studyId: '',
+                    priority: '0', // TODO: change?
+                } as ClinicalAttribute,
+            ];
+            if (this.studyIds.result!.length > 1) {
+                // if more than one study, add "Study of Origin" attribute
+                specialAttributes.push({
+                    clinicalAttributeId: SpecialAttribute.StudyOfOrigin,
+                    datatype: CLINICAL_ATTRIBUTE_FIELD_ENUM.DATATYPE_STRING,
+                    description: 'Study which the sample is a part of.',
+                    displayName: 'Study of origin',
+                    patientAttribute: false,
+                    studyId: '',
+                    priority: '0', // TODO: change?
+                } as ClinicalAttribute);
+            }
+            if (this.samples.result!.length !== this.patients.result!.length) {
+                // if different number of samples and patients, add "Num Samples of Patient" attribute
+                specialAttributes.push({
+                    clinicalAttributeId: SpecialAttribute.NumSamplesPerPatient,
+                    datatype: CLINICAL_ATTRIBUTE_FIELD_ENUM.DATATYPE_NUMBER,
+                    description: 'Number of queried samples for each patient.',
+                    displayName: '# Samples per Patient',
+                    patientAttribute: true,
+                } as ClinicalAttribute);
+            }
+            return [
+                ...serverAttributes,
+                ...specialAttributes,
+                ...this.clinicalAttributes_profiledIn.result!,
+                ...this.clinicalAttributes_comparisonGroupMembership.result!,
+            ];
+        },
+    });
+
+    readonly customAttributes = remoteData({
         await: () => [this.sampleMap],
         invoke: async () => {
             let ret: ExtendedClinicalAttribute[] = [];
@@ -5693,7 +5750,7 @@ export class ResultsViewPageStore extends AnalysisStore
         this.coverageInformation,
         this.filteredSampleKeyToSample,
         this.filteredPatientKeyToPatient,
-        this.clinicalAttributes_customCharts
+        this.customAttributes
     );
 
     public mutationCache = new MobxPromiseCache<
