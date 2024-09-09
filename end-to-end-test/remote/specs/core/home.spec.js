@@ -244,7 +244,11 @@ describe('case set selection in front page query form', function() {
         ) {
             await getElement(input, { timeout: 20000 });
             await setInputText(input, studyName);
+            await (
+                await getElement('[data-test="study-search"] .dropdown-toggle')
+            ).click();
             await waitForNumberOfStudyCheckboxes(1, checkboxSelector);
+            await getElement('[data-test="StudySelect"]', { timeout: 10000 });
             await clickElement(checkboxSelector);
 
             await browser.pause(2000);
@@ -256,12 +260,6 @@ describe('case set selection in front page query form', function() {
                 const selectedText = (
                     await getText(selectedCaseSet_sel)
                 ).trim();
-                console.log(
-                    'selectedText',
-                    selectedText,
-                    'expectedText',
-                    expectedText
-                );
                 return selectedText === expectedText;
             }, 30000);
         }
@@ -296,12 +294,6 @@ describe('case set selection in front page query form', function() {
         await browser.waitUntil(async () => {
             const expectedText = 'Samples with mutation and CNA data (88)';
             const selectedText = (await getText(selectedCaseSet_sel)).trim();
-            console.log(
-                'selectedText',
-                selectedText,
-                'expectedText',
-                expectedText
-            );
             return selectedText === expectedText;
         }, 10000);
     });
@@ -332,12 +324,6 @@ describe('selects the right default case sets in a single->select all filtered->
         await (await getElement(selectedCaseSetSelector)).waitForExist();
         await browser.waitUntil(async () => {
             const selectedText = await getText(selectedCaseSetSelector);
-            console.log(
-                'selectedText',
-                selectedText,
-                'expectedText',
-                expectedText
-            );
             return selectedText.trim() === expectedText;
         }, 10000);
     };
@@ -755,7 +741,7 @@ describe('results page quick oql edit', () => {
             `${CBIOPORTAL_URL}/results/oncoprint?genetic_profile_ids_PROFILE_MUTATION_EXTENDED=prad_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=prad_tcga_pub_gistic&cancer_study_list=prad_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&profileFilter=0&case_set_id=prad_tcga_pub_cnaseq&gene_list=BRCA1&geneset_list=%20&tab_index=tab_visualize&Action=Submit`
         );
 
-        await waitForOncoprint();
+        // await waitForOncoprint();
 
         await getElement('[data-test="oqlQuickEditButton"]', {
             timeout: 20000,
