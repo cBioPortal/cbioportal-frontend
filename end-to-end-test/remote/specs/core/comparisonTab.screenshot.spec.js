@@ -421,7 +421,9 @@ describe('results view comparison tab screenshot tests', () => {
             ).waitForDisplayed({ timeout: 10000 });
             await waitForElementDisplayed('b=RER1', { timeout: 10000 });
             await clickElement('b=RER1');
-            await (await getElement('body')).moveTo();
+            await (await getElement('body')).moveTo({
+                x:0, y:0
+            });
             const res = await browser.checkElement(
                 '.msk-tab:not(.hiddenByPosition)',
                 '',

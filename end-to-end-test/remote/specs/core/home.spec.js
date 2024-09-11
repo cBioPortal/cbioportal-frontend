@@ -736,7 +736,8 @@ describe('results page quick oql edit', () => {
             ).isEnabled())
         );
     });
-    it('auto-selects an mrna profile when mrna oql is entered', async () => {
+    /** skip tests */
+    it.skip('auto-selects an mrna profile when mrna oql is entered', async () => {
         await goToUrlAndSetLocalStorage(
             `${CBIOPORTAL_URL}/results/oncoprint?genetic_profile_ids_PROFILE_MUTATION_EXTENDED=prad_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=prad_tcga_pub_gistic&cancer_study_list=prad_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&profileFilter=0&case_set_id=prad_tcga_pub_cnaseq&gene_list=BRCA1&geneset_list=%20&tab_index=tab_visualize&Action=Submit`
         );

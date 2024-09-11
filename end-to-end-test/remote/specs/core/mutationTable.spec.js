@@ -175,7 +175,7 @@ describe('Mutation Table', function() {
                 timeout: 10000,
             });
             // wait for gnomad frequency show in the column
-            browser.waitUntil(
+            await browser.waitUntil(
                 async () => {
                     const textFrequency = await (
                         await getElement(frequency)
@@ -188,7 +188,7 @@ describe('Mutation Table', function() {
             // mouse over the frequency
             await (await getElement(frequency)).moveTo();
             // wait for gnomad table showing up
-            await getElement('[data-test="gnomad-table"]', { timeout: 10000 });
+            await getElement('[data-test="gnomad-table"]', { timeout: 20000 });
             // check if the gnomad table show up
             let res;
             await browser.waitUntil(

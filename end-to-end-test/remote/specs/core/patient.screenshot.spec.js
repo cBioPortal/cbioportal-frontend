@@ -19,7 +19,7 @@ describe('Patient Cohort View Custom Tab Tests', () => {
 
         await clickElement('.nextPageBtn');
 
-        await waitForNetworkQuiet();
+        await browser.pause(2000);
 
         const res = await browser.checkDocument();
         assertScreenShotMatch(res);
