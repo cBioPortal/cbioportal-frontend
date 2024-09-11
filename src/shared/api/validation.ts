@@ -76,6 +76,10 @@ export function getArrays(inp: any, output: Array<any>) {
     return output;
 }
 
+const deleteFields: Record<string, string[]> = {
+    MolecularProfileSample: ['label'],
+};
+
 const sortFields: Record<string, string> = {
     ClinicalDataBin: 'attributeId,specialValue',
     FilteredSamples: 'patientId,sampleId',
@@ -85,6 +89,14 @@ export function deepSort(inp: any, label: string) {
     const arrs = getArrays(inp, []);
 
     arrs.forEach(arr => {
+        if (label in deleteFields) {
+            arr.forEach((m: any) => {
+                deleteFields[label].forEach(l => {
+                    delete m[l];
+                });
+            });
+        }
+
         if (!arr.length) return;
         if (!isObject(arr[0])) {
             arr.sort();

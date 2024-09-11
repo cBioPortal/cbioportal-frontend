@@ -6,6 +6,15 @@ import { reportValidationResult, validate } from 'shared/api/validation';
 import _ from 'lodash';
 import { makeTest, urlChopper } from 'shared/api/testMaker';
 
+// function invokeValidation(func){
+//     getBrowserWindow().invokeCache = getBrowserWindow().invokeCache || [];
+//
+//     getBrowserWindow().invokeCache.push(func);
+//
+//
+//
+// }
+
 function proxyColumnStore(client: any, endpoint: string) {
     if (getBrowserWindow().location.search.includes('legacy')) {
         return;
@@ -24,17 +33,17 @@ function proxyColumnStore(client: any, endpoint: string) {
         const oldRequest = this.request;
 
         const endpoints = [
-            'ClinicalDataCounts',
-            'MutatedGenes',
-            'CaseList',
-            'ClinicalDataBin',
+            // 'ClinicalDataCounts',
+            // 'MutatedGenes',
+            // 'CaseList',
+            // 'ClinicalDataBin',
             'MolecularProfileSample',
-            'CNAGenes',
-            'StructuralVariantGenes',
-            'FilteredSamples',
-            'ClinicalDataDensity',
-            'MutationDataCounts',
-            'GenomicDataCounts',
+            // 'CNAGenes',
+            // 'StructuralVariantGenes',
+            // 'FilteredSamples',
+            // 'ClinicalDataDensity',
+            // 'MutationDataCounts',
+            // 'GenomicDataCounts',
         ];
 
         const matchedMethod = method.match(new RegExp(endpoints.join('|')));
@@ -56,11 +65,14 @@ function proxyColumnStore(client: any, endpoint: string) {
                 const hash = hashString(
                     JSON.stringify({ data: params, url: urlChopper(url) })
                 );
-                validate(url, params, matchedMethod[0], hash).then(
-                    (result: any) => {
-                        reportValidationResult(result, 'LIVE');
-                    }
-                );
+                const promise = validate(
+                    url,
+                    params,
+                    matchedMethod[0],
+                    hash
+                ).then((result: any) => {
+                    reportValidationResult(result, 'LIVE');
+                });
             };
         }
 
