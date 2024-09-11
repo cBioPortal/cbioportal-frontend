@@ -138,7 +138,7 @@ export const DescriptiveDataTable: FunctionComponent<DescriptiveDataTableProps> 
                         })}
                     </tr>
                     <tr>
-                        <td>Mean absolute deviation</td>
+                        <td>Mean Absolute Deviation</td>
                         {props.descriptiveData.map((d, index) => {
                             return <td key={index}>{_.round(d.mad, 2)}</td>;
                         })}
