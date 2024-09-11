@@ -10,6 +10,7 @@ import { Else, If, Then } from 'react-if';
 import { WindowWidthBox } from '../../../shared/components/WindowWidthBox/WindowWidthBox';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import {
+    getResourceViewUrlWithPathname,
     getSampleViewUrlWithPathname,
     getPatientViewUrlWithPathname,
 } from 'shared/api/urls';
@@ -86,6 +87,7 @@ function buildItemsAndResources(resourceData: {
                 typeOfResource: resource?.resourceDefinition?.displayName,
                 description: resource?.resourceDefinition?.description,
                 url: resource?.url,
+                resourceId: resource?.resourceId,
             }))
         )
         .value();
@@ -259,18 +261,41 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
                     'Type Of Resource'
                 ),
                 render: (data: { [id: string]: string }) => {
+                    const path = `patient/openResource_${data.resourceId}`;
                     return (
                         <div>
-                            <a href={data.url} target="_blank">
+                            <a
+                                href={getResourceViewUrlWithPathname(
+                                    data.studyId,
+                                    path,
+                                    data.patientId
+                                )}
+                            >
+                                {data.typeOfResource}
+                            </a>
+                        </div>
+                    );
+                },
+            },
+
+            {
+                ...this.getDefaultColumnConfig('resourceUrl', ''),
+                render: (data: { [id: string]: string }) => {
+                    return (
+                        <div>
+                            <a
+                                href={data.url}
+                                style={{ fontSize: 10 }}
+                                target={'_blank'}
+                            >
                                 <i
                                     className={`fa fa-external-link fa-sm`}
                                     style={{
                                         marginRight: 5,
                                         color: 'black',
-                                        fontSize: 10,
                                     }}
                                 />
-                                {data.typeOfResource}
+                                Open in new window
                             </a>
                         </div>
                     );
@@ -287,7 +312,7 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
             {
                 ...this.getDefaultColumnConfig(
                     'resourcesPerPatient',
-                    'Number of Resource Per Patient',
+                    'Resources per Patient',
                     true
                 ),
                 render: (data: { [id: string]: number }) => {
