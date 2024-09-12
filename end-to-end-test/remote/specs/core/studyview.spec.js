@@ -477,7 +477,7 @@ describe('study view lgg_tcga study tests', () => {
     });
     describe('pie chart', () => {
         describe('chart controls', () => {
-            it('should display the change chart option', () => {
+            it('the table icon should be available', () => {
                 $(pieChart).waitForDisplayed({
                     timeout: WAIT_FOR_VISIBLE_TIMEOUT,
                 });
@@ -486,46 +486,24 @@ describe('study view lgg_tcga study tests', () => {
                 browser.waitUntil(() => {
                     return $(pieChart + ' .controls').isExisting();
                 }, 10000);
-                assert($(pieChart + ' .controls .fa-exchange').isExisting());
-            });
-            it('should display the submenu when hovering over change chart', () => {
-                $(pieChart).waitForDisplayed({
-                    timeout: WAIT_FOR_VISIBLE_TIMEOUT,
-                });
-                jsApiHover(pieChart);
-
-                const changeChartItem = $(
-                    pieChart + ' .controls .dropdown-item'
-                );
-                changeChartItem.moveTo();
-
-                browser.waitUntil(() => {
-                    return changeChartItem
-                        .$('.dropdown-menu.show')
-                        .isExisting();
-                }, 10000);
-                assert(changeChartItem.$('.dropdown-menu.show').isExisting());
-            });
-            it('should display available chart types in the submenu', () => {
-                $(pieChart).waitForDisplayed({
-                    timeout: WAIT_FOR_VISIBLE_TIMEOUT,
-                });
-                jsApiHover(pieChart);
-
-                const changeChartItem = $(
-                    pieChart + ' .controls .dropdown-item'
-                );
-                changeChartItem.moveTo();
-
-                const submenuItems = changeChartItem.$$(
-                    '.dropdown-menu.show .dropdown-item'
-                );
-                assert(submenuItems.length > 0);
+                assert($(pieChart + ' .controls .fa-table').isExisting());
             });
         });
     });
     describe('table', () => {
         describe('chart controls', () => {
+            it('the pie icon should be available', () => {
+                $(table).waitForDisplayed({
+                    timeout: WAIT_FOR_VISIBLE_TIMEOUT,
+                });
+                jsApiHover(table);
+
+                browser.waitUntil(() => {
+                    return $(table + ' .controls').isExisting();
+                }, 10000);
+                assert($(table + ' .controls .fa-pie-chart').isExisting());
+            });
+
             it('table should be sorted by Freq in the default setting', () => {
                 // we need to move to the top of the page, otherwise the offset of add chart button is calculated wrong
                 $('body').moveTo({ xOffset: 0, yOffset: 0 });
