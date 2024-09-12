@@ -99,10 +99,11 @@ class JupyterNoteBookModal extends React.Component<
         return (
             <Modal show={show} onHide={handleClose}>
                 <Modal.Header closeButton>
-                    <Modal.Title>Enter Session Name</Modal.Title>
+                    <Modal.Title>Enter Notebook Name</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Form
+                        id="jupyterform"
                         onSubmit={e =>
                             this.handleSubmit(
                                 (e as unknown) as React.FormEvent<
@@ -113,11 +114,11 @@ class JupyterNoteBookModal extends React.Component<
                     >
                         <FormGroup controlId="formFolderName">
                             <ControlLabel className="py-2">
-                                Session Name
+                                Notebook Name
                             </ControlLabel>
                             <FormControl
                                 type="text"
-                                placeholder="Enter Session Name"
+                                placeholder="Enter Notebook Name"
                                 value={folderName}
                                 onChange={e =>
                                     this.handleChange(
@@ -134,12 +135,14 @@ class JupyterNoteBookModal extends React.Component<
                                 </div>
                             )}
                         </FormGroup>
-                        <Modal.Footer>
-                            <Button onClick={handleClose}>Close</Button>
-                            <Button type="submit">Open Jupyter Notebook</Button>
-                        </Modal.Footer>
                     </Form>
                 </Modal.Body>
+                <Modal.Footer>
+                    <Button onClick={handleClose}>Close</Button>
+                    <Button type="submit" form="jupyterform">
+                        Open Jupyter Notebook
+                    </Button>
+                </Modal.Footer>
             </Modal>
         );
     }

@@ -504,6 +504,7 @@ describe('study view lgg_tcga study tests', () => {
                         .$('.dropdown-menu.show')
                         .isExisting();
                 }, 10000);
+
                 assert(changeChartItem.$('.dropdown-menu.show').isExisting());
             });
             it('should display available chart types in the submenu', () => {
