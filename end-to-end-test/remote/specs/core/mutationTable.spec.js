@@ -164,9 +164,9 @@ describe('Mutation Table', function() {
                 '[data-test="add-chart-option-gnomad"] input'
             );
             // close columns menu
-            await clickElement('//button[contains(text(), "Columns")]');
+            await clickElement('button*=Columns');
 
-            await browser.pause(10000);
+            await browser.pause(5000);
             // find frequency
             // TODO: not sure why this is not working
             const frequency =
