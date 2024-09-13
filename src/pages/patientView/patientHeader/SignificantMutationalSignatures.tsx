@@ -74,11 +74,11 @@ export default class SignificantMutationalSignatures extends React.Component<
                     )}
                     {_.map(dataToShow, significantSignature => (
                         <div>
-                            <a href={significantSignature.meta.url}>
-                                {significantSignature.meta.name}
+                            <a href={significantSignature?.meta.url || "#"}>
+                                {significantSignature?.meta.name || "NA"}
                             </a>
                             <span>: </span>
-                            <span>{significantSignature.meta.description}</span>
+                            <span>{significantSignature?.meta.description || "NA"}</span>
                         </div>
                     ))}
                 </div>
