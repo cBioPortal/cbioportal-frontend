@@ -33,17 +33,17 @@ function proxyColumnStore(client: any, endpoint: string) {
         const oldRequest = this.request;
 
         const endpoints = [
-            // 'ClinicalDataCounts',
-            // 'MutatedGenes',
-            // 'CaseList',
-            // 'ClinicalDataBin',
+            'ClinicalDataCounts',
+            'MutatedGenes',
+            'CaseList',
+            'ClinicalDataBin',
             'MolecularProfileSample',
-            // 'CNAGenes',
-            // 'StructuralVariantGenes',
-            // 'FilteredSamples',
-            // 'ClinicalDataDensity',
-            // 'MutationDataCounts',
-            // 'GenomicDataCounts',
+            'CNAGenes',
+            'StructuralVariantGenes',
+            'FilteredSamples',
+            'ClinicalDataDensity',
+            'MutationDataCounts',
+            'GenomicDataCounts',
         ];
 
         const matchedMethod = method.match(new RegExp(endpoints.join('|')));
