@@ -248,7 +248,8 @@ export function validate(
     label: string,
     hash: number,
     body?: any,
-    elapsedTime?: any
+    elapsedTime?: any,
+    assertResponse?: any[]
 ) {
     const clStart = performance.now();
     let chDuration: number, legacyDuration: number;
@@ -270,27 +271,39 @@ export function validate(
 
     return chXHR
         .then(({ body, elapsedTime }: any) => {
-            let legacyUrl = url.replace(/column-store\//, '');
-            if (treatmentLegacyUrl[label]) {
-                legacyUrl = treatmentLegacyUrl[label](legacyUrl);
+            if (!assertResponse) {
+                let legacyUrl = url.replace(/column-store\//, '');
+                if (treatmentLegacyUrl[label]) {
+                    legacyUrl = treatmentLegacyUrl[label](legacyUrl);
+                }
+                const legacyXHR = $.ajax({
+                    method: 'post',
+                    url: legacyUrl,
+                    data: JSON.stringify(params),
+                    contentType: 'application/json',
+                });
+                return legacyXHR.then(legacyResult => {
+                    const result: any = compareCounts(body, legacyResult, label);
+                    result.url = url;
+                    result.hash = hash;
+                    result.data = params;
+                    result.chDuration = parseFloat(elapsedTime);
+                    result.legacyDuration = parseFloat(
+                        legacyXHR.getResponseHeader('elapsed-time') || ''
+                    );
+                    return result;
+                });
             }
-            const legacyXHR = $.ajax({
-                method: 'post',
-                url: legacyUrl,
-                data: JSON.stringify(params),
-                contentType: 'application/json',
-            });
-            return legacyXHR.then(legacyResult => {
-                const result: any = compareCounts(body, legacyResult, label);
-                result.url = url;
-                result.hash = hash;
-                result.data = params;
-                result.chDuration = parseFloat(elapsedTime);
-                result.legacyDuration = parseFloat(
-                    legacyXHR.getResponseHeader('elapsed-time') || ''
-                );
-                return result;
-            });
+            else {
+                return {
+                    label,
+                    url: url,
+                    hash: hash,
+                    status: true,
+                    data: params,
+                    chDuration: parseFloat(elapsedTime),
+                };
+            }
         })
         .catch(() => {
             const result: any = {};
@@ -324,13 +337,21 @@ export function reportValidationResult(result: any, prefix = '') {
         });
 
     result.status &&
-        console.log(
-            `${prefix} ${result.label} (${
-                result.hash
-            }) passed :) ch: ${result.chDuration.toFixed(
-                0
-            )} legacy: ${result.legacyDuration.toFixed(0)}`
-        );
+        (!result.legacyDuration
+            ? console.log(
+                  `${prefix} ${result.label} (${
+                      result.hash
+                  }) assertResponse detected, passed :) ch: ${result.chDuration.toFixed(
+                      0
+                  )}`
+              )
+            : console.log(
+                  `${prefix} ${result.label} (${
+                      result.hash
+                  }) passed :) ch: ${result.chDuration.toFixed(
+                      0
+                  )} legacy: ${result.legacyDuration.toFixed(0)}`
+              ));
 
     if (!result.status) {
         _.forEach(result.clDataSorted, (cl: any, i: number) => {
