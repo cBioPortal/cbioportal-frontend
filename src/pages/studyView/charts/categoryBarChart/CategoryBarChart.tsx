@@ -12,32 +12,29 @@ import _ from 'lodash';
 import { DataFilterValue } from 'cbioportal-ts-api-client';
 import { AbstractChart } from 'pages/studyView/charts/ChartContainer';
 import autobind from 'autobind-decorator';
-import BarChartAxisLabel from './BarChartAxisLabel';
+import CategoryBarChartAxisLabel from './CategoryBarChartAxisLabel';
 import {
-    filterCategoryBins,
-    filterNumericalBins,
-    formatNumericalTickValues,
-    generateCategoricalData,
-    generateNumericalData,
-    needAdditionShiftForLogScaleBarChart,
-    DataBin,
+    clinicalDataToDataBin,
     BarDatum,
+    DataBin,
     onlyContainsNA,
     doesNotContainNA,
     isDataBinSelected,
+    ClinicalDataCountSummary,
+    CategoryDataBin,
+    generateCategoricalBarData,
 } from '../../StudyViewUtils';
 import { STUDY_VIEW_CONFIG } from '../../StudyViewConfig';
 import { DEFAULT_NA_COLOR } from 'shared/lib/Colors';
-import BarChartToolTip, { ToolTipModel } from './BarChartToolTip';
+import BarChartToolTip from '../barChart/BarChartToolTip';
+import { ToolTipModel } from '../barChart/BarChartToolTip';
 import WindowStore from 'shared/components/window/WindowStore';
 import ReactDOM from 'react-dom';
-import {
-    CBIOPORTAL_VICTORY_THEME,
-    calcPlotBottomPadding,
-} from 'cbioportal-frontend-commons';
+import { calcPlotBottomPadding } from 'cbioportal-frontend-commons';
+import { VICTORY_THEME, TILT_ANGLE } from '../barChart/BarChart';
 
 export interface IBarChartProps {
-    data: DataBin[];
+    data: ClinicalDataCountSummary[];
     width: number;
     height: number;
     filters: DataFilterValue[];
@@ -45,18 +42,9 @@ export interface IBarChartProps {
     showNAChecked: boolean;
 }
 
-export function generateTheme() {
-    const theme = _.cloneDeep(CBIOPORTAL_VICTORY_THEME);
-    theme.axis.style.tickLabels.fontSize *= 0.85;
-
-    return theme;
-}
-
-export const VICTORY_THEME = generateTheme();
-export const TILT_ANGLE = 50;
-
 @observer
-export default class BarChart extends React.Component<IBarChartProps, {}>
+export default class CategoryBarChart
+    extends React.Component<IBarChartProps, {}>
     implements AbstractChart {
     private svgContainer: any;
 
@@ -76,9 +64,11 @@ export default class BarChart extends React.Component<IBarChartProps, {}>
 
     @autobind
     private onSelection(bars: { data: BarDatum[] }[]): void {
-        const dataBins = _.flatten(
-            bars.map(bar => bar.data.map(barDatum => barDatum.dataBin))
-        );
+        const dataBins = _(bars)
+            .map(bar => bar.data)
+            .flatten()
+            .map(barDatum => barDatum.dataBin)
+            .value();
         this.props.onUserSelection(dataBins);
     }
 
@@ -87,41 +77,18 @@ export default class BarChart extends React.Component<IBarChartProps, {}>
     }
 
     @computed
-    get numericalBins(): DataBin[] {
-        return filterNumericalBins(this.props.data);
-    }
-
-    @computed
-    get categoryBins(): DataBin[] {
-        return filterCategoryBins(this.props.data);
-    }
-
-    @computed
-    get numericalData(): BarDatum[] {
-        return generateNumericalData(this.numericalBins);
+    get categoryBins(): CategoryDataBin[] {
+        return clinicalDataToDataBin(this.props.data);
     }
 
     @computed
     get categoricalData(): BarDatum[] {
-        return generateCategoricalData(
-            this.categoryBins,
-            this.numericalTickFormat.length
-        );
-    }
-
-    @computed
-    get numericalTickFormat(): (string | string[])[] {
-        const formatted = formatNumericalTickValues(this.numericalBins);
-        // if the value contains ^ we need to return an array of values, instead of a single value
-        // to be compatible with BarChartAxisLabel
-        return formatted.map(value =>
-            value.includes('^') ? value.split('^') : value
-        );
+        return generateCategoricalBarData(this.categoryBins, 0);
     }
 
     @computed
     get barData(): BarDatum[] {
-        return [...this.numericalData, ...this.categoricalData];
+        return [...this.categoricalData];
     }
 
     @computed
@@ -133,21 +100,13 @@ export default class BarChart extends React.Component<IBarChartProps, {}>
 
     @computed
     get categories(): string[] {
-        return this.categoryBins.map(dataBin =>
-            dataBin.specialValue === undefined
-                ? `${dataBin.start}`
-                : dataBin.specialValue
-        );
+        return this.categoryBins.map(dataBin => dataBin.specialValue);
     }
 
     @computed
     get tickValues(): number[] {
         const values = [];
-        for (
-            let i = 1;
-            i <= this.numericalTickFormat.length + this.categories.length;
-            i++
-        ) {
+        for (let i = 1; i <= this.categories.length; i++) {
             values.push(i);
         }
         return values;
@@ -174,8 +133,7 @@ export default class BarChart extends React.Component<IBarChartProps, {}>
 
     @computed
     get tickFormat(): (string | string[])[] {
-        // copy non-numerical categories as is
-        return [...this.numericalTickFormat, ...this.categories];
+        return [...this.categories];
     }
 
     @computed
@@ -185,21 +143,14 @@ export default class BarChart extends React.Component<IBarChartProps, {}>
             VICTORY_THEME.axis.style.tickLabels.fontSize,
             this.tickFormat,
             TILT_ANGLE,
-            40,
+            30,
             10
         );
     }
 
     @computed
     get barRatio(): number {
-        // In log scale bar chart, when the first bin is .5 exponential, the bars will be shifted to the right
-        // for one bar. We need to adjust the bar ratio since it's calculated based on the range / # of bars
-        const additionRatio = needAdditionShiftForLogScaleBarChart(
-            this.numericalBins
-        )
-            ? this.barDataBasedOnNA.length / (this.barDataBasedOnNA.length + 1)
-            : 1;
-        return additionRatio * STUDY_VIEW_CONFIG.thresholds.barRatio;
+        return STUDY_VIEW_CONFIG.thresholds.barRatio;
     }
 
     @autobind
@@ -208,7 +159,7 @@ export default class BarChart extends React.Component<IBarChartProps, {}>
     }
 
     /*
-     * Supplies the BarPlot with the event handlers needed to record when the mouse enters
+     * Supplies the CategoryBarPlot with the event handlers needed to record when the mouse enters
      * or leaves a bar on the plot.
      */
     private get barPlotEvents() {
@@ -325,7 +276,7 @@ export default class BarChart extends React.Component<IBarChartProps, {}>
                             tickValues={this.tickValuesBasedOnNA}
                             tickFormat={(t: number) => this.tickFormat[t - 1]}
                             domain={[0, this.maximumX]}
-                            tickLabelComponent={<BarChartAxisLabel />}
+                            tickLabelComponent={<CategoryBarChartAxisLabel />}
                             style={{
                                 tickLabels: {
                                     angle: TILT_ANGLE,
@@ -367,6 +318,7 @@ export default class BarChart extends React.Component<IBarChartProps, {}>
                         model={this.toolTipModel}
                         totalBars={this.barData.length}
                         currentBarIndex={this.currentBarIndex}
+                        isCategorical
                     />,
                     document.body
                 )}
