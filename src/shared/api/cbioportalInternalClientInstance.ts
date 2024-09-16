@@ -48,31 +48,42 @@ function proxyColumnStore(client: any, endpoint: string) {
 
         const matchedMethod = method.match(new RegExp(endpoints.join('|')));
         if (localStorage.getItem('LIVE_VALIDATE_KEY') && matchedMethod) {
-            this.request = function() {
+            this.request = function(...origArgs: any[]) {
                 const params = toJS(arguments[2]);
 
+                const oldSuccess = arguments[7];
+
+                arguments[7] = function() {
+                    const url =
+                        origArgs[1].replace(
+                            /column-store\/api/,
+                            'column-store'
+                        ) +
+                        '?' +
+                        _.map(origArgs[4], (v, k) => `${k}=${v}&`).join('');
+
+                    setTimeout(() => {
+                        makeTest(params, urlChopper(url), matchedMethod[0]);
+                    }, 1000);
+
+                    const hash = hashString(
+                        JSON.stringify({ data: params, url: urlChopper(url) })
+                    );
+                    const promise = validate(
+                        url,
+                        params,
+                        matchedMethod[0],
+                        hash,
+                        undefined,
+                        arguments[0].xhr.getResponseHeader('elapsed-time')
+                    ).then((result: any) => {
+                        reportValidationResult(result, 'LIVE');
+                    });
+
+                    return oldSuccess.apply(this, arguments);
+                };
+
                 oldRequest.apply(this, arguments);
-
-                const url =
-                    arguments[1].replace(/column-store\/api/, 'column-store') +
-                    '?' +
-                    _.map(arguments[4], (v, k) => `${k}=${v}&`).join('');
-
-                setTimeout(() => {
-                    makeTest(params, urlChopper(url), matchedMethod[0]);
-                }, 1000);
-
-                const hash = hashString(
-                    JSON.stringify({ data: params, url: urlChopper(url) })
-                );
-                const promise = validate(
-                    url,
-                    params,
-                    matchedMethod[0],
-                    hash
-                ).then((result: any) => {
-                    reportValidationResult(result, 'LIVE');
-                });
             };
         }
 

@@ -143,38 +143,46 @@ export function validate(
     url: string,
     params: any,
     label: string,
-    hash: number
+    hash: number,
+    body?: any,
+    elapsedTime?: any
 ) {
     const clStart = performance.now();
     let chDuration: number, legacyDuration: number;
 
-    return $.ajax({
-        method: 'post',
-        url: url,
-        data: JSON.stringify(params),
-        contentType: 'application/json',
-    })
-        .then(chResult => {
+    let chXHR: any;
+
+    if (body) {
+        chXHR = Promise.resolve({ body, elapsedTime });
+    } else {
+        chXHR = $.ajax({
+            method: 'post',
+            url: url,
+            data: JSON.stringify(params),
+            contentType: 'application/json',
+        }).then((body, state, xhr) => {
+            return { body, elapsedTime: xhr.getResponseHeader('elapsed-time') };
+        });
+    }
+
+    return chXHR
+        .then(({ body, elapsedTime }: any) => {
             const legacyUrl = url.replace(/column-store\//, '');
-            chDuration = performance.now() - clStart;
-            const legacyStart = performance.now();
-            return $.ajax({
+            const legacyXHR = $.ajax({
                 method: 'post',
                 url: legacyUrl,
                 data: JSON.stringify(params),
                 contentType: 'application/json',
-            }).then(legacyResult => {
-                legacyDuration = performance.now() - legacyStart;
-                const result: any = compareCounts(
-                    chResult,
-                    legacyResult,
-                    label
-                );
+            });
+            return legacyXHR.then(legacyResult => {
+                const result: any = compareCounts(body, legacyResult, label);
                 result.url = url;
                 result.hash = hash;
                 result.data = params;
-                result.chDuration = chDuration;
-                result.legacyDuration = legacyDuration;
+                result.chDuration = parseFloat(elapsedTime);
+                result.legacyDuration = parseFloat(
+                    legacyXHR.getResponseHeader('elapsed-time') || ''
+                );
                 return result;
             });
         })
