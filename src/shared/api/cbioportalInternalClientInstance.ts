@@ -44,6 +44,7 @@ function proxyColumnStore(client: any, endpoint: string) {
             'ClinicalDataDensity',
             'MutationDataCounts',
             'GenomicDataCounts',
+            'GenericAssay',
         ];
 
         const matchedMethod = method.match(new RegExp(endpoints.join('|')));
@@ -69,12 +70,12 @@ function proxyColumnStore(client: any, endpoint: string) {
                     const hash = hashString(
                         JSON.stringify({ data: params, url: urlChopper(url) })
                     );
-                    const promise = validate(
+                    validate(
                         url,
                         params,
                         matchedMethod[0],
                         hash,
-                        undefined,
+                        arguments[0].body,
                         arguments[0].xhr.getResponseHeader('elapsed-time')
                     ).then((result: any) => {
                         reportValidationResult(result, 'LIVE');
@@ -125,6 +126,8 @@ proxyColumnStore(internalClientColumnStore, 'fetchClinicalDataDensityPlot');
 proxyColumnStore(internalClientColumnStore, 'getClinicalEventTypeCounts');
 proxyColumnStore(internalClientColumnStore, 'fetchMutationDataCounts');
 proxyColumnStore(internalClientColumnStore, 'fetchGenomicDataCounts');
+proxyColumnStore(internalClientColumnStore, 'fetchGenericAssayDataBinCounts');
+proxyColumnStore(internalClientColumnStore, 'fetchGenericAssayDataCounts');
 
 export default internalClient;
 
