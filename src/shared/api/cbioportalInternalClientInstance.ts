@@ -20,7 +20,11 @@ function proxyColumnStore(client: any, endpoint: string) {
         return;
     }
 
-    const method = `${endpoint}UsingPOSTWithHttpInfo`;
+    const method = endpoint.match(
+        new RegExp('fetchPatientTreatmentCounts|fetchSampleTreatmentCounts')
+    )
+        ? `${endpoint}UsingWithHttpInfo`
+        : `${endpoint}UsingPOSTWithHttpInfo`;
     const old = client[method];
 
     client[method] = function(params: any) {
@@ -43,6 +47,8 @@ function proxyColumnStore(client: any, endpoint: string) {
             'FilteredSamples',
             'ClinicalDataDensity',
             'MutationDataCounts',
+            'PatientTreatmentCounts',
+            'SampleTreatmentCounts',
             'GenomicData',
             'GenericAssay',
         ];
@@ -88,7 +94,11 @@ function proxyColumnStore(client: any, endpoint: string) {
             };
         }
 
-        params.$domain = `//${host}/api/column-store`;
+        params.$domain = method.match(
+            new RegExp('PatientTreatmentCounts|SampleTreatmentCounts')
+        )
+            ? `//${host}`
+            : `//${host}/api/column-store`;
         const url = old.apply(this, [params]);
 
         this.request = oldRequest;

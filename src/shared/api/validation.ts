@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import { array } from 'yargs';
 
 export const isObject = (value: any) => {
     return (
@@ -84,7 +85,90 @@ const deleteFields: Record<string, string[]> = {
 const sortFields: Record<string, string> = {
     ClinicalDataBin: 'attributeId,specialValue',
     FilteredSamples: 'patientId,sampleId',
+    SampleTreatmentCounts: 'treatment,time',
+    PatientTreatmentCounts: 'treatment',
 };
+
+function getLegacyPatientTreatmentCountUrl(url: string) {
+    return url.replace(
+        /api\/treatments\/patient-counts\/fetch?/,
+        'api/treatments/patient'
+    );
+}
+
+function getLegacySampleTreatmentCountUrl(url: string) {
+    return url.replace(
+        /api\/treatments\/sample-counts\/fetch?/,
+        'api/treatments/sample'
+    );
+}
+
+const treatmentLegacyUrl: Record<string, (url: string) => string> = {
+    PatientTreatmentCounts: getLegacyPatientTreatmentCountUrl,
+    SampleTreatmentCounts: getLegacySampleTreatmentCountUrl,
+};
+
+const treatmentConverter: Record<string, (legacyData: any) => any> = {
+    PatientTreatmentCounts: convertLegacyPatientTreatmentCountsToCh,
+    SampleTreatmentCounts: convertLegacySampleTreatmentCountsToCh,
+};
+
+function convertLegacySampleTreatmentCountsToCh(legacyData: any) {
+    const sampleIdSet = new Set();
+    const treatments: Array<{
+        time: string;
+        treatment: string;
+        count: number;
+        samples: Array<any>;
+    }> = [];
+
+    legacyData.forEach((legacySampleTreatment: any) => {
+        let treatment = {
+            time: legacySampleTreatment['time'],
+            treatment: legacySampleTreatment['treatment'],
+            count: legacySampleTreatment['count'],
+            samples: new Array(),
+        };
+
+        treatments.push(treatment);
+        const samples = legacySampleTreatment['samples'];
+        if (samples instanceof Array) {
+            samples.forEach(sample => {
+                sampleIdSet.add(sample['sampleId']);
+            });
+        }
+    });
+    return {
+        totalSamples: sampleIdSet.size,
+        treatments: treatments,
+    };
+}
+
+function convertLegacyPatientTreatmentCountsToCh(legacyData: any) {
+    const patientIdSet = new Set();
+    const treatments: Array<{ treatment: string; count: number }> = [];
+
+    legacyData.forEach((legacyTreatment: any) => {
+        let treatment = {
+            treatment: legacyTreatment['treatment'],
+            count: legacyTreatment['count'],
+        };
+        treatments.push(treatment);
+
+        const samples = legacyTreatment['samples'];
+        if (samples instanceof Array) {
+            samples.forEach(sample => {
+                patientIdSet.add(sample['patientId']);
+            });
+        }
+    });
+
+    return {
+        totalPatients: patientIdSet.size,
+        totalSamples: 0,
+        patientTreatments: treatments,
+    };
+}
 
 export function deepSort(inp: any, label: string) {
     const arrs = getArrays(inp, []);
@@ -126,8 +210,11 @@ function attemptSort(keys: string[], arr: any) {
 
 export function compareCounts(clData: any, legacyData: any, label: string) {
     const clDataSorted = deepSort(clData, label);
-    const legacyDataSorted = deepSort(legacyData, label);
+    var legacyDataSorted = deepSort(legacyData, label);
 
+    if (treatmentConverter[label]) {
+        legacyDataSorted = treatmentConverter[label](legacyDataSorted);
+    }
     const result =
         JSON.stringify(clDataSorted) === JSON.stringify(legacyDataSorted);
 
@@ -167,7 +254,10 @@ export function validate(
 
     return chXHR
         .then(({ body, elapsedTime }: any) => {
-            const legacyUrl = url.replace(/column-store\//, '');
+            let legacyUrl = url.replace(/column-store\//, '');
+            if (treatmentLegacyUrl[label]) {
+                legacyUrl = treatmentLegacyUrl[label](legacyUrl);
+            }
             const legacyXHR = $.ajax({
                 method: 'post',
                 url: legacyUrl,
