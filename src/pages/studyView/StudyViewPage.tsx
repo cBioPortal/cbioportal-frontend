@@ -731,20 +731,20 @@ export default class StudyViewPage extends React.Component<
                                             url={`https://bioinformatics.mdanderson.org/TCGA/NGCHMPortal/?${this.store.MDACCHeatmapStudyMeta.result[0]}`}
                                         />
                                     </MSKTab>
-                                    <MSKTab
-                                        key={3}
-                                        id={StudyViewPageTabKeyEnum.CN_SEGMENTS}
-                                        linkText={
-                                            StudyViewPageTabDescriptions.CN_SEGMENTS
-                                        }
-                                        hide={
-                                            this.store.hasCNSegmentData
-                                                .isPending ||
-                                            !this.store.hasCNSegmentData.result
-                                        }
-                                    >
-                                        <CNSegments store={this.store} />
-                                    </MSKTab>
+                                    {/*<MSKTab*/}
+                                    {/*    key={3}*/}
+                                    {/*    id={StudyViewPageTabKeyEnum.CN_SEGMENTS}*/}
+                                    {/*    linkText={*/}
+                                    {/*        StudyViewPageTabDescriptions.CN_SEGMENTS*/}
+                                    {/*    }*/}
+                                    {/*    hide={*/}
+                                    {/*        this.store.hasCNSegmentData*/}
+                                    {/*            .isPending ||*/}
+                                    {/*        !this.store.hasCNSegmentData.result*/}
+                                    {/*    }*/}
+                                    {/*>*/}
+                                    {/*    <CNSegments store={this.store} />*/}
+                                    {/*</MSKTab>*/}
                                     <MSKTab
                                         key={4}
                                         id={
