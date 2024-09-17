@@ -43,7 +43,7 @@ function proxyColumnStore(client: any, endpoint: string) {
             'FilteredSamples',
             'ClinicalDataDensity',
             'MutationDataCounts',
-            'GenomicDataCounts',
+            'GenomicData',
             'GenericAssay',
         ];
 
@@ -126,6 +126,7 @@ proxyColumnStore(internalClientColumnStore, 'fetchClinicalDataDensityPlot');
 proxyColumnStore(internalClientColumnStore, 'getClinicalEventTypeCounts');
 proxyColumnStore(internalClientColumnStore, 'fetchMutationDataCounts');
 proxyColumnStore(internalClientColumnStore, 'fetchGenomicDataCounts');
+proxyColumnStore(internalClientColumnStore, 'fetchGenomicDataBinCounts');
 proxyColumnStore(internalClientColumnStore, 'fetchGenericAssayDataBinCounts');
 proxyColumnStore(internalClientColumnStore, 'fetchGenericAssayDataCounts');
 
