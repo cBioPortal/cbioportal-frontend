@@ -186,6 +186,22 @@ export function deepSort(inp: any, label: string) {
         if (!isObject(arr[0])) {
             arr.sort();
         } else {
+            // it's an array of objects
+
+            // this is going to make sure the keys in the objects
+            // are in a sorted order
+            arr.forEach((o: any) => {
+                _.keys(o)
+                    .sort()
+                    .forEach(k => {
+                        const val = o[k];
+                        delete o[k];
+                        o[k] = val;
+                    });
+            });
+
+            //927275539
+
             if (sortFields[label]) {
                 attemptSort(sortFields[label].split(','), arr);
             } else {
