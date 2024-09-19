@@ -101,6 +101,7 @@ import classnames from 'classnames';
 import { OncoprintColorModal } from './OncoprintColorModal';
 import JupyterNoteBookModal from 'pages/staticPages/tools/oncoprinter/JupyterNotebookModal';
 import { convertToCSV } from 'shared/lib/calculation/JSONtoCSV';
+import { GAP_MODE_ENUM } from 'oncoprintjs';
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -1671,9 +1672,8 @@ export default class ResultsViewOncoprint extends React.Component<
      * Called when a track gap is added from within oncoprintjs UI
      */
     @action.bound
-    @action.bound
-    private onTrackGapChange(trackId: TrackId, gapOn: boolean) {
-        this.handleClinicalTrackChange(trackId, { gapOn });
+    private onTrackGapChange(trackId: TrackId, mode: GAP_MODE_ENUM) {
+        this.handleClinicalTrackChange(trackId, { gapMode: mode });
     }
 
     private handleClinicalTrackChange(

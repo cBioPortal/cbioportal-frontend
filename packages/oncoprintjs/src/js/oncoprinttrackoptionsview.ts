@@ -455,9 +455,12 @@ export default class OncoprintTrackOptionsView {
             const $show_gaps_percent_opt = OncoprintTrackOptionsView.$makeDropdownOption(
                 model.getTrackShowGaps(track_id) ===
                     GAP_MODE_ENUM.SHOW_GAPS_PERCENT
-                    ? 'Hide gaps (%)'
-                    : 'Show Gaps (%)',
-                model.getTrackShowGaps(track_id) ? 'bold' : 'normal',
+                    ? 'Hide gaps (w/%)'
+                    : 'Show Gaps (w/%)',
+                model.getTrackShowGaps(track_id) ===
+                    GAP_MODE_ENUM.SHOW_GAPS_PERCENT
+                    ? 'bold'
+                    : 'normal',
                 false,
                 function(evt) {
                     evt.stopPropagation();
@@ -475,7 +478,9 @@ export default class OncoprintTrackOptionsView {
                 model.getTrackShowGaps(track_id) === GAP_MODE_ENUM.SHOW_GAPS
                     ? 'Hide gaps'
                     : 'Show Gaps',
-                model.getTrackShowGaps(track_id) ? 'bold' : 'normal',
+                model.getTrackShowGaps(track_id) === GAP_MODE_ENUM.SHOW_GAPS
+                    ? 'bold'
+                    : 'normal',
                 false,
                 function(evt) {
                     evt.stopPropagation();
