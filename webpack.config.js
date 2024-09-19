@@ -599,14 +599,4 @@ if (isTest) {
 }
 // End Testing
 
-mergeApiTestJson();
-
-if (isDev) {
-    watch('./apiTests/specs', async function(event, filename) {
-        if (event === 'change') {
-            mergeApiTestJson();
-        }
-    });
-}
-
 module.exports = config;
