@@ -66,16 +66,20 @@ export function getLine(line: string): InputLine {
     };
 
     const content = line.split(':');
-    if (content.length === 1) {
-        parsedResult.caseId = content[0];
-    } else if (content.length > 1) {
-        parsedResult.studyId = content[0];
-        const groupInfo = content[1].split(/\s|\t/g);
+    const setCaseIdAndValue = (groupInfo: string[]) => {
         if (groupInfo.length > 1) {
             parsedResult.value = groupInfo[1];
         }
         parsedResult.caseId = groupInfo[0];
+    };
+    if (content.length === 1) {
+        parsedResult.caseId = content[0];
+        setCaseIdAndValue(content[0].split(/\s|\t/g));
+    } else if (content.length > 1) {
+        parsedResult.studyId = content[0];
+        setCaseIdAndValue(content[1].split(/\s|\t/g));
     }
+
     return parsedResult;
 }
 
@@ -348,6 +352,17 @@ export function parseContent(
         warning: [],
     };
     let lines: InputLine[] = getLines(content);
+    if (isSingleStudy) {
+        lines = lines.map(line => {
+            if (!line.studyId) {
+                line.studyId = selectedStudies[0];
+                line.line = `${line.studyId}:${line.line}`;
+            }
+
+            return line;
+        });
+    }
+
     if (lines.length > 0) {
         if (needToValidate) {
             const result = validateLines(
