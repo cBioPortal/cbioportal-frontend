@@ -919,8 +919,6 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                                     </span>
                                 </>
                             )}
-                            // we want to show in e2e context even if user is //
-                            logged out
                             {(this.props.store.isLoggedIn || isWebdriver()) && (
                                 <div>
                                     {this.customChartDataOptions.length > 0 && (
