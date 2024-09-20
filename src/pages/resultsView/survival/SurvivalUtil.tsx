@@ -678,6 +678,7 @@ export function getSurvivalChartDataByAlteredStatus(
 export function generateSurvivalPlotTitleFromDisplayName(displayName: string) {
     return displayName
         .replace(/status|survival/gi, '')
+        .replace(/\s+/g, ' ') // Replace multiple spaces with a single space
         .trim()
         .replace(/^\w/, c => c.toUpperCase());
 }

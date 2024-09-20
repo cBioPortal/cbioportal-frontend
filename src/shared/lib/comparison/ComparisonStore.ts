@@ -75,6 +75,7 @@ import {
     getFilteredMolecularProfilesByAlterationType,
     getPatientIdentifiers,
     buildSelectedDriverTiersMap,
+    showQueryUpdatedToast,
 } from 'pages/studyView/StudyViewUtils';
 import { calculateQValues } from 'shared/lib/calculation/BenjaminiHochbergFDRCalculator';
 import ComplexKeyMap from '../complexKeyDataStructures/ComplexKeyMap';
@@ -119,6 +120,7 @@ import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
 import { compileMutations } from './AnalysisStoreUtils';
 import { FeatureFlagEnum } from 'shared/featureFlags';
 import { SurvivalChartType } from 'pages/resultsView/survival/SurvivalPrefixTable';
+import { P } from 'js-combinatorics';
 
 export enum OverlapStrategy {
     INCLUDE = 'Include',
@@ -352,13 +354,12 @@ export default abstract class ComparisonStore extends AnalysisStore
         customSurvivalPlots: CustomSurvivalPlots
     ) {
         const newSession = toJS(this._session.result!);
-        newSession.customSurvivalPlots = toJS(customSurvivalPlots);
+        newSession.customSurvivalPlots = _.values(customSurvivalPlots) as any;
 
-        if (this.isSessionLoaded) {
-            await comparisonClient.addComparisonSession(newSession);
-        }
+        // Need this to prevent page for reloading
+        localStorage.setItem('preventPageReload', 'true');
 
-        this.saveAndGoToSession(newSession);
+        await this.saveAndGoToSession(newSession);
     }
 
     readonly origin = remoteData({
@@ -2156,9 +2157,12 @@ export default abstract class ComparisonStore extends AnalysisStore
     });
 
     @computed get survivalTabShowable() {
+        // TODO: refactor to check clinica-event data
         return (
-            this.survivalClinicalDataExists.isComplete &&
-            this.survivalClinicalDataExists.result
+            (this.predefinedSurvivalClinicalDataExists.isComplete &&
+                this.clinicalEventOptions.isComplete &&
+                this.predefinedSurvivalClinicalDataExists.result) ||
+            !_.isEmpty(this.clinicalEventOptions.result!)
         );
     }
 
@@ -2546,15 +2550,15 @@ export default abstract class ComparisonStore extends AnalysisStore
         },
     });
 
-    readonly survivalClinicalDataExists = remoteData<boolean>({
+    readonly predefinedSurvivalClinicalDataExists = remoteData<boolean>({
         await: () => [
             this.activeSamplesNotOverlapRemoved,
-            this.survivalClinicalAttributesPrefix,
+            this.predefinedSurvivalClinicalAttributesPrefix,
         ],
         invoke: () =>
             fetchSurvivalDataExists(
                 this.activeSamplesNotOverlapRemoved.result!,
-                this.survivalClinicalAttributesPrefix.result!
+                this.predefinedSurvivalClinicalAttributesPrefix.result!
             ),
     });
 
@@ -2562,7 +2566,7 @@ export default abstract class ComparisonStore extends AnalysisStore
         {
             await: () => [
                 this.activeSamplesNotOverlapRemoved,
-                this.survivalClinicalAttributesPrefix,
+                this.predefinedSurvivalClinicalAttributesPrefix,
             ],
             invoke: () => {
                 if (this.activeSamplesNotOverlapRemoved.result!.length === 0) {
@@ -2570,7 +2574,7 @@ export default abstract class ComparisonStore extends AnalysisStore
                 }
 
                 const attributeNames: string[] = _.reduce(
-                    this.survivalClinicalAttributesPrefix.result!,
+                    this.predefinedSurvivalClinicalAttributesPrefix.result!,
                     (attributeNames, prefix: string) => {
                         attributeNames.push(prefix + '_STATUS');
                         attributeNames.push(prefix + '_MONTHS');
@@ -2680,7 +2684,7 @@ export default abstract class ComparisonStore extends AnalysisStore
         {}
     );
 
-    readonly studiesSurvivalAttributes = remoteData<ClinicalAttribute[]>(
+    readonly activeStudiesClinicalAttributes = remoteData<ClinicalAttribute[]>(
         {
             await: () => [this.activeStudyIds],
             invoke: () => {
@@ -2695,14 +2699,44 @@ export default abstract class ComparisonStore extends AnalysisStore
         []
     );
 
-    readonly activeStudiesSurvivalAttributes = remoteData<ClinicalAttribute[]>(
+    readonly predefinedSurvivalAttributes = remoteData<ClinicalAttribute[]>(
         {
-            await: () => [this.studiesSurvivalAttributes, this.activeStudyIds],
+            await: () => [this.activeStudiesClinicalAttributes],
+            invoke: async () => {
+                return _.filter(
+                    this.activeStudiesClinicalAttributes.result,
+                    attr =>
+                        /_STATUS$/i.test(attr.clinicalAttributeId) ||
+                        /_MONTHS$/i.test(attr.clinicalAttributeId)
+                );
+            },
+        },
+        []
+    );
+
+    readonly allSurvivalAttributes = remoteData<ClinicalAttribute[]>(
+        {
+            await: () => [
+                this.predefinedSurvivalAttributes,
+                this.activeStudyIds,
+            ],
             invoke: () => {
                 const customAttributes = _.chain(this.customSurvivalPlots)
                     .flatMap((x, y) => {
                         return _.chain(this.activeStudyIds.result || [])
                             .flatMap(studyId => {
+                                // getSurvivalPlotPrefixText(
+                                //     x.startEventRequestIdentifier?.clinicalEventRequests[0].eventType,
+                                //     x.startEventRequestIdentifier?.position,
+                                //     x.startEventRequestIdentifier?.clinicalEventRequests[0].attributes as any,
+                                //     x.endEventRequestIdentifier?.clinicalEventRequests[0].eventType,
+                                //     x.endEventRequestIdentifier?.position,
+                                //     x.endEventRequestIdentifier?.clinicalEventRequests[0].attributes as any,
+                                //     x.censoredEventRequestIdentifier?.clinicalEventRequests[0].eventType,
+                                //     x.censoredEventRequestIdentifier?.position,
+                                //     x.censoredEventRequestIdentifier?.clinicalEventRequests[0].attributes as any
+                                // )
+
                                 const startIdentifier =
                                     x.startEventRequestIdentifier?.clinicalEventRequests[0].attributes
                                         .map(x => x.key + '::' + x.value)
@@ -2719,40 +2753,46 @@ export default abstract class ComparisonStore extends AnalysisStore
                                         .sort((a, b) => a.localeCompare(b))
                                         .join(' ') || '';
 
-                                var title = `${
-                                    x.startEventRequestIdentifier?.position
-                                } of ${
-                                    x.startEventRequestIdentifier
-                                        ?.clinicalEventRequests[0].eventType
-                                }${
-                                    startIdentifier.length > 0
-                                        ? ' - ' + startIdentifier
-                                        : ''
-                                } till ${
-                                    x.endEventRequestIdentifier?.position
-                                } of ${
-                                    x.endEventRequestIdentifier
-                                        ?.clinicalEventRequests[0].eventType
-                                }${
-                                    endIdentifier.length > 0
-                                        ? ' - ' + endIdentifier
-                                        : ''
-                                } censored by ${
-                                    x.censoredEventRequestIdentifier?.position
-                                } of ${
-                                    x.censoredEventRequestIdentifier
-                                        ?.clinicalEventRequests[0].eventType
-                                }${
-                                    censoredIdentifier.length > 0
-                                        ? ' - ' + censoredIdentifier
-                                        : ''
-                                }`;
+                                var title = x.name;
+
+                                if (title === undefined || title === '') {
+                                    title = `${
+                                        x.startEventRequestIdentifier?.position
+                                    } of ${
+                                        x.startEventRequestIdentifier
+                                            ?.clinicalEventRequests[0].eventType
+                                    }${
+                                        startIdentifier.length > 0
+                                            ? ' - ' + startIdentifier
+                                            : ''
+                                    } till ${
+                                        x.endEventRequestIdentifier?.position
+                                    } of ${
+                                        x.endEventRequestIdentifier
+                                            ?.clinicalEventRequests[0].eventType
+                                    }${
+                                        endIdentifier.length > 0
+                                            ? ' - ' + endIdentifier
+                                            : ''
+                                    } censored by ${
+                                        x.censoredEventRequestIdentifier
+                                            ?.position
+                                    } of ${
+                                        x.censoredEventRequestIdentifier
+                                            ?.clinicalEventRequests[0].eventType
+                                    }${
+                                        censoredIdentifier.length > 0
+                                            ? ' - ' + censoredIdentifier
+                                            : ''
+                                    }`;
+                                }
+
                                 var months_attribute: ClinicalAttribute = {
                                     clinicalAttributeId:
                                         x.attributeIdPrefix + '_MONTHS',
                                     datatype: 'NUMBER',
-                                    description: `Survival in months from ${title}`,
-                                    displayName: `Survival (Months) from ${title}`,
+                                    description: `Survival in months ${title}`,
+                                    displayName: `Survival (Months) ${title}`,
                                     patientAttribute: true,
                                     priority: '1',
                                     studyId: studyId,
@@ -2761,8 +2801,8 @@ export default abstract class ComparisonStore extends AnalysisStore
                                     clinicalAttributeId:
                                         x.attributeIdPrefix + '_STATUS',
                                     datatype: 'STRING',
-                                    description: `Survival status from ${title}`,
-                                    displayName: `Survival status from ${title}`,
+                                    description: `Survival status ${title}`,
+                                    displayName: `Survival status ${title}`,
                                     patientAttribute: true,
                                     priority: '1',
                                     studyId: studyId,
@@ -2774,7 +2814,7 @@ export default abstract class ComparisonStore extends AnalysisStore
                     .value();
 
                 return Promise.resolve([
-                    ...this.studiesSurvivalAttributes.result!,
+                    ...this.predefinedSurvivalAttributes.result!,
                     ...customAttributes,
                 ]);
             },
@@ -2783,11 +2823,22 @@ export default abstract class ComparisonStore extends AnalysisStore
     );
 
     readonly survivalClinicalAttributesPrefix = remoteData({
-        await: () => [this.activeStudiesSurvivalAttributes],
+        await: () => [this.allSurvivalAttributes],
         invoke: () => {
             return Promise.resolve(
                 getSurvivalClinicalAttributesPrefix(
-                    this.activeStudiesSurvivalAttributes.result!
+                    this.allSurvivalAttributes.result!
+                )
+            );
+        },
+    });
+
+    readonly predefinedSurvivalClinicalAttributesPrefix = remoteData({
+        await: () => [this.activeStudiesClinicalAttributes],
+        invoke: () => {
+            return Promise.resolve(
+                getSurvivalClinicalAttributesPrefix(
+                    this.activeStudiesClinicalAttributes.result!
                 )
             );
         },
@@ -2897,7 +2948,6 @@ export default abstract class ComparisonStore extends AnalysisStore
         },
     });
 
-    //TODO
     readonly patientSurvivals = remoteData<{
         [prefix: string]: PatientSurvival[];
     }>({
@@ -3030,7 +3080,7 @@ export default abstract class ComparisonStore extends AnalysisStore
 
     readonly survivalXAxisLabelGroupByPrefix = remoteData({
         await: () => [
-            this.activeStudiesSurvivalAttributes,
+            this.allSurvivalAttributes,
             this.survivalClinicalAttributesPrefix,
         ],
         invoke: () => {
@@ -3039,7 +3089,7 @@ export default abstract class ComparisonStore extends AnalysisStore
                 (acc, prefix) => {
                     const clinicalAttributeId = `${prefix}_MONTHS`;
                     const clinicalAttributes = _.filter(
-                        this.activeStudiesSurvivalAttributes.result,
+                        this.allSurvivalAttributes.result,
                         attr => attr.clinicalAttributeId === clinicalAttributeId
                     );
                     if (clinicalAttributes.length > 0) {
@@ -3060,7 +3110,7 @@ export default abstract class ComparisonStore extends AnalysisStore
 
     readonly survivalDescriptions = remoteData({
         await: () => [
-            this.activeStudiesSurvivalAttributes,
+            this.allSurvivalAttributes,
             this.activeStudyIdToStudy,
             this.survivalClinicalAttributesPrefix,
         ],
@@ -3070,7 +3120,7 @@ export default abstract class ComparisonStore extends AnalysisStore
                 (acc, prefix) => {
                     const clinicalAttributeId = `${prefix}_STATUS`;
                     const clinicalAttributes = _.filter(
-                        this.activeStudiesSurvivalAttributes.result,
+                        this.allSurvivalAttributes.result,
                         attr => attr.clinicalAttributeId === clinicalAttributeId
                     );
                     if (clinicalAttributes.length > 0) {
@@ -3279,22 +3329,13 @@ export default abstract class ComparisonStore extends AnalysisStore
         endClinicalEventAttributes: ClinicalEventDataWithKey[],
         censoredClinicalEventType: string,
         censoredEventPosition: 'FIRST' | 'LAST',
-        censoredClinicalEventAttributes: ClinicalEventDataWithKey[]
+        censoredClinicalEventAttributes: ClinicalEventDataWithKey[],
+        name: string,
+        showtoast: boolean = false
     ) {
-        const prefix = getSurvivalPlotPrefixText(
-            startClinicalEventType,
-            startEventPosition,
-            startClinicalEventAttributes,
-            endClinicalEventType,
-            endEventPosition,
-            endClinicalEventAttributes,
-            censoredClinicalEventType,
-            censoredEventPosition,
-            censoredClinicalEventAttributes
-        );
-
-        this.customSurvivalPlots[prefix] = {
-            attributeIdPrefix: prefix,
+        this.customSurvivalPlots[name] = {
+            name,
+            attributeIdPrefix: name,
             endEventRequestIdentifier: {
                 clinicalEventRequests: [
                     {
@@ -3333,15 +3374,13 @@ export default abstract class ComparisonStore extends AnalysisStore
             },
         };
 
-        if (!this.customSurvivalDataPromises.hasOwnProperty(prefix)) {
-            this.customSurvivalDataPromises[prefix] = remoteData<
-                ClinicalData[]
-            >({
+        if (!this.customSurvivalDataPromises.hasOwnProperty(name)) {
+            this.customSurvivalDataPromises[name] = remoteData<ClinicalData[]>({
                 await: () => {
                     return [this.activeSamplesNotOverlapRemoved];
                 },
                 invoke: async () => {
-                    const attr = this.customSurvivalPlots[prefix];
+                    const attr = this.customSurvivalPlots[name];
                     let censoredEventRequestIdentifier = toJS(
                         attr.censoredEventRequestIdentifier!
                     );
@@ -3351,7 +3390,7 @@ export default abstract class ComparisonStore extends AnalysisStore
                             : [];
 
                     const survivalRequest = {
-                        attributeIdPrefix: prefix,
+                        attributeIdPrefix: name,
                         startEventRequestIdentifier: attr.startEventRequestIdentifier!,
                         endEventRequestIdentifier: attr.endEventRequestIdentifier!,
                         censoredEventRequestIdentifier: censoredEventRequestIdentifier,
@@ -3362,9 +3401,16 @@ export default abstract class ComparisonStore extends AnalysisStore
                             })
                         ),
                     };
-                    return await internalClient.fetchSurvivalDataUsingPOST({
-                        survivalRequest,
-                    });
+                    let result = await internalClient.fetchSurvivalDataUsingPOST(
+                        {
+                            survivalRequest,
+                        }
+                    );
+                    showtoast &&
+                        showQueryUpdatedToast(
+                            `Successfully added survival plot: ${name}`
+                        );
+                    return result;
                 },
                 onError: () => {},
                 default: [],
@@ -3374,8 +3420,10 @@ export default abstract class ComparisonStore extends AnalysisStore
 
     @action.bound
     private loadCustomSurvivalCharts(): void {
-        this.customSurvivalPlots =
-            this._session.result!.customSurvivalPlots ?? {};
+        this.customSurvivalPlots = _.keyBy(
+            this._session.result!.customSurvivalPlots || [],
+            'attributeIdPrefix'
+        );
 
         _.forEach(this.customSurvivalPlots, plot => {
             this.addSurvivalRequest(
@@ -3393,7 +3441,8 @@ export default abstract class ComparisonStore extends AnalysisStore
                     .eventType,
                 plot.censoredEventRequestIdentifier!.position,
                 plot.censoredEventRequestIdentifier!.clinicalEventRequests[0]
-                    .attributes as ClinicalEventDataWithKey[]
+                    .attributes as ClinicalEventDataWithKey[],
+                plot.name || ''
             );
         });
     }

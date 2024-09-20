@@ -167,7 +167,7 @@ export const deletionGroup = [CopyNumberEnrichmentEventType.HOMDEL];
 export const cnaGroup = [...amplificationGroup, ...deletionGroup];
 
 export type CustomSurvivalPlots = {
-    [prefix: string]: Partial<SurvivalRequest>;
+    [prefix: string]: Partial<SurvivalRequest & { name: string }>;
 };
 
 export function cnaEventTypeSelectInit(
@@ -271,16 +271,22 @@ export function getSurvivalPlotPrefixText(
     censoredClinicalEventAttributes: ClinicalEventDataWithKey[]
 ) {
     const startIdentifier = startClinicalEventAttributes
-        .sort((a, b) => a.label.localeCompare(b.label))
-        .map(x => x.label)
+        .sort((a, b) =>
+            `${a.key}::${a.value}`.localeCompare(`${b.key}::${b.value}`)
+        )
+        .map(x => `${x.key}::${x.value}`)
         .join(' ');
     const endIdentifier = endClinicalEventAttributes
-        .sort((a, b) => a.label.localeCompare(b.label))
-        .map(x => x.label)
+        .sort((a, b) =>
+            `${a.key}::${a.value}`.localeCompare(`${b.key}::${b.value}`)
+        )
+        .map(x => `${x.key}::${x.value}`)
         .join(' ');
     const censoredIdentifier = censoredClinicalEventAttributes
-        .sort((a, b) => a.label.localeCompare(b.label))
-        .map(x => x.label)
+        .sort((a, b) =>
+            `${a.key}::${a.value}`.localeCompare(`${b.key}::${b.value}`)
+        )
+        .map(x => `${x.key}::${x.value}`)
         .join(' ');
 
     const title = `${startEventPosition} of ${startClinicalEventType}${

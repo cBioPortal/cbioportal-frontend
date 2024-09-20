@@ -14,7 +14,10 @@ import {
 import ErrorMessage from '../../shared/components/ErrorMessage';
 import { blendColors } from './OverlapUtils';
 import OverlapExclusionIndicator from './OverlapExclusionIndicator';
-import { getPatientIdentifiers } from '../studyView/StudyViewUtils';
+import {
+    getPatientIdentifiers,
+    showQueryUpdatedToast,
+} from '../studyView/StudyViewUtils';
 import _, { Dictionary } from 'lodash';
 import SurvivalDescriptionTable from 'pages/resultsView/survival/SurvivalDescriptionTable';
 import {
@@ -36,7 +39,7 @@ import {
     sortPatientSurvivals,
     calculateNumberOfPatients,
 } from 'pages/resultsView/survival/SurvivalUtil';
-import { observable, action, makeObservable, computed } from 'mobx';
+import { observable, action, makeObservable, computed, toJS } from 'mobx';
 import survivalPlotStyle from './styles.module.scss';
 import SurvivalPrefixTable, {
     SurvivalChartType,
@@ -71,7 +74,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
     private startEventPosition: 'FIRST' | 'LAST' = 'FIRST';
 
     @observable
-    private endEventPosition: 'FIRST' | 'LAST' = 'LAST';
+    private endEventPosition: 'FIRST' | 'LAST' = 'FIRST';
 
     @observable
     private censoredEventPosition: 'FIRST' | 'LAST' = 'LAST';
@@ -90,6 +93,8 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
 
     @observable
     private _selectedCensoredClinicalEventType: string | undefined = 'any';
+
+    @observable.ref chartName: string;
 
     @observable
     private selectedCensoredClinicalEventAttributes: ClinicalEventDataWithKey[] = [];
@@ -353,7 +358,27 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
     }
 
     @action.bound
+    private onKMPlotNameChange(e: React.SyntheticEvent<HTMLInputElement>) {
+        this.chartName = (e.target as HTMLInputElement).value;
+    }
+
+    @action.bound
     private onAddSurvivalPlot() {
+        let chartName =
+            this.chartName !== undefined && this.chartName.length > 0
+                ? this.chartName
+                : getSurvivalPlotPrefixText(
+                      this._selectedStartClinicalEventType!,
+                      this.startEventPosition,
+                      toJS(this.selectedStartClinicalEventAttributes),
+                      this._selectedEndClinicalEventType!,
+                      this.endEventPosition,
+                      toJS(this.selectedEndClinicalEventAttributes),
+                      this._selectedCensoredClinicalEventType!,
+                      this.censoredEventPosition,
+                      toJS(this.selectedCensoredClinicalEventAttributes)
+                  );
+
         this.props.store.addSurvivalRequest(
             this._selectedStartClinicalEventType!,
             this.startEventPosition,
@@ -363,24 +388,15 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             this.selectedEndClinicalEventAttributes,
             this._selectedCensoredClinicalEventType!,
             this.censoredEventPosition,
-            this.selectedCensoredClinicalEventAttributes
+            this.selectedCensoredClinicalEventAttributes,
+            chartName,
+            true
         );
-        this.setSurvivalPlotPrefix(
-            getSurvivalPlotPrefixText(
-                this._selectedStartClinicalEventType!,
-                this.startEventPosition,
-                this.selectedStartClinicalEventAttributes,
-                this._selectedEndClinicalEventType!,
-                this.endEventPosition,
-                this.selectedEndClinicalEventAttributes,
-                this._selectedCensoredClinicalEventType!,
-                this.censoredEventPosition,
-                this.selectedCensoredClinicalEventAttributes
-            )
-        );
+        this.setSurvivalPlotPrefix(chartName);
         this.props.store.updateCustomSurvivalPlots(
             this.props.store.customSurvivalPlots
         );
+        this.chartName = '';
     }
 
     @action.bound
@@ -405,10 +421,22 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
         return undefined;
     }
 
+    @computed get doesChartNameAlreadyExists() {
+        return (
+            this.chartName !== undefined &&
+            this.chartName.length >= 0 &&
+            _.values(this.survivalTitleByPrefix.result || {}).includes(
+                this.chartName.trim()
+            )
+        );
+    }
+
     @computed get isAddSurvivalPlotDisabled() {
         return (
             this._selectedStartClinicalEventType === undefined ||
-            this._selectedEndClinicalEventType === undefined
+            this._selectedEndClinicalEventType === undefined ||
+            this.doesChartNameAlreadyExists ||
+            this.props.store.patientSurvivals.isPending
         );
     }
 
@@ -450,6 +478,55 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                 }
                             >
                                 <table>
+                                    <tr>
+                                        <td>
+                                            <ControlLabel>Name:</ControlLabel>
+                                        </td>
+                                        <td>
+                                            <div className="form-group">
+                                                <DefaultTooltip
+                                                    visible={
+                                                        this
+                                                            .doesChartNameAlreadyExists
+                                                    }
+                                                    overlay={
+                                                        <div>
+                                                            <i
+                                                                className="fa fa-md fa-exclamation-triangle"
+                                                                style={{
+                                                                    color:
+                                                                        '#BB1700',
+                                                                    marginRight: 5,
+                                                                }}
+                                                            />
+                                                            <span>
+                                                                Already survival
+                                                                plot with same
+                                                                name exists,
+                                                                please use a
+                                                                different name
+                                                            </span>
+                                                        </div>
+                                                    }
+                                                >
+                                                    <input
+                                                        placeholder={'Optional'}
+                                                        style={{
+                                                            width: '300px',
+                                                            marginRight: '10px',
+                                                        }}
+                                                        type="text"
+                                                        onInput={
+                                                            this
+                                                                .onKMPlotNameChange
+                                                        }
+                                                        value={this.chartName}
+                                                        className="form-control input-sm"
+                                                    />
+                                                </DefaultTooltip>
+                                            </div>
+                                        </td>
+                                    </tr>
                                     <tr>
                                         <td>
                                             <ControlLabel>Start:</ControlLabel>
@@ -750,18 +827,28 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                     </tr>
                                     <tr>
                                         <td>
-                                            <button
-                                                className={
-                                                    'btn btn-primary btn-sm'
-                                                }
-                                                disabled={
-                                                    this
-                                                        .isAddSurvivalPlotDisabled
-                                                }
-                                                onClick={this.onAddSurvivalPlot}
+                                            <div
+                                                style={{
+                                                    display: 'flex',
+                                                    justifyContent:
+                                                        'space-between',
+                                                }}
                                             >
-                                                Add survival plot
-                                            </button>
+                                                <button
+                                                    className={
+                                                        'btn btn-primary btn-sm'
+                                                    }
+                                                    disabled={
+                                                        this
+                                                            .isAddSurvivalPlotDisabled
+                                                    }
+                                                    onClick={
+                                                        this.onAddSurvivalPlot
+                                                    }
+                                                >
+                                                    Add survival plot
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 </table>
@@ -846,8 +933,8 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                 style={{
                                     marginRight: 15,
                                     marginTop: 15,
-                                    minWidth: 475,
-                                    maxWidth: 475,
+                                    minWidth: 600,
+                                    maxWidth: 600,
                                     height: 'fit-content',
                                     overflowX: 'scroll',
                                 }}
@@ -864,7 +951,6 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             <LoadingIndicator center={true} isLoading={true} size={'big'} />
         ),
         renderError: () => <ErrorMessage />,
-        showLastRenderWhenPending: true,
     });
 
     readonly survivalPrefixes = remoteData(
@@ -1082,7 +1168,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             this.props.store.survivalClinicalAttributesPrefix,
             this.props.store.patientSurvivals,
             this.props.store.patientSurvivalsWithoutLeftTruncation,
-            this.props.store.activeStudiesSurvivalAttributes,
+            this.props.store.allSurvivalAttributes,
             this.analysisGroupsComputations,
             this.props.store.overlapComputations,
             this.props.store.uidToGroup,

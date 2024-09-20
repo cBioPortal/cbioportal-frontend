@@ -219,7 +219,27 @@ export default class SurvivalPrefixTable extends React.Component<
                 this.props.getSelectedPrefix
             );
         this.columnVisibility = this.initColumnVisibility();
+        if (
+            this.props.survivalPrefixes.some(
+                prefix => prefix.chartType === SurvivalChartType.CUSTOM
+            )
+        ) {
+            this.dataStore.patientMinThreshold = this.props.survivalPrefixes.reduce(
+                (minVal, prefix) => {
+                    if (prefix.chartType === SurvivalChartType.CUSTOM) {
+                        return Math.min(
+                            Math.max(prefix.numPatients - 1, 0),
+                            minVal
+                        );
+                    }
+                    return minVal;
+                },
+                0
+            );
+        }
     }
+
+    isRemoveChartClicked = false;
 
     COLUMNS = [
         {
@@ -234,6 +254,7 @@ export default class SurvivalPrefixTable extends React.Component<
                             )}
                             onClick={() => {
                                 this.props.removeCustomSurvivalPlot(d.prefix);
+                                this.isRemoveChartClicked = true;
                             }}
                             style={{ marginLeft: 10 }}
                         >
@@ -334,7 +355,11 @@ export default class SurvivalPrefixTable extends React.Component<
     }
     @autobind
     private onRowClick(d: SurvivalPrefixSummary) {
-        this.props.setSelectedPrefix(d.prefix);
+        if (this.isRemoveChartClicked) {
+            this.isRemoveChartClicked = false;
+        } else {
+            this.props.setSelectedPrefix(d.prefix);
+        }
     }
 
     @autobind
@@ -380,12 +405,14 @@ export default class SurvivalPrefixTable extends React.Component<
     }
 
     @computed get currentPage() {
+        if (this.props.getSelectedPrefix() === undefined) {
+            return 0;
+        }
         const rowIndex = this.dataStore
             .getSortedFilteredData()
             .findIndex(row => row.prefix === this.props.getSelectedPrefix());
-        const pageNumber = Math.floor(rowIndex / 15);
 
-        return pageNumber;
+        return Math.floor(Math.max(0, rowIndex) / 15);
     }
 
     @action.bound
@@ -428,6 +455,7 @@ export default class SurvivalPrefixTable extends React.Component<
                     getServerConfig().skin_hide_download_controls !==
                     DownloadControlOption.HIDE_ALL
                 }
+                enableHorizontalScroll={false}
             />
         );
     }
