@@ -19,7 +19,11 @@ import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
 import autobind from 'autobind-decorator';
 import _ from 'lodash';
 import AddChartByType from './addChartByType/AddChartByType';
-import { DefaultTooltip, remoteData } from 'cbioportal-frontend-commons';
+import {
+    DefaultTooltip,
+    isWebdriver,
+    remoteData,
+} from 'cbioportal-frontend-commons';
 import CustomCaseSelection from './customCaseSelection/CustomCaseSelection';
 import {
     calculateClinicalDataCountFrequency,
@@ -915,7 +919,9 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                                     </span>
                                 </>
                             )}
-                            {this.props.store.isLoggedIn && (
+                            // we want to show in e2e context even if user is //
+                            logged out
+                            {(this.props.store.isLoggedIn || isWebdriver()) && (
                                 <div>
                                     {this.customChartDataOptions.length > 0 && (
                                         <button
