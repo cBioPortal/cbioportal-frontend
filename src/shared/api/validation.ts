@@ -225,8 +225,13 @@ function attemptSort(keys: string[], arr: any) {
 }
 
 export function compareCounts(clData: any, legacyData: any, label: string) {
-    const clDataSorted = deepSort(clData, label);
-    var legacyDataSorted = deepSort(legacyData, label);
+    // @ts-ignore
+    const clDataClone = structuredClone(clData);
+    // @ts-ignore
+    const legacyDataClone = structuredClone(legacyData);
+
+    const clDataSorted = deepSort(clDataClone, label);
+    var legacyDataSorted = deepSort(legacyDataClone, label);
 
     if (treatmentConverter[label]) {
         legacyDataSorted = treatmentConverter[label](legacyDataSorted);
