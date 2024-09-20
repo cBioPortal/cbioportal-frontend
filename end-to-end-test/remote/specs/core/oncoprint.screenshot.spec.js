@@ -153,7 +153,7 @@ describe('oncoprint screenshot tests', () => {
             'Failed to open cancer type detailed track menu'
         );
         await clickElement(
-            `${cancerTypeDetailedElements.dropdown_selector} li:nth-child(9)`
+            `${cancerTypeDetailedElements.dropdown_selector} li:nth-child(10)`
         ); // Click "show gaps"
         await browser.pause(100); // give time to sort and insert gaps
 

@@ -26,7 +26,7 @@ describe('oncoprint gap screenshot tests', () => {
             sexElements.dropdown_selector,
             'Failed to open sex track menu'
         );
-        await clickElement(`${sexElements.dropdown_selector} li:nth-child(9)`); // Click "show gaps"
+        await clickElement(`${sexElements.dropdown_selector} li:nth-child(10)`); // Click "show gaps"
         await browser.pause(100); // give time to sort and insert gaps
 
         await waitForOncoprint();
@@ -51,7 +51,7 @@ describe('oncoprint gap screenshot tests', () => {
             'Failed to open cancer type detailed track menu'
         );
         await clickElement(
-            `${cancerTypeDetailedElements.dropdown_selector} li:nth-child(9)`
+            `${cancerTypeDetailedElements.dropdown_selector} li:nth-child(10)`
         ); // Click "show gaps"
         await browser.pause(100); // give time to sort and insert gaps
 
