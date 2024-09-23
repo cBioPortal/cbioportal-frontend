@@ -58,38 +58,48 @@ const ResourceTable = observer(
                     <tr>
                         <th>Resource</th>
                         <th></th>
-                        <th>Description</th>
+                        {resourceTable.data.length > 0 && <th>Description</th>}
                     </tr>
                 </thead>
                 <tbody>
-                    {resourceTable.data.map(resource => (
+                    {resourceTable.data.length === 0 ? (
                         <tr>
-                            <td>
-                                <a onClick={() => openResource(resource)}>
-                                    {icon(resource)}
-                                    {resource.resourceDefinition.displayName ||
-                                        resource.url}
-                                </a>
+                            <td colSpan={3} style={{ textAlign: 'center' }}>
+                                There are no results
                             </td>
-                            <td>
-                                <a
-                                    href={resource.url}
-                                    style={{ fontSize: 10 }}
-                                    target={'_blank'}
-                                >
-                                    <i
-                                        className={`fa fa-external-link fa-sm`}
-                                        style={{
-                                            marginRight: 5,
-                                            color: 'black',
-                                        }}
-                                    />
-                                    Open in new window
-                                </a>
-                            </td>
-                            <td>{resource.resourceDefinition.description}</td>
                         </tr>
-                    ))}
+                    ) : (
+                        resourceTable.data.map(resource => (
+                            <tr>
+                                <td>
+                                    <a onClick={() => openResource(resource)}>
+                                        {icon(resource)}
+                                        {resource.resourceDefinition
+                                            .displayName || resource.url}
+                                    </a>
+                                </td>
+                                <td>
+                                    <a
+                                        href={resource.url}
+                                        style={{ fontSize: 10 }}
+                                        target={'_blank'}
+                                    >
+                                        <i
+                                            className={`fa fa-external-link fa-sm`}
+                                            style={{
+                                                marginRight: 5,
+                                                color: 'black',
+                                            }}
+                                        />
+                                        Open in new window
+                                    </a>
+                                </td>
+                                <td>
+                                    {resource.resourceDefinition.description}
+                                </td>
+                            </tr>
+                        ))
+                    )}
                 </tbody>
             </table>
         );

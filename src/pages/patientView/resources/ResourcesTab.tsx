@@ -118,6 +118,40 @@ export default class ResourcesTab extends React.Component<
         },
     });
 
+    readonly showNoResource = MakeMobxView({
+        await: () => [this.props.store.resourceIdToResourceData],
+        render: () => {
+            const shouldShowNoResource = () => {
+                if (this.props.store.resourceIdToResourceData.isComplete) {
+                    return !_.some(
+                        this.props.store.resourceIdToResourceData.result,
+                        data => data.length > 0
+                    );
+                }
+                return true;
+            };
+
+            if (shouldShowNoResource()) {
+                return (
+                    <div className="resourcesSection">
+                        <h4 className="blackHeader">
+                            Resources for {this.props.store.patientId}
+                        </h4>
+                        <ResourceTable
+                            resources={
+                                this.props.store.studyResourceData.result!
+                            }
+                            isTabOpen={this.props.store.isResourceTabOpen}
+                            openResource={this.props.openResource}
+                        />
+                    </div>
+                );
+            } else {
+                return null;
+            }
+        },
+    });
+
     render() {
         return (
             <div className="resourcesTab">
@@ -136,6 +170,7 @@ export default class ResourcesTab extends React.Component<
                     {this.patientResources.component}
                     {this.sampleResources.component}
                     {this.studyResources.component}
+                    {this.showNoResource.component}
                 </div>
             </div>
         );
