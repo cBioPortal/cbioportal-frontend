@@ -2724,59 +2724,12 @@ export class ResultsViewPageStore extends AnalysisStore
     });
 
     readonly plotClinicalAttributes = remoteData<ExtendedClinicalAttribute[]>({
-        await: () => [
-            this.studyIds,
-            this.clinicalAttributes_profiledIn,
-            this.clinicalAttributes_comparisonGroupMembership,
-            this.samples,
-            this.patients,
-        ],
+        await: () => [this.clinicalAttributes, this.customAttributes],
         invoke: async () => {
-            const serverAttributes = await client.fetchClinicalAttributesUsingPOST(
-                {
-                    studyIds: this.studyIds.result!,
-                }
+            return _.filter(
+                this.clinicalAttributes.result!,
+                attr => !this.customAttributes.result!.includes(attr)
             );
-            const specialAttributes = [
-                {
-                    clinicalAttributeId: SpecialAttribute.MutationSpectrum,
-                    datatype: CLINICAL_ATTRIBUTE_FIELD_ENUM.DATATYPE_COUNTS_MAP,
-                    description:
-                        'Number of point mutations in the sample counted by different types of nucleotide changes.',
-                    displayName: 'Mutation spectrum',
-                    patientAttribute: false,
-                    studyId: '',
-                    priority: '0', // TODO: change?
-                } as ClinicalAttribute,
-            ];
-            if (this.studyIds.result!.length > 1) {
-                // if more than one study, add "Study of Origin" attribute
-                specialAttributes.push({
-                    clinicalAttributeId: SpecialAttribute.StudyOfOrigin,
-                    datatype: CLINICAL_ATTRIBUTE_FIELD_ENUM.DATATYPE_STRING,
-                    description: 'Study which the sample is a part of.',
-                    displayName: 'Study of origin',
-                    patientAttribute: false,
-                    studyId: '',
-                    priority: '0', // TODO: change?
-                } as ClinicalAttribute);
-            }
-            if (this.samples.result!.length !== this.patients.result!.length) {
-                // if different number of samples and patients, add "Num Samples of Patient" attribute
-                specialAttributes.push({
-                    clinicalAttributeId: SpecialAttribute.NumSamplesPerPatient,
-                    datatype: CLINICAL_ATTRIBUTE_FIELD_ENUM.DATATYPE_NUMBER,
-                    description: 'Number of queried samples for each patient.',
-                    displayName: '# Samples per Patient',
-                    patientAttribute: true,
-                } as ClinicalAttribute);
-            }
-            return [
-                ...serverAttributes,
-                ...specialAttributes,
-                ...this.clinicalAttributes_profiledIn.result!,
-                ...this.clinicalAttributes_comparisonGroupMembership.result!,
-            ];
         },
     });
 
