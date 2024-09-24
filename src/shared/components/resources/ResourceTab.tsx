@@ -126,10 +126,12 @@ export default class ResourceTab extends React.Component<
                         style={{ marginBottom: 10 }}
                     />
                     <p style={{ marginLeft: 10 }}>
-                        {
-                            this.currentResourceDatum.resourceDefinition
-                                .description
-                        }
+                        {this.currentResourceDatum.sampleId
+                            ? this.currentResourceDatum.sampleId
+                            : this.currentResourceDatum.patientId}
+                        {this.currentResourceDatum.resourceDefinition
+                            .description &&
+                            ` | ${this.currentResourceDatum.resourceDefinition.description}`}
                     </p>
                 </div>
                 <div

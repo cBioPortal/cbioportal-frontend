@@ -15,7 +15,7 @@ import {
     remoteData,
     svgToPdfDownload,
 } from 'cbioportal-frontend-commons';
-import { getRemoteDataGroupStatus } from 'cbioportal-utils';
+import { getRemoteDataGroupStatus, Mutation } from 'cbioportal-utils';
 import Oncoprint, {
     ClinicalTrackSpec,
     ClinicalTrackConfig,
@@ -59,7 +59,7 @@ import { getServerConfig } from 'config/config';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { OncoprintJS, RGBAColor, TrackGroupIndex, TrackId } from 'oncoprintjs';
 import fileDownload from 'react-file-download';
-import tabularDownload from './tabularDownload';
+import tabularDownload, { getTabularDownloadData } from './tabularDownload';
 import classNames from 'classnames';
 import {
     clinicalAttributeIsLocallyComputed,
@@ -99,6 +99,9 @@ import ClinicalTrackColorPicker from './ClinicalTrackColorPicker';
 import { hexToRGBA, rgbaToHex } from 'shared/lib/Colors';
 import classnames from 'classnames';
 import { OncoprintColorModal } from './OncoprintColorModal';
+import JupyterNoteBookModal from 'pages/staticPages/tools/oncoprinter/JupyterNotebookModal';
+import { convertToCSV } from 'shared/lib/calculation/JSONtoCSV';
+import { GAP_MODE_ENUM } from 'oncoprintjs';
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -773,6 +776,24 @@ export default class ResultsViewOncoprint extends React.Component<
         this.mouseInsideBounds = false;
     }
 
+    // jupyternotebook modal handling:
+
+    @observable public showJupyterNotebookModal = false;
+    @observable private jupyterFileContent: string | undefined = '';
+    @observable private jupyterFileName: string | undefined = '';
+
+    @action
+    private openJupyterNotebookModal = () => {
+        this.showJupyterNotebookModal = true;
+    };
+
+    @action
+    private closeJupyterNotebookModal = () => {
+        this.showJupyterNotebookModal = false;
+        this.jupyterFileContent = undefined;
+        this.jupyterFileName = undefined;
+    };
+
     private buildControlsHandlers() {
         return {
             onSelectColumnType: (type: OncoprintAnalysisCaseType) => {
@@ -1053,6 +1074,8 @@ export default class ResultsViewOncoprint extends React.Component<
                                 this.genesetHeatmapTracks,
                                 this.props.store
                                     .clinicalAttributeIdToClinicalAttribute,
+                                this.props.store.mutationsByGene,
+                                this.props.store.studyIds,
                             ],
                             (
                                 samples: Sample[],
@@ -1063,7 +1086,11 @@ export default class ResultsViewOncoprint extends React.Component<
                                 genesetHeatmapTracks: IGenesetHeatmapTrackSpec[],
                                 attributeIdToAttribute: {
                                     [attributeId: string]: ClinicalAttribute;
-                                }
+                                },
+                                mutationsByGenes: {
+                                    [gene: string]: Mutation[];
+                                },
+                                studyIds: string[]
                             ) => {
                                 const caseIds =
                                     this.oncoprintAnalysisCaseType ===
@@ -1115,11 +1142,79 @@ export default class ResultsViewOncoprint extends React.Component<
                                 const oncoprinterWindow = window.open(
                                     buildCBioPortalPageUrl('/oncoprinter')
                                 ) as any;
+
+                                // extra data that needs to be send for jupyter-notebook
+                                const allMutations = Object.values(
+                                    mutationsByGenes
+                                ).reduce(
+                                    (acc, geneArray) => [...acc, ...geneArray],
+                                    []
+                                );
+
                                 oncoprinterWindow.clientPostedData = {
                                     genetic: geneticInput,
                                     clinical: clinicalInput,
                                     heatmap: heatmapInput,
+                                    mutations: JSON.stringify(allMutations),
+                                    studyIds: JSON.stringify(studyIds),
                                 };
+                            }
+                        );
+                        break;
+                    case 'jupyterNoteBook':
+                        onMobxPromise(
+                            [
+                                this.props.store.sampleKeyToSample,
+                                this.props.store.patientKeyToPatient,
+                                this.props.store.mutationsByGene,
+                                this.props.store.studyIds,
+                            ],
+                            (
+                                sampleKeyToSample: {
+                                    [sampleKey: string]: Sample;
+                                },
+                                patientKeyToPatient: any,
+                                mutationsByGenes: {
+                                    [gene: string]: Mutation[];
+                                },
+                                studyIds: string[]
+                            ) => {
+                                const allGenesMutations = Object.values(
+                                    mutationsByGenes
+                                ).reduce(
+                                    (acc, geneArray) => [...acc, ...geneArray],
+                                    []
+                                );
+
+                                const fieldsToKeep = [
+                                    'hugoGeneSymbol',
+                                    'alterationType',
+                                    'chr',
+                                    'startPosition',
+                                    'endPosition',
+                                    'referenceAllele',
+                                    'variantAllele',
+                                    'proteinChange',
+                                    'proteinPosStart',
+                                    'proteinPosEnd',
+                                    'mutationType',
+                                    'oncoKbOncogenic',
+                                    'patientId',
+                                    'sampleId',
+                                    'isHotspot',
+                                ];
+
+                                const allGenesMutationsCsv = convertToCSV(
+                                    allGenesMutations,
+                                    fieldsToKeep
+                                );
+
+                                this.jupyterFileContent = allGenesMutationsCsv;
+
+                                this.jupyterFileName = studyIds.join('&');
+
+                                // sending content to the modal
+                                this.openJupyterNotebookModal();
                             }
                         );
                         break;
@@ -1577,9 +1672,8 @@ export default class ResultsViewOncoprint extends React.Component<
      * Called when a track gap is added from within oncoprintjs UI
      */
     @action.bound
-    @action.bound
-    private onTrackGapChange(trackId: TrackId, gapOn: boolean) {
-        this.handleClinicalTrackChange(trackId, { gapOn });
+    private onTrackGapChange(trackId: TrackId, mode: GAP_MODE_ENUM) {
+        this.handleClinicalTrackChange(trackId, { gapMode: mode });
     }
 
     private handleClinicalTrackChange(
@@ -2333,6 +2427,15 @@ export default class ResultsViewOncoprint extends React.Component<
                         </div>
                     </div>
                 </div>
+
+                {this.jupyterFileContent && this.jupyterFileName && (
+                    <JupyterNoteBookModal
+                        show={this.showJupyterNotebookModal}
+                        handleClose={this.closeJupyterNotebookModal}
+                        fileContent={this.jupyterFileContent}
+                        fileName={this.jupyterFileName}
+                    />
+                )}
             </div>
         );
     }

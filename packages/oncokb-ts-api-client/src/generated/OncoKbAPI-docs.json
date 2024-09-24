@@ -889,7 +889,7 @@
           "application/json"
         ],
         "produces": [
-          "text/plain"
+          "text/plain;charset=UTF-8"
         ],
         "parameters": [
           {
@@ -978,7 +978,7 @@
           "application/json"
         ],
         "produces": [
-          "text/plain"
+          "text/plain;charset=UTF-8"
         ],
         "parameters": [
           {

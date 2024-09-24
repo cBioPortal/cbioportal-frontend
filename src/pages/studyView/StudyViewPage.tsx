@@ -378,11 +378,8 @@ export default class StudyViewPage extends React.Component<
     }
 
     @computed get shouldShowResources() {
-        if (this.store.resourceIdToResourceData.isComplete) {
-            return _.some(
-                this.store.resourceIdToResourceData.result,
-                data => data.length > 0
-            );
+        if (this.store.resourceDefinitions.isComplete) {
+            return this.store.resourceDefinitions.result.length > 0;
         } else {
             return false;
         }

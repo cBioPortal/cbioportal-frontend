@@ -121,14 +121,33 @@ export function getSampleViewUrl(
     sampleId: string,
     navIds?: { patientId: string; studyId: string }[]
 ) {
+    return getSampleViewUrlWithPathname(studyId, sampleId, 'patient', navIds);
+}
+
+export function getSampleViewUrlWithPathname(
+    studyId: string,
+    sampleId: string,
+    pathname: string = 'patient',
+    navIds?: { patientId: string; studyId: string }[]
+) {
     let hash: any = undefined;
     if (navIds) {
         hash = `navCaseIds=${navIds
             .map(id => `${id.studyId}:${id.patientId}`)
             .join(',')}`;
     }
-    return buildCBioPortalPageUrl('patient', { sampleId, studyId }, hash);
+    return buildCBioPortalPageUrl(pathname, { sampleId, studyId }, hash);
 }
+
+export function getResourceViewUrlWithPathname(
+    studyId: string,
+    pathname: string,
+    patientId: string
+) {
+    let caseId: string = `${patientId}`;
+    return buildCBioPortalPageUrl(pathname, { studyId, caseId });
+}
+
 export function getPatientViewUrl(
     studyId: string,
     caseId: string,
@@ -140,7 +159,22 @@ export function getPatientViewUrl(
             .map(id => `${id.studyId}:${id.patientId}`)
             .join(',')}`;
     }
-    return buildCBioPortalPageUrl('patient', { studyId, caseId }, hash);
+    return getPatientViewUrlWithPathname(studyId, caseId, 'patient', navIds);
+}
+
+export function getPatientViewUrlWithPathname(
+    studyId: string,
+    caseId: string,
+    pathname: string = 'patient',
+    navIds?: { patientId: string; studyId: string }[]
+) {
+    let hash: any = undefined;
+    if (navIds) {
+        hash = `navCaseIds=${navIds
+            .map(id => `${id.studyId}:${id.patientId}`)
+            .join(',')}`;
+    }
+    return buildCBioPortalPageUrl(pathname, { studyId, caseId }, hash);
 }
 
 export function getComparisonUrl(params: Partial<GroupComparisonURLQuery>) {
