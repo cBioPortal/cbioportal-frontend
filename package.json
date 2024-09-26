@@ -15,7 +15,7 @@
   "scripts": {
     "start": "lerna run watch --parallel",
     "startSSL": "lerna run watchSSL --parallel",
-    "watchTests": "./scripts/api-test_env.sh && node $BACKEND_ROOT/test/api-e2e/index.js",
+    "watchTests": "./scripts/api-test_env.sh && node $BACKEND_ROOT/test/api-e2e/watch.js",
     "watch": "./scripts/env_vars.sh && eval \"$(./scripts/env_vars.sh)\" && cross-env NODE_ENV=development webpack-dev-server --compress",
     "watchSSL": "./scripts/env_vars.sh && eval \"$(./scripts/env_vars.sh)\" && cross-env NODE_ENV=development NODE_OPTIONS=--max-old-space-size=4096 webpack-dev-server --compress --https",
     "clean": "rimraf dist tsDist common-dist",
@@ -227,6 +227,7 @@
     "mobx-react-lite": "3.0.1",
     "mobx-react-router": "4.1.0",
     "mobx-utils": "6.0.1",
+    "najax": "^1.0.7",
     "numeral": "^2.0.6",
     "object-sizeof": "^1.2.0",
     "oncokb-frontend-commons": "^0.0.25",

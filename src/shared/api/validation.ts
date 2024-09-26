@@ -238,9 +238,10 @@ try {
 export function compareCounts(clData: any, legacyData: any, label: string) {
     // @ts-ignore
     const clDataClone = win.structuredClone ? structuredClone(clData) : clData;
-    // @ts-ignore
+
     const legacyDataClone = win.structuredClone
-        ? structuredClone(legacyData)
+        ? // @ts-ignore
+          structuredClone(legacyData)
         : legacyData;
 
     const clDataSorted = deepSort(clDataClone, label);
@@ -318,7 +319,11 @@ export function validate(
     // });
 }
 
-export function reportValidationResult(result: any, prefix = '') {
+export function reportValidationResult(
+    result: any,
+    prefix = '',
+    logLevel = ''
+) {
     const skipMessage =
         result.test && result.test.skip ? `(SKIPPED ${result.test.skip})` : '';
 
@@ -327,7 +332,8 @@ export function reportValidationResult(result: any, prefix = '') {
             `${prefix} ${result.label} (${result.hash}) ${skipMessage} failed :(`
         );
 
-    !result.status &&
+    logLevel === 'verbose' &&
+        !result.status &&
         console.log('failed test', {
             url: result.url,
             test: result.test,
@@ -347,7 +353,7 @@ export function reportValidationResult(result: any, prefix = '') {
             )} legacy: ${result.legacyDuration.toFixed(0)}`
         );
 
-    if (!result.status) {
+    if (logLevel === 'verbose' && !result.status) {
         if (result.clDataSorted.length) {
             for (var i = 0; i < result.clDataSorted.length; i++) {
                 const cl = result.clDataSorted[i];
@@ -361,7 +367,7 @@ export function reportValidationResult(result: any, prefix = '') {
                     console.log('Clickhouse:', cl);
                     console.log('Legacy:', result.legacyDataSorted[i]);
                     console.groupEnd();
-                    return false;
+                    break;
                 }
             }
         }
@@ -370,6 +376,98 @@ export function reportValidationResult(result: any, prefix = '') {
         console.log('CH', result.clDataSorted);
         console.groupEnd();
     }
+    !result.status && console.groupEnd();
+}
 
+export async function runSpecs(
+    files: any,
+    ajax: any,
+    host: string = '',
+    logLevel = ''
+) {
+    // @ts-ignore
+    const allTests = files
+        // @ts-ignore
+        .flatMap((n: any) => n.suites)
+        // @ts-ignore
+        .flatMap((n: any) => n.tests);
+
+    const totalCount = allTests.length;
+
+    const onlyDetected = allTests.some((t: any) => t.only === true);
+
+    console.log(`Running specs (${files.length} of ${totalCount})`);
+
+    if (logLevel === 'verbose') {
+        console.groupCollapsed('specs');
+        //console.log('raw', json);
+        console.log('filtered', files);
+        console.groupEnd();
+    }
+
+    let place = 0;
+    let errors: any[] = [];
+    let skips: any[] = [];
+    let passed: any[] = [];
+    let httpErrors: any[] = [];
+
+    const invokers: (() => Promise<any>)[] = [] as any;
+    files
+        .map((f: any) => f.suites)
+        .forEach((suite: any) => {
+            suite.forEach((col: any) =>
+                col.tests.forEach((test: any) => {
+                    test.url = test.url.replace(
+                        /column-store\/api/,
+                        'column-store'
+                    );
+
+                    if (!onlyDetected || test.only) {
+                        invokers.push(
+                            // @ts-ignore
+                            () => {
+                                return validate(
+                                    ajax,
+                                    host + test.url,
+                                    test.data,
+                                    test.label,
+                                    test.hash
+                                ).then((report: any) => {
+                                    report.test = test;
+                                    place = place + 1;
+                                    const prefix = `${place} of ${totalCount}`;
+
+                                    if (test?.skip) {
+                                        skips.push(test.hash);
+                                    } else if (!report.status) {
+                                        report.httpError
+                                            ? httpErrors.push(test.hash)
+                                            : errors.push(test.hash);
+                                    } else if (report.status)
+                                        passed.push(test.hash);
+
+                                    reportValidationResult(
+                                        report,
+                                        prefix,
+                                        logLevel
+                                    );
+                                });
+                            }
+                        );
+                    }
+                })
+            );
+        });
+
+    for (const el of invokers) {
+        await el();
+    }
+
+    console.group('FINAL REPORT');
+    console.log(`PASSED: ${passed.length} of ${totalCount}`);
+    console.log(`FAILED: ${errors.length} (${errors.join(',')})`);
+    console.log(`HTTP ERRORS: ${httpErrors.length} (${httpErrors.join(',')})`);
+    console.log(`SKIPPED: ${skips.length}  (${skips.join(',')})`);
     console.groupEnd();
+    // console.groupEnd();
 }
