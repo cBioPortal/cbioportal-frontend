@@ -259,9 +259,15 @@ export function validate(
     if (body) {
         chXHR = Promise.resolve({ body, elapsedTime });
     } else {
-        if (assertResponse && assertResponse[0] && assertResponse[0].attributeId) {
+        if (
+            assertResponse &&
+            assertResponse[0] &&
+            assertResponse[0].attributeId
+        ) {
             let data: any = {};
-            data['attributes'] = [{ attributeId: assertResponse[0].attributeId }];
+            data['attributes'] = [
+                { attributeId: assertResponse[0].attributeId },
+            ];
             if (params.studyViewFilter) {
                 const {
                     attributes,
@@ -277,7 +283,10 @@ export function validate(
                 data: JSON.stringify(data),
                 contentType: 'application/json',
             }).then((body, state, xhr) => {
-                return { body, elapsedTime: xhr.getResponseHeader('elapsed-time') };
+                return {
+                    body,
+                    elapsedTime: xhr.getResponseHeader('elapsed-time'),
+                };
             });
         } else {
             chXHR = $.ajax({
@@ -286,48 +295,50 @@ export function validate(
                 data: JSON.stringify(params),
                 contentType: 'application/json',
             }).then((body, state, xhr) => {
-                return { body, elapsedTime: xhr.getResponseHeader('elapsed-time') };
+                return {
+                    body,
+                    elapsedTime: xhr.getResponseHeader('elapsed-time'),
+                };
             });
         }
     }
 
     return chXHR
         .then(({ body, elapsedTime }: any) => {
-            if (!assertResponse) {
-                let legacyUrl = url.replace(/column-store\//, '');
-                if (treatmentLegacyUrl[label]) {
-                    legacyUrl = treatmentLegacyUrl[label](legacyUrl);
-                }
-                const legacyXHR = $.ajax({
-                    method: 'post',
-                    url: legacyUrl,
-                    data: JSON.stringify(params),
-                    contentType: 'application/json',
-                });
-                return legacyXHR.then(legacyResult => {
-                    const result: any = compareCounts(body, legacyResult, label);
-                    result.url = url;
-                    result.hash = hash;
-                    result.data = params;
-                    result.chDuration = parseFloat(elapsedTime);
-                    result.legacyDuration = parseFloat(
-                        legacyXHR.getResponseHeader('elapsed-time') || ''
-                    );
-                    return result;
-                });
-            }
-            else {
+            const legacyXHR: PromiseLike<any> = assertResponse
+                ? Promise.resolve(assertResponse)
+                : $.ajax({
+                      method: 'post',
+                      url: treatmentLegacyUrl[label]
+                          ? treatmentLegacyUrl[label](
+                                url.replace(/column-store\//, '')
+                            )
+                          : url.replace(/column-store\//, ''),
+                      data: JSON.stringify(params),
+                      contentType: 'application/json',
+                  });
+
+            return legacyXHR.then(legacyResult => {
                 const result: any = compareCounts(
                     body,
-                    assertResponse,
-                    'ClinicalDataCounts'
+                    legacyResult,
+                    assertResponse ? 'ClinicalDataCounts' : label
                 );
                 result.url = url;
                 result.hash = hash;
                 result.data = params;
                 result.chDuration = parseFloat(elapsedTime);
+
+                result.legacyDuration =
+                    !assertResponse &&
+                    parseFloat(
+                        (legacyXHR as JQuery.jqXHR<any>).getResponseHeader(
+                            'elapsed-time'
+                        ) || '0'
+                    );
+
                 return result;
-            }
+            });
         })
         .catch(() => {
             const result: any = {};
@@ -360,22 +371,15 @@ export function reportValidationResult(result: any, prefix = '') {
             httpError: result.httpError,
         });
 
-    result.status &&
-        (!result.legacyDuration
-            ? console.log(
-                  `${prefix} ${result.label} (${
-                      result.hash
-                  }) assertResponse detected, passed :) ch: ${result.chDuration.toFixed(
-                      0
-                  )}`
-              )
-            : console.log(
-                  `${prefix} ${result.label} (${
-                      result.hash
-                  }) passed :) ch: ${result.chDuration.toFixed(
-                      0
-                  )} legacy: ${result.legacyDuration.toFixed(0)}`
-              ));
+    const passedMessage = `${prefix} ${result.label} (${
+        result.hash
+    }) passed :) ch: ${result.chDuration.toFixed(0)} ${
+        result.legacyDuration
+            ? `legacy: ${result.legacyDuration.toFixed(0)}`
+            : `assertResponse detected`
+    }`;
+
+    result.status && console.log(passedMessage);
 
     if (!result.status) {
         _.forEach(result.clDataSorted, (cl: any, i: number) => {
