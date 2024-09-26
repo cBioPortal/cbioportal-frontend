@@ -259,48 +259,17 @@ export function validate(
     if (body) {
         chXHR = Promise.resolve({ body, elapsedTime });
     } else {
-        if (
-            assertResponse &&
-            assertResponse[0] &&
-            assertResponse[0].attributeId
-        ) {
-            let data: any = {};
-            data['attributes'] = [
-                { attributeId: assertResponse[0].attributeId },
-            ];
-            if (params.studyViewFilter) {
-                const {
-                    attributes,
-                    ...filteredStudyViewFilter
-                } = params.studyViewFilter;
-                data['studyViewFilter'] = filteredStudyViewFilter;
-            } else {
-                data['studyViewFilter'] = params;
-            }
-            chXHR = $.ajax({
-                method: 'post',
-                url: '/api/column-store/clinical-data-counts/fetch?',
-                data: JSON.stringify(data),
-                contentType: 'application/json',
-            }).then((body, state, xhr) => {
-                return {
-                    body,
-                    elapsedTime: xhr.getResponseHeader('elapsed-time'),
-                };
-            });
-        } else {
-            chXHR = $.ajax({
-                method: 'post',
-                url: url,
-                data: JSON.stringify(params),
-                contentType: 'application/json',
-            }).then((body, state, xhr) => {
-                return {
-                    body,
-                    elapsedTime: xhr.getResponseHeader('elapsed-time'),
-                };
-            });
-        }
+        chXHR = $.ajax({
+            method: 'post',
+            url: url,
+            data: JSON.stringify(params),
+            contentType: 'application/json',
+        }).then((body, state, xhr) => {
+            return {
+                body,
+                elapsedTime: xhr.getResponseHeader('elapsed-time'),
+            };
+        });
     }
 
     return chXHR
@@ -319,11 +288,7 @@ export function validate(
                   });
 
             return legacyXHR.then(legacyResult => {
-                const result: any = compareCounts(
-                    body,
-                    legacyResult,
-                    assertResponse ? 'ClinicalDataCounts' : label
-                );
+                const result: any = compareCounts(body, legacyResult, label);
                 result.url = url;
                 result.hash = hash;
                 result.data = params;

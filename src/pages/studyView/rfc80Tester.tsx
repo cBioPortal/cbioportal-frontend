@@ -115,7 +115,7 @@ export const RFC80Test = observer(function() {
                                     test.hash,
                                     undefined,
                                     undefined,
-                                    col.assertResponse
+                                    test.assertResponse
                                 ).then((report: any) => {
                                     report.test = test;
                                     place = place + 1;
