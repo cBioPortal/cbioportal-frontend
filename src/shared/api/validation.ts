@@ -1,6 +1,3 @@
-import _ from 'lodash';
-import { array } from 'yargs';
-
 export const isObject = (value: any) => {
     return (
         typeof value === 'object' &&
@@ -60,11 +57,17 @@ export function getArrays(inp: any, output: Array<any>) {
         inp.forEach(n => getArrays(n, output));
     } else if (isObject(inp)) {
         // this is to get rid of discrepancy deep in decimals
-        _.forEach(inp, (v, k) => {
-            if (/\d\.\d{10,}$/.test(v)) {
+        // _.forEach(inp, (v, k) => {
+        //     if (/\d\.\d{10,}$/.test(v)) {
+        //         inp[k] = inp[k].toFixed(5);
+        //     }
+        // });
+
+        for (const k in inp) {
+            if (/\d\.\d{10,}$/.test(inp[k])) {
                 inp[k] = inp[k].toFixed(5);
             }
-        });
+        }
 
         // this is get rid
         delete inp.matchingGenePanelIds;
@@ -191,7 +194,7 @@ export function deepSort(inp: any, label: string) {
             // this is going to make sure the keys in the objects
             // are in a sorted order
             arr.forEach((o: any) => {
-                _.keys(o)
+                Object.keys(o)
                     .sort()
                     .forEach(k => {
                         const val = o[k];
@@ -224,11 +227,21 @@ function attemptSort(keys: string[], arr: any) {
     arr.sort(dynamicSort(keys));
 }
 
+let win: any;
+
+try {
+    win = window;
+} catch (ex) {
+    win = {};
+}
+
 export function compareCounts(clData: any, legacyData: any, label: string) {
     // @ts-ignore
-    const clDataClone = structuredClone(clData);
+    const clDataClone = win.structuredClone ? structuredClone(clData) : clData;
     // @ts-ignore
-    const legacyDataClone = structuredClone(legacyData);
+    const legacyDataClone = win.structuredClone
+        ? structuredClone(legacyData)
+        : legacyData;
 
     const clDataSorted = deepSort(clDataClone, label);
     var legacyDataSorted = deepSort(legacyDataClone, label);
@@ -248,6 +261,7 @@ export function compareCounts(clData: any, legacyData: any, label: string) {
 }
 
 export function validate(
+    ajax: any,
     url: string,
     params: any,
     label: string,
@@ -255,57 +269,53 @@ export function validate(
     body?: any,
     elapsedTime?: any
 ) {
-    const clStart = performance.now();
-    let chDuration: number, legacyDuration: number;
-
     let chXHR: any;
 
     if (body) {
         chXHR = Promise.resolve({ body, elapsedTime });
     } else {
-        chXHR = $.ajax({
+        chXHR = ajax({
             method: 'post',
             url: url,
             data: JSON.stringify(params),
             contentType: 'application/json',
-        }).then((body, state, xhr) => {
+        }).then((body: any, state: any, xhr: XMLHttpRequest) => {
             return { body, elapsedTime: xhr.getResponseHeader('elapsed-time') };
         });
     }
 
-    return chXHR
-        .then(({ body, elapsedTime }: any) => {
-            let legacyUrl = url.replace(/column-store\//, '');
-            if (treatmentLegacyUrl[label]) {
-                legacyUrl = treatmentLegacyUrl[label](legacyUrl);
-            }
-            const legacyXHR = $.ajax({
-                method: 'post',
-                url: legacyUrl,
-                data: JSON.stringify(params),
-                contentType: 'application/json',
-            });
-            return legacyXHR.then(legacyResult => {
-                const result: any = compareCounts(body, legacyResult, label);
-                result.url = url;
-                result.hash = hash;
-                result.data = params;
-                result.chDuration = parseFloat(elapsedTime);
-                result.legacyDuration = parseFloat(
-                    legacyXHR.getResponseHeader('elapsed-time') || ''
-                );
-                return result;
-            });
-        })
-        .catch(() => {
-            const result: any = {};
+    return chXHR.then(({ body, elapsedTime }: any) => {
+        let legacyUrl = url.replace(/column-store\//, '');
+        if (treatmentLegacyUrl[label]) {
+            legacyUrl = treatmentLegacyUrl[label](legacyUrl);
+        }
+        const legacyXHR = ajax({
+            method: 'post',
+            url: legacyUrl,
+            data: JSON.stringify(params),
+            contentType: 'application/json',
+        });
+        return legacyXHR.then((legacyResult: any) => {
+            const result: any = compareCounts(body, legacyResult, label);
             result.url = url;
             result.hash = hash;
-            result.status = false;
             result.data = params;
-            result.httpError = true;
+            result.chDuration = parseFloat(elapsedTime);
+            result.legacyDuration = parseFloat(
+                legacyXHR.getResponseHeader('elapsed-time') || ''
+            );
             return result;
         });
+    });
+    // .catch(() => {
+    //     const result: any = {};
+    //     result.url = url;
+    //     result.hash = hash;
+    //     result.status = false;
+    //     result.data = params;
+    //     result.httpError = true;
+    //     return result;
+    // });
 }
 
 export function reportValidationResult(result: any, prefix = '') {
@@ -338,23 +348,28 @@ export function reportValidationResult(result: any, prefix = '') {
         );
 
     if (!result.status) {
-        _.forEach(result.clDataSorted, (cl: any, i: number) => {
-            if (
-                JSON.stringify(cl) !==
-                JSON.stringify(result.legacyDataSorted[i])
-            ) {
-                console.groupCollapsed(`First invalid item (${result.label})`);
-                console.log('Clickhouse:', cl);
-                console.log('Legacy:', result.legacyDataSorted[i]);
-                console.groupEnd();
-                return false;
+        if (result.clDataSorted.length) {
+            for (var i = 0; i < result.clDataSorted.length; i++) {
+                const cl = result.clDataSorted[i];
+                if (
+                    JSON.stringify(cl) !==
+                    JSON.stringify(result.legacyDataSorted[i])
+                ) {
+                    console.groupCollapsed(
+                        `First invalid item (${result.label})`
+                    );
+                    console.log('Clickhouse:', cl);
+                    console.log('Legacy:', result.legacyDataSorted[i]);
+                    console.groupEnd();
+                    return false;
+                }
             }
-        });
+        }
         console.groupCollapsed('All Data');
         console.log('legacy', result.legacyDataSorted);
         console.log('CH', result.clDataSorted);
         console.groupEnd();
     }
 
-    !result.status && console.groupEnd();
+    console.groupEnd();
 }

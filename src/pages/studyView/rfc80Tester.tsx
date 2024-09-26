@@ -1,7 +1,7 @@
 import * as React from 'react';
 import _ from 'lodash';
 import { useCallback, useEffect } from 'react';
-import { reportValidationResult, validate } from 'shared/api/validation';
+import { reportValidationResult, validate } from 'shared/api/validation.ts';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
 import { observer } from 'mobx-react';
 import { useLocalObservable } from 'mobx-react-lite';
@@ -76,12 +76,14 @@ export const RFC80Test = observer(function() {
             ? json.filter((f: any) => new RegExp(fileFilter).test(f.file))
             : json;
 
-        const totalCount = _(files)
-            .flatMap('suites')
-            .flatMap('tests')
-            .value().length;
+        // @ts-ignore
+        const totalCount = files
+            // @ts-ignore
+            .flatMap((n: any) => n.suites)
+            // @ts-ignore
+            .flatMap((n: any) => n.tests).length;
 
-        console.group(`Running specs (${files.length} of ${totalCount})`);
+        console.log(`Running specs (${files.length} of ${totalCount})`);
 
         console.groupCollapsed('specs');
         console.log('raw', json);
@@ -109,6 +111,7 @@ export const RFC80Test = observer(function() {
                             // @ts-ignore
                             () => {
                                 return validate(
+                                    $.ajax,
                                     test.url,
                                     test.data,
                                     test.label,
@@ -139,18 +142,15 @@ export const RFC80Test = observer(function() {
             await el();
         }
 
-        console.group('FINAL REPORT');
-        console.log(`PASSED: ${passed.length} of ${totalCount}`);
-        console.log(`FAILED: ${errors.length} (${errors.join(',')})`);
-        console.log(
-            `HTTP ERRORS: ${httpErrors.length} (${httpErrors.join(',')})`
-        );
-        console.log(`SKIPPED: ${skips.length}  (${skips.join(',')})`);
-        console.groupEnd();
-
-        //Promise.all(promises).then(() => {
-        console.groupEnd();
-        // });
+        // console.group('FINAL REPORT');
+        // console.log(`PASSED: ${passed.length} of ${totalCount}`);
+        // console.log(`FAILED: ${errors.length} (${errors.join(',')})`);
+        // console.log(
+        //     `HTTP ERRORS: ${httpErrors.length} (${httpErrors.join(',')})`
+        // );
+        // console.log(`SKIPPED: ${skips.length}  (${skips.join(',')})`);
+        // console.groupEnd();
+        // console.groupEnd();
     }, []);
 
     useEffect(() => {

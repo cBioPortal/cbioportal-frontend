@@ -77,6 +77,7 @@ function proxyColumnStore(client: any, endpoint: string) {
                         JSON.stringify({ data: params, url: urlChopper(url) })
                     );
                     validate(
+                        $.ajax,
                         url,
                         params,
                         matchedMethod[0],
