@@ -66,3 +66,4 @@ e2e-localdb-workspace/
 junit.xml
 .nvim.lua
 .luarc.json
+api-e2e/validation.js

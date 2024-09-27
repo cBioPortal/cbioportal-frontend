@@ -8,23 +8,15 @@ const host = process.env.API_TEST_HOST || 'http://localhost:8082';
 console.log(`RUNNING TESTS AGAINST: ${host}`);
 
 async function main() {
-    const result = await validate(
-        najax,
-        `${host}${test.url}`,
-        test.data,
-        test.label,
-        test.hash
-    );
-
     const start = Date.now();
 
-    const fileFilter = '';
+    const fileFilter = process.env.API_TEST_FILTER || '';
 
     const files = fileFilter?.trim().length
         ? json.filter(f => new RegExp(fileFilter).test(f.file))
         : json;
 
-    await runSpecs(files, najax, 'http://localhost:8082');
+    await runSpecs(files, najax, host);
 
     console.log(`Elapsed: ${Date.now() - start}`);
 }
