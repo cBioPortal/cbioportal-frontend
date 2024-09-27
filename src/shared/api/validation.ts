@@ -119,10 +119,10 @@ function convertLegacySampleTreatmentCountsToCh(legacyData: any) {
 
     legacyData.forEach((legacySampleTreatment: any) => {
         let treatment = {
-            time: legacySampleTreatment['time'],
-            treatment: legacySampleTreatment['treatment'],
             count: legacySampleTreatment['count'],
             samples: new Array(),
+            time: legacySampleTreatment['time'],
+            treatment: legacySampleTreatment['treatment'],
         };
 
         treatments.push(treatment);
@@ -145,8 +145,8 @@ function convertLegacyPatientTreatmentCountsToCh(legacyData: any) {
 
     legacyData.forEach((legacyTreatment: any) => {
         let treatment = {
-            treatment: legacyTreatment['treatment'],
             count: legacyTreatment['count'],
+            treatment: legacyTreatment['treatment'],
         };
         treatments.push(treatment);
 
@@ -302,17 +302,11 @@ export function validate(
             return result;
         });
     });
-
-    // (() => {
-    //     const result: any = {};
-    //     result.url = url;
-    //     result.hash = hash;
-    //     result.status = false;
-    //     result.data = params;
-    //     result.httpError = true;
-    //     return result;
-    // });
 }
+
+const red = '\x1b[31m';
+const green = '\x1b[32m';
+const reset = '\x1b[0m';
 
 export function reportValidationResult(
     result: any,
@@ -324,7 +318,7 @@ export function reportValidationResult(
 
     !result.status &&
         console.groupCollapsed(
-            `${prefix} ${result.label} (${result.hash}) ${skipMessage} failed :(`
+            `${red} ${prefix} ${result.label} (${result.hash}) ${skipMessage} failed :( ${reset}`
         );
 
     logLevel === 'verbose' &&
