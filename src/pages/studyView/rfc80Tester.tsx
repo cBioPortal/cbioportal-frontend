@@ -80,7 +80,7 @@ export const RFC80Test = observer(function() {
             ? json.filter((f: any) => new RegExp(fileFilter).test(f.file))
             : json;
 
-        await runSpecs(files, $.ajax);
+        await runSpecs(files, $.ajax, '', 'verbose');
     }, []);
 
     useEffect(() => {

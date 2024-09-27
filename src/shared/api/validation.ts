@@ -280,6 +280,7 @@ export function validate(
             url: url,
             data: JSON.stringify(params),
             contentType: 'application/json',
+            dataType: 'json',
         }).then((body: any, state: any, xhr: XMLHttpRequest) => {
             return { body, elapsedTime: xhr.getResponseHeader('elapsed-time') };
         });
@@ -295,6 +296,7 @@ export function validate(
             url: legacyUrl,
             data: JSON.stringify(params),
             contentType: 'application/json',
+            dataType: 'json',
         });
         return legacyXHR.then((legacyResult: any) => {
             const result: any = compareCounts(body, legacyResult, label);
@@ -308,7 +310,8 @@ export function validate(
             return result;
         });
     });
-    // .catch(() => {
+
+    // (() => {
     //     const result: any = {};
     //     result.url = url;
     //     result.hash = hash;
