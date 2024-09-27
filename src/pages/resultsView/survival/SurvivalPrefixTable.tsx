@@ -432,6 +432,12 @@ export default class SurvivalPrefixTable extends React.Component<
     }
 
     @computed get customControls() {
+        const clinicalDataExisted = !_.isEmpty(
+            this.props.pageStore.clinicalEventOptions.result
+        );
+        if (!clinicalDataExisted) {
+            return <></>;
+        }
         return (
             <div className="pull-right">
                 {this.showNewSurvivalDialog && (
