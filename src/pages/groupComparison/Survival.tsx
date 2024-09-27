@@ -716,14 +716,13 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                     <DefaultTooltip
                                         placement="bottom"
                                         overlay={
-                                            <></>
-                                            // <SurvivalDescriptionTable
-                                            //     survivalDescriptionData={
-                                            //         this.props.store
-                                            //             .survivalDescriptions
-                                            //             .result![key]
-                                            //     }
-                                            // />
+                                            <SurvivalDescriptionTable
+                                                survivalDescriptionData={
+                                                    this.props.store
+                                                        .survivalDescriptions
+                                                        .result![key]
+                                                }
+                                            />
                                         }
                                     >
                                         <a href="javascript:void(0)">

@@ -123,9 +123,7 @@ import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
 import AnalysisStore from './AnalysisStore';
 import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
 import { compileMutations } from './AnalysisStoreUtils';
-import { FeatureFlagEnum } from 'shared/featureFlags';
 import { SurvivalChartType } from 'pages/resultsView/survival/SurvivalPrefixTable';
-import { P } from 'js-combinatorics';
 
 export enum OverlapStrategy {
     INCLUDE = 'Include',
