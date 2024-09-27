@@ -89,15 +89,20 @@ import {
 } from 'shared/lib/StoreUtils';
 import { ResultsViewPageStore } from '../../../pages/resultsView/ResultsViewPageStore';
 import { AlterationTypeConstants, DataTypeConstants } from 'shared/constants';
-import { getSurvivalStatusBoolean } from 'pages/resultsView/survival/SurvivalUtil';
+import {
+    generateSurvivalPlotTitleFromDisplayName,
+    getSurvivalStatusBoolean,
+} from 'pages/resultsView/survival/SurvivalUtil';
 import {
     cnaEventTypeSelectInit,
     CopyNumberEnrichmentEventType,
     CustomSurvivalPlots,
     EnrichmentEventType,
+    generateRandomString,
     getCopyNumberEventTypesAPIParameter,
     getMutationEventTypesAPIParameter,
-    getSurvivalPlotPrefixText,
+    getSurvivalPlotName,
+    getSurvivalPlotDescription,
     MutationEnrichmentEventType,
     mutationEventTypeSelectInit,
     StructuralVariantEnrichmentEventType,
@@ -238,6 +243,203 @@ export default abstract class ComparisonStore extends AnalysisStore
         for (const disposer of this.reactionDisposers) {
             disposer();
         }
+    }
+
+    @observable
+    public startEventPosition: 'FIRST' | 'LAST' = 'FIRST';
+
+    @observable
+    public endEventPosition: 'FIRST' | 'LAST' = 'FIRST';
+
+    @observable
+    public censoredEventPosition: 'FIRST' | 'LAST' = 'LAST';
+
+    @observable
+    public _selectedStartClinicalEventType: string | undefined = undefined;
+
+    @observable
+    public selectedStartClinicalEventAttributes: ClinicalEventDataWithKey[] = [];
+
+    @observable
+    public _selectedEndClinicalEventType: string | undefined = undefined;
+
+    @observable
+    public selectedEndClinicalEventAttributes: ClinicalEventDataWithKey[] = [];
+
+    @observable
+    public _selectedCensoredClinicalEventType: string | undefined = 'any';
+
+    @observable.ref chartName: string;
+
+    @observable
+    public selectedCensoredClinicalEventAttributes: ClinicalEventDataWithKey[] = [];
+
+    @action.bound
+    public setSurvivalPlotPrefix(prefix: string | undefined) {
+        this.selectedSurvivalPlotPrefix = prefix;
+    }
+
+    @action.bound
+    public onStartClinicalEventSelection(option: any) {
+        if (option !== null) {
+            this._selectedStartClinicalEventType = option.value;
+            this.selectedStartClinicalEventAttributes = [];
+        } else {
+            this._selectedStartClinicalEventType = undefined;
+        }
+    }
+
+    @computed get selectedStartClinicalEventType() {
+        if (this._selectedStartClinicalEventType !== undefined) {
+            return this.clinicalEventOptions.result[
+                this._selectedStartClinicalEventType
+            ];
+        }
+        return undefined;
+    }
+
+    @action.bound
+    public onEndClinicalEventSelection(option: any) {
+        if (option !== null) {
+            this._selectedEndClinicalEventType = option.value;
+            this.selectedEndClinicalEventAttributes = [];
+        } else {
+            this._selectedEndClinicalEventType = undefined;
+        }
+    }
+
+    @computed get selectedEndClinicalEventType() {
+        if (this._selectedEndClinicalEventType !== undefined) {
+            return this.clinicalEventOptions.result[
+                this._selectedEndClinicalEventType
+            ];
+        }
+        return undefined;
+    }
+
+    @action.bound
+    public onCensoredClinicalEventSelection(option: any) {
+        if (option !== null) {
+            this._selectedCensoredClinicalEventType = option.value;
+            this.selectedCensoredClinicalEventAttributes = [];
+        } else {
+            this._selectedCensoredClinicalEventType = 'any';
+        }
+    }
+
+    @action.bound
+    public onKMPlotNameChange(e: React.SyntheticEvent<HTMLInputElement>) {
+        this.chartName = (e.target as HTMLInputElement).value;
+    }
+
+    @action.bound
+    public resetSurvivalPlotSelection() {
+        this.chartName = '';
+        this._selectedStartClinicalEventType = undefined;
+        this.startEventPosition = 'FIRST';
+        this.selectedStartClinicalEventAttributes = [];
+        this._selectedEndClinicalEventType = undefined;
+        this.endEventPosition = 'FIRST';
+        this.selectedEndClinicalEventAttributes = [];
+        this._selectedCensoredClinicalEventType = 'any';
+        this.censoredEventPosition = 'LAST';
+        this.selectedCensoredClinicalEventAttributes = [];
+    }
+
+    @action.bound
+    public onAddSurvivalPlot() {
+        let chartName =
+            this.chartName !== undefined && this.chartName.length > 0
+                ? this.chartName
+                : getSurvivalPlotName(
+                      this._selectedStartClinicalEventType!,
+                      this.startEventPosition,
+                      this._selectedEndClinicalEventType!,
+                      this.endEventPosition,
+                      this._selectedCensoredClinicalEventType!,
+                      _.values(this.survivalTitleByPrefix.result || {})
+                  );
+
+        this.addSurvivalRequest(
+            this._selectedStartClinicalEventType!,
+            this.startEventPosition,
+            this.selectedStartClinicalEventAttributes,
+            this._selectedEndClinicalEventType!,
+            this.endEventPosition,
+            this.selectedEndClinicalEventAttributes,
+            this._selectedCensoredClinicalEventType!,
+            this.censoredEventPosition,
+            this.selectedCensoredClinicalEventAttributes,
+            chartName,
+            true
+        );
+        this.setSurvivalPlotPrefix(chartName);
+        this.updateCustomSurvivalPlots(this.customSurvivalPlots);
+        this.chartName = '';
+    }
+
+    @computed get selectedCensoredClinicalEventType() {
+        if (this._selectedCensoredClinicalEventType !== undefined) {
+            if (this._selectedCensoredClinicalEventType === 'any') {
+                return {
+                    label: 'any event',
+                    value: 'any',
+                    attributes: [],
+                } as any;
+            }
+            return this.clinicalEventOptions.result[
+                this._selectedCensoredClinicalEventType
+            ];
+        }
+        return undefined;
+    }
+
+    @computed get doesChartNameAlreadyExists() {
+        return (
+            this.chartName !== undefined &&
+            this.chartName.length >= 0 &&
+            _.values(this.survivalTitleByPrefix.result || {}).some(
+                prefix =>
+                    prefix.toLowerCase().trim() ===
+                    this.chartName.toLowerCase().trim()
+            )
+        );
+    }
+
+    readonly survivalTitleByPrefix = remoteData(
+        {
+            await: () => [
+                this.survivalClinicalAttributesPrefix,
+                this.survivalDescriptions,
+            ],
+            invoke: () =>
+                Promise.resolve(
+                    this.survivalClinicalAttributesPrefix.result!.reduce(
+                        (map, prefix) => {
+                            // get survival plot titles
+                            // use first display name as title
+                            map[
+                                prefix
+                            ] = generateSurvivalPlotTitleFromDisplayName(
+                                this.survivalDescriptions.result![prefix][0]
+                                    .displayName
+                            );
+                            return map;
+                        },
+                        {} as { [prefix: string]: string }
+                    )
+                ),
+        },
+        {}
+    );
+
+    @computed get isAddSurvivalPlotDisabled() {
+        return (
+            this._selectedStartClinicalEventType === undefined ||
+            this._selectedEndClinicalEventType === undefined ||
+            this.doesChartNameAlreadyExists ||
+            this.patientSurvivals.isPending
+        );
     }
 
     @computed get selectedCopyNumberEnrichmentEventTypes() {
@@ -2721,88 +2923,28 @@ export default abstract class ComparisonStore extends AnalysisStore
                 this.activeStudyIds,
             ],
             invoke: () => {
-                const customAttributes = _.chain(this.customSurvivalPlots)
+                const customAttributes = _.chain(toJS(this.customSurvivalPlots))
                     .flatMap((x, y) => {
                         return _.chain(this.activeStudyIds.result || [])
                             .flatMap(studyId => {
-                                // getSurvivalPlotPrefixText(
-                                //     x.startEventRequestIdentifier?.clinicalEventRequests[0].eventType,
-                                //     x.startEventRequestIdentifier?.position,
-                                //     x.startEventRequestIdentifier?.clinicalEventRequests[0].attributes as any,
-                                //     x.endEventRequestIdentifier?.clinicalEventRequests[0].eventType,
-                                //     x.endEventRequestIdentifier?.position,
-                                //     x.endEventRequestIdentifier?.clinicalEventRequests[0].attributes as any,
-                                //     x.censoredEventRequestIdentifier?.clinicalEventRequests[0].eventType,
-                                //     x.censoredEventRequestIdentifier?.position,
-                                //     x.censoredEventRequestIdentifier?.clinicalEventRequests[0].attributes as any
-                                // )
-
-                                const startIdentifier =
-                                    x.startEventRequestIdentifier?.clinicalEventRequests[0].attributes
-                                        .map(x => x.key + '::' + x.value)
-                                        .sort((a, b) => a.localeCompare(b))
-                                        .join(' ') || '';
-                                const endIdentifier =
-                                    x.endEventRequestIdentifier?.clinicalEventRequests[0].attributes
-                                        .map(x => x.key + '::' + x.value)
-                                        .sort((a, b) => a.localeCompare(b))
-                                        .join(' ') || '';
-                                const censoredIdentifier =
-                                    x.censoredEventRequestIdentifier?.clinicalEventRequests[0].attributes
-                                        .map(x => x.key + '::' + x.value)
-                                        .sort((a, b) => a.localeCompare(b))
-                                        .join(' ') || '';
-
-                                var title = x.name;
-
-                                if (title === undefined || title === '') {
-                                    title = `${
-                                        x.startEventRequestIdentifier?.position
-                                    } of ${
-                                        x.startEventRequestIdentifier
-                                            ?.clinicalEventRequests[0].eventType
-                                    }${
-                                        startIdentifier.length > 0
-                                            ? ' - ' + startIdentifier
-                                            : ''
-                                    } till ${
-                                        x.endEventRequestIdentifier?.position
-                                    } of ${
-                                        x.endEventRequestIdentifier
-                                            ?.clinicalEventRequests[0].eventType
-                                    }${
-                                        endIdentifier.length > 0
-                                            ? ' - ' + endIdentifier
-                                            : ''
-                                    } censored by ${
-                                        x.censoredEventRequestIdentifier
-                                            ?.position
-                                    } of ${
-                                        x.censoredEventRequestIdentifier
-                                            ?.clinicalEventRequests[0].eventType
-                                    }${
-                                        censoredIdentifier.length > 0
-                                            ? ' - ' + censoredIdentifier
-                                            : ''
-                                    }`;
-                                }
+                                const description = getSurvivalPlotDescription(
+                                    x
+                                );
 
                                 var months_attribute: ClinicalAttribute = {
-                                    clinicalAttributeId:
-                                        x.attributeIdPrefix + '_MONTHS',
+                                    clinicalAttributeId: x.name + '_MONTHS',
                                     datatype: 'NUMBER',
-                                    description: `Survival in months ${title}`,
-                                    displayName: `Survival (Months) ${title}`,
+                                    description: `Survival in months ${description}`,
+                                    displayName: `Survival (Months) ${x.name}`,
                                     patientAttribute: true,
                                     priority: '1',
                                     studyId: studyId,
                                 };
                                 var status_attribute: ClinicalAttribute = {
-                                    clinicalAttributeId:
-                                        x.attributeIdPrefix + '_STATUS',
+                                    clinicalAttributeId: x.name + '_STATUS',
                                     datatype: 'STRING',
-                                    description: `Survival status ${title}`,
-                                    displayName: `Survival status ${title}`,
+                                    description: `Survival status ${description}`,
+                                    displayName: `Survival status ${x.name}`,
                                     patientAttribute: true,
                                     priority: '1',
                                     studyId: studyId,
@@ -3335,7 +3477,6 @@ export default abstract class ComparisonStore extends AnalysisStore
     ) {
         this.customSurvivalPlots[name] = {
             name,
-            attributeIdPrefix: name,
             endEventRequestIdentifier: {
                 clinicalEventRequests: [
                     {
@@ -3422,7 +3563,7 @@ export default abstract class ComparisonStore extends AnalysisStore
     private loadCustomSurvivalCharts(): void {
         this.customSurvivalPlots = _.keyBy(
             this._session.result!.customSurvivalPlots || [],
-            'attributeIdPrefix'
+            'name'
         );
 
         _.forEach(this.customSurvivalPlots, plot => {

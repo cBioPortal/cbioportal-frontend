@@ -6,6 +6,7 @@ declare const styles: {
   readonly "comparisonGroupManager": string;
   readonly "dashed-border-right": string;
   readonly "event-attributes": string;
+  readonly "event-position": string;
   readonly "event-type": string;
   readonly "groupButtons": string;
   readonly "groupCheckboxes": string;
@@ -15,6 +16,7 @@ declare const styles: {
   readonly "headerControls": string;
   readonly "inlineAlterationTypeSelectorMenu": string;
   readonly "markedForDeletion": string;
+  readonly "newSurvivalModalWindow": string;
   readonly "noGroupsMessage": string;
   readonly "noMutationsMessage": string;
   readonly "noPaddingLeftTruncationCheckbox": string;

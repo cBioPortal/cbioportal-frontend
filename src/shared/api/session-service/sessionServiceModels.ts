@@ -63,7 +63,7 @@ export type ComparisonSession = {
     origin: string[];
     clinicalAttributeName?: string;
     groupNameOrder?: string[];
-    customSurvivalPlots?: CustomSurvivalPlots[];
+    customSurvivalPlots?: Partial<SurvivalRequest> & { name: string }[];
 };
 
 export type SessionGroupData = GroupData & {

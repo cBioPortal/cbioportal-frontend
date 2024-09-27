@@ -167,7 +167,7 @@ export const deletionGroup = [CopyNumberEnrichmentEventType.HOMDEL];
 export const cnaGroup = [...amplificationGroup, ...deletionGroup];
 
 export type CustomSurvivalPlots = {
-    [prefix: string]: Partial<SurvivalRequest & { name: string }>;
+    [prefix: string]: Partial<SurvivalRequest> & { name: string };
 };
 
 export function cnaEventTypeSelectInit(
@@ -259,43 +259,82 @@ export function doEnrichmentEventTypeMapsMatch<T>(
     );
 }
 
-export function getSurvivalPlotPrefixText(
+export function getSurvivalPlotDescription(
+    chart: Partial<SurvivalRequest> & { name: string }
+) {
+    let description = '';
+    if (chart.startEventRequestIdentifier) {
+        const startIdentifier = chart.startEventRequestIdentifier.clinicalEventRequests[0].attributes
+            .sort((a, b) =>
+                `${a.key}::${a.value}`.localeCompare(`${b.key}::${b.value}`)
+            )
+            .map(x => `${x.key}::${x.value}`)
+            .join(' ');
+        description = `${chart.startEventRequestIdentifier.position} of ${
+            chart.startEventRequestIdentifier.clinicalEventRequests[0].eventType
+        }${startIdentifier.length > 0 ? ' - ' + startIdentifier : ''}`;
+    }
+    if (chart.endEventRequestIdentifier) {
+        const endIdentifier = chart.endEventRequestIdentifier.clinicalEventRequests[0].attributes
+            .sort((a, b) =>
+                `${a.key}::${a.value}`.localeCompare(`${b.key}::${b.value}`)
+            )
+            .map(x => `${x.key}::${x.value}`)
+            .join(' ');
+        description = `${description.length > 0 ? description + ' and' : ''} ${
+            chart.endEventRequestIdentifier.position
+        } of ${
+            chart.endEventRequestIdentifier.clinicalEventRequests[0].eventType
+        }${endIdentifier.length > 0 ? ' - ' + endIdentifier : ''}`;
+    }
+    if (chart.censoredEventRequestIdentifier) {
+        const censoredIdentifier = chart.censoredEventRequestIdentifier.clinicalEventRequests[0].attributes
+            .sort((a, b) =>
+                `${a.key}::${a.value}`.localeCompare(`${b.key}::${b.value}`)
+            )
+            .map(x => `${x.key}::${x.value}`)
+            .join(' ');
+        description = `${description.length > 0 ? description + ' and' : ''} ${
+            chart.censoredEventRequestIdentifier.position
+        } of ${
+            chart.censoredEventRequestIdentifier.clinicalEventRequests[0]
+                .eventType
+        }${censoredIdentifier.length > 0 ? ' - ' + censoredIdentifier : ''}`;
+    }
+    return description;
+}
+
+export function getSurvivalPlotName(
     startClinicalEventType: string,
     startEventPosition: 'FIRST' | 'LAST',
-    startClinicalEventAttributes: ClinicalEventDataWithKey[],
     endClinicalEventType: string,
     endEventPosition: 'FIRST' | 'LAST',
-    endClinicalEventAttributes: ClinicalEventDataWithKey[],
     censoredClinicalEventType: string,
-    censoredEventPosition: 'FIRST' | 'LAST',
-    censoredClinicalEventAttributes: ClinicalEventDataWithKey[]
+    existingNames: string[]
 ) {
-    const startIdentifier = startClinicalEventAttributes
-        .sort((a, b) =>
-            `${a.key}::${a.value}`.localeCompare(`${b.key}::${b.value}`)
-        )
-        .map(x => `${x.key}::${x.value}`)
-        .join(' ');
-    const endIdentifier = endClinicalEventAttributes
-        .sort((a, b) =>
-            `${a.key}::${a.value}`.localeCompare(`${b.key}::${b.value}`)
-        )
-        .map(x => `${x.key}::${x.value}`)
-        .join(' ');
-    const censoredIdentifier = censoredClinicalEventAttributes
-        .sort((a, b) =>
-            `${a.key}::${a.value}`.localeCompare(`${b.key}::${b.value}`)
-        )
-        .map(x => `${x.key}::${x.value}`)
-        .join(' ');
-
-    const title = `${startEventPosition} of ${startClinicalEventType}${
-        startIdentifier.length > 0 ? ' - ' + startIdentifier : ''
-    } and ${endEventPosition} of ${endClinicalEventType}${
-        endIdentifier.length > 0 ? ' - ' + endIdentifier : ''
-    } and censored by ${censoredEventPosition} of ${censoredClinicalEventType}${
-        censoredIdentifier.length > 0 ? ' - ' + censoredIdentifier : ''
-    }`;
-    const prefix = title.replace(/\s/g, '_');
-    return prefix;
+    while (true) {
+        const title = `${startEventPosition} ${startClinicalEventType} - ${endEventPosition} ${endClinicalEventType} and censored by ${censoredClinicalEventType} - ${generateRandomString(
+            5
+        )}`;
+        const formattedTitle = title.toLowerCase().trim();
+        if (
+            existingNames.find(
+                prefix => prefix.toLowerCase().trim() === formattedTitle
+            )
+        ) {
+            continue;
+        }
+        return title;
+    }
 }
+
+export const generateRandomString = (length: number): string => {
+    const characters =
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+        const randomIndex = Math.floor(Math.random() * characters.length);
+        result += characters.charAt(randomIndex);
+    }
+    return result;
+};

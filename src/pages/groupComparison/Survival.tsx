@@ -14,22 +14,16 @@ import {
 import ErrorMessage from '../../shared/components/ErrorMessage';
 import { blendColors } from './OverlapUtils';
 import OverlapExclusionIndicator from './OverlapExclusionIndicator';
-import {
-    getPatientIdentifiers,
-    showQueryUpdatedToast,
-} from '../studyView/StudyViewUtils';
+import { getPatientIdentifiers } from '../studyView/StudyViewUtils';
 import _, { Dictionary } from 'lodash';
-import SurvivalDescriptionTable from 'pages/resultsView/survival/SurvivalDescriptionTable';
 import {
     GroupLegendLabelComponent,
     SurvivalTabGroupLegendLabelComponent,
 } from './labelComponents/GroupLegendLabelComponent';
 import ComparisonStore, {
-    ClinicalEventDataWithKey,
     OverlapStrategy,
 } from '../../shared/lib/comparison/ComparisonStore';
 import {
-    generateSurvivalPlotTitleFromDisplayName,
     getMedian,
     getSurvivalSummaries,
     SURVIVAL_PLOT_X_LABEL_WITH_EVENT_TOOLTIP,
@@ -39,7 +33,7 @@ import {
     sortPatientSurvivals,
     calculateNumberOfPatients,
 } from 'pages/resultsView/survival/SurvivalUtil';
-import { observable, action, makeObservable, computed, toJS } from 'mobx';
+import { action, makeObservable } from 'mobx';
 import survivalPlotStyle from './styles.module.scss';
 import SurvivalPrefixTable, {
     SurvivalChartType,
@@ -49,9 +43,7 @@ import { PatientSurvival } from 'shared/model/PatientSurvival';
 import { calculateQValues } from 'shared/lib/calculation/BenjaminiHochbergFDRCalculator';
 import { logRankTest } from 'pages/resultsView/survival/logRankTest';
 import LeftTruncationCheckbox from 'shared/components/survival/LeftTruncationCheckbox';
-import { ControlLabel, FormControl, ButtonGroup, Radio } from 'react-bootstrap';
-import Select from 'react-select';
-import { getSurvivalPlotPrefixText } from 'shared/lib/comparison/ComparisonStoreUtils';
+import SurvivalDescriptionTable from 'pages/resultsView/survival/SurvivalDescriptionTable';
 
 export interface ISurvivalProps {
     store: ComparisonStore;
@@ -70,43 +62,9 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
     private differentDescriptionExistMessage =
         'Different descriptions of survival data were used for different studies.';
 
-    @observable
-    private startEventPosition: 'FIRST' | 'LAST' = 'FIRST';
-
-    @observable
-    private endEventPosition: 'FIRST' | 'LAST' = 'FIRST';
-
-    @observable
-    private censoredEventPosition: 'FIRST' | 'LAST' = 'LAST';
-
-    @observable
-    private _selectedStartClinicalEventType: string | undefined = undefined;
-
-    @observable
-    private selectedStartClinicalEventAttributes: ClinicalEventDataWithKey[] = [];
-
-    @observable
-    private _selectedEndClinicalEventType: string | undefined = undefined;
-
-    @observable
-    private selectedEndClinicalEventAttributes: ClinicalEventDataWithKey[] = [];
-
-    @observable
-    private _selectedCensoredClinicalEventType: string | undefined = 'any';
-
-    @observable.ref chartName: string;
-
-    @observable
-    private selectedCensoredClinicalEventAttributes: ClinicalEventDataWithKey[] = [];
-
     constructor(props: ISurvivalProps) {
         super(props);
         makeObservable(this);
-    }
-
-    @action.bound
-    private setSurvivalPlotPrefix(prefix: string | undefined) {
-        this.props.store.selectedSurvivalPlotPrefix = prefix;
     }
 
     public readonly analysisGroupsComputations = remoteData({
@@ -317,127 +275,10 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
         },
     });
 
-    @computed get selectedSurvivalPlotPrefix() {
-        return this.props.store.selectedSurvivalPlotPrefix;
-    }
-
-    @action.bound
-    private onStartClinicalEventSelection(option: any) {
-        this._selectedStartClinicalEventType = option.value;
-        this.selectedStartClinicalEventAttributes = [];
-    }
-
-    @computed get selectedStartClinicalEventType() {
-        if (this._selectedStartClinicalEventType !== undefined) {
-            return this.props.store.clinicalEventOptions.result[
-                this._selectedStartClinicalEventType
-            ];
-        }
-        return undefined;
-    }
-
-    @action.bound
-    private onEndClinicalEventSelection(option: any) {
-        this._selectedEndClinicalEventType = option.value;
-        this.selectedEndClinicalEventAttributes = [];
-    }
-
-    @computed get selectedEndClinicalEventType() {
-        if (this._selectedEndClinicalEventType !== undefined) {
-            return this.props.store.clinicalEventOptions.result[
-                this._selectedEndClinicalEventType
-            ];
-        }
-        return undefined;
-    }
-
-    @action.bound
-    private onCensoredClinicalEventSelection(option: any) {
-        this._selectedCensoredClinicalEventType = option.value;
-        this.selectedCensoredClinicalEventAttributes = [];
-    }
-
-    @action.bound
-    private onKMPlotNameChange(e: React.SyntheticEvent<HTMLInputElement>) {
-        this.chartName = (e.target as HTMLInputElement).value;
-    }
-
-    @action.bound
-    private onAddSurvivalPlot() {
-        let chartName =
-            this.chartName !== undefined && this.chartName.length > 0
-                ? this.chartName
-                : getSurvivalPlotPrefixText(
-                      this._selectedStartClinicalEventType!,
-                      this.startEventPosition,
-                      toJS(this.selectedStartClinicalEventAttributes),
-                      this._selectedEndClinicalEventType!,
-                      this.endEventPosition,
-                      toJS(this.selectedEndClinicalEventAttributes),
-                      this._selectedCensoredClinicalEventType!,
-                      this.censoredEventPosition,
-                      toJS(this.selectedCensoredClinicalEventAttributes)
-                  );
-
-        this.props.store.addSurvivalRequest(
-            this._selectedStartClinicalEventType!,
-            this.startEventPosition,
-            this.selectedStartClinicalEventAttributes,
-            this._selectedEndClinicalEventType!,
-            this.endEventPosition,
-            this.selectedEndClinicalEventAttributes,
-            this._selectedCensoredClinicalEventType!,
-            this.censoredEventPosition,
-            this.selectedCensoredClinicalEventAttributes,
-            chartName,
-            true
-        );
-        this.setSurvivalPlotPrefix(chartName);
-        this.props.store.updateCustomSurvivalPlots(
-            this.props.store.customSurvivalPlots
-        );
-        this.chartName = '';
-    }
-
     @action.bound
     private onDeleteSurvivalPlot(prefix: string) {
-        this.setSurvivalPlotPrefix(undefined);
+        this.props.store.setSurvivalPlotPrefix(undefined);
         this.props.store.removeCustomSurvivalPlot(prefix);
-    }
-
-    @computed get selectedCensoredClinicalEventType() {
-        if (this._selectedCensoredClinicalEventType !== undefined) {
-            if (this._selectedCensoredClinicalEventType === 'any') {
-                return {
-                    label: 'any event',
-                    value: 'any',
-                    attributes: [],
-                } as any;
-            }
-            return this.props.store.clinicalEventOptions.result[
-                this._selectedCensoredClinicalEventType
-            ];
-        }
-        return undefined;
-    }
-
-    @computed get doesChartNameAlreadyExists() {
-        return (
-            this.chartName !== undefined &&
-            this.chartName.length >= 0 &&
-            _.values(this.survivalTitleByPrefix.result || {}).includes(
-                this.chartName.trim()
-            )
-        );
-    }
-
-    @computed get isAddSurvivalPlotDisabled() {
-        return (
-            this._selectedStartClinicalEventType === undefined ||
-            this._selectedEndClinicalEventType === undefined ||
-            this.doesChartNameAlreadyExists ||
-            this.props.store.patientSurvivals.isPending
-        );
     }
 
     readonly mainTabUI = MakeMobxView({
@@ -469,394 +310,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                 const clinicalDataExisted = !_.isEmpty(
                     this.props.store.clinicalEventOptions.result
                 );
-                content = (
-                    <>
-                        {clinicalDataExisted && (
-                            <div
-                                className={
-                                    survivalPlotStyle.clinicalEventSelection
-                                }
-                            >
-                                <table>
-                                    <tr>
-                                        <td>
-                                            <ControlLabel>Name:</ControlLabel>
-                                        </td>
-                                        <td>
-                                            <div className="form-group">
-                                                <DefaultTooltip
-                                                    visible={
-                                                        this
-                                                            .doesChartNameAlreadyExists
-                                                    }
-                                                    overlay={
-                                                        <div>
-                                                            <i
-                                                                className="fa fa-md fa-exclamation-triangle"
-                                                                style={{
-                                                                    color:
-                                                                        '#BB1700',
-                                                                    marginRight: 5,
-                                                                }}
-                                                            />
-                                                            <span>
-                                                                Already survival
-                                                                plot with same
-                                                                name exists,
-                                                                please use a
-                                                                different name
-                                                            </span>
-                                                        </div>
-                                                    }
-                                                >
-                                                    <input
-                                                        placeholder={'Optional'}
-                                                        style={{
-                                                            width: '300px',
-                                                            marginRight: '10px',
-                                                        }}
-                                                        type="text"
-                                                        onInput={
-                                                            this
-                                                                .onKMPlotNameChange
-                                                        }
-                                                        value={this.chartName}
-                                                        className="form-control input-sm"
-                                                    />
-                                                </DefaultTooltip>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <ControlLabel>Start:</ControlLabel>
-                                        </td>
-                                        <td
-                                            className={
-                                                survivalPlotStyle['event-type']
-                                            }
-                                        >
-                                            <Select
-                                                placeholder="Select clinical event type"
-                                                name="clinical-event"
-                                                value={
-                                                    this
-                                                        .selectedStartClinicalEventType
-                                                }
-                                                onChange={
-                                                    this
-                                                        .onStartClinicalEventSelection
-                                                }
-                                                options={_.values(
-                                                    this.props.store
-                                                        .clinicalEventOptions
-                                                        .result
-                                                )}
-                                                clearable={false}
-                                                searchable={false}
-                                            />
-                                        </td>
-                                        {this
-                                            ._selectedStartClinicalEventType !==
-                                            undefined &&
-                                            this.props.store
-                                                .clinicalEventOptions.result[
-                                                this
-                                                    ._selectedStartClinicalEventType
-                                            ].attributes.length > 0 && (
-                                                <td
-                                                    className={
-                                                        survivalPlotStyle[
-                                                            'event-attributes'
-                                                        ]
-                                                    }
-                                                >
-                                                    <Select
-                                                        placeholder="Select clinical event type attributes"
-                                                        name="clinical-event-attributes"
-                                                        closeMenuOnSelect={
-                                                            false
-                                                        }
-                                                        isMulti
-                                                        value={
-                                                            this
-                                                                .selectedStartClinicalEventAttributes
-                                                        }
-                                                        onChange={(
-                                                            selectedOptions: any
-                                                        ) => {
-                                                            this.selectedStartClinicalEventAttributes = selectedOptions;
-                                                        }}
-                                                        options={
-                                                            this.props.store
-                                                                .clinicalEventOptions
-                                                                .result[
-                                                                this
-                                                                    ._selectedStartClinicalEventType
-                                                            ].attributes
-                                                        }
-                                                        isClearable={false}
-                                                        noOptionsMessage={() =>
-                                                            'No results'
-                                                        }
-                                                    />
-                                                </td>
-                                            )}
-                                        <td>
-                                            <ButtonGroup>
-                                                {POSITIONS.map((option, i) => {
-                                                    return (
-                                                        <Radio
-                                                            checked={
-                                                                option.value ===
-                                                                this
-                                                                    .startEventPosition
-                                                            }
-                                                            onChange={e => {
-                                                                this.startEventPosition = $(
-                                                                    e.target
-                                                                ).attr(
-                                                                    'data-value'
-                                                                ) as any;
-                                                            }}
-                                                            inline
-                                                            data-value={
-                                                                option.value
-                                                            }
-                                                        >
-                                                            {option.label}
-                                                        </Radio>
-                                                    );
-                                                })}
-                                            </ButtonGroup>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <ControlLabel>End:</ControlLabel>
-                                        </td>
-                                        <td
-                                            className={
-                                                survivalPlotStyle['event-type']
-                                            }
-                                        >
-                                            <Select
-                                                placeholder="Select clinical event type"
-                                                name="clinical-event"
-                                                value={
-                                                    this
-                                                        .selectedEndClinicalEventType
-                                                }
-                                                onChange={
-                                                    this
-                                                        .onEndClinicalEventSelection
-                                                }
-                                                options={_.values(
-                                                    this.props.store
-                                                        .clinicalEventOptions
-                                                        .result
-                                                )}
-                                                clearable={false}
-                                                searchable={false}
-                                            />
-                                        </td>
-                                        {this._selectedEndClinicalEventType !==
-                                            undefined &&
-                                            this.props.store
-                                                .clinicalEventOptions.result[
-                                                this
-                                                    ._selectedEndClinicalEventType
-                                            ].attributes.length > 0 && (
-                                                <td
-                                                    className={
-                                                        survivalPlotStyle[
-                                                            'event-attributes'
-                                                        ]
-                                                    }
-                                                >
-                                                    <Select
-                                                        placeholder="Select clinical event type attributes"
-                                                        name="clinical-event-attributes"
-                                                        closeMenuOnSelect={
-                                                            false
-                                                        }
-                                                        isMulti
-                                                        value={
-                                                            this
-                                                                .selectedEndClinicalEventAttributes
-                                                        }
-                                                        onChange={(
-                                                            selectedOptions: any
-                                                        ) => {
-                                                            this.selectedEndClinicalEventAttributes = selectedOptions;
-                                                        }}
-                                                        options={
-                                                            this.props.store
-                                                                .clinicalEventOptions
-                                                                .result[
-                                                                this
-                                                                    ._selectedEndClinicalEventType
-                                                            ].attributes
-                                                        }
-                                                        isClearable={false}
-                                                        noOptionsMessage={() =>
-                                                            'No results'
-                                                        }
-                                                    />
-                                                </td>
-                                            )}
-                                        <td>
-                                            <ButtonGroup>
-                                                {POSITIONS.map((option, i) => {
-                                                    return (
-                                                        <Radio
-                                                            checked={
-                                                                option.value ===
-                                                                this
-                                                                    .endEventPosition
-                                                            }
-                                                            onChange={e => {
-                                                                this.endEventPosition = $(
-                                                                    e.target
-                                                                ).attr(
-                                                                    'data-value'
-                                                                ) as any;
-                                                            }}
-                                                            inline
-                                                            data-value={
-                                                                option.value
-                                                            }
-                                                        >
-                                                            {option.label}
-                                                        </Radio>
-                                                    );
-                                                })}
-                                            </ButtonGroup>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <ControlLabel>
-                                                Censored:
-                                            </ControlLabel>
-                                        </td>
-                                        <td
-                                            className={
-                                                survivalPlotStyle['event-type']
-                                            }
-                                        >
-                                            <Select
-                                                placeholder="Select clinical event type"
-                                                name="clinical-event"
-                                                value={
-                                                    this
-                                                        .selectedCensoredClinicalEventType
-                                                }
-                                                onChange={
-                                                    this
-                                                        .onCensoredClinicalEventSelection
-                                                }
-                                                options={[
-                                                    {
-                                                        label: 'any event',
-                                                        value: 'any',
-                                                        attributes: [],
-                                                    } as any,
-                                                ].concat(
-                                                    _.values(
-                                                        this.props.store
-                                                            .clinicalEventOptions
-                                                            .result
-                                                    )
-                                                )}
-                                                clearable={false}
-                                                searchable={false}
-                                            />
-                                        </td>
-                                        {this
-                                            .selectedCensoredClinicalEventType !==
-                                            undefined &&
-                                            this
-                                                .selectedCensoredClinicalEventType
-                                                .value !== 'any' &&
-                                            this.props.store
-                                                .clinicalEventOptions.result[
-                                                this
-                                                    .selectedCensoredClinicalEventType
-                                                    .value
-                                            ].attributes.length > 0 && (
-                                                <td
-                                                    className={
-                                                        survivalPlotStyle[
-                                                            'event-attributes'
-                                                        ]
-                                                    }
-                                                >
-                                                    <Select
-                                                        placeholder="Select clinical event type attributes"
-                                                        name="clinical-event-attributes"
-                                                        closeMenuOnSelect={
-                                                            false
-                                                        }
-                                                        isMulti
-                                                        value={
-                                                            this
-                                                                .selectedCensoredClinicalEventAttributes
-                                                        }
-                                                        onChange={(
-                                                            selectedOptions: any
-                                                        ) => {
-                                                            this.selectedCensoredClinicalEventAttributes = selectedOptions;
-                                                        }}
-                                                        options={
-                                                            this.props.store
-                                                                .clinicalEventOptions
-                                                                .result[
-                                                                this
-                                                                    .selectedCensoredClinicalEventType
-                                                                    .value
-                                                            ].attributes
-                                                        }
-                                                        isClearable={false}
-                                                        noOptionsMessage={() =>
-                                                            'No results'
-                                                        }
-                                                    />
-                                                </td>
-                                            )}
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <div
-                                                style={{
-                                                    display: 'flex',
-                                                    justifyContent:
-                                                        'space-between',
-                                                }}
-                                            >
-                                                <button
-                                                    className={
-                                                        'btn btn-primary btn-sm'
-                                                    }
-                                                    disabled={
-                                                        this
-                                                            .isAddSurvivalPlotDisabled
-                                                    }
-                                                    onClick={
-                                                        this.onAddSurvivalPlot
-                                                    }
-                                                >
-                                                    Add survival plot
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </table>
-                            </div>
-                        )}
-                        {this.tabUI.component}
-                    </>
-                );
+                content = <>{this.tabUI.component}</>;
             }
             return (
                 <div data-test="ComparisonPageSurvivalTabDiv">{content}</div>
@@ -956,7 +410,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
     readonly survivalPrefixes = remoteData(
         {
             await: () => [
-                this.survivalTitleByPrefix,
+                this.props.store.survivalTitleByPrefix,
                 this.survivalChartTypeByPrefix,
                 this.props.store.patientSurvivals,
                 this.pValuesByPrefix,
@@ -978,7 +432,8 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                 const qValues = this.qValuesByPrefix.result!;
 
                 const survivalPrefixes = _.map(
-                    this.survivalTitleByPrefix.result! as Dictionary<string>,
+                    this.props.store.survivalTitleByPrefix
+                        .result! as Dictionary<string>,
                     (displayText, prefix) => {
                         const patientSurvivalsPerGroup = _.mapValues(
                             _.keyBy(analysisGroups, group => group.name),
@@ -1031,6 +486,19 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                     }
                 );
 
+                survivalPrefixes.sort((a, b) => {
+                    if (a.pValue !== null && b.pValue !== null) {
+                        return a.pValue - b.pValue;
+                    }
+                    if (a.pValue !== null) {
+                        return -1;
+                    }
+                    if (b.pValue !== null) {
+                        return 1;
+                    }
+                    return 0;
+                });
+
                 return Promise.resolve(survivalPrefixes);
             },
         },
@@ -1043,7 +511,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             return Promise.resolve(
                 new SurvivalPrefixTableStore(
                     () => this.survivalPrefixes.result!,
-                    () => this.selectedSurvivalPlotPrefix
+                    () => this.props.store.selectedSurvivalPlotPrefix
                 )
             );
         },
@@ -1051,7 +519,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
 
     readonly survivalPrefixTable = MakeMobxView({
         await: () => [
-            this.survivalTitleByPrefix,
+            this.props.store.survivalTitleByPrefix,
             this.analysisGroupsComputations,
             this.survivalPrefixes,
             this.survivalPrefixTableDataStore,
@@ -1059,7 +527,8 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
         render: () => {
             const analysisGroups = this.analysisGroupsComputations.result!
                 .analysisGroups;
-            const survivalTitleByPrefix = this.survivalTitleByPrefix.result!;
+            const survivalTitleByPrefix = this.props.store.survivalTitleByPrefix
+                .result!;
 
             if (Object.keys(survivalTitleByPrefix).length > 1) {
                 // only show table if there's more than one prefix option
@@ -1068,11 +537,14 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                         groupNames={analysisGroups.map(g => g.name)}
                         survivalPrefixes={this.survivalPrefixes.result!}
                         getSelectedPrefix={() =>
-                            this.selectedSurvivalPlotPrefix
+                            this.props.store.selectedSurvivalPlotPrefix
                         }
-                        setSelectedPrefix={this.setSurvivalPlotPrefix}
+                        setSelectedPrefix={
+                            this.props.store.setSurvivalPlotPrefix
+                        }
                         dataStore={this.survivalPrefixTableDataStore.result!}
                         removeCustomSurvivalPlot={this.onDeleteSurvivalPlot}
+                        pageStore={this.props.store}
                     />
                 );
             } else {
@@ -1083,34 +555,6 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             <LoadingIndicator center={true} isLoading={true} size={'big'} />
         ),
     });
-
-    readonly survivalTitleByPrefix = remoteData(
-        {
-            await: () => [
-                this.props.store.survivalClinicalAttributesPrefix,
-                this.props.store.survivalDescriptions,
-            ],
-            invoke: () =>
-                Promise.resolve(
-                    this.props.store.survivalClinicalAttributesPrefix.result!.reduce(
-                        (map, prefix) => {
-                            // get survival plot titles
-                            // use first display name as title
-                            map[
-                                prefix
-                            ] = generateSurvivalPlotTitleFromDisplayName(
-                                this.props.store.survivalDescriptions.result![
-                                    prefix
-                                ][0].displayName
-                            );
-                            return map;
-                        },
-                        {} as { [prefix: string]: string }
-                    )
-                ),
-        },
-        {}
-    );
 
     readonly survivalChartTypeByPrefix = remoteData(
         {
@@ -1172,7 +616,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             this.analysisGroupsComputations,
             this.props.store.overlapComputations,
             this.props.store.uidToGroup,
-            this.survivalTitleByPrefix,
+            this.props.store.survivalTitleByPrefix,
             this.survivalYLabel,
             this.sortedGroupedSurvivals,
             this.pValuesByPrefix,
@@ -1190,7 +634,8 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                 .result!.patientToAnalysisGroups;
             const patientSurvivals = this.props.store.patientSurvivals.result!;
             const attributeDescriptions: { [prefix: string]: string } = {};
-            const survivalTitleByPrefix = this.survivalTitleByPrefix.result!;
+            const survivalTitleByPrefix = this.props.store.survivalTitleByPrefix
+                .result!;
             const survivalYLabel = this.survivalYLabel.result!;
             this.props.store.survivalClinicalAttributesPrefix.result!.forEach(
                 prefix => {
@@ -1217,37 +662,32 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             // set default plot if applicable
             if (
                 !doNotSetDefaultPlot &&
-                this.selectedSurvivalPlotPrefix === undefined
+                this.props.store.selectedSurvivalPlotPrefix === undefined
             ) {
                 // if the table exists pick the first one from the table's store for consistency
                 if (this.survivalPrefixTable.component) {
-                    this.setSurvivalPlotPrefix(
+                    this.props.store.setSurvivalPlotPrefix(
                         this.survivalPrefixTableDataStore.result!.getSortedFilteredData()[0]
                             .prefix
                     );
                 }
                 // if there is no table, pick the first one from the default store
                 else {
-                    this.setSurvivalPlotPrefix(_.keys(patientSurvivals)[0]);
+                    this.props.store.setSurvivalPlotPrefix(
+                        _.keys(patientSurvivals)[0]
+                    );
                 }
             }
 
             if (
-                this.selectedSurvivalPlotPrefix &&
-                patientSurvivals?.[this.selectedSurvivalPlotPrefix]
+                this.props.store.selectedSurvivalPlotPrefix &&
+                patientSurvivals?.[this.props.store.selectedSurvivalPlotPrefix]
             ) {
-                const value = patientSurvivals[this.selectedSurvivalPlotPrefix];
-                const key = this.selectedSurvivalPlotPrefix;
-
-                // // show survival plot that is just selected
-                // if (!this.props.store.survivalClinicalAttributesPrefix.result?.includes(
-                //     key
-                // )) {
-                //     this.setSurvivalPlotPrefix(
-                //         this.survivalPrefixTableDataStore.result!.getSortedFilteredData()[0]
-                //             .prefix
-                //     );
-                // }
+                const value =
+                    patientSurvivals[
+                        this.props.store.selectedSurvivalPlotPrefix
+                    ];
+                const key = this.props.store.selectedSurvivalPlotPrefix;
 
                 if (value.length > 0) {
                     if (
@@ -1332,7 +772,8 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                     }
                                     sortedGroupedSurvivals={
                                         this.sortedGroupedSurvivals.result![
-                                            this.selectedSurvivalPlotPrefix
+                                            this.props.store
+                                                .selectedSurvivalPlotPrefix
                                         ]
                                     }
                                 />
@@ -1346,7 +787,8 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                     key={key}
                                     sortedGroupedSurvivals={
                                         this.sortedGroupedSurvivals.result![
-                                            this.selectedSurvivalPlotPrefix
+                                            this.props.store
+                                                .selectedSurvivalPlotPrefix
                                         ]
                                     }
                                     analysisGroups={analysisGroups}
@@ -1403,7 +845,8 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                     }}
                                     pValue={
                                         this.pValuesByPrefix.result![
-                                            this.selectedSurvivalPlotPrefix
+                                            this.props.store
+                                                .selectedSurvivalPlotPrefix
                                         ]
                                     }
                                     compactMode={false}

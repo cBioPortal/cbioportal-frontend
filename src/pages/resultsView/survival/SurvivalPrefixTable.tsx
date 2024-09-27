@@ -13,6 +13,7 @@ import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import { filterNumericalColumn } from 'shared/components/lazyMobXTable/utils';
 import _ from 'lodash';
 import {
+    DefaultTooltip,
     DownloadControlOption,
     EditableSpan,
     toggleColumnVisibility,
@@ -23,6 +24,8 @@ import { getServerConfig } from 'config/config';
 import Slider from 'react-rangeslider';
 import styles from 'pages/resultsView/survival/styles.module.scss';
 import classnames from 'classnames';
+import ComparisonStore from 'shared/lib/comparison/ComparisonStore';
+import NewSurvivalPlotModal from 'pages/groupComparison/NewSurvivalPlotModal';
 
 export interface ISurvivalPrefixTableProps {
     survivalPrefixes: SurvivalPrefixSummary[];
@@ -30,6 +33,7 @@ export interface ISurvivalPrefixTableProps {
     getSelectedPrefix: () => string | undefined;
     setSelectedPrefix: (p: string | undefined) => void;
     dataStore?: SurvivalPrefixTableStore;
+    pageStore: ComparisonStore;
     removeCustomSurvivalPlot: (prefix: string) => void;
 }
 
@@ -420,6 +424,40 @@ export default class SurvivalPrefixTable extends React.Component<
         this.dataStore.patientMinThreshold = val;
     }
 
+    @observable showNewSurvivalDialog = false;
+
+    @action.bound
+    private toggleNewSurvivalDialog() {
+        this.showNewSurvivalDialog = !this.showNewSurvivalDialog;
+    }
+
+    @computed get customControls() {
+        return (
+            <div className="pull-right">
+                {this.showNewSurvivalDialog && (
+                    <NewSurvivalPlotModal
+                        pageStore={this.props.pageStore}
+                        onHide={this.toggleNewSurvivalDialog}
+                    />
+                )}
+                <DefaultTooltip
+                    overlay={<span>Create new Survival plot</span>}
+                    placement="top"
+                    trigger={['hover', 'focus']}
+                >
+                    <button
+                        className="btn btn-sm btn-default"
+                        data-clipboard-text="NA"
+                        id="copyButton"
+                        onClick={this.toggleNewSurvivalDialog}
+                    >
+                        <i className="fa fa-plus" />
+                    </button>
+                </DefaultTooltip>
+            </div>
+        );
+    }
+
     public render() {
         this.dataStore.page = this.currentPage;
         return (
@@ -456,6 +494,7 @@ export default class SurvivalPrefixTable extends React.Component<
                     DownloadControlOption.HIDE_ALL
                 }
                 enableHorizontalScroll={false}
+                customControls={this.customControls}
             />
         );
     }
