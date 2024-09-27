@@ -56,25 +56,17 @@ export function getArrays(inp: any, output: Array<any>) {
         output.push(inp);
         inp.forEach(n => getArrays(n, output));
     } else if (isObject(inp)) {
-        // this is to get rid of discrepancy deep in decimals
-        // _.forEach(inp, (v, k) => {
-        //     if (/\d\.\d{10,}$/.test(v)) {
-        //         inp[k] = inp[k].toFixed(5);
-        //     }
-        // });
-
         for (const k in inp) {
             if (/\d\.\d{10,}$/.test(inp[k])) {
                 inp[k] = inp[k].toFixed(5);
             }
         }
 
-        // this is get rid
+        // this is get rid if extraneouys properties that conflict
         delete inp.matchingGenePanelIds;
         delete inp.cytoband;
         delete inp.numberOfProfiledCases;
 
-        // do nothing
         Object.values(inp).forEach(nn => getArrays(nn, output));
     }
     return output;
@@ -399,7 +391,7 @@ export async function runSpecs(
 
     const onlyDetected = allTests.some((t: any) => t.only === true);
 
-    console.log(`Running specs (${files.length} of ${totalCount})`);
+    //console.log(`Running specs (${files.length} of ${totalCount})`);
 
     if (logLevel === 'verbose') {
         console.groupCollapsed('specs');
@@ -462,8 +454,18 @@ export async function runSpecs(
             );
         });
 
-    for (const el of invokers) {
-        await el();
+    const concurrent = 2;
+    const batches = Math.ceil(invokers.length / concurrent);
+
+    for (var i = 0; i < batches; i++) {
+        const proms = [];
+        for (const inv of invokers.slice(
+            i * concurrent,
+            (i + 1) * concurrent
+        )) {
+            proms.push(inv());
+        }
+        await Promise.all(proms);
     }
 
     console.group('FINAL REPORT');

@@ -18,7 +18,7 @@ async function main() {
 
     await runSpecs(files, najax, host);
 
-    console.log(`Elapsed: ${Date.now() - start}`);
+    //console.log(`Elapsed: ${Date.now() - start}`);
 }
 
 main();
