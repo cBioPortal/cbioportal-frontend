@@ -77,6 +77,7 @@ function proxyColumnStore(client: any, endpoint: string) {
                         JSON.stringify({ data: params, url: urlChopper(url) })
                     );
                     validate(
+                        $.ajax,
                         url,
                         params,
                         matchedMethod[0],
@@ -84,7 +85,7 @@ function proxyColumnStore(client: any, endpoint: string) {
                         arguments[0].body,
                         arguments[0].xhr.getResponseHeader('elapsed-time')
                     ).then((result: any) => {
-                        reportValidationResult(result, 'LIVE');
+                        reportValidationResult(result, 'LIVE', 'verbose');
                     });
 
                     return oldSuccess.apply(this, arguments);

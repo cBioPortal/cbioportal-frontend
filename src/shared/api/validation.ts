@@ -1,6 +1,3 @@
-import _ from 'lodash';
-import { array } from 'yargs';
-
 export const isObject = (value: any) => {
     return (
         typeof value === 'object' &&
@@ -59,19 +56,17 @@ export function getArrays(inp: any, output: Array<any>) {
         output.push(inp);
         inp.forEach(n => getArrays(n, output));
     } else if (isObject(inp)) {
-        // this is to get rid of discrepancy deep in decimals
-        _.forEach(inp, (v, k) => {
-            if (/\d\.\d{10,}$/.test(v)) {
+        for (const k in inp) {
+            if (/\d\.\d{10,}$/.test(inp[k])) {
                 inp[k] = inp[k].toFixed(5);
             }
-        });
+        }
 
-        // this is get rid
+        // this is get rid if extraneouys properties that conflict
         delete inp.matchingGenePanelIds;
         delete inp.cytoband;
         delete inp.numberOfProfiledCases;
 
-        // do nothing
         Object.values(inp).forEach(nn => getArrays(nn, output));
     }
     return output;
@@ -124,10 +119,10 @@ function convertLegacySampleTreatmentCountsToCh(legacyData: any) {
 
     legacyData.forEach((legacySampleTreatment: any) => {
         let treatment = {
-            time: legacySampleTreatment['time'],
-            treatment: legacySampleTreatment['treatment'],
             count: legacySampleTreatment['count'],
             samples: new Array(),
+            time: legacySampleTreatment['time'],
+            treatment: legacySampleTreatment['treatment'],
         };
 
         treatments.push(treatment);
@@ -150,8 +145,8 @@ function convertLegacyPatientTreatmentCountsToCh(legacyData: any) {
 
     legacyData.forEach((legacyTreatment: any) => {
         let treatment = {
-            treatment: legacyTreatment['treatment'],
             count: legacyTreatment['count'],
+            treatment: legacyTreatment['treatment'],
         };
         treatments.push(treatment);
 
@@ -191,7 +186,7 @@ export function deepSort(inp: any, label: string) {
             // this is going to make sure the keys in the objects
             // are in a sorted order
             arr.forEach((o: any) => {
-                _.keys(o)
+                Object.keys(o)
                     .sort()
                     .forEach(k => {
                         const val = o[k];
@@ -224,11 +219,22 @@ function attemptSort(keys: string[], arr: any) {
     arr.sort(dynamicSort(keys));
 }
 
+let win: any;
+
+try {
+    win = window;
+} catch (ex) {
+    win = {};
+}
+
 export function compareCounts(clData: any, legacyData: any, label: string) {
     // @ts-ignore
-    const clDataClone = structuredClone(clData);
-    // @ts-ignore
-    const legacyDataClone = structuredClone(legacyData);
+    const clDataClone = win.structuredClone ? structuredClone(clData) : clData;
+
+    const legacyDataClone = win.structuredClone
+        ? // @ts-ignore
+          structuredClone(legacyData)
+        : legacyData;
 
     const clDataSorted = deepSort(clDataClone, label);
     var legacyDataSorted = deepSort(legacyDataClone, label);
@@ -248,6 +254,7 @@ export function compareCounts(clData: any, legacyData: any, label: string) {
 }
 
 export function validate(
+    ajax: any,
     url: string,
     params: any,
     label: string,
@@ -255,69 +262,67 @@ export function validate(
     body?: any,
     elapsedTime?: any
 ) {
-    const clStart = performance.now();
-    let chDuration: number, legacyDuration: number;
-
     let chXHR: any;
 
     if (body) {
         chXHR = Promise.resolve({ body, elapsedTime });
     } else {
-        chXHR = $.ajax({
+        chXHR = ajax({
             method: 'post',
             url: url,
             data: JSON.stringify(params),
             contentType: 'application/json',
-        }).then((body, state, xhr) => {
+            dataType: 'json',
+        }).then((body: any, state: any, xhr: XMLHttpRequest) => {
             return { body, elapsedTime: xhr.getResponseHeader('elapsed-time') };
         });
     }
 
-    return chXHR
-        .then(({ body, elapsedTime }: any) => {
-            let legacyUrl = url.replace(/column-store\//, '');
-            if (treatmentLegacyUrl[label]) {
-                legacyUrl = treatmentLegacyUrl[label](legacyUrl);
-            }
-            const legacyXHR = $.ajax({
-                method: 'post',
-                url: legacyUrl,
-                data: JSON.stringify(params),
-                contentType: 'application/json',
-            });
-            return legacyXHR.then(legacyResult => {
-                const result: any = compareCounts(body, legacyResult, label);
-                result.url = url;
-                result.hash = hash;
-                result.data = params;
-                result.chDuration = parseFloat(elapsedTime);
-                result.legacyDuration = parseFloat(
-                    legacyXHR.getResponseHeader('elapsed-time') || ''
-                );
-                return result;
-            });
-        })
-        .catch(() => {
-            const result: any = {};
+    return chXHR.then(({ body, elapsedTime }: any) => {
+        let legacyUrl = url.replace(/column-store\//, '');
+        if (treatmentLegacyUrl[label]) {
+            legacyUrl = treatmentLegacyUrl[label](legacyUrl);
+        }
+        const legacyXHR = ajax({
+            method: 'post',
+            url: legacyUrl,
+            data: JSON.stringify(params),
+            contentType: 'application/json',
+            dataType: 'json',
+        });
+        return legacyXHR.then((legacyResult: any) => {
+            const result: any = compareCounts(body, legacyResult, label);
             result.url = url;
             result.hash = hash;
-            result.status = false;
             result.data = params;
-            result.httpError = true;
+            result.chDuration = parseFloat(elapsedTime);
+            result.legacyDuration = parseFloat(
+                legacyXHR.getResponseHeader('elapsed-time') || ''
+            );
             return result;
         });
+    });
 }
 
-export function reportValidationResult(result: any, prefix = '') {
+const red = '\x1b[31m';
+const green = '\x1b[32m';
+const reset = '\x1b[0m';
+
+export function reportValidationResult(
+    result: any,
+    prefix = '',
+    logLevel = ''
+) {
     const skipMessage =
         result.test && result.test.skip ? `(SKIPPED ${result.test.skip})` : '';
 
     !result.status &&
         console.groupCollapsed(
-            `${prefix} ${result.label} (${result.hash}) ${skipMessage} failed :(`
+            `${red} ${prefix} ${result.label} (${result.hash}) ${skipMessage} failed :( ${reset}`
         );
 
-    !result.status &&
+    logLevel === 'verbose' &&
+        !result.status &&
         console.log('failed test', {
             url: result.url,
             test: result.test,
@@ -337,24 +342,131 @@ export function reportValidationResult(result: any, prefix = '') {
             )} legacy: ${result.legacyDuration.toFixed(0)}`
         );
 
-    if (!result.status) {
-        _.forEach(result.clDataSorted, (cl: any, i: number) => {
-            if (
-                JSON.stringify(cl) !==
-                JSON.stringify(result.legacyDataSorted[i])
-            ) {
-                console.groupCollapsed(`First invalid item (${result.label})`);
-                console.log('Clickhouse:', cl);
-                console.log('Legacy:', result.legacyDataSorted[i]);
-                console.groupEnd();
-                return false;
+    if (logLevel === 'verbose' && !result.status) {
+        if (result.clDataSorted.length) {
+            for (var i = 0; i < result.clDataSorted.length; i++) {
+                const cl = result.clDataSorted[i];
+                if (
+                    JSON.stringify(cl) !==
+                    JSON.stringify(result.legacyDataSorted[i])
+                ) {
+                    console.groupCollapsed(
+                        `First invalid item (${result.label})`
+                    );
+                    console.log('Clickhouse:', cl);
+                    console.log('Legacy:', result.legacyDataSorted[i]);
+                    console.groupEnd();
+                    break;
+                }
             }
-        });
+        }
         console.groupCollapsed('All Data');
         console.log('legacy', result.legacyDataSorted);
         console.log('CH', result.clDataSorted);
         console.groupEnd();
     }
-
     !result.status && console.groupEnd();
+}
+
+export async function runSpecs(
+    files: any,
+    ajax: any,
+    host: string = '',
+    logLevel = ''
+) {
+    // @ts-ignore
+    const allTests = files
+        // @ts-ignore
+        .flatMap((n: any) => n.suites)
+        // @ts-ignore
+        .flatMap((n: any) => n.tests);
+
+    const totalCount = allTests.length;
+
+    const onlyDetected = allTests.some((t: any) => t.only === true);
+
+    //console.log(`Running specs (${files.length} of ${totalCount})`);
+
+    if (logLevel === 'verbose') {
+        console.groupCollapsed('specs');
+        //console.log('raw', json);
+        console.log('filtered', files);
+        console.groupEnd();
+    }
+
+    let place = 0;
+    let errors: any[] = [];
+    let skips: any[] = [];
+    let passed: any[] = [];
+    let httpErrors: any[] = [];
+
+    const invokers: (() => Promise<any>)[] = [] as any;
+    files
+        .map((f: any) => f.suites)
+        .forEach((suite: any) => {
+            suite.forEach((col: any) =>
+                col.tests.forEach((test: any) => {
+                    test.url = test.url.replace(
+                        /column-store\/api/,
+                        'column-store'
+                    );
+
+                    if (!onlyDetected || test.only) {
+                        invokers.push(
+                            // @ts-ignore
+                            () => {
+                                return validate(
+                                    ajax,
+                                    host + test.url,
+                                    test.data,
+                                    test.label,
+                                    test.hash
+                                ).then((report: any) => {
+                                    report.test = test;
+                                    place = place + 1;
+                                    const prefix = `${place} of ${totalCount}`;
+
+                                    if (test?.skip) {
+                                        skips.push(test.hash);
+                                    } else if (!report.status) {
+                                        report.httpError
+                                            ? httpErrors.push(test.hash)
+                                            : errors.push(test.hash);
+                                    } else if (report.status)
+                                        passed.push(test.hash);
+
+                                    reportValidationResult(
+                                        report,
+                                        prefix,
+                                        logLevel
+                                    );
+                                });
+                            }
+                        );
+                    }
+                })
+            );
+        });
+
+    const concurrent = 2;
+    const batches = Math.ceil(invokers.length / concurrent);
+
+    for (var i = 0; i < batches; i++) {
+        const proms = [];
+        for (const inv of invokers.slice(
+            i * concurrent,
+            (i + 1) * concurrent
+        )) {
+            proms.push(inv());
+        }
+        await Promise.all(proms);
+    }
+
+    console.group('FINAL REPORT');
+    console.log(`PASSED: ${passed.length} of ${totalCount}`);
+    console.log(`FAILED: ${errors.length} (${errors.join(',')})`);
+    console.log(`HTTP ERRORS: ${httpErrors.length} (${httpErrors.join(',')})`);
+    console.log(`SKIPPED: ${skips.length}  (${skips.join(',')})`);
+    console.groupEnd();
+    // console.groupEnd();
 }

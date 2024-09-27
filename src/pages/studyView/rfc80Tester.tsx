@@ -1,7 +1,11 @@
 import * as React from 'react';
 import _ from 'lodash';
 import { useCallback, useEffect } from 'react';
-import { reportValidationResult, validate } from 'shared/api/validation';
+import {
+    reportValidationResult,
+    runSpecs,
+    validate,
+} from 'shared/api/validation.ts';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
 import { observer } from 'mobx-react';
 import { useLocalObservable } from 'mobx-react-lite';
@@ -76,81 +80,7 @@ export const RFC80Test = observer(function() {
             ? json.filter((f: any) => new RegExp(fileFilter).test(f.file))
             : json;
 
-        const totalCount = _(files)
-            .flatMap('suites')
-            .flatMap('tests')
-            .value().length;
-
-        console.group(`Running specs (${files.length} of ${totalCount})`);
-
-        console.groupCollapsed('specs');
-        console.log('raw', json);
-        console.log('filtered', files);
-        console.groupEnd();
-
-        let place = 0;
-        let errors: any[] = [];
-        let skips: any[] = [];
-        let passed: any[] = [];
-        let httpErrors: any[] = [];
-
-        const invokers: (() => Promise<any>)[] = [] as any;
-        files
-            .map((f: any) => f.suites)
-            .forEach((suite: any) => {
-                suite.forEach((col: any) =>
-                    col.tests.forEach((test: any) => {
-                        test.url = test.url.replace(
-                            /column-store\/api/,
-                            'column-store'
-                        );
-
-                        invokers.push(
-                            // @ts-ignore
-                            () => {
-                                return validate(
-                                    test.url,
-                                    test.data,
-                                    test.label,
-                                    test.hash
-                                ).then((report: any) => {
-                                    report.test = test;
-                                    place = place + 1;
-                                    const prefix = `${place} of ${totalCount}`;
-
-                                    if (test?.skip) {
-                                        skips.push(test.hash);
-                                    } else if (!report.status) {
-                                        report.httpError
-                                            ? httpErrors.push(test.hash)
-                                            : errors.push(test.hash);
-                                    } else if (report.status)
-                                        passed.push(test.hash);
-
-                                    reportValidationResult(report, prefix);
-                                });
-                            }
-                        );
-                    })
-                );
-            });
-
-        for (const el of invokers) {
-            await el();
-        }
-
-        console.group('FINAL REPORT');
-        console.log(`PASSED: ${passed.length} of ${totalCount}`);
-        console.log(`FAILED: ${errors.length} (${errors.join(',')})`);
-        console.log(
-            `HTTP ERRORS: ${httpErrors.length} (${httpErrors.join(',')})`
-        );
-        console.log(`SKIPPED: ${skips.length}  (${skips.join(',')})`);
-        console.groupEnd();
-
-        //Promise.all(promises).then(() => {
-        console.groupEnd();
-        // });
+        await runSpecs(files, $.ajax, '', 'verbose');
     }, []);
 
     useEffect(() => {
