@@ -307,9 +307,6 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             } else if (numActiveGroups === 0) {
                 content = <span>{SURVIVAL_NOT_ENOUGH_GROUPS_MSG}</span>;
             } else {
-                const clinicalDataExisted = !_.isEmpty(
-                    this.props.store.clinicalEventOptions.result
-                );
                 content = <>{this.tabUI.component}</>;
             }
             return (
@@ -719,13 +716,14 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                     <DefaultTooltip
                                         placement="bottom"
                                         overlay={
-                                            <SurvivalDescriptionTable
-                                                survivalDescriptionData={
-                                                    this.props.store
-                                                        .survivalDescriptions
-                                                        .result![key]
-                                                }
-                                            />
+                                            <></>
+                                            // <SurvivalDescriptionTable
+                                            //     survivalDescriptionData={
+                                            //         this.props.store
+                                            //             .survivalDescriptions
+                                            //             .result![key]
+                                            //     }
+                                            // />
                                         }
                                     >
                                         <a href="javascript:void(0)">
