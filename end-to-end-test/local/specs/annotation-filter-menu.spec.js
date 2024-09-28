@@ -1,15 +1,17 @@
-var assert = require('assert');
+const assert = require('assert');
 const {
     goToUrlAndSetLocalStorageWithProperty,
-} = require('../../shared/specUtils');
-var goToUrlAndSetLocalStorage = require('../../shared/specUtils')
-    .goToUrlAndSetLocalStorage;
-var useExternalFrontend = require('../../shared/specUtils').useExternalFrontend;
-var waitForStudyView = require('../../shared/specUtils').waitForStudyView;
-var waitForComparisonTab = require('../../shared/specUtils')
-    .waitForComparisonTab;
-var openAlterationTypeSelectionMenu = require('../../shared/specUtils')
-    .openAlterationTypeSelectionMenu;
+    goToUrlAndSetLocalStorage,
+    useExternalFrontend,
+    waitForStudyView,
+    waitForComparisonTab,
+    openAlterationTypeSelectionMenu,
+    getElement,
+    getNestedElement,
+    clickElement,
+    isDisplayed,
+    waitForElementDisplayed,
+} = require('../../shared/specUtils_Async');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 const studyViewUrl = `${CBIOPORTAL_URL}/study/summary?id=study_es_0`;
@@ -36,36 +38,44 @@ const SV_COUNTS_SORT_DESC_10 = {
 describe('alteration filter menu', function() {
     describe('study view', () => {
         describe('filtering of gene tables', () => {
-            beforeEach(() => {
-                goToUrlAndSetLocalStorageWithProperty(studyViewUrl, true, {
-                    /**
-                     * Only use custom driver annotations from local db:
-                     */
-                    show_oncokb: false,
-                });
-                waitForStudyView();
-                turnOffCancerGenesFilters();
-                openAlterationFilterMenu();
+            beforeEach(async () => {
+                await goToUrlAndSetLocalStorageWithProperty(
+                    studyViewUrl,
+                    true,
+                    {
+                        /**
+                         * Only use custom driver annotations from local db:
+                         */
+                        show_oncokb: false,
+                    }
+                );
+                await waitForStudyView();
+                await turnOffCancerGenesFilters();
+                await openAlterationFilterMenu();
             });
 
             // -+=+ MUTATION STATUS +=+-
-            it('filters mutation table when unchecking somatic checkbox', () => {
-                clickCheckBoxStudyView('Somatic');
-                assert.deepStrictEqual(geneTableCounts('mutations-table'), {
-                    BRCA2: '6',
-                    BRCA1: '1',
-                    ATM: '1',
-                    TP53: '1',
-                });
+            it('filters mutation table when unchecking somatic checkbox', async () => {
+                await clickCheckBoxStudyView('Somatic');
+                assert.deepStrictEqual(
+                    await geneTableCounts('mutations-table'),
+                    {
+                        BRCA2: '6',
+                        BRCA1: '1',
+                        ATM: '1',
+                        TP53: '1',
+                    }
+                );
                 // somatic checkbox unchecked, filter structural variant table
                 assert.strictEqual(
-                    Object.keys(geneTableCounts('structural variants-table'))
-                        .length,
+                    Object.keys(
+                        await geneTableCounts('structural variants-table')
+                    ).length,
                     0
                 );
                 // does not filter cna table
                 assert.deepStrictEqual(
-                    geneTableCounts('copy number alterations-table'),
+                    await geneTableCounts('copy number alterations-table'),
                     {
                         ERCC5_AMP: '7',
                         AURKAIP1_AMP: '7',
@@ -85,33 +95,38 @@ describe('alteration filter menu', function() {
                 );
             });
 
-            it('filters mutation table when unchecking germline checkbox', () => {
-                clickCheckBoxStudyView('Germline');
-                assert.deepStrictEqual(geneTableCounts('mutations-table'), {
-                    BRCA2: '6',
-                    ACP3: '5',
-                    BRCA1: '4',
-                    ATM: '1',
-                    DTNB: '1',
-                    ABLIM1: '1',
-                    MSH3: '1',
-                    MYB: '1',
-                    TP53: '1',
-                    PIEZO1: '1',
-                    ADAMTS20: '1',
-                    OR11H1: '1',
-                    TMEM247: '1',
-                });
+            it('filters mutation table when unchecking germline checkbox', async () => {
+                await clickCheckBoxStudyView('Germline');
+                assert.deepStrictEqual(
+                    await geneTableCounts('mutations-table'),
+                    {
+                        BRCA2: '6',
+                        ACP3: '5',
+                        BRCA1: '4',
+                        ATM: '1',
+                        DTNB: '1',
+                        ABLIM1: '1',
+                        MSH3: '1',
+                        MYB: '1',
+                        TP53: '1',
+                        PIEZO1: '1',
+                        ADAMTS20: '1',
+                        OR11H1: '1',
+                        TMEM247: '1',
+                    }
+                );
                 // does not filter structural variant table
                 // (sort and take top ten, as react does not render all rows)
-                sortPaneByCount('structural variants-table');
+                await sortPaneByCount('structural variants-table');
                 assert.deepStrictEqual(
-                    sortDescLimit(geneTableCounts('structural variants-table')),
+                    sortDescLimit(
+                        await geneTableCounts('structural variants-table')
+                    ),
                     SV_COUNTS_SORT_DESC_10
                 );
                 // does not filter cna table
                 assert.deepStrictEqual(
-                    geneTableCounts('copy number alterations-table'),
+                    await geneTableCounts('copy number alterations-table'),
                     {
                         ERCC5_AMP: '7',
                         AURKAIP1_AMP: '7',
@@ -131,38 +146,43 @@ describe('alteration filter menu', function() {
                 );
             });
 
-            it('does not filter mutation table when unchecking unknown status checkbox', () => {
+            it('does not filter mutation table when unchecking unknown status checkbox', async () => {
                 //NOTE this is failing because somatic status filtering appears not to
                 // work on SVs where it once did
                 // this is probably because SVs were mutations
                 // it apparently regarded them as UNKNOWN, now they are KNOWN
                 // FILL IN NUMBER OF SVs
-                $('[data-test=ShowUnknown]').click();
-                waitForStudyView();
-                assert.deepStrictEqual(geneTableCounts('mutations-table'), {
-                    BRCA2: '12',
-                    ACP3: '5',
-                    BRCA1: '5',
-                    ATM: '2',
-                    DTNB: '1',
-                    ABLIM1: '1',
-                    MSH3: '1',
-                    MYB: '1',
-                    TP53: '2',
-                    PIEZO1: '1',
-                    ADAMTS20: '1',
-                    OR11H1: '1',
-                    TMEM247: '1',
-                });
+                await clickElement('[data-test=ShowUnknown]');
+                await waitForStudyView();
+                assert.deepStrictEqual(
+                    await geneTableCounts('mutations-table'),
+                    {
+                        BRCA2: '12',
+                        ACP3: '5',
+                        BRCA1: '5',
+                        ATM: '2',
+                        DTNB: '1',
+                        ABLIM1: '1',
+                        MSH3: '1',
+                        MYB: '1',
+                        TP53: '2',
+                        PIEZO1: '1',
+                        ADAMTS20: '1',
+                        OR11H1: '1',
+                        TMEM247: '1',
+                    }
+                );
                 // does not filter structural variant table
                 // (take top ten, as react does not render all rows)
                 assert.deepStrictEqual(
-                    sortDescLimit(geneTableCounts('structural variants-table')),
+                    sortDescLimit(
+                        await geneTableCounts('structural variants-table')
+                    ),
                     SV_COUNTS_SORT_DESC_10
                 );
                 // does not filter cna table
                 assert.deepStrictEqual(
-                    geneTableCounts('copy number alterations-table'),
+                    await geneTableCounts('copy number alterations-table'),
                     {
                         ERCC5_AMP: '7',
                         AURKAIP1_AMP: '7',
@@ -183,24 +203,27 @@ describe('alteration filter menu', function() {
             });
 
             // -+=+ DRIVER ANNOTATIONS +=+-
-            it('filters tables when unchecking driver checkbox', () => {
-                clickCheckBoxStudyView('Putative drivers');
-                assert.deepStrictEqual(geneTableCounts('mutations-table'), {
-                    BRCA2: '12',
-                    ACP3: '5',
-                    BRCA1: '3',
-                    PIEZO1: '1',
-                    ATM: '2',
-                    TP53: '2',
-                    ADAMTS20: '1',
-                    TMEM247: '1',
-                    DTNB: '1',
-                    MSH3: '1',
-                    MYB: '1',
-                });
+            it('filters tables when unchecking driver checkbox', async () => {
+                await clickCheckBoxStudyView('Putative drivers');
+                assert.deepStrictEqual(
+                    await geneTableCounts('mutations-table'),
+                    {
+                        BRCA2: '12',
+                        ACP3: '5',
+                        BRCA1: '3',
+                        PIEZO1: '1',
+                        ATM: '2',
+                        TP53: '2',
+                        ADAMTS20: '1',
+                        TMEM247: '1',
+                        DTNB: '1',
+                        MSH3: '1',
+                        MYB: '1',
+                    }
+                );
 
                 assert.deepStrictEqual(
-                    geneTableCounts('copy number alterations-table'),
+                    await geneTableCounts('copy number alterations-table'),
                     {
                         AURKAIP1_AMP: '7',
                         ATAD3A_AMP: '7',
@@ -220,23 +243,26 @@ describe('alteration filter menu', function() {
                 );
             });
 
-            it('filters tables when unchecking passenger checkbox', () => {
-                clickCheckBoxStudyView('Putative passengers');
-                assert.deepStrictEqual(geneTableCounts('mutations-table'), {
-                    BRCA2: '12',
-                    ACP3: '5',
-                    BRCA1: '4',
-                    ATM: '2',
-                    ABLIM1: '1',
-                    TP53: '2',
-                    ADAMTS20: '1',
-                    OR11H1: '1',
-                });
+            it('filters tables when unchecking passenger checkbox', async () => {
+                await clickCheckBoxStudyView('Putative passengers');
+                assert.deepStrictEqual(
+                    await geneTableCounts('mutations-table'),
+                    {
+                        BRCA2: '12',
+                        ACP3: '5',
+                        BRCA1: '4',
+                        ATM: '2',
+                        ABLIM1: '1',
+                        TP53: '2',
+                        ADAMTS20: '1',
+                        OR11H1: '1',
+                    }
+                );
 
                 // For Structural Variants: see custom-driver-annotations-in-study-view.spec.js
 
                 assert.deepStrictEqual(
-                    geneTableCounts('copy number alterations-table'),
+                    await geneTableCounts('copy number alterations-table'),
                     {
                         ERCC5_AMP: '7',
                         AURKAIP1_AMP: '7',
@@ -256,24 +282,27 @@ describe('alteration filter menu', function() {
                 );
             });
 
-            it('filters tables when unchecking when unchecking unknown oncogenicity checkbox', () => {
-                $('[data-test=ShowUnknownOncogenicity]').click();
-                waitForStudyView();
-                assert.deepStrictEqual(geneTableCounts('mutations-table'), {
-                    BRCA1: '3',
-                    PIEZO1: '1',
-                    DTNB: '1',
-                    ABLIM1: '1',
-                    MSH3: '1',
-                    MYB: '1',
-                    OR11H1: '1',
-                    TMEM247: '1',
-                });
+            it('filters tables when unchecking when unchecking unknown oncogenicity checkbox', async () => {
+                await clickElement('[data-test=ShowUnknownOncogenicity]');
+                await waitForStudyView();
+                assert.deepStrictEqual(
+                    await geneTableCounts('mutations-table'),
+                    {
+                        BRCA1: '3',
+                        PIEZO1: '1',
+                        DTNB: '1',
+                        ABLIM1: '1',
+                        MSH3: '1',
+                        MYB: '1',
+                        OR11H1: '1',
+                        TMEM247: '1',
+                    }
+                );
 
                 // For Structural Variants: see custom-driver-annotations-in-study-view.spec.js
 
                 assert.deepStrictEqual(
-                    geneTableCounts('copy number alterations-table'),
+                    await geneTableCounts('copy number alterations-table'),
                     {
                         ERCC5_AMP: '1',
                         ACAP3_AMP: '1',
@@ -284,9 +313,9 @@ describe('alteration filter menu', function() {
                 );
             });
 
-            it('filters structural variant tables when unchecking when unchecking somatic oncogenicity checkbox', () => {
-                $('[data-test=HideSomatic]').click();
-                waitForStudyView();
+            it('filters structural variant tables when unchecking when unchecking somatic oncogenicity checkbox', async () => {
+                await clickElement('[data-test=HideSomatic]');
+                await waitForStudyView();
                 assert.strictEqual(
                     Object.keys(geneTableCounts('structural variants-table'))
                         .length,
@@ -295,28 +324,31 @@ describe('alteration filter menu', function() {
             });
 
             // -+=+ TIER ANNOTATIONS +=+-
-            it('does not filter tables when checking all tier checkboxes', () => {
-                waitForStudyView();
-                assert.deepStrictEqual(geneTableCounts('mutations-table'), {
-                    BRCA2: '12',
-                    ACP3: '5',
-                    BRCA1: '5',
-                    ATM: '2',
-                    DTNB: '1',
-                    ABLIM1: '1',
-                    MSH3: '1',
-                    MYB: '1',
-                    TP53: '2',
-                    PIEZO1: '1',
-                    ADAMTS20: '1',
-                    OR11H1: '1',
-                    TMEM247: '1',
-                });
+            it('does not filter tables when checking all tier checkboxes', async () => {
+                await waitForStudyView();
+                assert.deepStrictEqual(
+                    await geneTableCounts('mutations-table'),
+                    {
+                        BRCA2: '12',
+                        ACP3: '5',
+                        BRCA1: '5',
+                        ATM: '2',
+                        DTNB: '1',
+                        ABLIM1: '1',
+                        MSH3: '1',
+                        MYB: '1',
+                        TP53: '2',
+                        PIEZO1: '1',
+                        ADAMTS20: '1',
+                        OR11H1: '1',
+                        TMEM247: '1',
+                    }
+                );
 
                 // For Structural Variants: see custom-driver-annotations-in-study-view.spec.js
 
                 assert.deepStrictEqual(
-                    geneTableCounts('copy number alterations-table'),
+                    await geneTableCounts('copy number alterations-table'),
                     {
                         ERCC5_AMP: '7',
                         AURKAIP1_AMP: '7',
@@ -336,17 +368,20 @@ describe('alteration filter menu', function() {
                 );
             });
 
-            it('filters tables when checking only Class 1 checkbox', () => {
-                selectTier('Class_1');
-                waitForStudyView();
-                assert.deepStrictEqual(geneTableCounts('mutations-table'), {
-                    BRCA1: '3',
-                    ABLIM1: '1',
-                    DTNB: '1',
-                });
+            it('filters tables when checking only Class 1 checkbox', async () => {
+                await selectTier('Class_1');
+                await waitForStudyView();
+                assert.deepStrictEqual(
+                    await geneTableCounts('mutations-table'),
+                    {
+                        BRCA1: '3',
+                        ABLIM1: '1',
+                        DTNB: '1',
+                    }
+                );
 
                 assert.deepStrictEqual(
-                    geneTableCounts('copy number alterations-table'),
+                    await geneTableCounts('copy number alterations-table'),
                     {
                         ATAD3B_HOMDEL: '1',
                         AGRN_AMP: '1',
@@ -354,20 +389,23 @@ describe('alteration filter menu', function() {
                 );
             });
 
-            it('filters tables when checking only Class 2 checkbox', () => {
-                selectTier('Class_2');
-
-                assert.deepStrictEqual(geneTableCounts('mutations-table'), {
-                    TMEM247: '1',
-                });
+            it('filters tables when checking only Class 2 checkbox', async () => {
+                await selectTier('Class_2');
 
                 assert.deepStrictEqual(
-                    geneTableCounts('structural variants-table'),
+                    await geneTableCounts('mutations-table'),
+                    {
+                        TMEM247: '1',
+                    }
+                );
+
+                assert.deepStrictEqual(
+                    await geneTableCounts('structural variants-table'),
                     { ALK: '1', EML4: '1' }
                 );
 
                 assert.deepStrictEqual(
-                    geneTableCounts('copy number alterations-table'),
+                    await geneTableCounts('copy number alterations-table'),
                     {
                         ATAD3A_HOMDEL: '1',
                         ACAP3_AMP: '1',
@@ -375,36 +413,42 @@ describe('alteration filter menu', function() {
                 );
             });
 
-            it('filters tables when checking only Class 3 checkbox', () => {
-                selectTier('Class_3');
-                waitForStudyView();
-                assert.deepStrictEqual(geneTableCounts('mutations-table'), {
-                    MSH3: '1',
-                    PIEZO1: '1',
-                });
+            it('filters tables when checking only Class 3 checkbox', async () => {
+                await selectTier('Class_3');
+                await waitForStudyView();
+                assert.deepStrictEqual(
+                    await geneTableCounts('mutations-table'),
+                    {
+                        MSH3: '1',
+                        PIEZO1: '1',
+                    }
+                );
 
                 assert.deepStrictEqual(
-                    geneTableCounts('structural variants-table'),
+                    await geneTableCounts('structural variants-table'),
                     { NCOA4: '1', RET: '1' }
                 );
 
                 assert.strictEqual(
                     Object.keys(
-                        geneTableCounts('copy number alterations-table')
+                        await geneTableCounts('copy number alterations-table')
                     ).length,
                     0
                 );
             });
 
-            it('filters tables when checking only Class 4 checkbox', () => {
-                selectTier('Class_4');
-                waitForStudyView();
-                assert.deepStrictEqual(geneTableCounts('mutations-table'), {
-                    ADAMTS20: '1',
-                });
+            it('filters tables when checking only Class 4 checkbox', async () => {
+                await selectTier('Class_4');
+                await waitForStudyView();
+                assert.deepStrictEqual(
+                    await geneTableCounts('mutations-table'),
+                    {
+                        ADAMTS20: '1',
+                    }
+                );
 
                 assert.deepStrictEqual(
-                    geneTableCounts('structural variants-table'),
+                    await geneTableCounts('structural variants-table'),
                     {
                         KIAA1549: '1',
                         BRAF: '1',
@@ -415,29 +459,32 @@ describe('alteration filter menu', function() {
 
                 assert.strictEqual(
                     Object.keys(
-                        geneTableCounts('copy number alterations-table')
+                        await geneTableCounts('copy number alterations-table')
                     ).length,
                     0
                 );
             });
 
-            it('filters tables when checking only unknown tier checkbox', () => {
-                selectTier('ShowUnknownTier');
-                waitForStudyView();
-                assert.deepStrictEqual(geneTableCounts('mutations-table'), {
-                    BRCA2: '12',
-                    ACP3: '5',
-                    ATM: '2',
-                    BRCA1: '2',
-                    TP53: '2',
-                    MYB: '1',
-                    OR11H1: '1',
-                });
-
-                sortPaneByCount('structural variants-table');
+            it('filters tables when checking only unknown tier checkbox', async () => {
+                await selectTier('ShowUnknownTier');
+                await waitForStudyView();
                 assert.deepStrictEqual(
-                    sortDescLimit(
-                        geneTableCounts('structural variants-table'),
+                    await geneTableCounts('mutations-table'),
+                    {
+                        BRCA2: '12',
+                        ACP3: '5',
+                        ATM: '2',
+                        BRCA1: '2',
+                        TP53: '2',
+                        MYB: '1',
+                        OR11H1: '1',
+                    }
+                );
+
+                await sortPaneByCount('structural variants-table');
+                assert.deepStrictEqual(
+                    await sortDescLimit(
+                        await geneTableCounts('structural variants-table'),
                         8
                     ),
                     {
@@ -452,7 +499,7 @@ describe('alteration filter menu', function() {
                     }
                 );
                 assert.deepStrictEqual(
-                    geneTableCounts('copy number alterations-table'),
+                    await geneTableCounts('copy number alterations-table'),
                     {
                         ERCC5_AMP: '7',
                         AURKAIP1_AMP: '7',
@@ -474,101 +521,122 @@ describe('alteration filter menu', function() {
         });
 
         describe('filtering of study view samples', () => {
-            beforeEach(() => {
-                goToUrlAndSetLocalStorage(studyViewUrl, true);
-                waitForStudyView();
-                turnOffCancerGenesFilters();
-                openAlterationFilterMenu();
+            beforeEach(async () => {
+                await goToUrlAndSetLocalStorage(studyViewUrl, true);
+                await waitForStudyView();
+                await turnOffCancerGenesFilters();
+                await openAlterationFilterMenu();
             });
 
-            it('adds breadcrumb text for mutations', () => {
-                clickCheckBoxStudyView('Somatic');
-                clickCheckBoxStudyView('Putative passengers');
-                $('[data-test=ToggleAllDriverTiers]').click();
-                $('[data-test=ShowUnknownTier]').click();
-                waitForStudyView();
-                $('//*[@data-test="mutations-table"]')
-                    .$('input')
-                    .click();
-                $('//*[@data-test="mutations-table"]')
-                    .$('button=Select Samples')
-                    .click();
-                var sections = $('[data-test=groupedGeneFilterIcons]').$$(
-                    'div'
-                );
+            it('adds breadcrumb text for mutations', async () => {
+                await clickCheckBoxStudyView('Somatic');
+                await clickCheckBoxStudyView('Putative passengers');
+                await clickElement('[data-test=ToggleAllDriverTiers]');
+                await clickElement('[data-test=ShowUnknownTier]');
+                await waitForStudyView();
+                const element = await getNestedElement([
+                    '//*[@data-test="mutations-table"]',
+                    'input',
+                ]);
+                await element.click();
+                await (
+                    await getNestedElement([
+                        '//*[@data-test="mutations-table"]',
+                        'button=Select Samples',
+                    ])
+                ).click();
+                const sections = await (
+                    await getElement('[data-test=groupedGeneFilterIcons]')
+                ).$$('div');
                 assert.strictEqual(
-                    sections[0].$$('span')[1].getText(),
+                    await (await sections[0].$$('span'))[1].getText(),
                     'driver or unknown'
                 );
                 assert.strictEqual(
-                    sections[1].$$('span')[1].getText(),
+                    await (await sections[1].$$('span'))[1].getText(),
                     'germline or unknown'
                 );
                 assert.strictEqual(
-                    sections[2].$$('span')[1].getText(),
+                    await (await sections[2].$$('span'))[1].getText(),
                     'unknown'
                 );
             });
 
-            it('adds breadcrumb text for cnas', () => {
+            it('adds breadcrumb text for cnas', async () => {
                 // does not include the mutation status settings
-                clickCheckBoxStudyView('Somatic');
-                clickCheckBoxStudyView('Putative drivers');
-                $('//*[@data-test="copy number alterations-table"]')
-                    .$('input')
-                    .click();
-                $('//*[@data-test="copy number alterations-table"]')
-                    .$('button=Select Samples')
-                    .click();
-                var sections = $('[data-test=groupedGeneFilterIcons]').$$(
-                    'div'
-                );
+                await clickCheckBoxStudyView('Somatic');
+                await clickCheckBoxStudyView('Putative drivers');
+                await (
+                    await getNestedElement([
+                        '//*[@data-test="copy number alterations-table"]',
+                        'input',
+                    ])
+                ).click();
+                await (
+                    await getNestedElement([
+                        '//*[@data-test="copy number alterations-table"]',
+                        'button=Select Samples',
+                    ])
+                ).click();
+                const sections = await (
+                    await getElement('[data-test=groupedGeneFilterIcons]')
+                ).$$('div');
                 assert.strictEqual(sections.length, 1);
                 assert.strictEqual(
-                    sections[0].$$('span')[1].getText(),
+                    await (await sections[0].$$('span'))[1].getText(),
                     'passenger or unknown'
                 );
             });
 
-            it('reduced samples in genes table', () => {
-                clickCheckBoxStudyView('Somatic');
-                clickCheckBoxStudyView('Putative passengers');
-                $('//*[@data-test="mutations-table"]')
-                    .$$('input')[1]
-                    .click(); // click ATM gene
-                $('//*[@data-test="mutations-table"]')
-                    .$('button=Select Samples')
-                    .click();
-                assert.deepStrictEqual(geneTableCounts('mutations-table'), {
-                    BRCA2: '1',
-                    BRCA1: '1',
-                    ATM: '1',
-                    TP53: '1',
-                });
+            it('reduced samples in genes table', async () => {
+                await clickCheckBoxStudyView('Somatic');
+                await clickCheckBoxStudyView('Putative passengers');
+
+                await (
+                    await (
+                        await getElement('//*[@data-test="mutations-table"]')
+                    ).$$('input')
+                )[1].click(); // click ATM gene
+
+                await (
+                    await getNestedElement([
+                        '//*[@data-test="mutations-table"]',
+                        'button=Select Samples',
+                    ])
+                ).click();
+                assert.deepStrictEqual(
+                    await geneTableCounts('mutations-table'),
+                    {
+                        BRCA2: '1',
+                        BRCA1: '1',
+                        ATM: '1',
+                        TP53: '1',
+                    }
+                );
             });
         });
     });
 
     describe('group comparison - results view ', () => {
-        before(() => {
-            goToUrlAndSetLocalStorage(comparisonResultsViewUrl, true);
-            waitForComparisonTab();
+        before(async () => {
+            await goToUrlAndSetLocalStorage(comparisonResultsViewUrl, true);
+            await waitForComparisonTab();
 
             // turn off fusion and cna types
-            openAlterationTypeSelectionMenu();
-            clickCheckBoxResultsView('Structural Variants / Fusions');
-            clickCheckBoxResultsView('Copy Number Alterations');
-            $('[data-test=buttonSelectAlterations]').click();
-            waitForUpdateResultsView();
+            await openAlterationTypeSelectionMenu();
+            await clickCheckBoxResultsView('Structural Variants / Fusions');
+            await clickCheckBoxResultsView('Copy Number Alterations');
+            await clickElement('[data-test=buttonSelectAlterations]');
+            await waitForUpdateResultsView();
 
-            openAlterationFilterMenuGroupComparison();
+            await openAlterationFilterMenuGroupComparison();
         });
 
         // -+=+ MUTATION STATUS +=+-
-        it('filters enrichment table when unchecking germline checkbox', () => {
-            waitForStudyView();
-            clickCheckBoxResultsView('Germline');
-            assert.deepStrictEqual(enrichmentTableCounts(), {
+        it('filters enrichment table when unchecking germline checkbox', async () => {
+            await waitForStudyView();
+            await clickCheckBoxResultsView('Germline');
+            assert.deepStrictEqual(await enrichmentTableCounts(), {
                 DTNB: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                 ADAMTS20: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                 ATM: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
@@ -578,23 +646,23 @@ describe('alteration filter menu', function() {
                 BRCA2: { alt: '0 (0.00%)', unalt: '6 (30.00%)' },
                 ACP3: { alt: '0 (0.00%)', unalt: '5 (22.73%)' },
             });
-            clickCheckBoxResultsView('Germline');
+            await clickCheckBoxResultsView('Germline');
         });
 
-        it('filters enrichment table when unchecking somatic checkbox', () => {
-            clickCheckBoxResultsView('Somatic');
-            assert.deepStrictEqual(enrichmentTableCounts(), {
+        it('filters enrichment table when unchecking somatic checkbox', async () => {
+            await clickCheckBoxResultsView('Somatic');
+            assert.deepStrictEqual(await enrichmentTableCounts(), {
                 ATM: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                 BRCA1: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                 BRCA2: { alt: '1 (100.00%)', unalt: '5 (25.00%)' },
             });
-            clickCheckBoxResultsView('Somatic');
+            await clickCheckBoxResultsView('Somatic');
         });
 
-        it('filters enrichment table when unchecking unknown status checkbox', () => {
-            $('[data-test=ShowUnknown]').click();
-            waitForUpdateResultsView();
-            assert.deepStrictEqual(enrichmentTableCounts(), {
+        it('filters enrichment table when unchecking unknown status checkbox', async () => {
+            await clickElement('[data-test=ShowUnknown]');
+            await waitForUpdateResultsView();
+            assert.deepStrictEqual(await enrichmentTableCounts(), {
                 DTNB: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                 ADAMTS20: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                 ATM: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
@@ -604,13 +672,13 @@ describe('alteration filter menu', function() {
                 BRCA2: { alt: '1 (100.00%)', unalt: '11 (55.00%)' },
                 ACP3: { alt: '0 (0.00%)', unalt: '5 (22.73%)' },
             });
-            $('[data-test=ShowUnknown]').click();
+            await clickElement('[data-test=ShowUnknown]');
         });
 
         // -+=+ DRIVER ANNOTATIONS +=+-
-        it('filters enrichment table when unchecking driver checkbox', () => {
-            clickCheckBoxResultsView('Putative drivers');
-            assert.deepStrictEqual(enrichmentTableCounts(), {
+        it('filters enrichment table when unchecking driver checkbox', async () => {
+            await clickCheckBoxResultsView('Putative drivers');
+            assert.deepStrictEqual(await enrichmentTableCounts(), {
                 DTNB: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                 ADAMTS20: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                 ATM: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
@@ -619,12 +687,12 @@ describe('alteration filter menu', function() {
                 BRCA2: { alt: '1 (100.00%)', unalt: '11 (55.00%)' },
                 ACP3: { alt: '0 (0.00%)', unalt: '5 (22.73%)' },
             });
-            clickCheckBoxResultsView('Putative drivers');
+            await clickCheckBoxResultsView('Putative drivers');
         });
 
-        it('filters enrichment table when unchecking passenger checkbox', () => {
-            clickCheckBoxResultsView('Putative passengers');
-            assert.deepStrictEqual(enrichmentTableCounts(), {
+        it('filters enrichment table when unchecking passenger checkbox', async () => {
+            await clickCheckBoxResultsView('Putative passengers');
+            assert.deepStrictEqual(await enrichmentTableCounts(), {
                 ADAMTS20: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                 ATM: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                 BRCA1: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
@@ -632,23 +700,23 @@ describe('alteration filter menu', function() {
                 BRCA2: { alt: '1 (100.00%)', unalt: '11 (55.00%)' },
                 ACP3: { alt: '0 (0.00%)', unalt: '5 (22.73%)' },
             });
-            clickCheckBoxResultsView('Putative passengers');
+            await clickCheckBoxResultsView('Putative passengers');
         });
 
-        it('filters enrichment table when unchecking unknown oncogenicity checkbox', () => {
-            $('[data-test=ShowUnknownOncogenicity]').click();
-            waitForUpdateResultsView();
-            assert.deepStrictEqual(enrichmentTableCounts(), {
+        it('filters enrichment table when unchecking unknown oncogenicity checkbox', async () => {
+            await clickElement('[data-test=ShowUnknownOncogenicity]');
+            await waitForUpdateResultsView();
+            assert.deepStrictEqual(await enrichmentTableCounts(), {
                 DTNB: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                 OR11H1: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                 TMEM247: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
             });
-            $('[data-test=ShowUnknownOncogenicity]').click();
+            await clickElement('[data-test=ShowUnknownOncogenicity]');
         });
 
         // -+=+ TIER ANNOTATIONS +=+-
-        it('does not filter tables when checking all tier checkboxes', () => {
-            assert.deepStrictEqual(enrichmentTableCounts(), {
+        it('does not filter tables when checking all tier checkboxes', async () => {
+            assert.deepStrictEqual(await enrichmentTableCounts(), {
                 DTNB: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                 ADAMTS20: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                 ATM: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
@@ -660,60 +728,62 @@ describe('alteration filter menu', function() {
             });
         });
 
-        it('filters tables when checking Class 2 checkbox', () => {
+        it('filters tables when checking Class 2 checkbox', async () => {
             // browser.pause(1000_000_000)
-            selectTier('Class_2');
-            waitForUpdateResultsView();
-            assert.deepStrictEqual(enrichmentTableCounts(), {
+            await selectTier('Class_2');
+            await waitForUpdateResultsView();
+            assert.deepStrictEqual(await enrichmentTableCounts(), {
                 TMEM247: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
             });
-            $('[data-test=Class_2]').click();
+            await clickElement('[data-test=Class_2]');
         });
 
-        it('filters tables when checking unknown tier checkbox', () => {
-            $('[data-test=ShowUnknownTier]').click();
-            waitForUpdateResultsView();
-            assert.deepStrictEqual(enrichmentTableCounts(), {
+        it('filters tables when checking unknown tier checkbox', async () => {
+            await clickElement('[data-test=ShowUnknownTier]');
+            await waitForUpdateResultsView();
+            assert.deepStrictEqual(await enrichmentTableCounts(), {
                 ATM: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                 BRCA1: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                 OR11H1: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                 BRCA2: { alt: '1 (100.00%)', unalt: '11 (55.00%)' },
                 ACP3: { alt: '0 (0.00%)', unalt: '5 (22.73%)' },
             });
-            $('[data-test=ShowUnknownTier]').click();
+            clickElement('[data-test=ShowUnknownTier]');
         });
     });
 });
 
-function selectTier(tier) {
-    const $toggleAllTiers = $('[data-test=ToggleAllDriverTiers]');
-    $toggleAllTiers.waitForExist();
-    $toggleAllTiers.waitForClickable();
-    $toggleAllTiers.click();
-    const $tier = $(`[data-test=${tier}]`);
-    $tier.waitForExist();
-    $tier.waitForDisplayed();
-    $tier.waitForClickable();
-    $tier.click();
+async function selectTier(tier) {
+    const $toggleAllTiers = await getElement(
+        '[data-test=ToggleAllDriverTiers]'
+    );
+    await $toggleAllTiers.waitForExist();
+    await $toggleAllTiers.waitForClickable();
+    await $toggleAllTiers.click();
+    const $tier = await getElement(`[data-test=${tier}]`);
+    await $tier.waitForExist();
+    await $tier.waitForDisplayed();
+    await $tier.waitForClickable();
+    await $tier.click();
 }
 
-function sortPaneByCount(pane) {
-    $('//*[@data-test="' + pane + '"]')
-        .$('span=#')
-        .click();
-    waitForStudyView();
+async function sortPaneByCount(pane) {
+    await (
+        await (await getElement('//*[@data-test="' + pane + '"]')).$('span=#')
+    ).click();
+    await waitForStudyView();
 }
 
-var clickCheckBoxStudyView = name => {
-    const checkboxContainer = $('label=' + name);
-    checkboxContainer.waitForDisplayed();
-    const checkboxField = checkboxContainer.$('input');
-    checkboxField.waitForDisplayed();
-    checkboxField.click();
-    waitForStudyView();
+const clickCheckBoxStudyView = async name => {
+    const checkboxContainer = await getElement('label=' + name);
+    await checkboxContainer.waitForDisplayed();
+    const checkboxField = await checkboxContainer.$('input');
+    await checkboxField.waitForDisplayed();
+    await checkboxField.click();
+    await waitForStudyView();
 };
 
-var sortDescLimit = (entryCounts, limit = 10) => {
+const sortDescLimit = (entryCounts, limit = 10) => {
     return Object.fromEntries(
         Object.entries(entryCounts)
             .sort((e1, e2) => e1[1] < e2[1])
@@ -721,53 +791,64 @@ var sortDescLimit = (entryCounts, limit = 10) => {
     );
 };
 
-var clickCheckBoxResultsView = name => {
-    const $el = $('label=' + name).$('input');
-    $el.waitForExist();
-    $el.waitForDisplayed();
-    $el.waitForClickable();
-    $el.click();
-    waitForUpdateResultsView();
+const clickCheckBoxResultsView = async name => {
+    const $el = await getNestedElement(['label=' + name, 'input']);
+    await $el.waitForExist();
+    await $el.waitForDisplayed();
+    await $el.waitForClickable();
+    await $el.click();
+    await waitForUpdateResultsView();
 };
 
-var geneTableCounts = dataTest => {
-    var fieldName =
+const geneTableCounts = async dataTest => {
+    const fieldName =
         dataTest === 'copy number alterations-table'
             ? 'numberOfAlteredCasesText'
             : 'numberOfAlterations';
-    var geneCells = $('//*[@data-test="' + dataTest + '"]').$$(
-        '[data-test=geneNameCell]'
+    const geneCells = await (
+        await getElement('//*[@data-test="' + dataTest + '"]')
+    ).$$('[data-test=geneNameCell]');
+    const geneNames = await Promise.all(
+        geneCells.map(async c => (await c.$('div')).getText())
     );
-    var geneNames = geneCells.map(c => c.$('div').getText());
-    var countCells = $('//*[@data-test="' + dataTest + '"]').$$(
+    const countCells = await (await $('//*[@data-test="' + dataTest + '"]')).$$(
         '[data-test=' + fieldName + ']'
     );
-    var geneCounts = countCells.map(c => c.getText());
-    var cnaCells = $('//*[@data-test="' + dataTest + '"]').$$(
-        '[data-test=cnaCell]'
-    );
-    var cnas = cnaCells.map(c => c.getText());
+    const geneCounts = await Promise.all(countCells.map(c => c.getText()));
+    const cnaCells = await (
+        await getElement('//*[@data-test="' + dataTest + '"]')
+    ).$$('[data-test=cnaCell]');
+    const cnas = await Promise.all(cnaCells.map(async c => await c.getText()));
     return geneNames.reduce((obj, geneName, index) => {
-        var suffix = '';
+        let suffix = '';
         if (cnas.length > 0) suffix = '_' + cnas[index];
-        var key = geneName + suffix;
+        const key = geneName + suffix;
         return { ...obj, [key]: geneCounts[index] };
     }, {});
 };
 
-var enrichmentTableCounts = () => {
-    var rows = $('[data-test=LazyMobXTable]')
-        .$('tbody')
-        .$$('tr');
-    var geneNames = rows.map(r =>
-        r.$('span[data-test=geneNameCell]').getText()
+const enrichmentTableCounts = async () => {
+    const tbody = await getNestedElement([
+        '[data-test=LazyMobXTable]',
+        'tbody',
+    ]);
+    const rows = await tbody.$$('tr');
+    const geneNames = await Promise.all(
+        rows.map(
+            async r =>
+                await (await r.$('span[data-test=geneNameCell]')).getText()
+        )
     );
-    var alteredCounts = $$('//*[@data-test="Altered group-CountCell"]').map(r =>
-        r.getText()
+    const alteredCounts = await Promise.all(
+        (await $$('//*[@data-test="Altered group-CountCell"]')).map(
+            async r => await r.getText()
+        )
     );
-    var unalteredCounts = $$(
-        '//*[@data-test="Unaltered group-CountCell"]'
-    ).map(r => r.getText());
+    const unalteredCounts = await Promise.all(
+        (await $$('//*[@data-test="Unaltered group-CountCell"]')).map(
+            async r => await r.getText()
+        )
+    );
     return geneNames.reduce((obj, geneName, index) => {
         return {
             ...obj,
@@ -779,27 +860,29 @@ var enrichmentTableCounts = () => {
     }, {});
 };
 
-var waitForUpdateResultsView = () => {
-    $('[data-test=LazyMobXTable]').waitForDisplayed();
+const waitForUpdateResultsView = async () => {
+    await waitForElementDisplayed('[data-test=LazyMobXTable]');
 };
 
-var turnOffCancerGenesFilters = () => {
+const turnOffCancerGenesFilters = () => {
     const activeFilterIcons = $$(
         '[data-test=gene-column-header] [data-test=header-filter-icon]'
     ).filter(e => e.getCSSProperty('color').value === 'rgba(0,0,0,1)');
     activeFilterIcons.forEach(i => i.click());
 };
 
-var openAlterationFilterMenu = () => {
+const openAlterationFilterMenu = () => {
     $('[data-test=AlterationFilterButton]').waitForDisplayed();
     $('[data-test=AlterationFilterButton]').click();
     $('[data-test=GlobalSettingsDropdown] input').waitForDisplayed();
 };
 
-var openAlterationFilterMenuGroupComparison = () => {
-    $(
+const openAlterationFilterMenuGroupComparison = async () => {
+    await waitForElementDisplayed(
         '[data-test=AlterationEnrichmentAnnotationsSelectorButton]'
-    ).waitForDisplayed();
-    $('[data-test=AlterationEnrichmentAnnotationsSelectorButton]').click();
-    $('[data-test=GlobalSettingsDropdown] input').waitForDisplayed();
+    );
+    await clickElement(
+        '[data-test=AlterationEnrichmentAnnotationsSelectorButton]'
+    );
+    await waitForElementDisplayed('[data-test=GlobalSettingsDropdown] input');
 };

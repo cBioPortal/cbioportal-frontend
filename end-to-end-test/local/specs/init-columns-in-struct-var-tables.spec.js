@@ -2,7 +2,9 @@ const assert = require('assert');
 const {
     goToUrlAndSetLocalStorageWithProperty,
     getElementByTestHandle,
-} = require('../../shared/specUtils');
+    waitForElementDisplayed,
+    getNestedElement,
+} = require('../../shared/specUtils_Async');
 const { waitForTable } = require('./namespace-columns-utils');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
@@ -22,69 +24,79 @@ describe('namespace columns in structural variant tables', function() {
         const patientViewUrl = `${CBIOPORTAL_URL}/patient?studyId=study_es_0&caseId=TCGA-A2-A04P`;
         const patientStructVarTable = 'patientview-structural-variant-table';
 
-        it('shows default columns when property is not set', () => {
-            goToUrlAndSetLocalStorageWithProperty(patientViewUrl, true, {});
-            waitForTable(patientStructVarTable);
+        it('shows default columns when property is not set', async () => {
+            await goToUrlAndSetLocalStorageWithProperty(
+                patientViewUrl,
+                true,
+                {}
+            );
+            await waitForTable(patientStructVarTable);
 
-            assert(defaultColumnsAreDisplayed());
+            assert(await defaultColumnsAreDisplayed());
         });
 
-        it('shows selected columns when property is set', () => {
-            goToUrlAndSetLocalStorageWithProperty(patientViewUrl, true, {
+        it('shows selected columns when property is set', async () => {
+            await goToUrlAndSetLocalStorageWithProperty(patientViewUrl, true, {
                 skin_patient_view_structural_variant_table_columns_show_on_init:
                     'Gene 1,Annotation,Breakpoint Type',
             });
-            waitForTable(patientStructVarTable);
-            assert(columnIsDisplayed(DEFAULT_COLS.GENE_1));
-            assert(columnIsNotDisplayed(DEFAULT_COLS.GENE_2));
-            assert(columnIsNotDisplayed(DEFAULT_COLS.STATUS));
-            assert(columnIsDisplayed(DEFAULT_COLS.ANNOTATION));
-            assert(columnIsNotDisplayed(DEFAULT_COLS.VARIANT_CLASS));
-            assert(columnIsNotDisplayed(DEFAULT_COLS.EVENT_INFO));
-            assert(columnIsNotDisplayed(DEFAULT_COLS.CONNECTION_TYPE));
-            assert(columnIsDisplayed('Breakpoint Type'));
+            await waitForTable(patientStructVarTable);
+            assert(await columnIsDisplayed(DEFAULT_COLS.GENE_1));
+            assert(await columnIsNotDisplayed(DEFAULT_COLS.GENE_2));
+            assert(await columnIsNotDisplayed(DEFAULT_COLS.STATUS));
+            assert(await columnIsDisplayed(DEFAULT_COLS.ANNOTATION));
+            assert(await columnIsNotDisplayed(DEFAULT_COLS.VARIANT_CLASS));
+            assert(await columnIsNotDisplayed(DEFAULT_COLS.EVENT_INFO));
+            assert(await columnIsNotDisplayed(DEFAULT_COLS.CONNECTION_TYPE));
+            assert(await columnIsDisplayed('Breakpoint Type'));
         });
     });
 });
 
-defaultColumnsAreDisplayed = () => {
+const defaultColumnsAreDisplayed = async () => {
     const patientStructVarTable = 'patientview-structural-variant-table';
     return (
-        $("//span[text() = '" + DEFAULT_COLS.GENE_1 + "']").waitForDisplayed({
-            timeout: 10000,
-        }) &&
-        getElementByTestHandle(patientStructVarTable).$(
+        (await waitForElementDisplayed(
+            "//span[text() = '" + DEFAULT_COLS.GENE_1 + "']",
+            {
+                timeout: 10000,
+            }
+        )) &&
+        (await (await getElementByTestHandle(patientStructVarTable)).$(
             `span=${DEFAULT_COLS.GENE_2}`
-        ) &&
-        getElementByTestHandle(patientStructVarTable).$(
+        )) &&
+        (await (await getElementByTestHandle(patientStructVarTable)).$(
             `span=${DEFAULT_COLS.STATUS}`
-        ) &&
-        getElementByTestHandle(patientStructVarTable).$(
+        )) &&
+        (await (await getElementByTestHandle(patientStructVarTable)).$(
             `span=${DEFAULT_COLS.ANNOTATION}`
-        ) &&
-        getElementByTestHandle(patientStructVarTable).$(
+        )) &&
+        (await (await getElementByTestHandle(patientStructVarTable)).$(
             `span=${DEFAULT_COLS.VARIANT_CLASS}`
-        ) &&
-        getElementByTestHandle(patientStructVarTable).$(
+        )) &&
+        (await (await getElementByTestHandle(patientStructVarTable)).$(
             `span=${DEFAULT_COLS.EVENT_INFO}`
-        ) &&
-        getElementByTestHandle(patientStructVarTable).$(
+        )) &&
+        (await (await getElementByTestHandle(patientStructVarTable)).$(
             `span=${DEFAULT_COLS.CONNECTION_TYPE}`
-        ) &&
-        getElementByTestHandle(patientStructVarTable).$(
+        )) &&
+        (await (await getElementByTestHandle(patientStructVarTable)).$(
             `span='Breakpoint Type'`
-        )
+        ))
     );
 };
 
-function columnIsDisplayed(column) {
-    return getElementByTestHandle('patientview-structural-variant-table').$(
-        `span=${column}`
-    );
+async function columnIsDisplayed(column) {
+    return (
+        await getElementByTestHandle('patientview-structural-variant-table')
+    ).$(`span=${column}`);
 }
 
-function columnIsNotDisplayed(column) {
-    return !$(`[data-test=${'patientview-structural-variant-table'}]`)
-        .$("//span[text() = '" + column + "']")
-        .isDisplayed();
+async function columnIsNotDisplayed(column) {
+    return !(await (
+        await getNestedElement([
+            `[data-test=${'patientview-structural-variant-table'}]`,
+            "//span[text() = '" + column + "']",
+        ])
+    ).isDisplayed());
 }
