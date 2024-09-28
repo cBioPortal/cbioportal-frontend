@@ -1,4 +1,10 @@
-const { goToUrlAndSetLocalStorage } = require('../../shared/specUtils');
+const {
+    goToUrlAndSetLocalStorage,
+    getNestedElement,
+    waitForElementDisplayed,
+    clickElement,
+    getElement,
+} = require('../../shared/specUtils_Async');
 const assert = require('assert');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
@@ -18,56 +24,71 @@ const PILL_TAG = 'div[data-test="pill-tag"]';
 const DELETE_PILL_TAG = 'span[data-test="pill-tag-delete"]';
 
 describe('Toggling of study view filters autosubmit', function() {
-    it('autocommits filters by default', () => {
-        goToUrlAndSetLocalStorage(studyViewUrl, true);
+    it('autocommits filters by default', async () => {
+        await goToUrlAndSetLocalStorage(studyViewUrl, true);
 
         //this seems to fix issue with intermittent fail of test due to
         //menu not being clickeable
-        browser.setWindowSize(1600, 1000);
+        await browser.setWindowSize(1600, 1000);
 
-        selectMutationProfile(0);
-        selectSamples();
+        await selectMutationProfile(0);
+        await selectSamples();
 
-        const filterInHeader = $(STUDY_VIEW_HEADER).$(PUTATIVE_PROFILE);
-        assert(filterInHeader.isDisplayed());
-        const isFilterQueued = hasFilterClass(filterInHeader, 'pending');
+        const filterInHeader = await getNestedElement([
+            STUDY_VIEW_HEADER,
+            PUTATIVE_PROFILE,
+        ]);
+        assert(await filterInHeader.isDisplayed());
+        const isFilterQueued = await hasFilterClass(filterInHeader, 'pending');
         assert(!isFilterQueued);
     });
 
-    it('can disable filter submission in settings menu', () => {
-        $(SETTINGS_MENU_BUTTON).waitForDisplayed({ timeout: 20000 });
-        $(SETTINGS_MENU_BUTTON).click();
-        $(DISABLE_AUTOCOMMIT_FIELD).waitForDisplayed({ timeout: 20000 });
-        $(DISABLE_AUTOCOMMIT_FIELD).click();
+    it('can disable filter submission in settings menu', async () => {
+        await waitForElementDisplayed(SETTINGS_MENU_BUTTON, { timeout: 20000 });
+        await clickElement(SETTINGS_MENU_BUTTON);
+        await waitForElementDisplayed(DISABLE_AUTOCOMMIT_FIELD, {
+            timeout: 20000,
+        });
+        await clickElement(DISABLE_AUTOCOMMIT_FIELD);
     });
 
-    it('queues new filters when autosubmit disabled', () => {
+    it('queues new filters when autosubmit disabled', async () => {
         // no submit button
-        assert.equal($(SUBMIT_STUDY_FILTERS).isExisting(), false);
+        assert.equal(
+            await (await getElement(SUBMIT_STUDY_FILTERS)).isExisting(),
+            false
+        );
 
-        selectMutationProfile(1);
+        await selectMutationProfile(1);
 
-        queueFilter();
+        await queueFilter();
 
         // now we see the submit button
-        $(SUBMIT_STUDY_FILTERS).waitForDisplayed();
+        await waitForElementDisplayed(SUBMIT_STUDY_FILTERS);
 
-        const queuedFilterInHeader = $(STUDY_VIEW_HEADER).$(LOG2_PROFILE);
-        assert(queuedFilterInHeader.isDisplayed());
-        const isFilterQueued = hasFilterClass(queuedFilterInHeader, 'pending');
+        const queuedFilterInHeader = await getNestedElement([
+            STUDY_VIEW_HEADER,
+            LOG2_PROFILE,
+        ]);
+        assert(await queuedFilterInHeader.isDisplayed());
+        const isFilterQueued = await hasFilterClass(
+            queuedFilterInHeader,
+            'pending'
+        );
         assert(isFilterQueued);
     });
     //
-    it('queues deleted filters when autosubmit disabled', () => {
-        const submittedFilterInHeader = $(STUDY_VIEW_HEADER).$(
-            PUTATIVE_PROFILE
-        );
-        assert(submittedFilterInHeader.isDisplayed());
+    it('queues deleted filters when autosubmit disabled', async () => {
+        const submittedFilterInHeader = await getNestedElement([
+            STUDY_VIEW_HEADER,
+            PUTATIVE_PROFILE,
+        ]);
+        assert(await submittedFilterInHeader.isDisplayed());
 
-        deleteFilter(submittedFilterInHeader);
+        await deleteFilter(submittedFilterInHeader);
 
-        assert(submittedFilterInHeader.isDisplayed());
-        const isFilterQueued = hasFilterClass(
+        assert(await submittedFilterInHeader.isDisplayed());
+        const isFilterQueued = await hasFilterClass(
             submittedFilterInHeader,
             'pending'
         );
@@ -79,45 +100,60 @@ describe('Toggling of study view filters autosubmit', function() {
         assert(isFilterDeleted);
     });
     //
-    it('submits queued and deleted filters when manually submitting', () => {
-        const queuedDeletedFilterInHeader = $(STUDY_VIEW_HEADER).$(
-            PUTATIVE_PROFILE
+    it('submits queued and deleted filters when manually submitting', async () => {
+        const queuedDeletedFilterInHeader = await getNestedElement([
+            STUDY_VIEW_HEADER,
+            PUTATIVE_PROFILE,
+        ]);
+        assert(await queuedDeletedFilterInHeader.isDisplayed());
+        const queuedFilterInHeader = await getNestedElement([
+            STUDY_VIEW_HEADER,
+            LOG2_PROFILE,
+        ]);
+        assert(await queuedFilterInHeader.isDisplayed());
+
+        await clickElement(SUBMIT_STUDY_FILTERS);
+
+        await browser.waitUntil(
+            async () => !(await queuedDeletedFilterInHeader.isDisplayed())
         );
-        assert(queuedDeletedFilterInHeader.isDisplayed());
-        const queuedFilterInHeader = $(STUDY_VIEW_HEADER).$(LOG2_PROFILE);
-        assert(queuedFilterInHeader.isDisplayed());
-
-        $(SUBMIT_STUDY_FILTERS).click();
-
-        browser.waitUntil(() => !queuedDeletedFilterInHeader.isDisplayed());
-        assert(queuedFilterInHeader.isDisplayed());
-        const isFilterQueued = hasFilterClass(queuedFilterInHeader, 'pending');
+        assert(await queuedFilterInHeader.isDisplayed());
+        const isFilterQueued = await hasFilterClass(
+            queuedFilterInHeader,
+            'pending'
+        );
         assert(!isFilterQueued);
     });
 });
 
-function selectMutationProfile(index = 0) {
-    $(GENOMIC_PROFILES_SAMPLE_COUNT_TABLE)
-        .$$('input')
-        [index].click();
+async function selectMutationProfile(index = 0) {
+    await (
+        await getNestedElement([GENOMIC_PROFILES_SAMPLE_COUNT_TABLE, 'input'])
+    )[index].click();
 }
 
-function queueFilter() {
-    $(GENOMIC_PROFILES_SAMPLE_COUNT_TABLE)
-        .$(ADD_FILTERS_BUTTON)
-        .click();
+async function queueFilter() {
+    await (
+        await getNestedElement([
+            GENOMIC_PROFILES_SAMPLE_COUNT_TABLE,
+            ADD_FILTERS_BUTTON,
+        ])
+    ).click();
 }
 
-function selectSamples() {
-    $(GENOMIC_PROFILES_SAMPLE_COUNT_TABLE)
-        .$(SELECT_SAMPLES_BUTTON)
-        .click();
+async function selectSamples() {
+    await (
+        await getNestedElement([
+            GENOMIC_PROFILES_SAMPLE_COUNT_TABLE,
+            SELECT_SAMPLES_BUTTON,
+        ])
+    ).click();
 }
 
 /**
  * Execute in browser to be able to use parentElement.closest()
  */
-function hasFilterClass(queuedFilterInHeader, toInclude) {
+async function hasFilterClass(queuedFilterInHeader, toInclude) {
     return browser.execute(
         (queuedFilterInHeader, toInclude, PILL_TAG) => {
             return queuedFilterInHeader.parentElement
@@ -131,8 +167,8 @@ function hasFilterClass(queuedFilterInHeader, toInclude) {
     );
 }
 
-function deleteFilter(queuedFilterInHeader) {
-    browser.execute(
+async function deleteFilter(queuedFilterInHeader) {
+    await browser.execute(
         (queuedFilterInHeader, PILL_TAG, DELETE_PILL_TAG) => {
             return queuedFilterInHeader.parentElement
                 .closest(PILL_TAG)

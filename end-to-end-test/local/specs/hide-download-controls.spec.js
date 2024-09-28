@@ -1,16 +1,19 @@
-var assert = require('assert');
-var goToUrlAndSetLocalStorage = require('../../shared/specUtils')
-    .goToUrlAndSetLocalStorage;
-var waitForStudyQueryPage = require('../../shared/specUtils')
-    .waitForStudyQueryPage;
-var waitForOncoprint = require('../../shared/specUtils').waitForOncoprint;
-var useExternalFrontend = require('../../shared/specUtils').useExternalFrontend;
-var waitForPatientView = require('../../shared/specUtils').waitForPatientView;
-var waitForStudyView = require('../../shared/specUtils').waitForStudyView;
-var jsApiHover = require('../../shared/specUtils').jsApiHover;
-var setServerConfiguration = require('../../shared/specUtils')
-    .setServerConfiguration;
-var openGroupComparison = require('../../shared/specUtils').openGroupComparison;
+const assert = require('assert');
+const {
+    goToUrlAndSetLocalStorage,
+    waitForStudyQueryPage,
+    waitForOncoprint,
+    useExternalFrontend,
+    waitForPatientView,
+    waitForStudyView,
+    jsApiHover,
+    setServerConfiguration,
+    openGroupComparison,
+    getElement,
+    waitForElementDisplayed,
+    clickElement,
+    getNthElements,
+} = require('../../shared/specUtils_Async');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
@@ -18,50 +21,50 @@ const downloadIcon = '.fa-download';
 const downloadCloudIcon = '.fa-cloud-download';
 const clipboardIcon = '.fa-clipboard';
 
-const globalCheck = () => {
+const globalCheck = async () => {
     assert(
-        !$('*=Download').isExisting(),
+        !(await (await getElement('*=Download')).isExisting()),
         'The word "Download" occurs on the page. Make sure that it is displayed conditionally based on the skin_hide_download_controls property'
     );
     assert(
-        !$('*=download').isExisting(),
+        !(await (await getElement('*=download')).isExisting()),
         'The word "download" occurs on the page. Make sure that it is displayed conditionally based on the skin_hide_download_controls property'
     );
     assert(
-        !$(downloadIcon).isExisting(),
+        !(await (await getElement(downloadIcon)).isExisting()),
         'A download button/icon is visible on the page. Make sure that it is displayed conditionally based on the skin_hide_download_controls property'
     );
     assert(
-        !$(downloadCloudIcon).isExisting(),
+        !(await (await getElement(downloadCloudIcon)).isExisting()),
         'A cloud download button/icon is visible on the page. Make sure that it is displayed conditionally based on the skin_hide_download_controls property'
     );
     assert(
-        !$(clipboardIcon).isExisting(),
+        !(await (await getElement(clipboardIcon)).isExisting()),
         'A download button/icon is visible on the page. Make sure that it is displayed conditionally based on the skin_hide_download_controls property'
     );
 };
 
-const openAndSetProperty = (url, prop) => {
-    goToUrlAndSetLocalStorage(url, true);
-    setServerConfiguration(prop);
-    goToUrlAndSetLocalStorage(url, true);
+const openAndSetProperty = async (url, prop) => {
+    await goToUrlAndSetLocalStorage(url, true);
+    await setServerConfiguration(prop);
+    await goToUrlAndSetLocalStorage(url, true);
 };
 
-const waitForTabs = count => {
-    browser.waitUntil(() => {
-        return $$('.tabAnchor').length >= count;
+const waitForTabs = async count => {
+    await browser.waitUntil(async () => {
+        return (await $$('.tabAnchor')).length >= count;
     }, 300000);
 };
 
-function studyViewChartHoverHamburgerIcon(chartDataTest, timeout) {
+async function studyViewChartHoverHamburgerIcon(chartDataTest, timeout) {
     // move to the chart
     const chart = '[data-test=' + chartDataTest + ']';
-    $(chart).waitForDisplayed({ timeout: timeout || 10000 });
-    jsApiHover(chart);
+    await waitForElementDisplayed(chart, { timeout: timeout });
+    await jsApiHover(chart);
 
     // move to hamburger icon
     const hamburgerIcon = '[data-test=chart-header-hamburger-icon]';
-    jsApiHover(hamburgerIcon);
+    await jsApiHover(hamburgerIcon);
 }
 
 describe('hide download controls feature', function() {
@@ -69,19 +72,26 @@ describe('hide download controls feature', function() {
         describe('study query page', () => {
             const expectedTabNames = ['Query'];
 
-            before(() => {
-                openAndSetProperty(CBIOPORTAL_URL, {
+            before(async () => {
+                await openAndSetProperty(CBIOPORTAL_URL, {
                     skin_hide_download_controls: 'hide',
                 });
                 // browser.debug();
-                waitForStudyQueryPage();
-                waitForTabs(expectedTabNames.length);
+                await waitForStudyQueryPage();
+                await waitForTabs(expectedTabNames.length);
             });
 
-            it('covers all tabs with download control tests', () => {
-                const observedTabNames = $$('.tabAnchor')
-                    .filter(a => a.isDisplayed())
-                    .map(a => a.getText());
+            it('covers all tabs with download control tests', async () => {
+                const tabElements = await $$('.tabAnchor');
+                const displayedTabs = await Promise.all(
+                    tabElements.map(async a =>
+                        (await a.isDisplayed()) ? a : null
+                    )
+                );
+                const visibleTabs = displayedTabs.filter(a => a !== null);
+                const observedTabNames = await Promise.all(
+                    visibleTabs.map(async a => await a.getText())
+                );
                 assert.deepStrictEqual(
                     expectedTabNames,
                     observedTabNames,
@@ -94,22 +104,31 @@ describe('hide download controls feature', function() {
                 );
             });
 
-            it('global check for icon and occurrence of "Download" as a word', () => {
-                globalCheck();
+            it('global check for icon and occurrence of "Download" as a word', async () => {
+                await globalCheck();
             });
 
-            it('does not show Download tab', () => {
-                assert(!$('.tabAnchor_download').isExisting());
+            it('does not show Download tab', async () => {
+                assert(
+                    !(await (
+                        await getElement('.tabAnchor_download')
+                    ).isExisting())
+                );
             });
 
-            it('does not show download icons data sets in study rows', () => {
-                goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/datasets`, true);
-                $('[data-test=LazyMobXTable]').waitForExist();
-                assert(!$(downloadIcon).isExisting());
+            it('does not show download icons data sets in study rows', async () => {
+                await goToUrlAndSetLocalStorage(
+                    `${CBIOPORTAL_URL}/datasets`,
+                    true
+                );
+                await (
+                    await getElement('[data-test=LazyMobXTable]')
+                ).waitForExist();
+                assert(!(await (await getElement(downloadIcon)).isExisting()));
             });
         });
 
-        describe('results view page', () => {
+        describe.only('results view page', () => {
             const expectedTabNames = [
                 'OncoPrint',
                 'Cancer Types Summary',
@@ -121,21 +140,29 @@ describe('hide download controls feature', function() {
                 'CN Segments',
                 'Pathways',
             ];
-            before(() => {
-                browser.setWindowSize(3200, 1000);
+            before(async () => {
+                await browser.setWindowSize(3200, 1000);
 
-                openAndSetProperty(
+                await openAndSetProperty(
                     `${CBIOPORTAL_URL}/results/oncoprint?genetic_profile_ids_PROFILE_MUTATION_EXTENDED=study_es_0_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=study_es_0_gistic&cancer_study_list=study_es_0&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&profileFilter=mutations%2Cgistic&case_set_id=study_es_0_cnaseq&gene_list=CREB3L1%2520RPS11%2520PNMA1%2520MMP2%2520ZHX3%2520ERCC5%2520TP53&geneset_list=%20&tab_index=tab_visualize&Action=Submit&comparison_subtab=mrna`,
                     { skin_hide_download_controls: 'hide' }
                 );
-                waitForOncoprint();
-                waitForTabs(expectedTabNames.length);
+                await waitForOncoprint();
+                await waitForTabs(expectedTabNames.length);
             });
 
-            it('covers all tabs with download control tests', () => {
-                const observedTabNames = $$('.tabAnchor')
-                    .filter(a => a.isDisplayed())
-                    .map(a => a.getText());
+            it('covers all tabs with download control tests', async () => {
+                const tabElements = await $$('.tabAnchor');
+                const displayedTabs = await Promise.all(
+                    tabElements.map(async a =>
+                        (await a.isDisplayed()) ? a : null
+                    )
+                );
+                const visibleTabs = displayedTabs.filter(a => a !== null);
+                const observedTabNames = await Promise.all(
+                    visibleTabs.map(async a => await a.getText())
+                );
+
                 assert.deepStrictEqual(
                     expectedTabNames,
                     observedTabNames,
@@ -149,44 +176,56 @@ describe('hide download controls feature', function() {
             });
 
             describe('oncoprint', () => {
-                it('does not show download/clipboard icons and does not contain the word "Download"', () => {
-                    globalCheck();
+                it('does not show download/clipboard icons and does not contain the word "Download"', async () => {
+                    await globalCheck();
                 });
             });
 
             describe('cancer type summary', () => {
-                it('does not show download/clipboard icons and does not contain the word "Download"', () => {
-                    $('.tabAnchor_cancerTypesSummary').click();
-                    $('[data-test=cancerTypeSummaryChart]').waitForExist();
-                    globalCheck();
+                it('does not show download/clipboard icons and does not contain the word "Download"', async () => {
+                    await clickElement('.tabAnchor_cancerTypesSummary');
+                    await (
+                        await getElement('[data-test=cancerTypeSummaryChart]')
+                    ).waitForExist();
+                    await globalCheck();
                 });
             });
 
             describe('mutual exclusivity', () => {
-                it('global check for icon and occurrence of "Download" as a word', () => {
-                    $('.tabAnchor_mutualExclusivity').click();
-                    $('[data-test=LazyMobXTable]').waitForExist();
-                    globalCheck();
+                it('global check for icon and occurrence of "Download" as a word', async () => {
+                    await clickElement('.tabAnchor_mutualExclusivity');
+                    await (
+                        await getElement('[data-test=LazyMobXTable]')
+                    ).waitForExist();
+                    await globalCheck();
                 });
             });
 
             describe('plots', () => {
-                it('global check for icon and occurrence of "Download" as a word', () => {
-                    $('.tabAnchor_plots').click();
-                    $('=mRNA vs mut type').waitForExist();
-                    $('=mRNA vs mut type').click();
-                    $('[data-test=PlotsTabPlotDiv]').waitForExist();
-                    globalCheck();
+                it('global check for icon and occurrence of "Download" as a word', async () => {
+                    await clickElement('.tabAnchor_plots');
+                    await (
+                        await getElement('=mRNA vs mut type')
+                    ).waitForExist();
+                    await clickElement('=mRNA vs mut type');
+                    await (
+                        await getElement('[data-test=PlotsTabPlotDiv]')
+                    ).waitForExist();
+                    await globalCheck();
                 });
             });
 
             describe('mutations', () => {
-                it('global check for icon and occurrence of "Download" as a word', () => {
-                    $('.tabAnchor_mutations').click();
-                    $('[data-test=LollipopPlot]').waitForExist();
-                    $('.tabAnchor_TP53').click();
-                    $('[data-test=LollipopPlot]').waitForExist();
-                    globalCheck();
+                it('global check for icon and occurrence of "Download" as a word', async () => {
+                    await clickElement('.tabAnchor_mutations');
+                    await (
+                        await getElement('[data-test=LollipopPlot]')
+                    ).waitForExist();
+                    await clickElement('.tabAnchor_TP53');
+                    await (
+                        await getElement('[data-test=LollipopPlot]')
+                    ).waitForExist();
+                    await globalCheck();
                     // $('[data-test=view3DStructure]').click();
                     // $('.borderedChart canvas').waitForExist();
                     // globalCheck();
@@ -194,19 +233,23 @@ describe('hide download controls feature', function() {
             });
 
             describe('co-expression', () => {
-                it('global check for icon and occurrence of "Download" as a word', () => {
-                    $('.tabAnchor_coexpression').click();
-                    $('#coexpression-plot-svg').waitForExist();
-                    globalCheck();
+                it('global check for icon and occurrence of "Download" as a word', async () => {
+                    await clickElement('.tabAnchor_coexpression');
+                    await (
+                        await getElement('#coexpression-plot-svg')
+                    ).waitForExist();
+                    await globalCheck();
                 });
             });
 
             describe('comparison/survival', () => {
-                before(() => {
-                    $('.tabAnchor_comparison').click();
+                before(async () => {
+                    await clickElement('.tabAnchor_comparison');
                 });
-                it('covers all tabs with download control tests', () => {
-                    $('.tabAnchor_overlap').waitForExist();
+                it('covers all tabs with download control tests', async () => {
+                    await (
+                        await getElement('.tabAnchor_overlap')
+                    ).waitForExist();
                     const expectedTabNames = [
                         'Overlap',
                         'Survival',
@@ -218,11 +261,20 @@ describe('hide download controls feature', function() {
                         'Mutational Signature',
                         'Treatment Response',
                     ];
-                    const observedTabNames = $$(
+
+                    const tabElements = $$(
                         '[data-test=ComparisonTabDiv] .tabAnchor'
-                    )
-                        .filter(a => a.isDisplayed())
-                        .map(a => a.getText());
+                    );
+                    const displayedTabs = await Promise.all(
+                        tabElements.map(async a =>
+                            (await a.isDisplayed()) ? a : null
+                        )
+                    );
+                    const visibleTabs = displayedTabs.filter(a => a !== null);
+                    const observedTabNames = await Promise.all(
+                        visibleTabs.map(async a => await a.getText())
+                    );
+
                     assert.deepStrictEqual(
                         expectedTabNames,
                         observedTabNames,
@@ -235,134 +287,188 @@ describe('hide download controls feature', function() {
                     );
                 });
                 describe('overlap tab', () => {
-                    it('global check for icon and occurrence of "Download" as a word', () => {
-                        $('.tabAnchor_overlap').click();
-                        $(
-                            '[data-test=ComparisonPageOverlapTabContent]'
+                    it('global check for icon and occurrence of "Download" as a word', async () => {
+                        await clickElement('.tabAnchor_overlap');
+                        await (
+                            await getElement(
+                                '[data-test=ComparisonPageOverlapTabContent]'
+                            )
                         ).waitForExist();
-                        globalCheck();
+                        await globalCheck();
                     });
                 });
                 describe('survival tab', () => {
-                    it('global check for icon and occurrence of "Download" as a word', () => {
-                        $('.tabAnchor_survival').click();
-                        $('[data-test=SurvivalChart]').waitForExist();
-                        globalCheck();
+                    it('global check for icon and occurrence of "Download" as a word', async () => {
+                        await clickElement('.tabAnchor_survival');
+                        await (
+                            await getElement('[data-test=SurvivalChart]')
+                        ).waitForExist();
+                        await globalCheck();
                     });
                 });
                 describe('clinical tab', () => {
-                    it('global check for icon and occurrence of "Download" as a word', () => {
-                        $('.tabAnchor_clinical').click();
-                        $('[data-test=ClinicalTabPlotDiv]').waitForExist();
-                        $('[data-test=LazyMobXTable]').waitForExist();
-                        globalCheck();
+                    it('global check for icon and occurrence of "Download" as a word', async () => {
+                        await clickElement('.tabAnchor_clinical');
+                        await (
+                            await getElement('[data-test=ClinicalTabPlotDiv]')
+                        ).waitForExist();
+                        await (
+                            await getElement('[data-test=LazyMobXTable]')
+                        ).waitForExist();
+                        await globalCheck();
                     });
                 });
                 describe('alterations tab', () => {
-                    it('global check for icon and occurrence of "Download" as a word', () => {
-                        $('.tabAnchor_alterations').click();
-                        $('[data-test=LazyMobXTable]').waitForExist();
-                        globalCheck();
+                    it('global check for icon and occurrence of "Download" as a word', async () => {
+                        await clickElement('.tabAnchor_alterations');
+                        await (
+                            await getElement('[data-test=LazyMobXTable]')
+                        ).waitForExist();
+                        await globalCheck();
                     });
                 });
                 describe('mrna tab', () => {
-                    it('global check for icon and occurrence of "Download" as a word', () => {
-                        $('.tabAnchor_mrna').click();
-                        $(
-                            '[data-test=GroupComparisonMRNAEnrichments]'
+                    it('global check for icon and occurrence of "Download" as a word', async () => {
+                        await clickElement('.tabAnchor_mrna');
+                        await (
+                            await getElement(
+                                '[data-test=GroupComparisonMRNAEnrichments]'
+                            )
                         ).waitForExist();
-                        $$(
-                            '[data-test=GroupComparisonMRNAEnrichments] tbody tr b'
-                        )[0].click();
-                        $('[data-test=MiniBoxPlot]').waitForExist();
-                        globalCheck();
+                        await (
+                            await getNthElements(
+                                '[data-test=GroupComparisonMRNAEnrichments] tbody tr b',
+                                0
+                            )
+                        ).click();
+                        await (
+                            await getElement('[data-test=MiniBoxPlot]')
+                        ).waitForExist();
+                        await globalCheck();
                     });
                 });
                 describe('dna_methylation tab', () => {
-                    it('global check for icon and occurrence of "Download" as a word', () => {
-                        $('.tabAnchor_dna_methylation').click();
-                        $(
-                            '[data-test=GroupComparisonMethylationEnrichments]'
+                    it('global check for icon and occurrence of "Download" as a word', async () => {
+                        await clickElement('.tabAnchor_dna_methylation');
+                        await (
+                            await getElement(
+                                '[data-test=GroupComparisonMethylationEnrichments]'
+                            )
                         ).waitForExist();
-                        $$(
-                            '[data-test=GroupComparisonMethylationEnrichments] tbody tr b'
-                        )[0].click();
-                        $('[data-test=MiniBoxPlot]').waitForExist();
-                        globalCheck();
+                        await (
+                            await getNthElements(
+                                '[data-test=GroupComparisonMethylationEnrichments] tbody tr b',
+                                0
+                            )
+                        ).click();
+                        await (
+                            await getElement('[data-test=MiniBoxPlot]')
+                        ).waitForExist();
+                        await globalCheck();
                     });
                 });
                 describe('treatment response tab', () => {
-                    it('global check for icon and occurrence of "Download" as a word', () => {
-                        $(
+                    it('global check for icon and occurrence of "Download" as a word', async () => {
+                        await clickElement(
                             '.tabAnchor_generic_assay_treatment_response'
+                        );
+                        await getElement(
+                            '[data-test=GroupComparisonGenericAssayEnrichments]',
+                            {
+                                waitForExist: true,
+                            }
+                        );
+                        await (
+                            await getNthElements(
+                                '[data-test=GroupComparisonGenericAssayEnrichments] tbody tr b',
+                                0
+                            )
                         ).click();
-                        $(
-                            '[data-test=GroupComparisonGenericAssayEnrichments]'
-                        ).waitForExist();
-                        $$(
-                            '[data-test=GroupComparisonGenericAssayEnrichments] tbody tr b'
-                        )[0].click();
-                        $('[data-test=MiniBoxPlot]').waitForExist();
-                        globalCheck();
+                        await getElement('[data-test=MiniBoxPlot]', {
+                            waitForExist: true,
+                        });
+                        await globalCheck();
                     });
                 });
                 describe('mutational signature tab', () => {
-                    it('global check for icon and occurrence of "Download" as a word', () => {
-                        $(
-                            '.tabAnchor_generic_assay_mutational_signature'
+                    it('global check for icon and occurrence of "Download" as a word', async () => {
+                        await (
+                            await clickElement(
+                                '.tabAnchor_generic_assay_mutational_signature'
+                            )
                         ).click();
-                        $(
-                            '[data-test=GroupComparisonGenericAssayEnrichments] tbody tr b'
+                        await (
+                            await getElement(
+                                '[data-test=GroupComparisonGenericAssayEnrichments] tbody tr b'
+                            )
                         ).waitForExist();
-                        browser.pause(1000);
-                        $$(
-                            '[data-test=GroupComparisonGenericAssayEnrichments] tbody tr b'
-                        )[1].click(); // first row is invisible treatment response 'Name of 17-AAG'
-
-                        $('[data-test=MiniBoxPlot]').waitForExist();
-                        globalCheck();
+                        await browser.pause(1000);
+                        await (
+                            await getNthElements(
+                                '[data-test=GroupComparisonGenericAssayEnrichments] tbody tr b',
+                                1
+                            )
+                        ).click(); // first row is invisible treatment response 'Name of 17-AAG'
+                        await getElement('[data-test=MiniBoxPlot]', {
+                            waitForExist: true,
+                        });
+                        await globalCheck();
                     });
                 });
                 // Activation of the 'Patient Test' tab results in a backend error. Omitting for now.
                 // Inactivation of download tabs is also covered by other Generic Assay tabs.
                 describe.skip('generic assay patient test tab', () => {
-                    it('global check for icon and occurrence of "Download" as a word', () => {
-                        $(
+                    it('global check for icon and occurrence of "Download" as a word', async () => {
+                        await clickElement(
                             '.tabAnchor_generic_assay_generic_assay_patient_test'
-                        ).click();
-                        $(
-                            '[data-test=GroupComparisonGenericAssayEnrichments]'
-                        ).waitForExist();
-                        $$(
-                            '[data-test=GroupComparisonGenericAssayEnrichments] tbody tr b'
-                        )[5].click(); // first 5 rows is invisible treatment responses
-                        $('[data-test=MiniBoxPlot]').waitForExist();
-                        globalCheck();
+                        );
+                        await getElement(
+                            '[data-test=GroupComparisonGenericAssayEnrichments]',
+                            { waitForExist: true }
+                        );
+                        await (
+                            await getNthElements(
+                                '[data-test=GroupComparisonGenericAssayEnrichments] tbody tr b',
+                                5
+                            )
+                        ).click(); // first 5 rows is invisible treatment responses
+                        await getElement('[data-test=MiniBoxPlot]', {
+                            waitForExist: true,
+                        });
+                        await globalCheck();
                     });
                 });
 
                 describe('CN segments', () => {
-                    before(() => {
-                        $('.tabAnchor_cnSegments').click();
-                        $('.igvContainer').waitForExist();
+                    before(async () => {
+                        await clickElement('.tabAnchor_cnSegments');
+                        await getElement('.igvContainer', {
+                            waitForExist: true,
+                        });
                     });
-                    it('global check for icon and occurrence of "Download" as a word', () => {
-                        globalCheck();
+                    it('global check for icon and occurrence of "Download" as a word', async () => {
+                        await globalCheck();
                     });
                 });
 
                 describe('pathways', () => {
-                    before(() => {
-                        $('.tabAnchor_pathways').click();
-                        $('.pathwayMapper').waitForExist();
+                    before(async () => {
+                        await clickElement('.tabAnchor_pathways');
+                        await getElement('.pathwayMapper', {
+                            waitForExist: true,
+                        });
                     });
-                    it('global check for icon and occurrence of "Download" as a word', () => {
-                        globalCheck();
+                    it('global check for icon and occurrence of "Download" as a word', async () => {
+                        await globalCheck();
                     });
                 });
 
-                it('does not show Download tab', () => {
-                    assert(!$('.tabAnchor_download').isExisting());
+                it('does not show Download tab', async () => {
+                    assert(
+                        !(await (
+                            await getElement('.tabAnchor_download')
+                        ).isExisting())
+                    );
                 });
             });
         });
@@ -377,18 +483,26 @@ describe('hide download controls feature', function() {
                 'Pathology Slide',
                 'Study Sponsors',
             ];
-            before(() => {
-                openAndSetProperty(
+            before(async () => {
+                await openAndSetProperty(
                     `${CBIOPORTAL_URL}/patient?studyId=study_es_0&caseId=TCGA-A1-A0SK`,
                     { skin_hide_download_controls: 'hide' }
                 );
-                waitForPatientView();
-                waitForTabs(expectedTabNames.length);
+                await waitForPatientView();
+                await waitForTabs(expectedTabNames.length);
             });
-            it('covers all tabs with download control tests', () => {
-                const observedTabNames = $$('.tabAnchor')
-                    .filter(a => a.isDisplayed())
-                    .map(a => a.getText());
+            it('covers all tabs with download control tests', async () => {
+                const tabElements = $$('.tabAnchor');
+                const displayedTabs = await Promise.all(
+                    tabElements.map(async a =>
+                        (await a.isDisplayed()) ? a : null
+                    )
+                );
+                const visibleTabs = displayedTabs.filter(a => a !== null);
+                const observedTabNames = await Promise.all(
+                    visibleTabs.map(async a => await a.getText())
+                );
+
                 assert.deepStrictEqual(
                     expectedTabNames,
                     observedTabNames,
@@ -401,52 +515,64 @@ describe('hide download controls feature', function() {
                 );
             });
             describe('summary tab', () => {
-                it('global check for icon and occurrence of "Download" as a word', () => {
-                    $('.tabAnchor_summary').click();
-                    $('[data-test=LazyMobXTable]').waitForExist();
-                    globalCheck();
+                it('global check for icon and occurrence of "Download" as a word', async () => {
+                    await clickElement('.tabAnchor_summary');
+                    await getElement('[data-test=LazyMobXTable]', {
+                        waitForExist: true,
+                    });
+                    await globalCheck();
                 });
             });
             describe('pathways tab', () => {
-                it('global check for icon and occurrence of "Download" as a word', () => {
-                    $('.tabAnchor_pathways').click();
-                    $('.pathwayMapper').waitForExist();
-                    globalCheck();
+                it('global check for icon and occurrence of "Download" as a word', async () => {
+                    await clickElement('.tabAnchor_pathways');
+                    await getElement('.pathwayMapper', {
+                        waitForExist: true,
+                    });
+                    await globalCheck();
                 });
             });
             describe('clinical data tab', () => {
-                it('global check for icon and occurrence of "Download" as a word', () => {
-                    $('.tabAnchor_clinicalData').click();
-                    $('[data-test=LazyMobXTable]').waitForExist();
-                    globalCheck();
+                it('global check for icon and occurrence of "Download" as a word', async () => {
+                    await clickElement('.tabAnchor_clinicalData');
+                    await getElement('[data-test=LazyMobXTable]', {
+                        waitForExist: true,
+                    });
+                    await globalCheck();
                 });
             });
             describe('files and links tab', () => {
-                it('global check for icon and occurrence of "Download" as a word', () => {
-                    $('.tabAnchor_filesAndLinks').click();
-                    $('.resourcesSection').waitForExist();
-                    globalCheck();
+                it('global check for icon and occurrence of "Download" as a word', async () => {
+                    await clickElement('.tabAnchor_filesAndLinks');
+                    await getElement('.resourcesSection', {
+                        waitForExist: true,
+                    });
+                    await globalCheck();
                 });
             });
             describe('tissue image tab', () => {
-                it('global check for icon and occurrence of "Download" as a word', () => {
-                    $('.tabAnchor_tissueImage').click();
-                    $('iframe').waitForExist();
-                    globalCheck();
+                it('global check for icon and occurrence of "Download" as a word', async () => {
+                    await clickElement('.tabAnchor_tissueImage');
+                    await getElement('iframe', { waitForExist: true });
+                    await globalCheck();
                 });
             });
             describe('pathology slide tab', () => {
-                it('global check for icon and occurrence of "Download" as a word', () => {
-                    $('.tabAnchor_openResource_PATHOLOGY_SLIDE').click();
-                    $('h2').waitForExist();
-                    globalCheck();
+                it('global check for icon and occurrence of "Download" as a word', async () => {
+                    await clickElement(
+                        '.tabAnchor_openResource_PATHOLOGY_SLIDE'
+                    );
+                    await getElement('h2', { waitForExist: true });
+                    await globalCheck();
                 });
             });
             describe('study sponsors tab', () => {
-                it('global check for icon and occurrence of "Download" as a word', () => {
-                    $('.tabAnchor_openResource_STUDY_SPONSORS').click();
-                    $('h2').waitForExist();
-                    globalCheck();
+                it('global check for icon and occurrence of "Download" as a word', async () => {
+                    await clickElement(
+                        '.tabAnchor_openResource_STUDY_SPONSORS'
+                    );
+                    await getElement('h2', { waitForExist: true });
+                    await globalCheck();
                 });
             });
         });
@@ -460,19 +586,29 @@ describe('hide download controls feature', function() {
                 'Plots Beta!',
                 'Study Sponsors',
             ];
-            before(() => {
-                openAndSetProperty(
+            before(async () => {
+                await openAndSetProperty(
                     `${CBIOPORTAL_URL}/study/summary?id=study_es_0`,
                     { skin_hide_download_controls: 'hide' }
                 );
-                waitForStudyView();
-                waitForTabs(expectedTabNames.length);
+                await waitForStudyView();
+                await waitForTabs(expectedTabNames.length);
             });
             describe('summary tab', () => {
-                it('covers all tabs with download control tests', () => {
-                    const observedTabNames = $$('.tabAnchor')
-                        .filter(a => a.isDisplayed())
-                        .map(a => a.getText());
+                it.only('covers all tabs with download control tests', async () => {
+                    const tabElements = await $$('.tabAnchor');
+                    console.log('visibleTabs', { tabElements });
+                    const displayedTabs = await Promise.all(
+                        tabElements.map(async a =>
+                            (await a.isDisplayed()) ? a : null
+                        )
+                    );
+                    console.log('visibleTabs', { displayedTabs });
+                    const visibleTabs = displayedTabs.filter(a => a !== null);
+                    console.log('visibleTabs', { visibleTabs });
+                    const observedTabNames = await Promise.all(
+                        visibleTabs.map(async a => await a.getText())
+                    );
                     assert.deepStrictEqual(
                         expectedTabNames,
                         observedTabNames,
@@ -484,68 +620,74 @@ describe('hide download controls feature', function() {
                             ' tests for this in hide-download-controls.spec.js.'
                     );
                 });
-                it('global check for icon and occurrence of "Download" as a word', () => {
-                    globalCheck();
+                it('global check for icon and occurrence of "Download" as a word', async () => {
+                    await globalCheck();
                 });
-                it('does not show download option in chart menu-s', () => {
-                    studyViewChartHoverHamburgerIcon(
+                it('does not show download option in chart menu-s', async () => {
+                    await studyViewChartHoverHamburgerIcon(
                         'chart-container-SAMPLE_COUNT',
                         1000
                     );
-                    globalCheck();
-                    studyViewChartHoverHamburgerIcon(
+                    await globalCheck();
+                    await studyViewChartHoverHamburgerIcon(
                         'chart-container-study_es_0_mutations',
                         1000
                     );
-                    globalCheck();
-                    studyViewChartHoverHamburgerIcon(
+                    await globalCheck();
+                    await studyViewChartHoverHamburgerIcon(
                         'chart-container-MUTATION_COUNT',
                         1000
                     );
-                    globalCheck();
-                    studyViewChartHoverHamburgerIcon(
+                    await globalCheck();
+                    await studyViewChartHoverHamburgerIcon(
                         'chart-container-GENOMIC_PROFILES_SAMPLE_COUNT',
                         1000
                     );
-                    globalCheck();
-                    studyViewChartHoverHamburgerIcon(
+                    await globalCheck();
+                    await studyViewChartHoverHamburgerIcon(
                         'chart-container-FRACTION_GENOME_ALTERED',
                         1000
                     );
-                    globalCheck();
-                    studyViewChartHoverHamburgerIcon(
+                    await globalCheck();
+                    await studyViewChartHoverHamburgerIcon(
                         'chart-container-OS_SURVIVAL',
                         1000
                     );
-                    globalCheck();
+                    await globalCheck();
                 });
             });
             describe('clinical data tab', () => {
-                it('global check for icon and occurrence of "Download" as a word', () => {
-                    $('.tabAnchor_clinicalData').click();
-                    $('[data-test=LazyMobXTable]').waitForExist();
-                    globalCheck();
+                it('global check for icon and occurrence of "Download" as a word', async () => {
+                    await clickElement('.tabAnchor_clinicalData');
+                    await getElement('[data-test=LazyMobXTable]', {
+                        waitForExist: true,
+                    });
+                    await globalCheck();
                 });
             });
             describe('CN segments tab', () => {
-                it('global check for icon and occurrence of "Download" as a word', () => {
-                    $('.tabAnchor_cnSegments').click();
-                    $('.igvContainer').waitForExist(30000);
-                    globalCheck();
+                it('global check for icon and occurrence of "Download" as a word', async () => {
+                    await clickElement('.tabAnchor_cnSegments');
+                    await getElement('.igvContainer', { timeout: 30000 });
+                    await globalCheck();
                 });
             });
             describe('files and links tab', () => {
-                it('global check for icon and occurrence of "Download" as a word', () => {
-                    $('.tabAnchor_filesAndLinks').click();
-                    $('.resourcesSection').waitForExist();
-                    globalCheck();
+                it('global check for icon and occurrence of "Download" as a word', async () => {
+                    await clickElement('.tabAnchor_filesAndLinks');
+                    await getElement('.resourcesSection', {
+                        waitForExist: true,
+                    });
+                    await globalCheck();
                 });
             });
             describe('study sponsors tab', () => {
-                it('global check for icon and occurrence of "Download" as a word', () => {
-                    $('.tabAnchor_openResource_STUDY_SPONSORS').click();
-                    $('h2').waitForExist();
-                    globalCheck();
+                it('global check for icon and occurrence of "Download" as a word', async () => {
+                    await clickElement(
+                        '.tabAnchor_openResource_STUDY_SPONSORS'
+                    );
+                    await getElement('h2', { waitForExist: true });
+                    await globalCheck();
                 });
             });
         });
@@ -563,20 +705,20 @@ describe('hide download controls feature', function() {
                 'Mutational Signature',
                 'Treatment Response',
             ];
-            before(() => {
-                openAndSetProperty(browser.getUrl(), {
+            before(async () => {
+                await openAndSetProperty(await browser.getUrl(), {
                     skin_hide_download_controls: 'show',
                 });
-                openGroupComparison(
+                await openGroupComparison(
                     `${CBIOPORTAL_URL}/study/summary?id=study_es_0`,
                     'chart-container-OS_STATUS',
                     true,
                     30000
                 );
-                openAndSetProperty(browser.getUrl(), {
+                await openAndSetProperty(await browser.getUrl(), {
                     skin_hide_download_controls: 'hide',
                 });
-                waitForTabs(expectedTabNames.length);
+                await waitForTabs(expectedTabNames.length);
             });
             it('covers all tabs with download control tests', () => {
                 const observedTabNames = $$('.tabAnchor')
@@ -594,104 +736,162 @@ describe('hide download controls feature', function() {
                 );
             });
             describe('overlap tab', () => {
-                it('global check for icon and occurrence of "Download" as a word', () => {
-                    $('[data-test=ComparisonPageOverlapTabDiv]').waitForExist();
-                    globalCheck();
+                it('global check for icon and occurrence of "Download" as a word', async () => {
+                    await getElement(
+                        '[data-test=ComparisonPageOverlapTabDiv]',
+                        {
+                            waitForExist: true,
+                        }
+                    );
+                    await globalCheck();
                 });
             });
             describe('survival tab', () => {
-                it('global check for icon and occurrence of "Download" as a word', () => {
-                    $('.tabAnchor_survival').click();
-                    $(
-                        '[data-test=ComparisonPageSurvivalTabDiv]'
-                    ).waitForExist();
-                    globalCheck();
+                it('global check for icon and occurrence of "Download" as a word', async () => {
+                    await clickElement('.tabAnchor_survival');
+                    await getElement(
+                        '[data-test=ComparisonPageSurvivalTabDiv]',
+                        {
+                            waitForExist: true,
+                        }
+                    );
+                    await globalCheck();
                 });
             });
             describe('clinical tab', () => {
-                it('global check for icon and occurrence of "Download" as a word', () => {
-                    $('.tabAnchor_clinical').click();
-                    $('[data-test=LazyMobXTable]').waitForExist();
-                    $('[data-test=ClinicalTabPlotDiv]').waitForExist();
-                    globalCheck();
+                it('global check for icon and occurrence of "Download" as a word', async () => {
+                    await clickElement('.tabAnchor_clinical');
+                    await getElement('[data-test=LazyMobXTable]', {
+                        waitForExist: true,
+                    });
+                    await getElement('[data-test=ClinicalTabPlotDiv]', {
+                        waitForExist: true,
+                    });
+                    await globalCheck();
                 });
             });
             describe('genomic alterations tab', () => {
-                it('global check for icon and occurrence of "Download" as a word', () => {
-                    $('.tabAnchor_alterations').click();
-                    $('[data-test=GeneBarPlotDiv]').waitForExist();
-                    globalCheck();
+                it('global check for icon and occurrence of "Download" as a word', async () => {
+                    await clickElement('.tabAnchor_alterations');
+                    await getElement('[data-test=GeneBarPlotDiv]', {
+                        waitForExist: true,
+                    });
+                    await globalCheck();
                 });
             });
             describe('mRNA tab', () => {
-                it('global check for icon and occurrence of "Download" as a word', () => {
-                    $('.tabAnchor_mrna').click();
-                    $(
-                        '[data-test=GroupComparisonMRNAEnrichments]'
-                    ).waitForExist();
-                    $$(
-                        '[data-test=GroupComparisonMRNAEnrichments] tbody tr b'
-                    )[0].click();
-                    $('[data-test=MiniBoxPlot]').waitForExist();
-                    globalCheck();
+                it('global check for icon and occurrence of "Download" as a word', async () => {
+                    await clickElement('.tabAnchor_mrna');
+                    getElement('[data-test=GroupComparisonMRNAEnrichments]', {
+                        waitForExist: true,
+                    });
+                    await (
+                        await getNthElements(
+                            '[data-test=GroupComparisonMRNAEnrichments] tbody tr b',
+                            0
+                        )
+                    ).click();
+                    await getElement('[data-test=MiniBoxPlot]', {
+                        waitForExist: true,
+                    });
+                    await globalCheck();
                 });
             });
             describe('DNA methylation tab', () => {
-                it('global check for icon and occurrence of "Download" as a word', () => {
-                    $('.tabAnchor_dna_methylation').click();
-                    $(
-                        '[data-test=GroupComparisonMethylationEnrichments]'
-                    ).waitForExist();
-                    $$(
-                        '[data-test=GroupComparisonMethylationEnrichments] tbody tr b'
-                    )[0].click();
-                    $('[data-test=MiniBoxPlot]').waitForExist();
-                    globalCheck();
+                it('global check for icon and occurrence of "Download" as a word', async () => {
+                    await clickElement('.tabAnchor_dna_methylation');
+                    await getElement(
+                        '[data-test=GroupComparisonMethylationEnrichments]',
+                        {
+                            waitForExist: true,
+                        }
+                    );
+                    await (
+                        await getNthElements(
+                            '[data-test=GroupComparisonMethylationEnrichments] tbody tr b',
+                            0
+                        )
+                    ).click();
+                    await getElement('[data-test=MiniBoxPlot]', {
+                        waitForExist: true,
+                    });
+                    await globalCheck();
                 });
             });
             describe('treatment response tab', () => {
-                it('global check for icon and occurrence of "Download" as a word', () => {
-                    $('.tabAnchor_generic_assay_treatment_response').click();
-                    $('[data-test=LazyMobXTable]').waitForExist();
-                    $(
-                        '[data-test=GroupComparisonGenericAssayEnrichments]'
-                    ).waitForExist();
-                    $$(
-                        '[data-test=GroupComparisonGenericAssayEnrichments] tbody tr b'
-                    )[0].click();
-                    $('[data-test=MiniBoxPlot]').waitForExist();
-                    globalCheck();
+                it('global check for icon and occurrence of "Download" as a word', async () => {
+                    await clickElement(
+                        '.tabAnchor_generic_assay_treatment_response'
+                    );
+                    await getElement('[data-test=LazyMobXTable]', {
+                        waitForExist: true,
+                    });
+                    await getElement(
+                        '[data-test=GroupComparisonGenericAssayEnrichments]',
+                        {
+                            waitForExist: true,
+                        }
+                    );
+                    await (
+                        await getNthElements(
+                            '[data-test=GroupComparisonGenericAssayEnrichments] tbody tr b',
+                            0
+                        )
+                    ).click();
+
+                    await getElement('[data-test=MiniBoxPlot]', {
+                        waitForExist: true,
+                    });
+                    await globalCheck();
                 });
             });
             describe('mutational signature tab', () => {
-                it('global check for icon and occurrence of "Download" as a word', () => {
-                    $('.tabAnchor_generic_assay_mutational_signature').click();
-                    $(
-                        '[data-test=GroupComparisonGenericAssayEnrichments] tbody tr b'
-                    ).waitForExist();
-                    browser.pause(1000);
-                    $$(
-                        '[data-test=GroupComparisonGenericAssayEnrichments] tbody tr b'
-                    )[5].click(); // first 5 rows is invisible treatment responses
-                    $('[data-test=MiniBoxPlot]').waitForExist();
-                    globalCheck();
+                it('global check for icon and occurrence of "Download" as a word', async () => {
+                    await clickElement(
+                        '.tabAnchor_generic_assay_mutational_signature'
+                    );
+                    await getElement(
+                        '[data-test=GroupComparisonGenericAssayEnrichments] tbody tr b',
+                        {
+                            waitForExist: true,
+                        }
+                    );
+                    await browser.pause(1000);
+                    await (
+                        await getNthElements(
+                            '[data-test=GroupComparisonGenericAssayEnrichments] tbody tr b',
+                            5
+                        )
+                    ).click(); // first 5 rows is invisible treatment responses
+                    await getElement('[data-test=MiniBoxPlot]', {
+                        waitForExist: true,
+                    });
+                    await globalCheck();
                 });
             });
             // Activation of the 'Patient Test' tab results in a backend error. Omitting for now.
             // Inactivation of download tabs is also covered by other Generic Assay tabs.
             describe.skip('generic assay patient test tab', () => {
-                it('global check for icon and occurrence of "Download" as a word', () => {
-                    $(
+                it('global check for icon and occurrence of "Download" as a word', async () => {
+                    await clickElement(
                         '.tabAnchor_generic_assay_generic_assay_patient_test'
-                    ).click();
-                    $(
-                        '[data-test=GroupComparisonGenericAssayEnrichments]'
-                    ).waitForExist();
-                    $$(
-                        '[data-test=GroupComparisonGenericAssayEnrichments] tbody tr b'
-                    )[5].click(); // first 5 rows is invisible treatment responses
-                    $('[data-test=MiniBoxPlot]').waitForExist();
-                    globalCheck();
+                    );
+                    await getElement(
+                        '[data-test=GroupComparisonGenericAssayEnrichments]',
+                        {
+                            waitForExist: true,
+                        }
+                    );
+                    await (
+                        await getNthElements(
+                            '[data-test=GroupComparisonGenericAssayEnrichments] tbody tr b',
+                            5
+                        )
+                    ).click(); // first 5 rows is invisible treatment responses
+                    await getElement('[data-test=MiniBoxPlot]', {
+                        waitForExist: true,
+                    });
+                    await globalCheck();
                 });
             });
         });
