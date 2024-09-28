@@ -1,17 +1,15 @@
-var assert = require('assert');
-var goToUrlAndSetLocalStorage = require('../../../shared/specUtils')
-    .goToUrlAndSetLocalStorage;
-var useExternalFrontend = require('../../../shared/specUtils')
-    .useExternalFrontend;
-var waitForPatientView = require('../../../shared/specUtils')
-    .waitForPatientView;
-var {
+const assert = require('assert');
+const {
+    goToUrlAndSetLocalStorage,
     jsApiHover,
     setDropdownOpen,
     strIsNumeric,
-} = require('../../../shared/specUtils');
+    waitForPatientView,
+    getNestedElement,
+    getElement,
+} = require('../../../shared/specUtils_Async');
 
-var _ = require('lodash');
+const _ = require('lodash');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 const genePanelPatientViewUrl =
@@ -25,15 +23,15 @@ const ALLELE_FREQ_SAMPLE_VIEW_URL = `${CBIOPORTAL_URL}/patient?studyId=ascn_test
 
 describe('patient view page', function() {
     describe('gene panel information', () => {
-        before(() => {
-            goToUrlAndSetLocalStorage(genePanelPatientViewUrl, true);
-            waitForPatientView();
+        before(async () => {
+            await goToUrlAndSetLocalStorage(genePanelPatientViewUrl, true);
+            await waitForPatientView();
         });
 
         const p = 'sample-icon';
         const n = 'not-profiled-icon';
 
-        it('mutation table shows correct sample icons, non-profiled icons and invisible icons', () => {
+        it('mutation table shows correct sample icons, non-profiled icons and invisible icons', async () => {
             const sampleIcon = {
                 ERBB2: [n, n, n, p, p],
                 ABLIM1: [p, p, n, p, p],
@@ -49,17 +47,17 @@ describe('patient view page', function() {
             };
 
             const genes = _.keys(sampleIcon);
-            genes.forEach(gene => {
-                testSampleIcon(
+            for (const gene of genes) {
+                await testSampleIcon(
                     gene,
                     'patientview-mutation-table',
                     sampleIcon[gene],
                     sampleVisibility[gene]
                 );
-            });
+            }
         });
 
-        it('CNA table shows correct sample icons, non-profiled icons and invisible icons', () => {
+        it('CNA table shows correct sample icons, non-profiled icons and invisible icons', async () => {
             const sampleIcon = {
                 ERBB2: [n, n, p, p, n],
                 CADM2: [p, p, p, p, p],
@@ -74,14 +72,14 @@ describe('patient view page', function() {
 
             const genes = _.keys(sampleIcon);
 
-            genes.forEach(gene => {
-                testSampleIcon(
+            for (const gene of genes) {
+                await testSampleIcon(
                     gene,
                     'patientview-copynumber-table',
                     sampleIcon[gene],
                     sampleVisibility[gene]
                 );
-            });
+            }
         });
     });
 
@@ -89,58 +87,64 @@ describe('patient view page', function() {
         let selectMenu;
         let filterIcon;
 
-        before(() => {
-            goToUrlAndSetLocalStorage(genePanelPatientViewUrl, true);
-            waitForPatientView();
+        before(async () => {
+            await goToUrlAndSetLocalStorage(genePanelPatientViewUrl, true);
+            await waitForPatientView();
         });
 
-        it('filter menu icon is shown when gene panels are used', () => {
-            filterIcon = $('div[data-test=patientview-mutation-table]').$(
-                'i[data-test=gene-filter-icon]'
+        it('filter menu icon is shown when gene panels are used', async () => {
+            filterIcon = await getNestedElement([
+                'div[data-test=patientview-mutation-table]',
+                'i[data-test=gene-filter-icon]',
+            ]);
+            assert(await filterIcon.isDisplayed());
+        });
+
+        it('opens selection menu when filter icon clicked', async () => {
+            await setDropdownOpen(true, filterIcon, '.rc-tooltip');
+            selectMenu = await getElement('.rc-tooltip');
+            assert(await selectMenu.isDisplayed());
+        });
+
+        it('removes genes profiles profiled in some samples then `all genes` option selected', async () => {
+            await setDropdownOpen(true, filterIcon, selectMenu);
+            const allGenesRadio = await selectMenu.$('input[value=allSamples]');
+            await allGenesRadio.click();
+            const geneEntries = await $$(
+                '[data-test=mutation-table-gene-column]'
             );
-            assert(filterIcon.isDisplayed());
-        });
-
-        it('opens selection menu when filter icon clicked', () => {
-            setDropdownOpen(true, filterIcon, '.rc-tooltip');
-            selectMenu = $('.rc-tooltip');
-            assert(selectMenu.isDisplayed());
-        });
-
-        it('removes genes profiles profiled in some samples then `all genes` option selected', () => {
-            setDropdownOpen(true, filterIcon, selectMenu);
-            const allGenesRadio = selectMenu.$('input[value=allSamples]');
-            allGenesRadio.click();
-            const geneEntries = $$('[data-test=mutation-table-gene-column]');
             assert.equal(geneEntries.length, 1);
-            const geneName = geneEntries[0].getText();
+            const geneName = await geneEntries[0].getText();
             assert.equal(geneName, 'CADM2');
         });
 
-        it('re-adds genes when `any genes` option selected', () => {
-            const anyGenesRadio = selectMenu.$('input[value=anySample]');
-            anyGenesRadio.click();
-            const geneEntries = $$('[data-test=mutation-table-gene-column]');
+        it('re-adds genes when `any genes` option selected', async () => {
+            const anyGenesRadio = await selectMenu.$('input[value=anySample]');
+            await anyGenesRadio.click();
+            const geneEntries = await $$(
+                '[data-test=mutation-table-gene-column]'
+            );
             assert.equal(geneEntries.length, 4);
         });
 
-        it('closes selection menu when filter icon clicked again', () => {
-            setDropdownOpen(false, filterIcon, '.rc-tooltip');
-            selectMenu = $('.rc-tooltip');
-            assert(!selectMenu.isDisplayed());
+        it('closes selection menu when filter icon clicked again', async () => {
+            await setDropdownOpen(false, filterIcon, '.rc-tooltip');
+            selectMenu = await $('.rc-tooltip');
+            assert(!(await selectMenu.isDisplayed()));
         });
 
-        it('filter menu icon is not shown when gene panels are not used', () => {
-            goToUrlAndSetLocalStorage(
+        it('filter menu icon is not shown when gene panels are not used', async () => {
+            await goToUrlAndSetLocalStorage(
                 CBIOPORTAL_URL +
                     '/patient?studyId=study_es_0&caseId=TCGA-A1-A0SK',
                 true
             );
-            waitForPatientView();
-            var filterIcon = $('div[data-test=patientview-mutation-table]').$(
-                'i[data-test=gene-filter-icon]'
-            );
-            assert(!filterIcon.isDisplayed());
+            await waitForPatientView();
+            const filterIcon = getNestedElement([
+                'div[data-test=patientview-mutation-table]',
+                'i[data-test=gene-filter-icon]',
+            ]);
+            assert(!(await filterIcon.isDisplayed()));
         });
     });
 
@@ -148,83 +152,95 @@ describe('patient view page', function() {
         let selectMenu;
         let filterIcon;
 
-        before(() => {
-            goToUrlAndSetLocalStorage(genePanelPatientViewUrl, true);
-            waitForPatientView();
+        before(async () => {
+            await goToUrlAndSetLocalStorage(genePanelPatientViewUrl, true);
+            await waitForPatientView();
         });
 
-        it('filter menu icon is shown when gene panels are used', () => {
-            filterIcon = $('div[data-test=patientview-copynumber-table]').$(
-                'i[data-test=gene-filter-icon]'
-            );
-            assert(filterIcon.isDisplayed());
+        it('filter menu icon is shown when gene panels are used', async () => {
+            filterIcon = await getNestedElement([
+                'div[data-test=patientview-copynumber-table]',
+                'i[data-test=gene-filter-icon]',
+            ]);
+            assert(await filterIcon.isDisplayed());
         });
 
-        it('opens selection menu when filter icon clicked', () => {
-            setDropdownOpen(true, filterIcon, '.rc-tooltip');
-            selectMenu = $('.rc-tooltip');
-            assert(selectMenu.isDisplayed());
+        it('opens selection menu when filter icon clicked', async () => {
+            await setDropdownOpen(true, filterIcon, '.rc-tooltip');
+            selectMenu = await getElement('.rc-tooltip');
+            assert(await selectMenu.isDisplayed());
         });
 
-        it('removes genes profiles profiled in some samples then `all genes` option selected', () => {
-            setDropdownOpen(true, filterIcon, '.rc-tooltip');
-            const allGenesRadio = selectMenu.$('input[value=allSamples]');
-            allGenesRadio.click();
-            const geneEntries = $$('[data-test=cna-table-gene-column]');
+        it('removes genes profiles profiled in some samples then `all genes` option selected', async () => {
+            await setDropdownOpen(true, filterIcon, '.rc-tooltip');
+            const allGenesRadio = await selectMenu.$('input[value=allSamples]');
+            await allGenesRadio.click();
+            const geneEntries = await $$('[data-test=cna-table-gene-column]');
             assert.equal(geneEntries.length, 1);
-            const geneName = geneEntries[0].getText();
+            const geneName = await geneEntries[0].getText();
             assert.equal(geneName, 'CADM2');
         });
 
-        it('re-adds genes when `any genes` option selected', () => {
-            setDropdownOpen(true, filterIcon, '.rc-tooltip');
-            const anyGenesRadio = selectMenu.$('input[value=anySample]');
-            anyGenesRadio.click();
-            const geneEntries = $$('[data-test=cna-table-gene-column]');
+        it('re-adds genes when `any genes` option selected', async () => {
+            await setDropdownOpen(true, filterIcon, '.rc-tooltip');
+            const anyGenesRadio = await selectMenu.$('input[value=anySample]');
+            await anyGenesRadio.click();
+            const geneEntries = await $$('[data-test=cna-table-gene-column]');
             assert.equal(geneEntries.length, 3);
         });
 
-        it('closes selection menu when filter icon clicked again', () => {
-            setDropdownOpen(false, filterIcon, '.rc-tooltip');
-            assert(!selectMenu.isDisplayed());
+        it('closes selection menu when filter icon clicked again', async () => {
+            await setDropdownOpen(false, filterIcon, '.rc-tooltip');
+            assert(!(await selectMenu.isDisplayed()));
         });
 
-        it('filter menu icon is not shown when gene panels are not used', () => {
-            goToUrlAndSetLocalStorage(
+        it('filter menu icon is not shown when gene panels are not used', async () => {
+            await goToUrlAndSetLocalStorage(
                 CBIOPORTAL_URL +
                     '/patient?studyId=study_es_0&caseId=TCGA-A2-A04U',
                 true
             );
-            waitForPatientView();
-            var filterIcon = $('div[data-test=patientview-copynumber-table]').$(
-                'i[data-test=gene-filter-icon]'
-            );
+            await waitForPatientView();
+            const filterIcon = await getNestedElement([
+                'div[data-test=patientview-copynumber-table]',
+                'i[data-test=gene-filter-icon]',
+            ]);
             assert(!filterIcon.isDisplayed());
         });
     });
 
     describe('genomic tracks', () => {
-        before(() => {
-            goToUrlAndSetLocalStorage(genePanelPatientViewUrl, true);
-            waitForPatientView();
+        before(async () => {
+            await goToUrlAndSetLocalStorage(genePanelPatientViewUrl, true);
+            await waitForPatientView();
         });
 
-        it.skip('shows gene panel icon when gene panels are used for patient samples', () => {
-            assert($('[data-test=cna-track-genepanel-icon-0]').isExisting());
-            assert($('[data-test=mut-track-genepanel-icon-5]').isExisting());
+        it.skip('shows gene panel icon when gene panels are used for patient samples', async () => {
+            assert(
+                await (
+                    await getElement('[data-test=cna-track-genepanel-icon-0]')
+                ).isExisting()
+            );
+            assert(
+                await await '[data-test=mut-track-genepanel-icon-5]'.isExisting()
+            );
         });
 
-        it.skip('shows mouse-over tooltip for gene panel icons with gene panel id', () => {
+        it.skip('shows mouse-over tooltip for gene panel icons with gene panel id', async () => {
             // Tooltip elements are created when hovering the gene panel icon.
             // Control logic below is needed to access the last one after it
             // was created.
 
-            $('[data-test=cna-track-genepanel-icon-1]').waitForDisplayed();
+            await waitForElementDisplayed(
+                '[data-test=cna-track-genepanel-icon-1]'
+            );
 
-            $('[data-test=cna-track-genepanel-icon-1]').moveTo();
+            await (
+                await getElement('[data-test=cna-track-genepanel-icon-1]')
+            ).moveTo();
 
-            $('.genover-tooltip').waitForDisplayed();
-            var text = $('div.qtip-content').getText();
+            await waitForElementDisplayed('.genover-tooltip');
+            const text = (await getElement('div.qtip-content')).getText();
             assert.equal(text, 'Gene panel: TESTPANEL1');
         });
 
@@ -458,25 +474,25 @@ describe('patient view page', function() {
     });
 });
 
-function testSampleIcon(
+async function testSampleIcon(
     geneSymbol,
     tableTag,
     sampleIconTypes,
     sampleVisibilities
 ) {
-    const geneCell = $('div[data-test=' + tableTag + '] table').$(
-        'span=' + geneSymbol
+    const geneCell = getNestedElement([
+        'div[data-test=' + tableTag + '] table',
+        'span=' + geneSymbol,
+    ]);
+    const samplesCell = await (await (await geneCell.$('..')).$('..')).$(
+        'div[data-test=samples-cell] ul'
     );
-    const samplesCell = geneCell
-        .$('..')
-        .$('..')
-        .$('div[data-test=samples-cell] ul');
-    const icons = samplesCell.$$('li');
+    const icons = await samplesCell.$$('li');
 
-    sampleIconTypes.forEach((desiredDataType, i) => {
-        const isExpectedIcon = icons[i]
-            .$('svg[data-test=' + desiredDataType + ']')
-            .isExisting();
+    sampleIconTypes.forEach(async (desiredDataType, i) => {
+        const isExpectedIcon = await (
+            await icons[i].$('svg[data-test=' + desiredDataType + ']')
+        ).isExisting();
         assert.equal(
             isExpectedIcon,
             true,
@@ -490,8 +506,8 @@ function testSampleIcon(
         );
     });
 
-    sampleVisibilities.forEach((desiredVisibility, i) => {
-        const actualVisibility = icons[i].isDisplayed();
+    sampleVisibilities.forEach(async (desiredVisibility, i) => {
+        const actualVisibility = await icons[i].isDisplayed();
         assert.equal(
             actualVisibility,
             desiredVisibility,
@@ -508,27 +524,27 @@ function testSampleIcon(
     });
 }
 
-function testClonalIcon(
+async function testClonalIcon(
     geneSymbol,
     tableTag,
     clonalIconTypes,
     sampleVisibilities
 ) {
-    const geneCell = $('div[data-test=' + tableTag + '] table').$(
-        'span=' + geneSymbol
+    const geneCell = await getNestedElement([
+        'div[data-test=' + tableTag + '] table',
+        'span=' + geneSymbol,
+    ]);
+    const clonalCell = await (await (await geneCell.$('..')).$('..')).$(
+        'span[data-test=clonal-cell]'
     );
-    const clonalCell = geneCell
-        .$('..')
-        .$('..')
-        .$('span[data-test=clonal-cell]');
 
     //if span span - getting a whole list where each index is a list
     //if span span span - each index seems to be one item
-    const icons = clonalCell.$$('span span span');
-    clonalIconTypes.forEach((desiredDataType, i) => {
-        const svg = icons[i].$('svg');
+    const icons = await clonalCell.$$('span span span');
+    clonalIconTypes.forEach(async (desiredDataType, i) => {
+        const svg = await icons[i].$('svg');
 
-        const actualDataType = svg.getAttribute('data-test');
+        const actualDataType = await svg.getAttribute('data-test');
         assert.equal(
             actualDataType,
             desiredDataType,
@@ -543,7 +559,8 @@ function testClonalIcon(
                 '`'
         );
 
-        const actualVisibility = svg.$('circle').getAttribute('opacity') > 0;
+        const actualVisibility =
+            (await (await svg.$('circle')).getAttribute('opacity')) > 0;
         assert.equal(
             actualVisibility,
             sampleVisibilities[i],
