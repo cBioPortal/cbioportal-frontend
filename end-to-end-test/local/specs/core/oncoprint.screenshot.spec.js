@@ -1,16 +1,17 @@
-var {
+const {
     goToUrlAndSetLocalStorage,
     waitForOncoprint,
     checkOncoprintElement,
     goToUrlAndSetLocalStorageWithProperty,
-} = require('../../../shared/specUtils');
-var {
     getNthOncoprintTrackOptionsElements,
-} = require('../../../shared/specUtils');
-var assertScreenShotMatch = require('../../../shared/lib/testUtils')
-    .assertScreenShotMatch;
+    clickElement,
+    waitForElementDisplayed,
+    getElement,
+} = require('../../../shared/specUtils_Async');
 
-var _ = require('lodash');
+const { assertScreenShotMatch } = require('../../../shared/lib/testUtils');
+
+const _ = require('lodash');
 const { parse } = require('query-string');
 
 const USER_SETTINGS_QUERY_PARAM = 'userSettingsJson';
@@ -78,17 +79,17 @@ const ONCOPRINT_TIMEOUT = 100000;
 describe('oncoprint', function() {
     this.retries(0);
     describe('generic assay categorical tracks', () => {
-        it('shows binary and multiple category tracks', () => {
-            goToUrlAndSetLocalStorage(genericArrayUrl, true);
-            waitForOncoprint();
-            const res = checkOncoprintElement();
+        it('shows binary and multiple category tracks', async () => {
+            await goToUrlAndSetLocalStorage(genericArrayUrl, true);
+            await waitForOncoprint();
+            const res = await checkOncoprintElement();
             assertScreenShotMatch(res);
         });
     });
 
     describe('clinical tracks', () => {
-        beforeEach(() => {
-            goToUrlAndSetLocalStorageWithProperty(
+        beforeEach(async () => {
+            await goToUrlAndSetLocalStorageWithProperty(
                 studyes0_oncoprintTabUrl,
                 true,
                 {
@@ -97,27 +98,27 @@ describe('oncoprint', function() {
                     ),
                 }
             );
-            waitForOncoprint();
+            await waitForOncoprint();
         });
 
-        it('initializes as configured by default', () => {
-            const res = checkOncoprintElement();
+        it('initializes as configured by default', async () => {
+            const res = await checkOncoprintElement();
             assertScreenShotMatch(res);
         });
 
-        it('updates url when changing gaps', () => {
-            changeNthTrack(1, 'Hide gaps (w/%)');
-            const clinicalTracksUrlParam = getTracksFromBookmark(browser);
+        it('updates url when changing gaps', async () => {
+            await changeNthTrack(1, 'Hide gaps (w/%)');
+            const clinicalTracksUrlParam = await getTracksFromBookmark(browser);
 
             expect(clinicalTracksUrlParam).toEqual(
                 SERVER_CLINICAL_TRACK_CONFIG
             );
         });
 
-        it('updates url when sorting', () => {
-            changeNthTrack(1, 'Sort Z-a');
+        it('updates url when sorting', async () => {
+            await changeNthTrack(1, 'Sort Z-a');
 
-            const clinicallist = getTracksFromBookmark(browser);
+            const clinicallist = await getTracksFromBookmark(browser);
 
             expect(SERVER_CLINICAL_TRACK_CONFIG[0].sortOrder === 'ASC');
             const updatedTrackConfig = JSON.parse(
@@ -127,29 +128,29 @@ describe('oncoprint', function() {
             expect(clinicallist).toEqual(updatedTrackConfig);
         });
 
-        it('initializes correctly when clinicallist config present in url', () => {
+        it('initializes correctly when clinicallist config present in url', async () => {
             const urlWithUserConfig = createUrlWithSettingsQueryParam(
                 MANUAL_TRACK_CONFIG
             );
-            goToUrlAndSetLocalStorage(urlWithUserConfig, false);
-            waitForOncoprint();
+            await goToUrlAndSetLocalStorage(urlWithUserConfig, false);
+            await waitForOncoprint();
 
-            const res = checkOncoprintElement();
+            const res = await checkOncoprintElement();
             assertScreenShotMatch(res);
 
-            const clinicallist = getTracksFromBookmark(browser);
+            const clinicallist = await getTracksFromBookmark(browser);
             expect(clinicallist).toEqual(MANUAL_TRACK_CONFIG);
         });
 
-        it('still supports legacy clinicallist format', () => {
-            const legacyFormatUrlParam = createOncoprintFromLegacyFormat();
+        it('still supports legacy clinicallist format', async () => {
+            const legacyFormatUrlParam = await createOncoprintFromLegacyFormat();
 
-            changeNthTrack(1, 'Sort a-Z');
+            await changeNthTrack(1, 'Sort a-Z');
 
-            const res = checkOncoprintElement();
+            const res = await checkOncoprintElement();
             assertScreenShotMatch(res);
 
-            const clinicallist = getTracksFromBookmark(browser);
+            const clinicallist = await getTracksFromBookmark(browser);
 
             const stableIds = clinicallist.map(tracks => tracks.stableId);
             expect(stableIds.join(',')).toEqual(legacyFormatUrlParam);
@@ -159,32 +160,36 @@ describe('oncoprint', function() {
         /**
          * Note: to rerun test locally, first clean user session
          */
-        it.skip('stores config in user session when save button clicked', () => {
+        it.skip('stores config in user session when save button clicked', async () => {
             // Load page with a default config that differs from SERVER_CLINICAL_TRACK_CONFIG
             const customConfig = JSON.parse(
                 JSON.stringify(SERVER_CLINICAL_TRACK_CONFIG)
             );
             // Remove track to create diff
             customConfig.pop();
-            const urlWithUserConfig = createUrlWithSettingsQueryParam(
+            const urlWithUserConfig = await createUrlWithSettingsQueryParam(
                 customConfig
             );
-            goToUrlAndSetLocalStorage(urlWithUserConfig, false);
+            await goToUrlAndSetLocalStorage(urlWithUserConfig, false);
 
-            waitForOncoprint();
+            await waitForOncoprint();
 
             // Check save button enabled
-            openTracksMenu();
-            const $saveSessionBtn = $('#save-oncoprint-config-to-session');
-            let classes = $saveSessionBtn.getAttribute('class').split(' ');
+            await openTracksMenu();
+            const $saveSessionBtn = await getElement(
+                '#save-oncoprint-config-to-session'
+            );
+            let classes = (await $saveSessionBtn.getAttribute('class')).split(
+                ' '
+            );
             const saveBtnIsEnabled = !classes.includes('disabled');
             expect(saveBtnIsEnabled).toBe(true);
 
             // Click save button
-            $saveSessionBtn.click();
-            waitForOncoprint();
+            await $saveSessionBtn.click();
+            await waitForOncoprint();
             // Check save button disabled
-            classes = $saveSessionBtn.getAttribute('class').split(' ');
+            classes = (await $saveSessionBtn.getAttribute('class')).split(' ');
             const saveBtnIsDisabled = classes.includes('disabled');
             expect(saveBtnIsDisabled).toBe(true);
         });
@@ -193,19 +198,19 @@ describe('oncoprint', function() {
          * Uses session from previous test
          * to differentiate between default and custom config
          */
-        it.skip('uses configuration stored in session when available', () => {
+        it.skip('uses configuration stored in session when available', async () => {
             // Expected should match custom config of previous test
             const expected = JSON.parse(
                 JSON.stringify(SERVER_CLINICAL_TRACK_CONFIG)
             );
             expected.pop(); // <-- remove track
-            const clinicallist = getTracksFromBookmark(browser);
+            const clinicallist = await getTracksFromBookmark(browser);
             expect(clinicallist).toEqual(expected);
         });
     });
 
-    describe('oql structural variant tracks', () => {
-        beforeEach(() => {
+    describe('oql structural variant tracks', async () => {
+        beforeEach(async () => {
             // Build Struct Var OQL and place in the URL.
             const oql =
                 // Downstream KIAA1549 has 1 struct var event (0.1%):
@@ -239,7 +244,7 @@ describe('oncoprint', function() {
 
             // Define a set of clinical tracks in the props so that changes here
             // do not cause unnecessary differences in the screenshot test.
-            goToUrlAndSetLocalStorageWithProperty(stuctVarUrl, true, {
+            await goToUrlAndSetLocalStorageWithProperty(stuctVarUrl, true, {
                 oncoprint_clinical_tracks_config_json: JSON.stringify(
                     SERVER_CLINICAL_TRACK_CONFIG
                 ),
@@ -247,8 +252,8 @@ describe('oncoprint', function() {
             waitForOncoprint();
         });
 
-        it('shows oql structural variant variations', function() {
-            const res = checkOncoprintElement();
+        it('shows oql structural variant variations', async function() {
+            const res = await checkOncoprintElement();
             assertScreenShotMatch(res);
         });
     });
@@ -261,39 +266,45 @@ function createUrlWithSettingsQueryParam(config) {
     return `${studyes0_oncoprintTabUrl}#${USER_SETTINGS_QUERY_PARAM}=${jsonConfig}`;
 }
 
-function openTracksMenu() {
-    const $tracksDropdown = $('#addTracksDropdown');
-    $tracksDropdown.click();
-    waitForOncoprint();
+async function openTracksMenu() {
+    const $tracksDropdown = await getElement('#addTracksDropdown');
+    await $tracksDropdown.click();
+    await waitForOncoprint();
 }
 
-function changeNthTrack(track, menuOptionButtonText) {
-    const firstTrack = getNthOncoprintTrackOptionsElements(1);
-    $(firstTrack.button_selector).click();
-    $(firstTrack.dropdown_selector).waitForDisplayed({
+async function changeNthTrack(track, menuOptionButtonText) {
+    const firstTrack = await getNthOncoprintTrackOptionsElements(1);
+    await clickElement(firstTrack.button_selector);
+    await waitForElementDisplayed(firstTrack.dropdown_selector, {
         timeout: 1000,
     });
-    $(`li=${menuOptionButtonText}`).click();
-    waitForOncoprint();
+    await clickElement(`li=${menuOptionButtonText}`);
+    await waitForOncoprint();
 }
 
-function getBookmarkUrl(browser) {
+async function getBookmarkUrl(browser) {
     const showBookmarkButtonSelector = '[data-test=bookmark-link]';
-    browser.waitUntil(() => $(showBookmarkButtonSelector).isExisting());
-    $(showBookmarkButtonSelector).click();
+    await browser.waitUntil(
+        async () =>
+            await (await getElement(showBookmarkButtonSelector)).isExisting()
+    );
+    await clickElement(showBookmarkButtonSelector);
     const bookmarkUrlInputFieldSelector = '[data-test=bookmark-url]';
-    browser.waitUntil(() => $(bookmarkUrlInputFieldSelector).isExisting());
-    const $bookMarkUrl = $('[data-test=bookmark-url]');
+    await browser.waitUntil(
+        async () =>
+            await (await getElement(bookmarkUrlInputFieldSelector)).isExisting()
+    );
+    const $bookMarkUrl = await getElement('[data-test=bookmark-url]');
     return $bookMarkUrl.getValue();
 }
 
-function getTracksFromBookmark(browser) {
-    const bookmarkUrl = getBookmarkUrl(browser);
-    const userSettings = getUserSettingsFrom(bookmarkUrl);
+async function getTracksFromBookmark(browser) {
+    const bookmarkUrl = await getBookmarkUrl(browser);
+    const userSettings = await getUserSettingsFrom(bookmarkUrl);
     return userSettings.clinicallist;
 }
 
-function getUserSettingsFrom(bookmarkUrl) {
+async function getUserSettingsFrom(bookmarkUrl) {
     let params = parse(new URL(bookmarkUrl).hash);
     return JSON.parse(params[USER_SETTINGS_QUERY_PARAM]);
 }
@@ -301,12 +312,12 @@ function getUserSettingsFrom(bookmarkUrl) {
 /**
  * @returns {string} legacy format
  */
-function createOncoprintFromLegacyFormat() {
+async function createOncoprintFromLegacyFormat() {
     const legacyFormatQueryParam = MANUAL_TRACK_CONFIG.map(
         track => track.stableId
     ).join(',');
     const legacyUrl = `${studyes0_oncoprintTabUrl}&clinicallist=${legacyFormatQueryParam}`;
-    goToUrlAndSetLocalStorage(legacyUrl, false);
-    waitForOncoprint();
+    await goToUrlAndSetLocalStorage(legacyUrl, false);
+    await waitForOncoprint();
     return legacyFormatQueryParam;
 }

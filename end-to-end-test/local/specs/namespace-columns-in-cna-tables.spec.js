@@ -1,7 +1,7 @@
 const assert = require('assert');
 const {
     goToUrlAndSetLocalStorageWithProperty,
-} = require('../../shared/specUtils');
+} = require('../../shared/specUtils_Async');
 const {
     namespaceColumnsAreNotDisplayed,
     waitForTable,
@@ -24,30 +24,34 @@ describe('namespace columns in cna tables', function() {
         const patientCnaTable = 'patientview-copynumber-table';
         const geneWithCustomNamespaceData = 'ACAP3';
 
-        it('hides namespace columns when no property set', () => {
-            goToUrlAndSetLocalStorageWithProperty(patientViewUrl, true, {});
-            waitForTable(patientCnaTable);
-            assert(namespaceColumnsAreNotDisplayed(namespaceColumns));
+        it('hides namespace columns when no property set', async () => {
+            await goToUrlAndSetLocalStorageWithProperty(
+                patientViewUrl,
+                true,
+                {}
+            );
+            await waitForTable(patientCnaTable);
+            assert(await namespaceColumnsAreNotDisplayed(namespaceColumns));
         });
 
-        it('shows columns when column menu is used', () => {
-            clickColumnSelectionButton(patientCnaTable);
-            selectColumn(namespaceColumn1);
-            selectColumn(namespaceColumn2);
-            clickColumnSelectionButton(patientCnaTable);
-            assert(namespaceColumnsAreDisplayed(namespaceColumns));
+        it('shows columns when column menu is used', async () => {
+            await clickColumnSelectionButton(patientCnaTable);
+            await selectColumn(namespaceColumn1);
+            await selectColumn(namespaceColumn2);
+            await clickColumnSelectionButton(patientCnaTable);
+            assert(await namespaceColumnsAreDisplayed(namespaceColumns));
         });
 
         /**
          * Expected custom namespace columns to be shown
          */
-        it('displays custom namespace data', () => {
-            const rowWithNamespaceData = getRowByGene(
+        it('displays custom namespace data', async () => {
+            const rowWithNamespaceData = await getRowByGene(
                 patientCnaTable,
                 geneWithCustomNamespaceData
             );
             assert(!!rowWithNamespaceData);
-            const text = rowWithNamespaceData.getText();
+            const text = await rowWithNamespaceData.getText();
             assert(text.includes(namespaceValue1));
             assert(text.includes(namespaceValue2));
         });

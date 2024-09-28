@@ -1,11 +1,13 @@
-var goToUrlAndSetLocalStorage = require('../../../shared/specUtils')
-    .goToUrlAndSetLocalStorage;
-var waitForPatientView = require('../../../shared/specUtils')
-    .waitForPatientView;
-var { setDropdownOpen } = require('../../../shared/specUtils');
-var assertScreenShotMatch = require('../../../shared/lib/testUtils')
-    .assertScreenShotMatch;
-const { getElementByTestHandle } = require('../../../shared/specUtils');
+const {
+    goToUrlAndSetLocalStorage,
+    waitForPatientView,
+    setDropdownOpen,
+    getElementByTestHandle,
+    getNestedElement,
+    waitForElementDisplayed,
+    clickElement,
+} = require('../../../shared/specUtils_Async');
+const { assertScreenShotMatch } = require('../../../shared/lib/testUtils');
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 const patientViewUrl =
     CBIOPORTAL_URL + '/patient?studyId=teststudy_genepanels&caseId=patientA';
@@ -17,13 +19,13 @@ const genericAssayPatientViewUrl =
 
 describe('patient view page', function() {
     describe('mutation table for study with ASCN data', () => {
-        beforeEach(() => {
-            goToUrlAndSetLocalStorage(ascnPatientViewUrl, true);
-            waitForPatientView();
+        beforeEach(async () => {
+            await goToUrlAndSetLocalStorage(ascnPatientViewUrl, true);
+            await waitForPatientView();
         });
 
-        it('displays ASCN columns', () => {
-            var res = browser.checkElement(
+        it('displays ASCN columns', async () => {
+            const res = await browser.checkElement(
                 'div[data-test=patientview-mutation-table] table'
             );
             assertScreenShotMatch(res);
@@ -31,13 +33,13 @@ describe('patient view page', function() {
     });
 
     describe('mutation table for study with no ASCN data', () => {
-        beforeEach(() => {
-            goToUrlAndSetLocalStorage(patientViewUrl, true);
-            waitForPatientView();
+        beforeEach(async () => {
+            await goToUrlAndSetLocalStorage(patientViewUrl, true);
+            await waitForPatientView();
         });
 
-        it('does not display ASCN columns for studies with no ASCN data', () => {
-            var res = browser.checkElement(
+        it('does not display ASCN columns for studies with no ASCN data', async () => {
+            const res = await browser.checkElement(
                 'div[data-test=patientview-mutation-table] table'
             );
             assertScreenShotMatch(res);
@@ -48,13 +50,13 @@ describe('patient view page', function() {
         const iconIndexGenePanelSample = 2;
         const iconIndexWholeGenomeSample = 3;
 
-        beforeEach(() => {
-            goToUrlAndSetLocalStorage(patientViewUrl, true);
-            waitForPatientView();
+        beforeEach(async () => {
+            await goToUrlAndSetLocalStorage(patientViewUrl, true);
+            await waitForPatientView();
         });
 
-        it('shows gene panel icons behind mutation and CNA genomic tracks', () => {
-            var res = browser.checkElement(
+        it('shows gene panel icons behind mutation and CNA genomic tracks', async () => {
+            const res = await browser.checkElement(
                 'div.genomicOverviewTracksContainer'
             );
             assertScreenShotMatch(res);
@@ -204,16 +206,17 @@ describe('patient view page', function() {
     });
 });
 
-const switchGeneFilter = selectedOption => {
+const switchGeneFilter = async selectedOption => {
     const selectMenu = '.rc-tooltip';
     const filterIcon =
         'div[data-test=patientview-mutation-table] i[data-test=gene-filter-icon]';
-    setDropdownOpen(true, filterIcon, selectMenu);
-    const allGenesRadio = $(selectMenu).$(
-        'input[value=' + selectedOption + ']'
-    );
-    allGenesRadio.click();
-    setDropdownOpen(false, filterIcon, selectMenu);
+    await setDropdownOpen(true, filterIcon, selectMenu);
+    const allGenesRadio = await getNestedElement([
+        selectMenu,
+        'input[value=' + selectedOption + ']',
+    ]);
+    await allGenesRadio.click();
+    await setDropdownOpen(false, filterIcon, selectMenu);
 };
 
 const doVafPlotScreenshotTest = () => {
@@ -255,11 +258,14 @@ const selectPercentageYAxis = () => {
     getElementByTestHandle('AxisScaleSwitch%').click();
 };
 
-const selectSampleMutationalSignature = () => {
-    $('div.mutationalSignatureSampleSelector__indicators').waitForDisplayed({
-        timeout: 10000,
-    });
-    $('div.mutationalSignatureSampleSelector__indicators').click();
-    $('div=P01_Rec').waitForDisplayed({ timeout: 10000 });
-    $('div=P01_Rec').click();
+const selectSampleMutationalSignature = async () => {
+    await waitForElementDisplayed(
+        'div.mutationalSignatureSampleSelector__indicators',
+        {
+            timeout: 10000,
+        }
+    );
+    await clickElement('div.mutationalSignatureSampleSelector__indicators');
+    await waitForElementDisplayed('div=P01_Rec', { timeout: 10000 });
+    await clickElement('div=P01_Rec');
 };

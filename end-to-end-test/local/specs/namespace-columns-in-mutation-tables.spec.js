@@ -1,7 +1,13 @@
 const assert = require('assert');
 const {
     goToUrlAndSetLocalStorageWithProperty,
-} = require('../../shared/specUtils');
+    clickElement,
+    setInputText,
+    getNestedElement,
+    getElement,
+    isDisplayed,
+    waitForElementDisplayed,
+} = require('../../shared/specUtils_Async');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 const resultsViewUrl = `${CBIOPORTAL_URL}/results/mutations?cancer_study_list=study_es_0&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&profileFilter=mutations%2Cfusion%2Cgistic&case_set_id=study_es_0_all&gene_list=BRCA1&geneset_list=%20&tab_index=tab_visualize&Action=Submit`;
@@ -9,57 +15,79 @@ const patientViewUrl = `${CBIOPORTAL_URL}/patient?sampleId=TEST_SAMPLE_SOMATIC_H
 
 describe('namespace columns in mutation tables', function() {
     describe('results view', () => {
-        it('hides namespace columns when no property set', () => {
-            goToUrlAndSetLocalStorageWithProperty(resultsViewUrl, true, {});
-            waitForMutationTable();
-            assert(namespaceColumnsAreNotDisplayed());
+        it('hides namespace columns when no property set', async () => {
+            await goToUrlAndSetLocalStorageWithProperty(
+                resultsViewUrl,
+                true,
+                {}
+            );
+            await waitForMutationTable();
+            assert(await namespaceColumnsAreNotDisplayed());
         });
-        it('shows columns when column menu is used', () => {
+        it('shows columns when column menu is used', async () => {
             // Click on column button.
-            $('button*=Columns').click();
+            await clickElement('button*=Columns');
             // Filter menu options.
-            $('[data-test=fixed-header-table-search-input]').setValue(
+            await setInputText(
+                '[data-test=fixed-header-table-search-input]',
                 'zygosity'
             );
-            $('[data-test=add-by-type]')
-                .$('div*=Zygosity')
-                .waitForDisplayed();
+            await (
+                await getNestedElement([
+                    '[data-test=add-by-type]',
+                    'div*=Zygosity',
+                ])
+            ).waitForDisplayed();
             // Click namespace column checkboxes.
-            $('[data-test=add-by-type]')
+            await (await getElement('[data-test=add-by-type]'))
                 .$$('div*=Zygosity')
-                .forEach(checkbox => checkbox.click());
-            $('button*=Columns').click();
-            assert(namespaceColumnsAreDisplayed());
+                .forEach(async checkbox => await checkbox.click());
+            await clickElement('button*=Columns');
+            assert(await namespaceColumnsAreDisplayed());
         });
-        it('shows namespace columns when property set', () => {
-            goToUrlAndSetLocalStorageWithProperty(resultsViewUrl, true, {
+        it('shows namespace columns when property set', async () => {
+            await goToUrlAndSetLocalStorageWithProperty(resultsViewUrl, true, {
                 skin_mutation_table_namespace_column_show_by_default: true,
             });
-            waitForMutationTable();
-            assert(namespaceColumnsAreDisplayed());
+            await waitForMutationTable();
+            assert(await namespaceColumnsAreDisplayed());
         });
-        it('has filter icons', () => {
-            $("//span[text() = 'Zygosity Code']").click();
-            filterIconOfHeader(
-                "//span[text() = 'Zygosity Code']"
+        it('has filter icons', async () => {
+            await clickElement("//span[text() = 'Zygosity Code']");
+            await (
+                await filterIconOfHeader("//span[text() = 'Zygosity Code']")
             ).waitForDisplayed();
-            $("//span[text() = 'Zygosity Name']").click();
-            filterIconOfHeader(
-                "//span[text() = 'Zygosity Name']"
+            await clickElement("//span[text() = 'Zygosity Name']");
+            await (
+                await filterIconOfHeader("//span[text() = 'Zygosity Name']")
             ).waitForDisplayed();
         });
-        it('filters rows when using numerical filter menu', () => {
-            filterIconOfHeader("//span[text() = 'Zygosity Code']").click();
+        it('filters rows when using numerical filter menu', async () => {
+            await (
+                await filterIconOfHeader("//span[text() = 'Zygosity Code']")
+            ).click();
             // Empty rows
-            var numberOfRowsBefore = numberOfTableRows();
-            $('#Zygosity_Code-lowerValue-box').setValue('2');
-            $('[data-test=numerical-filter-menu-remove-empty-rows]').click();
-            browser.waitUntil(() => numberOfTableRows() < numberOfRowsBefore);
+            const numberOfRowsBefore = await numberOfTableRows();
+            await (await getElement('#Zygosity_Code-lowerValue-box')).setValue(
+                '2'
+            );
+            await clickElement(
+                '[data-test=numerical-filter-menu-remove-empty-rows]'
+            );
+            await browser.waitUntil(
+                async () => (await numberOfTableRows()) < numberOfRowsBefore
+            );
 
             // reset state
-            $('#Zygosity_Code-lowerValue-box').setValue('1');
-            $('[data-test=numerical-filter-menu-remove-empty-rows]').click();
-            browser.waitUntil(() => numberOfTableRows() === numberOfRowsBefore);
+            await (await getElement('#Zygosity_Code-lowerValue-box')).setValue(
+                '1'
+            );
+            await clickElement(
+                '[data-test=numerical-filter-menu-remove-empty-rows]'
+            );
+            await browser.waitUntil(
+                async () => (await numberOfTableRows()) === numberOfRowsBefore
+            );
         });
         it('filters rows when using categorical filter menu', () => {
             filterIconOfHeader("//span[text() = 'Zygosity Name']").click();
@@ -77,56 +105,65 @@ describe('namespace columns in mutation tables', function() {
             waitForPatientViewMutationTable();
             assert(namespaceColumnsAreNotDisplayed());
         });
-        it('shows columns when column menu is used', () => {
+        it('shows columns when column menu is used', async () => {
             // Click on column button.
-            $('[data-test=patientview-mutation-table]')
-                .$('button*=Columns')
-                .click();
+            await (
+                await getNestedElement([
+                    '[data-test=patientview-mutation-table]',
+                    'button*=Columns',
+                ])
+            ).click();
             // Click namespace column checkboxes.
-            $('[data-id="Zygosity Code"]').click();
-            $('[data-id="Zygosity Name"]').click();
-            $('[data-test=patientview-mutation-table]')
-                .$('button*=Columns')
-                .click();
-            assert(namespaceColumnsAreDisplayed());
+            await clickElement('[data-id="Zygosity Code"]');
+            await clickElement('[data-id="Zygosity Name"]');
+            await (
+                await getNestedElement([
+                    '[data-test=patientview-mutation-table]',
+                    'button*=Columns',
+                ])
+            ).click();
+            assert(await namespaceColumnsAreDisplayed());
         });
-        it('shows namespace columns when property set', () => {
-            goToUrlAndSetLocalStorageWithProperty(patientViewUrl, true, {
+        it('shows namespace columns when property set', async () => {
+            await goToUrlAndSetLocalStorageWithProperty(patientViewUrl, true, {
                 skin_mutation_table_namespace_column_show_by_default: true,
             });
-            waitForPatientViewMutationTable();
-            assert(namespaceColumnsAreDisplayed());
+            await waitForPatientViewMutationTable();
+            assert(await namespaceColumnsAreDisplayed());
         });
     });
 });
 
-waitForMutationTable = () => {
-    $('[data-test=LazyMobXTable]').waitForDisplayed();
+const waitForMutationTable = async () => {
+    await waitForElementDisplayed('[data-test=LazyMobXTable]');
 };
 
-waitForPatientViewMutationTable = () => {
-    $('[data-test=patientview-mutation-table]').waitForDisplayed();
+const waitForPatientViewMutationTable = async () => {
+    await waitForElementDisplayed('[data-test=patientview-mutation-table]');
 };
 
-namespaceColumnsAreDisplayed = () => {
+const namespaceColumnsAreDisplayed = async () => {
     return (
-        $("//span[text() = 'Zygosity Code']").isDisplayed() &&
-        $("//span[text() = 'Zygosity Name']").isDisplayed()
+        (await isDisplayed("//span[text() = 'Zygosity Code']")) &&
+        (await isDisplayed("//span[text() = 'Zygosity Name']"))
     );
 };
 
-namespaceColumnsAreNotDisplayed = () => {
+const namespaceColumnsAreNotDisplayed = async () => {
     return !(
-        $("//span[text() = 'Zygosity Code']").isDisplayed() &&
-        $("//span[text() = 'Zygosity Name']").isDisplayed()
+        (await isDisplayed("//span[text() = 'Zygosity Code']")) &&
+        (await isDisplayed("//span[text() = 'Zygosity Name']"))
     );
 };
 
-filterIconOfHeader = selector => {
-    return $(selector)
-        .parentElement()
-        .parentElement()
-        .$('.fa-filter');
+const filterIconOfHeader = async selector => {
+    // return await (await (
+    //     await (await $(selector))
+    //         .parentElement())
+    //     .parentElement())
+    //     .$('.fa-filter');
+
+    return getNestedElement([selector, '..', '..', '.fa-filter']);
 };
 
-numberOfTableRows = () => $$('.lazy-mobx-table tr').length;
+const numberOfTableRows = async () => (await $$('.lazy-mobx-table tr')).length;
