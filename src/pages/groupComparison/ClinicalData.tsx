@@ -121,6 +121,7 @@ export const categoryPlotTypeOptions = [
         label: '100% stacked bar chart',
     },
     { value: CategoryPlotType.Heatmap, label: 'Heatmap' },
+    { value: CategoryPlotType.Table, label: 'Table' },
 ];
 
 function isNumerical(datatype?: string) {
@@ -277,7 +278,14 @@ export default class ClinicalData extends React.Component<
     }
 
     @computed get showHorizontalBarControls() {
-        return !this.showLogScaleControls && !this.isHeatmap;
+        return (
+            !this.showLogScaleControls &&
+            !this.isHeatmap &&
+            !(
+                !this.isNumericalPlot &&
+                this.categoryPlotType === CategoryPlotType.Table
+            )
+        );
     }
 
     @computed get showSwapAxisControls() {
@@ -286,9 +294,11 @@ export default class ClinicalData extends React.Component<
 
     @computed get isTable() {
         return (
-            this.isNumericalPlot &&
-            this.numericalVisualisationType ===
-                ClinicalNumericalVisualisationType.Table
+            (this.isNumericalPlot &&
+                this.numericalVisualisationType ===
+                    ClinicalNumericalVisualisationType.Table) ||
+            (!this.isNumericalPlot &&
+                this.categoryPlotType === CategoryPlotType.Table)
         );
     }
 
@@ -728,7 +738,7 @@ export default class ClinicalData extends React.Component<
                         className="form-group"
                         style={{ display: 'flex', alignItems: 'center' }}
                     >
-                        <label>Plot Type</label>
+                        <label>Visualisation Type</label>
                         <div
                             style={{ width: 240, marginLeft: 5 }}
                             data-test="plotTypeSelector"
