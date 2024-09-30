@@ -269,7 +269,7 @@ async function goToUrlAndSetLocalStorage(url, authenticated = false) {
         await browser.url(`${url}${prefix}${urlparam}=true`);
         console.log('Connecting to: ' + `${url}${prefix}${urlparam}=true`);
     }
-    if (needToLogin) keycloakLogin(10000);
+    if (needToLogin) await keycloakLogin(10000);
     await browser.pause(1000);
 }
 
