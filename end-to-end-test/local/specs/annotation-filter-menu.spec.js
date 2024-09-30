@@ -864,17 +864,23 @@ const waitForUpdateResultsView = async () => {
     await waitForElementDisplayed('[data-test=LazyMobXTable]');
 };
 
-const turnOffCancerGenesFilters = () => {
-    const activeFilterIcons = $$(
+const turnOffCancerGenesFilters = async () => {
+    const activeFilterIcons = await $$(
         '[data-test=gene-column-header] [data-test=header-filter-icon]'
-    ).filter(e => e.getCSSProperty('color').value === 'rgba(0,0,0,1)');
-    activeFilterIcons.forEach(i => i.click());
+    );
+    for (const icon of activeFilterIcons) {
+        if ((await icon.getCSSProperty('color').value) === 'rgba(0,0,0,1)') {
+            await icon.click();
+        }
+    }
 };
 
-const openAlterationFilterMenu = () => {
-    $('[data-test=AlterationFilterButton]').waitForDisplayed();
-    $('[data-test=AlterationFilterButton]').click();
-    $('[data-test=GlobalSettingsDropdown] input').waitForDisplayed();
+const openAlterationFilterMenu = async () => {
+    await (await $('[data-test=AlterationFilterButton]')).waitForDisplayed();
+    await (await $('[data-test=AlterationFilterButton]')).click();
+    await (
+        await $('[data-test=GlobalSettingsDropdown] input')
+    ).waitForDisplayed();
 };
 
 const openAlterationFilterMenuGroupComparison = async () => {
