@@ -98,7 +98,6 @@ import {
     CopyNumberEnrichmentEventType,
     CustomSurvivalPlots,
     EnrichmentEventType,
-    generateRandomString,
     getCopyNumberEventTypesAPIParameter,
     getMutationEventTypesAPIParameter,
     getSurvivalPlotName,
@@ -351,10 +350,13 @@ export default abstract class ComparisonStore extends AnalysisStore
                 ? this.chartName
                 : getSurvivalPlotName(
                       this._selectedStartClinicalEventType!,
+                      this.selectedStartClinicalEventAttributes || [],
                       this.startEventPosition,
                       this._selectedEndClinicalEventType!,
+                      this.selectedEndClinicalEventAttributes || [],
                       this.endEventPosition,
                       this._selectedCensoredClinicalEventType!,
+                      this.selectedCensoredClinicalEventAttributes || [],
                       _.values(this.survivalTitleByPrefix.result || {})
                   );
 

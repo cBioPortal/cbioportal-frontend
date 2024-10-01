@@ -264,77 +264,107 @@ export function getSurvivalPlotDescription(
 ) {
     let description = '';
     if (chart.startEventRequestIdentifier) {
-        const startIdentifier = chart.startEventRequestIdentifier.clinicalEventRequests[0].attributes
-            .sort((a, b) =>
-                `${a.key}::${a.value}`.localeCompare(`${b.key}::${b.value}`)
-            )
-            .map(x => `${x.key}::${x.value}`)
-            .join(' ');
-        description = `${chart.startEventRequestIdentifier.position} of ${
-            chart.startEventRequestIdentifier.clinicalEventRequests[0].eventType
-        }${startIdentifier.length > 0 ? ' - ' + startIdentifier : ''}`;
+        const clinicalEventRequest =
+            chart.startEventRequestIdentifier.clinicalEventRequests[0];
+        description += `Start: ${
+            clinicalEventRequest.eventType
+        } - ${clinicalEventRequest.attributes
+            .map(x => `${x.key}:${x.value}`)
+            .join(
+                ' or '
+            )} (${chart.startEventRequestIdentifier.position.toLowerCase()} event)`;
     }
     if (chart.endEventRequestIdentifier) {
-        const endIdentifier = chart.endEventRequestIdentifier.clinicalEventRequests[0].attributes
-            .sort((a, b) =>
-                `${a.key}::${a.value}`.localeCompare(`${b.key}::${b.value}`)
-            )
-            .map(x => `${x.key}::${x.value}`)
-            .join(' ');
-        description = `${description.length > 0 ? description + ' and' : ''} ${
-            chart.endEventRequestIdentifier.position
-        } of ${
-            chart.endEventRequestIdentifier.clinicalEventRequests[0].eventType
-        }${endIdentifier.length > 0 ? ' - ' + endIdentifier : ''}`;
+        const clinicalEventRequest =
+            chart.endEventRequestIdentifier.clinicalEventRequests[0];
+        description += `\nEnd: ${
+            clinicalEventRequest.eventType
+        } - ${clinicalEventRequest.attributes
+            .map(x => `${x.key}:${x.value}`)
+            .join(
+                ' or '
+            )} (${chart.endEventRequestIdentifier.position.toLowerCase()} event)`;
     }
     if (chart.censoredEventRequestIdentifier) {
-        const censoredIdentifier = chart.censoredEventRequestIdentifier.clinicalEventRequests[0].attributes
-            .sort((a, b) =>
-                `${a.key}::${a.value}`.localeCompare(`${b.key}::${b.value}`)
-            )
-            .map(x => `${x.key}::${x.value}`)
-            .join(' ');
-        description = `${description.length > 0 ? description + ' and' : ''} ${
-            chart.censoredEventRequestIdentifier.position
-        } of ${
-            chart.censoredEventRequestIdentifier.clinicalEventRequests[0]
-                .eventType
-        }${censoredIdentifier.length > 0 ? ' - ' + censoredIdentifier : ''}`;
+        const clinicalEventRequest =
+            chart.censoredEventRequestIdentifier.clinicalEventRequests[0];
+        description += `\nEnd: ${clinicalEventRequest.eventType}`;
+
+        if (clinicalEventRequest.attributes.length > 0) {
+            description += ` - ${clinicalEventRequest.attributes
+                .map(x => `${x.key}:${x.value}`)
+                .join(' or ')}`;
+        }
+        description += ` (${chart.censoredEventRequestIdentifier.position.toLowerCase()} event)`;
     }
     return description;
 }
 
 export function getSurvivalPlotName(
     startClinicalEventType: string,
+    startEventAttributes: ClinicalEventDataWithKey[],
     startEventPosition: 'FIRST' | 'LAST',
     endClinicalEventType: string,
+    endEventAttributes: ClinicalEventDataWithKey[],
     endEventPosition: 'FIRST' | 'LAST',
     censoredClinicalEventType: string,
+    censoredEventAttributes: ClinicalEventDataWithKey[],
     existingNames: string[]
 ) {
-    while (true) {
-        const title = `${startEventPosition} ${startClinicalEventType} - ${endEventPosition} ${endClinicalEventType} and censored by ${censoredClinicalEventType} - ${generateRandomString(
-            5
-        )}`;
-        const formattedTitle = title.toLowerCase().trim();
-        if (
-            existingNames.find(
-                prefix => prefix.toLowerCase().trim() === formattedTitle
-            )
-        ) {
-            continue;
+    let title = 'From ';
+    const startStr = startEventAttributes.reduce((acc, attr, index) => {
+        acc += `${attr.value} `;
+        if (index !== startEventAttributes.length - 1) {
+            acc += 'or ';
         }
-        return title;
-    }
+        return acc;
+    }, '');
+    title += `${startEventPosition.toLowerCase()} ${
+        startStr.length > 0 ? startStr : 'of any ' + startClinicalEventType
+    } to `;
+    const endStr = endEventAttributes.reduce((acc, attr, index) => {
+        acc += `${attr.value} `;
+        if (index !== endEventAttributes.length - 1) {
+            acc += 'or ';
+        }
+        return acc;
+    }, '');
+    title += `${endEventPosition.toLowerCase()} ${
+        endStr.length > 0 ? endStr : 'of any ' + endClinicalEventType
+    } and censored by `;
+    const censoredStr = censoredEventAttributes.reduce((acc, attr, index) => {
+        acc += `${attr.value} `;
+        if (index !== censoredEventAttributes.length - 1) {
+            acc += 'or ';
+        }
+        return acc;
+    }, '');
+    title += `${
+        censoredStr.length > 0
+            ? censoredStr
+            : 'of any ' + censoredClinicalEventType === 'any'
+            ? ''
+            : censoredClinicalEventType
+    }`;
+    return `${title}-${getMaxMatchingNumber(title, existingNames)}`;
 }
 
-export const generateRandomString = (length: number): string => {
-    const characters =
-        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let result = '';
-    for (let i = 0; i < length; i++) {
-        const randomIndex = Math.floor(Math.random() * characters.length);
-        result += characters.charAt(randomIndex);
-    }
-    return result;
-};
+function getMaxMatchingNumber(
+    _str: string,
+    refStrings: string[]
+): number | null {
+    const regex = new RegExp(`^${_str}-(\\d+)$`);
+
+    let maxNumber: number | null = null;
+
+    refStrings.forEach(refStr => {
+        const match = refStr.match(regex);
+        if (match) {
+            const num = parseInt(match[1], 10);
+            if (maxNumber === null || num > maxNumber) {
+                maxNumber = num;
+            }
+        }
+    });
+    return maxNumber === null ? 1 : maxNumber + 1;
+}

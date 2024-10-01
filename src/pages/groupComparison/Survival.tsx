@@ -746,7 +746,13 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                             <h4 className="forceHeaderStyle h4">
                                 {survivalTitleByPrefix[key]}
                             </h4>
-                            <p>{attributeDescriptions[key]}</p>
+                            <p
+                                dangerouslySetInnerHTML={{
+                                    __html: `${attributeDescriptions[
+                                        key
+                                    ].replace(/\r?\n/g, '<br/>')}`,
+                                }}
+                            ></p>
                             {showLeftTruncationCheckbox && (
                                 <LeftTruncationCheckbox
                                     className={

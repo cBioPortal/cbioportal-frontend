@@ -50,48 +50,6 @@ export default class NewSurvivalPlotModal extends React.Component<
                 <Modal.Body>
                     <div className={styles.clinicalEventSelection}>
                         <div className="form-group">
-                            <label>Name:</label>
-                            <div className="form-group">
-                                <DefaultTooltip
-                                    visible={
-                                        this.props.pageStore
-                                            .doesChartNameAlreadyExists
-                                    }
-                                    overlay={
-                                        <div>
-                                            <i
-                                                className="fa fa-md fa-exclamation-triangle"
-                                                style={{
-                                                    color: '#BB1700',
-                                                    marginRight: 5,
-                                                }}
-                                            />
-                                            <span>
-                                                Already survival plot with same
-                                                name exists, please use a
-                                                different name
-                                            </span>
-                                        </div>
-                                    }
-                                >
-                                    <input
-                                        placeholder={'Optional'}
-                                        style={{
-                                            width: '300px',
-                                            marginRight: '10px',
-                                        }}
-                                        type="text"
-                                        onInput={
-                                            this.props.pageStore
-                                                .onKMPlotNameChange
-                                        }
-                                        value={this.props.pageStore.chartName}
-                                        className="form-control input-sm"
-                                    />
-                                </DefaultTooltip>
-                            </div>
-                        </div>
-                        <div className="form-group">
                             <label>Start:</label>
                             <div style={{ display: 'flex' }}>
                                 <div className={styles['event-type']}>
@@ -369,6 +327,48 @@ export default class NewSurvivalPlotModal extends React.Component<
                                             />
                                         </div>
                                     )}
+                            </div>
+                        </div>
+                        <div className="form-group">
+                            <label>Name:</label>
+                            <div className="form-group">
+                                <DefaultTooltip
+                                    visible={
+                                        this.props.pageStore
+                                            .doesChartNameAlreadyExists
+                                    }
+                                    overlay={
+                                        <div>
+                                            <i
+                                                className="fa fa-md fa-exclamation-triangle"
+                                                style={{
+                                                    color: '#BB1700',
+                                                    marginRight: 5,
+                                                }}
+                                            />
+                                            <span>
+                                                Already survival plot with same
+                                                name exists, please use a
+                                                different name
+                                            </span>
+                                        </div>
+                                    }
+                                >
+                                    <input
+                                        placeholder={'Optional'}
+                                        style={{
+                                            width: '300px',
+                                            marginRight: '10px',
+                                        }}
+                                        type="text"
+                                        onInput={
+                                            this.props.pageStore
+                                                .onKMPlotNameChange
+                                        }
+                                        value={this.props.pageStore.chartName}
+                                        className="form-control input-sm"
+                                    />
+                                </DefaultTooltip>
                             </div>
                         </div>
                     </div>
