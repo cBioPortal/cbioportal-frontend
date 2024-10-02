@@ -295,7 +295,8 @@ export function getGenericAssayCategoryFromName(
     // name format: ENTITY_NAME (CATEGORY)
     // we can get category between '(' and ')'
     const regExpName = /\(([^)]+)\)/;
-    return name ? name : 'No category';
+    const matchFound = regExpName.exec(name);
+    return matchFound != null ? matchFound![1] : 'No category';
 }
 
 export function getCategoryOrderByGenericAssayType(genericAssayType: string) {

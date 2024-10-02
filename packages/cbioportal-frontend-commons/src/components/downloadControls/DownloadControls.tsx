@@ -11,6 +11,7 @@ import { saveSvg, saveSvgAsPng } from 'save-svg-as-png';
 import svgToPdfDownload from '../../lib/svgToPdfDownload';
 import { CSSProperties } from 'react';
 import { isPromiseLike } from 'cbioportal-utils';
+import juice from 'juice';
 
 type ButtonSpec = {
     key: string;
@@ -127,11 +128,22 @@ export default class DownloadControls extends React.Component<
                         }
                     });
                 } else {
-                    saveMethod(
-                        result,
-                        `${this.props.filename}.${fileExtension}`,
-                        { excludeCss: true }
+                    // using serlizer to convert svg to string
+                    let serializer = new XMLSerializer();
+                    const inlinedSVG = juice(
+                        serializer.serializeToString(result)
                     );
+
+                    // parsing as SVGElement after css inlining
+                    let parser = new DOMParser();
+                    let svg = (parser.parseFromString(
+                        inlinedSVG,
+                        'image/svg+xml'
+                    ).documentElement as unknown) as SVGElement;
+
+                    saveMethod(svg, `${this.props.filename}.${fileExtension}`, {
+                        excludeCss: true,
+                    });
                 }
             }
         }

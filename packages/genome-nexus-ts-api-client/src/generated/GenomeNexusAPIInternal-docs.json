@@ -1104,6 +1104,18 @@
         }
       }
     },
+    "AlphaMissense": {
+      "type": "object",
+      "properties": {
+        "pathogenicity": {
+          "type": "string"
+        },
+        "score": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
     "Cosmic": {
       "type": "object",
       "properties": {
@@ -2211,6 +2223,9 @@
         "transcriptId"
       ],
       "properties": {
+        "alphaMissense": {
+          "$ref": "#/definitions/AlphaMissense"
+        },
         "aminoAcidAlt": {
           "type": "string",
           "description": "Alt Amino Acid"
@@ -2306,6 +2321,9 @@
         "variant"
       ],
       "properties": {
+        "alphaMissense": {
+          "$ref": "#/definitions/AlphaMissense"
+        },
         "assemblyName": {
           "type": "string",
           "description": "Assembly name"
@@ -2370,6 +2388,18 @@
         }
       }
     },
+    "VueReference": {
+      "type": "object",
+      "properties": {
+        "pubmedId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "referenceText": {
+          "type": "string"
+        }
+      }
+    },
     "Vues": {
       "type": "object",
       "properties": {
@@ -2394,17 +2424,22 @@
         "hugoGeneSymbol": {
           "type": "string"
         },
-        "pubmedId": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "referenceText": {
+        "mutationOrigin": {
           "type": "string"
+        },
+        "references": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/VueReference"
+          }
         },
         "revisedProteinEffect": {
           "type": "string"
         },
         "revisedVariantClassification": {
+          "type": "string"
+        },
+        "revisedVariantClassificationStandard": {
           "type": "string"
         },
         "transcriptId": {

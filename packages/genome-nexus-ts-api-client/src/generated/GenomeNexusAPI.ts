@@ -73,6 +73,12 @@ export type Alleles = {
     'allele': string
 
 };
+export type AlphaMissense = {
+    'pathogenicity': string
+
+        'score': number
+
+};
 export type ArticleAbstract = {
     'abstract': string
 
@@ -840,7 +846,9 @@ export type StatsByTumorType = {
 
 };
 export type TranscriptConsequence = {
-    'amino_acids': string
+    'alphaMissense': AlphaMissense
+
+        'amino_acids': string
 
         'canonical': string
 
@@ -886,7 +894,9 @@ export type TranscriptConsequence = {
 
 };
 export type TranscriptConsequenceSummary = {
-    'aminoAcidAlt': string
+    'alphaMissense': AlphaMissense
+
+        'aminoAcidAlt': string
 
         'aminoAcidRef': string
 
@@ -1026,7 +1036,9 @@ export type VariantAnnotation = {
 
 };
 export type VariantAnnotationSummary = {
-    'assemblyName': string
+    'alphaMissense': AlphaMissense
+
+        'assemblyName': string
 
         'canonicalTranscriptId': string
 
@@ -1061,6 +1073,12 @@ export type Version = {
         'version': string
 
 };
+export type VueReference = {
+    'pubmedId': number
+
+        'referenceText': string
+
+};
 export type Vues = {
     'comment': string
 
@@ -1076,13 +1094,15 @@ export type Vues = {
 
         'hugoGeneSymbol': string
 
-        'pubmedId': number
+        'mutationOrigin': string
 
-        'referenceText': string
+        'references': Array < VueReference >
 
         'revisedProteinEffect': string
 
         'revisedVariantClassification': string
+
+        'revisedVariantClassificationStandard': string
 
         'transcriptId': string
 

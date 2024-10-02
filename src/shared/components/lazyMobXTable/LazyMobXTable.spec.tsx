@@ -2398,16 +2398,20 @@ describe('LazyMobXTable', () => {
     });
     describe('pagination', () => {
         it('starts with 50 items per page', () => {
-            let table = mount(<Table columns={simpleColumns} data={[]} />);
-            assert.equal(getItemsPerPage(table), 50, 'with no data');
-            table.setProps({
-                columns: simpleColumns,
-                data: data.slice(0, 100),
-            });
+            let table = mount(
+                <Table
+                    columns={simpleColumns}
+                    showLoading={false}
+                    data={data.slice(0, 100)}
+                />
+            );
             assert.equal(getItemsPerPage(table), 50, 'with data');
         });
         it('limits page accessing appropriately, depending on how many items total and how many per page, and changes page numbers correctly', () => {
-            let table = mount(<Table columns={simpleColumns} data={[]} />);
+            let table = mount(
+                <Table columns={simpleColumns} data={data.slice(0, 100)} />
+            );
+
             assert.equal(getCurrentPage(table), 0, 'starts on page 0');
             assert.isFalse(
                 clickPrevPage(table),
@@ -2510,46 +2514,40 @@ describe('LazyMobXTable', () => {
         });
 
         it('properly handles changing items per page', () => {
-            let table = mount(<Table columns={simpleColumns} data={[]} />);
-            selectItemsPerPage(table, 25);
+            let table = mount(
+                <Table columns={simpleColumns} data={data.slice(0, 100)} />
+            );
+
+            console.log('row count');
+            console.log(data.length);
+
+            selectItemsPerPage(table, 2);
             assert.equal(
                 getItemsPerPage(table),
-                25,
-                'case: no data; it successfully changes the items per page to 25'
+                2,
+                'it successfully changes the items per page to 25'
             );
+            assert.equal(getCurrentPage(table), 0, "we're on page 1");
             assert.equal(
-                getCurrentPage(table),
-                0,
-                'case: no data; still on page 0'
-            );
-            assert.equal(
-                getNumVisibleRows(table),
-                0,
-                'case: no data; no rows visible with 25/page, because no data'
+                getVisibleRows(table).length,
+                2,
+                'there are two items on the page'
             );
             selectItemsPerPage(table, -1);
             assert.equal(
                 getItemsPerPage(table),
                 -1,
-                'case: no data; it successfully changes the items per page to show all'
+                'it successfully changes the items per page to show all'
             );
-            assert.equal(
-                getCurrentPage(table),
-                0,
-                'case: no data; still on page 0'
-            );
-            assert.equal(
-                getNumVisibleRows(table),
-                0,
-                'case: no data; no rows visible with show all, because no data'
-            );
+            assert.equal(getCurrentPage(table), 0, 'still on page 1');
+            assert.equal(getNumVisibleRows(table), 5, 'shows all rows now');
 
             table.setProps({ columns: columns, data: [simpleData[0]] });
             selectItemsPerPage(table, 25);
             assert.equal(
                 getItemsPerPage(table),
                 25,
-                'case: 1 data; it successfully changes the items per page to 25'
+                'it successfully changes the items per page to 25'
             );
             assert.equal(
                 getCurrentPage(table),
@@ -2747,12 +2745,18 @@ describe('LazyMobXTable', () => {
         });
         it('shows the right text before the paging buttons', () => {
             let table = mount(<Table columns={simpleColumns} data={[]} />);
+
+            table.setProps({
+                columns: simpleColumns,
+                data: data.slice(0, 100),
+            });
+
             assert.equal(
                 getItemsPerPage(table),
                 50,
                 'confirm 50 items per page'
             );
-            assert.equal(getTextBeforeButtons(table), 'Showing 0-0 of 0');
+            assert.equal(getTextBeforeButtons(table), 'Showing 1-5 of 5');
 
             table.setProps({ columns: simpleColumns, data: [simpleData[0]] });
             assert.equal(getTextBeforeButtons(table), 'Showing 1-1 of 1');

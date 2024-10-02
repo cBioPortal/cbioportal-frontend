@@ -26,7 +26,7 @@ import {
     waterfallSearchIndicatorAppearance,
     limitValueAppearance,
     IValue1D,
-} from 'pages/resultsView/plots/PlotsTabUtils';
+} from './PlotsTabUtils';
 import {
     CBIOPORTAL_VICTORY_THEME,
     baseLabelStyles,

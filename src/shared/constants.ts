@@ -129,3 +129,13 @@ export const DataTypeConstants = {
 };
 
 export const SUPPORTED_DAT_METHODS = ['oauth2', 'uuid'];
+
+export const MutationOptionConstants = {
+    MUTATED: 'MUTATED',
+    MUTATION_TYPE: 'MUTATION_TYPE',
+};
+
+export const MutationOptionConstantsLabel = {
+    [MutationOptionConstants.MUTATED]: 'Mutated vs Not Mutated',
+    [MutationOptionConstants.MUTATION_TYPE]: 'Mutation Types',
+};

@@ -15,7 +15,7 @@ import {
     remoteData,
     svgToPdfDownload,
 } from 'cbioportal-frontend-commons';
-import { getRemoteDataGroupStatus } from 'cbioportal-utils';
+import { getRemoteDataGroupStatus, Mutation } from 'cbioportal-utils';
 import Oncoprint, {
     ClinicalTrackSpec,
     ClinicalTrackConfig,
@@ -25,6 +25,8 @@ import Oncoprint, {
     IGenesetHeatmapTrackSpec,
     IHeatmapTrackSpec,
     ClinicalTrackConfigChange,
+    GeneticTrackConfigMap,
+    GeneticTrackConfig,
 } from './Oncoprint';
 import OncoprintControls, {
     IOncoprintControlsHandlers,
@@ -57,7 +59,7 @@ import { getServerConfig } from 'config/config';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { OncoprintJS, RGBAColor, TrackGroupIndex, TrackId } from 'oncoprintjs';
 import fileDownload from 'react-file-download';
-import tabularDownload from './tabularDownload';
+import tabularDownload, { getTabularDownloadData } from './tabularDownload';
 import classNames from 'classnames';
 import {
     clinicalAttributeIsLocallyComputed,
@@ -97,6 +99,9 @@ import ClinicalTrackColorPicker from './ClinicalTrackColorPicker';
 import { hexToRGBA, rgbaToHex } from 'shared/lib/Colors';
 import classnames from 'classnames';
 import { OncoprintColorModal } from './OncoprintColorModal';
+import JupyterNoteBookModal from 'pages/staticPages/tools/oncoprinter/JupyterNotebookModal';
+import { convertToCSV } from 'shared/lib/calculation/JSONtoCSV';
+import { GAP_MODE_ENUM } from 'oncoprintjs';
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -364,6 +369,31 @@ export default class ResultsViewOncoprint extends React.Component<
         ) as ClinicalTrackConfigMap;
     }
 
+    @computed get selectedGeneticTrackConfig(): GeneticTrackConfigMap {
+        let geneticTracks: GeneticTrackConfig[] | undefined = this.props.store
+            .pageUserSession.userSettings?.geneticlist;
+        if (geneticTracks) {
+            const userSettingsTrackMap = geneticTracks.reduce((acc, track) => {
+                acc[track.stableId] = track;
+                return acc;
+            }, {} as GeneticTrackConfigMap);
+            return userSettingsTrackMap;
+        }
+
+        geneticTracks = (this.props.store.genes.result || []).map(
+            attr => new GeneticTrackConfig(attr.hugoGeneSymbol)
+        );
+
+        return geneticTracks
+            .map(track => ({
+                [track.stableId]: track,
+            }))
+            .reduce((acc, obj) => {
+                Object.assign(acc, obj);
+                return acc;
+            }, {} as GeneticTrackConfigMap);
+    }
+
     public expansionsByGeneticTrackKey = observable.map<string, number[]>();
     public expansionsByGenesetHeatmapTrackKey = observable.map<
         string,
@@ -471,6 +501,7 @@ export default class ResultsViewOncoprint extends React.Component<
             this
         );
         this.onDeleteClinicalTrack = this.onDeleteClinicalTrack.bind(this);
+        this.onDeleteGeneticTrack = this.onDeleteGeneticTrack.bind(this);
         this.onMinimapClose = this.onMinimapClose.bind(this);
         this.oncoprintRef = this.oncoprintRef.bind(this);
         this.oncoprintJsRef = this.oncoprintJsRef.bind(this);
@@ -744,6 +775,24 @@ export default class ResultsViewOncoprint extends React.Component<
     onMouseLeave() {
         this.mouseInsideBounds = false;
     }
+
+    // jupyternotebook modal handling:
+
+    @observable public showJupyterNotebookModal = false;
+    @observable private jupyterFileContent: string | undefined = '';
+    @observable private jupyterFileName: string | undefined = '';
+
+    @action
+    private openJupyterNotebookModal = () => {
+        this.showJupyterNotebookModal = true;
+    };
+
+    @action
+    private closeJupyterNotebookModal = () => {
+        this.showJupyterNotebookModal = false;
+        this.jupyterFileContent = undefined;
+        this.jupyterFileName = undefined;
+    };
 
     private buildControlsHandlers() {
         return {
@@ -1025,6 +1074,8 @@ export default class ResultsViewOncoprint extends React.Component<
                                 this.genesetHeatmapTracks,
                                 this.props.store
                                     .clinicalAttributeIdToClinicalAttribute,
+                                this.props.store.mutationsByGene,
+                                this.props.store.studyIds,
                             ],
                             (
                                 samples: Sample[],
@@ -1035,7 +1086,11 @@ export default class ResultsViewOncoprint extends React.Component<
                                 genesetHeatmapTracks: IGenesetHeatmapTrackSpec[],
                                 attributeIdToAttribute: {
                                     [attributeId: string]: ClinicalAttribute;
-                                }
+                                },
+                                mutationsByGenes: {
+                                    [gene: string]: Mutation[];
+                                },
+                                studyIds: string[]
                             ) => {
                                 const caseIds =
                                     this.oncoprintAnalysisCaseType ===
@@ -1087,11 +1142,79 @@ export default class ResultsViewOncoprint extends React.Component<
                                 const oncoprinterWindow = window.open(
                                     buildCBioPortalPageUrl('/oncoprinter')
                                 ) as any;
+
+                                // extra data that needs to be send for jupyter-notebook
+                                const allMutations = Object.values(
+                                    mutationsByGenes
+                                ).reduce(
+                                    (acc, geneArray) => [...acc, ...geneArray],
+                                    []
+                                );
+
                                 oncoprinterWindow.clientPostedData = {
                                     genetic: geneticInput,
                                     clinical: clinicalInput,
                                     heatmap: heatmapInput,
+                                    mutations: JSON.stringify(allMutations),
+                                    studyIds: JSON.stringify(studyIds),
                                 };
+                            }
+                        );
+                        break;
+                    case 'jupyterNoteBook':
+                        onMobxPromise(
+                            [
+                                this.props.store.sampleKeyToSample,
+                                this.props.store.patientKeyToPatient,
+                                this.props.store.mutationsByGene,
+                                this.props.store.studyIds,
+                            ],
+                            (
+                                sampleKeyToSample: {
+                                    [sampleKey: string]: Sample;
+                                },
+                                patientKeyToPatient: any,
+                                mutationsByGenes: {
+                                    [gene: string]: Mutation[];
+                                },
+                                studyIds: string[]
+                            ) => {
+                                const allGenesMutations = Object.values(
+                                    mutationsByGenes
+                                ).reduce(
+                                    (acc, geneArray) => [...acc, ...geneArray],
+                                    []
+                                );
+
+                                const fieldsToKeep = [
+                                    'hugoGeneSymbol',
+                                    'alterationType',
+                                    'chr',
+                                    'startPosition',
+                                    'endPosition',
+                                    'referenceAllele',
+                                    'variantAllele',
+                                    'proteinChange',
+                                    'proteinPosStart',
+                                    'proteinPosEnd',
+                                    'mutationType',
+                                    'oncoKbOncogenic',
+                                    'patientId',
+                                    'sampleId',
+                                    'isHotspot',
+                                ];
+
+                                const allGenesMutationsCsv = convertToCSV(
+                                    allGenesMutations,
+                                    fieldsToKeep
+                                );
+
+                                this.jupyterFileContent = allGenesMutationsCsv;
+
+                                this.jupyterFileName = studyIds.join('&');
+
+                                // sending content to the modal
+                                this.openJupyterNotebookModal();
                             }
                         );
                         break;
@@ -1335,6 +1458,203 @@ export default class ResultsViewOncoprint extends React.Component<
         }
     }
 
+    private onDeleteGeneticTrack(
+        geneticTrackKey: string,
+        geneticSublabel: string
+    ): void {
+        if (!this.isHidden) {
+            let json: GeneticTrackConfigMap = _.clone(
+                this.selectedGeneticTrackConfig
+            );
+            const genesToDelete = geneticTrackKey.split(' ');
+            json = _.omitBy(json, entry =>
+                genesToDelete.some(gene => entry.stableId.includes(gene.trim()))
+            ) as GeneticTrackConfigMap;
+            const session = this.props.store.pageUserSession;
+            session.userSettings = {
+                ...session.userSettings,
+                geneticlist: _.values(json),
+            };
+            const remainingGeneAfterDeletion = Object.keys(json).join(' ');
+            const updatedGeneList = this.calculateUpdatedGeneList(
+                remainingGeneAfterDeletion,
+                geneticSublabel,
+                geneticTrackKey
+            );
+            this.urlWrapper.updateURL({
+                gene_list: updatedGeneList.join(' '),
+            });
+        }
+    }
+
+    private calculateUpdatedGeneList(
+        remainingGeneAfterDeletion: string,
+        geneticSublabel: string,
+        GeneticTrackToBeDeleted: string
+    ): string[] {
+        const urlParams = new URLSearchParams(window.location.search);
+        const geneListFromURL = urlParams.get('gene_list') || '';
+        let geneListArrayFromURL: string[];
+
+        if (geneListFromURL.includes('%25')) {
+            geneListArrayFromURL = geneListFromURL
+                .split('%25')
+                .map(param => decodeURIComponent(param));
+        } else {
+            geneListArrayFromURL = geneListFromURL
+                .split('%20')
+                .map(param => decodeURIComponent(param));
+        }
+        let tempArray: string[] = [];
+        for (const item of geneListArrayFromURL) {
+            tempArray = tempArray.concat(item.split('\n'));
+        }
+        geneListArrayFromURL = tempArray.filter(item => item.trim() !== '');
+        let updatedGeneList: string[] = [];
+        const remainingGeneAfterDeletionString = remainingGeneAfterDeletion.split(
+            ' '
+        );
+
+        //Datatypes genetrack logic
+        if (geneListArrayFromURL.includes('DATATYPES:')) {
+            updatedGeneList.push(
+                'DATATYPES' +
+                    geneticSublabel +
+                    ' ; ' +
+                    remainingGeneAfterDeletion
+            );
+        } else if (geneticSublabel) {
+            //OQL Queries logic
+            const isSublabelInURL = this.isSublabelInURL(
+                geneListArrayFromURL,
+                geneticSublabel
+            );
+            if (isSublabelInURL) {
+                const newList = this.sliceURLBasedOnSublabel(
+                    geneListArrayFromURL,
+                    geneticSublabel,
+                    GeneticTrackToBeDeleted
+                );
+                if (newList !== null) {
+                    updatedGeneList.push(...newList);
+                }
+            } else {
+                geneListArrayFromURL = geneListArrayFromURL.filter(
+                    item => item !== GeneticTrackToBeDeleted
+                );
+                const testRemainingArray = remainingGeneAfterDeletionString; // Split testRemaining into an array
+                let startIdx = 0;
+
+                for (let i = 1; i < testRemainingArray.length; i++) {
+                    const currentGene = testRemainingArray[i];
+                    const currentIndex = geneListArrayFromURL.indexOf(
+                        currentGene
+                    );
+                    const genesToAdd = geneListArrayFromURL.slice(
+                        startIdx,
+                        currentIndex
+                    );
+                    updatedGeneList.push(...genesToAdd);
+                    updatedGeneList.push('\n');
+                    startIdx = currentIndex;
+                }
+                const genesToAdd = geneListArrayFromURL.slice(
+                    startIdx,
+                    geneListArrayFromURL.length + 1
+                );
+                updatedGeneList.push(...genesToAdd);
+            }
+        } else {
+            //Merged gene track updation logic
+            let insideSquareBrackets = false;
+            let withinQuotes = false;
+            let startIdx = geneListArrayFromURL.indexOf('[');
+            let endIdx = geneListArrayFromURL.lastIndexOf(']');
+            let desiredArray = geneListArrayFromURL.slice(startIdx, endIdx + 1);
+            const containsBracketGenes = remainingGeneAfterDeletionString.some(
+                gene => desiredArray.includes(gene)
+            );
+            if (containsBracketGenes) {
+                for (const gene of geneListArrayFromURL) {
+                    if (gene === '[') {
+                        insideSquareBrackets = true;
+                        updatedGeneList.push(gene);
+                        withinQuotes = false;
+                    } else if (gene === ']') {
+                        insideSquareBrackets = false;
+                        updatedGeneList.push(gene);
+                        withinQuotes = false;
+                    } else if (
+                        insideSquareBrackets &&
+                        gene.startsWith('"') &&
+                        !withinQuotes
+                    ) {
+                        updatedGeneList.push(gene);
+                        withinQuotes = true;
+                    } else if (remainingGeneAfterDeletion.includes(gene)) {
+                        updatedGeneList.push(gene);
+                    }
+                }
+            } else {
+                updatedGeneList = [remainingGeneAfterDeletion];
+            }
+        }
+        return updatedGeneList;
+    }
+
+    private isSublabelInURL(
+        geneListArrayFromURL: string[],
+        geneticSublabel: string
+    ): boolean {
+        const sublabelWords = geneticSublabel.split(/[ :=]/).filter(Boolean);
+        let currentIndex = 0;
+
+        for (const word of sublabelWords) {
+            const index = geneListArrayFromURL.indexOf(word, currentIndex);
+            if (index === -1) {
+                return false;
+            }
+            currentIndex = index + 1;
+        }
+
+        return true;
+    }
+
+    private sliceURLBasedOnSublabel(
+        geneListArrayFromURL: string[],
+        geneticSublabel: string,
+        geneticTrackToBeDeleted: string
+    ): string[] | null {
+        const sublabelWords = geneticSublabel.split(/[ :=]/).filter(Boolean);
+        let currentIndex = 0;
+
+        for (const word of sublabelWords) {
+            const index = geneListArrayFromURL.indexOf(word, currentIndex);
+            if (index === -1) {
+                return null;
+            }
+            currentIndex = index + 1;
+        }
+
+        const startIndex = geneListArrayFromURL.indexOf(sublabelWords[0]);
+        const endIndex = geneListArrayFromURL.indexOf(
+            sublabelWords[sublabelWords.length - 1]
+        );
+        const trackWithoutColon = geneListArrayFromURL[startIndex - 1].endsWith(
+            ':'
+        )
+            ? geneListArrayFromURL[startIndex - 1].slice(0, -1) // Remove ':' if it's the last character
+            : geneListArrayFromURL[startIndex - 1];
+        if (trackWithoutColon === geneticTrackToBeDeleted) {
+            const slicedURL = [
+                ...geneListArrayFromURL.slice(0, startIndex - 1),
+                ...geneListArrayFromURL.slice(endIndex + 1),
+            ];
+            return slicedURL;
+        }
+        return null;
+    }
+
     /**
      * Called when a clinical or heatmap track is sorted a-Z or Z-a, selected from within oncoprintjs UI
      */
@@ -1352,9 +1672,8 @@ export default class ResultsViewOncoprint extends React.Component<
      * Called when a track gap is added from within oncoprintjs UI
      */
     @action.bound
-    @action.bound
-    private onTrackGapChange(trackId: TrackId, gapOn: boolean) {
-        this.handleClinicalTrackChange(trackId, { gapOn });
+    private onTrackGapChange(trackId: TrackId, mode: GAP_MODE_ENUM) {
+        this.handleClinicalTrackChange(trackId, { gapMode: mode });
     }
 
     private handleClinicalTrackChange(
@@ -1954,12 +2273,37 @@ export default class ResultsViewOncoprint extends React.Component<
                 <div className={'tabMessageContainer'}>
                     <OqlStatusBanner
                         className="oncoprint-oql-status-banner"
-                        store={this.props.store}
+                        queryContainsOql={this.props.store.queryContainsOql}
                         tabReflectsOql={true}
                     />
-                    <AlterationFilterWarning store={this.props.store} />
+                    <AlterationFilterWarning
+                        driverAnnotationSettings={
+                            this.props.store.driverAnnotationSettings
+                        }
+                        includeGermlineMutations={
+                            this.props.store.includeGermlineMutations
+                        }
+                        mutationsReportByGene={
+                            this.props.store.mutationsReportByGene
+                        }
+                        oqlFilteredMutationsReport={
+                            this.props.store.oqlFilteredMutationsReport
+                        }
+                        oqlFilteredMolecularDataReport={
+                            this.props.store.oqlFilteredMolecularDataReport
+                        }
+                        oqlFilteredStructuralVariantsReport={
+                            this.props.store.oqlFilteredStructuralVariantsReport
+                        }
+                    />
                     <CaseFilterWarning
-                        store={this.props.store}
+                        samples={this.props.store.samples}
+                        filteredSamples={this.props.store.filteredSamples}
+                        patients={this.props.store.patients}
+                        filteredPatients={this.props.store.filteredPatients}
+                        hideUnprofiledSamples={
+                            this.props.store.hideUnprofiledSamples
+                        }
                         isPatientMode={
                             this.oncoprintAnalysisCaseType ===
                             OncoprintAnalysisCaseType.PATIENT
@@ -2065,6 +2409,7 @@ export default class ResultsViewOncoprint extends React.Component<
                                 onDeleteClinicalTrack={
                                     this.onDeleteClinicalTrack
                                 }
+                                onDeleteGeneticTrack={this.onDeleteGeneticTrack}
                                 onTrackSortDirectionChange={
                                     this.onTrackSortDirectionChange
                                 }
@@ -2082,6 +2427,15 @@ export default class ResultsViewOncoprint extends React.Component<
                         </div>
                     </div>
                 </div>
+
+                {this.jupyterFileContent && this.jupyterFileName && (
+                    <JupyterNoteBookModal
+                        show={this.showJupyterNotebookModal}
+                        handleClose={this.closeJupyterNotebookModal}
+                        fileContent={this.jupyterFileContent}
+                        fileName={this.jupyterFileName}
+                    />
+                )}
             </div>
         );
     }

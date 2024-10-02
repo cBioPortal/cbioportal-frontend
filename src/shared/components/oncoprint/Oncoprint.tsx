@@ -22,6 +22,7 @@ import {
 } from 'shared/model/AnnotatedMutation';
 import { CustomDriverNumericGeneMolecularData } from 'shared/model/CustomDriverNumericGeneMolecularData';
 import { ExtendedAlteration } from 'shared/model/ExtendedAlteration';
+import { GAP_MODE_ENUM } from 'oncoprintjs';
 
 export type CategoricalTrackDatum = {
     entity: string;
@@ -90,7 +91,7 @@ export class ClinicalTrackConfig {
 export type ClinicalTrackConfigChange = {
     stableId?: string;
     sortOrder?: string;
-    gapOn?: boolean;
+    gapMode?: GAP_MODE_ENUM;
 };
 
 export type ClinicalTrackConfigMap = {
@@ -177,6 +178,21 @@ export type GeneticTrackSpec = {
     expansionTrackList?: GeneticTrackSpec[];
     labelColor?: string;
     customOptions?: CustomTrackOption[];
+};
+
+export class GeneticTrackConfig {
+    constructor(stableId: string) {
+        this.stableId = stableId;
+    }
+    public stableId: string;
+}
+
+export type GeneticTrackConfigChange = {
+    stableId?: string;
+};
+
+export type GeneticTrackConfigMap = {
+    [geneticAttribute: string]: GeneticTrackConfig;
 };
 
 export interface IBaseHeatmapTrackSpec {
@@ -296,8 +312,9 @@ export interface IOncoprintProps {
 
     onMinimapClose?: () => void;
     onDeleteClinicalTrack?: (key: string) => void;
+    onDeleteGeneticTrack?: (key: string, sublabel: string) => void;
     onTrackSortDirectionChange?: (trackId: TrackId, dir: number) => void;
-    onTrackGapChange?: (trackId: TrackId, gap: boolean) => void;
+    onTrackGapChange?: (trackId: TrackId, gap: GAP_MODE_ENUM) => void;
 
     trackKeySelectedForEdit?: string | null;
     setTrackKeySelectedForEdit?: (key: string | null) => void;

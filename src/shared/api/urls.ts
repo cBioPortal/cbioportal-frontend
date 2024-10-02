@@ -121,14 +121,24 @@ export function getSampleViewUrl(
     sampleId: string,
     navIds?: { patientId: string; studyId: string }[]
 ) {
+    return getSampleViewUrlWithPathname(studyId, sampleId, 'patient', navIds);
+}
+
+export function getSampleViewUrlWithPathname(
+    studyId: string,
+    sampleId: string,
+    pathname: string = 'patient',
+    navIds?: { patientId: string; studyId: string }[]
+) {
     let hash: any = undefined;
     if (navIds) {
         hash = `navCaseIds=${navIds
             .map(id => `${id.studyId}:${id.patientId}`)
             .join(',')}`;
     }
-    return buildCBioPortalPageUrl('patient', { sampleId, studyId }, hash);
+    return buildCBioPortalPageUrl(pathname, { sampleId, studyId }, hash);
 }
+
 export function getPatientViewUrl(
     studyId: string,
     caseId: string,
@@ -140,7 +150,22 @@ export function getPatientViewUrl(
             .map(id => `${id.studyId}:${id.patientId}`)
             .join(',')}`;
     }
-    return buildCBioPortalPageUrl('patient', { studyId, caseId }, hash);
+    return getPatientViewUrlWithPathname(studyId, caseId, 'patient', navIds);
+}
+
+export function getPatientViewUrlWithPathname(
+    studyId: string,
+    caseId: string,
+    pathname: string = 'patient',
+    navIds?: { patientId: string; studyId: string }[]
+) {
+    let hash: any = undefined;
+    if (navIds) {
+        hash = `navCaseIds=${navIds
+            .map(id => `${id.studyId}:${id.patientId}`)
+            .join(',')}`;
+    }
+    return buildCBioPortalPageUrl(pathname, { studyId, caseId }, hash);
 }
 
 export function getComparisonUrl(params: Partial<GroupComparisonURLQuery>) {
@@ -245,14 +270,14 @@ export function getGenomeNexusHgvsgUrl(
         : `${getServerConfig().genomenexus_website_url}/variant/${hgvsg}`;
 }
 
-export function getSessionUrl() {
+export function getSessionUrl(path = 'api/session') {
     if (getServerConfig() && getServerConfig().hasOwnProperty('apiRoot')) {
         // TODO: remove this after switch to AWS. This is a hack to use proxy
         // session-service from non apiRoot. We'll have to come up with a better
         // solution for auth portals
-        return buildCBioPortalPageUrl('api/session');
+        return buildCBioPortalPageUrl(path);
     } else {
-        return buildCBioPortalAPIUrl('api/session');
+        return buildCBioPortalAPIUrl(path);
     }
 }
 

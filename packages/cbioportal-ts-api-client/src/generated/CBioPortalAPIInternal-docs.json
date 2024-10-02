@@ -381,7 +381,7 @@
           },
           {
             "default": 0,
-            "description": "Page number of the result list",
+            "description": "Page number of the result list. Zero represents the first page.",
             "format": "int32",
             "in": "query",
             "minimum": 0,
@@ -428,7 +428,7 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/ClinicalDataCollection"
+              "$ref": "#/definitions/SampleClinicalDataCollection"
             }
           }
         },
@@ -556,6 +556,41 @@
         ],
         "description": "Get Counts of Clinical Event Types by Study View Filter",
         "operationId": "getClinicalEventTypeCountsUsingPOST"
+      }
+    },
+    "/api/clinical-events-meta/fetch": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "clinicalEventAttributeRequest",
+            "schema": {
+              "$ref": "#/definitions/ClinicalEventAttributeRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/ClinicalEvent"
+              },
+              "type": "array"
+            }
+          }
+        },
+        "tags": [
+          "Clinical Events"
+        ],
+        "description": "Fetch clinical events meta",
+        "operationId": "fetchClinicalEventsMetaUsingPOST"
       }
     },
     "/api/cna-genes/fetch": {
@@ -2074,7 +2109,10 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/ResponseEntityListGenomicDataCountItem"
+              "items": {
+                "$ref": "#/definitions/GenomicDataCountItem"
+              },
+              "type": "array"
             }
           }
         },
@@ -3216,6 +3254,41 @@
         "operationId": "getSignificantlyMutatedGenesUsingGET"
       }
     },
+    "/api/survival-data/fetch": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "survivalRequest",
+            "schema": {
+              "$ref": "#/definitions/SurvivalRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/ClinicalData"
+              },
+              "type": "array"
+            }
+          }
+        },
+        "tags": [
+          "Survival"
+        ],
+        "description": "Fetch survival data",
+        "operationId": "fetchSurvivalDataUsingPOST"
+      }
+    },
     "/api/timestamps": {
       "get": {
         "produces": [
@@ -3235,6 +3308,208 @@
         ],
         "description": "Get the last time each static resource was updated",
         "operationId": "getAllTimestampsUsingGET"
+      }
+    },
+    "/api/treatments/display-patient": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "default": "Agent",
+            "enum": [
+              "Agent",
+              "AgentClass",
+              "AgentTarget"
+            ],
+            "in": "query",
+            "name": "tier",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "studyIds",
+            "required": true,
+            "schema": {
+              "description": "List of Study IDs",
+              "items": {
+                "maxLength": 10000000,
+                "minLength": 1,
+                "type": "string"
+              },
+              "maxItems": 10000000,
+              "minItems": 1,
+              "type": "array",
+              "uniqueItems": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        },
+        "tags": [
+          "Treatments"
+        ],
+        "description": "Should patient level treatments be displayed",
+        "operationId": "getContainsTreatmentDataUsingPOST"
+      }
+    },
+    "/api/treatments/display-sample": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "default": "Agent",
+            "enum": [
+              "Agent",
+              "AgentClass",
+              "AgentTarget"
+            ],
+            "in": "query",
+            "name": "tier",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "studyIds",
+            "required": true,
+            "schema": {
+              "description": "List of Study IDs",
+              "items": {
+                "maxLength": 10000000,
+                "minLength": 1,
+                "type": "string"
+              },
+              "maxItems": 10000000,
+              "minItems": 1,
+              "type": "array",
+              "uniqueItems": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        },
+        "tags": [
+          "Treatments"
+        ],
+        "description": "Should sample level treatments be displayed",
+        "operationId": "getContainsSampleTreatmentDataUsingPOST"
+      }
+    },
+    "/api/treatments/patient": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "default": "Agent",
+            "enum": [
+              "Agent",
+              "AgentClass",
+              "AgentTarget"
+            ],
+            "in": "query",
+            "name": "tier",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "studyViewFilter",
+            "schema": {
+              "$ref": "#/definitions/StudyViewFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/PatientTreatmentRow"
+              },
+              "type": "array"
+            }
+          }
+        },
+        "tags": [
+          "Treatments"
+        ],
+        "description": "Get all patient level treatments",
+        "operationId": "getAllPatientTreatmentsUsingPOST"
+      }
+    },
+    "/api/treatments/sample": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "default": "Agent",
+            "enum": [
+              "Agent",
+              "AgentClass",
+              "AgentTarget"
+            ],
+            "in": "query",
+            "name": "tier",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "studyViewFilter",
+            "schema": {
+              "$ref": "#/definitions/StudyViewFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/SampleTreatmentRow"
+              },
+              "type": "array"
+            }
+          }
+        },
+        "tags": [
+          "Treatments"
+        ],
+        "description": "Get all sample level treatments",
+        "operationId": "getAllSampleTreatmentsUsingPOST"
       }
     }
   },
@@ -3636,23 +3911,6 @@
       },
       "type": "object"
     },
-    "ClinicalDataCollection": {
-      "properties": {
-        "patientClinicalData": {
-          "items": {
-            "$ref": "#/definitions/ClinicalData"
-          },
-          "type": "array"
-        },
-        "sampleClinicalData": {
-          "items": {
-            "$ref": "#/definitions/ClinicalData"
-          },
-          "type": "array"
-        }
-      },
-      "type": "object"
-    },
     "ClinicalDataCount": {
       "properties": {
         "count": {
@@ -3770,6 +4028,27 @@
       ],
       "type": "object"
     },
+    "ClinicalEventAttributeRequest": {
+      "description": "clinical events Request",
+      "properties": {
+        "clinicalEventRequests": {
+          "items": {
+            "$ref": "#/definitions/ClinicalEventRequest"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "patientIdentifiers": {
+          "items": {
+            "$ref": "#/definitions/PatientIdentifier"
+          },
+          "maxItems": 10000000,
+          "minItems": 1,
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
     "ClinicalEventData": {
       "properties": {
         "key": {
@@ -3783,6 +4062,65 @@
         "key",
         "value"
       ],
+      "type": "object"
+    },
+    "ClinicalEventRequest": {
+      "properties": {
+        "attributes": {
+          "items": {
+            "$ref": "#/definitions/ClinicalEventData"
+          },
+          "type": "array"
+        },
+        "eventType": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "eventType"
+      ],
+      "type": "object"
+    },
+    "ClinicalEventRequestIdentifier": {
+      "properties": {
+        "clinicalEventRequests": {
+          "items": {
+            "$ref": "#/definitions/ClinicalEventRequest"
+          },
+          "maxItems": 10000000,
+          "minItems": 0,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "position": {
+          "enum": [
+            "FIRST",
+            "LAST"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "position"
+      ],
+      "type": "object"
+    },
+    "ClinicalEventSample": {
+      "properties": {
+        "patientId": {
+          "type": "string"
+        },
+        "sampleId": {
+          "type": "string"
+        },
+        "studyId": {
+          "type": "string"
+        },
+        "timeTaken": {
+          "format": "int32",
+          "type": "integer"
+        }
+      },
       "type": "object"
     },
     "ClinicalEventTypeCount": {
@@ -3934,53 +4272,6 @@
           "type": "array"
         },
         "sampleListId": {
-          "type": "string"
-        }
-      },
-      "type": "object"
-    },
-    "ContentDisposition": {
-      "properties": {
-        "attachment": {
-          "type": "boolean"
-        },
-        "charset": {
-          "properties": {
-            "registered": {
-              "type": "boolean"
-            }
-          },
-          "type": "object"
-        },
-        "creationDate": {
-          "format": "date-time",
-          "type": "string"
-        },
-        "filename": {
-          "type": "string"
-        },
-        "formData": {
-          "type": "boolean"
-        },
-        "inline": {
-          "type": "boolean"
-        },
-        "modificationDate": {
-          "format": "date-time",
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "readDate": {
-          "format": "date-time",
-          "type": "string"
-        },
-        "size": {
-          "format": "int64",
-          "type": "integer"
-        },
-        "type": {
           "type": "string"
         }
       },
@@ -5005,76 +5296,6 @@
       ],
       "type": "object"
     },
-    "HttpMethod": {
-      "type": "object"
-    },
-    "HttpRange": {
-      "type": "object"
-    },
-    "HttpStatusCode": {
-      "properties": {
-        "error": {
-          "type": "boolean"
-        },
-        "is1xxInformational": {
-          "type": "boolean"
-        },
-        "is2xxSuccessful": {
-          "type": "boolean"
-        },
-        "is3xxRedirection": {
-          "type": "boolean"
-        },
-        "is4xxClientError": {
-          "type": "boolean"
-        },
-        "is5xxServerError": {
-          "type": "boolean"
-        }
-      },
-      "type": "object"
-    },
-    "MediaType": {
-      "properties": {
-        "parameters": {
-          "additionalProperties": {
-            "type": "string"
-          },
-          "type": "object"
-        },
-        "charset": {
-          "properties": {
-            "registered": {
-              "type": "boolean"
-            }
-          },
-          "type": "object"
-        },
-        "concrete": {
-          "type": "boolean"
-        },
-        "qualityValue": {
-          "format": "double",
-          "type": "number"
-        },
-        "subtype": {
-          "type": "string"
-        },
-        "subtypeSuffix": {
-          "type": "string"
-        },
-        "type": {
-          "type": "string"
-        },
-        "wildcardSubtype": {
-          "type": "boolean"
-        },
-        "wildcardType": {
-          "type": "boolean"
-        }
-      },
-      "type": "object"
-    },
     "MolecularProfileCaseIdentifier": {
       "properties": {
         "caseId": {
@@ -5233,7 +5454,7 @@
         "categorization": {
           "enum": [
             "MUTATED",
-            "EVENT"
+            "MUTATION_TYPE"
           ],
           "type": "string"
         },
@@ -5375,8 +5596,38 @@
       },
       "type": "object"
     },
+    "PatientIdentifier": {
+      "properties": {
+        "patientId": {
+          "type": "string"
+        },
+        "studyId": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
     "PatientTreatmentFilter": {
       "properties": {
+        "treatment": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "PatientTreatmentRow": {
+      "properties": {
+        "count": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "samples": {
+          "items": {
+            "$ref": "#/definitions/ClinicalEventSample"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
         "treatment": {
           "type": "string"
         }
@@ -5488,401 +5739,6 @@
       ],
       "type": "object"
     },
-    "ResponseEntityListGenomicDataCountItem": {
-      "properties": {
-        "body": {
-          "items": {
-            "$ref": "#/definitions/GenomicDataCountItem"
-          },
-          "type": "array"
-        },
-        "headers": {
-          "additionalProperties": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
-          "properties": {
-            "host": {
-              "properties": {
-                "address": {
-                  "properties": {
-                    "address": {
-                      "items": {
-                        "format": "byte",
-                        "type": "string"
-                      },
-                      "type": "array"
-                    },
-                    "anyLocalAddress": {
-                      "type": "boolean"
-                    },
-                    "canonicalHostName": {
-                      "type": "string"
-                    },
-                    "hostAddress": {
-                      "type": "string"
-                    },
-                    "hostName": {
-                      "type": "string"
-                    },
-                    "linkLocalAddress": {
-                      "type": "boolean"
-                    },
-                    "loopbackAddress": {
-                      "type": "boolean"
-                    },
-                    "mcglobal": {
-                      "type": "boolean"
-                    },
-                    "mclinkLocal": {
-                      "type": "boolean"
-                    },
-                    "mcnodeLocal": {
-                      "type": "boolean"
-                    },
-                    "mcorgLocal": {
-                      "type": "boolean"
-                    },
-                    "mcsiteLocal": {
-                      "type": "boolean"
-                    },
-                    "multicastAddress": {
-                      "type": "boolean"
-                    },
-                    "siteLocalAddress": {
-                      "type": "boolean"
-                    }
-                  },
-                  "type": "object"
-                },
-                "hostName": {
-                  "type": "string"
-                },
-                "hostString": {
-                  "type": "string"
-                },
-                "port": {
-                  "format": "int32",
-                  "type": "integer"
-                },
-                "unresolved": {
-                  "type": "boolean"
-                }
-              },
-              "type": "object"
-            },
-            "accept": {
-              "items": {
-                "$ref": "#/definitions/MediaType"
-              },
-              "type": "array"
-            },
-            "acceptCharset": {
-              "items": {
-                "properties": {
-                  "registered": {
-                    "type": "boolean"
-                  }
-                },
-                "type": "object"
-              },
-              "type": "array"
-            },
-            "acceptLanguage": {
-              "items": {
-                "properties": {
-                  "range": {
-                    "type": "string"
-                  },
-                  "weight": {
-                    "format": "double",
-                    "type": "number"
-                  }
-                },
-                "type": "object"
-              },
-              "type": "array"
-            },
-            "acceptLanguageAsLocales": {
-              "items": {
-                "properties": {
-                  "country": {
-                    "type": "string"
-                  },
-                  "displayCountry": {
-                    "type": "string"
-                  },
-                  "displayLanguage": {
-                    "type": "string"
-                  },
-                  "displayName": {
-                    "type": "string"
-                  },
-                  "displayScript": {
-                    "type": "string"
-                  },
-                  "displayVariant": {
-                    "type": "string"
-                  },
-                  "extensionKeys": {
-                    "items": {
-                      "type": "string"
-                    },
-                    "type": "array",
-                    "uniqueItems": true
-                  },
-                  "iso3Country": {
-                    "type": "string"
-                  },
-                  "iso3Language": {
-                    "type": "string"
-                  },
-                  "language": {
-                    "type": "string"
-                  },
-                  "script": {
-                    "type": "string"
-                  },
-                  "unicodeLocaleAttributes": {
-                    "items": {
-                      "type": "string"
-                    },
-                    "type": "array",
-                    "uniqueItems": true
-                  },
-                  "unicodeLocaleKeys": {
-                    "items": {
-                      "type": "string"
-                    },
-                    "type": "array",
-                    "uniqueItems": true
-                  },
-                  "variant": {
-                    "type": "string"
-                  }
-                },
-                "type": "object"
-              },
-              "type": "array"
-            },
-            "acceptPatch": {
-              "items": {
-                "$ref": "#/definitions/MediaType"
-              },
-              "type": "array"
-            },
-            "accessControlAllowCredentials": {
-              "type": "boolean"
-            },
-            "accessControlAllowHeaders": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "accessControlAllowMethods": {
-              "items": {
-                "$ref": "#/definitions/HttpMethod"
-              },
-              "type": "array"
-            },
-            "accessControlAllowOrigin": {
-              "type": "string"
-            },
-            "accessControlExposeHeaders": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "accessControlMaxAge": {
-              "format": "int64",
-              "type": "integer"
-            },
-            "accessControlRequestHeaders": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "accessControlRequestMethod": {
-              "$ref": "#/definitions/HttpMethod"
-            },
-            "all": {
-              "additionalProperties": {
-                "type": "string"
-              },
-              "type": "object"
-            },
-            "allow": {
-              "items": {
-                "$ref": "#/definitions/HttpMethod"
-              },
-              "type": "array",
-              "uniqueItems": true
-            },
-            "basicAuth": {
-              "type": "string"
-            },
-            "bearerAuth": {
-              "type": "string"
-            },
-            "cacheControl": {
-              "type": "string"
-            },
-            "connection": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "contentDisposition": {
-              "$ref": "#/definitions/ContentDisposition"
-            },
-            "contentLanguage": {
-              "properties": {
-                "country": {
-                  "type": "string"
-                },
-                "displayCountry": {
-                  "type": "string"
-                },
-                "displayLanguage": {
-                  "type": "string"
-                },
-                "displayName": {
-                  "type": "string"
-                },
-                "displayScript": {
-                  "type": "string"
-                },
-                "displayVariant": {
-                  "type": "string"
-                },
-                "extensionKeys": {
-                  "items": {
-                    "type": "string"
-                  },
-                  "type": "array",
-                  "uniqueItems": true
-                },
-                "iso3Country": {
-                  "type": "string"
-                },
-                "iso3Language": {
-                  "type": "string"
-                },
-                "language": {
-                  "type": "string"
-                },
-                "script": {
-                  "type": "string"
-                },
-                "unicodeLocaleAttributes": {
-                  "items": {
-                    "type": "string"
-                  },
-                  "type": "array",
-                  "uniqueItems": true
-                },
-                "unicodeLocaleKeys": {
-                  "items": {
-                    "type": "string"
-                  },
-                  "type": "array",
-                  "uniqueItems": true
-                },
-                "variant": {
-                  "type": "string"
-                }
-              },
-              "type": "object"
-            },
-            "contentLength": {
-              "format": "int64",
-              "type": "integer"
-            },
-            "contentType": {
-              "$ref": "#/definitions/MediaType"
-            },
-            "date": {
-              "format": "int64",
-              "type": "integer"
-            },
-            "empty": {
-              "type": "boolean"
-            },
-            "etag": {
-              "type": "string"
-            },
-            "expires": {
-              "format": "int64",
-              "type": "integer"
-            },
-            "ifMatch": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "ifModifiedSince": {
-              "format": "int64",
-              "type": "integer"
-            },
-            "ifNoneMatch": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "ifUnmodifiedSince": {
-              "format": "int64",
-              "type": "integer"
-            },
-            "lastModified": {
-              "format": "int64",
-              "type": "integer"
-            },
-            "location": {
-              "format": "uri",
-              "type": "string"
-            },
-            "origin": {
-              "type": "string"
-            },
-            "pragma": {
-              "type": "string"
-            },
-            "range": {
-              "items": {
-                "$ref": "#/definitions/HttpRange"
-              },
-              "type": "array"
-            },
-            "upgrade": {
-              "type": "string"
-            },
-            "vary": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            }
-          },
-          "type": "object"
-        },
-        "statusCode": {
-          "$ref": "#/definitions/HttpStatusCode"
-        },
-        "statusCodeValue": {
-          "format": "int32",
-          "type": "integer"
-        }
-      },
-      "type": "object"
-    },
     "Sample": {
       "properties": {
         "copyNumberSegmentPresent": {
@@ -5926,6 +5782,20 @@
       ],
       "type": "object"
     },
+    "SampleClinicalDataCollection": {
+      "properties": {
+        "byUniqueSampleKey": {
+          "additionalProperties": {
+            "items": {
+              "$ref": "#/definitions/ClinicalData"
+            },
+            "type": "array"
+          },
+          "type": "object"
+        }
+      },
+      "type": "object"
+    },
     "SampleIdentifier": {
       "properties": {
         "sampleId": {
@@ -5950,6 +5820,32 @@
     },
     "SampleTreatmentFilter": {
       "properties": {
+        "time": {
+          "enum": [
+            "Pre",
+            "Post"
+          ],
+          "type": "string"
+        },
+        "treatment": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "SampleTreatmentRow": {
+      "properties": {
+        "count": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "samples": {
+          "items": {
+            "$ref": "#/definitions/ClinicalEventSample"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
         "time": {
           "enum": [
             "Pre",
@@ -6371,6 +6267,35 @@
           "type": "array"
         }
       },
+      "type": "object"
+    },
+    "SurvivalRequest": {
+      "description": "Survival Data Request",
+      "properties": {
+        "attributeIdPrefix": {
+          "type": "string"
+        },
+        "censoredEventRequestIdentifier": {
+          "$ref": "#/definitions/ClinicalEventRequestIdentifier"
+        },
+        "endEventRequestIdentifier": {
+          "$ref": "#/definitions/ClinicalEventRequestIdentifier"
+        },
+        "patientIdentifiers": {
+          "items": {
+            "$ref": "#/definitions/PatientIdentifier"
+          },
+          "maxItems": 10000000,
+          "minItems": 1,
+          "type": "array"
+        },
+        "startEventRequestIdentifier": {
+          "$ref": "#/definitions/ClinicalEventRequestIdentifier"
+        }
+      },
+      "required": [
+        "attributeIdPrefix"
+      ],
       "type": "object"
     },
     "VariantCount": {

@@ -105,6 +105,9 @@ export const GenomicFormatHelp = (
                                 <code>PROMOTER</code>: a promoter mutation
                             </li>
                             <li>
+                                <code>SPLICE</code>: a splice mutation
+                            </li>
+                            <li>
                                 <code>OTHER</code>: any other kind of mutation
                             </li>
                         </ul>

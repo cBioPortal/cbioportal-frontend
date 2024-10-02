@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { IAxisLogScaleParams } from 'pages/resultsView/plots/PlotsTabUtils';
+import { IAxisLogScaleParams } from 'shared/components/plots/PlotsTabUtils';
 import { CoExpressionPlotData } from 'pages/resultsView/coExpression/CoExpressionPlot';
 import { MolecularProfile } from 'cbioportal-ts-api-client';
 import { GeneticEntity } from 'shared/model/GeneticEntity';

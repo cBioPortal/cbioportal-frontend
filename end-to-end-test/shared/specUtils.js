@@ -47,7 +47,7 @@ function waitForPatientView(timeout) {
     });
 }
 
-function waitForOncoprint(timeout) {
+function waitForOncoprint() {
     browser.pause(200); // give oncoprint time to disappear
     browser.waitUntil(
         () => {
@@ -57,7 +57,7 @@ function waitForOncoprint(timeout) {
                 $('.oncoprint__controls').isExisting()
             ); // oncoprint controls are showing
         },
-        { timeout }
+        { timeout: 60000 }
     );
     browser.pause(200);
 }
@@ -209,6 +209,8 @@ function goToUrlAndSetLocalStorage(url, authenticated = false) {
     const currentUrl = browser.getUrl();
     const needToLogin =
         authenticated && (!currentUrl || !currentUrl.includes('http'));
+    // navigate to blank page first to prevent issues with url hash params
+    browser.url('about:blank');
     if (!useExternalFrontend) {
         browser.url(url);
         console.log('Connecting to: ' + url);

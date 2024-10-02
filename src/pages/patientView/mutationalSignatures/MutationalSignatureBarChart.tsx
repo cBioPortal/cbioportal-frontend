@@ -1,6 +1,14 @@
 import * as React from 'react';
 import _ from 'lodash';
-import { VictoryBar, VictoryAxis, VictoryLabel, VictoryTooltip } from 'victory';
+import {
+    VictoryBar,
+    VictoryAxis,
+    VictoryLabel,
+    VictoryTooltip,
+    Bar,
+    VictoryZoomContainer,
+    VictoryChart,
+} from 'victory';
 import { action, computed, observable, reaction } from 'mobx';
 import { observer } from 'mobx-react';
 import { IMutationalCounts } from 'shared/model/MutationalSignature';
@@ -34,6 +42,7 @@ export interface IMutationalBarChartProps {
     selectedScale: string;
     initialReference: string;
     updateReference: boolean;
+    domainMaxPercentage: number;
 }
 
 const theme = _.cloneDeep(CBIOPORTAL_VICTORY_THEME);
@@ -71,6 +80,7 @@ export default class MutationalBarChart extends React.Component<
         );
     }
     @observable svgWidth = this.props.width;
+    @observable svgHeight: number = 350;
     @observable graphWidth = this.props.width - 50;
 
     @computed get xTickLabels(): string[] {
@@ -80,9 +90,42 @@ export default class MutationalBarChart extends React.Component<
         ).map(item => item.label);
     }
 
+    // this represents what percentage of the domain to render
+    // e.g. if it's 50% and the domain is 0 to 220, we show 0 to 110
+    @computed get domainMaxPercentage() {
+        let perc = this.props.domainMaxPercentage;
+
+        if (perc < 100 && perc > 80) {
+            perc = 80;
+        }
+
+        if (perc <= 1) {
+            return 1;
+        } else {
+            // always make sure that the ticks are integers so that
+            // we get proper set of ticks
+            const ceil = Math.ceil(perc / 20) * 20;
+
+            //return 100;
+            return ceil || 100;
+        }
+    }
+
+    @computed get cosmicYAxisDomain() {
+        if (this.props.selectedScale === '%') {
+            const ceil = Math.ceil(this.props.domainMaxPercentage / 10) * 10;
+            return [ceil * -1, 0];
+        } else {
+            // this is confusing but if we're in absolute mode
+            // this chart is always y=percentage and so we
+            // don't want it to respond to scale slider
+            return [-100, 0];
+        }
+    }
+
     @computed get yAxisDomain(): number[] {
         if (this.props.selectedScale == '%') {
-            return [0, 100];
+            return [0, this.domainMaxPercentage];
         } else {
             const maxValue = this.props.data.reduce(
                 (previous: IMutationalCounts, current: IMutationalCounts) => {
@@ -91,7 +134,16 @@ export default class MutationalBarChart extends React.Component<
             );
 
             if (maxValue.value !== 0) {
-                return [0, Math.round(maxValue.value)];
+                // we need the value to be a multiple of 10 so that we will always have a
+                // ticket at the top of the y axis and it can have a label of >=
+                // this allows us to accomodate then we are zoomed and bars
+                // need to overflow the chart
+                return [
+                    0,
+                    Math.ceil(
+                        (maxValue.value * this.domainMaxPercentage) / 100 / 10
+                    ) * 10,
+                ];
             } else {
                 return [0, 10];
             }
@@ -463,6 +515,23 @@ export default class MutationalBarChart extends React.Component<
         }
     }
 
+    @computed get heightReferenceAxis() {
+        //Make sure that the height of the table
+        if (!this.props.updateReference) {
+            return 0;
+        } else {
+            return heightYAxis;
+        }
+    }
+
+    @computed get heightSvgElement() {
+        if (!this.props.updateReference) {
+            return 300;
+        } else {
+            return 550;
+        }
+    }
+
     @computed get referenceAxisLabel() {
         const referenceString = `COSMIC Reference`;
         return this.props.version === 'SBS'
@@ -491,7 +560,7 @@ export default class MutationalBarChart extends React.Component<
                 }}
             >
                 <svg
-                    height={600}
+                    height={this.heightSvgElement}
                     width={this.svgWidth}
                     xmlns="http://www.w3.org/2000/svg"
                     ref={this.props.svgRef}
@@ -505,9 +574,25 @@ export default class MutationalBarChart extends React.Component<
                             dependentAxis
                             label={this.props.label}
                             domain={this.yAxisDomain}
-                            tickFormat={(t: number) =>
-                                Number.isInteger(t) ? t.toFixed(0) : ''
-                            }
+                            tickFormat={(...args: any) => {
+                                const val = args[0];
+                                if (Number.isInteger(val)) {
+                                    if (val >= this.yAxisDomain[1]) {
+                                        if (
+                                            this.props.selectedScale === '%' &&
+                                            val === 100
+                                        ) {
+                                            return val.toFixed(0);
+                                        } else {
+                                            return `>=${val.toFixed(0)}`;
+                                        }
+                                    } else {
+                                        return val.toFixed(0);
+                                    }
+                                } else {
+                                    return '';
+                                }
+                            }}
                             height={300}
                             width={this.graphWidth + 45}
                             offsetX={offSetYAxis}
@@ -519,10 +604,7 @@ export default class MutationalBarChart extends React.Component<
                                 axisLabel: {
                                     fontFamily:
                                         theme.bar.style.labels.fontFamily,
-                                    padding:
-                                        this.props.selectedScale == '%'
-                                            ? 35
-                                            : 40,
+                                    padding: 40,
                                     letterSpacing: 'normal',
                                 },
                                 ticks: { size: 5, stroke: 'black' },
@@ -530,6 +612,7 @@ export default class MutationalBarChart extends React.Component<
                                     fontFamily:
                                         theme.bar.style.labels.fontFamily,
                                     padding: 2,
+                                    fontSize: 10,
                                 },
                                 grid: {
                                     stroke: 'lightgrey',
@@ -555,9 +638,31 @@ export default class MutationalBarChart extends React.Component<
                                 orientation="left"
                                 invertAxis
                                 label={this.referenceAxisLabel}
-                                domain={[100, 0]}
+                                domain={this.cosmicYAxisDomain}
+                                tickFormat={(...args: any) => {
+                                    const val = args[0];
+                                    if (Number.isInteger(val)) {
+                                        if (val <= this.cosmicYAxisDomain[0]) {
+                                            // values in this chart cannot be over 100 since they are
+                                            // always percentages
+                                            const pre =
+                                                Math.abs(val) < 100 ? '>=' : '';
+                                            return `${pre}${Math.abs(
+                                                val.toFixed(0)
+                                            )}%`;
+                                        } else {
+                                            // note that this axis is ALWAYS percent regardless
+                                            // of the user selection
+                                            return (
+                                                Math.abs(val.toFixed(0)) + '%'
+                                            );
+                                        }
+                                    } else {
+                                        return '';
+                                    }
+                                }}
                                 offsetX={offSetYAxis}
-                                height={heightYAxis}
+                                height={this.heightReferenceAxis}
                                 width={this.graphWidth}
                                 style={{
                                     paddingTop: 20,
@@ -566,10 +671,7 @@ export default class MutationalBarChart extends React.Component<
                                     axisLabel: {
                                         fontFamily:
                                             theme.bar.style.labels.fontFamily,
-                                        padding:
-                                            this.props.selectedScale == '%'
-                                                ? 35
-                                                : 40,
+                                        padding: 30,
                                         letterSpacing: 'normal',
                                     },
                                     ticks: { size: 5, stroke: 'black' },
@@ -577,6 +679,7 @@ export default class MutationalBarChart extends React.Component<
                                         fontFamily:
                                             theme.bar.style.labels.fontFamily,
                                         padding: 2,
+                                        fontSize: 10,
                                     },
                                     grid: {
                                         stroke: 'lightgrey',
@@ -608,7 +711,7 @@ export default class MutationalBarChart extends React.Component<
                                 tickLabels: {
                                     fontFamily:
                                         theme.bar.style.labels.fontFamily,
-                                    fontSize: 12,
+                                    fontSize: 10,
                                     padding: 40,
                                     angle:
                                         this.props.version === 'ID' ? 0 : 270,
@@ -657,7 +760,23 @@ export default class MutationalBarChart extends React.Component<
                                 this.props.selectedScale
                             )}
                             x="mutationalSignatureLabel"
-                            y="value"
+                            y={
+                                // this determines the height of the bars
+                                // if the a bar exceeds the y domain limit, trim it to the limit
+                                // so that the bars don't overflow the chart
+                                (d: any) => {
+                                    if (this.props.selectedScale === '%') {
+                                        return d.percentage >=
+                                            this.yAxisDomain[1]
+                                            ? this.yAxisDomain[1]
+                                            : d.percentage;
+                                    } else {
+                                        return d.value >= this.yAxisDomain[1]
+                                            ? this.yAxisDomain[1]
+                                            : d.value;
+                                    }
+                                }
+                            }
                             style={{
                                 paddingTop: 30,
                                 paddingLeft: 30,
@@ -668,26 +787,26 @@ export default class MutationalBarChart extends React.Component<
                                 },
                             }}
                             standalone={false}
-                        />
+                        ></VictoryBar>
                     </g>
-                    {!this.props.updateReference && (
-                        <g
-                            transform={
-                                'translate(' +
-                                this.getTranslateDistance(
-                                    (this.graphWidth - 200) / 2
-                                ) +
-                                ',' +
-                                this.getTranslateDistance(400) +
-                                ')'
-                            }
-                        >
-                            <text style={{ border: '2px solid #ccc' }}>
-                                Select a signature from the table to show the
-                                reference signature plot
-                            </text>
-                        </g>
-                    )}
+                    {/*{!this.props.updateReference && (*/}
+                    {/*    <g*/}
+                    {/*        transform={*/}
+                    {/*            'translate(' +*/}
+                    {/*            this.getTranslateDistance(*/}
+                    {/*                (this.graphWidth - 200) / 2*/}
+                    {/*            ) +*/}
+                    {/*            ',' +*/}
+                    {/*            this.getTranslateDistance(350) +*/}
+                    {/*            ')'*/}
+                    {/*        }*/}
+                    {/*    >*/}
+                    {/*        <text style={{ border: '2px solid #ccc' }}>*/}
+                    {/*            Select a signature from the table to show the*/}
+                    {/*            reference signature plot*/}
+                    {/*        </text>*/}
+                    {/*    </g>*/}
+                    {/*)}*/}
                     {this.props.version == 'ID' && this.colorBoxXAxis}
                     {this.props.version == 'ID' && this.xAxisLabelsInDel}
                     {this.props.updateReference && (
@@ -704,11 +823,24 @@ export default class MutationalBarChart extends React.Component<
                                 barRatio={1}
                                 barWidth={7}
                                 width={this.graphWidth}
-                                height={300}
-                                domain={{ y: [-100, 0] }}
+                                height={this.heightReferenceAxis}
+                                domain={{ y: this.cosmicYAxisDomain }}
                                 data={this.getReferenceSignatureToPlot}
                                 x="label"
-                                y="value"
+                                y={
+                                    // this determines the height of the bars
+                                    // if the a bar exceeds the y domain limit, trim it to the limit
+                                    // so that the bars don't overflow the chart
+                                    (d: any) => {
+                                        if (
+                                            d.value < this.cosmicYAxisDomain[0]
+                                        ) {
+                                            return this.cosmicYAxisDomain[0];
+                                        } else {
+                                            return d.value;
+                                        }
+                                    }
+                                }
                                 style={{
                                     paddingTop: 20,
                                     paddingLeft: 20,
@@ -732,6 +864,16 @@ export default class MutationalBarChart extends React.Component<
                                             stroke: '#bacdd8',
                                             strokeWidth: 1,
                                             fill: 'white',
+                                        }}
+                                        orientation={'bottom'}
+                                        text={(d: any) => {
+                                            const txt = d?.mutationalSignatureLabel.replace(
+                                                /[-_]/g,
+                                                ''
+                                            );
+                                            return `${txt} ${Math.round(
+                                                Math.abs(d.value)
+                                            )}%`;
                                         }}
                                     />
                                 }
