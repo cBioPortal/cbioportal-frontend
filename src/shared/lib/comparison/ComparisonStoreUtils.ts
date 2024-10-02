@@ -312,33 +312,26 @@ export function getSurvivalPlotName(
     existingNames: string[]
 ) {
     let title = 'From ';
-    const startStr = startEventAttributes.reduce((acc, attr, index) => {
-        acc += `${attr.value} `;
-        if (index !== startEventAttributes.length - 1) {
-            acc += 'or ';
-        }
-        return acc;
-    }, '');
+    const startStr = startEventAttributes
+        .map(attr => attr.value)
+        .join(' or ')
+        .trim();
     title += `${startEventPosition.toLowerCase()} ${
-        startStr.length > 0 ? startStr : 'of any ' + startClinicalEventType
+        startStr.length > 0
+            ? startStr.trim()
+            : 'of any ' + startClinicalEventType
     } to `;
-    const endStr = endEventAttributes.reduce((acc, attr, index) => {
-        acc += `${attr.value} `;
-        if (index !== endEventAttributes.length - 1) {
-            acc += 'or ';
-        }
-        return acc;
-    }, '');
+    const endStr = endEventAttributes
+        .map(attr => attr.value)
+        .join(' or ')
+        .trim();
     title += `${endEventPosition.toLowerCase()} ${
         endStr.length > 0 ? endStr : 'of any ' + endClinicalEventType
     } and censored by `;
-    const censoredStr = censoredEventAttributes.reduce((acc, attr, index) => {
-        acc += `${attr.value} `;
-        if (index !== censoredEventAttributes.length - 1) {
-            acc += 'or ';
-        }
-        return acc;
-    }, '');
+    const censoredStr = censoredEventAttributes
+        .map(attr => attr.value)
+        .join(' or ')
+        .trim();
     title += `${
         censoredStr.length > 0
             ? censoredStr
