@@ -98,6 +98,7 @@ export default class VirtualStudy extends React.Component<
 > {
     @observable.ref private name: string;
     @observable.ref private description: string;
+    @observable.ref private isDynamic: boolean = false;
 
     @observable private saving = false;
     @observable private sharing = false;
@@ -167,6 +168,7 @@ export default class VirtualStudy extends React.Component<
                             study => study.studyId
                         ),
                         studies: studies,
+                        isDynamic: this.isDynamic,
                     };
                     return await sessionServiceClient.saveVirtualStudy(
                         parameters,
@@ -296,6 +298,89 @@ export default class VirtualStudy extends React.Component<
                                                         event.currentTarget.value)
                                                 }
                                             />
+                                        </div>
+
+                                        <div className="form-group-inline">
+                                            <label>Type:</label>
+                                            <label>
+                                                <input
+                                                    type="radio"
+                                                    name="option"
+                                                    value="static"
+                                                    checked={!this.isDynamic}
+                                                    onChange={_ =>
+                                                        (this.isDynamic = false)
+                                                    }
+                                                />{' '}
+                                                Static
+                                            </label>
+                                            <label>
+                                                <input
+                                                    type="radio"
+                                                    name="option"
+                                                    value="dynamic"
+                                                    checked={this.isDynamic}
+                                                    onChange={_ =>
+                                                        (this.isDynamic = true)
+                                                    }
+                                                />{' '}
+                                                Dynamic
+                                            </label>
+                                            <DefaultTooltip
+                                                mouseEnterDelay={0}
+                                                placement="right"
+                                                overlay={
+                                                    <div>
+                                                        <p>
+                                                            <strong>
+                                                                Type of Virtual
+                                                                Study:
+                                                            </strong>
+                                                        </p>
+                                                        <p>
+                                                            A Virtual Study is a
+                                                            set of sample IDs
+                                                            derived from
+                                                            selected studies.
+                                                            This set can be
+                                                            defined as either
+                                                            static or dynamic:
+                                                        </p>
+                                                        <ul>
+                                                            <li>
+                                                                <strong>
+                                                                    Static
+                                                                </strong>{' '}
+                                                                – Sample IDs are
+                                                                captured at the
+                                                                time of creation
+                                                                and do not
+                                                                update, even
+                                                                when the data in
+                                                                the parent
+                                                                studies changes.
+                                                            </li>
+                                                            <li>
+                                                                <strong>
+                                                                    Dynamic
+                                                                </strong>{' '}
+                                                                – Sample IDs are
+                                                                automatically
+                                                                refreshed to
+                                                                reflect any
+                                                                changes in the
+                                                                parent studies,
+                                                                ensuring the
+                                                                virtual study
+                                                                stays
+                                                                up-to-date.
+                                                            </li>
+                                                        </ul>
+                                                    </div>
+                                                }
+                                            >
+                                                <FontAwesome name="question-circle" />
+                                            </DefaultTooltip>
                                         </div>
 
                                         <div>
