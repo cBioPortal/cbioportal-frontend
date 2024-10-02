@@ -31,9 +31,7 @@ class FunctionalPrediction extends React.Component<IFunctionalPredictionProps> {
         genomeNexusData: VariantAnnotation | undefined
     ): IFunctionalImpactData {
         const mutationAssessor =
-            genomeNexusData &&
-            genomeNexusData.mutation_assessor &&
-            genomeNexusData.mutation_assessor.annotation;
+            genomeNexusData && genomeNexusData.mutation_assessor;
         const siftScore =
             genomeNexusData &&
             genomeNexusData.transcript_consequences &&

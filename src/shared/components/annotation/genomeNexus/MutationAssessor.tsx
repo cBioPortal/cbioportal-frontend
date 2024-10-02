@@ -19,7 +19,8 @@ export default class MutationAssessor extends React.Component<
     IMutationAssessorProps,
     {}
 > {
-    static MUTATION_ASSESSOR_URL: string = 'http://mutationassessor.org/r3/';
+    // Replace to new url when publication available
+    // static MUTATION_ASSESSOR_URL: string = 'http://mutationassessor.org/r3/';
 
     constructor(props: IMutationAssessorProps) {
         super(props);
@@ -31,7 +32,7 @@ export default class MutationAssessor extends React.Component<
         mutationAssessorData: MutationAssessorData | undefined
     ): string {
         if (mutationAssessorData) {
-            return `impact: ${mutationAssessorData.functionalImpact}, score: ${mutationAssessorData.functionalImpactScore}`;
+            return `impact: ${mutationAssessorData.functionalImpactPrediction}, score: ${mutationAssessorData.functionalImpactScore}`;
         } else {
             return 'NA';
         }
@@ -44,7 +45,7 @@ export default class MutationAssessor extends React.Component<
 
         if (
             this.props.mutationAssessor &&
-            this.props.mutationAssessor.functionalImpact !== null
+            this.props.mutationAssessor.functionalImpactPrediction !== null
         ) {
             const maData = this.props.mutationAssessor;
             maContent = (
@@ -52,7 +53,7 @@ export default class MutationAssessor extends React.Component<
                     className={classNames(
                         annotationStyles['annotation-item-text'],
                         (mutationAssessorColumn as any)[
-                            `ma-${maData.functionalImpact}`
+                            `ma-${maData.functionalImpactPrediction}`
                         ]
                     )}
                 >
@@ -80,15 +81,14 @@ export default class MutationAssessor extends React.Component<
     private tooltipContent() {
         if (this.props.mutationAssessor) {
             const maData = this.props.mutationAssessor;
-            const impact = maData.functionalImpact ? (
+            const impact = maData.functionalImpactPrediction ? (
                 <div>
                     <table className={tooltipStyles['ma-tooltip-table']}>
                         <tr>
                             <td>Source</td>
                             <td>
-                                <a href="http://mutationassessor.org/r3">
-                                    MutationAssessor
-                                </a>
+                                {/* Add link when pubilcation is available */}
+                                MutationAssessor
                             </td>
                         </tr>
                         <tr>
@@ -97,11 +97,11 @@ export default class MutationAssessor extends React.Component<
                                 <span
                                     className={
                                         (mutationAssessorColumn as any)[
-                                            `ma-${maData.functionalImpact}`
+                                            `ma-${maData.functionalImpactPrediction}`
                                         ]
                                     }
                                 >
-                                    {maData.functionalImpact}
+                                    {maData.functionalImpactPrediction}
                                 </span>
                             </td>
                         </tr>

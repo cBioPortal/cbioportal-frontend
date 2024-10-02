@@ -306,18 +306,13 @@ class FunctionalImpactColumnTooltip extends React.Component<
     public static mutationAssessorText() {
         return (
             <div style={{ width: 450, height: 100 }}>
-                <a
-                    href={MutationAssessor.MUTATION_ASSESSOR_URL}
-                    target="_blank"
-                >
-                    Mutation Assessor
-                </a>{' '}
-                predicts the functional impact of amino-acid substitutions in
-                proteins, such as mutations discovered in cancer or missense
-                polymorphisms. The functional impact is assessed based on
-                evolutionary conservation of the affected amino acid in protein
-                homologs. The method has been validated on a large set (60k) of
-                disease associated (OMIM) and polymorphic variants.
+                Mutation Assessor predicts the functional impact of amino-acid
+                substitutions in proteins, such as mutations discovered in
+                cancer or missense polymorphisms. The functional impact is
+                assessed based on evolutionary conservation of the affected
+                amino acid in protein homologs. The method has been validated on
+                a large set of disease associated and polymorphic variants
+                (ClinVar).
             </div>
         );
     }
@@ -531,13 +526,7 @@ export default class FunctionalImpactColumnFormatter {
     public static getMutationAssessorData(
         mutationAssessorDataCache: VariantAnnotation | null
     ): MutationAssessorData | undefined {
-        if (!mutationAssessorDataCache) {
-            return undefined;
-        } else {
-            return mutationAssessorDataCache.mutation_assessor
-                ? mutationAssessorDataCache.mutation_assessor.annotation
-                : undefined;
-        }
+        return mutationAssessorDataCache?.mutation_assessor;
     }
 
     public static renderFunction(
