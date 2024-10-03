@@ -305,14 +305,26 @@ class FunctionalImpactColumnTooltip extends React.Component<
 
     public static mutationAssessorText() {
         return (
-            <div style={{ width: 450, height: 100 }}>
+            <div style={{ width: 450, height: 130 }}>
                 Mutation Assessor predicts the functional impact of amino-acid
                 substitutions in proteins, such as mutations discovered in
                 cancer or missense polymorphisms. The functional impact is
                 assessed based on evolutionary conservation of the affected
                 amino acid in protein homologs. The method has been validated on
-                a large set of disease associated and polymorphic variants
-                (ClinVar).
+                a large set of disease associated and polymorphic variants (
+                <a href="https://www.ncbi.nlm.nih.gov/clinvar/" target="_blank">
+                    ClinVar
+                </a>
+                ).
+                <br />
+                <b>
+                    Mutation Assessor V4 data is now available in the portal!
+                </b>{' '}
+                New manuscript is in progress. Click{` `}
+                <a href="http://mutationassessor.org/r3/" target="_blank">
+                    here
+                </a>
+                {` `} to see information about V3 data.
             </div>
         );
     }

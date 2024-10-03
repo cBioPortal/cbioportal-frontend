@@ -19,7 +19,7 @@ export default class MutationAssessor extends React.Component<
     IMutationAssessorProps,
     {}
 > {
-    // Replace to new url when publication available
+    // TODO Replace to new url when manuscript is available
     // static MUTATION_ASSESSOR_URL: string = 'http://mutationassessor.org/r3/';
 
     constructor(props: IMutationAssessorProps) {
@@ -87,8 +87,8 @@ export default class MutationAssessor extends React.Component<
                         <tr>
                             <td>Source</td>
                             <td>
-                                {/* Add link when pubilcation is available */}
-                                MutationAssessor
+                                {/* TODO Add link when manuscript is available */}
+                                Mutation Assessor
                             </td>
                         </tr>
                         <tr>

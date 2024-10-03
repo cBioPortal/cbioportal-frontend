@@ -27,20 +27,32 @@ export default class MutationAssessor extends React.Component<
     IMutationAssessorProps,
     {}
 > {
-    // Change to new url when available
+    // TODO Change to new url when manuscript is available
     // New url will need to be added in tooltip, discrption, "Please refer to the score range here." and "Go to Mutation Assessor"
     // private static MUTATION_ASSESSOR_URL: string = 'http://mutationassessor.org/r3/';
 
     private static mutationAssessorText() {
         return (
-            <div style={{ width: 450, height: 110 }}>
+            <div style={{ width: 450, height: 130 }}>
                 Mutation Assessor predicts the functional impact of amino-acid
                 substitutions in proteins, such as mutations discovered in
                 cancer or missense polymorphisms. The functional impact is
                 assessed based on evolutionary conservation of the affected
                 amino acid in protein homologs. The method has been validated on
-                a large set of disease associated and polymorphic variants
-                (ClinVar).
+                a large set of disease associated and polymorphic variants (
+                <a href="https://www.ncbi.nlm.nih.gov/clinvar/" target="_blank">
+                    ClinVar
+                </a>
+                ).
+                <br />
+                <b>
+                    Mutation Assessor V4 data is now available in the portal!
+                </b>{' '}
+                New manuscript is in progress. Click{` `}
+                <a href="http://mutationassessor.org/r3/" target="_blank">
+                    here
+                </a>
+                {` `} to see information about V3 data.
             </div>
         );
     }
@@ -146,14 +158,6 @@ export default class MutationAssessor extends React.Component<
 
     public render() {
         let maContent: JSX.Element = <span />;
-        const dataSource = (
-            <>
-                Mutation Assessor&nbsp;
-                <i className="fas fa-external-link-alt" />
-                {!this.props.isCanonicalTranscriptSelected && <span> *</span>}
-            </>
-        );
-
         if (
             this.props.mutationAssessor &&
             this.props.mutationAssessor.functionalImpactPrediction != null &&
@@ -168,7 +172,15 @@ export default class MutationAssessor extends React.Component<
         return (
             <div className={featureTableStyle['feature-table-layout']}>
                 <div className={featureTableStyle['data-source']}>
-                    {this.mutationAssessorTooltip(<>{dataSource}</>)}
+                    {this.mutationAssessorTooltip(
+                        <>
+                            Mutation Assessor&nbsp;
+                            <i className="fas fa-external-link-alt" />
+                            {!this.props.isCanonicalTranscriptSelected && (
+                                <span> *</span>
+                            )}
+                        </>
+                    )}
                 </div>
                 <div>
                     {this.mutationAssessorTooltip(
