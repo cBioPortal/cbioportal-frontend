@@ -15,7 +15,7 @@
   "scripts": {
     "start": "lerna run watch --parallel",
     "startSSL": "lerna run watchSSL --parallel",
-    "watchTests": "./scripts/api-test_env.sh && node $BACKEND_ROOT/test/api-e2e/watch.js",
+    "watchTests": "./scripts/api-test_env.sh && node ./api-e2e/watch.js",
     "apitests": "cd ./api-e2e && npx tsc && node ./run.js",
     "watch": "./scripts/env_vars.sh && eval \"$(./scripts/env_vars.sh)\" && cross-env NODE_ENV=development webpack-dev-server --compress",
     "watchSSL": "./scripts/env_vars.sh && eval \"$(./scripts/env_vars.sh)\" && cross-env NODE_ENV=development NODE_OPTIONS=--max-old-space-size=4096 webpack-dev-server --compress --https",

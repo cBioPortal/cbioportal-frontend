@@ -260,7 +260,8 @@ export function validate(
     label: string,
     hash: number,
     body?: any,
-    elapsedTime?: any
+    elapsedTime: any = 0,
+    assertResponse?: any[]
 ) {
     let chXHR: any;
 
@@ -283,22 +284,30 @@ export function validate(
         if (treatmentLegacyUrl[label]) {
             legacyUrl = treatmentLegacyUrl[label](legacyUrl);
         }
-        const legacyXHR = ajax({
-            method: 'post',
-            url: legacyUrl,
-            data: JSON.stringify(params),
-            contentType: 'application/json',
-            dataType: 'json',
-        });
+        const legacyXHR: PromiseLike<any> | XMLHttpRequest = assertResponse
+            ? new Promise((resolve, reject) => {
+                  resolve(assertResponse);
+              })
+            : ajax({
+                  method: 'post',
+                  url: legacyUrl,
+                  data: JSON.stringify(params),
+                  contentType: 'application/json',
+                  dataType: 'json',
+              });
+        // @ts-ignore
         return legacyXHR.then((legacyResult: any) => {
             const result: any = compareCounts(body, legacyResult, label);
             result.url = url;
             result.hash = hash;
             result.data = params;
             result.chDuration = parseFloat(elapsedTime);
-            result.legacyDuration = parseFloat(
-                legacyXHR.getResponseHeader('elapsed-time') || ''
-            );
+            result.legacyDuration =
+                !assertResponse &&
+                parseFloat(
+                    // @ts-ignore
+                    legacyXHR.getResponseHeader('elapsed-time') || '0'
+                );
             return result;
         });
     });
@@ -339,7 +348,8 @@ export function reportValidationResult(
                 result.hash
             }) passed :) ch: ${result.chDuration.toFixed(
                 0
-            )} legacy: ${result.legacyDuration.toFixed(0)}`
+            )} legacy: ${result.legacyDuration &&
+                result.legacyDuration.toFixed(0)}`
         );
 
     if (logLevel === 'verbose' && !result.status) {
@@ -420,26 +430,48 @@ export async function runSpecs(
                                     host + test.url,
                                     test.data,
                                     test.label,
-                                    test.hash
+                                    test.hash,
+                                    undefined,
+                                    undefined,
+                                    test.assertResponse
                                 ).then((report: any) => {
                                     report.test = test;
                                     place = place + 1;
                                     const prefix = `${place} of ${totalCount}`;
 
-                                    if (test?.skip) {
-                                        skips.push(test.hash);
-                                    } else if (!report.status) {
-                                        report.httpError
-                                            ? httpErrors.push(test.hash)
-                                            : errors.push(test.hash);
-                                    } else if (report.status)
-                                        passed.push(test.hash);
+                                    if (report instanceof Promise) {
+                                        report.then((report: any) => {
+                                            if (test?.skip) {
+                                                skips.push(test.hash);
+                                            } else if (!report.status) {
+                                                report.httpError
+                                                    ? httpErrors.push(test.hash)
+                                                    : errors.push(test.hash);
+                                            } else if (report.status)
+                                                passed.push(test.hash);
 
-                                    reportValidationResult(
-                                        report,
-                                        prefix,
-                                        logLevel
-                                    );
+                                            reportValidationResult(
+                                                report,
+                                                prefix,
+                                                logLevel
+                                            );
+                                        });
+                                    } else {
+                                        if (test?.skip) {
+                                            skips.push(test.hash);
+                                        } else if (!report.status) {
+                                            report.httpError
+                                                ? httpErrors.push(test.hash)
+                                                : errors.push(test.hash);
+                                        } else if (report.status)
+                                            passed.push(test.hash);
+
+                                        reportValidationResult(
+                                            report,
+                                            prefix,
+                                            logLevel
+                                        );
+                                    }
                                 });
                             }
                         );
