@@ -79,7 +79,7 @@ const deleteFields: Record<string, string[]> = {
 
 const sortFields: Record<string, string> = {
     ClinicalDataBin: 'attributeId,specialValue',
-    FilteredSamples: 'patientId,sampleId',
+    FilteredSamples: 'patientId,sampleId,studyId',
     SampleTreatmentCounts: 'treatment,time',
     PatientTreatmentCounts: 'treatment',
 };
@@ -480,7 +480,7 @@ export async function runSpecs(
             );
         });
 
-    const concurrent = 2;
+    const concurrent = 1;
     const batches = Math.ceil(invokers.length / concurrent);
 
     for (var i = 0; i < batches; i++) {
