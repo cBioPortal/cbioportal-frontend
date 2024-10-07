@@ -285,7 +285,9 @@ export function validate(
             legacyUrl = treatmentLegacyUrl[label](legacyUrl);
         }
         const legacyXHR: PromiseLike<any> | XMLHttpRequest = assertResponse
-            ? Promise.resolve(assertResponse)
+            ? new Promise((resolve, reject) => {
+                  resolve(assertResponse);
+              })
             : ajax({
                   method: 'post',
                   url: legacyUrl,
@@ -437,20 +439,39 @@ export async function runSpecs(
                                     place = place + 1;
                                     const prefix = `${place} of ${totalCount}`;
 
-                                    if (test?.skip) {
-                                        skips.push(test.hash);
-                                    } else if (!report.status) {
-                                        report.httpError
-                                            ? httpErrors.push(test.hash)
-                                            : errors.push(test.hash);
-                                    } else if (report.status)
-                                        passed.push(test.hash);
+                                    if (report instanceof Promise) {
+                                        report.then((report: any) => {
+                                            if (test?.skip) {
+                                                skips.push(test.hash);
+                                            } else if (!report.status) {
+                                                report.httpError
+                                                    ? httpErrors.push(test.hash)
+                                                    : errors.push(test.hash);
+                                            } else if (report.status)
+                                                passed.push(test.hash);
 
-                                    reportValidationResult(
-                                        report,
-                                        prefix,
-                                        logLevel
-                                    );
+                                            reportValidationResult(
+                                                report,
+                                                prefix,
+                                                logLevel
+                                            );
+                                        });
+                                    } else {
+                                        if (test?.skip) {
+                                            skips.push(test.hash);
+                                        } else if (!report.status) {
+                                            report.httpError
+                                                ? httpErrors.push(test.hash)
+                                                : errors.push(test.hash);
+                                        } else if (report.status)
+                                            passed.push(test.hash);
+
+                                        reportValidationResult(
+                                            report,
+                                            prefix,
+                                            logLevel
+                                        );
+                                    }
                                 });
                             }
                         );
