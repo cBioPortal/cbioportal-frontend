@@ -38,6 +38,8 @@ export interface VirtualStudyData {
     studies: { id: string; samples: string[] }[];
     origin: string[];
     studyViewFilter: StudyViewFilter;
+    typeOfCancerId?: string;
+    pmid?: string;
 }
 
 export type GroupData = Omit<VirtualStudyData, 'studyViewFilter'>;

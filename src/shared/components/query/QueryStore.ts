@@ -225,7 +225,13 @@ export class QueryStore {
     }
 
     @computed get virtualStudiesMap(): { [id: string]: VirtualStudy } {
-        return _.keyBy(this.userVirtualStudies.result, study => study.id);
+        return _.keyBy(
+            [
+                ...this.userVirtualStudies.result,
+                ...this.publicVirtualStudies.result,
+            ],
+            study => study.id
+        );
     }
 
     @computed get selectedVirtualStudies(): VirtualStudy[] {
@@ -792,6 +798,19 @@ export class QueryStore {
         }
     }, []);
 
+    readonly publicVirtualStudies = remoteData(async () => {
+        if (ServerConfigHelpers.sessionServiceIsEnabled()) {
+            try {
+                const studies = await sessionServiceClient.getPublicVirtualStudies();
+                return studies;
+            } catch (ex) {
+                return [];
+            }
+        } else {
+            return [];
+        }
+    }, []);
+
     private readonly userVirtualStudiesSet = remoteData<{
         [studyId: string]: VirtualStudy;
     }>({
@@ -808,18 +827,40 @@ export class QueryStore {
         default: {},
     });
 
+    private readonly publicVirtualStudiesSet = remoteData<{
+        [studyId: string]: VirtualStudy;
+    }>({
+        await: () => [this.publicVirtualStudies],
+        invoke: async () => {
+            return this.publicVirtualStudies.result.reduce(
+                (obj: { [studyId: string]: VirtualStudy }, item) => {
+                    obj[item.id] = item;
+                    return obj;
+                },
+                {}
+            );
+        },
+        default: {},
+    });
+
     private readonly sharedVirtualStudiesSet = remoteData<{
         [studyId: string]: VirtualStudy;
     }>({
-        await: () => [this.physicalStudiesSet, this.userVirtualStudiesSet],
+        await: () => [
+            this.physicalStudiesSet,
+            this.userVirtualStudiesSet,
+            this.publicVirtualStudiesSet,
+        ],
         invoke: async () => {
             let physicalStudiesIdsSet = this.physicalStudiesSet.result;
             let virtualStudiesIdsSet = this.userVirtualStudiesSet.result;
+            let publicStudiesIdsSet = this.publicVirtualStudiesSet.result;
 
             let knownSelectableIds = Object.assign(
                 [],
                 Object.keys(physicalStudiesIdsSet),
-                Object.keys(virtualStudiesIdsSet)
+                Object.keys(virtualStudiesIdsSet),
+                Object.keys(publicStudiesIdsSet)
             );
 
             //queried id that are not selectable(this would mostly be shared virtual study)
@@ -864,12 +905,15 @@ export class QueryStore {
     private readonly selectedStudyToSampleSet = remoteData<{
         [id: string]: { [id: string]: boolean };
     }>({
-        await: () => [this.userVirtualStudiesSet, this.sharedVirtualStudiesSet],
+        await: () => [
+            this.userVirtualStudiesSet,
+            this.sharedVirtualStudiesSet,
+            this.publicVirtualStudiesSet,
+        ],
         invoke: async () => {
             let studyToSampleSet: {
                 [id: string]: { [id: string]: boolean };
             } = {};
-
             const physicalStudyIds = _.filter(
                 this.allSelectedStudyIds,
                 studyId => this.physicalStudiesSet.result[studyId]
@@ -893,6 +937,7 @@ export class QueryStore {
                 const _vs = {
                     ...this.userVirtualStudiesSet.result,
                     ...this.sharedVirtualStudiesSet.result,
+                    ...this.publicVirtualStudiesSet.result,
                 };
 
                 for (const id of this._allSelectedStudyIds.keys()) {
@@ -943,6 +988,12 @@ export class QueryStore {
                     result[studyId] = virtualStudy.data.studies.map(
                         study => study.id
                     );
+                }
+            );
+            _.each(
+                this.publicVirtualStudiesSet.result,
+                (virtualStudy, studyId) => {
+                    result[studyId] = [studyId];
                 }
             );
 
@@ -1117,6 +1168,10 @@ export class QueryStore {
 
     @computed get sampleCountForSelectedStudies() {
         return _.sumBy(this.selectableSelectedStudies, s => s.allSampleCount);
+    }
+
+    @computed get sampleCountForAllStudies() {
+        return _.sumBy(this.selectableStudies, s => s.allSampleCount);
     }
 
     readonly sampleLists = remoteData<SampleList[]>({
@@ -1490,6 +1545,9 @@ export class QueryStore {
             virtualStudies: this.forDownloadTab
                 ? []
                 : this.userVirtualStudies.result,
+            publicVirtualStudies: this.forDownloadTab
+                ? []
+                : this.publicVirtualStudies.result,
             maxTreeDepth: this.maxTreeDepth,
         });
     }
@@ -1524,9 +1582,17 @@ export class QueryStore {
             .filter(_.identity);
     }
 
+    @computed get selectableStudies() {
+        return Array.from(this.treeData.map_studyId_cancerStudy.values());
+    }
+
     public isVirtualStudy(studyId: string): boolean {
         // if the study id doesn't correspond to one in this.cancerStudies, then its a virtual Study
         return !this.cancerStudyIdsSet.result[studyId];
+    }
+
+    public isPublicVirtualStudy(studyId: string): boolean {
+        return !!this.publicVirtualStudies.result.find(ps => ps.id == studyId);
     }
 
     public isDeletedVirtualStudy(studyId: string): boolean {

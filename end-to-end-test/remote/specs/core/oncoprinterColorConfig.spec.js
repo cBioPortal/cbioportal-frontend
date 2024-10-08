@@ -1,129 +1,164 @@
-var assertScreenShotMatch = require('../../../shared/lib/testUtils')
-    .assertScreenShotMatch;
-var assert = require('assert');
-var waitForOncoprint = require('../../../shared/specUtils').waitForOncoprint;
-var goToUrlAndSetLocalStorage = require('../../../shared/specUtils')
-    .goToUrlAndSetLocalStorage;
-var getNthOncoprintTrackOptionsElements = require('../../../shared/specUtils')
-    .getNthOncoprintTrackOptionsElements;
-var {
+const { assertScreenShotMatch } = require('../../../shared/lib/testUtils');
+const assert = require('assert');
+const {
+    waitForOncoprint,
     checkOncoprintElement,
     getElementByTestHandle,
-} = require('../../../shared/specUtils.js');
+    goToUrlAndSetLocalStorage,
+    getNthOncoprintTrackOptionsElements,
+    getElement,
+    clickElement,
+    getNthElements,
+    waitForElementDisplayed,
+} = require('../../../shared/specUtils_Async.js');
 
 const TIMEOUT = 6000;
-
-const ONCOPRINT_TIMEOUT = 60000;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
 describe('oncoprinter clinical example data, color configuration', () => {
-    it('oncoprinter color configuration modal reflects user selected colors', function() {
-        goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/oncoprinter`);
-        $('.oncoprinterClinicalExampleData').waitForExist();
-        $('.oncoprinterClinicalExampleData').click();
-        $('.oncoprinterSubmit').click();
-        waitForOncoprint(TIMEOUT);
+    it('oncoprinter color configuration modal reflects user selected colors', async () => {
+        await goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/oncoprinter`);
+        await (
+            await getElement('.oncoprinterClinicalExampleData')
+        ).waitForExist();
+        await clickElement('.oncoprinterClinicalExampleData');
+        await clickElement('.oncoprinterSubmit');
+        await waitForOncoprint(TIMEOUT);
 
-        var trackOptionsElts = getNthOncoprintTrackOptionsElements(2);
+        const trackOptionsElts = await getNthOncoprintTrackOptionsElements(2);
         // open menu
-        $(trackOptionsElts.button_selector).click();
-        $(trackOptionsElts.dropdown_selector).waitForDisplayed({
-            timeout: 1000,
-        });
+        await (await getElement(trackOptionsElts.button_selector)).click();
+        await waitForElementDisplayed(trackOptionsElts.dropdown_selector);
         // click "Edit Colors" to open modal
-        $(trackOptionsElts.dropdown_selector + ' li:nth-child(11)').click();
-        browser.pause(1000);
+        await clickElement(
+            trackOptionsElts.dropdown_selector + ' li:nth-child(11)'
+        );
+        await browser.pause(1000);
 
         // select new colors for track values
-        getElementByTestHandle('color-picker-icon').click();
-        $('.circle-picker').waitForDisplayed({ timeout: 1000 });
-        $('.circle-picker [title="#990099"]').click();
-        waitForOncoprint();
-        getElementByTestHandle('color-picker-icon').waitForDisplayed();
-        getElementByTestHandle('color-picker-icon').click();
-        $('.circle-picker').waitForDisplayed({ reverse: true });
+        await (await getElementByTestHandle('color-picker-icon')).click();
+        await waitForElementDisplayed('.circle-picker');
+        await clickElement('.circle-picker [title="#990099"]');
+        await waitForOncoprint();
+        await (
+            await getElementByTestHandle('color-picker-icon')
+        ).waitForDisplayed();
+        await (await getElementByTestHandle('color-picker-icon')).click();
+        await waitForElementDisplayed('.circle-picker', {
+            reverse: true,
+        });
 
-        $$('[data-test="color-picker-icon"]')[1].click();
-        $('.circle-picker').waitForDisplayed({ timeout: 1000 });
-        $('.circle-picker [title="#109618"]').click();
-        waitForOncoprint();
-        getElementByTestHandle('color-picker-icon').waitForDisplayed();
-        $$('[data-test="color-picker-icon"]')[1].click();
-        $('.circle-picker').waitForDisplayed({ reverse: true });
+        await (
+            await getNthElements('[data-test="color-picker-icon"]', 1)
+        ).click();
+        await waitForElementDisplayed('.circle-picker');
+        await clickElement('.circle-picker [title="#109618"]');
+        await waitForOncoprint();
+        await (
+            await getElementByTestHandle('color-picker-icon')
+        ).waitForDisplayed();
+        await (
+            await getNthElements('[data-test="color-picker-icon"]', 1)
+        ).click();
+        await waitForElementDisplayed('.circle-picker', {
+            reverse: true,
+        });
 
-        $$('[data-test="color-picker-icon"]')[2].click();
-        $('.circle-picker').waitForDisplayed({ timeout: 1000 });
-        $('.circle-picker [title="#8b0707"]').click();
-        waitForOncoprint();
+        await (
+            await getNthElements('[data-test="color-picker-icon"]', 2)
+        ).click();
+        await waitForElementDisplayed('.circle-picker', {
+            timeout: 1000,
+        });
+        await clickElement('.circle-picker [title="#8b0707"]');
+        await waitForOncoprint();
 
         assert.strictEqual(
-            $('[data-test="color-picker-icon"] rect').getAttribute('fill'),
+            await (
+                await getElement('[data-test="color-picker-icon"] rect')
+            ).getAttribute('fill'),
             '#990099'
         );
         assert.strictEqual(
-            $$('[data-test="color-picker-icon"] rect')[1].getAttribute('fill'),
+            await (
+                await getNthElements('[data-test="color-picker-icon"] rect', 1)
+            ).getAttribute('fill'),
             '#109618'
         );
         assert.strictEqual(
-            $$('[data-test="color-picker-icon"] rect')[2].getAttribute('fill'),
+            await (
+                await getNthElements('[data-test="color-picker-icon"] rect', 2)
+            ).getAttribute('fill'),
             '#8b0707'
         );
-    });
 
-    it('oncoprinter reflects user selected colors', () => {
         // close modal
-        $('a.tabAnchor_oncoprint').click();
-        var res = checkOncoprintElement();
-        assertScreenShotMatch(res);
+        await clickElement('.modal-dialog .close');
     });
 
-    it('oncoprinter reset colors button is visible when default colors not used', () => {
+    it('oncoprinter reflects user selected colors', async () => {
+        await clickElement('a.tabAnchor_oncoprint');
+        const res = await checkOncoprintElement();
+        await assertScreenShotMatch(res);
+    });
+
+    it('oncoprinter reset colors button is visible when default colors not used', async () => {
         // click "Edit Colors" to open modal and check "Reset Colors" button in modal
-        var trackOptionsElts = getNthOncoprintTrackOptionsElements(2);
-        $(trackOptionsElts.button_selector).click();
-        $(trackOptionsElts.dropdown_selector).waitForDisplayed({
+        const trackOptionsElts = await getNthOncoprintTrackOptionsElements(2);
+        await clickElement(trackOptionsElts.button_selector);
+        await waitForElementDisplayed(trackOptionsElts.dropdown_selector, {
             timeout: 1000,
         });
-        $(trackOptionsElts.dropdown_selector + ' li:nth-child(11)').click();
-        getElementByTestHandle('resetColors').waitForDisplayed();
+        await clickElement(
+            trackOptionsElts.dropdown_selector + ' li:nth-child(11)'
+        );
+        await waitForElementDisplayed('[data-test="resetColors"]');
     });
 
-    it('oncoprinter color configuration modal reflects default colors', () => {
+    it('oncoprinter color configuration modal reflects default colors', async () => {
         // click "Reset Colors" track
-        getElementByTestHandle('resetColors').click();
-        waitForOncoprint();
+        await clickElement('[data-test="resetColors"]');
+        await waitForOncoprint();
 
         assert.strictEqual(
-            $('[data-test="color-picker-icon"] rect').getAttribute('fill'),
+            await (
+                await getElement('[data-test="color-picker-icon"] rect')
+            ).getAttribute('fill'),
             '#dc3912'
         );
         assert.strictEqual(
-            $$('[data-test="color-picker-icon"] rect')[1].getAttribute('fill'),
+            await (
+                await getNthElements('[data-test="color-picker-icon"] rect', 1)
+            ).getAttribute('fill'),
             '#3366cc'
         );
         assert.strictEqual(
-            $$('[data-test="color-picker-icon"] rect')[2].getAttribute('fill'),
+            await (
+                await getNthElements('[data-test="color-picker-icon"] rect', 2)
+            ).getAttribute('fill'),
             '#ff9900'
         );
     });
 
-    it('oncoprinter reflects default colors', () => {
+    it('oncoprinter reflects default colors', async () => {
         // close modal
-        $('a.tabAnchor_oncoprint').click();
-        var res = checkOncoprintElement();
-        assertScreenShotMatch(res);
+        await clickElement('.modal button.close');
+        const res = await checkOncoprintElement();
+        await assertScreenShotMatch(res);
     });
 
-    it('oncoprinter reset colors button is hidden when default colors are used', () => {
+    it('oncoprinter reset colors button is hidden when default colors are used', async () => {
         // click "Edit Colors" to open modal and check "Reset Colors" button in modal
-        var trackOptionsElts = getNthOncoprintTrackOptionsElements(2);
-        $(trackOptionsElts.button_selector).click();
-        $(trackOptionsElts.dropdown_selector).waitForDisplayed({
+        const trackOptionsElts = await getNthOncoprintTrackOptionsElements(2);
+        await clickElement(trackOptionsElts.button_selector);
+        await waitForElementDisplayed(trackOptionsElts.dropdown_selector, {
             timeout: 1000,
         });
-        $(trackOptionsElts.dropdown_selector + ' li:nth-child(11)').click();
-        getElementByTestHandle('resetColors').waitForDisplayed({
+        await clickElement(
+            trackOptionsElts.dropdown_selector + ' li:nth-child(11)'
+        );
+        await (await getElementByTestHandle('resetColors')).waitForDisplayed({
             reverse: true,
         });
     });

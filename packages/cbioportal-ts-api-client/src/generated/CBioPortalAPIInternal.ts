@@ -261,6 +261,7 @@ export type ClinicalEventRequestIdentifier = {
     'clinicalEventRequests': Array < ClinicalEventRequest >
 
         'position': "FIRST" | "LAST"
+
 };
 export type ClinicalEventSample = {
     'patientId': string
@@ -1230,13 +1231,13 @@ export type StudyViewStructuralVariantFilter = {
 export type SurvivalRequest = {
     'attributeIdPrefix': string
 
+        'censoredEventRequestIdentifier': ClinicalEventRequestIdentifier
+
         'endEventRequestIdentifier': ClinicalEventRequestIdentifier
 
         'patientIdentifiers': Array < PatientIdentifier >
 
         'startEventRequestIdentifier': ClinicalEventRequestIdentifier
-
-        'censoredEventRequestIdentifier': ClinicalEventRequestIdentifier
 
 };
 export type VariantCount = {
@@ -2375,7 +2376,7 @@ export default class CBioPortalAPIInternal {
             });
         };
     fetchClinicalEventsMetaUsingPOSTURL(parameters: {
-        'clinicalEventAttributeRequest': ClinicalEventAttributeRequest,
+        'clinicalEventAttributeRequest' ? : ClinicalEventAttributeRequest,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -2395,12 +2396,12 @@ export default class CBioPortalAPIInternal {
      * Fetch clinical events meta
      * @method
      * @name CBioPortalAPIInternal#fetchClinicalEventsMetaUsingPOST
-     * @param {} clinicalEventAttributeRequest - clinical events Request
+     * @param {} clinicalEventAttributeRequest - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      */
     fetchClinicalEventsMetaUsingPOSTWithHttpInfo(parameters: {
-        'clinicalEventAttributeRequest': ClinicalEventAttributeRequest,
+        'clinicalEventAttributeRequest' ? : ClinicalEventAttributeRequest,
         $queryParameters ? : any,
-        $domain ? : string
+            $domain ? : string
     }): Promise < request.Response > {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
@@ -2416,11 +2417,6 @@ export default class CBioPortalAPIInternal {
 
             if (parameters['clinicalEventAttributeRequest'] !== undefined) {
                 body = parameters['clinicalEventAttributeRequest'];
-            }
-
-            if (parameters['clinicalEventAttributeRequest'] === undefined) {
-                reject(new Error('Missing required  parameter: clinicalEventAttributeRequest'));
-                return;
             }
 
             if (parameters.$queryParameters) {
@@ -2439,12 +2435,12 @@ export default class CBioPortalAPIInternal {
      * Fetch clinical events meta
      * @method
      * @name CBioPortalAPIInternal#fetchClinicalEventsMetaUsingPOST
-     * @param {} clinicalEventAttributeRequest - clinical events Request
+     * @param {} clinicalEventAttributeRequest - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      */
     fetchClinicalEventsMetaUsingPOST(parameters: {
-            'clinicalEventAttributeRequest': ClinicalEventAttributeRequest,
+            'clinicalEventAttributeRequest' ? : ClinicalEventAttributeRequest,
             $queryParameters ? : any,
-            $domain ? : string
+                $domain ? : string
         }): Promise < Array < ClinicalEvent >
         > {
             return this.fetchClinicalEventsMetaUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
@@ -7427,11 +7423,11 @@ export default class CBioPortalAPIInternal {
             });
         };
     fetchSurvivalDataUsingPOSTURL(parameters: {
-        'survivalRequest': SurvivalRequest,
+        'survivalRequest' ? : SurvivalRequest,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/survival-data/fetch';
+        let path = '/api/survival-data/fetch';
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -7447,12 +7443,12 @@ export default class CBioPortalAPIInternal {
      * Fetch survival data
      * @method
      * @name CBioPortalAPIInternal#fetchSurvivalDataUsingPOST
-     * @param {} survivalRequest - Survival Data Request
+     * @param {} survivalRequest - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      */
     fetchSurvivalDataUsingPOSTWithHttpInfo(parameters: {
-        'survivalRequest': SurvivalRequest,
+        'survivalRequest' ? : SurvivalRequest,
         $queryParameters ? : any,
-        $domain ? : string
+            $domain ? : string
     }): Promise < request.Response > {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
@@ -7468,11 +7464,6 @@ export default class CBioPortalAPIInternal {
 
             if (parameters['survivalRequest'] !== undefined) {
                 body = parameters['survivalRequest'];
-            }
-
-            if (parameters['survivalRequest'] === undefined) {
-                reject(new Error('Missing required  parameter: survivalRequest'));
-                return;
             }
 
             if (parameters.$queryParameters) {
@@ -7491,12 +7482,12 @@ export default class CBioPortalAPIInternal {
      * Fetch survival data
      * @method
      * @name CBioPortalAPIInternal#fetchSurvivalDataUsingPOST
-     * @param {} survivalRequest - Survival Data Request
+     * @param {} survivalRequest - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      */
     fetchSurvivalDataUsingPOST(parameters: {
-            'survivalRequest': SurvivalRequest,
+            'survivalRequest' ? : SurvivalRequest,
             $queryParameters ? : any,
-            $domain ? : string
+                $domain ? : string
         }): Promise < Array < ClinicalData >
         > {
             return this.fetchSurvivalDataUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {

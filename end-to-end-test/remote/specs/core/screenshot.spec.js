@@ -1,107 +1,121 @@
-//var assert = require('assert');
-//var expect = require('chai').expect;
-
 const {
     waitForOncoprint,
     setSettingsMenuOpen,
-    setOncoprintMutationsMenuOpen,
     checkElementWithMouseDisabled,
     goToUrlAndSetLocalStorage,
     waitForNetworkQuiet,
     sessionServiceIsEnabled,
-} = require('../../../shared/specUtils');
+    getElement,
+    COEXPRESSION_TIMEOUT,
+    clickElement,
+    getElementByTestHandle,
+    waitForElementDisplayed,
+} = require('../../../shared/specUtils_Async');
 
 const { assertScreenShotMatch } = require('../../../shared/lib/testUtils');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
-var { COEXPRESSION_TIMEOUT } = require('../../../shared/specUtils');
-
-function waitForAndCheckPlotsTab() {
-    $('div[data-test="PlotsTabPlotDiv"]').waitForDisplayed({ timout: 100000 });
-    var res = browser.checkElement('div[data-test="PlotsTabEntireDiv"]');
-    assertScreenShotMatch(res);
+async function waitForAndCheckPlotsTab() {
+    await waitForElementDisplayed('div[data-test="PlotsTabPlotDiv"]', {
+        timeout: 100000,
+    });
+    const res = await browser.checkElement(
+        'div[data-test="PlotsTabEntireDiv"]'
+    );
+    await assertScreenShotMatch(res);
 }
 
 function runResultsTestSuite(prefix, options = {}) {
-    it(`${prefix} render the oncoprint`, function() {
-        waitForOncoprint();
-        var res = checkElementWithMouseDisabled('.oncoprintContainer');
+    it(`${prefix} render the oncoprint`, async function() {
+        await waitForOncoprint();
+        const res = await checkElementWithMouseDisabled('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
 
-    it(`${prefix} igv_tab tab`, function() {
-        $('a.tabAnchor_cnSegments').click();
-        $('.igv-column-container').waitForExist({ timeout: 20000 });
-        var res = browser.checkElement('.pillTabs');
+    it(`${prefix} igv_tab tab`, async function() {
+        await clickElement('a.tabAnchor_cnSegments');
+        await getElement('.igv-column-container', { timeout: 20000 });
+        const res = await browser.checkElement('.pillTabs');
         assertScreenShotMatch(res);
     });
 
-    it(`${prefix} cancer type summary`, function() {
-        $('a.tabAnchor_cancerTypesSummary').click();
-        $('[data-test="cancerTypeSummaryChart"]', 10000).waitForDisplayed();
-        $('[data-test="cancerTypeSummaryWrapper"]').waitForExist();
-        var res = browser.checkElement(
+    it(`${prefix} cancer type summary`, async function() {
+        await clickElement('a.tabAnchor_cancerTypesSummary');
+        await waitForElementDisplayed('[data-test="cancerTypeSummaryChart"]', {
+            timeout: 10000,
+        });
+        await (
+            await getElement('[data-test="cancerTypeSummaryWrapper"]')
+        ).waitForExist();
+        const res = await browser.checkElement(
             '[data-test="cancerTypeSummaryWrapper"]'
         );
         assertScreenShotMatch(res);
     });
 
-    it(`${prefix} mutex tab`, function() {
-        $('a.tabAnchor_mutualExclusivity').click();
-        var res = browser.checkElement('[data-test="mutualExclusivityTabDiv"]');
+    it(`${prefix} mutex tab`, async function() {
+        await clickElement('a.tabAnchor_mutualExclusivity');
+        const res = await browser.checkElement(
+            '[data-test="mutualExclusivityTabDiv"]'
+        );
         assertScreenShotMatch(res);
     });
 
-    it(`${prefix} plots tab`, function() {
-        $('a.tabAnchor_plots').click();
-        waitForAndCheckPlotsTab();
+    it(`${prefix} plots tab`, async function() {
+        await clickElement('a.tabAnchor_plots');
+        await waitForAndCheckPlotsTab();
     });
 
-    it(`${prefix} mutation tab`, function() {
-        $('a.tabAnchor_mutations').click();
-        $('.borderedChart svg').waitForDisplayed({ timeout: 20000 });
-        var res = browser.checkElement('[data-test="mutationsTabDiv"]', '', {
-            viewportChangePause: 4000,
-        }); // hide these things because the timing of data loading makes this test so flaky
+    it(`${prefix} mutation tab`, async function() {
+        await clickElement('a.tabAnchor_mutations');
+        await waitForElementDisplayed('.borderedChart svg', { timeout: 20000 });
+        const res = await browser.checkElement(
+            '[data-test="mutationsTabDiv"]',
+            ''
+        ); // hide these things because the timing of data loading makes this test so flaky
         assertScreenShotMatch(res);
     });
 
-    it(`${prefix} coexpression tab`, function() {
-        $('a.tabAnchor_coexpression').click();
-        $('div[data-test="CoExpressionPlot"]').waitForDisplayed({
+    it(`${prefix} coexpression tab`, async function() {
+        await clickElement('a.tabAnchor_coexpression');
+        await waitForElementDisplayed('div[data-test="CoExpressionPlot"]', {
             timeout: COEXPRESSION_TIMEOUT,
         });
-        var res = browser.checkElement('[data-test="coExpressionTabDiv"]');
+        const res = await browser.checkElement(
+            '[data-test="coExpressionTabDiv"]'
+        );
         assertScreenShotMatch(res);
     });
 
-    it(`${prefix} comparison tab overlap`, function() {
-        $('a.tabAnchor_comparison').click();
-        $(
+    it(`${prefix} comparison tab overlap`, async function() {
+        await clickElement('a.tabAnchor_comparison');
+        await waitForElementDisplayed(
             'div[data-test="ComparisonPageOverlapTabContent"]'
-        ).waitForDisplayed();
-        var res = checkElementWithMouseDisabled(
+        );
+        const res = await checkElementWithMouseDisabled(
             'div[data-test="ComparisonTabDiv"]'
         );
         assertScreenShotMatch(res);
     });
 
-    it(`${prefix} comparison tab clinical`, function() {
-        $('.comparisonTabSubTabs .tabAnchor_clinical').click();
-        $('div[data-test="ComparisonPageClinicalTabDiv"]').waitForDisplayed();
-        var res = checkElementWithMouseDisabled(
+    it(`${prefix} comparison tab clinical`, async function() {
+        await clickElement('.comparisonTabSubTabs .tabAnchor_clinical');
+        await waitForElementDisplayed(
+            'div[data-test="ComparisonPageClinicalTabDiv"]'
+        );
+        const res = await checkElementWithMouseDisabled(
             'div[data-test="ComparisonTabDiv"]'
         );
         assertScreenShotMatch(res);
     });
 
-    it(`${prefix} comparison tab alteration enrichments sample mode`, function() {
-        $('.comparisonTabSubTabs .tabAnchor_alterations').click();
-        $(
+    it(`${prefix} comparison tab alteration enrichments sample mode`, async function() {
+        await clickElement('.comparisonTabSubTabs .tabAnchor_alterations');
+        await waitForElementDisplayed(
             'div[data-test="GroupComparisonAlterationEnrichments"]'
-        ).waitForDisplayed();
-        var res = browser.checkElement(
+        );
+        const res = await browser.checkElement(
             'div[data-test="ComparisonTabDiv"]',
             '',
             {
@@ -111,14 +125,14 @@ function runResultsTestSuite(prefix, options = {}) {
         assertScreenShotMatch(res);
     });
 
-    it(`${prefix} comparison tab alteration enrichments patient mode`, function() {
-        browser.execute(function() {
+    it(`${prefix} comparison tab alteration enrichments patient mode`, async function() {
+        await browser.execute(function() {
             comparisonTab.store.setUsePatientLevelEnrichments(true);
         });
-        $(
+        await waitForElementDisplayed(
             'div[data-test="GroupComparisonAlterationEnrichments"]'
-        ).waitForDisplayed();
-        var res = browser.checkElement(
+        );
+        const res = await browser.checkElement(
             'div[data-test="ComparisonTabDiv"]',
             '',
             {
@@ -128,37 +142,41 @@ function runResultsTestSuite(prefix, options = {}) {
         assertScreenShotMatch(res);
     });
 
-    it(`${prefix} comparison tab mrna enrichments`, function() {
-        $('.comparisonTabSubTabs .tabAnchor_mrna').click();
-        $('div[data-test="GroupComparisonMRNAEnrichments"]').waitForDisplayed();
-        $(options.mrnaEnrichmentsRowSelector || 'b=ETV5').click();
-        $('div[data-test="MiniBoxPlot"]').waitForDisplayed();
-        var res = browser.checkElement('div[data-test="ComparisonTabDiv"]');
+    it(`${prefix} comparison tab mrna enrichments`, async function() {
+        await clickElement('.comparisonTabSubTabs .tabAnchor_mrna');
+        await (
+            await getElement('div[data-test="GroupComparisonMRNAEnrichments"]')
+        ).waitForDisplayed();
+        await clickElement(options.mrnaEnrichmentsRowSelector || 'b=ETV5');
+        await waitForElementDisplayed('div[data-test="MiniBoxPlot"]');
+        const res = await browser.checkElement(
+            'div[data-test="ComparisonTabDiv"]'
+        );
         assertScreenShotMatch(res);
     });
 
-    it(`${prefix} survival tab`, function() {
-        $('.comparisonTabSubTabs a.tabAnchor_survival').click();
-        $(
+    it(`${prefix} survival tab`, async function() {
+        await clickElement('.comparisonTabSubTabs a.tabAnchor_survival');
+        await waitForElementDisplayed(
             '[data-test="ComparisonPageSurvivalTabDiv"] svg',
-            10000
-        ).waitForDisplayed();
-        var res = checkElementWithMouseDisabled(
+            { timeout: 10000 }
+        );
+        const res = await checkElementWithMouseDisabled(
             '[data-test="ComparisonTabDiv"]'
         );
         assertScreenShotMatch(res);
     });
 
-    it(`${prefix} pathwaymapper tab`, function() {
+    it(`${prefix} pathwaymapper tab`, async function() {
         // go to pathways tab
-        $('a.tabAnchor_pathways').waitForDisplayed();
-        $('a.tabAnchor_pathways').click();
+        await waitForElementDisplayed('a.tabAnchor_pathways');
+        await clickElement('a.tabAnchor_pathways');
 
-        $('#cy').waitForDisplayed({ timeout: 10000 });
+        await (await getElement('#cy')).waitForDisplayed({ timeout: 10000 });
 
-        waitForNetworkQuiet(5000);
+        await waitForNetworkQuiet(5000);
 
-        var res = browser.checkElement(
+        const res = await browser.checkElement(
             '[data-test="pathwayMapperTabDiv"]',
             '',
             { hide: ['.qtip', '.__react_component_tooltip', '.rc-tooltip'] }
@@ -167,125 +185,134 @@ function runResultsTestSuite(prefix, options = {}) {
         assertScreenShotMatch(res);
     });
 
-    it(`${prefix} data_download tab`, function() {
-        $('a.tabAnchor_download').click();
+    it(`${prefix} data_download tab`, async function() {
+        await clickElement('a.tabAnchor_download');
         //  browser.pause(1000);
-        $(`[data-test='downloadTabDiv']`, 20000).waitForExist();
+        await getElement(`[data-test='downloadTabDiv']`, { timeout: 20000 });
 
-        var res = browser.checkElement(`[data-test="downloadTabDiv"]`);
+        const res = await browser.checkElement(`[data-test="downloadTabDiv"]`);
 
         assertScreenShotMatch(res);
     });
 }
 
 describe('result page screenshot tests', function() {
-    before(function() {
-        var url = `${CBIOPORTAL_URL}/index.do?tab_index=tab_visualize&cancer_study_list=coadread_tcga_pub&cancer_study_id=coadread_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&Z_SCORE_THRESHOLD=2.0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS+NRAS+BRAF&gene_set_choice=user-defined-list&Action=Submit&show_samples=false&`;
-        goToUrlAndSetLocalStorage(url);
-        waitForOncoprint();
+    before(async function() {
+        const url = `${CBIOPORTAL_URL}/index.do?tab_index=tab_visualize&cancer_study_list=coadread_tcga_pub&cancer_study_id=coadread_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&Z_SCORE_THRESHOLD=2.0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS+NRAS+BRAF&gene_set_choice=user-defined-list&Action=Submit&show_samples=false&`;
+        await goToUrlAndSetLocalStorage(url);
+        await waitForOncoprint();
     });
 
     runResultsTestSuite('no session');
 });
 
-describe('download tab screenshot tests', function() {
-    it('download tab - msk_impact_2017 with ALK and SOS1 - SOS1 should be not sequenced', function() {
-        var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=msk_impact_2017&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=msk_impact_2017_all&gene_list=ALK%2520SOS1&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=msk_impact_2017_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=msk_impact_2017_cna`;
-        goToUrlAndSetLocalStorage(url);
-        $('a.tabAnchor_download').waitForExist({ timeout: 10000 });
-        $('a.tabAnchor_download').click();
-        $(
-            '[data-test="dataDownloadGeneAlterationTable"] tr > td > svg'
-        ).waitForExist({ timeout: 20000 });
-        $('[data-test="downloadTabDiv"]').waitForExist({ timeout: 10000 });
-        var res = browser.checkElement('[data-test="downloadTabDiv"]');
+describe('download tab screenshot tests', async () => {
+    it('download tab - msk_impact_2017 with ALK and SOS1 - SOS1 should be not sequenced', async function() {
+        const url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=msk_impact_2017&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=msk_impact_2017_all&gene_list=ALK%2520SOS1&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=msk_impact_2017_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=msk_impact_2017_cna`;
+        await goToUrlAndSetLocalStorage(url);
+        await getElement('a.tabAnchor_download', { timeout: 10000 });
+        await clickElement('a.tabAnchor_download');
+        await getElement(
+            '[data-test="dataDownloadGeneAlterationTable"] tr > td > svg',
+            { timeout: 20000 }
+        );
+        await getElement('[data-test="downloadTabDiv"]', { timeout: 10000 });
+        const res = await browser.checkElement('[data-test="downloadTabDiv"]');
         assertScreenShotMatch(res);
     });
 
-    it('download tab - nsclc_tcga_broad_2016 with TP53', function() {
-        var url = `${CBIOPORTAL_URL}/results/download?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=nsclc_tcga_broad_2016&case_set_id=nsclc_tcga_broad_2016_cnaseq&data_priority=0&gene_list=TP53&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=nsclc_tcga_broad_2016_cna&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=nsclc_tcga_broad_2016_mutations&tab_index=tab_visualize`;
-        goToUrlAndSetLocalStorage(url);
-        $(
-            '[data-test="dataDownloadGeneAlterationTable"] tr > td > svg'
-        ).waitForExist({ timeout: 20000 });
-        $('[data-test="downloadTabDiv"]').waitForExist({ timeout: 5000 });
-        var res = browser.checkElement('[data-test="downloadTabDiv"]');
+    it('download tab - nsclc_tcga_broad_2016 with TP53', async function() {
+        const url = `${CBIOPORTAL_URL}/results/download?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=nsclc_tcga_broad_2016&case_set_id=nsclc_tcga_broad_2016_cnaseq&data_priority=0&gene_list=TP53&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=nsclc_tcga_broad_2016_cna&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=nsclc_tcga_broad_2016_mutations&tab_index=tab_visualize`;
+        await goToUrlAndSetLocalStorage(url);
+        await getElement(
+            '[data-test="dataDownloadGeneAlterationTable"] tr > td > svg',
+            { timeout: 20000 }
+        );
+        await getElement('[data-test="downloadTabDiv"]', { timeout: 5000 });
+        const res = await browser.checkElement('[data-test="downloadTabDiv"]');
         assertScreenShotMatch(res);
     });
 
-    it('download tab - nsclc_tcga_broad_2016 with CDKN2A MDM2 and merged track MDM4 TP53', function() {
-        var url = `${CBIOPORTAL_URL}/results/download?Action=Submit&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=nsclc_tcga_broad_2016_cna&Z_SCORE_THRESHOLD=2.0&tab_index=tab_visualize&data_priority=0&case_set_id=nsclc_tcga_broad_2016_cnaseq&gene_list=CDKN2A%2520MDM2%2520%255B%2522MERGED%2522%2520MDM4%2520TP53%255D&RPPA_SCORE_THRESHOLD=2.0&cancer_study_list=nsclc_tcga_broad_2016&geneset_list=%20&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=nsclc_tcga_broad_2016_mutations`;
-        goToUrlAndSetLocalStorage(url);
-        $(
-            '[data-test="dataDownloadGeneAlterationTable"] tr > td > svg'
-        ).waitForExist({ timeout: 20000 });
-        $('[data-test="downloadTabDiv"]').waitForExist({ timeout: 5000 });
-        var res = browser.checkElement('[data-test="downloadTabDiv"]');
+    it('download tab - nsclc_tcga_broad_2016 with CDKN2A MDM2 and merged track MDM4 TP53', async () => {
+        const url = `${CBIOPORTAL_URL}/results/download?Action=Submit&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=nsclc_tcga_broad_2016_cna&Z_SCORE_THRESHOLD=2.0&tab_index=tab_visualize&data_priority=0&case_set_id=nsclc_tcga_broad_2016_cnaseq&gene_list=CDKN2A%2520MDM2%2520%255B%2522MERGED%2522%2520MDM4%2520TP53%255D&RPPA_SCORE_THRESHOLD=2.0&cancer_study_list=nsclc_tcga_broad_2016&geneset_list=%20&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=nsclc_tcga_broad_2016_mutations`;
+        await goToUrlAndSetLocalStorage(url);
+        await getElement(
+            '[data-test="dataDownloadGeneAlterationTable"] tr > td > svg',
+            { timeout: 20000 }
+        );
+        await getElement('[data-test="downloadTabDiv"]', { timeout: 5000 });
+        const res = await browser.checkElement('[data-test="downloadTabDiv"]');
         assertScreenShotMatch(res);
     });
 
-    it('download tab - nsclc_tcga_broad_2016 for query EGFR: MUT=T790M AMP', function() {
-        var url = `${CBIOPORTAL_URL}/results/download?Action=Submit&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=nsclc_tcga_broad_2016_cna&Z_SCORE_THRESHOLD=2.0&tab_index=tab_visualize&data_priority=0&case_set_id=nsclc_tcga_broad_2016_cnaseq&gene_list=EGFR%253A%2520MUT%253DT790M%2520AMP&RPPA_SCORE_THRESHOLD=2.0&cancer_study_list=nsclc_tcga_broad_2016&geneset_list=%20&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=nsclc_tcga_broad_2016_mutations`;
-        goToUrlAndSetLocalStorage(url);
-        $(
-            '[data-test="dataDownloadGeneAlterationTable"] tr > td > svg'
-        ).waitForExist({ timeout: 20000 });
-        $('[data-test="downloadTabDiv"]').waitForExist({ timeout: 5000 });
-        var res = browser.checkElement('[data-test="downloadTabDiv"]');
+    it('download tab - nsclc_tcga_broad_2016 for query EGFR: MUT=T790M AMP', async () => {
+        const url = `${CBIOPORTAL_URL}/results/download?Action=Submit&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=nsclc_tcga_broad_2016_cna&Z_SCORE_THRESHOLD=2.0&tab_index=tab_visualize&data_priority=0&case_set_id=nsclc_tcga_broad_2016_cnaseq&gene_list=EGFR%253A%2520MUT%253DT790M%2520AMP&RPPA_SCORE_THRESHOLD=2.0&cancer_study_list=nsclc_tcga_broad_2016&geneset_list=%20&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=nsclc_tcga_broad_2016_mutations`;
+        await goToUrlAndSetLocalStorage(url);
+        await getElement(
+            '[data-test="dataDownloadGeneAlterationTable"] tr > td > svg',
+            { timeout: 20000 }
+        );
+        await getElement('[data-test="downloadTabDiv"]', { timeout: 5000 });
+        const res = await browser.checkElement('[data-test="downloadTabDiv"]');
         assertScreenShotMatch(res);
     });
 
-    it('download tab - nsclc_tcga_broad_2016 with overlapping TP53', function() {
-        var url = `${CBIOPORTAL_URL}/results/download?Action=Submit&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=nsclc_tcga_broad_2016_cna&Z_SCORE_THRESHOLD=2.0&tab_index=tab_visualize&data_priority=0&case_set_id=nsclc_tcga_broad_2016_cnaseq&gene_list=TP53%250ATP53%253A%2520AMP%250ATP53%253A%2520MUT&RPPA_SCORE_THRESHOLD=2.0&cancer_study_list=nsclc_tcga_broad_2016&geneset_list=%20&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=nsclc_tcga_broad_2016_mutations`;
-        goToUrlAndSetLocalStorage(url);
-        $(
-            '[data-test="dataDownloadGeneAlterationTable"] tr > td > svg'
-        ).waitForExist({ timeout: 20000 });
+    it('download tab - nsclc_tcga_broad_2016 with overlapping TP53', async function() {
+        const url = `${CBIOPORTAL_URL}/results/download?Action=Submit&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=nsclc_tcga_broad_2016_cna&Z_SCORE_THRESHOLD=2.0&tab_index=tab_visualize&data_priority=0&case_set_id=nsclc_tcga_broad_2016_cnaseq&gene_list=TP53%250ATP53%253A%2520AMP%250ATP53%253A%2520MUT&RPPA_SCORE_THRESHOLD=2.0&cancer_study_list=nsclc_tcga_broad_2016&geneset_list=%20&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=nsclc_tcga_broad_2016_mutations`;
+        await goToUrlAndSetLocalStorage(url);
+        await getElement(
+            '[data-test="dataDownloadGeneAlterationTable"] tr > td > svg',
+            { timeout: 20000 }
+        );
 
-        $('[data-test="downloadTabDiv"]').waitForExist({ timeout: 5000 });
+        await getElement('[data-test="downloadTabDiv"]', { timeout: 5000 });
 
-        var res = browser.checkElement('[data-test="downloadTabDiv"]');
+        const res = await browser.checkElement('[data-test="downloadTabDiv"]');
         assertScreenShotMatch(res);
     });
 });
 
 describe('patient view page screenshot test', function() {
-    it('patient view lgg_ucsf_2014 P04', function() {
-        var url = `${CBIOPORTAL_URL}/patient?studyId=lgg_ucsf_2014&caseId=P04`;
-        goToUrlAndSetLocalStorage(url);
+    it('patient view lgg_ucsf_2014 P04', async function() {
+        const url = `${CBIOPORTAL_URL}/patient?studyId=lgg_ucsf_2014&caseId=P04`;
+        await goToUrlAndSetLocalStorage(url);
 
         // find oncokb image
-        var oncokbIndicator = $('[data-test="oncogenic-icon-image"]');
-        oncokbIndicator.waitForExist({ timeout: 30000 });
+        const oncokbIndicator = await getElement(
+            '[data-test="oncogenic-icon-image"]'
+        );
+        await oncokbIndicator.waitForExist({ timeout: 30000 });
         // find vaf plot
-        var vafPlot = $('.vafPlotThumbnail');
-        vafPlot.waitForExist({ timeout: 30000 });
+        const vafPlot = await getElement('.vafPlotThumbnail');
+        await vafPlot.waitForExist({ timeout: 30000 });
 
-        var res = browser.checkElement('#mainColumn');
+        const res = await browser.checkElement('#mainColumn');
         assertScreenShotMatch(res);
     });
 
-    it('patient view with 0 mutations msk_impact_2017 P-0000053-T01-IM3', function() {
-        var url = `${CBIOPORTAL_URL}/patient?sampleId=P-0000053-T01-IM3&studyId=msk_impact_2017`;
-        goToUrlAndSetLocalStorage(url);
+    it('patient view with 0 mutations msk_impact_2017 P-0000053-T01-IM3', async function() {
+        const url = `${CBIOPORTAL_URL}/patient?sampleId=P-0000053-T01-IM3&studyId=msk_impact_2017`;
+        await goToUrlAndSetLocalStorage(url);
 
         // should show 0 mutations
-        $('span*=0 Mutations').waitForExist();
+        await (await getElement('span*=0 Mutations')).waitForExist();
 
         // should show 21.6% copy number altered in genomic overview
-        $('div*=21.6%').waitForExist();
+        await (await getElement('div*=21.6%')).waitForExist();
 
         // take screenshot
-        var res = browser.checkElement('#mainColumn', '', { hide: ['.qtip'] });
+        const res = await browser.checkElement('#mainColumn', '', {
+            hide: ['.qtip'],
+        });
         assertScreenShotMatch(res);
     });
 
-    it('patient view pathways tab msk_impact_2017 P-0000377', function() {
-        var url = `${CBIOPORTAL_URL}/patient/pathways?studyId=msk_impact_2017&caseId=P-0000377`;
-        goToUrlAndSetLocalStorage(url);
+    it('patient view pathways tab msk_impact_2017 P-0000377', async function() {
+        const url = `${CBIOPORTAL_URL}/patient/pathways?studyId=msk_impact_2017&caseId=P-0000377`;
+        await goToUrlAndSetLocalStorage(url);
 
-        $('#cy').waitForDisplayed({ timeout: 10000 });
-        var res = browser.checkElement(
+        await (await getElement('#cy')).waitForDisplayed({ timeout: 10000 });
+        const res = await browser.checkElement(
             '[data-test="pathwayMapperTabDiv"]',
             '',
             {
@@ -296,12 +323,12 @@ describe('patient view page screenshot test', function() {
         assertScreenShotMatch(res);
     });
 
-    it('patient view pathways tab msk_impact_2017 P-0000377-T03-IM3', function() {
-        var url = `${CBIOPORTAL_URL}/patient/pathways?studyId=msk_impact_2017&sampleId=P-0000377-T03-IM3`;
-        goToUrlAndSetLocalStorage(url);
+    it('patient view pathways tab msk_impact_2017 P-0000377-T03-IM3', async function() {
+        const url = `${CBIOPORTAL_URL}/patient/pathways?studyId=msk_impact_2017&sampleId=P-0000377-T03-IM3`;
+        await goToUrlAndSetLocalStorage(url);
 
-        $('#cy').waitForDisplayed({ timeout: 10000 });
-        var res = browser.checkElement(
+        await (await getElement('#cy')).waitForDisplayed({ timeout: 10000 });
+        const res = await browser.checkElement(
             '[data-test="pathwayMapperTabDiv"]',
             '',
             {
@@ -314,52 +341,58 @@ describe('patient view page screenshot test', function() {
 });
 
 describe('enrichments tab screenshot tests', function() {
-    beforeEach(function() {
-        var url = `${CBIOPORTAL_URL}/results/enrichments?tab_index=tab_visualize&cancer_study_list=coadread_tcga_pub&cancer_study_id=coadread_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&Z_SCORE_THRESHOLD=2.0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS+NRAS+BRAF&gene_set_choice=user-defined-list&Action=Submit`;
-        goToUrlAndSetLocalStorage(url);
+    beforeEach(async function() {
+        const url = `${CBIOPORTAL_URL}/results/enrichments?tab_index=tab_visualize&cancer_study_list=coadread_tcga_pub&cancer_study_id=coadread_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&Z_SCORE_THRESHOLD=2.0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS+NRAS+BRAF&gene_set_choice=user-defined-list&Action=Submit`;
+        await goToUrlAndSetLocalStorage(url);
         //browser.$('.fdsa').waitForDisplayed();
     });
 
-    it('enrichments tab coadread_tcga_pub mRNA profile', function() {
-        browser.$('.comparisonTabSubTabs .tabAnchor_mrna').waitForDisplayed();
+    it('enrichments tab coadread_tcga_pub mRNA profile', async function() {
+        await (
+            await browser.$('.comparisonTabSubTabs .tabAnchor_mrna')
+        ).waitForDisplayed();
 
-        $('.comparisonTabSubTabs .tabAnchor_mrna').click();
-        $('a=mRNA').click();
+        await clickElement('.comparisonTabSubTabs .tabAnchor_mrna');
+        await clickElement('a=mRNA');
 
-        $('b=MERTK').click();
+        await clickElement('b=MERTK');
 
-        var res = browser.checkElement('div[data-test="ComparisonTabDiv"]');
+        const res = await browser.checkElement(
+            'div[data-test="ComparisonTabDiv"]'
+        );
 
         assertScreenShotMatch(res);
     });
 });
 
 describe('result page tabs, loading from session id', function() {
-    before(function() {
+    before(async function() {
         // only run these tests if session service is enabled
         if (sessionServiceIsEnabled() === false) {
             this.skip();
         }
 
-        var url = `${CBIOPORTAL_URL}/results?session_id=5bbe8197498eb8b3d5684271`;
-        goToUrlAndSetLocalStorage(url);
-        waitForOncoprint();
+        const url = `${CBIOPORTAL_URL}/results?session_id=5bbe8197498eb8b3d5684271`;
+        await goToUrlAndSetLocalStorage(url);
+        await waitForOncoprint();
     });
 
     runResultsTestSuite('session');
 });
 
 describe('results page tabs while excluding unprofiled samples', function() {
-    before(() => {
-        goToUrlAndSetLocalStorage(
+    before(async () => {
+        await goToUrlAndSetLocalStorage(
             `${CBIOPORTAL_URL}/results/oncoprint?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=gbm_tcga&case_set_id=gbm_tcga_all&data_priority=0&gene_list=EGFR%250APTEN%250AIDH1%250ATP53&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=gbm_tcga_gistic&genetic_profile_ids_PROFILE_MRNA_EXPRESSION=gbm_tcga_mrna_median_all_sample_Zscores&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=gbm_tcga_mutations&hide_unprofiled_samples=false&profileFilter=0&tab_index=tab_visualize`
         );
-        waitForOncoprint();
-        setSettingsMenuOpen(true);
-        $('input[data-test="HideUnprofiled"]').waitForExist();
-        $('input[data-test="HideUnprofiled"]').click();
-        waitForOncoprint();
-        setSettingsMenuOpen(false);
+        await waitForOncoprint();
+        await setSettingsMenuOpen(true);
+        await (
+            await getElement('input[data-test="HideUnprofiled"]')
+        ).waitForExist();
+        await clickElement('input[data-test="HideUnprofiled"]');
+        await waitForOncoprint();
+        await setSettingsMenuOpen(false);
     });
 
     runResultsTestSuite('excluding unprofiled samples', {
@@ -368,18 +401,18 @@ describe('results page tabs while excluding unprofiled samples', function() {
 });
 
 describe('results page pathways tab with unprofiled genes', function() {
-    before(() => {
-        goToUrlAndSetLocalStorage(
+    before(async () => {
+        await goToUrlAndSetLocalStorage(
             `${CBIOPORTAL_URL}/results/pathways?cancer_study_list=msk_impact_2017&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&profileFilter=mutations%2Cfusion%2Ccna&case_set_id=msk_impact_2017_cnaseq&gene_list=EGFR%2520ERBB2%2520PDGFRA%2520MET%2520KRAS%2520NRAS%2520HRAS%2520NF1%2520SPRY2%2520FOXO1%2520FOXO3%2520AKT1%2520AKT2%2520AKT3%2520PIK3R1%2520PIK3CA%2520PTEN&geneset_list=%20&tab_index=tab_visualize&Action=Submit`
         );
     });
 
-    it(`results page pathwaymapper tab with unprofiled genes`, function() {
-        $('#cy').waitForDisplayed({ timeout: 30000 });
+    it(`results page pathwaymapper tab with unprofiled genes`, async function() {
+        await (await getElement('#cy')).waitForDisplayed({ timeout: 30000 });
 
-        waitForNetworkQuiet(15000);
+        await waitForNetworkQuiet(15000);
 
-        const res = browser.checkElement(
+        const res = await browser.checkElement(
             '[data-test="pathwayMapperTabDiv"]',
             '',
             { hide: ['.qtip', '.__react_component_tooltip', '.rc-tooltip'] }
@@ -388,44 +421,3 @@ describe('results page pathways tab with unprofiled genes', function() {
         assertScreenShotMatch(res);
     });
 });
-
-//
-// describe('error messaging for 400 error', function() {
-//     before(function() {
-//         var url = `${CBIOPORTAL_URL}/results/oncoprint?Z_SCORE_THRESHOLD=2.0&cancer_study_id=coadread_tcga_pub&cancer_study_list=coadread_tcga_pub&case_set_id=coadread_tcga_pubb_nonhypermut&gene_list=KRAS%20NRAS%20BRAF&gene_set_choice=user-defined-list&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations`;
-//         goToUrlAndSetLocalStorage(url);
-//     });
-//
-//     it('should show error message for 400 query', function() {
-//         $('.errorScreen').waitForExist();
-//     });
-//
-//     it('should allow return to homepage after error message', function() {
-//         $('.errorLogo').click();
-//         $('.homePageLayout').waitForExist();
-//     });
-// });
-//
-// describe('error messaging for 404 error', function() {
-//     it('should show error message for wrong sample', function() {
-//         var url = `${CBIOPORTAL_URL}/patient?sampleId=not-a-sample&studyId=msk_impact_2017`;
-//         goToUrlAndSetLocalStorage(url);
-//
-//         $('.errorScreen').waitForExist();
-//         var res = browser.checkElement('.errorScreen', {
-//             hide: ['.form-group'],
-//         });
-//         assertScreenShotMatch(res);
-//     });
-//
-//     it('should show error message for wrong patient', function() {
-//         var url = `${CBIOPORTAL_URL}/patient?studyId=msk_impact_2017&caseId=not-a-patient`;
-//         goToUrlAndSetLocalStorage(url);
-//
-//         $('.errorScreen').waitForExist();
-//         var res = browser.checkElement('.errorScreen', {
-//             hide: ['.form-group'],
-//         });
-//         assertScreenShotMatch(res);
-//     });
-// });

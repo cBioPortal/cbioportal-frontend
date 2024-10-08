@@ -5784,6 +5784,44 @@ export class StudyViewPageStore
         },
     });
 
+    readonly sampleResourceData = remoteData<{
+        [sampleId: string]: ResourceData[];
+    }>({
+        await: () => [this.resourceDefinitions, this.samples],
+        invoke: () => {
+            const sampleResourceDefinitions = this.resourceDefinitions.result!.filter(
+                d => d.resourceType === 'SAMPLE'
+            );
+            if (!sampleResourceDefinitions.length) {
+                return Promise.resolve({});
+            }
+
+            const res = _(this.samples.result!)
+                .map(sample =>
+                    sampleResourceDefinitions.map(resource =>
+                        internalClient.getAllResourceDataOfSampleInStudyUsingGET(
+                            {
+                                sampleId: sample.sampleId,
+                                studyId: sample.studyId,
+                                resourceId: resource.resourceId,
+                                projection: 'DETAILED',
+                            }
+                        )
+                    )
+                )
+                .flatten()
+                .value();
+
+            return Promise.all(res).then(resData =>
+                _(resData)
+                    .flatMap()
+                    .groupBy('sampleId')
+                    .mapValues(data => data)
+                    .value()
+            );
+        },
+    });
+
     readonly resourceIdToResourceData = remoteData<{
         [resourceId: string]: ResourceData[];
     }>({

@@ -17,7 +17,9 @@ Note: you can check the frontend version of the live instance by checking `windo
 Make sure you have installed the node version and yarn version specified in
 [package.json](https://github.com/cBioPortal/cbioportal-frontend/blob/master/package.json).
 
-> **Tip:**  We recommend that you use [nvm:  Node Version Manager](https://github.com/nvm-sh/nvm) and [yvm:  Yarn Version Manager](https://yvm.js.org/docs/overview) to switch between versions more easily.
+> **Tip:**  For node, we recommend that you use [nvm:  Node Version Manager](https://github.com/nvm-sh/nvm) to switch between versions easily.
+
+> **Tip:** For yarn, you can use [yarn set version](https://yarnpkg.com/cli/set/version) or `npm install yarn@(version)`.
 
 > **Windows Tip:** If you are developing on Windows, we recommend that you use [Ubuntu / Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/install-win10).
 
@@ -52,6 +54,8 @@ export BRANCH_ENV=master # or rc if branching from rc
 yarn run start
 ```
 
+> **Tip:** BRANCH_ENV should be set to `master` or `rc`, and not to your local branch name. You can set this in your ~/.bashrc if you don't intend to change it often.
+
 Example pages:
  - http://localhost:3000/
  - http://localhost:3000/patient?studyId=lgg_ucsf_2014&caseId=P04
@@ -70,8 +74,6 @@ GREP=example.spec.js yarn run testMain
 GREP=example.spec.js yarn run testModules
 
 ```
-
-> **Windows Tip:** There is a known solved hiccup running the tests on Ubuntu via Windows Subsystem for Linux (WSL): [#7096](https://github.com/cBioPortal/cbioportal/issues/7096)
 
 To run unit/integration tests in watch mode
 ```
@@ -139,6 +141,12 @@ or clear entire local storage
 ```
 localStorage.clear()
 ```
+You can also add a bookmarklet to quickly switch to your local frontend server. Set the URL to the following:
+
+```
+javascript:(function()%7BlocalStorage.setItem%28%60localdev%60,true%29%3Bwindow.location.reload()%3B %7D)()
+```
+
 You can also use a netlify deployed cbioportal-frontend pull request for serving the JS:
 1. Create the following bookmarklet: 
 ```
@@ -146,6 +154,8 @@ javascript:(function()%7Bvar pr %3D prompt("Please enter PR%23")%3Bif (pr %26%26
 ```
 2. Navigate to the cBioPortal installation that you want to test.
 3. Click the bookmarklet and enter your pull request number.
+
+
 
 ## Run e2e-tests
 
@@ -161,6 +171,7 @@ cd end-to-end-test
 // install deps
 yarn --ignore-engines
 
+cd ..
 ```
 
 ```
@@ -349,3 +360,16 @@ Please make sure to not introduce any dependencies from `cbioportal-frontend` wo
 ### react-mutation-mapper
 
 [react-mutation-mapper](https://www.npmjs.com/package/react-mutation-mapper/) is a separate public npm library that contains the Mutation Mapper and related components.
+
+## WSL Tips
+
+When running on a Windows environment, use [WSL: Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/install-win10). You will be able to run a linux shell, which is necessary for many of the scripts used. You will also be able to use it concurrently with Windows applications.
+
+Make sure the git repo is cloned under the WSL file system (under your home directory).  If you instead clone it to the Windows file system (e.g. `/mnt/c/...` from WSL), then all scripts will be extremely slow.
+
+If you may be working with the git repo via the Windows system, then make sure your line returns are set to `lf` as opposed to the Windows default `crlf`. 
+
+```
+# from the repo folder
+git config core.autocrlf false
+```

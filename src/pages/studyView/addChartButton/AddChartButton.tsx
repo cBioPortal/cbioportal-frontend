@@ -19,7 +19,11 @@ import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
 import autobind from 'autobind-decorator';
 import _ from 'lodash';
 import AddChartByType from './addChartByType/AddChartByType';
-import { DefaultTooltip, remoteData } from 'cbioportal-frontend-commons';
+import {
+    DefaultTooltip,
+    isWebdriver,
+    remoteData,
+} from 'cbioportal-frontend-commons';
 import CustomCaseSelection from './customCaseSelection/CustomCaseSelection';
 import {
     calculateClinicalDataCountFrequency,
@@ -50,6 +54,7 @@ import { CustomChartData } from 'shared/api/session-service/sessionServiceModels
 import ReactSelect from 'react-select';
 import { GenericAssayMeta } from 'cbioportal-ts-api-client';
 import { DataTypeConstants } from 'shared/constants';
+import { Else, If, Then } from 'react-if';
 
 export interface IAddChartTabsProps {
     store: StudyViewPageStore;
@@ -629,6 +634,23 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
 
     @computed get notificationMessages() {
         let notificationMessages: JSX.Element[] = [];
+        if (!this.props.store.isLoggedIn) {
+            notificationMessages.push(
+                <>
+                    <button
+                        className="btn btn-default btn-xs"
+                        onClick={() =>
+                            openSocialAuthWindow(this.props.store.appStore)
+                        }
+                    >
+                        Login
+                    </button>
+                    &nbsp;to add custom data charts to your profile.
+                </>
+            );
+            return notificationMessages;
+        }
+
         if (this.props.store.customChartSet.size > 0) {
             // Notify if there any shared custom data
             if (this.existSharedCustomData) {
@@ -642,28 +664,6 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                             Highlighted rows
                         </span>{' '}
                         are shared custom data.
-                    </>
-                );
-            }
-            // Notify that shared and page-session custom data are not saved for non-logged users
-            if (
-                !this.props.store.isLoggedIn &&
-                this.props.store.appStore.isSocialAuthenticated
-            ) {
-                if (notificationMessages.length > 0) {
-                    notificationMessages.push(<br />);
-                }
-                notificationMessages.push(
-                    <>
-                        <button
-                            className="btn btn-default btn-xs"
-                            onClick={() =>
-                                openSocialAuthWindow(this.props.store.appStore)
-                            }
-                        >
-                            Login
-                        </button>
-                        &nbsp;to save custom data charts to your profile.
                     </>
                 );
             } else if (this.existSharedCustomData) {
@@ -911,104 +911,135 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                                     this.getTabsWidth - CONTAINER_PADDING_WIDTH,
                             }}
                         >
-                            {this.customChartDataOptions.length > 0 && (
-                                <button
-                                    className="btn btn-primary btn-xs"
-                                    onClick={this.onToggleAddNewChart}
-                                >
-                                    {this.isAddNewChartWindowVisible
-                                        ? 'Cancel'
-                                        : '+ Add new custom data'}
-                                </button>
+                            {!this.props.store.isLoggedIn && (
+                                <>
+                                    <br />
+                                    <span className="text-warning">
+                                        Please {this.notificationMessages}
+                                    </span>
+                                </>
                             )}
+                            {(this.props.store.isLoggedIn || isWebdriver()) && (
+                                <div>
+                                    {this.customChartDataOptions.length > 0 && (
+                                        <button
+                                            className="btn btn-primary btn-xs"
+                                            onClick={this.onToggleAddNewChart}
+                                        >
+                                            {this.isAddNewChartWindowVisible
+                                                ? 'Cancel'
+                                                : '+ Add new custom data'}
+                                        </button>
+                                    )}
 
-                            {this.isAddNewChartWindowVisible && (
-                                <CustomCaseSelection
-                                    allSamples={this.props.store.samples.result}
-                                    selectedSamples={
-                                        this.props.store.selectedSamples.result
-                                    }
-                                    submitButtonText={'Add Chart'}
-                                    queriedStudies={
-                                        this.props.store.queriedPhysicalStudyIds
-                                            .result
-                                    }
-                                    isChartNameValid={
-                                        this.props.store.isChartNameValid
-                                    }
-                                    getDefaultChartName={
-                                        this.props.store
-                                            .getDefaultCustomChartName
-                                    }
-                                    disableSubmitButton={this.savingCustomData}
-                                    onSubmit={(chart: CustomChartData) => {
-                                        this.showAddNewChart = false;
-                                        this.savingCustomData = true;
-                                        this.updateInfoMessage(
-                                            `Saving ${chart.displayName}`
-                                        );
-                                        this.props.store
-                                            .addCustomChart(chart)
-                                            .then(() => {
-                                                this.savingCustomData = false;
-                                                this.updateInfoMessage(
-                                                    `${chart.displayName} has been added.`
-                                                );
-                                            });
-                                    }}
-                                />
-                            )}
-
-                            <>
-                                {this.customChartDataOptions.length > 0 && (
-                                    <>
-                                        <hr
-                                            style={{
-                                                marginTop: 10,
-                                                marginBottom: 10,
-                                            }}
-                                        />
-                                        <AddChartByType
-                                            width={this.getTabsWidth}
-                                            options={
-                                                this.customChartDataOptions
+                                    {this.isAddNewChartWindowVisible && (
+                                        <CustomCaseSelection
+                                            allSamples={
+                                                this.props.store.samples.result
                                             }
-                                            freqPromise={this.dataCount}
-                                            onAddAll={this.onAddAll}
-                                            onClearAll={this.onClearAll}
-                                            onToggleOption={this.onToggleOption}
-                                            hideControls={true}
-                                            firstColumnHeaderName="Custom data"
-                                            shareCharts={
-                                                this.props
-                                                    .openShareCustomDataUrlModal
+                                            selectedSamples={
+                                                this.props.store.selectedSamples
+                                                    .result
                                             }
-                                            deleteChart={(id: string) => {
-                                                this.props.store.toggleCustomChartMarkedForDeletion(
-                                                    id
-                                                );
-                                            }}
-                                            restoreChart={(id: string) => {
-                                                this.props.store.toggleCustomChartMarkedForDeletion(
-                                                    id
-                                                );
-                                            }}
-                                            markedForDeletion={
+                                            submitButtonText={'Add Chart'}
+                                            queriedStudies={
                                                 this.props.store
-                                                    .customChartGroupMarkedForDeletion
+                                                    .queriedPhysicalStudyIds
+                                                    .result
                                             }
+                                            isChartNameValid={
+                                                this.props.store
+                                                    .isChartNameValid
+                                            }
+                                            getDefaultChartName={
+                                                this.props.store
+                                                    .getDefaultCustomChartName
+                                            }
+                                            disableSubmitButton={
+                                                this.savingCustomData
+                                            }
+                                            onSubmit={(
+                                                chart: CustomChartData
+                                            ) => {
+                                                this.showAddNewChart = false;
+                                                this.savingCustomData = true;
+                                                this.updateInfoMessage(
+                                                    `Saving ${chart.displayName}`
+                                                );
+                                                this.props.store
+                                                    .addCustomChart(chart)
+                                                    .then(() => {
+                                                        this.savingCustomData = false;
+                                                        this.updateInfoMessage(
+                                                            `${chart.displayName} has been added.`
+                                                        );
+                                                    });
+                                            }}
                                         />
-                                    </>
-                                )}
-                                {this.notificationMessages.length > 0 && (
+                                    )}
+
                                     <>
-                                        <br />
-                                        <span className="text-warning">
-                                            Note: {this.notificationMessages}
-                                        </span>
+                                        {this.customChartDataOptions.length >
+                                            0 && (
+                                            <>
+                                                <hr
+                                                    style={{
+                                                        marginTop: 10,
+                                                        marginBottom: 10,
+                                                    }}
+                                                />
+                                                <AddChartByType
+                                                    width={this.getTabsWidth}
+                                                    options={
+                                                        this
+                                                            .customChartDataOptions
+                                                    }
+                                                    freqPromise={this.dataCount}
+                                                    onAddAll={this.onAddAll}
+                                                    onClearAll={this.onClearAll}
+                                                    onToggleOption={
+                                                        this.onToggleOption
+                                                    }
+                                                    hideControls={true}
+                                                    firstColumnHeaderName="Custom data"
+                                                    shareCharts={
+                                                        this.props
+                                                            .openShareCustomDataUrlModal
+                                                    }
+                                                    deleteChart={(
+                                                        id: string
+                                                    ) => {
+                                                        this.props.store.toggleCustomChartMarkedForDeletion(
+                                                            id
+                                                        );
+                                                    }}
+                                                    restoreChart={(
+                                                        id: string
+                                                    ) => {
+                                                        this.props.store.toggleCustomChartMarkedForDeletion(
+                                                            id
+                                                        );
+                                                    }}
+                                                    markedForDeletion={
+                                                        this.props.store
+                                                            .customChartGroupMarkedForDeletion
+                                                    }
+                                                />
+                                            </>
+                                        )}
+                                        {this.notificationMessages.length >
+                                            0 && (
+                                            <>
+                                                <br />
+                                                <span className="text-warning">
+                                                    Note:{' '}
+                                                    {this.notificationMessages}
+                                                </span>
+                                            </>
+                                        )}
                                     </>
-                                )}
-                            </>
+                                </div>
+                            )}
                         </div>
                     </MSKTab>
                     <MSKTab

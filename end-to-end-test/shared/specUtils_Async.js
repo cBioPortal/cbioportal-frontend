@@ -20,14 +20,18 @@ function waitForGeneQueryPage(timeout) {
     });
 }
 
-function waitForPlotsTab(timeout) {
-    $('div.axisBlock').waitForDisplayed({ timeout: timeout || 20000 });
+async function waitForPlotsTab(timeout) {
+    await (await $('div.axisBlock')).waitForDisplayed({
+        timeout: timeout || 20000,
+    });
 }
 
-function waitForAndCheckPlotsTab() {
-    $('body').moveTo({ xOffset: 0, yOffset: 0 });
-    $('div[data-test="PlotsTabPlotDiv"]').waitForDisplayed({ timeout: 20000 });
-    var res = checkElementWithElementHidden(
+async function waitForAndCheckPlotsTab() {
+    await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
+    await waitForElementDisplayed('div[data-test="PlotsTabPlotDiv"]', {
+        timeout: 20000,
+    });
+    const res = await checkElementWithElementHidden(
         'div[data-test="PlotsTabEntireDiv"]',
         '.popover',
         { hide: ['.qtip'] }
@@ -49,44 +53,41 @@ function waitForPatientView(timeout) {
     });
 }
 
-function waitForOncoprint(timeout) {
-    browser.pause(200); // give oncoprint time to disappear
-    browser.waitUntil(
-        () => {
+async function waitForOncoprint(timeout = 100000) {
+    await browser.pause(500); // give oncoprint time to disappear
+    await browser.waitUntil(
+        async () => {
             return (
-                !$('.oncoprintLoadingIndicator').isExisting() && // wait for loading indicator to hide, and
-                $('#oncoprintDiv svg rect').isExisting() && // as a proxy for oncoprint being rendered, wait for an svg rectangle to appear in the legend
-                $('.oncoprint__controls').isExisting()
+                !(await (await $('.oncoprintLoadingIndicator')).isExisting()) && // wait for loading indicator to hide, and
+                (await (await $('#oncoprintDiv svg rect')).isExisting()) && // as a proxy for oncoprint being rendered, wait for an svg rectangle to appear in the legend
+                (await (await $('.oncoprint__controls')).isExisting())
             ); // oncoprint controls are showing
         },
         { timeout }
     );
-    browser.pause(200);
+    await browser.pause(500);
 }
 
 function waitForComparisonTab() {
     $('[data-test=GroupComparisonAlterationEnrichments]').waitForDisplayed();
 }
 
-function getTextInOncoprintLegend() {
-    return $$('#oncoprintDiv .oncoprint-legend-div svg text')
-        .map(t => {
-            return t.getHTML(false);
-        })
-        .join(' ');
+async function getTextInOncoprintLegend() {
+    const elements = await $$('#oncoprintDiv .oncoprint-legend-div svg text');
+    const texts = await Promise.all(elements.map(t => t.getHTML(false)));
+    return texts.join(' ');
 }
-
-function setSettingsMenuOpen(open, buttonId = 'GlobalSettingsButton') {
+async function setSettingsMenuOpen(open, buttonId = 'GlobalSettingsButton') {
     const button = 'button[data-test="' + buttonId + '"]';
     const dropdown = 'div[data-test="GlobalSettingsDropdown"]';
-    $(button).waitForDisplayed();
-    browser.waitUntil(
-        () => {
-            if (open === $(dropdown).isDisplayedInViewport()) {
+    await (await $(button)).waitForDisplayed();
+    await browser.waitUntil(
+        async () => {
+            if (open === (await (await $(dropdown)).isDisplayedInViewport())) {
                 return true;
             } else {
-                $(button).click();
-                $(dropdown).waitForDisplayed({
+                await (await $(button)).click();
+                await (await $(dropdown)).waitForDisplayed({
                     timeout: 6000,
                     reverse: !open,
                 });
@@ -105,25 +106,59 @@ function setSettingsMenuOpen(open, buttonId = 'GlobalSettingsButton') {
 
 async function getElementByTestHandle(handle, options) {
     if (options?.timeout) {
-        const el = await $(`[data-test="${handle}"]`);
+        const el = await getElement(`[data-test="${handle}"]`);
         await el.waitForExist(options);
     }
 
-    return await $(`[data-test="${handle}"]`);
+    return await getElement(`[data-test="${handle}"]`);
 }
 
-function setOncoprintMutationsMenuOpen(open) {
+/**
+ * @param {string} testHandle  the data-test handle of the element
+ * @param {string} type  the type of color to get background-color, border-color , default is 'color'
+ * @returns {Promise<string>} `hex` color of the element
+ */
+async function getColorByTestHandle(testHandle, type = 'color') {
+    const element = await getElementByTestHandle(testHandle);
+    const color = await element.getCSSProperty(type);
+    return color.parsed.hex;
+}
+
+async function getCSSProperty(selector, property) {
+    const element = await getElement(selector);
+    const { value } = await element.getCSSProperty(property);
+    return value;
+}
+
+/**
+ * @param {string} selector
+ * @param {number} index
+ * @param {string} type border-color, background-color, color
+ * @returns {Promise<string>} `hex` color of the element
+ */
+async function getColorOfNthElement(selector, index, type = 'color') {
+    const element = await getNthElements(selector, index);
+    const color = await element.getCSSProperty(type);
+    return color.parsed.hex;
+}
+
+async function setOncoprintMutationsMenuOpen(open) {
     const mutationColorMenuButton = '#mutationColorDropdown';
     const mutationColorMenuDropdown =
         'div.oncoprint__controls__mutation_color_menu';
-    $('div.oncoprint__controls').moveTo();
-    $(mutationColorMenuButton).waitForDisplayed();
-    browser.waitUntil(
-        () => {
-            if (open === $(mutationColorMenuDropdown).isDisplayedInViewport()) {
+    await (await getElement('div.oncoprint__controls')).moveTo();
+    await (await getElement(mutationColorMenuButton)).waitForDisplayed();
+    await browser.waitUntil(
+        async () => {
+            if (
+                open ===
+                (await (
+                    await getElement(mutationColorMenuDropdown)
+                ).isDisplayedInViewport())
+            ) {
                 return true;
             } else {
-                $(mutationColorMenuButton).click();
+                await clickElement(mutationColorMenuButton);
                 return false;
             }
         },
@@ -160,31 +195,31 @@ function setCheckboxChecked(checked, selector, failure_message) {
  * check if dropdown element is in correct state
  * (i.e. displayed or not)qq
  */
-function setDropdownOpen(
+async function setDropdownOpen(
     open,
     button_selector_or_elt,
     dropdown_selector_or_elt,
     failure_message
 ) {
-    browser.waitUntil(
-        () => {
+    await browser.waitUntil(
+        async () => {
             const dropdown_elt =
                 typeof dropdown_selector_or_elt === 'string'
-                    ? $(dropdown_selector_or_elt)
+                    ? await $(dropdown_selector_or_elt)
                     : dropdown_selector_or_elt;
             // check if exists first because sometimes we get errors with isVisible if it doesn't exist
-            const isOpen = dropdown_elt.isExisting()
-                ? dropdown_elt.isDisplayedInViewport()
+            const isOpen = (await dropdown_elt.isExisting())
+                ? await dropdown_elt.isDisplayedInViewport()
                 : false;
             if (open === isOpen) {
                 return true;
             } else {
                 const button_elt =
                     typeof button_selector_or_elt === 'string'
-                        ? $(button_selector_or_elt)
+                        ? await $(button_selector_or_elt)
                         : button_selector_or_elt;
-                button_elt.waitForExist();
-                button_elt.click();
+                await button_elt.waitForExist();
+                await button_elt.click();
                 return false;
             }
         },
@@ -236,7 +271,17 @@ async function goToUrlAndSetLocalStorage(url, authenticated = false) {
         console.log('Connecting to: ' + `${url}${prefix}${urlparam}=true`);
     }
     if (needToLogin) keycloakLogin(10000);
+    await browser.pause(1000);
 }
+
+const setServerConfiguration = serverConfig => {
+    browser.execute(function(_serverConfig) {
+        this.localStorage.setItem(
+            'frontendConfig',
+            JSON.stringify({ serverConfig: _serverConfig })
+        );
+    }, serverConfig);
+};
 
 const goToUrlAndSetLocalStorageWithProperty = (url, authenticated, props) => {
     goToUrlAndSetLocalStorage(url, authenticated);
@@ -244,16 +289,14 @@ const goToUrlAndSetLocalStorageWithProperty = (url, authenticated, props) => {
     goToUrlAndSetLocalStorage(url, authenticated);
 };
 
-function setServerConfiguration(props) {
-    browser.execute(
-        function(frontendConf) {
-            this.localStorage.setItem(
-                'frontendConfig',
-                JSON.stringify(frontendConf)
-            );
-        },
-        { serverConfig: props }
-    );
+async function waitForElementDisplayed(selector, options = {}) {
+    const element = await getElement(selector, options);
+    await element.waitForDisplayed({
+        timeout: options.timeout || 10000,
+        ...options,
+    });
+
+    return element;
 }
 
 function sessionServiceIsEnabled() {
@@ -273,7 +316,7 @@ async function waitForNumberOfStudyCheckboxes(expectedNumber, text) {
     });
 }
 
-function getNthOncoprintTrackOptionsElements(n) {
+async function getNthOncoprintTrackOptionsElements(n) {
     // n is one-indexed
 
     const button_selector =
@@ -282,9 +325,13 @@ function getNthOncoprintTrackOptionsElements(n) {
         '#oncoprintDiv .oncoprintjs__track_options__dropdown.nth-' + n;
 
     return {
-        button: $(button_selector),
+        button: await $(button_selector, {
+            timeout: 20000,
+        }),
         button_selector,
-        dropdown: $(dropdown_selector),
+        dropdown: await $(dropdown_selector, {
+            timeout: 20000,
+        }),
         dropdown_selector,
     };
 }
@@ -297,13 +344,13 @@ const useExternalFrontend = !process.env
 
 const useLocalDist = process.env.FRONTEND_TEST_USE_LOCAL_DIST;
 
-function waitForNetworkQuiet(timeout) {
-    browser.waitUntil(
-        () => {
+async function waitForNetworkQuiet(timeout) {
+    await browser.waitUntil(
+        async () => {
             return (
-                browser.execute(function() {
+                (await browser.execute(function() {
                     return window.ajaxQuiet === true;
-                }) == true
+                })) == true
             );
         },
         { timeout }
@@ -314,23 +361,25 @@ function getPortalUrlFromEnv() {
     return process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 }
 
-function toStudyViewSummaryTab() {
-    var summaryTab = '#studyViewTabs a.tabAnchor_summary';
-    var summaryContent = "[data-test='summary-tab-content']";
-    if (!$(summaryContent).isDisplayedInViewport()) {
-        $(summaryTab).waitForDisplayed({ timeout: 10000 });
-        $(summaryTab).click();
-        $(summaryContent).waitForDisplayed({ timeout: 10000 });
+async function toStudyViewSummaryTab() {
+    const summaryTab = '#studyViewTabs a.tabAnchor_summary';
+    const summaryContent = "[data-test='summary-tab-content']";
+    if (!(await (await $(summaryContent)).isDisplayedInViewport())) {
+        await (await $(summaryTab)).waitForDisplayed({ timeout: 10000 });
+        await clickElement(summaryTab);
+        await (await $(summaryContent)).waitForDisplayed({ timeout: 10000 });
     }
 }
 
-function toStudyViewClinicalDataTab() {
-    var clinicalDataTab = '#studyViewTabs a.tabAnchor_clinicalData';
-    var clinicalDataContent = "[data-test='clinical-data-tab-content']";
-    if (!$(clinicalDataContent).isDisplayedInViewport()) {
-        $(clinicalDataTab).waitForDisplayed({ timeout: 10000 });
-        $(clinicalDataTab).click();
-        $(clinicalDataContent).waitForDisplayed({ timeout: 10000 });
+async function toStudyViewClinicalDataTab() {
+    const clinicalDataTab = '#studyViewTabs a.tabAnchor_clinicalData';
+    const clinicalDataContent = "[data-test='clinical-data-tab-content']";
+    if (!(await (await $(clinicalDataContent)).isDisplayedInViewport())) {
+        (await $(clinicalDataTab)).waitForDisplayed({ timeout: 10000 });
+        await clickElement(clinicalDataTab);
+        await (await $(clinicalDataContent)).waitForDisplayed({
+            timeout: 10000,
+        });
     }
 }
 
@@ -341,16 +390,21 @@ function removeAllStudyViewFilters() {
     }
 }
 
-function waitForStudyViewSelectedInfo() {
-    $("[data-test='selected-info']").waitForDisplayed({ timeout: 5000 });
+async function waitForStudyViewSelectedInfo() {
+    await (await $("[data-test='selected-info']")).waitForDisplayed({
+        timeout: 5000,
+    });
     // pause to wait the animation finished
-    browser.pause(2000);
+    await browser.pause(2000);
 }
 
-function waitForStudyView() {
-    browser.waitUntil(() => $$('.sk-spinner').length === 0, {
-        timeout: 100000,
-    });
+async function waitForStudyView() {
+    await browser.waitUntil(
+        async () => (await $$('.sk-spinner')).length === 0,
+        {
+            timeout: 100000,
+        }
+    );
 }
 
 function waitForGroupComparisonTabOpen(timeout) {
@@ -359,25 +413,25 @@ function waitForGroupComparisonTabOpen(timeout) {
     });
 }
 
-function getTextFromElement(element) {
-    return $(element)
-        .getText()
-        .trim();
+async function getTextFromElement(element) {
+    return (await (await $(element)).getText()).trim();
 }
 
-function getNumberOfStudyViewCharts() {
-    return $$('div.react-grid-item').length;
+async function getNumberOfStudyViewCharts() {
+    return (await $$('div.react-grid-item')).length;
 }
 
-function setInputText(selector, text) {
+async function setInputText(selector, text) {
     // backspace to delete current contents - webdriver is supposed to clear it but it doesnt always work
-    $(selector).click();
+    // await (await $(selector)).click();
     //browser.keys('\uE003'.repeat($(selector).getValue().length));
 
-    $(selector).clearValue();
+    // await (await $(selector)).clearValue();
+
+    await (await $(selector)).setValue('');
     //browser.pause(1000);
 
-    $(selector).setValue(text);
+    await (await $(selector)).setValue(text);
 }
 
 function getReactSelectOptions(parent) {
@@ -389,8 +443,8 @@ function selectReactSelectOption(parent, optionText) {
     reactSelectOption(parent, optionText).click();
 }
 
-function reactSelectOption(parent, optionText, loose = false) {
-    setDropdownOpen(
+async function reactSelectOption(parent, optionText, loose = false) {
+    await setDropdownOpen(
         true,
         parent.$('.Select-control'),
         loose
@@ -416,15 +470,15 @@ function getSelectCheckedOptions(parent) {
     return parent.$$('.checked-select-option');
 }
 
-function pasteToElement(elementSelector, text) {
-    clipboardy.writeSync(text);
-    $(elementSelector).click();
-    browser.keys(['Shift', 'Insert']);
+async function pasteToElement(elementSelector, text) {
+    await clipboardy.writeSync(text);
+    await clickElement(elementSelector);
+    await browser.keys(['Shift', 'Insert']);
 }
 
-function checkOncoprintElement(selector, viewports) {
+async function checkOncoprintElement(selector, viewports) {
     //browser.moveToObject('body', 0, 0);
-    browser.execute(function() {
+    await browser.execute(() => {
         frontendOnc.clearMouseOverEffects(); // clear mouse hover effects for uniform screenshot
     });
     return checkElementWithMouseDisabled(selector || '#oncoprintDiv', 0, {
@@ -446,8 +500,8 @@ async function jsApiHover(selector) {
     }, selector);
 }
 
-function jsApiClick(selector) {
-    browser.execute(function(_selector) {
+async function jsApiClick(selector) {
+    await browser.execute(function(_selector) {
         $(_selector)[0].dispatchEvent(
             new MouseEvent('click', { bubbles: true })
         );
@@ -458,23 +512,23 @@ function executeInBrowser(callback) {
     return browser.execute(callback);
 }
 
-function checkElementWithTemporaryClass(
+async function checkElementWithTemporaryClass(
     selectorForChecking,
     selectorForTemporaryClass,
     temporaryClass,
     pauseTime,
     options
 ) {
-    browser.execute(
-        function(selectorForTemporaryClass, temporaryClass) {
+    await browser.execute(
+        (selectorForTemporaryClass, temporaryClass) => {
             $(selectorForTemporaryClass).addClass(temporaryClass);
         },
         selectorForTemporaryClass,
         temporaryClass
     );
-    browser.pause(pauseTime);
-    var res = browser.checkElement(selectorForChecking, '', options);
-    browser.execute(
+    await browser.pause(pauseTime);
+    const res = await browser.checkElement(selectorForChecking, '', options);
+    await browser.execute(
         function(selectorForTemporaryClass, temporaryClass) {
             $(selectorForTemporaryClass).removeClass(temporaryClass);
         },
@@ -484,17 +538,17 @@ function checkElementWithTemporaryClass(
     return res;
 }
 
-function checkElementWithMouseDisabled(selector, pauseTime, options) {
-    browser.execute(function() {
+async function checkElementWithMouseDisabled(selector, pauseTime, options) {
+    await browser.execute(() => {
         const style = 'display:block !important;visibility:visible !important;';
         $(`<div id='blockUIToDisableMouse' style='${style}'></div>`).appendTo(
             'body'
         );
     });
 
-    $(selector).waitForExist({ timeout: 5000 });
+    await getElement(selector, { timeout: 5000 });
 
-    const ret = checkElementWithTemporaryClass(
+    const ret = await checkElementWithTemporaryClass(
         selector,
         selector,
         'disablePointerEvents',
@@ -502,23 +556,27 @@ function checkElementWithMouseDisabled(selector, pauseTime, options) {
         options
     );
 
-    browser.execute(function() {
+    await browser.execute(() => {
         $('#blockUIToDisableMouse').remove();
     });
 
     return ret;
 }
 
-function checkElementWithElementHidden(selector, selectorToHide, options) {
-    browser.execute(selectorToHide => {
+async function checkElementWithElementHidden(
+    selector,
+    selectorToHide,
+    options
+) {
+    await browser.execute(selectorToHide => {
         $(
             `<style id="tempHiddenStyles" type="text/css">${selectorToHide}{opacity:0;}</style>`
         ).appendTo('head');
     }, selectorToHide);
 
-    var res = browser.checkElement(selector, '', options);
+    const res = await browser.checkElement(selector, '', options);
 
-    browser.execute(selectorToHide => {
+    await browser.execute(selectorToHide => {
         $('#tempHiddenStyles').remove();
     }, selectorToHide);
 
@@ -526,22 +584,26 @@ function checkElementWithElementHidden(selector, selectorToHide, options) {
 }
 
 async function clickQueryByGeneButton() {
-    const el = await $('.disabled[data-test=queryByGeneButton]');
-    await el.waitForExist({
-        reverse: true,
-    });
+    // TODO: does this really happen ? do we need to wait for it to disappear?
+    // const el = await $('.disabled[data-test="queryByGeneButton"]');
+    // await el.waitForExist({
+    //     reverse: true,
+    //     timeout: 5000
+    // });
     //const el = await getElementByTestHandle('queryByGeneButton');
-    await clickElement('handle=queryByGeneButton');
+    await clickElement('[data-test=queryByGeneButton]');
 
     const body = await $('body');
     await body.scrollIntoView();
+
+    await browser.pause(1000);
 }
 
-function clickModifyStudySelectionButton() {
-    $('[data-test="modifyStudySelectionButton"]').click();
+async function clickModifyStudySelectionButton() {
+    await clickElement('[data-test="modifyStudySelectionButton"]');
 }
 
-function getOncoprintGroupHeaderOptionsElements(trackGroupIndex) {
+async function getOncoprintGroupHeaderOptionsElements(trackGroupIndex) {
     //trackGroupIndex is 0-indexed
 
     const button_selector =
@@ -552,9 +614,9 @@ function getOncoprintGroupHeaderOptionsElements(trackGroupIndex) {
         trackGroupIndex;
 
     return {
-        button: $(button_selector),
+        button: await $(button_selector),
         button_selector,
-        dropdown: $(dropdown_selector),
+        dropdown: await $(dropdown_selector),
         dropdown_selector,
     };
 }
@@ -685,19 +747,14 @@ async function jq(selector) {
     }, selector);
 }
 
-function setServerConfiguration(serverConfig) {
-    browser.execute(function(_serverConfig) {
-        this.localStorage.setItem(
-            'frontendConfig',
-            JSON.stringify({ serverConfig: _serverConfig })
-        );
-    }, serverConfig);
-}
-
-var openAlterationTypeSelectionMenu = () => {
-    $('[data-test=AlterationEnrichmentTypeSelectorButton]').waitForExist();
-    $('[data-test=AlterationEnrichmentTypeSelectorButton]').click();
-    $('[data-test=AlterationTypeSelectorMenu]').waitForDisplayed();
+const openAlterationTypeSelectionMenu = async () => {
+    await $(
+        '[data-test=AlterationEnrichmentTypeSelectorButton]'
+    ).waitForExist();
+    await clickElement('[data-test=AlterationEnrichmentTypeSelectorButton]');
+    await (
+        await getElement('[data-test=AlterationTypeSelectorMenu]')
+    ).waitForDisplayed();
 };
 
 function strIsNumeric(str) {
@@ -707,16 +764,21 @@ function strIsNumeric(str) {
     ); // ...and ensure strings of whitespace fail
 }
 
-function selectClinicalTabPlotType(type) {
-    setDropdownOpen(
+async function selectClinicalTabPlotType(type) {
+    await setDropdownOpen(
         true,
         '[data-test="plotTypeSelector"] .Select-arrow-zone',
         '[data-test="plotTypeSelector"] .Select-menu',
         "Couldn't open clinical tab chart type dropdown"
     );
-    $(
+    await clickElement(
         `[data-test="plotTypeSelector"] .Select-option[aria-label="${type}"]`
-    ).click();
+    );
+}
+
+async function isDisplayed(selector, options = {}) {
+    const element = await getElement(selector, options);
+    return await element.isDisplayed();
 }
 
 async function getElement(selector, options = {}) {
@@ -732,6 +794,24 @@ async function getElement(selector, options = {}) {
         await el.waitForExist(options);
     }
     return el;
+}
+/**
+ * @param {string} selector  css selector
+ * @param {number} index  index of the element
+ * @param {object} options  options for the element
+ * @returns  {Promise<WebdriverIO.ElementArray>}
+ */
+async function getNthElements(selector, index, options = {}) {
+    let els;
+    if (/^handle=/.test(selector)) {
+        els = await $$(selector.replace(/^handle=/, ''));
+    } else {
+        els = await $$(selector);
+    }
+    if (options?.timeout) {
+        await els.waitForExist(options);
+    }
+    return els[index];
 }
 
 async function getText(selector, option) {
@@ -819,6 +899,9 @@ module.exports = {
     setCheckboxChecked,
     openAlterationTypeSelectionMenu,
     strIsNumeric,
+    getNthElements,
+    getColorByTestHandle,
+    getColorOfNthElement,
     jq,
     setServerConfiguration,
     selectClinicalTabPlotType,
@@ -827,4 +910,7 @@ module.exports = {
     getText,
     isSelected,
     isUnselected,
+    isDisplayed,
+    waitForElementDisplayed,
+    getCSSProperty,
 };
