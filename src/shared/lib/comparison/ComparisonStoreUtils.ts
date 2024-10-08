@@ -346,7 +346,7 @@ function getMaxMatchingNumber(
     _str: string,
     refStrings: string[]
 ): number | null {
-    const regex = new RegExp(`^${_str}-(\\d+)$`);
+    const regex = new RegExp(`^${_str} - (\\d+)$`);
 
     let maxNumber: number | null = null;
 
