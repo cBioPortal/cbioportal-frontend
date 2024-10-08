@@ -339,7 +339,7 @@ export function getSurvivalPlotName(
             ? ''
             : censoredClinicalEventType
     }`;
-    return `${title}-${getMaxMatchingNumber(title, existingNames)}`;
+    return `${title} - ${getMaxMatchingNumber(title, existingNames)}`;
 }
 
 function getMaxMatchingNumber(

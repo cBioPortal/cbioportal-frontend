@@ -243,6 +243,13 @@ export default class SurvivalPrefixTable extends React.Component<
         }
     }
 
+    componentDidMount() {
+        const rowIndex = this.dataStore
+            .getSortedFilteredData()
+            .findIndex(row => row.prefix === this.props.getSelectedPrefix());
+        this.dataStore.page = Math.floor(Math.max(0, rowIndex) / 15);
+    }
+
     isRemoveChartClicked = false;
 
     COLUMNS = [
@@ -408,17 +415,6 @@ export default class SurvivalPrefixTable extends React.Component<
         );
     }
 
-    @computed get currentPage() {
-        if (this.props.getSelectedPrefix() === undefined) {
-            return 0;
-        }
-        const rowIndex = this.dataStore
-            .getSortedFilteredData()
-            .findIndex(row => row.prefix === this.props.getSelectedPrefix());
-
-        return Math.floor(Math.max(0, rowIndex) / 15);
-    }
-
     @action.bound
     private onPatientMinThresholdChange(val: number) {
         this.dataStore.patientMinThreshold = val;
@@ -465,7 +461,6 @@ export default class SurvivalPrefixTable extends React.Component<
     }
 
     public render() {
-        this.dataStore.page = this.currentPage;
         return (
             <LazyMobXTable
                 columns={this.columns}

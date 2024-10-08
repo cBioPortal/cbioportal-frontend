@@ -18,6 +18,7 @@ import {
     onMobxPromise,
     remoteData,
     stringListToMap,
+    toPromise,
 } from 'cbioportal-frontend-commons';
 import {
     AlterationFilter,
@@ -344,7 +345,7 @@ export default abstract class ComparisonStore extends AnalysisStore
     }
 
     @action.bound
-    public onAddSurvivalPlot() {
+    public async onAddSurvivalPlot() {
         let chartName =
             this.chartName !== undefined && this.chartName.length > 0
                 ? this.chartName
@@ -370,9 +371,12 @@ export default abstract class ComparisonStore extends AnalysisStore
             this._selectedCensoredClinicalEventType!,
             this.censoredEventPosition,
             this.selectedCensoredClinicalEventAttributes,
-            chartName,
-            true
+            chartName
         );
+
+        await toPromise(this.customSurvivalDataPromises[chartName]);
+        showQueryUpdatedToast(`Successfully added survival plot: ${chartName}`);
+
         this.setSurvivalPlotPrefix(chartName);
         this.updateCustomSurvivalPlots(this.customSurvivalPlots);
         this.chartName = '';
@@ -1374,16 +1378,8 @@ export default abstract class ComparisonStore extends AnalysisStore
     @action.bound
     public removeCustomSurvivalPlot(prefix: string) {
         if (!_.isEmpty(this.customSurvivalPlots)) {
-            this.customSurvivalPlots = _.omitBy(
-                toJS(this.customSurvivalPlots),
-                (value, key) => key === prefix
-            ) as CustomSurvivalPlots;
-
-            this.customSurvivalDataPromises = _.omitBy(
-                toJS(this.customSurvivalDataPromises),
-                (value, key) => key === prefix
-            ) as { [prefix: string]: MobxPromise<ClinicalData[]> };
-
+            delete this.customSurvivalPlots[prefix];
+            delete this.customSurvivalDataPromises[prefix];
             this.updateCustomSurvivalPlots(toJS(this.customSurvivalPlots));
         }
     }
@@ -2943,7 +2939,7 @@ export default abstract class ComparisonStore extends AnalysisStore
                                 var status_attribute: ClinicalAttribute = {
                                     clinicalAttributeId: x.name + '_STATUS',
                                     datatype: 'STRING',
-                                    description: `Survival status ${description}`,
+                                    description: `${description}`,
                                     displayName: `Survival status ${x.name}`,
                                     patientAttribute: true,
                                     priority: '1',
@@ -3472,8 +3468,7 @@ export default abstract class ComparisonStore extends AnalysisStore
         censoredClinicalEventType: string,
         censoredEventPosition: 'FIRST' | 'LAST',
         censoredClinicalEventAttributes: ClinicalEventDataWithKey[],
-        name: string,
-        showtoast: boolean = false
+        name: string
     ) {
         this.customSurvivalPlots[name] = {
             name,
@@ -3547,10 +3542,6 @@ export default abstract class ComparisonStore extends AnalysisStore
                             survivalRequest,
                         }
                     );
-                    showtoast &&
-                        showQueryUpdatedToast(
-                            `Successfully added survival plot: ${name}`
-                        );
                     return result;
                 },
                 onError: () => {},
