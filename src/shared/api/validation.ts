@@ -58,7 +58,9 @@ export function getArrays(inp: any, output: Array<any>) {
     } else if (isObject(inp)) {
         for (const k in inp) {
             if (/\d\.\d{10,}$/.test(inp[k])) {
-                inp[k] = inp[k].toFixed(5);
+                try {
+                    inp[k] = inp[k].toFixed(5);
+                } catch (ex) {}
             }
         }
 
@@ -79,9 +81,10 @@ const deleteFields: Record<string, string[]> = {
 
 const sortFields: Record<string, string> = {
     ClinicalDataBin: 'attributeId,specialValue',
-    FilteredSamples: 'patientId,sampleId,studyId',
+    FilteredSamples: 'studyId,patientId,sampleId',
     SampleTreatmentCounts: 'treatment,time',
     PatientTreatmentCounts: 'treatment',
+    ClinicalDataCounts: 'attributeId,value',
 };
 
 function getLegacyPatientTreatmentCountUrl(url: string) {
@@ -176,6 +179,10 @@ export function deepSort(inp: any, label: string) {
                 });
             });
         }
+
+        arr.forEach((m: any) => {
+            if (m.value) m.value = m.value.toLowerCase();
+        });
 
         if (!arr.length) return;
         if (!isObject(arr[0])) {
@@ -395,7 +402,7 @@ export async function runSpecs(
 
     const onlyDetected = allTests.some((t: any) => t.only === true);
 
-    //console.log(`Running specs (${files.length} of ${totalCount})`);
+    console.log(`Running specs (${files.length} of ${totalCount})`);
 
     if (logLevel === 'verbose') {
         console.groupCollapsed('specs');

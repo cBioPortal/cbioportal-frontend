@@ -51,6 +51,7 @@ function proxyColumnStore(client: any, endpoint: string) {
             'SampleTreatmentCounts',
             'GenomicData',
             'GenericAssay',
+            'ViolinPlots',
         ];
 
         const matchedMethod = method.match(new RegExp(endpoints.join('|')));
@@ -140,6 +141,7 @@ proxyColumnStore(internalClientColumnStore, 'fetchGenomicDataCounts');
 proxyColumnStore(internalClientColumnStore, 'fetchGenomicDataBinCounts');
 proxyColumnStore(internalClientColumnStore, 'fetchGenericAssayDataBinCounts');
 proxyColumnStore(internalClientColumnStore, 'fetchGenericAssayDataCounts');
+proxyColumnStore(internalClientColumnStore, 'fetchClinicalDataViolinPlots');
 
 export default internalClient;
 
