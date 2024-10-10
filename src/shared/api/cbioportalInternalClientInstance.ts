@@ -52,6 +52,7 @@ function proxyColumnStore(client: any, endpoint: string) {
             'GenomicData',
             'GenericAssay',
             'ViolinPlots',
+            'ClinicalEventTypeCounts',
         ];
 
         const matchedMethod = method.match(new RegExp(endpoints.join('|')));

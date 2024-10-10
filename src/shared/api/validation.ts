@@ -85,6 +85,7 @@ const sortFields: Record<string, string> = {
     SampleTreatmentCounts: 'treatment,time',
     PatientTreatmentCounts: 'treatment',
     ClinicalDataCounts: 'attributeId,value',
+    ClinicalEventTypeCounts: 'eventType',
 };
 
 function getLegacyPatientTreatmentCountUrl(url: string) {

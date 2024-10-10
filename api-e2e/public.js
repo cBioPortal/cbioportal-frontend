@@ -5,11 +5,15 @@ const _ = require('lodash');
 var najax = require('najax');
 var { runSpecs } = require('./validation');
 
-const exclusions = [/clinical-data-density/, /molecular-profile-sample/];
-const filters = [/clinical-event-type/];
+const exclusions = [
+    /clinical-data-density/,
+    /molecular-profile-sample/,
+    /clinical-event-type/,
+];
+const filters = []; //[/clinical-event-type/];
 
-const START = 5;
-const LIMIT = 5;
+const START = 279;
+const LIMIT = 1;
 
 async function main() {
     const files = await csv()
@@ -61,6 +65,8 @@ async function main() {
                     ],
                 },
             ];
+            //console.log(JSON.stringify(tests,3));
+
             return fakeFiles;
         });
 
@@ -68,83 +74,3 @@ async function main() {
 }
 
 main();
-
-const file = [
-    {
-        name: '',
-        note: '',
-        studies: [],
-        tests: [
-            {
-                hash: 788956100,
-                filterString: '',
-                data: {
-                    attributes: [
-                        {
-                            attributeId: 'CANCER_TYPE',
-                        },
-                        {
-                            attributeId: 'CANCER_TYPE_DETAILED',
-                        },
-                        {
-                            attributeId: 'SAMPLE_COUNT',
-                        },
-                        {
-                            attributeId: 'SEX',
-                        },
-                        {
-                            attributeId: 'ETHNICITY',
-                        },
-                        {
-                            attributeId: 'SAMPLE_TYPE',
-                        },
-                        {
-                            attributeId: 'CENTER',
-                        },
-                        {
-                            attributeId: 'ONCOTREE_CODE',
-                        },
-                        {
-                            attributeId: 'PRIMARY_RACE',
-                        },
-                        {
-                            attributeId: 'SAMPLE_TYPE_DETAILED',
-                        },
-                        {
-                            attributeId: 'SEQ_ASSAY_ID',
-                        },
-                        {
-                            attributeId: 'DEAD',
-                        },
-                    ],
-                    studyViewFilter: {
-                        studyIds: ['genie_public'],
-                        alterationFilter: {
-                            copyNumberAlterationEventTypes: {
-                                AMP: true,
-                                HOMDEL: true,
-                            },
-                            mutationEventTypes: {
-                                any: true,
-                            },
-                            structuralVariants: null,
-                            includeDriver: true,
-                            includeVUS: true,
-                            includeUnknownOncogenicity: true,
-                            includeUnknownTier: true,
-                            includeGermline: true,
-                            includeSomatic: true,
-                            includeUnknownStatus: true,
-                            tiersBooleanMap: {},
-                        },
-                    },
-                },
-                url: '/api/column-store/clinical-data-counts/fetch?',
-                label: 'ClinicalDataCounts',
-                studies: ['genie_public'],
-                filterUrl:
-                    '/study/summary?id=genie_public#filterJson={"studyIds":["genie_public"],"alterationFilter":{"copyNumberAlterationEventTypes":{"AMP":true,"HOMDEL":true},"mutationEventTypes":{"any":true},"structuralVariants":null,"includeDriver":true,"includeVUS":true,"includeUnknownOncogenicity":true,"includeUnknownTier":true,"includeGermline":true,"includeSomatic":true,"includeUnknownStatus":true,"tiersBooleanMap":{}}}',
-            },
-        ],
-    },
-];
