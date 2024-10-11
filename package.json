@@ -194,6 +194,7 @@
     "fmin": "^0.0.2",
     "font-awesome": "^4.7.0",
     "fork-ts-checker-webpack-plugin": "^6.3.3",
+    "format-curl": "^2.2.1",
     "genome-nexus-ts-api-client": "^1.1.32",
     "git-revision-webpack-plugin": "^5.0.0",
     "history": "4.10.1",

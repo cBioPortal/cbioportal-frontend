@@ -11386,6 +11386,11 @@ form-data@~2.1.1:
     combined-stream "^1.0.5"
     mime-types "^2.1.12"
 
+format-curl@^2.2.1:
+  version "2.2.1"
+  resolved "https://registry.yarnpkg.com/format-curl/-/format-curl-2.2.1.tgz#06c68beb7568616dfb4a62e7f935449064845ecb"
+  integrity sha512-6w/KmhD9wjBdqRezh9zXUHcCtJeaaqtz3li1R/2yEmLnFlj7C06+B0r30tyRKQ0siwoRjk/JRi6P3IUaeSBObA==
+
 formidable@^1.2.0:
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/formidable/-/formidable-1.2.1.tgz#70fb7ca0290ee6ff961090415f4b3df3d2082659"

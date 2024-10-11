@@ -1,8 +1,9 @@
 const csv = require('csvtojson');
 const csvFilePath = './extract-2024-10-11T00_29_53.795Z.csv';
 const _ = require('lodash');
+const formatCurl = require('format-curl');
 
-var najax = require('najax');
+var axios = require('axios');
 var { runSpecs } = require('./validation');
 
 const exclusions = [
@@ -71,7 +72,22 @@ async function main() {
             return fakeFiles;
         });
 
-    runSpecs(files, najax, 'https://beta.cbioportal.org');
+    runSpecs(files, axios, 'https://beta.cbioportal.org', undefined, onFail);
 }
 
 main();
+
+const onFail = args => {
+    const url = args.url;
+    const options = {
+        // headers: {
+        //     'x-header': 'test',
+        //     'x-header2': 'test2'
+        // },
+        body: JSON.stringify(args.data),
+        method: 'POST',
+        //args: ['-vvv']
+    };
+
+    console.log(formatCurl(url, options));
+};

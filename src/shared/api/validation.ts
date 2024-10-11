@@ -269,7 +269,8 @@ export async function validate(
     hash: number,
     body?: any,
     elapsedTime: any = 0,
-    assertResponse?: any[]
+    assertResponse: any[] | undefined = undefined,
+    onFail: (...args: any[]) => void = () => {}
 ) {
     let chXHR: any;
 
@@ -280,7 +281,7 @@ export async function validate(
         chResult = { body, elapsedTime, status: 200 };
     } else {
         chResult = await ajax
-            .post(url.replace(/structural/, 'stru'), params)
+            .post(url, params)
             .then(function(response: any) {
                 return {
                     status: response.status,
@@ -289,7 +290,6 @@ export async function validate(
                 };
             })
             .catch(function(error: any) {
-                debugger;
                 return {
                     body: null,
                     error,
@@ -333,6 +333,10 @@ export async function validate(
     result.data = params;
     result.chDuration = chResult.elapsedTime;
     result.legacyDuration = !assertResponse && legacyResult.elapsedTime;
+
+    if (!result.status) {
+        onFail(url);
+    }
 
     return result;
 }
@@ -403,9 +407,10 @@ export function reportValidationResult(
 
 export async function runSpecs(
     files: any,
-    ajax: any,
+    axios: any,
     host: string = '',
-    logLevel = ''
+    logLevel = '',
+    onFail: any = () => {}
 ) {
     // @ts-ignore
     const allTests = files
@@ -449,7 +454,7 @@ export async function runSpecs(
                             // @ts-ignore
                             () => {
                                 return validate(
-                                    ajax,
+                                    axios,
                                     host + test.url,
                                     test.data,
                                     test.label,
@@ -458,6 +463,10 @@ export async function runSpecs(
                                     undefined,
                                     test.assertResponse
                                 ).then((report: any) => {
+                                    if (!report.status) {
+                                        onFail(test);
+                                    }
+
                                     report.test = test;
                                     place = place + 1;
                                     const prefix = `${place} of ${totalCount}`;
