@@ -1266,7 +1266,7 @@ export default class MutationTable<
                 </span>
             ),
             defaultSortDirection: 'desc',
-            visible: true,
+            visible: false,
             align: 'left',
         };
 
@@ -1352,7 +1352,7 @@ export default class MutationTable<
                 </span>
             ),
             defaultSortDirection: 'desc',
-            visible: true,
+            visible: false,
             align: 'right',
         };
 
