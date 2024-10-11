@@ -1,3 +1,5 @@
+import { assert } from 'chai';
+
 export const isObject = (value: any) => {
     return (
         typeof value === 'object' &&
@@ -203,8 +205,6 @@ export function deepSort(inp: any, label: string) {
                     });
             });
 
-            //927275539
-
             if (sortFields[label]) {
                 attemptSort(sortFields[label].split(','), arr);
             } else {
@@ -261,7 +261,7 @@ export function compareCounts(clData: any, legacyData: any, label: string) {
     };
 }
 
-export function validate(
+export async function validate(
     ajax: any,
     url: string,
     params: any,
@@ -273,52 +273,68 @@ export function validate(
 ) {
     let chXHR: any;
 
+    let chResult;
+    let legacyResult;
+
     if (body) {
-        chXHR = Promise.resolve({ body, elapsedTime });
+        chResult = { body, elapsedTime, status: 200 };
     } else {
-        chXHR = ajax({
-            method: 'post',
-            url: url,
-            data: JSON.stringify(params),
-            contentType: 'application/json',
-            dataType: 'json',
-        }).then((body: any, state: any, xhr: XMLHttpRequest) => {
-            return { body, elapsedTime: xhr.getResponseHeader('elapsed-time') };
-        });
+        chResult = await ajax
+            .post(url.replace(/structural/, 'stru'), params)
+            .then(function(response: any) {
+                return {
+                    status: response.status,
+                    body: response.data,
+                    elapsedTime: response.headers['elapsed-time'],
+                };
+            })
+            .catch(function(error: any) {
+                debugger;
+                return {
+                    body: null,
+                    error,
+                    elapsedTime: null,
+                    status: error.status,
+                };
+            });
     }
 
-    return chXHR.then(({ body, elapsedTime }: any) => {
+    if (assertResponse) {
+        legacyResult = assertResponse;
+    } else {
         let legacyUrl = url.replace(/column-store\//, '');
+
         if (treatmentLegacyUrl[label]) {
             legacyUrl = treatmentLegacyUrl[label](legacyUrl);
         }
-        const legacyXHR: PromiseLike<any> | XMLHttpRequest = assertResponse
-            ? new Promise((resolve, reject) => {
-                  resolve(assertResponse);
-              })
-            : ajax({
-                  method: 'post',
-                  url: legacyUrl,
-                  data: JSON.stringify(params),
-                  contentType: 'application/json',
-                  dataType: 'json',
-              });
-        // @ts-ignore
-        return legacyXHR.then((legacyResult: any) => {
-            const result: any = compareCounts(body, legacyResult, label);
-            result.url = url;
-            result.hash = hash;
-            result.data = params;
-            result.chDuration = parseFloat(elapsedTime);
-            result.legacyDuration =
-                !assertResponse &&
-                parseFloat(
-                    // @ts-ignore
-                    legacyXHR.getResponseHeader('elapsed-time') || '0'
-                );
-            return result;
-        });
-    });
+
+        legacyResult = await ajax
+            .post(legacyUrl, params)
+            .then(function(response: any) {
+                return {
+                    status: response.status,
+                    body: response.data,
+                    elapsedTime: response.headers['elapsed-time'],
+                };
+            })
+            .catch(function(error: any) {
+                return {
+                    body: null,
+                    error,
+                    elapsedTime: null,
+                    status: error.status,
+                };
+            });
+    }
+
+    const result: any = compareCounts(chResult.body, legacyResult.body, label);
+    result.url = url;
+    result.hash = hash;
+    result.data = params;
+    result.chDuration = chResult.elapsedTime;
+    result.legacyDuration = !assertResponse && legacyResult.elapsedTime;
+
+    return result;
 }
 
 const red = '\x1b[31m';
@@ -338,8 +354,7 @@ export function reportValidationResult(
             `${red} ${prefix} ${result.label} (${result.hash}) ${skipMessage} failed :( ${reset}`
         );
 
-    logLevel === 'verbose' &&
-        !result.status &&
+    if (logLevel === 'verbose' && !result.status) {
         console.log('failed test', {
             url: result.url,
             test: result.test,
@@ -349,40 +364,40 @@ export function reportValidationResult(
             equal: result.status,
             httpError: result.httpError,
         });
-
-    result.status &&
-        console.log(
-            `${prefix} ${result.label} (${
-                result.hash
-            }) passed :) ch: ${result.chDuration.toFixed(
-                0
-            )} legacy: ${result.legacyDuration &&
-                result.legacyDuration.toFixed(0)}`
-        );
-
-    if (logLevel === 'verbose' && !result.status) {
-        if (result.clDataSorted.length) {
-            for (var i = 0; i < result.clDataSorted.length; i++) {
-                const cl = result.clDataSorted[i];
-                if (
-                    JSON.stringify(cl) !==
-                    JSON.stringify(result.legacyDataSorted[i])
-                ) {
-                    console.groupCollapsed(
-                        `First invalid item (${result.label})`
-                    );
-                    console.log('Clickhouse:', cl);
-                    console.log('Legacy:', result.legacyDataSorted[i]);
-                    console.groupEnd();
-                    break;
-                }
-            }
-        }
-        console.groupCollapsed('All Data');
-        console.log('legacy', result.legacyDataSorted);
-        console.log('CH', result.clDataSorted);
-        console.groupEnd();
     }
+
+    if (result.status) {
+        console.log(
+            `${prefix} ${result.label} (${result.hash}) passed :) ch: ${
+                result.chDuration
+            } legacy: ${result.legacyDuration && result.legacyDuration}`
+        );
+    }
+
+    // if (logLevel === 'verbose' && !result.status) {
+    //     if (result.clDataSorted.length) {
+    //         for (var i = 0; i < result.clDataSorted.length; i++) {
+    //             const cl = result.clDataSorted[i];
+    //             if (
+    //                 JSON.stringify(cl) !==
+    //                 JSON.stringify(result.legacyDataSorted[i])
+    //             ) {
+    //                 console.groupCollapsed(
+    //                     `First invalid item (${result.label})`
+    //                 );
+    //                 console.log('Clickhouse:', cl);
+    //                 console.log('Legacy:', result.legacyDataSorted[i]);
+    //                 console.groupEnd();
+    //                 break;
+    //             }
+    //         }
+    //     }
+    //     console.groupCollapsed('All Data');
+    //     console.log('legacy', result.legacyDataSorted);
+    //     console.log('CH', result.clDataSorted);
+    //     console.groupEnd();
+    // }
+
     !result.status && console.groupEnd();
 }
 
@@ -446,7 +461,6 @@ export async function runSpecs(
                                     report.test = test;
                                     place = place + 1;
                                     const prefix = `${place} of ${totalCount}`;
-
                                     if (report instanceof Promise) {
                                         report.then((report: any) => {
                                             if (test?.skip) {

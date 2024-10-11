@@ -1,6 +1,7 @@
 import * as React from 'react';
 import _ from 'lodash';
 import { useCallback, useEffect } from 'react';
+import axios from 'axios';
 import {
     reportValidationResult,
     runSpecs,
@@ -80,7 +81,7 @@ export const RFC80Test = observer(function() {
             ? json.filter((f: any) => new RegExp(fileFilter).test(f.file))
             : json;
 
-        await runSpecs(files, $.ajax, '', 'verbose');
+        await runSpecs(files, axios, '', 'verbose');
     }, []);
 
     useEffect(() => {
