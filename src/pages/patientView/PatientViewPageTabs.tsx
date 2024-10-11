@@ -859,23 +859,23 @@ export function tabs(
             </MSKTab>
         );
 
-    tabs.push(
-        <MSKTab
-            key={43}
-            id={PatientViewPageTabs.ClinicalTrialsGov}
-            linkText="ClinicalTrialsGov"
-            unmountOnHide={false}
-        >
-            <ClinicalTrialMatchTable
-                store={pageComponent.patientViewPageStore}
-                clinicalTrialMatches={
-                    pageComponent.patientViewPageStore.clinicalTrialMatches
-                        .result
-                }
-                mtbTabAvailable={pageComponent.shouldShowMtbTab}
-            />
-        </MSKTab>
-    );
+    // tabs.push(
+    //     <MSKTab
+    //         key={43}
+    //         id={PatientViewPageTabs.ClinicalTrialsGov}
+    //         linkText="ClinicalTrialsGov"
+    //         unmountOnHide={false}
+    //     >
+    //         <ClinicalTrialMatchTable
+    //             store={pageComponent.patientViewPageStore}
+    //             clinicalTrialMatches={
+    //                 pageComponent.patientViewPageStore.clinicalTrialMatches
+    //                     .result
+    //             }
+    //             mtbTabAvailable={pageComponent.shouldShowMtbTab}
+    //         />
+    //     </MSKTab>
+    // );
 
     pageComponent.resourceTabs.component &&
         /* @ts-ignore */
