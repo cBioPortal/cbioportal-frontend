@@ -1,5 +1,5 @@
 const csv = require('csvtojson');
-const csvFilePath = './extract-2024-10-08T16_34_22.764Z.csv';
+const csvFilePath = './extract-2024-10-11T00_29_53.795Z.csv';
 const _ = require('lodash');
 
 var najax = require('najax');
@@ -12,8 +12,8 @@ const exclusions = [
 ];
 const filters = []; //[/clinical-event-type/];
 
-const START = 279;
-const LIMIT = 1;
+const START = 0;
+const LIMIT = 10000;
 
 async function main() {
     const files = await csv()
@@ -26,8 +26,9 @@ async function main() {
                     );
                 })
                 .filter(d => {
-                    return _.every(
-                        filters.map(re => re.test(d['@url']) === true)
+                    return (
+                        filters.length === 0 ||
+                        _.every(filters.map(re => re.test(d['@url']) === true))
                     );
                 });
 
