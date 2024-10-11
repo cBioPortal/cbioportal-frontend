@@ -291,7 +291,7 @@ import {
 } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 import {
     fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecularProfileId,
-    fetchGenericAssayMetaByMolecularProfileIdsGroupedByGenericAssayType,
+    fetchGenericAssayMetaGroupedByMolecularProfileIdSuffix,
 } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import {
     buildDriverAnnotationSettings,
@@ -6039,17 +6039,6 @@ export class StudyViewPageStore
         default: [],
     });
 
-    readonly genericAssayEntitiesGroupedByGenericAssayType = remoteData<{
-        [genericAssayType: string]: GenericAssayMeta[];
-    }>({
-        await: () => [this.genericAssayProfiles],
-        invoke: async () => {
-            return await fetchGenericAssayMetaByMolecularProfileIdsGroupedByGenericAssayType(
-                this.genericAssayProfiles.result
-            );
-        },
-    });
-
     readonly genericAssayEntitiesGroupedByProfileId = remoteData<{
         [profileId: string]: GenericAssayMeta[];
     }>({
@@ -6061,20 +6050,13 @@ export class StudyViewPageStore
         },
     });
 
-    readonly genericAssayStableIdToMeta = remoteData<{
-        [genericAssayStableId: string]: GenericAssayMeta;
+    readonly genericAssayEntitiesGroupedByProfileIdSuffix = remoteData<{
+        [profileIdSuffix: string]: GenericAssayMeta[];
     }>({
-        await: () => [this.genericAssayEntitiesGroupedByGenericAssayType],
-        invoke: () => {
-            return Promise.resolve(
-                _.chain(
-                    this.genericAssayEntitiesGroupedByGenericAssayType.result
-                )
-                    .values()
-                    .flatten()
-                    .uniqBy(meta => meta.stableId)
-                    .keyBy(meta => meta.stableId)
-                    .value()
+        await: () => [this.genericAssayProfiles],
+        invoke: async () => {
+            return await fetchGenericAssayMetaGroupedByMolecularProfileIdSuffix(
+                this.genericAssayProfiles.result
             );
         },
     });
@@ -6093,20 +6075,32 @@ export class StudyViewPageStore
         default: [],
     });
 
+    readonly genericAssayProfilesGroupedByGenericAssayType = remoteData({
+        await: () => [this.genericAssayProfiles],
+        invoke: () => {
+            return Promise.resolve(
+                _.groupBy(
+                    this.genericAssayProfiles.result,
+                    profile => profile.genericAssayType
+                )
+            );
+        },
+        default: {},
+    });
+
     readonly genericAssayProfileOptionsByType = remoteData({
         await: () => [
-            this.genericAssayProfiles,
+            this.genericAssayProfilesGroupedByGenericAssayType,
             this.molecularProfileSampleCountSet,
         ],
         invoke: () => {
             return Promise.resolve(
-                _.chain(this.genericAssayProfiles.result)
-                    .filter(
-                        profile =>
-                            profile.molecularAlterationType ===
-                            AlterationTypeConstants.GENERIC_ASSAY
-                    )
-                    .groupBy(profile => profile.genericAssayType)
+                // Each Generic Assay Profile has a type "profile.genericAssayType"
+                // But one Generic Assay Type can then have different suffix, meaning they are the same Generic Assay Type but different kind of data
+                // Then we need to distinguish them using suffix of the profile id
+                _.chain(
+                    this.genericAssayProfilesGroupedByGenericAssayType.result
+                )
                     .mapValues(profiles => {
                         return _.chain(profiles)
                             .groupBy(molecularProfile =>
