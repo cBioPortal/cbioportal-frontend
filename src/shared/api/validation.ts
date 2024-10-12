@@ -82,7 +82,7 @@ const deleteFields: Record<string, string[]> = {
 };
 
 const sortFields: Record<string, string> = {
-    ClinicalDataBin: 'attributeId,specialValue',
+    ClinicalDataBinCounts: 'attributeId,specialValue',
     FilteredSamples: 'studyId,patientId,sampleId',
     SampleTreatmentCounts: 'treatment,time',
     PatientTreatmentCounts: 'treatment',
@@ -333,6 +333,7 @@ export async function validate(
     result.data = params;
     result.chDuration = chResult.elapsedTime;
     result.legacyDuration = !assertResponse && legacyResult.elapsedTime;
+    result.chError = chResult.error;
 
     if (!result.status) {
         onFail(url);
@@ -353,9 +354,11 @@ export function reportValidationResult(
     const skipMessage =
         result.test && result.test.skip ? `(SKIPPED ${result.test.skip})` : '';
 
+    const errorStatus = result.chError ? `(${result.chError.status})` : '';
+
     !result.status &&
         console.groupCollapsed(
-            `${red} ${prefix} ${result.label} (${result.hash}) ${skipMessage} failed :( ${reset}`
+            `${red} ${prefix} ${result.label} (${result.hash}) ${skipMessage} failed ${errorStatus} :( ${reset}`
         );
 
     if (logLevel === 'verbose' && !result.status) {
