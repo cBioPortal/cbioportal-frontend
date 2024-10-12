@@ -1,16 +1,16 @@
-import { Button, ButtonGroup, Modal, Radio } from 'react-bootstrap';
-import * as React from 'react';
 import { DefaultTooltip } from 'cbioportal-frontend-commons/dist';
-import Select from 'react-select';
-import styles from './styles.module.scss';
-import { POSITIONS } from './Survival';
-import ComparisonStore from 'shared/lib/comparison/ComparisonStore';
+import classNames from 'classnames';
 import _ from 'lodash';
 import { observer } from 'mobx-react';
-import classNames from 'classnames';
+import * as React from 'react';
+import { Button, ButtonGroup, Modal, Radio } from 'react-bootstrap';
+import Select from 'react-select';
+import { POSITIONS } from './Survival';
+import SurvivalPageStore from './SurvivalPageStore';
+import styles from './styles.module.scss';
 
 export interface INewSurvivalModalProps {
-    pageStore: ComparisonStore;
+    pageStore: SurvivalPageStore;
     onHide: () => void;
 }
 
@@ -68,7 +68,7 @@ export default class NewSurvivalPlotModal extends React.Component<
                                                 .onStartClinicalEventSelection
                                         }
                                         options={_.values(
-                                            this.props.pageStore
+                                            this.props.pageStore.parentStore
                                                 .clinicalEventOptions.result
                                         )}
                                         isClearable
@@ -78,8 +78,8 @@ export default class NewSurvivalPlotModal extends React.Component<
                                 {this.props.pageStore
                                     ._selectedStartClinicalEventType !==
                                     undefined &&
-                                    this.props.pageStore.clinicalEventOptions
-                                        .result[
+                                    this.props.pageStore.parentStore
+                                        .clinicalEventOptions.result[
                                         this.props.pageStore
                                             ._selectedStartClinicalEventType
                                     ].attributes.length > 0 && (
@@ -104,15 +104,15 @@ export default class NewSurvivalPlotModal extends React.Component<
                                                 }}
                                                 options={
                                                     this.props.pageStore
+                                                        .parentStore
                                                         .clinicalEventOptions
                                                         .result[
                                                         this.props.pageStore
                                                             ._selectedStartClinicalEventType
                                                     ].attributes
                                                 }
-                                                isClearable={true}
-                                                clearable={true}
-                                                searchable={true}
+                                                isClearable
+                                                isSearchable
                                                 noOptionsMessage={() =>
                                                     'No results'
                                                 }
@@ -166,7 +166,7 @@ export default class NewSurvivalPlotModal extends React.Component<
                                                 .onEndClinicalEventSelection
                                         }
                                         options={_.values(
-                                            this.props.pageStore
+                                            this.props.pageStore.parentStore
                                                 .clinicalEventOptions.result
                                         )}
                                         isClearable={true}
@@ -178,8 +178,8 @@ export default class NewSurvivalPlotModal extends React.Component<
                                 {this.props.pageStore
                                     ._selectedEndClinicalEventType !==
                                     undefined &&
-                                    this.props.pageStore.clinicalEventOptions
-                                        .result[
+                                    this.props.pageStore.parentStore
+                                        .clinicalEventOptions.result[
                                         this.props.pageStore
                                             ._selectedEndClinicalEventType
                                     ].attributes.length > 0 && (
@@ -204,14 +204,15 @@ export default class NewSurvivalPlotModal extends React.Component<
                                                 }}
                                                 options={
                                                     this.props.pageStore
+                                                        .parentStore
                                                         .clinicalEventOptions
                                                         .result[
                                                         this.props.pageStore
                                                             ._selectedEndClinicalEventType
                                                     ].attributes
                                                 }
-                                                isClearable={true}
-                                                searchable={true}
+                                                isClearable
+                                                isSearchable
                                                 noOptionsMessage={() =>
                                                     'No results'
                                                 }
@@ -272,7 +273,7 @@ export default class NewSurvivalPlotModal extends React.Component<
                                             } as any,
                                         ].concat(
                                             _.values(
-                                                this.props.pageStore
+                                                this.props.pageStore.parentStore
                                                     .clinicalEventOptions.result
                                             )
                                         )}
@@ -286,8 +287,8 @@ export default class NewSurvivalPlotModal extends React.Component<
                                     this.props.pageStore
                                         .selectedCensoredClinicalEventType
                                         .value !== 'any' &&
-                                    this.props.pageStore.clinicalEventOptions
-                                        .result[
+                                    this.props.pageStore.parentStore
+                                        .clinicalEventOptions.result[
                                         this.props.pageStore
                                             .selectedCensoredClinicalEventType
                                             .value
@@ -313,6 +314,7 @@ export default class NewSurvivalPlotModal extends React.Component<
                                                 }}
                                                 options={
                                                     this.props.pageStore
+                                                        .parentStore
                                                         .clinicalEventOptions
                                                         .result[
                                                         this.props.pageStore
@@ -320,7 +322,8 @@ export default class NewSurvivalPlotModal extends React.Component<
                                                             .value
                                                     ].attributes
                                                 }
-                                                isClearable={false}
+                                                isClearable
+                                                isSearchable
                                                 noOptionsMessage={() =>
                                                     'No results'
                                                 }

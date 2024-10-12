@@ -1,7 +1,13 @@
-import * as React from 'react';
-import { observer, Observer } from 'mobx-react';
 import autobind from 'autobind-decorator';
-import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
+import {
+    DownloadControlOption,
+    DownloadControls,
+    remoteData,
+} from 'cbioportal-frontend-commons';
+import { Sample } from 'cbioportal-ts-api-client';
+import { getRemoteDataGroupStatus } from 'cbioportal-utils';
+import { getServerConfig } from 'config/config';
+import _ from 'lodash';
 import {
     action,
     autorun,
@@ -10,16 +16,22 @@ import {
     makeObservable,
     observable,
 } from 'mobx';
-import { SimpleGetterLazyMobXTableApplicationDataStore } from 'shared/lib/ILazyMobXTableApplicationDataStore';
-import ClinicalDataEnrichmentsTable from './ClinicalDataEnrichmentsTable';
-import _ from 'lodash';
+import { observer, Observer } from 'mobx-react';
+import { OncoprintJS } from 'oncoprintjs';
+import CategoryPlot, {
+    CategoryPlotType,
+} from 'pages/groupComparison/CategoryPlot';
 import {
-    DownloadControlOption,
-    DownloadControls,
-    remoteData,
-} from 'cbioportal-frontend-commons';
-import { getRemoteDataGroupStatus } from 'cbioportal-utils';
+    ClinicalNumericalDataVisualisation,
+    ClinicalNumericalVisualisationType,
+} from 'pages/groupComparison/ClinicalNumericalDataVisualisation';
+import { createSurvivalAttributeIdsDict } from 'pages/resultsView/survival/SurvivalUtil';
+import * as React from 'react';
+import ReactSelect from 'react-select1';
 import client from 'shared/api/cbioportalClientInstance';
+import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
+import { MakeMobxView } from 'shared/components/MobxView';
+import { IBoxScatterPlotData } from 'shared/components/plots/BoxScatterPlot';
 import {
     basicAppearance,
     boxPlotTooltip,
@@ -32,39 +44,27 @@ import {
     IStringAxisData,
     makeBoxScatterPlotData,
 } from 'shared/components/plots/PlotsTabUtils';
-import ScrollBar from 'shared/components/Scrollbar/ScrollBar';
-import { IBoxScatterPlotData } from 'shared/components/plots/BoxScatterPlot';
 import { scatterPlotSize } from 'shared/components/plots/PlotUtils';
-import {
-    CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG,
-    ClinicalDataEnrichmentWithQ,
-    GetStatisticalCautionInfo,
-} from './GroupComparisonUtils';
-import ReactSelect from 'react-select1';
-import { MakeMobxView } from 'shared/components/MobxView';
-import OverlapExclusionIndicator from './OverlapExclusionIndicator';
-import { RESERVED_CLINICAL_VALUE_COLORS } from '../../shared/lib/Colors';
-import ErrorMessage from '../../shared/components/ErrorMessage';
+import ScrollBar from 'shared/components/Scrollbar/ScrollBar';
 import ComplexKeyMap from 'shared/lib/complexKeyDataStructures/ComplexKeyMap';
-import { Sample } from 'cbioportal-ts-api-client';
+import { SimpleGetterLazyMobXTableApplicationDataStore } from 'shared/lib/ILazyMobXTableApplicationDataStore';
+import ErrorMessage from '../../shared/components/ErrorMessage';
+import { RESERVED_CLINICAL_VALUE_COLORS } from '../../shared/lib/Colors';
 import ComparisonStore, {
     OverlapStrategy,
 } from '../../shared/lib/comparison/ComparisonStore';
-import { createSurvivalAttributeIdsDict } from 'pages/resultsView/survival/SurvivalUtil';
+import ClinicalDataEnrichmentsTable from './ClinicalDataEnrichmentsTable';
 import {
     filterSampleList,
     getComparisonCategoricalNaValue,
 } from './ClinicalDataUtils';
 import {
-    ClinicalNumericalDataVisualisation,
-    ClinicalNumericalVisualisationType,
-} from 'pages/groupComparison/ClinicalNumericalDataVisualisation';
+    CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG,
+    ClinicalDataEnrichmentWithQ,
+    GetStatisticalCautionInfo,
+} from './GroupComparisonUtils';
+import OverlapExclusionIndicator from './OverlapExclusionIndicator';
 import { SummaryStatisticsTable } from './SummaryStatisticsTable';
-import CategoryPlot, {
-    CategoryPlotType,
-} from 'pages/groupComparison/CategoryPlot';
-import { OncoprintJS } from 'oncoprintjs';
-import { getServerConfig } from 'config/config';
 
 export interface IClinicalDataProps {
     store: ComparisonStore;
@@ -231,7 +231,8 @@ export default class ClinicalData extends React.Component<
             // There is no need to still keep them in clinical tab
             // So, exclude them from the data store
             const survivalAttributeIdsDict = createSurvivalAttributeIdsDict(
-                this.props.store.survivalClinicalAttributesPrefix.result || []
+                this.props.store.predefinedSurvivalClinicalAttributesPrefix
+                    .result || []
             );
             // In addition remove a few more attributes from the comparison page
             // for GENIE BPC related to years. In the future we might want to

@@ -1,3 +1,69 @@
+import autobind from 'autobind-decorator';
+import {
+    MobxPromise,
+    onMobxPromise,
+    remoteData,
+    stringListToMap,
+} from 'cbioportal-frontend-commons';
+import {
+    AlterationFilter,
+    CancerStudy,
+    ClinicalAttribute,
+    ClinicalEventData,
+    Group,
+    MolecularProfile,
+    MolecularProfileCasesGroupFilter,
+    MolecularProfileFilter,
+    ReferenceGenomeGene,
+    Sample,
+} from 'cbioportal-ts-api-client';
+import { getServerConfig } from 'config/config';
+import _ from 'lodash';
+import {
+    action,
+    autorun,
+    computed,
+    IReactionDisposer,
+    makeObservable,
+    observable,
+} from 'mobx';
+import IComparisonURLWrapper from 'pages/groupComparison/IComparisonURLWrapper';
+import {
+    buildSelectedDriverTiersMap,
+    getFilteredMolecularProfilesByAlterationType,
+    getPatientIdentifiers,
+} from 'pages/studyView/StudyViewUtils';
+import {
+    buildDriverAnnotationSettings,
+    IAnnotationFilterSettings,
+    IDriverAnnotationReport,
+    initializeCustomDriverAnnotationSettings,
+} from 'shared/alterationFiltering/AnnotationFilteringSettings';
+import {
+    ComparisonSession,
+    SessionGroupData,
+} from 'shared/api/session-service/sessionServiceModels';
+import { AlterationTypeConstants, DataTypeConstants } from 'shared/constants';
+import { calculateQValues } from 'shared/lib/calculation/BenjaminiHochbergFDRCalculator';
+import {
+    cnaEventTypeSelectInit,
+    CopyNumberEnrichmentEventType,
+    EnrichmentEventType,
+    getCopyNumberEventTypesAPIParameter,
+    getMutationEventTypesAPIParameter,
+    MutationEnrichmentEventType,
+    mutationEventTypeSelectInit,
+    StructuralVariantEnrichmentEventType,
+} from 'shared/lib/comparison/ComparisonStoreUtils';
+import {
+    fetchAllReferenceGenomeGenes,
+    fetchSurvivalDataExists,
+    getSurvivalClinicalAttributesPrefix,
+} from 'shared/lib/StoreUtils';
+import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
+import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
+import { AppStore } from '../../../AppStore';
+import { GroupComparisonTab } from '../../../pages/groupComparison/GroupComparisonTabs';
 import {
     ClinicalDataEnrichmentWithQ,
     ComparisonGroup,
@@ -11,43 +77,6 @@ import {
     isGroupEmpty,
     partitionCasesByGroupMembership,
 } from '../../../pages/groupComparison/GroupComparisonUtils';
-import { GroupComparisonTab } from '../../../pages/groupComparison/GroupComparisonTabs';
-import {
-    findFirstMostCommonElt,
-    MobxPromise,
-    onMobxPromise,
-    remoteData,
-    stringListToMap,
-    toPromise,
-} from 'cbioportal-frontend-commons';
-import {
-    AlterationFilter,
-    CancerStudy,
-    ClinicalAttribute,
-    ClinicalData,
-    ClinicalDataMultiStudyFilter,
-    ClinicalEventData,
-    Group,
-    MolecularProfile,
-    MolecularProfileCasesGroupFilter,
-    MolecularProfileFilter,
-    ReferenceGenomeGene,
-    Sample,
-    SurvivalRequest,
-} from 'cbioportal-ts-api-client';
-import {
-    action,
-    autorun,
-    computed,
-    IReactionDisposer,
-    makeObservable,
-    observable,
-    reaction,
-    toJS,
-} from 'mobx';
-import client from '../../api/cbioportalClientInstance';
-import comparisonClient from '../../api/comparisonGroupClientInstance';
-import _ from 'lodash';
 import {
     compareByAlterationPercentage,
     getAlterationRowData,
@@ -62,68 +91,20 @@ import {
     pickProteinEnrichmentProfiles,
     pickStructuralVariantEnrichmentProfiles,
 } from '../../../pages/resultsView/enrichments/EnrichmentsUtil';
+import { ResultsViewPageStore } from '../../../pages/resultsView/ResultsViewPageStore';
 import {
     makeEnrichmentDataPromise,
-    makeGenericAssayEnrichmentDataPromise,
     makeGenericAssayBinaryEnrichmentDataPromise,
     makeGenericAssayCategoricalEnrichmentDataPromise,
+    makeGenericAssayEnrichmentDataPromise,
 } from '../../../pages/resultsView/ResultsViewPageStoreUtils';
+import client from '../../api/cbioportalClientInstance';
 import internalClient from '../../api/cbioportalInternalClientInstance';
-import autobind from 'autobind-decorator';
-import { PatientSurvival } from 'shared/model/PatientSurvival';
-import { getPatientSurvivals } from 'pages/resultsView/SurvivalStoreHelper';
-import {
-    getFilteredMolecularProfilesByAlterationType,
-    getPatientIdentifiers,
-    buildSelectedDriverTiersMap,
-    showQueryUpdatedToast,
-} from 'pages/studyView/StudyViewUtils';
-import { calculateQValues } from 'shared/lib/calculation/BenjaminiHochbergFDRCalculator';
-import ComplexKeyMap from '../complexKeyDataStructures/ComplexKeyMap';
+import comparisonClient from '../../api/comparisonGroupClientInstance';
 import ComplexKeyGroupsMap from '../complexKeyDataStructures/ComplexKeyGroupsMap';
-import { AppStore } from '../../../AppStore';
-import { ISurvivalDescription } from 'pages/resultsView/survival/SurvivalDescriptionTable';
-import {
-    fetchAllReferenceGenomeGenes,
-    fetchSurvivalDataExists,
-    getSurvivalClinicalAttributesPrefix,
-} from 'shared/lib/StoreUtils';
-import { ResultsViewPageStore } from '../../../pages/resultsView/ResultsViewPageStore';
-import { AlterationTypeConstants, DataTypeConstants } from 'shared/constants';
-import {
-    generateSurvivalPlotTitleFromDisplayName,
-    getSurvivalStatusBoolean,
-} from 'pages/resultsView/survival/SurvivalUtil';
-import {
-    cnaEventTypeSelectInit,
-    CopyNumberEnrichmentEventType,
-    CustomSurvivalPlots,
-    EnrichmentEventType,
-    getCopyNumberEventTypesAPIParameter,
-    getMutationEventTypesAPIParameter,
-    getSurvivalPlotName,
-    getSurvivalPlotDescription,
-    MutationEnrichmentEventType,
-    mutationEventTypeSelectInit,
-    StructuralVariantEnrichmentEventType,
-} from 'shared/lib/comparison/ComparisonStoreUtils';
-import {
-    buildDriverAnnotationSettings,
-    IAnnotationFilterSettings,
-    IDriverAnnotationReport,
-    initializeCustomDriverAnnotationSettings,
-} from 'shared/alterationFiltering/AnnotationFilteringSettings';
-import { getServerConfig } from 'config/config';
-import IComparisonURLWrapper from 'pages/groupComparison/IComparisonURLWrapper';
-import {
-    ComparisonSession,
-    SessionGroupData,
-} from 'shared/api/session-service/sessionServiceModels';
-import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
+import ComplexKeyMap from '../complexKeyDataStructures/ComplexKeyMap';
 import AnalysisStore from './AnalysisStore';
-import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
 import { compileMutations } from './AnalysisStoreUtils';
-import { SurvivalChartType } from 'pages/resultsView/survival/SurvivalPrefixTable';
 
 export enum OverlapStrategy {
     INCLUDE = 'Include',
@@ -142,14 +123,6 @@ export default abstract class ComparisonStore extends AnalysisStore
     @observable includeGermlineMutations = true;
     @observable includeSomaticMutations = true;
     @observable includeUnknownStatusMutations = true;
-
-    @observable public adjustForLeftTruncation = true;
-
-    @observable selectedSurvivalPlotPrefix: string | undefined = undefined;
-
-    public customSurvivalDataPromises: {
-        [id: string]: MobxPromise<ClinicalData[]>;
-    } = {};
 
     constructor(
         protected appStore: AppStore,
@@ -223,17 +196,6 @@ export default abstract class ComparisonStore extends AnalysisStore
                     );
                 })
             );
-
-            this.reactionDisposers.push(
-                reaction(
-                    () => this.isSessionLoaded,
-                    isComplete => {
-                        if (isComplete) {
-                            this.loadCustomSurvivalCharts();
-                        }
-                    }
-                )
-            );
         }); // do this after timeout so that all subclasses have time to construct
     }
 
@@ -241,209 +203,6 @@ export default abstract class ComparisonStore extends AnalysisStore
         for (const disposer of this.reactionDisposers) {
             disposer();
         }
-    }
-
-    @observable
-    public startEventPosition: 'FIRST' | 'LAST' = 'FIRST';
-
-    @observable
-    public endEventPosition: 'FIRST' | 'LAST' = 'FIRST';
-
-    @observable
-    public censoredEventPosition: 'FIRST' | 'LAST' = 'LAST';
-
-    @observable
-    public _selectedStartClinicalEventType: string | undefined = undefined;
-
-    @observable
-    public selectedStartClinicalEventAttributes: ClinicalEventDataWithKey[] = [];
-
-    @observable
-    public _selectedEndClinicalEventType: string | undefined = undefined;
-
-    @observable
-    public selectedEndClinicalEventAttributes: ClinicalEventDataWithKey[] = [];
-
-    @observable
-    public _selectedCensoredClinicalEventType: string | undefined = 'any';
-
-    @observable.ref chartName: string;
-
-    @observable
-    public selectedCensoredClinicalEventAttributes: ClinicalEventDataWithKey[] = [];
-
-    @action.bound
-    public setSurvivalPlotPrefix(prefix: string | undefined) {
-        this.selectedSurvivalPlotPrefix = prefix;
-    }
-
-    @action.bound
-    public onStartClinicalEventSelection(option: any) {
-        if (option !== null) {
-            this._selectedStartClinicalEventType = option.value;
-            this.selectedStartClinicalEventAttributes = [];
-        } else {
-            this._selectedStartClinicalEventType = undefined;
-        }
-    }
-
-    @computed get selectedStartClinicalEventType() {
-        if (this._selectedStartClinicalEventType !== undefined) {
-            return this.clinicalEventOptions.result[
-                this._selectedStartClinicalEventType
-            ];
-        }
-        return undefined;
-    }
-
-    @action.bound
-    public onEndClinicalEventSelection(option: any) {
-        if (option !== null) {
-            this._selectedEndClinicalEventType = option.value;
-            this.selectedEndClinicalEventAttributes = [];
-        } else {
-            this._selectedEndClinicalEventType = undefined;
-        }
-    }
-
-    @computed get selectedEndClinicalEventType() {
-        if (this._selectedEndClinicalEventType !== undefined) {
-            return this.clinicalEventOptions.result[
-                this._selectedEndClinicalEventType
-            ];
-        }
-        return undefined;
-    }
-
-    @action.bound
-    public onCensoredClinicalEventSelection(option: any) {
-        if (option !== null) {
-            this._selectedCensoredClinicalEventType = option.value;
-            this.selectedCensoredClinicalEventAttributes = [];
-        } else {
-            this._selectedCensoredClinicalEventType = 'any';
-        }
-    }
-
-    @action.bound
-    public onKMPlotNameChange(e: React.SyntheticEvent<HTMLInputElement>) {
-        this.chartName = (e.target as HTMLInputElement).value;
-    }
-
-    @action.bound
-    public resetSurvivalPlotSelection() {
-        this.chartName = '';
-        this._selectedStartClinicalEventType = undefined;
-        this.startEventPosition = 'FIRST';
-        this.selectedStartClinicalEventAttributes = [];
-        this._selectedEndClinicalEventType = undefined;
-        this.endEventPosition = 'FIRST';
-        this.selectedEndClinicalEventAttributes = [];
-        this._selectedCensoredClinicalEventType = 'any';
-        this.censoredEventPosition = 'LAST';
-        this.selectedCensoredClinicalEventAttributes = [];
-    }
-
-    @action.bound
-    public async onAddSurvivalPlot() {
-        let chartName =
-            this.chartName !== undefined && this.chartName.length > 0
-                ? this.chartName
-                : getSurvivalPlotName(
-                      this._selectedStartClinicalEventType!,
-                      this.selectedStartClinicalEventAttributes || [],
-                      this.startEventPosition,
-                      this._selectedEndClinicalEventType!,
-                      this.selectedEndClinicalEventAttributes || [],
-                      this.endEventPosition,
-                      this._selectedCensoredClinicalEventType!,
-                      this.selectedCensoredClinicalEventAttributes || [],
-                      _.values(this.survivalTitleByPrefix.result || {})
-                  );
-
-        this.addSurvivalRequest(
-            this._selectedStartClinicalEventType!,
-            this.startEventPosition,
-            this.selectedStartClinicalEventAttributes,
-            this._selectedEndClinicalEventType!,
-            this.endEventPosition,
-            this.selectedEndClinicalEventAttributes,
-            this._selectedCensoredClinicalEventType!,
-            this.censoredEventPosition,
-            this.selectedCensoredClinicalEventAttributes,
-            chartName
-        );
-
-        await toPromise(this.customSurvivalDataPromises[chartName]);
-        showQueryUpdatedToast(`Successfully added survival plot: ${chartName}`);
-
-        this.setSurvivalPlotPrefix(chartName);
-        this.updateCustomSurvivalPlots(this.customSurvivalPlots);
-        this.chartName = '';
-    }
-
-    @computed get selectedCensoredClinicalEventType() {
-        if (this._selectedCensoredClinicalEventType !== undefined) {
-            if (this._selectedCensoredClinicalEventType === 'any') {
-                return {
-                    label: 'any event',
-                    value: 'any',
-                    attributes: [],
-                } as any;
-            }
-            return this.clinicalEventOptions.result[
-                this._selectedCensoredClinicalEventType
-            ];
-        }
-        return undefined;
-    }
-
-    @computed get doesChartNameAlreadyExists() {
-        return (
-            this.chartName !== undefined &&
-            this.chartName.length >= 0 &&
-            _.values(this.survivalTitleByPrefix.result || {}).some(
-                prefix =>
-                    prefix.toLowerCase().trim() ===
-                    this.chartName.toLowerCase().trim()
-            )
-        );
-    }
-
-    readonly survivalTitleByPrefix = remoteData(
-        {
-            await: () => [
-                this.survivalClinicalAttributesPrefix,
-                this.survivalDescriptions,
-            ],
-            invoke: () =>
-                Promise.resolve(
-                    this.survivalClinicalAttributesPrefix.result!.reduce(
-                        (map, prefix) => {
-                            // get survival plot titles
-                            // use first display name as title
-                            map[
-                                prefix
-                            ] = generateSurvivalPlotTitleFromDisplayName(
-                                this.survivalDescriptions.result![prefix][0]
-                                    .displayName
-                            );
-                            return map;
-                        },
-                        {} as { [prefix: string]: string }
-                    )
-                ),
-        },
-        {}
-    );
-
-    @computed get isAddSurvivalPlotDisabled() {
-        return (
-            this._selectedStartClinicalEventType === undefined ||
-            this._selectedEndClinicalEventType === undefined ||
-            this.doesChartNameAlreadyExists ||
-            this.patientSurvivals.isPending
-        );
     }
 
     @computed get selectedCopyNumberEnrichmentEventTypes() {
@@ -520,7 +279,7 @@ export default abstract class ComparisonStore extends AnalysisStore
     public deselectAllGroups() {
         throw new Error(`deselectAllGroups must be implemented in subclass`);
     }
-    protected async saveAndGoToSession(newSession: ComparisonSession) {
+    public async saveAndGoToSession(newSession: ComparisonSession) {
         throw new Error(`saveAndGoToSession must be implemented in subclass`);
     }
     abstract get _session(): MobxPromise<ComparisonSession>;
@@ -554,18 +313,6 @@ export default abstract class ComparisonStore extends AnalysisStore
         newSession.groups = newSession.groups.filter(g => g.name !== name);
 
         this.saveAndGoToSession(newSession);
-    }
-
-    public async updateCustomSurvivalPlots(
-        customSurvivalPlots: CustomSurvivalPlots
-    ) {
-        const newSession = toJS(this._session.result!);
-        newSession.customSurvivalPlots = _.values(customSurvivalPlots) as any;
-
-        // Need this to prevent page for reloading
-        localStorage.setItem('preventPageReload', 'true');
-
-        await this.saveAndGoToSession(newSession);
     }
 
     readonly origin = remoteData({
@@ -967,8 +714,6 @@ export default abstract class ComparisonStore extends AnalysisStore
             [studyId: string]: MolecularProfile;
         };
     } = {};
-
-    @observable customSurvivalPlots: CustomSurvivalPlots = {};
 
     @observable customClinicalAttributes: ClinicalAttribute[] = [];
 
@@ -1373,15 +1118,6 @@ export default abstract class ComparisonStore extends AnalysisStore
         clonedMap[genericAssayType] = profileMap;
         // trigger the function to recompute
         this._selectedGenericAssayEnrichmentProfileMapGroupedByGenericAssayType = clonedMap;
-    }
-
-    @action.bound
-    public removeCustomSurvivalPlot(prefix: string) {
-        if (!_.isEmpty(this.customSurvivalPlots)) {
-            delete this.customSurvivalPlots[prefix];
-            delete this.customSurvivalDataPromises[prefix];
-            this.updateCustomSurvivalPlots(toJS(this.customSurvivalPlots));
-        }
     }
 
     readonly alterationsEnrichmentAnalysisGroups = remoteData({
@@ -2355,7 +2091,6 @@ export default abstract class ComparisonStore extends AnalysisStore
     });
 
     @computed get survivalTabShowable() {
-        // TODO: refactor to check clinica-event data
         return (
             (this.predefinedSurvivalClinicalDataExists.isComplete &&
                 this.clinicalEventOptions.isComplete &&
@@ -2760,75 +2495,6 @@ export default abstract class ComparisonStore extends AnalysisStore
             ),
     });
 
-    readonly predefinedSurvivalClinicalData = remoteData<ClinicalData[]>(
-        {
-            await: () => [
-                this.activeSamplesNotOverlapRemoved,
-                this.predefinedSurvivalClinicalAttributesPrefix,
-            ],
-            invoke: () => {
-                if (this.activeSamplesNotOverlapRemoved.result!.length === 0) {
-                    return Promise.resolve([]);
-                }
-
-                const attributeNames: string[] = _.reduce(
-                    this.predefinedSurvivalClinicalAttributesPrefix.result!,
-                    (attributeNames, prefix: string) => {
-                        attributeNames.push(prefix + '_STATUS');
-                        attributeNames.push(prefix + '_MONTHS');
-                        return attributeNames;
-                    },
-                    [] as string[]
-                );
-
-                if (attributeNames.length === 0) {
-                    return Promise.resolve([]);
-                }
-                const filter: ClinicalDataMultiStudyFilter = {
-                    attributeIds: attributeNames,
-                    identifiers: this.activeSamplesNotOverlapRemoved.result!.map(
-                        (s: any) => ({
-                            entityId: s.patientId,
-                            studyId: s.studyId,
-                        })
-                    ),
-                };
-                return client.fetchClinicalDataUsingPOST({
-                    clinicalDataType: 'PATIENT',
-                    clinicalDataMultiStudyFilter: filter,
-                });
-            },
-        },
-        []
-    );
-
-    readonly survivalClinicalData = remoteData<ClinicalData[]>(
-        {
-            await: () => [
-                this.activeSamplesNotOverlapRemoved,
-                this.predefinedSurvivalClinicalData,
-                ..._.values(this.customSurvivalDataPromises),
-            ],
-            invoke: async () => {
-                if (this.activeSamplesNotOverlapRemoved.result!.length === 0) {
-                    return Promise.resolve([]);
-                }
-                let response: ClinicalData[] = [];
-                if (_.keys(this.customSurvivalPlots).length > 0) {
-                    response = _.chain(this.customSurvivalDataPromises)
-                        .values()
-                        .flatMap(x => x.result || [])
-                        .value();
-                }
-                return [
-                    ...this.predefinedSurvivalClinicalData.result,
-                    ...response,
-                ];
-            },
-        },
-        []
-    );
-
     readonly clinicalEventOptions = remoteData<{
         [key: string]: {
             label: string;
@@ -2912,65 +2578,6 @@ export default abstract class ComparisonStore extends AnalysisStore
         []
     );
 
-    readonly allSurvivalAttributes = remoteData<ClinicalAttribute[]>(
-        {
-            await: () => [
-                this.predefinedSurvivalAttributes,
-                this.activeStudyIds,
-            ],
-            invoke: () => {
-                const customAttributes = _.chain(toJS(this.customSurvivalPlots))
-                    .flatMap((x, y) => {
-                        return _.chain(this.activeStudyIds.result || [])
-                            .flatMap(studyId => {
-                                const description = getSurvivalPlotDescription(
-                                    x
-                                );
-
-                                var months_attribute: ClinicalAttribute = {
-                                    clinicalAttributeId: x.name + '_MONTHS',
-                                    datatype: 'NUMBER',
-                                    description: `Survival in months ${description}`,
-                                    displayName: `Survival (Months) ${x.name}`,
-                                    patientAttribute: true,
-                                    priority: '1',
-                                    studyId: studyId,
-                                };
-                                var status_attribute: ClinicalAttribute = {
-                                    clinicalAttributeId: x.name + '_STATUS',
-                                    datatype: 'STRING',
-                                    description: `${description}`,
-                                    displayName: `Survival status ${x.name}`,
-                                    patientAttribute: true,
-                                    priority: '1',
-                                    studyId: studyId,
-                                };
-                                return [months_attribute, status_attribute];
-                            })
-                            .value();
-                    })
-                    .value();
-
-                return Promise.resolve([
-                    ...this.predefinedSurvivalAttributes.result!,
-                    ...customAttributes,
-                ]);
-            },
-        },
-        []
-    );
-
-    readonly survivalClinicalAttributesPrefix = remoteData({
-        await: () => [this.allSurvivalAttributes],
-        invoke: () => {
-            return Promise.resolve(
-                getSurvivalClinicalAttributesPrefix(
-                    this.allSurvivalAttributes.result!
-                )
-            );
-        },
-    });
-
     readonly predefinedSurvivalClinicalAttributesPrefix = remoteData({
         await: () => [this.activeStudiesClinicalAttributes],
         invoke: () => {
@@ -2982,143 +2589,10 @@ export default abstract class ComparisonStore extends AnalysisStore
         },
     });
 
-    readonly survivalClinicalDataGroupByUniquePatientKey = remoteData<{
-        [key: string]: ClinicalData[];
-    }>({
-        await: () => [this.survivalClinicalData],
-        invoke: async () => {
-            return _.groupBy(
-                this.survivalClinicalData.result,
-                'uniquePatientKey'
-            );
-        },
-    });
-
     // This method should be updated in the child component
-    protected get isLeftTruncationFeatureFlagEnabled() {
+    public get isLeftTruncationFeatureFlagEnabled() {
         return false;
     }
-
-    @computed get isGeniebpcStudy() {
-        if (this.studies.result) {
-            const studyIds = this.studies.result.map(s => s.studyId);
-            return (
-                studyIds.length === 1 &&
-                studyIds[0] === 'heme_onc_nsclc_genie_bpc'
-            );
-        }
-        return false;
-    }
-
-    readonly survivalEntryMonths = remoteData<
-        { [uniquePatientKey: string]: number } | undefined
-    >({
-        await: () => [this.studies],
-        invoke: async () => {
-            const studyIds = this.studies.result!.map(s => s.studyId);
-            // Please note:
-            // The left truncation adjustment is only available for one study: heme_onc_nsclc_genie_bpc at this time
-            // clinical attributeId still need to be decided in the future
-            if (
-                this.isGeniebpcStudy &&
-                this.isLeftTruncationFeatureFlagEnabled
-            ) {
-                const data = await client.getAllClinicalDataInStudyUsingGET({
-                    attributeId: 'TT_CPT_REPORT_MOS',
-                    clinicalDataType: 'PATIENT',
-                    studyId: studyIds[0],
-                });
-                return data.reduce(
-                    (map: { [patientKey: string]: number }, next) => {
-                        map[next.uniquePatientKey] = parseFloat(next.value);
-                        return map;
-                    },
-                    {}
-                );
-            } else {
-                return undefined;
-            }
-        },
-    });
-
-    readonly isLeftTruncationAvailable = remoteData<boolean>({
-        await: () => [this.survivalEntryMonths],
-        invoke: async () => {
-            return !!this.survivalEntryMonths.result;
-        },
-    });
-
-    @action.bound
-    public toggleLeftTruncationSelection() {
-        this.adjustForLeftTruncation = !this.adjustForLeftTruncation;
-    }
-
-    // patientSurvivalsWithoutLeftTruncation is used to compare with patient survival data with left truncation adjustment
-    // This is used for generating information about how many patients get excluded by enabling left truncation adjustment
-    readonly patientSurvivalsWithoutLeftTruncation = remoteData<{
-        [prefix: string]: PatientSurvival[];
-    }>({
-        await: () => [
-            this.survivalClinicalDataGroupByUniquePatientKey,
-            this.activePatientKeysNotOverlapRemoved,
-            this.survivalClinicalAttributesPrefix,
-            this.survivalEntryMonths,
-        ],
-        invoke: () => {
-            return Promise.resolve(
-                _.reduce(
-                    this.survivalClinicalAttributesPrefix.result!,
-                    (acc, key) => {
-                        acc[key] = getPatientSurvivals(
-                            this.survivalClinicalDataGroupByUniquePatientKey
-                                .result!,
-                            this.activePatientKeysNotOverlapRemoved.result!,
-                            `${key}_STATUS`,
-                            `${key}_MONTHS`,
-                            s => getSurvivalStatusBoolean(s, key),
-                            undefined
-                        );
-                        return acc;
-                    },
-                    {} as { [prefix: string]: PatientSurvival[] }
-                )
-            );
-        },
-    });
-
-    readonly patientSurvivals = remoteData<{
-        [prefix: string]: PatientSurvival[];
-    }>({
-        await: () => [
-            this.survivalClinicalDataGroupByUniquePatientKey,
-            this.activePatientKeysNotOverlapRemoved,
-            this.survivalClinicalAttributesPrefix,
-            this.survivalEntryMonths,
-        ],
-        invoke: () => {
-            return Promise.resolve(
-                _.reduce(
-                    this.survivalClinicalAttributesPrefix.result!,
-                    (acc, key) => {
-                        acc[key] = getPatientSurvivals(
-                            this.survivalClinicalDataGroupByUniquePatientKey
-                                .result!,
-                            this.activePatientKeysNotOverlapRemoved.result!,
-                            `${key}_STATUS`,
-                            `${key}_MONTHS`,
-                            s => getSurvivalStatusBoolean(s, key),
-                            // Currently, left truncation is only appliable for Overall Survival data
-                            this.adjustForLeftTruncation && key === 'OS'
-                                ? this.survivalEntryMonths.result
-                                : undefined
-                        );
-                        return acc;
-                    },
-                    {} as { [prefix: string]: PatientSurvival[] }
-                )
-            );
-        },
-    });
 
     readonly uidToGroup = remoteData({
         await: () => [this._originalGroups],
@@ -3215,82 +2689,6 @@ export default abstract class ComparisonStore extends AnalysisStore
         },
         {}
     );
-
-    readonly survivalXAxisLabelGroupByPrefix = remoteData({
-        await: () => [
-            this.allSurvivalAttributes,
-            this.survivalClinicalAttributesPrefix,
-        ],
-        invoke: () => {
-            const survivalXAxisLabelGroupByPrefix = _.reduce(
-                this.survivalClinicalAttributesPrefix.result!,
-                (acc, prefix) => {
-                    const clinicalAttributeId = `${prefix}_MONTHS`;
-                    const clinicalAttributes = _.filter(
-                        this.allSurvivalAttributes.result,
-                        attr => attr.clinicalAttributeId === clinicalAttributeId
-                    );
-                    if (clinicalAttributes.length > 0) {
-                        const xLabels = clinicalAttributes.map(
-                            attr => attr.displayName
-                        );
-                        // find the most common text as the label
-                        // findFirstMostCommonElt require a sorted array as the input
-                        acc[prefix] = findFirstMostCommonElt(xLabels.sort())!;
-                    }
-                    return acc;
-                },
-                {} as { [prefix: string]: string }
-            );
-            return Promise.resolve(survivalXAxisLabelGroupByPrefix);
-        },
-    });
-
-    readonly survivalDescriptions = remoteData({
-        await: () => [
-            this.allSurvivalAttributes,
-            this.activeStudyIdToStudy,
-            this.survivalClinicalAttributesPrefix,
-        ],
-        invoke: () => {
-            const survivalDescriptions = _.reduce(
-                this.survivalClinicalAttributesPrefix.result!,
-                (acc, prefix) => {
-                    const clinicalAttributeId = `${prefix}_STATUS`;
-                    const clinicalAttributes = _.filter(
-                        this.allSurvivalAttributes.result,
-                        attr => attr.clinicalAttributeId === clinicalAttributeId
-                    );
-                    if (clinicalAttributes.length > 0) {
-                        clinicalAttributes.map(attr => {
-                            if (!acc[prefix]) {
-                                acc[prefix] = [];
-                            }
-                            acc[prefix].push({
-                                studyName: this.activeStudyIdToStudy.result[
-                                    attr.studyId
-                                ].name,
-                                description: attr.description,
-                                displayName: attr.displayName,
-                                chartType: _.keys(
-                                    this.customSurvivalPlots
-                                ).includes(prefix)
-                                    ? SurvivalChartType.CUSTOM
-                                    : SurvivalChartType.PREDEFINED,
-                            } as ISurvivalDescription & { chartType: SurvivalChartType });
-                        });
-                    }
-                    return acc;
-                },
-                {} as {
-                    [prefix: string]: (ISurvivalDescription & {
-                        chartType: SurvivalChartType;
-                    })[];
-                }
-            );
-            return Promise.resolve(survivalDescriptions);
-        },
-    });
 
     @autobind
     public getGroupsDownloadDataPromise() {
@@ -3455,127 +2853,5 @@ export default abstract class ComparisonStore extends AnalysisStore
             this.structuralVariantEnrichmentProfiles.isComplete &&
             this.structuralVariantEnrichmentProfiles.result!.length > 0
         );
-    }
-
-    @action.bound
-    public addSurvivalRequest(
-        startClinicalEventType: string,
-        startEventPosition: 'FIRST' | 'LAST',
-        startClinicalEventAttributes: ClinicalEventDataWithKey[],
-        endClinicalEventType: string,
-        endEventPosition: 'FIRST' | 'LAST',
-        endClinicalEventAttributes: ClinicalEventDataWithKey[],
-        censoredClinicalEventType: string,
-        censoredEventPosition: 'FIRST' | 'LAST',
-        censoredClinicalEventAttributes: ClinicalEventDataWithKey[],
-        name: string
-    ) {
-        this.customSurvivalPlots[name] = {
-            name,
-            endEventRequestIdentifier: {
-                clinicalEventRequests: [
-                    {
-                        attributes: endClinicalEventAttributes.map(x => ({
-                            key: x.key,
-                            value: x.value,
-                        })),
-                        eventType: endClinicalEventType,
-                    },
-                ],
-                position: endEventPosition,
-            },
-            startEventRequestIdentifier: {
-                clinicalEventRequests: [
-                    {
-                        attributes: startClinicalEventAttributes.map(x => ({
-                            key: x.key,
-                            value: x.value,
-                        })),
-                        eventType: startClinicalEventType,
-                    },
-                ],
-                position: startEventPosition,
-            },
-            censoredEventRequestIdentifier: {
-                clinicalEventRequests: [
-                    {
-                        attributes: censoredClinicalEventAttributes.map(x => ({
-                            key: x.key,
-                            value: x.value,
-                        })),
-                        eventType: censoredClinicalEventType,
-                    },
-                ],
-                position: censoredEventPosition,
-            },
-        };
-
-        if (!this.customSurvivalDataPromises.hasOwnProperty(name)) {
-            this.customSurvivalDataPromises[name] = remoteData<ClinicalData[]>({
-                await: () => {
-                    return [this.activeSamplesNotOverlapRemoved];
-                },
-                invoke: async () => {
-                    const attr = this.customSurvivalPlots[name];
-                    let censoredEventRequestIdentifier = toJS(
-                        attr.censoredEventRequestIdentifier!
-                    );
-                    censoredEventRequestIdentifier.clinicalEventRequests =
-                        censoredClinicalEventType !== 'any'
-                            ? censoredEventRequestIdentifier.clinicalEventRequests
-                            : [];
-
-                    const survivalRequest = {
-                        attributeIdPrefix: name,
-                        startEventRequestIdentifier: attr.startEventRequestIdentifier!,
-                        endEventRequestIdentifier: attr.endEventRequestIdentifier!,
-                        censoredEventRequestIdentifier: censoredEventRequestIdentifier,
-                        patientIdentifiers: this.activeSamplesNotOverlapRemoved.result!.map(
-                            (s: any) => ({
-                                patientId: s.patientId,
-                                studyId: s.studyId,
-                            })
-                        ),
-                    };
-                    let result = await internalClient.fetchSurvivalDataUsingPOST(
-                        {
-                            survivalRequest,
-                        }
-                    );
-                    return result;
-                },
-                onError: () => {},
-                default: [],
-            });
-        }
-    }
-
-    @action.bound
-    private loadCustomSurvivalCharts(): void {
-        this.customSurvivalPlots = _.keyBy(
-            this._session.result!.customSurvivalPlots || [],
-            'name'
-        );
-
-        _.forEach(this.customSurvivalPlots, plot => {
-            this.addSurvivalRequest(
-                plot.startEventRequestIdentifier!.clinicalEventRequests[0]
-                    .eventType,
-                plot.startEventRequestIdentifier!.position,
-                plot.startEventRequestIdentifier!.clinicalEventRequests[0]
-                    .attributes as ClinicalEventDataWithKey[],
-                plot.endEventRequestIdentifier!.clinicalEventRequests[0]
-                    .eventType,
-                plot.endEventRequestIdentifier!.position,
-                plot.endEventRequestIdentifier!.clinicalEventRequests[0]
-                    .attributes as ClinicalEventDataWithKey[],
-                plot.censoredEventRequestIdentifier!.clinicalEventRequests[0]
-                    .eventType,
-                plot.censoredEventRequestIdentifier!.position,
-                plot.censoredEventRequestIdentifier!.clinicalEventRequests[0]
-                    .attributes as ClinicalEventDataWithKey[],
-                plot.name || ''
-            );
-        });
     }
 }

@@ -1,39 +1,39 @@
-import * as React from 'react';
-import { observer } from 'mobx-react';
-import LazyMobXTable, {
-    Column,
-} from 'shared/components/lazyMobXTable/LazyMobXTable';
 import autobind from 'autobind-decorator';
-import {
-    getSortedFilteredData,
-    SimpleGetterLazyMobXTableApplicationDataStore,
-} from 'shared/lib/ILazyMobXTableApplicationDataStore';
-import { toConditionalPrecisionWithMinimum } from 'shared/lib/FormatUtils';
-import { toConditionalPrecision } from 'shared/lib/NumberUtils';
-import { filterNumericalColumn } from 'shared/components/lazyMobXTable/utils';
-import _ from 'lodash';
 import {
     DefaultTooltip,
     DownloadControlOption,
     EditableSpan,
     toggleColumnVisibility,
 } from 'cbioportal-frontend-commons';
-import { IColumnVisibilityDef } from 'shared/components/columnVisibilityControls/ColumnVisibilityControls';
-import { observable, computed, makeObservable, action } from 'mobx';
-import { getServerConfig } from 'config/config';
-import Slider from 'react-rangeslider';
-import styles from 'pages/resultsView/survival/styles.module.scss';
 import classnames from 'classnames';
-import ComparisonStore from 'shared/lib/comparison/ComparisonStore';
+import { getServerConfig } from 'config/config';
+import _ from 'lodash';
+import { action, computed, makeObservable, observable } from 'mobx';
+import { observer } from 'mobx-react';
 import NewSurvivalPlotModal from 'pages/groupComparison/NewSurvivalPlotModal';
+import SurvivalPageStore from 'pages/groupComparison/SurvivalPageStore';
+import styles from 'pages/resultsView/survival/styles.module.scss';
+import * as React from 'react';
+import Slider from 'react-rangeslider';
+import { IColumnVisibilityDef } from 'shared/components/columnVisibilityControls/ColumnVisibilityControls';
+import LazyMobXTable, {
+    Column,
+} from 'shared/components/lazyMobXTable/LazyMobXTable';
+import { filterNumericalColumn } from 'shared/components/lazyMobXTable/utils';
+import { toConditionalPrecisionWithMinimum } from 'shared/lib/FormatUtils';
+import {
+    getSortedFilteredData,
+    SimpleGetterLazyMobXTableApplicationDataStore,
+} from 'shared/lib/ILazyMobXTableApplicationDataStore';
+import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 
 export interface ISurvivalPrefixTableProps {
     survivalPrefixes: SurvivalPrefixSummary[];
     groupNames: string[];
     getSelectedPrefix: () => string | undefined;
-    setSelectedPrefix: (p: string | undefined) => void;
+    setSelectedPrefix: (p: string) => void;
     dataStore?: SurvivalPrefixTableStore;
-    pageStore: ComparisonStore;
+    pageStore: SurvivalPageStore;
     removeCustomSurvivalPlot: (prefix: string) => void;
 }
 
@@ -429,7 +429,7 @@ export default class SurvivalPrefixTable extends React.Component<
 
     @computed get customControls() {
         const clinicalDataExisted = !_.isEmpty(
-            this.props.pageStore.clinicalEventOptions.result
+            this.props.pageStore.parentStore.clinicalEventOptions.result
         );
         if (!clinicalDataExisted) {
             return <></>;
