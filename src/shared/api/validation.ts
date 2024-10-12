@@ -1,5 +1,3 @@
-import { assert } from 'chai';
-
 export const isObject = (value: any) => {
     return (
         typeof value === 'object' &&
@@ -381,29 +379,29 @@ export function reportValidationResult(
         );
     }
 
-    // if (logLevel === 'verbose' && !result.status) {
-    //     if (result.clDataSorted.length) {
-    //         for (var i = 0; i < result.clDataSorted.length; i++) {
-    //             const cl = result.clDataSorted[i];
-    //             if (
-    //                 JSON.stringify(cl) !==
-    //                 JSON.stringify(result.legacyDataSorted[i])
-    //             ) {
-    //                 console.groupCollapsed(
-    //                     `First invalid item (${result.label})`
-    //                 );
-    //                 console.log('Clickhouse:', cl);
-    //                 console.log('Legacy:', result.legacyDataSorted[i]);
-    //                 console.groupEnd();
-    //                 break;
-    //             }
-    //         }
-    //     }
-    //     console.groupCollapsed('All Data');
-    //     console.log('legacy', result.legacyDataSorted);
-    //     console.log('CH', result.clDataSorted);
-    //     console.groupEnd();
-    // }
+    if (!result.status && logLevel == 'verbose') {
+        if (result?.clDataSorted?.length) {
+            for (var i = 0; i < result?.clDataSorted?.length; i++) {
+                const cl = result.clDataSorted[i];
+                if (
+                    JSON.stringify(cl) !==
+                    JSON.stringify(result.legacyDataSorted[i])
+                ) {
+                    console.groupCollapsed(
+                        `First invalid item (${result.label})`
+                    );
+                    console.log('Clickhouse:', cl);
+                    console.log('Legacy:', result.legacyDataSorted[i]);
+                    console.groupEnd();
+                    break;
+                }
+            }
+        }
+        console.groupCollapsed('All Data');
+        console.log('legacy', result.legacyDataSorted);
+        console.log('CH', result.clDataSorted);
+        console.groupEnd();
+    }
 
     !result.status && console.groupEnd();
 }

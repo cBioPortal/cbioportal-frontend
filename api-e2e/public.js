@@ -13,7 +13,7 @@ const exclusions = [
 ];
 const filters = []; //[/clinical-event-type/];
 
-const START = 1488;
+const START = 532;
 const LIMIT = 1;
 
 async function main() {
@@ -67,17 +67,18 @@ async function main() {
                     ],
                 },
             ];
-            //console.log(JSON.stringify(tests,3));
 
             return fakeFiles;
         });
 
-    runSpecs(files, axios, 'https://beta.cbioportal.org', undefined, onFail);
+    runSpecs(files, axios, 'http://localhost:8082', undefined, onFail);
 }
 
 main();
 
 const onFail = args => {
+    //console.log(args);
+
     const url = 'http://localhost:8082' + args.url;
     // const options = {
     //     // headers: {
