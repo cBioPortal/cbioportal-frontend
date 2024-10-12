@@ -98,7 +98,7 @@ export default class VirtualStudy extends React.Component<
 > {
     @observable.ref private name: string;
     @observable.ref private description: string;
-    @observable.ref private isDynamic: boolean = false;
+    @observable.ref private dynamic: boolean = false;
 
     @observable private saving = false;
     @observable private sharing = false;
@@ -168,7 +168,7 @@ export default class VirtualStudy extends React.Component<
                             study => study.studyId
                         ),
                         studies: studies,
-                        isDynamic: this.isDynamic,
+                        dynamic: this.dynamic,
                     };
                     return await sessionServiceClient.saveVirtualStudy(
                         parameters,
@@ -307,9 +307,9 @@ export default class VirtualStudy extends React.Component<
                                                     type="radio"
                                                     name="option"
                                                     value="static"
-                                                    checked={!this.isDynamic}
+                                                    checked={!this.dynamic}
                                                     onChange={_ =>
-                                                        (this.isDynamic = false)
+                                                        (this.dynamic = false)
                                                     }
                                                 />{' '}
                                                 Static
@@ -319,9 +319,9 @@ export default class VirtualStudy extends React.Component<
                                                     type="radio"
                                                     name="option"
                                                     value="dynamic"
-                                                    checked={this.isDynamic}
+                                                    checked={this.dynamic}
                                                     onChange={_ =>
-                                                        (this.isDynamic = true)
+                                                        (this.dynamic = true)
                                                     }
                                                 />{' '}
                                                 Dynamic
