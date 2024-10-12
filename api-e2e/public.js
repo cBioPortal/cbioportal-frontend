@@ -1,5 +1,8 @@
 const csv = require('csvtojson');
-const csvFilePath = './extract-2024-10-11T11_47_07.957Z.csv';
+var csvFilePath = './extract-2024-10-11T11_47_07.957Z.csv';
+
+csvFilePath = 'extract-2024-10-12T19_34_07.810Z.csv';
+
 const _ = require('lodash');
 const formatCurl = require('format-curl');
 
@@ -13,14 +16,16 @@ const exclusions = [
 ];
 const filters = []; //[/clinical-event-type/];
 
-const START = 532;
-const LIMIT = 1;
+const hashes = [];
+
+const START = 1;
+const LIMIT = 1000;
 
 async function main() {
     const files = await csv()
         .fromFile(csvFilePath)
         .then(async jsonObj => {
-            const uniq = _.uniqBy(jsonObj, '@hash')
+            let uniq = _.uniqBy(jsonObj, '@hash')
                 .filter(d => {
                     return _.every(
                         exclusions.map(re => re.test(d['@url']) === false)
@@ -31,7 +36,15 @@ async function main() {
                         filters.length === 0 ||
                         _.every(filters.map(re => re.test(d['@url']) === true))
                     );
+                })
+                .filter(d => {
+                    return (
+                        hashes.length === 0 ||
+                        _.every(hashes.map(re => re.test(d['@hash']) === true))
+                    );
                 });
+
+            //uniq = uniq.filter(m=>m["@hash"]=="-1827897056")
 
             const tests = uniq.slice(START, START + LIMIT).reduce((aggr, d) => {
                 try {
@@ -71,7 +84,7 @@ async function main() {
             return fakeFiles;
         });
 
-    runSpecs(files, axios, 'http://localhost:8082', undefined, onFail);
+    runSpecs(files, axios, 'http://localhost:8082', 'verboses', onFail);
 }
 
 main();
@@ -110,16 +123,16 @@ const onFail = args => {
     //console.log(url);
     //console.log(JSON.stringify(args.data));
 
-    console.log(
-        curl
-            .trim()
-            .split('\n')
-            .join('')
-    );
-
-    console.log(
-        `http://localhost:8082/study/summary?id=ov_tcga_pan_can_atlas_2018#filterJson=${encodeURIComponent(
-            JSON.stringify(args.data)
-        )}`
-    );
+    // console.log(
+    //     curl
+    //         .trim()
+    //         .split('\n')
+    //         .join('')
+    // );
+    //
+    // console.log(
+    //     `http://localhost:8082/study/summary?id=ov_tcga_pan_can_atlas_2018#filterJson=${encodeURIComponent(
+    //         JSON.stringify(args.data)
+    //     )}`
+    // );
 };
