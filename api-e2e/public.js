@@ -1,7 +1,7 @@
 const csv = require('csvtojson');
 var csvFilePath = './extract-2024-10-11T11_47_07.957Z.csv';
 
-csvFilePath = 'extract-2024-10-12T19_34_07.810Z.csv';
+csvFilePath = 'extract-2024-10-11T11_47_07.957Z.csv';
 
 const _ = require('lodash');
 const formatCurl = require('format-curl');
@@ -18,8 +18,8 @@ const filters = []; //[/clinical-event-type/];
 
 const hashes = [];
 
-const START = 1;
-const LIMIT = 1000;
+const START = 0;
+const LIMIT = 200;
 
 async function main() {
     const files = await csv()
@@ -40,11 +40,9 @@ async function main() {
                 .filter(d => {
                     return (
                         hashes.length === 0 ||
-                        _.every(hashes.map(re => re.test(d['@hash']) === true))
+                        _.some(hashes.map(re => re.test(d['@hash']) === true))
                     );
                 });
-
-            //uniq = uniq.filter(m=>m["@hash"]=="-1827897056")
 
             const tests = uniq.slice(START, START + LIMIT).reduce((aggr, d) => {
                 try {
@@ -84,7 +82,7 @@ async function main() {
             return fakeFiles;
         });
 
-    runSpecs(files, axios, 'http://localhost:8082', 'verboses', onFail);
+    runSpecs(files, axios, 'http://localhost:8082', 'verbose', onFail);
 }
 
 main();

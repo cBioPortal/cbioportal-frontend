@@ -64,6 +64,12 @@ export function getArrays(inp: any, output: Array<any>) {
             }
         }
 
+        if (inp.counts) {
+            inp.counts = inp.counts.filter((n: any) => {
+                return n.label != 'NA';
+            });
+        }
+
         // this is get rid if extraneouys properties that conflict
         delete inp.matchingGenePanelIds;
         delete inp.cytoband;
