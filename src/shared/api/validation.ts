@@ -81,7 +81,7 @@ export function getArrays(inp: any, output: Array<any>) {
 }
 
 const deleteFields: Record<string, string[]> = {
-    MolecularProfileSample: ['label'],
+    'MOLECULAR-PROFILE-SAMPLE-COUNTS': ['label'],
     CaseList: ['label'],
 };
 

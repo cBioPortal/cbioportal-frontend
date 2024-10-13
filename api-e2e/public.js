@@ -11,14 +11,12 @@ var { runSpecs } = require('./validation');
 
 var exclusions = [/clinical-data-density/, /molecular-profile-sample/];
 
-exclusions = [];
-
-const filters = [/clinical-data-density/]; //[/clinical-event-type/];
+const filters = [];
 
 const hashes = [];
 
 const START = 0;
-const LIMIT = 0;
+const LIMIT = 100;
 
 async function main() {
     const files = await csv()
