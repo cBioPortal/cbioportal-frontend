@@ -91,7 +91,7 @@ const sortFields: Record<string, string> = {
     SampleTreatmentCounts: 'treatment,time',
     PatientTreatmentCounts: 'treatment',
     ClinicalDataCounts: 'attributeId,value',
-    ClinicalEventTypeCounts: 'eventType',
+    'CLINICAL-EVENT-TYPE-COUNTS': 'eventType',
 };
 
 function getLegacyPatientTreatmentCountUrl(url: string) {
@@ -403,10 +403,10 @@ export function reportValidationResult(
                 }
             }
         }
-        console.groupCollapsed('All Data');
-        console.log('legacy', result.legacyDataSorted);
-        console.log('CH', result.clDataSorted);
-        console.groupEnd();
+        // console.groupCollapsed('All Data');
+        // console.log('legacy', result.legacyDataSorted);
+        // console.log('CH', result.clDataSorted);
+        // console.groupEnd();
     }
 
     !result.status && console.groupEnd();

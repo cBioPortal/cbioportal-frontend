@@ -9,17 +9,16 @@ const formatCurl = require('format-curl');
 var axios = require('axios');
 var { runSpecs } = require('./validation');
 
-const exclusions = [
-    /clinical-data-density/,
-    /molecular-profile-sample/,
-    /clinical-event-type/,
-];
-const filters = []; //[/clinical-event-type/];
+var exclusions = [/clinical-data-density/, /molecular-profile-sample/];
+
+exclusions = [];
+
+const filters = [/clinical-data-density/]; //[/clinical-event-type/];
 
 const hashes = [];
 
 const START = 0;
-const LIMIT = 200;
+const LIMIT = 0;
 
 async function main() {
     const files = await csv()
