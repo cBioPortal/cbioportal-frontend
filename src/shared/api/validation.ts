@@ -81,8 +81,11 @@ export function getArrays(inp: any, output: Array<any>) {
 }
 
 const deleteFields: Record<string, string[]> = {
-    'MOLECULAR-PROFILE-SAMPLE-COUNTS': ['label'],
+    MolecularProfileSampleCounts: ['label'],
     CaseList: ['label'],
+    SampleListCounts: ['label'],
+    CnaGenes: ['qValue'],
+    MutatedGenes: ['qValue'],
 };
 
 const sortFields: Record<string, string> = {
@@ -91,7 +94,7 @@ const sortFields: Record<string, string> = {
     SampleTreatmentCounts: 'treatment,time',
     PatientTreatmentCounts: 'treatment',
     ClinicalDataCounts: 'attributeId,value',
-    'CLINICAL-EVENT-TYPE-COUNTS': 'eventType',
+    ClinicalDataTypeCounts: 'eventType',
 };
 
 function getLegacyPatientTreatmentCountUrl(url: string) {
@@ -239,6 +242,15 @@ try {
     win = {};
 }
 
+function removeElement(nums: any[], val: any) {
+    for (let i = 0; i < nums.length; i++) {
+        if (nums[i] === val) {
+            nums.splice(i, 1);
+            i--;
+        }
+    }
+}
+
 export function compareCounts(clData: any, legacyData: any, label: string) {
     // @ts-ignore
     const clDataClone = win.structuredClone ? structuredClone(clData) : clData;
@@ -248,8 +260,29 @@ export function compareCounts(clData: any, legacyData: any, label: string) {
           structuredClone(legacyData)
         : legacyData;
 
-    const clDataSorted = deepSort(clDataClone, label);
+    var clDataSorted = deepSort(clDataClone, label);
     var legacyDataSorted = deepSort(legacyDataClone, label);
+
+    getArrays(clDataSorted, []).forEach((arr: any) => {
+        arr.filter(n => /NA/i.test(n.value)).forEach((val: any) => {
+            removeElement(arr, val);
+        });
+    });
+
+    getArrays(legacyDataSorted, []).forEach((arr: any) => {
+        arr.filter(n => /NA/i.test(n.value)).forEach((val: any) => {
+            removeElement(arr, val);
+        });
+    });
+
+    // get rid of these little guys
+    if (clDataSorted)
+        clDataSorted = clDataSorted.filter((n: any) => n.specialValue != 'NA');
+
+    if (legacyDataSorted)
+        legacyDataSorted = legacyDataSorted.filter(
+            (n: any) => n.specialValue != 'NA'
+        );
 
     if (treatmentConverter[label]) {
         legacyDataSorted = treatmentConverter[label](legacyDataSorted);
@@ -518,7 +551,7 @@ export async function runSpecs(
             );
         });
 
-    const concurrent = 1;
+    const concurrent = 3;
     const batches = Math.ceil(invokers.length / concurrent);
 
     for (var i = 0; i < batches; i++) {
