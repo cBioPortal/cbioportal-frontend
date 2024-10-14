@@ -10,6 +10,22 @@ export const isObject = (value: any) => {
     );
 };
 
+function filterDuplicates(arr: any) {
+    try {
+        if ('attributeId' in arr[0]) {
+            const obj = arr.reduce((aggr: any, n: any) => {
+                aggr[n.attributeId] = n;
+                return aggr;
+            }, {});
+            return Object.values(obj);
+        } else {
+            return arr;
+        }
+    } catch (ex) {
+        return arr;
+    }
+}
+
 export function dynamicSortSingle(property: string) {
     var sortOrder = 1;
     if (property[0] === '-') {
@@ -90,6 +106,8 @@ const deleteFields: Record<string, string[]> = {
 
 const sortFields: Record<string, string> = {
     ClinicalDataBinCounts: 'attributeId,specialValue',
+    ClinicalDataBin: 'attributeId,specialValue',
+
     FilteredSamples: 'studyId,patientId,sampleId',
     SampleTreatmentCounts: 'treatment,time',
     PatientTreatmentCounts: 'treatment',
@@ -254,33 +272,36 @@ function removeElement(nums: any[], val: any) {
 
 export function compareCounts(clData: any, legacyData: any, label: string) {
     // @ts-ignore
-    const clDataClone = win.structuredClone ? structuredClone(clData) : clData;
+    let clDataClone = win.structuredClone ? structuredClone(clData) : clData;
 
-    const legacyDataClone = win.structuredClone
+    let legacyDataClone = win.structuredClone
         ? // @ts-ignore
           structuredClone(legacyData)
         : legacyData;
+
+    // get trid of duplicates
+    //clDataClone = filterDuplicates(clDataClone);
 
     var clDataSorted = deepSort(clDataClone, label);
     var legacyDataSorted = deepSort(legacyDataClone, label);
 
     getArrays(clDataSorted, []).forEach((arr: any) => {
-        arr.filter(n => /NA/i.test(n.value)).forEach((val: any) => {
+        arr.filter((n: any) => /NA/i.test(n.value)).forEach((val: any) => {
             removeElement(arr, val);
         });
     });
 
     getArrays(legacyDataSorted, []).forEach((arr: any) => {
-        arr.filter(n => /NA/i.test(n.value)).forEach((val: any) => {
+        arr.filter((n: any) => /NA/i.test(n.value)).forEach((val: any) => {
             removeElement(arr, val);
         });
     });
 
     // get rid of these little guys
-    if (clDataSorted)
+    if (clDataSorted && clDataSorted.filter)
         clDataSorted = clDataSorted.filter((n: any) => n.specialValue != 'NA');
 
-    if (legacyDataSorted)
+    if (legacyDataSorted && legacyDataSorted.filter)
         legacyDataSorted = legacyDataSorted.filter(
             (n: any) => n.specialValue != 'NA'
         );
@@ -437,10 +458,13 @@ export function reportValidationResult(
                 }
             }
         }
-        // console.groupCollapsed('All Data');
-        // console.log('legacy', result.legacyDataSorted);
-        // console.log('CH', result.clDataSorted);
-        // console.groupEnd();
+        console.groupCollapsed('All Data');
+        console.log(
+            `CH: ${result.clDataSorted.length}, Legacy:${result.legacyDataSorted.length}`
+        );
+        console.log('legacy', result.legacyDataSorted);
+        console.log('CH', result.clDataSorted);
+        console.groupEnd();
     }
 
     !result.status && console.groupEnd();

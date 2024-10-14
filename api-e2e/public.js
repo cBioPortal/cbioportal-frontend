@@ -5,6 +5,8 @@ csvFilePath = 'extract-2024-10-12T19_34_07.810Z.csv';
 
 csvFilePath = 'extract-2024-10-13T07_41_15.227Z.csv'; //BIG ONE
 
+csvFilePath = 'genie/extract-2024-10-14T20_29_07.301Z.csv';
+
 const _ = require('lodash');
 const formatCurl = require('format-curl');
 
@@ -682,12 +684,12 @@ moos = [
 
 //moos = ['1612090123'];
 
-hashes = moos.map(s => new RegExp(s));
+//hashes = moos.map(s => new RegExp(s));
 
 if (cliArgs.h) hashes = [new RegExp(cliArgs.h)];
 
-const START = 0;
-const LIMIT = 10000;
+const START = cliArgs.s || 0;
+const LIMIT = cliArgs.l || 10000000;
 
 async function main() {
     const files = await csv()
@@ -713,7 +715,12 @@ async function main() {
                 });
 
             const tests = uniq.slice(START, START + LIMIT).reduce((aggr, d) => {
+                //delete data.genomicProfiles;
+                //delete data.genomicDataFilters;
+
                 try {
+                    let data = JSON.parse(d['@data']);
+
                     const url = d['@url']
                         .replace(/^"|"$/g, '')
                         .replace(/^\/\/[^\/]*/, '')
@@ -729,7 +736,7 @@ async function main() {
                     aggr.push({
                         hash: d['@hash'],
                         label,
-                        data: JSON.parse(d['@data']),
+                        data,
                         url,
                     });
                 } catch (err) {
@@ -770,18 +777,9 @@ main();
 const onFail = args => {
     //console.log(args);
 
-    console.log(JSON.stringify(args.data, null, 5));
+    //console.log(JSON.stringify(args.data, null, 5));
 
     const url = 'http://localhost:8082' + args.url;
-    // const options = {
-    //     // headers: {
-    //     //     'x-header': 'test',
-    //     //     'x-header2': 'test2'
-    //     // },
-    //     body: JSON.stringify(args.data),
-    //     method: 'POST',
-    //     //args: ['-vvv']
-    // };
 
     const curl = `
         curl '${url}' 
@@ -799,9 +797,6 @@ const onFail = args => {
           -H 'user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36' 
           --data-raw '${JSON.stringify(args.data)}';
     `;
-
-    //console.log(url);
-    //console.log(JSON.stringify(args.data));
 
     cliArgs.c &&
         console.log(

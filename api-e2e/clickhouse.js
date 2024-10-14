@@ -17,24 +17,28 @@ async function main() {
 
     const then = Date.now();
 
-    // for (const study of studies) {
-    //     console.log(`inserting ${study.cancer_study_id} ${ study.cancer_study_identifier }`)
-    //     try {
-    //         await insertStudy(study.cancer_study_id)
-    //     } catch (ex) {
-    //         console.log(`ERROR inserting ${study.cancer_study_id} ${ study.cancer_study_identifier }`)
-    //         console.log(ex);
-    //     }
-    // }
-
-    for (const entity of entities) {
+    for (const study of studies) {
+        console.log(
+            `inserting ${study.cancer_study_id} ${study.cancer_study_identifier}`
+        );
         try {
-            await insertProfile(2071, entity.genetic_entity_id);
+            await insertStudy(study.cancer_study_id);
         } catch (ex) {
-            console.log(`ERROR inserting ${entity.genetic_entity_id}`);
+            console.log(
+                `ERROR inserting ${study.cancer_study_id} ${study.cancer_study_identifier}`
+            );
             console.log(ex);
         }
     }
+
+    // for (const entity of entities) {
+    //     try {
+    //         await insertProfile(2071, entity.genetic_entity_id);
+    //     } catch (ex) {
+    //         console.log(`ERROR inserting ${entity.genetic_entity_id}`);
+    //         console.log(ex);
+    //     }
+    // }
 
     console.log(`Finished in ${Date.now() - then}`);
 
