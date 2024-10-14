@@ -1,7 +1,9 @@
 const csv = require('csvtojson');
 var csvFilePath = './extract-2024-10-11T11_47_07.957Z.csv';
 
-csvFilePath = 'extract-2024-10-13T07_41_15.227Z.csv';
+csvFilePath = 'extract-2024-10-12T19_34_07.810Z.csv';
+
+//'extract-2024-10-13T07_41_15.227Z.csv'; BIG ONE
 
 const _ = require('lodash');
 const formatCurl = require('format-curl');
@@ -678,9 +680,11 @@ moos = [
     '813654522',
 ];
 
-moos = ['111369452'];
+//moos = ['1612090123'];
 
 hashes = moos.map(s => new RegExp(s));
+
+if (cliArgs.h) hashes = [new RegExp(cliArgs.h)];
 
 const START = 0;
 const LIMIT = 10000;
@@ -814,9 +818,9 @@ const onFail = args => {
 function parseArgs() {
     const args = process.argv.slice(2);
 
-    const pairs = args.filter(s => /-[^=]*=[^/\s]/);
+    const pairs = args.filter(s => /=/.test(s));
 
-    const single = args.filter(s => /-[^/\s]*/);
+    const single = args.filter(s => !/=/.test(s));
 
     const obj = {};
 
@@ -824,12 +828,10 @@ function parseArgs() {
         obj[a.replace(/^-/, '')] = true;
     });
 
-    // console.log(pairs);
-    // pairs.forEach(p=>{
-    //     p.split("=").forEach((vals)=>{
-    //         obj[vals[0].replace(/^-/,"")]=vals[1]
-    //     })
-    // })
+    pairs.forEach(p => {
+        const tuple = p.split('=');
+        obj[tuple[0].replace(/^-/, '')] = tuple[1];
+    });
 
     return obj;
 }
