@@ -5,6 +5,7 @@ import { toJS } from 'mobx';
 import { reportValidationResult, validate } from 'shared/api/validation';
 import _ from 'lodash';
 import { makeTest, urlChopper } from 'shared/api/testMaker';
+import axios from 'axios';
 
 // function invokeValidation(func){
 //     getBrowserWindow().invokeCache = getBrowserWindow().invokeCache || [];
@@ -51,6 +52,8 @@ function proxyColumnStore(client: any, endpoint: string) {
             'SampleTreatmentCounts',
             'GenomicData',
             'GenericAssay',
+            'ViolinPlots',
+            'ClinicalEventTypeCounts',
         ];
 
         const matchedMethod = method.match(new RegExp(endpoints.join('|')));
@@ -76,17 +79,12 @@ function proxyColumnStore(client: any, endpoint: string) {
                     const hash = hashString(
                         JSON.stringify({ data: params, url: urlChopper(url) })
                     );
-                    validate(
-                        $.ajax,
-                        url,
-                        params,
-                        matchedMethod[0],
-                        hash,
-                        arguments[0].body,
-                        arguments[0].xhr.getResponseHeader('elapsed-time')
-                    ).then((result: any) => {
-                        reportValidationResult(result, 'LIVE', 'verbose');
-                    });
+
+                    validate(axios, url, params, matchedMethod[0], hash).then(
+                        (result: any) => {
+                            reportValidationResult(result, 'LIVE', 'verbose');
+                        }
+                    );
 
                     return oldSuccess.apply(this, arguments);
                 };
@@ -140,6 +138,7 @@ proxyColumnStore(internalClientColumnStore, 'fetchGenomicDataCounts');
 proxyColumnStore(internalClientColumnStore, 'fetchGenomicDataBinCounts');
 proxyColumnStore(internalClientColumnStore, 'fetchGenericAssayDataBinCounts');
 proxyColumnStore(internalClientColumnStore, 'fetchGenericAssayDataCounts');
+proxyColumnStore(internalClientColumnStore, 'fetchClinicalDataViolinPlots');
 
 export default internalClient;
 

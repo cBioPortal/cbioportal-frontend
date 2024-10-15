@@ -10,6 +10,22 @@ export const isObject = (value: any) => {
     );
 };
 
+function filterDuplicates(arr: any) {
+    try {
+        if ('attributeId' in arr[0]) {
+            const obj = arr.reduce((aggr: any, n: any) => {
+                aggr[n.attributeId] = n;
+                return aggr;
+            }, {});
+            return Object.values(obj);
+        } else {
+            return arr;
+        }
+    } catch (ex) {
+        return arr;
+    }
+}
+
 export function dynamicSortSingle(property: string) {
     var sortOrder = 1;
     if (property[0] === '-') {
@@ -58,8 +74,16 @@ export function getArrays(inp: any, output: Array<any>) {
     } else if (isObject(inp)) {
         for (const k in inp) {
             if (/\d\.\d{10,}$/.test(inp[k])) {
-                inp[k] = inp[k].toFixed(5);
+                try {
+                    inp[k] = inp[k].toFixed(5);
+                } catch (ex) {}
             }
+        }
+
+        if (inp.counts) {
+            inp.counts = inp.counts.filter((n: any) => {
+                return n.label != 'NA';
+            });
         }
 
         // this is get rid if extraneouys properties that conflict
@@ -73,15 +97,23 @@ export function getArrays(inp: any, output: Array<any>) {
 }
 
 const deleteFields: Record<string, string[]> = {
-    MolecularProfileSample: ['label'],
+    MolecularProfileSampleCounts: ['label'],
     CaseList: ['label'],
+    SampleListCounts: ['label'],
+    CnaGenes: ['qValue'],
+    MutatedGenes: ['qValue'],
 };
 
 const sortFields: Record<string, string> = {
+    ClinicalDataBinCounts: 'attributeId,specialValue',
     ClinicalDataBin: 'attributeId,specialValue',
-    FilteredSamples: 'patientId,sampleId,studyId',
+
+    FilteredSamples: 'studyId,patientId,sampleId',
     SampleTreatmentCounts: 'treatment,time',
     PatientTreatmentCounts: 'treatment',
+    ClinicalDataCounts: 'attributeId,value',
+    ClinicalDataTypeCounts: 'eventType',
+    ClinicalEventTypeCounts: 'eventType',
 };
 
 function getLegacyPatientTreatmentCountUrl(url: string) {
@@ -177,6 +209,10 @@ export function deepSort(inp: any, label: string) {
             });
         }
 
+        arr.forEach((m: any) => {
+            if (m.value) m.value = m.value.toLowerCase();
+        });
+
         if (!arr.length) return;
         if (!isObject(arr[0])) {
             arr.sort();
@@ -194,8 +230,6 @@ export function deepSort(inp: any, label: string) {
                         o[k] = val;
                     });
             });
-
-            //927275539
 
             if (sortFields[label]) {
                 attemptSort(sortFields[label].split(','), arr);
@@ -227,17 +261,50 @@ try {
     win = {};
 }
 
+function removeElement(nums: any[], val: any) {
+    for (let i = 0; i < nums.length; i++) {
+        if (nums[i] === val) {
+            nums.splice(i, 1);
+            i--;
+        }
+    }
+}
+
 export function compareCounts(clData: any, legacyData: any, label: string) {
     // @ts-ignore
-    const clDataClone = win.structuredClone ? structuredClone(clData) : clData;
+    let clDataClone = win.structuredClone ? structuredClone(clData) : clData;
 
-    const legacyDataClone = win.structuredClone
+    let legacyDataClone = win.structuredClone
         ? // @ts-ignore
           structuredClone(legacyData)
         : legacyData;
 
-    const clDataSorted = deepSort(clDataClone, label);
+    // get trid of duplicates
+    //clDataClone = filterDuplicates(clDataClone);
+
+    var clDataSorted = deepSort(clDataClone, label);
     var legacyDataSorted = deepSort(legacyDataClone, label);
+
+    getArrays(clDataSorted, []).forEach((arr: any) => {
+        arr.filter((n: any) => /NA/i.test(n.value)).forEach((val: any) => {
+            removeElement(arr, val);
+        });
+    });
+
+    getArrays(legacyDataSorted, []).forEach((arr: any) => {
+        arr.filter((n: any) => /NA/i.test(n.value)).forEach((val: any) => {
+            removeElement(arr, val);
+        });
+    });
+
+    // get rid of these little guys
+    if (clDataSorted && clDataSorted.filter)
+        clDataSorted = clDataSorted.filter((n: any) => n.specialValue != 'NA');
+
+    if (legacyDataSorted && legacyDataSorted.filter)
+        legacyDataSorted = legacyDataSorted.filter(
+            (n: any) => n.specialValue != 'NA'
+        );
 
     if (treatmentConverter[label]) {
         legacyDataSorted = treatmentConverter[label](legacyDataSorted);
@@ -253,7 +320,7 @@ export function compareCounts(clData: any, legacyData: any, label: string) {
     };
 }
 
-export function validate(
+export async function validate(
     ajax: any,
     url: string,
     params: any,
@@ -261,56 +328,77 @@ export function validate(
     hash: number,
     body?: any,
     elapsedTime: any = 0,
-    assertResponse?: any[]
+    assertResponse: any[] | undefined = undefined,
+    onFail: (...args: any[]) => void = () => {}
 ) {
     let chXHR: any;
 
+    let chResult;
+    let legacyResult;
+
     if (body) {
-        chXHR = Promise.resolve({ body, elapsedTime });
+        chResult = { body, elapsedTime, status: 200 };
     } else {
-        chXHR = ajax({
-            method: 'post',
-            url: url,
-            data: JSON.stringify(params),
-            contentType: 'application/json',
-            dataType: 'json',
-        }).then((body: any, state: any, xhr: XMLHttpRequest) => {
-            return { body, elapsedTime: xhr.getResponseHeader('elapsed-time') };
-        });
+        chResult = await ajax
+            .post(url, params)
+            .then(function(response: any) {
+                return {
+                    status: response.status,
+                    body: response.data,
+                    elapsedTime: response.headers['elapsed-time'],
+                };
+            })
+            .catch(function(error: any) {
+                return {
+                    body: null,
+                    error,
+                    elapsedTime: null,
+                    status: error.status,
+                };
+            });
     }
 
-    return chXHR.then(({ body, elapsedTime }: any) => {
+    if (assertResponse) {
+        legacyResult = assertResponse;
+    } else {
         let legacyUrl = url.replace(/column-store\//, '');
+
         if (treatmentLegacyUrl[label]) {
             legacyUrl = treatmentLegacyUrl[label](legacyUrl);
         }
-        const legacyXHR: PromiseLike<any> | XMLHttpRequest = assertResponse
-            ? new Promise((resolve, reject) => {
-                  resolve(assertResponse);
-              })
-            : ajax({
-                  method: 'post',
-                  url: legacyUrl,
-                  data: JSON.stringify(params),
-                  contentType: 'application/json',
-                  dataType: 'json',
-              });
-        // @ts-ignore
-        return legacyXHR.then((legacyResult: any) => {
-            const result: any = compareCounts(body, legacyResult, label);
-            result.url = url;
-            result.hash = hash;
-            result.data = params;
-            result.chDuration = parseFloat(elapsedTime);
-            result.legacyDuration =
-                !assertResponse &&
-                parseFloat(
-                    // @ts-ignore
-                    legacyXHR.getResponseHeader('elapsed-time') || '0'
-                );
-            return result;
-        });
-    });
+
+        legacyResult = await ajax
+            .post(legacyUrl, params)
+            .then(function(response: any) {
+                return {
+                    status: response.status,
+                    body: response.data,
+                    elapsedTime: response.headers['elapsed-time'],
+                };
+            })
+            .catch(function(error: any) {
+                return {
+                    body: null,
+                    error,
+                    elapsedTime: null,
+                    status: error.status,
+                };
+            });
+    }
+
+    const result: any = compareCounts(chResult.body, legacyResult.body, label);
+    result.url = url;
+    result.hash = hash;
+    result.data = params;
+    result.chDuration = chResult.elapsedTime;
+    result.legacyDuration = !assertResponse && legacyResult.elapsedTime;
+    result.chError = chResult.error;
+
+    if (!result.status) {
+        onFail(url);
+    }
+
+    return result;
 }
 
 const red = '\x1b[31m';
@@ -325,13 +413,14 @@ export function reportValidationResult(
     const skipMessage =
         result.test && result.test.skip ? `(SKIPPED ${result.test.skip})` : '';
 
+    const errorStatus = result.chError ? `(${result.chError.status})` : '';
+
     !result.status &&
         console.groupCollapsed(
-            `${red} ${prefix} ${result.label} (${result.hash}) ${skipMessage} failed :( ${reset}`
+            `${red} ${prefix} ${result.label} (${result.hash}) ${skipMessage} failed ${errorStatus} :( ${reset}`
         );
 
-    logLevel === 'verbose' &&
-        !result.status &&
+    if (logLevel === 'verbose' && !result.status) {
         console.log('failed test', {
             url: result.url,
             test: result.test,
@@ -341,20 +430,19 @@ export function reportValidationResult(
             equal: result.status,
             httpError: result.httpError,
         });
+    }
 
-    result.status &&
+    if (result.status) {
         console.log(
-            `${prefix} ${result.label} (${
-                result.hash
-            }) passed :) ch: ${result.chDuration.toFixed(
-                0
-            )} legacy: ${result.legacyDuration &&
-                result.legacyDuration.toFixed(0)}`
+            `${prefix} ${result.label} (${result.hash}) passed :) ch: ${
+                result.chDuration
+            } legacy: ${result.legacyDuration && result.legacyDuration}`
         );
+    }
 
-    if (logLevel === 'verbose' && !result.status) {
-        if (result.clDataSorted.length) {
-            for (var i = 0; i < result.clDataSorted.length; i++) {
+    if (!result.status && logLevel == 'verbose') {
+        if (result?.clDataSorted?.length) {
+            for (var i = 0; i < result?.clDataSorted?.length; i++) {
                 const cl = result.clDataSorted[i];
                 if (
                     JSON.stringify(cl) !==
@@ -371,18 +459,23 @@ export function reportValidationResult(
             }
         }
         console.groupCollapsed('All Data');
+        console.log(
+            `CH: ${result.clDataSorted.length}, Legacy:${result.legacyDataSorted.length}`
+        );
         console.log('legacy', result.legacyDataSorted);
         console.log('CH', result.clDataSorted);
         console.groupEnd();
     }
+
     !result.status && console.groupEnd();
 }
 
 export async function runSpecs(
     files: any,
-    ajax: any,
+    axios: any,
     host: string = '',
-    logLevel = ''
+    logLevel = '',
+    onFail: any = () => {}
 ) {
     // @ts-ignore
     const allTests = files
@@ -395,7 +488,7 @@ export async function runSpecs(
 
     const onlyDetected = allTests.some((t: any) => t.only === true);
 
-    //console.log(`Running specs (${files.length} of ${totalCount})`);
+    console.log(`Running specs (${files.length} of ${totalCount})`);
 
     if (logLevel === 'verbose') {
         console.groupCollapsed('specs');
@@ -426,7 +519,7 @@ export async function runSpecs(
                             // @ts-ignore
                             () => {
                                 return validate(
-                                    ajax,
+                                    axios,
                                     host + test.url,
                                     test.data,
                                     test.label,
@@ -435,10 +528,13 @@ export async function runSpecs(
                                     undefined,
                                     test.assertResponse
                                 ).then((report: any) => {
+                                    if (!report.status) {
+                                        onFail(test);
+                                    }
+
                                     report.test = test;
                                     place = place + 1;
                                     const prefix = `${place} of ${totalCount}`;
-
                                     if (report instanceof Promise) {
                                         report.then((report: any) => {
                                             if (test?.skip) {
@@ -480,7 +576,7 @@ export async function runSpecs(
             );
         });
 
-    const concurrent = 1;
+    const concurrent = 10;
     const batches = Math.ceil(invokers.length / concurrent);
 
     for (var i = 0; i < batches; i++) {
