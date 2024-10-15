@@ -10,26 +10,42 @@ const client = createClient({
     request_timeout: 600000,
 });
 
-async function main() {
+async function mainInsert() {
     const studies = await getStudies();
 
     const entities = await getEntities();
 
+    let profiles = await getProfiles();
+
     const then = Date.now();
 
-    for (const study of studies) {
-        console.log(
-            `inserting ${study.cancer_study_id} ${study.cancer_study_identifier}`
-        );
+    //profiles = profiles.slice(0,1);
+
+    //console.log(profiles);
+
+    for (const profile of profiles) {
+        console.log(`inserting ${profile.stable_id}`);
         try {
-            await insertStudy(study.cancer_study_id);
+            await insertProfile(profile.genetic_profile_id);
         } catch (ex) {
-            console.log(
-                `ERROR inserting ${study.cancer_study_id} ${study.cancer_study_identifier}`
-            );
+            console.log(`ERROR inserting ${profile.stable_id}`);
             console.log(ex);
         }
     }
+
+    // for (const study of studies) {
+    //     console.log(
+    //         `inserting ${study.cancer_study_id} ${study.cancer_study_identifier}`
+    //     );
+    //     try {
+    //         await insertStudy(study.cancer_study_id);
+    //     } catch (ex) {
+    //         console.log(
+    //             `ERROR inserting ${study.cancer_study_id} ${study.cancer_study_identifier}`
+    //         );
+    //         console.log(ex);
+    //     }
+    // }
 
     // for (const entity of entities) {
     //     try {
@@ -47,6 +63,10 @@ async function main() {
     //console.log(result);
 }
 
+async function mainPatient() {
+    getPatientIds();
+}
+
 async function insertStudy(cancer_study_id) {
     const resultSet = await client.query({
         query: queryByStudies({ cancer_study_id }),
@@ -58,9 +78,22 @@ async function insertStudy(cancer_study_id) {
     return dataset;
 }
 
-async function insertProfile(genetic_profile_id, genetic_entity_id) {
+async function insertProfile(genetic_profile_id) {
     const resultSet = await client.query({
-        query: queryByProfiles({ genetic_profile_id, genetic_entity_id }),
+        query: queryByProfiles({ genetic_profile_id }),
+        format: 'JSONEachRow',
+    });
+
+    const dataset = await resultSet.json(); // or `row.text` to avoid parsing JSON
+
+    return dataset;
+}
+
+async function getProfiles() {
+    const resultSet = await client.query({
+        query: `SELECT * FROM genetic_profile
+                WHERE genetic_profile.genetic_alteration_type NOT IN ('GENERIC_ASSAY', 'MUTATION_EXTENDED', 'STRUCTURAL_VARIANT')
+        `,
         format: 'JSONEachRow',
     });
 
@@ -81,6 +114,33 @@ async function getEntities() {
     return dataset;
 }
 
+async function getPatientIds() {
+    const resultSet = await client.query({
+        query: `SELECT p.stable_id, cs.cancer_study_identifier FROM patient p
+                JOIN cancer_study cs ON cs.cancer_study_id = p.cancer_study_id
+
+        `,
+        format: 'JSONEachRow',
+    });
+
+    const dataset = await resultSet.json(); // or `row.text` to avoid parsing JSON
+
+    const grouped = _.groupBy(
+        dataset,
+        p =>
+            `${p.stable_id.replace(
+                /-/g,
+                ''
+            )}|${p.cancer_study_identifier.toUpperCase()}`
+    );
+
+    console.log(_.values(grouped).length);
+
+    console.log(_.values(grouped).filter(a => a.length > 1));
+
+    //return dataset;
+}
+
 async function getStudies() {
     const resultSet = await client.query({
         query: 'select * from cancer_study',
@@ -94,7 +154,7 @@ async function getStudies() {
 
 const queryByStudies = _.template(
     `
-INSERT INTO TABLE genetic_alteration_derived2
+INSERT INTO TABLE genetic_alteration_derivedFIXED
 SELECT
     sample_unique_id,
     cancer_study_identifier,
@@ -111,8 +171,8 @@ FROM
          (SELECT
               g.hugo_gene_symbol AS hugo_gene_symbol,
               gp.stable_id as stable_id,
-              arrayMap(x -> (x = '' ? NULL : x), splitByString(',', assumeNotNull(trim(trailing ',' from ga.values)))) AS alteration_value,
-              arrayMap(x -> (x = '' ? NULL : toInt32(x)), splitByString(',', assumeNotNull(trim(trailing ',' from gps.ordered_sample_list)))) AS sample_id
+              arrayMap(x -> (x = '' ? NULL : x), splitByString(',', assumeNotNull(substring(ga.values, 1, length(ga.values) - 1)))) AS alteration_value,
+              arrayMap(x -> (x = '' ? NULL : toInt32(x)), splitByString(',', assumeNotNull(substring(gps.ordered_sample_list, 1, length(gps.ordered_sample_list) - 1)))) AS sample_id
           FROM
               genetic_profile gp
                   JOIN genetic_profile_samples gps ON gp.genetic_profile_id = gps.genetic_profile_id
@@ -131,7 +191,7 @@ FROM
 
 const queryByProfiles = _.template(
     `
-INSERT INTO TABLE genetic_alteration_derived2
+INSERT INTO TABLE genetic_alteration_derivedFIXED
 SELECT
     sample_unique_id,
     cancer_study_identifier,
@@ -148,16 +208,15 @@ FROM
          (SELECT
               g.hugo_gene_symbol AS hugo_gene_symbol,
               gp.stable_id as stable_id,
-              arrayMap(x -> (x = '' ? NULL : x), splitByString(',', assumeNotNull(trim(trailing ',' from ga.values)))) AS alteration_value,
-              arrayMap(x -> (x = '' ? NULL : toInt32(x)), splitByString(',', assumeNotNull(trim(trailing ',' from gps.ordered_sample_list)))) AS sample_id
+              arrayMap(x -> (x = '' ? NULL : x), splitByString(',', assumeNotNull(substring(ga.values, 1, length(ga.values) - 1)))) AS alteration_value,
+              arrayMap(x -> (x = '' ? NULL : toInt32(x)), splitByString(',', assumeNotNull(substring(gps.ordered_sample_list, 1, length(gps.ordered_sample_list) - 1)))) AS sample_id
           FROM
               genetic_profile gp
                   JOIN genetic_profile_samples gps ON gp.genetic_profile_id = gps.genetic_profile_id
                   JOIN genetic_alteration ga ON gp.genetic_profile_id = ga.genetic_profile_id
                   JOIN gene g ON ga.genetic_entity_id = g.genetic_entity_id
           WHERE
-                  ga.genetic_profile_id=<%= genetic_profile_id %> AND
-                  ga.genetic_entity_id=<%= genetic_entity_id %>
+                  ga.genetic_profile_id='<%= genetic_profile_id %>'
             AND
                   gp.genetic_alteration_type NOT IN ('GENERIC_ASSAY', 'MUTATION_EXTENDED', 'STRUCTURAL_VARIANT')
              )
@@ -167,4 +226,4 @@ FROM
  `
 );
 
-main();
+mainInsert();
