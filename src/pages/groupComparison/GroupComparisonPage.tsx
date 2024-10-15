@@ -77,6 +77,8 @@ export default class GroupComparisonPage extends React.Component<
         this.queryReaction = reaction(
             () => this.urlWrapper.query.comparisonId,
             (sessionId, previousSessionId) => {
+                // New session is created when a custom survival plot is added or deleted.
+                // In this case, we don't want to reload the page.
                 if (localStorage.getItem('preventPageReload') === 'true') {
                     localStorage.removeItem('preventPageReload');
                     if (previousSessionId !== undefined) {

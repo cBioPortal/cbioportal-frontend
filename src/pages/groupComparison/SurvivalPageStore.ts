@@ -1021,7 +1021,7 @@ export default class SurvivalPageStore {
                 const qValues = this.qValuesByPrefix.result!;
 
                 const survivalPrefixes = _.map(
-                    this.survivalTitleByPrefix.result! as Dictionary<string>,
+                    this.survivalTitleByPrefix.result!,
                     (displayText, prefix) => {
                         const patientSurvivalsPerGroup = _.mapValues(
                             _.keyBy(analysisGroups, group => group.name),
