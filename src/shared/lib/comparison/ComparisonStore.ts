@@ -2095,7 +2095,7 @@ export default abstract class ComparisonStore extends AnalysisStore
             (this.predefinedSurvivalClinicalDataExists.isComplete &&
                 this.clinicalEventOptions.isComplete &&
                 this.predefinedSurvivalClinicalDataExists.result) ||
-            !_.isEmpty(this.clinicalEventOptions.result!)
+            !_.isEmpty(this.clinicalEventOptions.result)
         );
     }
 

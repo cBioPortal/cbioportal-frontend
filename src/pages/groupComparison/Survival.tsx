@@ -171,6 +171,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             this.pageStore.analysisGroupsComputations,
             this.pageStore.survivalPrefixes,
             this.pageStore.survivalPrefixTableDataStore,
+            this.props.store.clinicalEventOptions,
         ],
         render: () => {
             const analysisGroups = this.pageStore.analysisGroupsComputations
@@ -178,7 +179,10 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             const survivalTitleByPrefix = this.pageStore.survivalTitleByPrefix
                 .result!;
 
-            if (Object.keys(survivalTitleByPrefix).length > 1) {
+            if (
+                Object.keys(survivalTitleByPrefix).length > 1 ||
+                !_.isEmpty(this.props.store.clinicalEventOptions.result)
+            ) {
                 // only show table if there's more than one prefix option
                 return (
                     <SurvivalPrefixTable
