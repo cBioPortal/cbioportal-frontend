@@ -139,7 +139,7 @@ export default class ComparisonTab extends React.Component<
             this.store.mRNAEnrichmentProfiles,
             this.store.proteinEnrichmentProfiles,
             this.store.methylationEnrichmentProfiles,
-            this.store.survivalClinicalDataExists,
+            this.store.predefinedSurvivalClinicalDataExists,
             this.store.genericAssayEnrichmentProfilesGroupedByGenericAssayType,
         ],
         render: () => {

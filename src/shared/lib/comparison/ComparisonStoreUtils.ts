@@ -1,5 +1,7 @@
-import ComparisonStore from 'shared/lib/comparison/ComparisonStore';
-import { MolecularProfile } from 'cbioportal-ts-api-client';
+import ComparisonStore, {
+    ClinicalEventDataWithKey,
+} from 'shared/lib/comparison/ComparisonStore';
+import { MolecularProfile, SurvivalRequest } from 'cbioportal-ts-api-client';
 import { stringListToMap } from 'cbioportal-frontend-commons';
 import _ from 'lodash';
 
@@ -164,6 +166,10 @@ export const amplificationGroup = [CopyNumberEnrichmentEventType.AMP];
 export const deletionGroup = [CopyNumberEnrichmentEventType.HOMDEL];
 export const cnaGroup = [...amplificationGroup, ...deletionGroup];
 
+export type CustomSurvivalPlots = {
+    [prefix: string]: Partial<SurvivalRequest> & { name: string };
+};
+
 export function cnaEventTypeSelectInit(
     profiles: MolecularProfile[]
 ): {
@@ -251,4 +257,107 @@ export function doEnrichmentEventTypeMapsMatch<T>(
             }
         })
     );
+}
+
+export function getSurvivalPlotDescription(
+    chart: Partial<SurvivalRequest> & { name: string }
+) {
+    let description = '';
+    if (chart.startEventRequestIdentifier) {
+        const clinicalEventRequest =
+            chart.startEventRequestIdentifier.clinicalEventRequests[0];
+        description += `Start: ${
+            clinicalEventRequest.eventType
+        } - ${clinicalEventRequest.attributes
+            .map(x => `${x.key}:${x.value}`)
+            .join(
+                ' or '
+            )} (${chart.startEventRequestIdentifier.position.toLowerCase()} event)`;
+    }
+    if (chart.endEventRequestIdentifier) {
+        const clinicalEventRequest =
+            chart.endEventRequestIdentifier.clinicalEventRequests[0];
+        description += `\nEnd: ${
+            clinicalEventRequest.eventType
+        } - ${clinicalEventRequest.attributes
+            .map(x => `${x.key}:${x.value}`)
+            .join(
+                ' or '
+            )} (${chart.endEventRequestIdentifier.position.toLowerCase()} event)`;
+    }
+    if (chart.censoredEventRequestIdentifier) {
+        const clinicalEventRequest =
+            chart.censoredEventRequestIdentifier.clinicalEventRequests[0];
+        description += `\nEnd: ${clinicalEventRequest.eventType}`;
+
+        if (clinicalEventRequest.attributes.length > 0) {
+            description += ` - ${clinicalEventRequest.attributes
+                .map(x => `${x.key}:${x.value}`)
+                .join(' or ')}`;
+        }
+        description += ` (${chart.censoredEventRequestIdentifier.position.toLowerCase()} event)`;
+    }
+    return description;
+}
+
+export function getSurvivalPlotName(
+    startClinicalEventType: string,
+    startEventAttributes: ClinicalEventDataWithKey[],
+    startEventPosition: 'FIRST' | 'LAST',
+    endClinicalEventType: string,
+    endEventAttributes: ClinicalEventDataWithKey[],
+    endEventPosition: 'FIRST' | 'LAST',
+    censoredClinicalEventType: string,
+    censoredEventAttributes: ClinicalEventDataWithKey[],
+    existingNames: string[]
+) {
+    let title = 'From ';
+    const startStr = startEventAttributes
+        .map(attr => attr.value)
+        .join(' or ')
+        .trim();
+    title += `${startEventPosition.toLowerCase()} ${
+        startStr.length > 0
+            ? startStr.trim()
+            : 'of any ' + startClinicalEventType
+    } to `;
+    const endStr = endEventAttributes
+        .map(attr => attr.value)
+        .join(' or ')
+        .trim();
+    title += `${endEventPosition.toLowerCase()} ${
+        endStr.length > 0 ? endStr : 'of any ' + endClinicalEventType
+    } and censored by `;
+    const censoredStr = censoredEventAttributes
+        .map(attr => attr.value)
+        .join(' or ')
+        .trim();
+    title += `${
+        censoredStr.length > 0
+            ? censoredStr
+            : 'of any ' + censoredClinicalEventType === 'any'
+            ? ''
+            : censoredClinicalEventType
+    }`;
+    return `${title} - ${getMaxMatchingNumber(title, existingNames)}`;
+}
+
+function getMaxMatchingNumber(
+    _str: string,
+    refStrings: string[]
+): number | null {
+    const regex = new RegExp(`^${_str} - (\\d+)$`);
+
+    let maxNumber: number | null = null;
+
+    refStrings.forEach(refStr => {
+        const match = refStr.match(regex);
+        if (match) {
+            const num = parseInt(match[1], 10);
+            if (maxNumber === null || num > maxNumber) {
+                maxNumber = num;
+            }
+        }
+    });
+    return maxNumber === null ? 1 : maxNumber + 1;
 }

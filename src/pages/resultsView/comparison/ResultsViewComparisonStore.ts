@@ -169,7 +169,7 @@ export default class ResultsViewComparisonStore extends ComparisonStore {
 
     // <session>
     @action
-    protected async saveAndGoToSession(newSession: ComparisonSession) {
+    public async saveAndGoToSession(newSession: ComparisonSession) {
         const { id } = await comparisonClient.addComparisonSession(newSession);
         this.urlWrapper.updateURL({ comparison_createdGroupsSessionId: id });
         this.newSessionPending = false;
@@ -197,7 +197,7 @@ export default class ResultsViewComparisonStore extends ComparisonStore {
     }
 
     // override parent method
-    protected get isLeftTruncationFeatureFlagEnabled() {
+    public get isLeftTruncationFeatureFlagEnabled() {
         return this.appStore.featureFlagStore.has(
             FeatureFlagEnum.LEFT_TRUNCATION_ADJUSTMENT
         );

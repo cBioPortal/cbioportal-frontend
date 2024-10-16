@@ -12,10 +12,6 @@ export interface ISurvivalDescriptionTableProps {
     survivalDescriptionData: ISurvivalDescription[];
 }
 
-class SurvivalDescriptionTableComponent extends LazyMobXTable<
-    ISurvivalDescription
-> {}
-
 @observer
 export default class SurvivalDescriptionTable extends React.Component<
     ISurvivalDescriptionTableProps,
@@ -23,7 +19,7 @@ export default class SurvivalDescriptionTable extends React.Component<
 > {
     public render() {
         return (
-            <SurvivalDescriptionTableComponent
+            <LazyMobXTable
                 data={this.props.survivalDescriptionData}
                 columns={[
                     {

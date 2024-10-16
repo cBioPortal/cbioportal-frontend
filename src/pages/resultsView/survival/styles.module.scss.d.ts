@@ -3,6 +3,7 @@ declare const styles: {
   readonly "SurvivalTable": string;
   readonly "Tooltip": string;
   readonly "XmaxNumberInput": string;
+  readonly "clickable": string;
   readonly "paddingLeftTruncationCheckbox": string;
 };
 export = styles;

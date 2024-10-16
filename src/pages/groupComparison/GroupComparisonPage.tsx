@@ -52,6 +52,7 @@ import GroupComparisonMutationsTab from './GroupComparisonMutationsTab';
 import GroupComparisonPathwayMapperUserSelectionStore from './pathwayMapper/GroupComparisonPathwayMapperUserSelectionStore';
 import { Tour } from 'tours';
 import GenericAssayEnrichmentCollections from './GenericAssayEnrichmentCollections';
+import 'react-toastify/dist/ReactToastify.css';
 
 export interface IGroupComparisonPageProps {
     routing: any;
@@ -75,7 +76,15 @@ export default class GroupComparisonPage extends React.Component<
         this.pathwayMapperUserSelectionStore = new GroupComparisonPathwayMapperUserSelectionStore();
         this.queryReaction = reaction(
             () => this.urlWrapper.query.comparisonId,
-            sessionId => {
+            (sessionId, previousSessionId) => {
+                // New session is created when a custom survival plot is added or deleted.
+                // In this case, we don't want to reload the page.
+                if (localStorage.getItem('preventPageReload') === 'true') {
+                    localStorage.removeItem('preventPageReload');
+                    if (previousSessionId !== undefined) {
+                        return;
+                    }
+                }
                 if (
                     !props.routing.location.pathname.includes('/comparison') ||
                     !sessionId
@@ -133,7 +142,8 @@ export default class GroupComparisonPage extends React.Component<
             this.store.mRNAEnrichmentProfiles,
             this.store.proteinEnrichmentProfiles,
             this.store.methylationEnrichmentProfiles,
-            this.store.survivalClinicalDataExists,
+            this.store.predefinedSurvivalClinicalDataExists,
+            this.store.clinicalEventOptions,
             this.store.genericAssayEnrichmentProfilesGroupedByGenericAssayType,
             this.store
                 .genericAssayBinaryEnrichmentProfilesGroupedByGenericAssayType,
