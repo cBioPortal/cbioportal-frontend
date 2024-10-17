@@ -8,7 +8,11 @@ import {
 import classnames from 'classnames';
 import { action, computed, makeObservable, observable } from 'mobx';
 import { observer } from 'mobx-react';
-import { ChartTypeEnum } from '../StudyViewConfig';
+import {
+    ChartTypeEnum,
+    ChartTypeNameEnum,
+    chartChangeOptionsMap,
+} from '../StudyViewConfig';
 import { ChartMeta, getClinicalAttributeOverlay } from '../StudyViewUtils';
 import {
     DataType,
@@ -82,6 +86,7 @@ export interface ChartControls {
     showSwapAxes?: boolean;
     showSurvivalPlotLeftTruncationToggle?: boolean;
     survivalPlotLeftTruncationChecked?: boolean;
+    showChartChangeOptions?: boolean;
 }
 
 @observer
@@ -90,6 +95,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
     @observable downloadSubmenuOpen = false;
     @observable comparisonSubmenuOpen = false;
     @observable showCustomBinModal: boolean = false;
+    @observable showChartChangeOptions: boolean = false;
     private closeMenuTimeout: number | undefined = undefined;
 
     constructor(props: IChartHeaderProps) {
@@ -444,54 +450,89 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
             );
         }
 
-        if (
-            this.props.chartControls &&
-            !!this.props.chartControls.showTableIcon
-        ) {
+        if (this.props.chartControls?.showChartChangeOptions) {
+            const submenuWidth = 120;
+            const availableCharts = [
+                ...new Set(
+                    (
+                        this.props.store.availableChartTypes.get(
+                            this.props.chartMeta.uniqueKey
+                        ) || []
+                    ).concat(chartChangeOptionsMap[this.props.chartType] || [])
+                ),
+            ];
             items.push(
-                <li>
-                    <a
-                        className="dropdown-item"
-                        onClick={() =>
-                            this.props.changeChartType(ChartTypeEnum.TABLE)
+                <li style={{ position: 'relative' }}>
+                    <div
+                        className={classnames(
+                            'dropdown-item',
+                            styles.dropdownHoverEffect
+                        )}
+                        style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            padding: '3px 20px',
+                        }}
+                        onMouseEnter={() =>
+                            (this.showChartChangeOptions = true)
+                        }
+                        onMouseLeave={() =>
+                            (this.showChartChangeOptions = false)
                         }
                     >
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                            <i
+                                className={classnames(
+                                    'fa fa-xs',
+                                    'fa-exchange',
+                                    styles.menuItemIcon
+                                )}
+                                aria-hidden="true"
+                            />
+                            <span>Change Chart</span>
+                        </div>
                         <i
-                            className={classnames(
-                                'fa fa-xs fa-fw',
-                                'fa-table',
-                                styles.menuItemIcon
-                            )}
-                            aria-hidden="true"
+                            className={'fa fa-xs fa-fw fa-caret-right'}
+                            style={{ lineHeight: 'inherit' }}
                         />
-                        Show Table
-                    </a>
-                </li>
-            );
-        }
-
-        if (
-            this.props.chartControls &&
-            !!this.props.chartControls.showPieIcon
-        ) {
-            items.push(
-                <li>
-                    <a
-                        className="dropdown-item"
-                        onClick={() =>
-                            this.props.changeChartType(ChartTypeEnum.PIE_CHART)
-                        }
-                    >
-                        <i
-                            className={classnames(
-                                'fa fa-xs fa-fw',
-                                'fa-pie-chart',
-                                styles.menuItemIcon
-                            )}
-                            aria-hidden="true"
-                        />
-                        Show Pie
-                    </a>
+                        {this.showChartChangeOptions && (
+                            <ul
+                                className={classnames('dropdown-menu', {
+                                    show: this.showChartChangeOptions,
+                                })}
+                                style={{
+                                    top: 0,
+                                    margin: '-6px 0',
+                                    left:
+                                        this.props.placement === 'left'
+                                            ? -submenuWidth
+                                            : '100%',
+                                }}
+                            >
+                                <li>
+                                    {availableCharts
+                                        ?.filter(
+                                            (chartType, id) =>
+                                                chartType !=
+                                                this.props.chartType
+                                        )
+                                        .map((chartType, id) => (
+                                            <a
+                                                key={id}
+                                                className="dropdown-item text-capitalize"
+                                                onClick={() =>
+                                                    this.props.changeChartType(
+                                                        chartType
+                                                    )
+                                                }
+                                            >
+                                                {ChartTypeNameEnum[chartType]}
+                                            </a>
+                                        ))}
+                                </li>
+                            </ul>
+                        )}
+                    </div>
                 </li>
             );
         }
