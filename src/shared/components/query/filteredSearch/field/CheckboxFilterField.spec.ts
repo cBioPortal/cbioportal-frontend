@@ -4,6 +4,10 @@ import {
 } from 'shared/components/query/filteredSearch/field/CheckboxFilterField';
 import { CancerTreeSearchFilter } from 'shared/lib/query/textQueryUtils';
 import { ListPhrase } from 'shared/components/query/filteredSearch/Phrase';
+import {
+    toFilterFieldOption,
+    toFilterFieldValue,
+} from 'shared/components/query/filteredSearch/field/FilterFieldOption';
 
 describe('CheckboxFilterField', () => {
     describe('createQueryUpdate', () => {
@@ -12,7 +16,7 @@ describe('CheckboxFilterField', () => {
             nodeFields: ['studyId'],
             form: {
                 input: FilterCheckbox,
-                options: ['a', 'b', 'c', 'd', 'e'],
+                options: ['a', 'b', 'c', 'd', 'e'].map(toFilterFieldOption),
                 label: 'Test label',
             },
         } as CancerTreeSearchFilter;
@@ -48,7 +52,11 @@ describe('CheckboxFilterField', () => {
         it('removes all update when only And', () => {
             const checked = dummyFilter.form.options;
             const toRemove: ListPhrase[] = [];
-            const result = createQueryUpdate(toRemove, checked, dummyFilter);
+            const result = createQueryUpdate(
+                toRemove,
+                checked.map(toFilterFieldValue),
+                dummyFilter
+            );
             expect(result.toAdd?.length).toEqual(0);
         });
 
