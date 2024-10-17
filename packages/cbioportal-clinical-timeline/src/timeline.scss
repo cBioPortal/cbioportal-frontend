@@ -79,19 +79,20 @@ $tl-fontsize: 12px;
 }
 
 .tl-timeline-leftbar {
+    max-width: 150px;
     .tl-timeline-tracklabels {
         overflow: hidden;
         display: flex;
         flex-direction: column;
-        font-size: $tl-fontsize;
+        font-size: 12.5px; // The first tooltip does not show up if the font-size is too small (<12px)
         > div {
             white-space: nowrap;
             border-bottom: 1px dashed #eee;
-            padding-right: 18px;
+            padding-right: 15px;
             padding-top: 2px;
             overflow: hidden;
             text-overflow: ellipsis;
-            max-width: 100%; // Modify to test the ellipsis and tooltip
+            //max-width: 100%;
         }
     }
 }
