@@ -1,6 +1,10 @@
 import { IStringAxisData } from './PlotsTabUtils';
 import _ from 'lodash';
-import { IMultipleCategoryBarPlotData } from '../../../pages/groupComparison/MultipleCategoryBarPlot';
+import {
+    IMultipleCategoryBarPlotData,
+    TotalSumItem,
+} from '../../../pages/groupComparison/MultipleCategoryBarPlot';
+import { marginLeft } from 'pages/patientView/trialMatch/style/trialMatch.module.scss';
 
 export function makePlotData(
     horzData: IStringAxisData['data'],
@@ -107,7 +111,8 @@ export function makeBarSpecs(
     categoryCoord: (categoryIndex: number) => number,
     horizontalBars: boolean,
     stacked: boolean,
-    percentage: boolean
+    percentage: boolean,
+    sortOption?: string
 ): {
     fill: string;
     data: {
@@ -117,24 +122,94 @@ export function makeBarSpecs(
         minorCategory: string;
         count: number;
         percentage: number;
-    }[]; // one data per major category, in correct order - either specified, or alphabetical
+    }[];
 }[] {
-    // one bar spec per minor category, in correct order - either specified, or alphabetical
     data = sortDataByCategory(data, d => d.minorCategory, minorCategoryOrder);
-    // reverse the order of stacked or horizontal bars
+
     if ((!horizontalBars && stacked) || (horizontalBars && !stacked)) {
         data = _.reverse(data);
     }
+    data.forEach(item => {
+        item.counts.sort((a, b) =>
+            a.majorCategory.localeCompare(b.majorCategory)
+        );
+    });
+
+    const totalSumArray: TotalSumItem[] = [];
+    data.forEach(item => {
+        item.counts.forEach(countItem => {
+            const existingItem = totalSumArray.find(
+                sumItem => sumItem.majorCategory === countItem.majorCategory
+            );
+            if (existingItem) {
+                existingItem.sum += countItem.count;
+                existingItem.minorCategory.push({
+                    name: item.minorCategory,
+                    count: countItem.count,
+                    percentage: countItem.percentage,
+                });
+            } else {
+                totalSumArray.push({
+                    majorCategory: countItem.majorCategory,
+                    sum: countItem.count,
+                    minorCategory: [
+                        {
+                            name: item.minorCategory,
+                            count: countItem.count,
+                            percentage: countItem.percentage,
+                        },
+                    ],
+                });
+            }
+        });
+    });
+
+    totalSumArray.sort((a, b) => b.sum - a.sum);
+
     return data.map(({ minorCategory, counts }) => {
         const fill = getColor(minorCategory);
-        const sortedCounts = sortDataByCategory(
-            counts,
-            d => d.majorCategory,
-            majorCategoryOrder
-        );
+
+        let categorizedCounts;
+        if (sortOption == 'sortByCount') {
+            const minorCategoryArrays: {
+                [key: string]: {
+                    majorCategory: string;
+                    count: number;
+                    percentage: number;
+                }[];
+            } = {};
+            data.forEach(item => {
+                // Extract the minorCategory from the current item
+                if (!minorCategoryArrays[item.minorCategory]) {
+                    minorCategoryArrays[item.minorCategory] = [];
+                }
+
+                // Find corresponding items in totalSumArray and add them to the array
+                totalSumArray.forEach(totalItem => {
+                    totalItem.minorCategory.forEach(minorItem => {
+                        if (minorItem.name === item.minorCategory) {
+                            minorCategoryArrays[item.minorCategory].push({
+                                majorCategory: totalItem.majorCategory,
+                                count: minorItem.count,
+                                percentage: minorItem.percentage,
+                            });
+                        }
+                    });
+                });
+            });
+
+            categorizedCounts = minorCategoryArrays[minorCategory];
+        } else {
+            categorizedCounts = sortDataByCategory(
+                counts,
+                d => d.majorCategory,
+                majorCategoryOrder
+            );
+        }
+
         return {
             fill,
-            data: sortedCounts.map((obj, index) => ({
+            data: categorizedCounts.map((obj, index) => ({
                 x: categoryCoord(index),
                 y: percentage ? obj.percentage : obj.count,
                 majorCategory: obj.majorCategory,
