@@ -17,7 +17,7 @@ import { ISelectOption } from 'shared/lib/GenericAssayUtils/GenericAssaySelectio
 
 describe('GenericAssayCommonUtils', () => {
     describe('makeGenericAssayOption()', () => {
-        it('Includes entity_stable_id and description when present and unique', () => {
+        it('Includes description and hides stableId when present and unique', () => {
             const genericAssayEntity: GenericAssayMeta = {
                 stableId: 'id_1',
                 entityType: 'GENERIC_ASSAY',
@@ -29,7 +29,7 @@ describe('GenericAssayCommonUtils', () => {
 
             const expect = {
                 value: 'id_1',
-                label: 'name_1 (id_1): desc_1',
+                label: 'name_1: desc_1',
             };
             assert.deepEqual(
                 makeGenericAssayOption(genericAssayEntity),
@@ -49,7 +49,7 @@ describe('GenericAssayCommonUtils', () => {
 
             const expect = {
                 value: 'id_1',
-                label: 'name_1 (id_1)',
+                label: 'name_1',
             };
             assert.deepEqual(
                 makeGenericAssayOption(genericAssayEntity),
@@ -77,7 +77,7 @@ describe('GenericAssayCommonUtils', () => {
             );
         });
 
-        it('Hides name and description when same as entity_stable_id', () => {
+        it('Hides stableId and description when same as name', () => {
             const genericAssayEntity: GenericAssayMeta = {
                 stableId: 'id_1',
                 entityType: 'GENERIC_ASSAY',
@@ -116,7 +116,7 @@ describe('GenericAssayCommonUtils', () => {
             );
         });
 
-        it('Shows entity_stable_id and name when description is missing in properties', () => {
+        it('Shows name and hides stableId when description is missing in properties', () => {
             const genericAssayEntity: GenericAssayMeta = {
                 stableId: 'id_1',
                 entityType: 'GENERIC_ASSAY',
@@ -127,7 +127,7 @@ describe('GenericAssayCommonUtils', () => {
 
             const expect = {
                 value: 'id_1',
-                label: 'name_1 (id_1)',
+                label: 'name_1',
             };
             assert.deepEqual(
                 makeGenericAssayOption(genericAssayEntity),
@@ -166,7 +166,7 @@ describe('GenericAssayCommonUtils', () => {
 
             const expect = {
                 value: 'id_1',
-                label: 'name_1 (id_1): desc_1',
+                label: 'name_1: desc_1',
                 plotAxisLabel: 'name_1',
             };
             assert.deepEqual(
@@ -187,8 +187,8 @@ describe('GenericAssayCommonUtils', () => {
 
             const expect = {
                 value: 'id_1',
-                label: 'name_1 (id_1): desc_1',
-                plotAxisLabel: 'name_1 (id_1)',
+                label: 'name_1: desc_1',
+                plotAxisLabel: 'name_1',
             };
             assert.deepEqual(
                 makeGenericAssayPlotsTabOption(genericAssayEntity, true),
@@ -295,7 +295,7 @@ describe('GenericAssayCommonUtils', () => {
     });
 
     describe('formatGenericAssayCompactLabelByNameAndId()', () => {
-        it('Hides name when same as stableId', () => {
+        it('Hides stableId when same as name', () => {
             const stableId = 'STABLE_ID';
             const name = stableId;
             assert.equal(
@@ -303,12 +303,12 @@ describe('GenericAssayCommonUtils', () => {
                 stableId
             );
         });
-        it('shows name and stableId when they are unique', () => {
+        it('Only shows name when name and stableId are unique', () => {
             const stableId = 'STABLE_ID';
             const name = 'NAME';
             assert.equal(
                 formatGenericAssayCompactLabelByNameAndId(stableId, name),
-                `${name} (${stableId})`
+                `${name}`
             );
         });
     });
