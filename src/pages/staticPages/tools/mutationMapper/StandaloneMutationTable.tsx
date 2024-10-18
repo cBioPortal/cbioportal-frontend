@@ -47,6 +47,7 @@ export default class StandaloneMutationTable extends MutationTable<
             MutationTableColumnType.TUMOR_ALLELE_FREQ,
             MutationTableColumnType.NORMAL_ALLELE_FREQ,
             MutationTableColumnType.EXON,
+            MutationTableColumnType.ALPHAMISSENSE,
             MutationTableColumnType.HGVSC,
             MutationTableColumnType.GNOMAD,
             MutationTableColumnType.CLINVAR,
@@ -68,7 +69,6 @@ export default class StandaloneMutationTable extends MutationTable<
                 this._columns[columnName] = column;
             }
         );
-
         // override default visibility for some columns
         this._columns[
             MutationTableColumnType.TUMOR_ALLELE_FREQ
@@ -95,6 +95,7 @@ export default class StandaloneMutationTable extends MutationTable<
         this._columns[MutationTableColumnType.ANNOTATION].order = 30;
         this._columns[MutationTableColumnType.FUNCTIONAL_IMPACT].order = 38;
         this._columns[MutationTableColumnType.MUTATION_TYPE].order = 40;
+        this._columns[MutationTableColumnType.ALPHAMISSENSE].order = 41;
         this._columns[MutationTableColumnType.VARIANT_TYPE].order = 45;
         //this._columns[MutationTableColumnType.COPY_NUM].order = 50;
         //this._columns[MutationTableColumnType.COSMIC].order = 60;
