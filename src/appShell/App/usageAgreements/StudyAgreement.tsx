@@ -29,8 +29,8 @@ export const StudyAgreement: React.FunctionComponent<{}> = function({}) {
             alertMessage={
                 <>
                     <span style={{ color: 'red' }}>Attention:</span>
-                    &nbsp;Please read and follow the rules about usage of MSK
-                    clinical sequencing data in manuscripts.
+                    &nbsp;Please read and follow the <a target="_blank" href={'https://mskcc.sharepoint.com/sites/pub-ResearchDG/SitePages/Home.aspx?ga=1'}>rules about usage of MSK
+                    clinical sequencing data in manuscripts</a>.
                 </>
             }
             dismissButtonText={'Acknowledge'}
@@ -57,12 +57,12 @@ export const StudyAgreement: React.FunctionComponent<{}> = function({}) {
                     public cBioPortal.
                 </>,
                 <>
-                    I have read the{' '}
+                    I have read and agree to the {' '}
                     <a
                         href="https://mskcc.sharepoint.com/sites/pub-ResearchDG/SitePages/Home.aspx?ga=1"
                         target="_blank"
                     >
-                        I have read the MSK-IMPACT Research Data Governance
+                        MSK-IMPACT Research Data Governance
                         publication guidelines.
                     </a>
                     .
