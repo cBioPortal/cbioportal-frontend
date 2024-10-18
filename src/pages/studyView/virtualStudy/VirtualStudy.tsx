@@ -338,12 +338,11 @@ export default class VirtualStudy extends React.Component<
                                                             </strong>
                                                         </p>
                                                         <p>
-                                                            A Virtual Study is a
-                                                            set of sample IDs
-                                                            derived from
-                                                            selected studies.
-                                                            This set can be
-                                                            defined as either
+                                                            This Virtual Study will
+                                                            contain the set of sample IDs
+                                                            currently selected.
+                                                            Furthermore, you can
+                                                            define this Virtual Study  either
                                                             static or dynamic:
                                                         </p>
                                                         <ul>
@@ -352,28 +351,22 @@ export default class VirtualStudy extends React.Component<
                                                                     Static
                                                                 </strong>{' '}
                                                                 – Sample IDs are
-                                                                captured at the
-                                                                time of creation
-                                                                and do not
-                                                                update, even
-                                                                when the data in
-                                                                the parent
-                                                                studies changes.
+                                                                the ones currently selected
+                                                                and no new samples are
+                                                                added to this Virtual Study set,
+                                                                even if the database gets updated with
+                                                                new samples that match the
+                                                                same filtering/selection criteria
+                                                                as the samples in the current set.
                                                             </li>
                                                             <li>
                                                                 <strong>
                                                                     Dynamic
                                                                 </strong>{' '}
-                                                                – Sample IDs are
-                                                                automatically
-                                                                refreshed to
-                                                                reflect any
-                                                                changes in the
-                                                                parent studies,
-                                                                ensuring the
-                                                                virtual study
-                                                                stays
-                                                                up-to-date.
+                                                                – Unlike the Static option, 
+                                                                any new samples added to the database
+                                                                that match the criteria of this Virtual Study
+                                                                will automatically be included in its sample set.
                                                             </li>
                                                         </ul>
                                                     </div>
