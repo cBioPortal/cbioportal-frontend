@@ -63,7 +63,7 @@ function proxyColumnStore(client: any, endpoint: string) {
 
                 const oldSuccess = arguments[7];
 
-                arguments[7] = function() {
+                arguments[7] = function(response: any) {
                     const url =
                         origArgs[1].replace(
                             /column-store\/api/,
@@ -80,11 +80,16 @@ function proxyColumnStore(client: any, endpoint: string) {
                         JSON.stringify({ data: params, url: urlChopper(url) })
                     );
 
-                    validate(axios, url, params, matchedMethod[0], hash).then(
-                        (result: any) => {
-                            reportValidationResult(result, 'LIVE', 'verbose');
-                        }
-                    );
+                    validate(
+                        axios,
+                        url,
+                        params,
+                        matchedMethod[0],
+                        hash,
+                        response.body
+                    ).then((result: any) => {
+                        reportValidationResult(result, 'LIVE', 'verbose');
+                    });
 
                     return oldSuccess.apply(this, arguments);
                 };

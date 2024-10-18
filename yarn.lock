@@ -1135,6 +1135,18 @@
   dependencies:
     commander "^2.15.1"
 
+"@clickhouse/client-common@1.6.0":
+  version "1.6.0"
+  resolved "https://registry.yarnpkg.com/@clickhouse/client-common/-/client-common-1.6.0.tgz#371a64592f55758ac7ddca707a30b78cfc656f84"
+  integrity sha512-DPdfPUIrBumWff8JdE2oLqnOIN1DwxXt48juV+tB6zaonufQR1QImtUGEhIFIqRWJU7zErtQ1eKfkwjLY0MYDg==
+
+"@clickhouse/client@^1.6.0":
+  version "1.6.0"
+  resolved "https://registry.yarnpkg.com/@clickhouse/client/-/client-1.6.0.tgz#703d7b4aef35c60987db9e8f8f4420da1f93adc3"
+  integrity sha512-cjuOL5O11Y/axYIvSaNgZjZqD53BBbScrG0DCgZ7XBCz5KWlA5lIG3fP6A4jME277q8ZUYAQxUOlJjeF18872A==
+  dependencies:
+    "@clickhouse/client-common" "1.6.0"
+
 "@cspotcode/source-map-consumer@0.8.0":
   version "0.8.0"
   resolved "https://registry.yarnpkg.com/@cspotcode/source-map-consumer/-/source-map-consumer-0.8.0.tgz#33bf4b7b39c178821606f669bbc447a6a629786b"

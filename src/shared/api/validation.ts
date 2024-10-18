@@ -10,22 +10,6 @@ export const isObject = (value: any) => {
     );
 };
 
-function filterDuplicates(arr: any) {
-    try {
-        if ('attributeId' in arr[0]) {
-            const obj = arr.reduce((aggr: any, n: any) => {
-                aggr[n.attributeId] = n;
-                return aggr;
-            }, {});
-            return Object.values(obj);
-        } else {
-            return arr;
-        }
-    } catch (ex) {
-        return arr;
-    }
-}
-
 export function dynamicSortSingle(property: string) {
     var sortOrder = 1;
     if (property[0] === '-') {
@@ -99,7 +83,7 @@ export function getArrays(inp: any, output: Array<any>) {
 const deleteFields: Record<string, string[]> = {
     MolecularProfileSampleCounts: ['label'],
     CaseList: ['label'],
-    SampleListCounts: ['label'],
+    SampleListsCounts: ['label'],
     CnaGenes: ['qValue'],
     MutatedGenes: ['qValue'],
 };
@@ -107,7 +91,6 @@ const deleteFields: Record<string, string[]> = {
 const sortFields: Record<string, string> = {
     ClinicalDataBinCounts: 'attributeId,specialValue',
     ClinicalDataBin: 'attributeId,specialValue',
-
     FilteredSamples: 'studyId,patientId,sampleId',
     SampleTreatmentCounts: 'treatment,time',
     PatientTreatmentCounts: 'treatment',
@@ -210,7 +193,12 @@ export function deepSort(inp: any, label: string) {
         }
 
         arr.forEach((m: any) => {
-            if (m.value) m.value = m.value.toLowerCase();
+            if (m.value && m.value.toLowerCase) m.value = m.value.toLowerCase();
+        });
+
+        arr.forEach((m: any) => {
+            if (m.specialValue && m.specialValue.toLowerCase)
+                m.specialValue = m.specialValue.toLowerCase();
         });
 
         if (!arr.length) return;
@@ -403,6 +391,7 @@ export async function validate(
 
 const red = '\x1b[31m';
 const green = '\x1b[32m';
+const blue = '\x1b[36m';
 const reset = '\x1b[0m';
 
 export function reportValidationResult(
@@ -415,10 +404,20 @@ export function reportValidationResult(
 
     const errorStatus = result.chError ? `(${result.chError.status})` : '';
 
+    const data = result.data || result?.test.data;
+    const studies = (data.studyIds || data.studyViewFilter.studyIds).join(',');
+
     !result.status &&
+        !result.supressed &&
         console.groupCollapsed(
-            `${red} ${prefix} ${result.label} (${result.hash}) ${skipMessage} failed ${errorStatus} :( ${reset}`
+            `${red} ${prefix} ${result.label} (${result.hash}) ${skipMessage} failed (${errorStatus}) ${studies} :( ${reset}`
         );
+
+    if (result.supressed) {
+        console.log(
+            `${blue} ${prefix} ${result.label} (${result.hash}) ${skipMessage} SUPPRESSED :( ${reset}`
+        );
+    }
 
     if (logLevel === 'verbose' && !result.status) {
         console.log('failed test', {
@@ -441,7 +440,7 @@ export function reportValidationResult(
     }
 
     if (!result.status && logLevel == 'verbose') {
-        if (result?.clDataSorted?.length) {
+        if (result?.clDataSorted?.length && result?.legacyDataSorted?.length) {
             for (var i = 0; i < result?.clDataSorted?.length; i++) {
                 const cl = result.clDataSorted[i];
                 if (
@@ -460,7 +459,7 @@ export function reportValidationResult(
         }
         console.groupCollapsed('All Data');
         console.log(
-            `CH: ${result.clDataSorted.length}, Legacy:${result.legacyDataSorted.length}`
+            `CH: ${result?.clDataSorted?.length}, Legacy:${result?.legacyDataSorted?.length}`
         );
         console.log('legacy', result.legacyDataSorted);
         console.log('CH', result.clDataSorted);
@@ -475,7 +474,8 @@ export async function runSpecs(
     axios: any,
     host: string = '',
     logLevel = '',
-    onFail: any = () => {}
+    onFail: any = () => {},
+    supressors: any = []
 ) {
     // @ts-ignore
     const allTests = files
@@ -502,6 +502,7 @@ export async function runSpecs(
     let skips: any[] = [];
     let passed: any[] = [];
     let httpErrors: any[] = [];
+    let supressed: any[] = [];
 
     const invokers: (() => Promise<any>)[] = [] as any;
     files
@@ -529,7 +530,7 @@ export async function runSpecs(
                                     test.assertResponse
                                 ).then((report: any) => {
                                     if (!report.status) {
-                                        onFail(test);
+                                        onFail(test, report);
                                     }
 
                                     report.test = test;
@@ -556,9 +557,26 @@ export async function runSpecs(
                                         if (test?.skip) {
                                             skips.push(test.hash);
                                         } else if (!report.status) {
-                                            report.httpError
-                                                ? httpErrors.push(test.hash)
-                                                : errors.push(test.hash);
+                                            let supress = [];
+
+                                            supress = supressors
+                                                .map((f: any) => {
+                                                    try {
+                                                        return f(report);
+                                                    } catch (exc) {
+                                                        return false;
+                                                    }
+                                                })
+                                                .filter((r: any) => r);
+
+                                            if (supress.length) {
+                                                supressed.push(test.hash);
+                                                report.supressed = true;
+                                            } else {
+                                                report.httpError
+                                                    ? httpErrors.push(test.hash)
+                                                    : errors.push(test.hash);
+                                            }
                                         } else if (report.status)
                                             passed.push(test.hash);
 
@@ -595,6 +613,7 @@ export async function runSpecs(
     console.log(`FAILED: ${errors.length} (${errors.join(',')})`);
     console.log(`HTTP ERRORS: ${httpErrors.length} (${httpErrors.join(',')})`);
     console.log(`SKIPPED: ${skips.length}  (${skips.join(',')})`);
+    console.log(`SUPRESSED: ${supressed.length}  (${supressed.join(',')})`);
     console.groupEnd();
     // console.groupEnd();
 }
