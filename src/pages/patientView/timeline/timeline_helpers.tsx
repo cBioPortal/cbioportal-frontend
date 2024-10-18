@@ -103,12 +103,12 @@ export function configureHtanOhsuTimeline(baseConfig: ITimelineConfig) {
 
 export function configureTimelineToxicityColors(baseConfig: ITimelineConfig) {
     baseConfig.trackStructures = baseConfig.trackStructures || [];
-    baseConfig.trackStructures!.push([
-        'TOXICITY',
-        'TOXICITY_TYPE',
-        'SUBTYPE',
-        'TOX_OTHER_SPECIFY',
-    ]);
+    baseConfig.trackStructures!.push(
+        ['TOXICITY', 'TOXICITY_TYPE', 'SUBTYPE', 'TOX_OTHER_SPECIFY'],
+        ['STATUS', 'SUBTYPE'],
+        ['MOLECULAR MARKER', 'SUBTYPE'],
+        ['OUTCOME', 'SUBTYPE']
+    );
 
     baseConfig.eventColorGetter = function(e: TimelineEvent) {
         const grade = e.event.attributes.find(
