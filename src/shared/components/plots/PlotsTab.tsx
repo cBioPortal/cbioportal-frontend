@@ -262,6 +262,10 @@ export type ColoringMenuSelection = {
         entrezGeneId?: number;
     };
 };
+interface OptionType {
+    value: string;
+    label: string;
+}
 
 export interface IPlotsTabProps {
     filteredSamplesByDetailedCancerType: MobxPromise<{
@@ -441,8 +445,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     private scrollPane: HTMLDivElement;
     private dummyScrollPane: HTMLDivElement;
     private scrollingDummyPane = false;
-    @observable plotElementWidth = 0;
 
+    @observable plotElementWidth = 0;
+    @observable sortOption: string = 'sortByAlphabet';
     @observable boxPlotSortByMedian = false;
     @observable.ref searchCaseInput: string;
     @observable.ref searchMutationInput: string;
@@ -900,6 +905,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         this.horzSelection = this.initAxisMenuSelection(false);
         this.vertSelection = this.initAxisMenuSelection(true);
         this.coloringMenuSelection = this.initColoringMenuSelection();
+        this.sortOption = 'sortByAlphabet';
+        this.handleChangeSortOption = this.handleChangeSortOption.bind(this);
 
         this.searchCaseInput = '';
         this.searchMutationInput = '';
@@ -1542,7 +1549,16 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             selectedCategories: [],
         });
     }
-
+    handleChangeSortOption(selectedOption: OptionType) {
+        if (selectedOption) {
+            console.log(selectedOption, 'thisisselectedoptions');
+            console.log(this.sortOption, 'thisSOrtts');
+            this.sortOption = selectedOption.value;
+            // this.setState({ sortOption: selectedOption.value });
+        } else {
+            // Handle case when selectedOption is null (if needed)
+        }
+    }
     private initColoringMenuSelection(): ColoringMenuSelection {
         const self = this;
         return observable({
@@ -4595,6 +4611,32 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                             </label>
                         </div>
                     )}
+                    {this.isStacked && (this.plotType.result==3) && (
+                        <div className="form-group">
+                            <label style={{ margin: '0' }}>
+                                <b>Sort</b>
+                            </label>
+                            <div style={{ display: 'flex' }}>
+                                <ReactSelect
+                                    name="sortOption"
+                                    value={this.sortOption}
+                                    onChange={this.handleChangeSortOption}
+                                    options={[
+                                        {
+                                            value: 'sortByAlphabet',
+                                            label: 'Sort by Alphabet',
+                                        },
+                                        {
+                                            value: 'sortByCount',
+                                            label: 'Sort by Count',
+                                        },
+                                    ]}
+                                    clearable={false}
+                                    searchable={false}
+                                />
+                            </div>
+                        </div>
+                    )}
                     {showRegression && (
                         <div className="checkbox" style={{ marginTop: 14 }}>
                             <label>
@@ -5340,7 +5382,16 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             DownloadControlOption.SHOW_ALL
         );
     }
-
+    get isStacked() {
+        const isPercentage =
+            this.discreteVsDiscretePlotType ===
+            DiscreteVsDiscretePlotType.PercentageStackedBar;
+        return (
+            isPercentage ||
+            this.discreteVsDiscretePlotType ===
+                DiscreteVsDiscretePlotType.StackedBar
+        );
+    }
     @computed get plot() {
         const promises: MobxPromise<any>[] = [
             this.plotType,
@@ -5547,6 +5598,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                     horizontalBars={this.horizontalBars}
                                     percentage={isPercentage}
                                     stacked={isStacked}
+                                    sortOption={this.sortOption}
                                 />
                             );
                         }
