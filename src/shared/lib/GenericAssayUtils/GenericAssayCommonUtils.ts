@@ -158,6 +158,7 @@ export async function fetchGenericAssayData(
             } as GenericAssayFilter,
         };
     });
+    console.log(params, 'here are params2');
     const dataPromises = params.map(param => {
         // do not request data by using empty sample list
         if (
