@@ -10,7 +10,7 @@ console.log(`RUNNING TESTS AGAINST: ${host}`);
 async function main() {
     const start = Date.now();
 
-    const fileFilter = process.env.API_TEST_FILTER || 'clinical';
+    const fileFilter = process.env.API_TEST_FILTER || '';
 
     const files = fileFilter?.trim().length
         ? json.filter(f => new RegExp(fileFilter).test(f.file))
