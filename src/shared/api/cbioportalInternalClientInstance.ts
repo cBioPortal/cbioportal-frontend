@@ -82,7 +82,8 @@ function proxyColumnStore(client: any, endpoint: string) {
                         params,
                         matchedMethod[0],
                         hash,
-                        response.body
+                        response.body,
+                        response.headers['elapsed-time']
                     ).then((result: any) => {
                         reportValidationResult(result, 'LIVE', 'verbose');
                     });
