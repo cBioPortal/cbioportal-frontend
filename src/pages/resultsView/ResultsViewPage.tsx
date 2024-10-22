@@ -313,10 +313,8 @@ export default class ResultsViewPage extends React.Component<
                                 driverAnnotationSettings={
                                     store.driverAnnotationSettings
                                 }
-                                studyIdToStudy={store.studyIdToStudy.result}
-                                structuralVariants={
-                                    store.structuralVariants.result
-                                }
+                                studyIdToStudy={store.studyIdToStudy}
+                                structuralVariants={store.structuralVariants}
                                 hugoGeneSymbols={store.hugoGeneSymbols}
                                 selectedGenericAssayEntitiesGroupByMolecularProfileId={
                                     store.selectedGenericAssayEntitiesGroupByMolecularProfileId
