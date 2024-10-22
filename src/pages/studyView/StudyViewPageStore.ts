@@ -2073,6 +2073,7 @@ export class StudyViewPageStore
     @observable private initialFiltersQuery: Partial<StudyViewFilter> = {};
 
     @observable studyIds: string[] = [];
+    @observable unfilteredStudyIds: string[] = [];
 
     private _clinicalDataFilterSet = observable.map<
         AttributeId,
@@ -3084,15 +3085,7 @@ export class StudyViewPageStore
                     chartUniqueKey === SpecialChartsUniqueKeyEnum.CANCER_STUDIES
                 ) {
                     // this is for pre-defined custom charts
-                    let filteredSampleIdentifiers = getFilteredSampleIdentifiers(
-                        this.samples.result.filter(sample =>
-                            values.includes(sample.studyId)
-                        )
-                    );
-                    this._chartSampleIdentifiersFilterSet.set(
-                        chartUniqueKey,
-                        filteredSampleIdentifiers
-                    );
+                    this.studyIds = values;
                     this.preDefinedCustomChartFilterSet.set(
                         chartUniqueKey,
                         clinicalDataFilter
@@ -3108,9 +3101,7 @@ export class StudyViewPageStore
                     chartUniqueKey === SpecialChartsUniqueKeyEnum.CANCER_STUDIES
                 ) {
                     // this is for pre-defined custom charts
-                    this._chartSampleIdentifiersFilterSet.delete(
-                        chartUniqueKey
-                    );
+                    this.studyIds = this.unfilteredStudyIds;
                     this.preDefinedCustomChartFilterSet.delete(chartUniqueKey);
                 } else {
                     this._customDataFilterSet.delete(chartUniqueKey);
@@ -5504,6 +5495,113 @@ export class StudyViewPageStore
         default: [],
     });
 
+    // contains queried physical studies
+    readonly filteredPhysicalStudiesFromOriginalQuery = remoteData({
+        await: () => [this.everyStudyIdToStudy],
+        invoke: async () => {
+            const everyStudyIdToStudy = this.everyStudyIdToStudy.result!;
+            return _.reduce(
+                this.unfilteredStudyIds,
+                (acc: CancerStudy[], next) => {
+                    if (
+                        everyStudyIdToStudy[next] &&
+                        isQueriedStudyAuthorized(everyStudyIdToStudy[next])
+                    ) {
+                        acc.push(everyStudyIdToStudy[next]);
+                    }
+                    return acc;
+                },
+                []
+            );
+        },
+        default: [],
+    });
+
+    // contains queried vaild virtual studies
+    readonly filteredVirtualStudiesFromOriginalQuery = remoteData({
+        await: () => [this.filteredPhysicalStudiesFromOriginalQuery],
+        invoke: async () => {
+            if (
+                this.filteredPhysicalStudiesFromOriginalQuery.result.length ===
+                this.unfilteredStudyIds.length
+            ) {
+                return [];
+            }
+            let filteredVirtualStudies: VirtualStudy[] = [];
+            let validFilteredPhysicalStudyIds = this.filteredPhysicalStudiesFromOriginalQuery.result.map(
+                study => study.studyId
+            );
+            let virtualStudyIds = _.filter(
+                this.unfilteredStudyIds,
+                id => !_.includes(validFilteredPhysicalStudyIds, id)
+            );
+
+            await Promise.all(
+                virtualStudyIds.map(id =>
+                    sessionServiceClient
+                        .getVirtualStudy(id)
+                        .then(res => {
+                            filteredVirtualStudies.push(res);
+                        })
+                        .catch(() => {
+                            /*do nothing*/
+                        })
+                )
+            );
+            return filteredVirtualStudies;
+        },
+        default: [],
+    });
+
+    // includes all physical studies from queried virtual studies
+    readonly queriedPhysicalStudiesFromOriginalQuery = remoteData({
+        await: () => [
+            this.filteredPhysicalStudiesFromOriginalQuery,
+            this.filteredVirtualStudiesFromOriginalQuery,
+        ],
+        invoke: async () => {
+            let everyStudyIdToStudy = this.everyStudyIdToStudy.result!;
+
+            let studies = _.reduce(
+                this.filteredPhysicalStudiesFromOriginalQuery.result,
+                (acc, next) => {
+                    acc[next.studyId] = everyStudyIdToStudy[next.studyId];
+                    return acc;
+                },
+                {} as { [id: string]: CancerStudy }
+            );
+
+            this.filteredVirtualStudiesFromOriginalQuery.result.forEach(
+                virtualStudy => {
+                    virtualStudy.data.studies.forEach(study => {
+                        if (
+                            !studies[study.id] &&
+                            everyStudyIdToStudy[study.id]
+                        ) {
+                            studies[study.id] = everyStudyIdToStudy[study.id];
+                        }
+                    });
+                }
+            );
+            return _.values(studies);
+        },
+        default: [],
+    });
+
+    // includes all physical studies from queried virtual studies
+    readonly queriedPhysicalStudyIdsFromOriginalQuery = remoteData({
+        await: () => [this.queriedPhysicalStudiesFromOriginalQuery],
+        invoke: () => {
+            return Promise.resolve(
+                _.map(
+                    this.queriedPhysicalStudiesFromOriginalQuery.result,
+                    study => study.studyId
+                )
+            );
+        },
+        default: [],
+    });
+
     readonly studyIdToStudy = remoteData(
         {
             await: () => [this.queriedPhysicalStudies],
@@ -5590,16 +5688,18 @@ export class StudyViewPageStore
     // this is used in page header(name and description)
     readonly displayedStudies = remoteData({
         await: () => [
-            this.filteredVirtualStudies,
-            this.filteredPhysicalStudies,
-            this.queriedPhysicalStudies,
+            this.filteredVirtualStudiesFromOriginalQuery,
+            this.filteredPhysicalStudiesFromOriginalQuery,
+            this.queriedPhysicalStudiesFromOriginalQuery,
         ],
         invoke: async () => {
             if (
-                this.filteredPhysicalStudies.result.length === 0 &&
-                this.filteredVirtualStudies.result.length === 1
+                this.filteredPhysicalStudiesFromOriginalQuery.result.length ===
+                    0 &&
+                this.filteredVirtualStudiesFromOriginalQuery.result.length === 1
             ) {
-                const virtualStudy = this.filteredVirtualStudies.result[0];
+                const virtualStudy = this
+                    .filteredVirtualStudiesFromOriginalQuery.result[0];
                 return [
                     {
                         name: virtualStudy.data.name,
@@ -5608,7 +5708,7 @@ export class StudyViewPageStore
                     } as CancerStudy,
                 ];
             } else {
-                return this.queriedPhysicalStudies.result;
+                return this.queriedPhysicalStudiesFromOriginalQuery.result;
             }
         },
         default: [],
@@ -9866,31 +9966,15 @@ export class StudyViewPageStore
     }
 
     readonly cancerStudiesData = remoteData<ClinicalDataCountSummary[]>({
-        await: () => [this.selectedSamples],
+        await: () => [this.selectedSamplesFromOriginalQuery],
         invoke: async () => {
             // return empty if there are no filtered samples
             if (!this.hasFilteredSamples) {
                 return [];
             }
-            let selectedSamples = [];
-            if (
-                this._chartSampleIdentifiersFilterSet.has(
-                    SpecialChartsUniqueKeyEnum.CANCER_STUDIES
-                )
-            ) {
-                selectedSamples = await getSamplesByExcludingFiltersOnChart(
-                    SpecialChartsUniqueKeyEnum.CANCER_STUDIES,
-                    this.filters,
-                    _.fromPairs(this._chartSampleIdentifiersFilterSet.toJSON()),
-                    this.queriedSampleIdentifiers.result,
-                    this.queriedPhysicalStudyIds.result
-                );
-            } else {
-                selectedSamples = this.selectedSamples.result;
-            }
             const counts = _.values(
                 _.reduce(
-                    selectedSamples,
+                    this.selectedSamplesFromOriginalQuery.result,
                     (acc, sample) => {
                         const studyId = sample.studyId;
                         if (acc[studyId]) {
@@ -9913,6 +9997,101 @@ export class StudyViewPageStore
         },
         onError: () => {},
         default: [],
+    });
+
+    readonly samplesFromOriginalQuery = remoteData<Sample[]>({
+        await: () => [
+            // this.queriedSampleIdentifiers,
+            this.queriedPhysicalStudyIdsFromOriginalQuery,
+        ],
+        invoke: () => {
+            let studyViewFilter: StudyViewFilter = {} as any;
+            //this logic is need since fetchFilteredSamplesUsingPOST api accepts sampleIdentifiers or studyIds not both
+            // if (this.queriedSampleIdentifiers.result.length > 0) {
+            //     studyViewFilter.sampleIdentifiers = this.queriedSampleIdentifiers.result;
+            // } else {
+            studyViewFilter.studyIds = this.queriedPhysicalStudyIdsFromOriginalQuery.result;
+            // }
+
+            if (
+                // !_.isEmpty(studyViewFilter.sampleIdentifiers) ||
+                !_.isEmpty(studyViewFilter.studyIds)
+            ) {
+                return this.internalClient.fetchFilteredSamplesUsingPOST({
+                    studyViewFilter: studyViewFilter,
+                });
+            }
+            return Promise.resolve([]);
+        },
+        onError: () => {},
+        default: [],
+    });
+
+    readonly molecularProfilesFromOriginalQuery = remoteData<
+        MolecularProfile[]
+    >({
+        await: () => [this.queriedPhysicalStudyIdsFromOriginalQuery],
+        invoke: async () => {
+            if (
+                this.queriedPhysicalStudyIdsFromOriginalQuery.result.length > 0
+            ) {
+                return await defaultClient.fetchMolecularProfilesUsingPOST({
+                    molecularProfileFilter: {
+                        studyIds: this.queriedPhysicalStudyIdsFromOriginalQuery
+                            .result,
+                    } as MolecularProfileFilter,
+                });
+            }
+            return [];
+        },
+        onError: () => {},
+        default: [],
+    });
+
+    readonly selectedSamplesFromOriginalQuery = remoteData<Sample[]>({
+        await: () => [
+            this.samplesFromOriginalQuery,
+            this.molecularProfilesFromOriginalQuery,
+            this.queriedPhysicalStudyIdsFromOriginalQuery,
+        ],
+        invoke: () => {
+            //fetch samples when there are only filters applied
+            if (this.chartsAreFiltered) {
+                if (!this.hasSampleIdentifiersInFilter) {
+                    return Promise.resolve([] as Sample[]);
+                }
+                // here we are validating only the molecular profile ids,
+                // but ideally we should validate the entire filters object
+                const invalidMolecularProfiles = findInvalidMolecularProfileIds(
+                    this.filters,
+                    this.molecularProfilesFromOriginalQuery.result
+                );
+                if (invalidMolecularProfiles.length > 0) {
+                    this.appStore.addError(
+                        `Invalid molecular profile id(s): ${invalidMolecularProfiles.join(
+                            ', '
+                        )}`
+                    );
+                }
+                return this.internalClient.fetchFilteredSamplesUsingPOST({
+                    studyViewFilter: _.merge(_.clone(this.filters), {
+                        studyIds: this.queriedPhysicalStudyIdsFromOriginalQuery
+                            .result,
+                    }),
+                });
+            } else {
+                return Promise.resolve(this.samplesFromOriginalQuery.result);
+            }
+        },
+        onError: () => {},
+        default: [],
+        onResult: samples => {
+            if (samples.length === 0) {
+                this.blockLoading = true;
+            } else {
+                this.blockLoading = false;
+            }
+        },
     });
 
     @action
