@@ -347,7 +347,10 @@ export async function validate(
     }
 
     if (assertResponse) {
-        legacyResult = assertResponse;
+        legacyResult = {
+            body: assertResponse,
+            elapsedTime: null,
+        };
     } else {
         let legacyUrl = url.replace(/column-store\//, '');
 
@@ -379,7 +382,7 @@ export async function validate(
     result.hash = hash;
     result.data = params;
     result.chDuration = chResult.elapsedTime;
-    result.legacyDuration = !assertResponse && legacyResult.elapsedTime;
+    result.legacyDuration = legacyResult.elapsedTime;
     result.chError = chResult.error;
 
     if (!result.status) {
