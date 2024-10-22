@@ -2155,6 +2155,11 @@ export class StudyViewPageStore
         ChartDimension
     >();
 
+    @observable public availableChartTypes = observable.map<
+        ChartUniqueKey,
+        ChartType[]
+    >();
+
     @observable public chartsType = observable.map<ChartUniqueKey, ChartType>();
 
     private newlyAddedCharts = observable.array<string>();
