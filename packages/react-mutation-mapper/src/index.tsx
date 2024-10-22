@@ -47,6 +47,12 @@ export {
 } from './component/column/Hgvsc';
 export { default as Hgvsg } from './component/column/Hgvsg';
 export * from './component/column/HgvsHelper';
+export {
+    default as AlphaMissense,
+    download as alphaMissenseDownload,
+    sortValue as alphaMissenseSortValue,
+} from './component/column/AlphaMissense';
+export * from './component/column/AlphaMissenseHelper';
 export { MutationStatus } from './component/column/MutationStatus';
 export {
     default as ProteinChange,
