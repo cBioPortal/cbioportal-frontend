@@ -298,35 +298,37 @@ export default class PieChart extends React.Component<IPieChartProps, {}>
 
     public render() {
         return (
-            <DefaultTooltip
-                placement={this.props.placement}
-                overlay={
-                    <ClinicalTable
-                        width={300}
-                        height={150}
-                        openComparisonPage={this.props.openComparisonPage}
-                        data={this.props.data}
-                        label={this.props.label}
-                        labelDescription={this.props.labelDescription}
-                        patientAttribute={this.props.patientAttribute}
-                        showAddRemoveAllButtons={true}
-                        filters={this.filters}
-                        highlightedRow={this.highlightedRow}
-                        onUserSelection={this.props.onUserSelection}
-                    />
-                }
-                destroyTooltipOnHide={true}
-                trigger={['hover']}
-            >
-                <svg
-                    width={this.props.width}
-                    height={this.props.height}
-                    ref={(ref: any) => (this.svg = ref)}
+            <>
+                <DefaultTooltip
+                    placement={this.props.placement}
+                    overlay={
+                        <ClinicalTable
+                            width={300}
+                            height={150}
+                            openComparisonPage={this.props.openComparisonPage}
+                            data={this.props.data}
+                            label={this.props.label}
+                            labelDescription={this.props.labelDescription}
+                            patientAttribute={this.props.patientAttribute}
+                            showAddRemoveAllButtons={true}
+                            filters={this.filters}
+                            highlightedRow={this.highlightedRow}
+                            onUserSelection={this.props.onUserSelection}
+                        />
+                    }
+                    destroyTooltipOnHide={true}
+                    trigger={['hover']}
                 >
-                    {this.victoryPie}
-                    {this.victoryLegend}
-                </svg>
-            </DefaultTooltip>
+                    <svg
+                        width={this.props.width}
+                        height={this.props.height}
+                        ref={(ref: any) => (this.svg = ref)}
+                    >
+                        {this.victoryPie}
+                        {this.victoryLegend}
+                    </svg>
+                </DefaultTooltip>
+            </>
         );
     }
 }
