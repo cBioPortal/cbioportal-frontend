@@ -129,6 +129,9 @@ export default class ResourceTab extends React.Component<
                         {this.currentResourceDatum.sampleId
                             ? this.currentResourceDatum.sampleId
                             : this.currentResourceDatum.patientId}
+                        {this.currentResourceDatum.resourceDefinition
+                            .description &&
+                            ` | ${this.currentResourceDatum.resourceDefinition.description}`}
                     </p>
                 </div>
                 <div
