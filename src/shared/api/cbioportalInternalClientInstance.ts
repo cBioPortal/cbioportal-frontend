@@ -29,11 +29,7 @@ function proxyColumnStore(client: any, endpoint: string) {
     const old = client[method];
 
     client[method] = function(params: any) {
-        const host =
-            getBrowserWindow().location.hostname ===
-            'genie-public-beta.cbioportal.org'
-                ? 'genie-public-beta1.cbioportal.org'
-                : getLoadConfig().baseUrl;
+        const host = getLoadConfig().baseUrl;
 
         const oldRequest = this.request;
 
