@@ -71,7 +71,7 @@ export const StudyAgreement: React.FunctionComponent<{}> = function({}) {
                         href="https://mskcc.sharepoint.com/sites/pub-ResearchDG/SitePages/Home.aspx?ga=1"
                         target="_blank"
                     >
-                        MSK-IMPACT Research Data Governance publication
+                        MSK-IMPACT Memorial Hospital Research Data Governance publication
                         guidelines
                     </a>
                     .
