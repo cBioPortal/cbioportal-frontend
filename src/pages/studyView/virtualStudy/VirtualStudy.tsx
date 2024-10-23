@@ -97,7 +97,7 @@ export default class VirtualStudy extends React.Component<
     {}
 > {
     @observable.ref private name: string;
-    @observable.ref private description: string;
+    @observable.ref private description: string = '';
     @observable.ref private dynamic: boolean = false;
 
     @observable private saving = false;
@@ -108,17 +108,7 @@ export default class VirtualStudy extends React.Component<
         super(props);
         makeObservable(this);
         this.name = props.name || '';
-        this.description =
-            props.description ||
-            getVirtualStudyDescription(
-                this.props.description,
-                this.props.studyWithSamples,
-                this.props.filter,
-                this.attributeNamesSet,
-                this.props.molecularProfileNameSet,
-                this.props.caseListNameSet,
-                this.props.user
-            );
+        this.setDynamicTypeTo(false);
     }
 
     @computed get namePlaceHolder() {
@@ -233,6 +223,28 @@ export default class VirtualStudy extends React.Component<
         );
     }
 
+    updateDescriptionIfBlankOrDefault(hideSampleCounts: boolean) {
+        const getVirtualStudyDescriptionWithCounts = getVirtualStudyDescription.bind(null,
+            this.props.description,
+            this.props.studyWithSamples,
+            this.props.filter,
+            this.attributeNamesSet,
+            this.props.molecularProfileNameSet,
+            this.props.caseListNameSet,
+            this.props.user
+        );
+        const blankOrDefaultDescription = !this.description || !this.description.trim() || this.description === getVirtualStudyDescriptionWithCounts(!hideSampleCounts);
+        if (blankOrDefaultDescription) {
+            this.description = getVirtualStudyDescriptionWithCounts(hideSampleCounts);
+        }
+    }
+
+    setDynamicTypeTo(dynamic: boolean) {
+        this.dynamic = dynamic;
+
+        this.updateDescriptionIfBlankOrDefault(dynamic);
+    }
+
     render() {
         return (
             <div
@@ -308,9 +320,7 @@ export default class VirtualStudy extends React.Component<
                                                     name="option"
                                                     value="static"
                                                     checked={!this.dynamic}
-                                                    onChange={_ =>
-                                                        (this.dynamic = false)
-                                                    }
+                                                    onChange={_ => this.setDynamicTypeTo(false) }
                                                 />{' '}
                                                 Static
                                             </label>
@@ -320,9 +330,7 @@ export default class VirtualStudy extends React.Component<
                                                     name="option"
                                                     value="dynamic"
                                                     checked={this.dynamic}
-                                                    onChange={_ =>
-                                                        (this.dynamic = true)
-                                                    }
+                                                    onChange={_ => this.setDynamicTypeTo(true) }
                                                 />{' '}
                                                 Dynamic
                                             </label>
