@@ -47,6 +47,14 @@ div:active {
     }
 }
 
+.form-group-inline {
+    @extend .form-group;
+
+    label {
+        margin-right: 6px;
+    }
+}
+
 .posRelative {
     position: relative;
 }
