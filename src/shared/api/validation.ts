@@ -91,7 +91,7 @@ const deleteFields: Record<string, string[]> = {
 const sortFields: Record<string, string> = {
     ClinicalDataBinCounts: 'attributeId,specialValue',
     ClinicalDataBin: 'attributeId,specialValue',
-    FilteredSamples: 'studyId,patientId,sampleId',
+    FilteredSamples: 'uniqueSampleKey',
     SampleTreatmentCounts: 'treatment,time',
     PatientTreatmentCounts: 'treatment',
     ClinicalDataCounts: 'attributeId,value',
@@ -385,6 +385,8 @@ export async function validate(
     result.chDuration = chResult.elapsedTime;
     result.legacyDuration = legacyResult.elapsedTime;
     result.chError = chResult.error;
+    result.legacyResult = legacyResult;
+    result.chResult = chResult;
 
     if (!result.status) {
         onFail(url);
@@ -479,7 +481,7 @@ export async function runSpecs(
     host: string = '',
     logLevel = '',
     onFail: any = () => {},
-    supressors: any = []
+    suppressors: any = []
 ) {
     // @ts-ignore
     const allTests = files
@@ -563,7 +565,7 @@ export async function runSpecs(
                                         } else if (!report.status) {
                                             let supress = [];
 
-                                            supress = supressors
+                                            supress = suppressors
                                                 .map((f: any) => {
                                                     try {
                                                         return f(report);
