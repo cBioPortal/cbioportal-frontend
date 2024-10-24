@@ -86,6 +86,7 @@ const deleteFields: Record<string, string[]> = {
     SampleListsCounts: ['label'],
     CnaGenes: ['qValue'],
     MutatedGenes: ['qValue'],
+    ClinicalDataViolinPlots: ['sampleId'],
 };
 
 const sortFields: Record<string, string> = {
@@ -97,7 +98,7 @@ const sortFields: Record<string, string> = {
     ClinicalDataCounts: 'attributeId,value',
     ClinicalDataTypeCounts: 'eventType',
     ClinicalEventTypeCounts: 'eventType',
-    ClinicalDataViolinPlots: 'sampleId,numSamples',
+    ClinicalDataViolinPlots: 'sampleId,numSamples,category',
 };
 
 function getLegacyPatientTreatmentCountUrl(url: string) {
@@ -446,27 +447,27 @@ export function reportValidationResult(
     }
 
     if (!result.status && logLevel == 'verbose') {
-        if (result?.clDataSorted?.length && result?.legacyDataSorted?.length) {
-            for (var i = 0; i < result?.clDataSorted?.length; i++) {
-                const cl = result.clDataSorted[i];
-                if (
-                    JSON.stringify(cl) !==
-                    JSON.stringify(result.legacyDataSorted[i])
-                ) {
+        // violin plot response has a single node of rows
+        const chSubject = result?.clDataSorted.rows || result?.clDataSorted;
+        const legacySubject =
+            result?.legacyDataSorted.rows || result?.legacyDataSorted;
+
+        if (chSubject?.length && legacySubject?.length) {
+            for (var i = 0; i < chSubject?.length; i++) {
+                const cl = chSubject[i];
+                if (JSON.stringify(cl) !== JSON.stringify(legacySubject[i])) {
                     console.groupCollapsed(
                         `First invalid item (${result.label})`
                     );
                     console.log('Clickhouse:', cl);
-                    console.log('Legacy:', result.legacyDataSorted[i]);
+                    console.log('Legacy:', legacySubject[i]);
                     console.groupEnd();
                     break;
                 }
             }
         }
         console.groupCollapsed('All Data');
-        console.log(
-            `CH: ${result?.clDataSorted?.length}, Legacy:${result?.legacyDataSorted?.length}`
-        );
+        console.log(`CH: ${chSubject?.length}, Legacy:${legacySubject.length}`);
         console.log('legacy', result.legacyDataSorted);
         console.log('CH', result.clDataSorted);
         console.groupEnd();
