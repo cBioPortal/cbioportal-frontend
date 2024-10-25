@@ -171,6 +171,8 @@ export function scatterPlotSize(
         return 8;
     } else if (active) {
         return 6;
+    // } else if (d.lineHovered) {
+    //     return 6;
     } else {
         return 4;
     }
