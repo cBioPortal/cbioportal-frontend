@@ -34,6 +34,26 @@ class FilesLinksTableComponent extends LazyMobXTable<{
 
 const RECORD_LIMIT = 500;
 
+function getResourceDataOfEntireStudy(studyClinicalData: {
+    [uniqueSampleKey: string]: ClinicalData[];
+}) {
+    // Need a better way to get just the studyId
+    const studyId = Object.values(studyClinicalData)[0][0]['studyId'];
+
+    const allResources = internalClient.getAllStudyResourceDataInStudyPatientSampleUsingGET(
+        {
+            studyId: studyId,
+            projection: 'DETAILED',
+        }
+    );
+    console.log(allResources);
+    // Need to filter out allResources to only the patients selected in the
+    // studyClinicalData
+    // TODO
+
+    return allResources;
+}
+
 function getResourceDataOfPatients(studyClinicalData: {
     [uniqueSampleKey: string]: ClinicalData[];
 }) {
@@ -49,6 +69,7 @@ function getResourceDataOfPatients(studyClinicalData: {
         )
         .flatten()
         .value();
+    console.log(resourcesPerPatient); // All PROMISES
 
     return Promise.all(resourcesPerPatient).then(resourcesPerPatient =>
         _(resourcesPerPatient)
@@ -97,7 +118,7 @@ function buildItemsAndResources(resourceData: {
 
 async function fetchFilesLinksData(
     filters: StudyViewFilter,
-    sampleIdResourceData: { [sampleId: string]: ResourceData[] },
+    // sampleIdResourceData: { [sampleId: string]: ResourceData[] },
     searchTerm: string | undefined,
     sortAttributeId: string | undefined,
     sortDirection: 'asc' | 'desc' | undefined,
@@ -112,18 +133,52 @@ async function fetchFilesLinksData(
         0
     );
 
-    const resourcesForPatients = await getResourceDataOfPatients(
+    // Fetching resource data of patients
+    // const resourcesForPatients = await getResourceDataOfPatients(
+    //     studyClinicalDataResponse.data // The studyViewFilterdata. The 42 patients
+    // );
+
+    const resourcesForEntireStudy = await getResourceDataOfEntireStudy(
+        // The studyViewFilterdata. The 42 patients, do we still need this if we only need the study id? Yes, we need to filter down to only these patients
         studyClinicalDataResponse.data
     );
-    const resourcesForPatientsAndSamples: { [key: string]: ResourceData[] } = {
-        ...sampleIdResourceData,
-        ...resourcesForPatients,
-    };
+    console.log('resourcesForEntireStudy', resourcesForEntireStudy);
+
+    const reduced = resourcesForEntireStudy.reduce(
+        (map: { [key: string]: ResourceData[] }, resource) => {
+            if (resource.resourceDefinition.resourceType == 'PATIENT') {
+                if (map.hasOwnProperty(resource.patientId)) {
+                    map[resource.patientId].push(resource);
+                } else {
+                    map[resource.patientId] = [resource];
+                }
+            } else if (resource.resourceDefinition.resourceType == 'SAMPLE') {
+                if (map.hasOwnProperty(resource.sampleId)) {
+                    map[resource.sampleId].push(resource);
+                } else {
+                    map[resource.sampleId] = [resource];
+                }
+            }
+
+            return map;
+        },
+        {}
+    );
+    console.log('Reduced', reduced);
+
+    // console.log("resourcesForPatients", resourcesForPatients);
+
+    // const resourcesForPatientsAndSamples: { [key: string]: ResourceData[] } = {
+    //     ...sampleIdResourceData,
+    //     ...resourcesForPatients,
+    // };
 
     // we create objects with the necessary properties for each resource
     // calculate the total number of resources per patient.
+    // console.log("resourcesForPatientsAndSamples", resourcesForPatientsAndSamples);
     const { resourcesPerPatient, items } = buildItemsAndResources(
-        resourcesForPatientsAndSamples
+        // resourcesForPatientsAndSamples
+        reduced
     );
 
     // set the number of resources available per patient.
@@ -197,7 +252,7 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
         await: () => [
             this.props.store.selectedSamples,
             this.props.store.resourceDefinitions,
-            this.props.store.sampleResourceData,
+            // this.props.store.sampleResourceData,
         ],
         onError: () => {},
         invoke: async () => {
@@ -207,7 +262,7 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
 
             const resources = await fetchFilesLinksData(
                 this.props.store.filters,
-                this.props.store.sampleResourceData.result!,
+                // this.props.store.sampleResourceData.result!,
                 this.searchTerm,
                 'patientId',
                 'asc',
