@@ -303,54 +303,30 @@ export type IntegerRange = {
         'start': number
 
 };
+export type IntergenicConsequenceSummary = {
+    'consequenceTerms': Array < string >
+
+        'impact': string
+
+        'variantAllele': string
+
+        'variantClassification': string
+
+};
 export type MutationAssessor = {
-    'codonStartPosition': string
-
-        'cosmicCount': number
-
-        'functionalImpact': string
+    'functionalImpactPrediction': string
 
         'functionalImpactScore': number
 
-        'hgvs': string
+        'hgvspShort': string
 
-        'hugoSymbol': string
+        'mav': number
 
-        'input': string
+        'msa': string
 
-        'mappingIssue': string
-
-        'msaGaps': number
-
-        'msaHeight': number
-
-        'msaLink': string
-
-        'pdbLink': string
-
-        'referenceGenomeVariant': string
-
-        'referenceGenomeVariantType': string
-
-        'refseqId': string
-
-        'refseqPosition': number
-
-        'refseqResidue': string
-
-        'snpCount': number
+        'sv': number
 
         'uniprotId': string
-
-        'uniprotPosition': number
-
-        'uniprotResidue': string
-
-        'variant': string
-
-        'variantConservationScore': number
-
-        'variantSpecificityScore': number
 
 };
 export type Mutdb = {
@@ -601,6 +577,8 @@ export type VariantAnnotationSummary = {
         'canonicalTranscriptId': string
 
         'genomicLocation': GenomicLocation
+
+        'intergenicConsequenceSummaries': Array < IntergenicConsequenceSummary >
 
         'strandSign': string
 
@@ -1543,7 +1521,7 @@ export default class GenomeNexusAPIInternal {
             return response.body;
         });
     };
-    postMutationAssessorAnnotationURL(parameters: {
+    postMutationAssessorURL(parameters: {
         'variants': Array < string > ,
         $queryParameters ? : any
     }): string {
@@ -1563,10 +1541,10 @@ export default class GenomeNexusAPIInternal {
     /**
      * Retrieves mutation assessor information for the provided list of variants
      * @method
-     * @name GenomeNexusAPIInternal#postMutationAssessorAnnotation
+     * @name GenomeNexusAPIInternal#postMutationAssessor
      * @param {} variants - List of variants. For example ["7:g.140453136A>T","12:g.25398285C>A"]
      */
-    postMutationAssessorAnnotationWithHttpInfo(parameters: {
+    postMutationAssessorWithHttpInfo(parameters: {
         'variants': Array < string > ,
         $queryParameters ? : any,
         $domain ? : string
@@ -1607,20 +1585,20 @@ export default class GenomeNexusAPIInternal {
     /**
      * Retrieves mutation assessor information for the provided list of variants
      * @method
-     * @name GenomeNexusAPIInternal#postMutationAssessorAnnotation
+     * @name GenomeNexusAPIInternal#postMutationAssessor
      * @param {} variants - List of variants. For example ["7:g.140453136A>T","12:g.25398285C>A"]
      */
-    postMutationAssessorAnnotation(parameters: {
+    postMutationAssessor(parameters: {
             'variants': Array < string > ,
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < MutationAssessor >
         > {
-            return this.postMutationAssessorAnnotationWithHttpInfo(parameters).then(function(response: request.Response) {
+            return this.postMutationAssessorWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
-    fetchMutationAssessorAnnotationGETURL(parameters: {
+    fetchMutationAssessorGETURL(parameters: {
         'variant': string,
         $queryParameters ? : any
     }): string {
@@ -1642,10 +1620,10 @@ export default class GenomeNexusAPIInternal {
     /**
      * Retrieves mutation assessor information for the provided list of variants
      * @method
-     * @name GenomeNexusAPIInternal#fetchMutationAssessorAnnotationGET
+     * @name GenomeNexusAPIInternal#fetchMutationAssessorGET
      * @param {string} variant - A variant. For example 7:g.140453136A>T
      */
-    fetchMutationAssessorAnnotationGETWithHttpInfo(parameters: {
+    fetchMutationAssessorGETWithHttpInfo(parameters: {
         'variant': string,
         $queryParameters ? : any,
         $domain ? : string
@@ -1684,15 +1662,15 @@ export default class GenomeNexusAPIInternal {
     /**
      * Retrieves mutation assessor information for the provided list of variants
      * @method
-     * @name GenomeNexusAPIInternal#fetchMutationAssessorAnnotationGET
+     * @name GenomeNexusAPIInternal#fetchMutationAssessorGET
      * @param {string} variant - A variant. For example 7:g.140453136A>T
      */
-    fetchMutationAssessorAnnotationGET(parameters: {
+    fetchMutationAssessorGET(parameters: {
         'variant': string,
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < MutationAssessor > {
-        return this.fetchMutationAssessorAnnotationGETWithHttpInfo(parameters).then(function(response: request.Response) {
+        return this.fetchMutationAssessorGETWithHttpInfo(parameters).then(function(response: request.Response) {
             return response.body;
         });
     };

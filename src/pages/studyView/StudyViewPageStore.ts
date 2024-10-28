@@ -11477,7 +11477,7 @@ export class StudyViewPageStore
             ),
     });
 
-    readonly clinicalAttributes_customCharts = remoteData({
+    readonly customAttributes = remoteData({
         await: () => [this.sampleMap],
         invoke: async () => {
             let ret: ExtendedClinicalAttribute[] = [];
@@ -11523,7 +11523,7 @@ export class StudyViewPageStore
         this.coverageInformation,
         this.filteredSampleKeyToSample,
         this.filteredPatientKeyToPatient,
-        this.clinicalAttributes_customCharts
+        this.customAttributes
     );
 
     private _numericGeneMolecularDataCache = new MobxPromiseCache<

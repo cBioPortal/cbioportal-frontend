@@ -28,11 +28,21 @@ export const StudyAgreement: React.FunctionComponent<{}> = function({}) {
         <UsageAgreement
             alertMessage={
                 <>
-                    <span style={{ color: 'red' }}>WARNING:</span>
-                    &nbsp;All URLs in this website are private - do NOT include
-                    in manuscripts.
+                    <span style={{ color: 'red' }}>Attention:</span>
+                    &nbsp;Please read and follow the{' '}
+                    <a
+                        target="_blank"
+                        href={
+                            'https://mskcc.sharepoint.com/sites/pub-ResearchDG/SitePages/Home.aspx?ga=1'
+                        }
+                    >
+                        rules about usage of MSK clinical sequencing data in
+                        manuscripts
+                    </a>
+                    .
                 </>
             }
+            dismissButtonText={'Acknowledge'}
             persistenceKey={STUDY_VIEW_WARNING_PERSISTENCE_KEY}
             expirationInDays={90}
             clauses={[
@@ -56,31 +66,13 @@ export const StudyAgreement: React.FunctionComponent<{}> = function({}) {
                     public cBioPortal.
                 </>,
                 <>
-                    When adding a link to a cBioPortal cohort in a manuscript,{' '}
-                    <strong>
-                        I will not link to this private portal (
-                        {window.location.hostname})
-                    </strong>
-                    , but will instead link to this study on the public
-                    cBioPortal (
-                    <a href="https://www.cbioportal.org/" target="_blank">
-                        cbioportal.org
-                    </a>
-                    ). Contact{' '}
-                    <a href="mailto:cbioportal@cbio.mskcc.org">
-                        cbioportal@cbio.mskcc.org
-                    </a>{' '}
-                    with any questions about getting the data transferred to the
-                    public cBioPortal.
-                </>,
-                <>
-                    I have read the{' '}
+                    I have read and agree to the{' '}
                     <a
-                        href="https://cmo.mskcc.org/index.php/msk-impact/"
+                        href="https://mskcc.sharepoint.com/sites/pub-ResearchDG/SitePages/Home.aspx?ga=1"
                         target="_blank"
                     >
-                        MSK-IMPACT Data publication guidelines (intranet/VPN
-                        only)
+                        MSK-IMPACT Memorial Hospital Research Data Governance publication
+                        guidelines
                     </a>
                     .
                 </>,
