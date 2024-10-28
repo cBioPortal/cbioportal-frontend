@@ -57,7 +57,7 @@ $($TEST_HOME/runtime-config/setup_environment.sh)
 
 if [[ "$(uname -s)" == "Darwin" ]] && [[ "$(sysctl -n machdep.cpu.brand_string)" =~ ^Apple\ M.*$ ]]; then
   # if macOS and M-series chip, use images for ARM architecture
-  export DOCKER_IMAGE_MYSQL=biarms/mysql:5.7
+  export DOCKER_IMAGE_MYSQL=mysql:8.0
 else
   # else use images for x86_64 architecture
   export DOCKER_IMAGE_MYSQL=mysql:5.7
