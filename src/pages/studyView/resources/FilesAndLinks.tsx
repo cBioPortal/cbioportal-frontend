@@ -39,18 +39,12 @@ function getResourceDataOfEntireStudy(studyClinicalData: {
 }) {
     // Need a better way to get just the studyId
     const studyId = Object.values(studyClinicalData)[0][0]['studyId'];
-
     const allResources = internalClient.getAllStudyResourceDataInStudyPatientSampleUsingGET(
         {
             studyId: studyId,
             projection: 'DETAILED',
         }
     );
-    console.log(allResources);
-    // Need to filter out allResources to only the patients selected in the
-    // studyClinicalData
-    // TODO
-
     return allResources;
 }
 
@@ -69,7 +63,6 @@ function getResourceDataOfPatients(studyClinicalData: {
         )
         .flatten()
         .value();
-    console.log(resourcesPerPatient); // All PROMISES
 
     return Promise.all(resourcesPerPatient).then(resourcesPerPatient =>
         _(resourcesPerPatient)
@@ -118,6 +111,7 @@ function buildItemsAndResources(resourceData: {
 
 async function fetchFilesLinksData(
     filters: StudyViewFilter,
+    selectedSamples: Array<any>,
     // sampleIdResourceData: { [sampleId: string]: ResourceData[] },
     searchTerm: string | undefined,
     sortAttributeId: string | undefined,
@@ -133,52 +127,46 @@ async function fetchFilesLinksData(
         0
     );
 
-    // Fetching resource data of patients
-    // const resourcesForPatients = await getResourceDataOfPatients(
-    //     studyClinicalDataResponse.data // The studyViewFilterdata. The 42 patients
-    // );
+    const selectedSamplesList = selectedSamples.map(item => item.sampleId);
+    const selectedPatientsList = [
+        ...new Set(selectedSamples.map(item => item.patientId)),
+    ];
 
     const resourcesForEntireStudy = await getResourceDataOfEntireStudy(
-        // The studyViewFilterdata. The 42 patients, do we still need this if we only need the study id? Yes, we need to filter down to only these patients
         studyClinicalDataResponse.data
     );
-    console.log('resourcesForEntireStudy', resourcesForEntireStudy);
 
-    const reduced = resourcesForEntireStudy.reduce(
-        (map: { [key: string]: ResourceData[] }, resource) => {
-            if (resource.resourceDefinition.resourceType == 'PATIENT') {
-                if (map.hasOwnProperty(resource.patientId)) {
-                    map[resource.patientId].push(resource);
+    const resourcesForPatientsAndSamples = resourcesForEntireStudy
+        .filter(
+            resource =>
+                selectedSamplesList.includes(resource.sampleId) ||
+                selectedPatientsList.includes(resource.patientId)
+        )
+        .reduce((idMap: { [key: string]: ResourceData[] }, resource) => {
+            const { resourceType } = resource.resourceDefinition;
+            const { patientId, sampleId } = resource;
+
+            if (resourceType == 'PATIENT') {
+                if (idMap.hasOwnProperty(patientId)) {
+                    idMap[patientId].push(resource);
                 } else {
-                    map[resource.patientId] = [resource];
+                    idMap[patientId] = [resource];
                 }
-            } else if (resource.resourceDefinition.resourceType == 'SAMPLE') {
-                if (map.hasOwnProperty(resource.sampleId)) {
-                    map[resource.sampleId].push(resource);
+            } else if (resourceType == 'SAMPLE') {
+                if (idMap.hasOwnProperty(sampleId)) {
+                    idMap[sampleId].push(resource);
                 } else {
-                    map[resource.sampleId] = [resource];
+                    idMap[sampleId] = [resource];
                 }
             }
 
-            return map;
-        },
-        {}
-    );
-    console.log('Reduced', reduced);
-
-    // console.log("resourcesForPatients", resourcesForPatients);
-
-    // const resourcesForPatientsAndSamples: { [key: string]: ResourceData[] } = {
-    //     ...sampleIdResourceData,
-    //     ...resourcesForPatients,
-    // };
+            return idMap;
+        }, {});
 
     // we create objects with the necessary properties for each resource
     // calculate the total number of resources per patient.
-    // console.log("resourcesForPatientsAndSamples", resourcesForPatientsAndSamples);
     const { resourcesPerPatient, items } = buildItemsAndResources(
-        // resourcesForPatientsAndSamples
-        reduced
+        resourcesForPatientsAndSamples
     );
 
     // set the number of resources available per patient.
@@ -262,12 +250,14 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
 
             const resources = await fetchFilesLinksData(
                 this.props.store.filters,
+                this.props.store.selectedSamples.result,
                 // this.props.store.sampleResourceData.result!,
                 this.searchTerm,
                 'patientId',
                 'asc',
                 RECORD_LIMIT
             );
+
             return Promise.resolve(resources);
         },
     });
