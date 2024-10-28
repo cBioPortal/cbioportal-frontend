@@ -138,30 +138,36 @@ async function fetchFilesLinksData(
 
     const resourcesForPatientsAndSamples = resourcesForEntireStudy
         .filter(
-            resource =>
+            (resource: ResourceData) =>
                 selectedSamplesList.includes(resource.sampleId) ||
                 selectedPatientsList.includes(resource.patientId)
         )
-        .reduce((idMap: { [key: string]: ResourceData[] }, resource) => {
-            const { resourceType } = resource.resourceDefinition;
-            const { patientId, sampleId } = resource;
+        .reduce(
+            (
+                idMap: { [key: string]: ResourceData[] },
+                resource: ResourceData
+            ) => {
+                const { resourceType } = resource.resourceDefinition;
+                const { patientId, sampleId } = resource;
 
-            if (resourceType == 'PATIENT') {
-                if (idMap.hasOwnProperty(patientId)) {
-                    idMap[patientId].push(resource);
-                } else {
-                    idMap[patientId] = [resource];
+                if (resourceType == 'PATIENT') {
+                    if (idMap.hasOwnProperty(patientId)) {
+                        idMap[patientId].push(resource);
+                    } else {
+                        idMap[patientId] = [resource];
+                    }
+                } else if (resourceType == 'SAMPLE') {
+                    if (idMap.hasOwnProperty(sampleId)) {
+                        idMap[sampleId].push(resource);
+                    } else {
+                        idMap[sampleId] = [resource];
+                    }
                 }
-            } else if (resourceType == 'SAMPLE') {
-                if (idMap.hasOwnProperty(sampleId)) {
-                    idMap[sampleId].push(resource);
-                } else {
-                    idMap[sampleId] = [resource];
-                }
-            }
 
-            return idMap;
-        }, {});
+                return idMap;
+            },
+            {}
+        );
 
     // we create objects with the necessary properties for each resource
     // calculate the total number of resources per patient.
