@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 
 services:
   cbioportal:
@@ -6,45 +6,45 @@ services:
       - $TEST_HOME/docker_compose/keycloak/localdb.crt:/cbioportal-webapp/local.crt:ro
       - $TEST_HOME/docker_compose/keycloak/localdb.key:/cbioportal-webapp/local.key
       - $E2E_WORKSPACE/keycloak/idp-metadata.xml:/cbioportal-webapp/client-tailored-saml-idp-metadata.xml:ro
-    command: > 
-      /bin/sh -c "java -Xms2g -Xmx4g  -cp '/cbioportal-webapp:/cbioportal-webapp/lib/*' org.cbioportal.PortalApplication --spring.config.location=cbioportal-webapp/application.properties --dat.method=none --multithread.core_pool_size=1 
+    command: >
+      /bin/sh -c "java -Xms2g -Xmx4g  -cp '/cbioportal-webapp:/cbioportal-webapp/lib/*' org.cbioportal.PortalApplication --spring.config.location=cbioportal-webapp/application.properties --dat.method=none --multithread.core_pool_size=1
       --authenticate=saml --spring.security.saml2.relyingparty.registration.cbio-idp.assertingparty.metadata-uri=classpath:/client-tailored-saml-idp-metadata.xml --session.service.url=http://cbioportal-session:5000/api/sessions/my_portal/
       --spring.security.saml2.relyingparty.registration.cbio-idp.entity-id=cbioportal --spring.security.saml2.relyingparty.registration.cbio-idp.signing.credentials[0].certificate-location=classpath:/local.crt
       --spring.security.saml2.relyingparty.registration.cbio-idp.signing.credentials[0].private-key-location=classpath:/local.key"
   keycloak:
     networks:
-    - cbio-net
+      - cbio-net
     container_name: keycloak
     image: quay.io/keycloak/keycloak:11.0.3
     restart: unless-stopped
     depends_on:
-    - kcdb
+      - kcdb
     ports:
-    - "8081:8080"
+      - "8081:8080"
     environment:
-    - DB_VENDOR=mysql
-    - DB_ADDR=kcdb
-    - DB_USER=keycloak
-    - DB_PORT=3306
-    - DB_PASSWORD=password
-    - DB_DATABASE=keycloak
-    - KEYCLOAK_USER=admin
-    - KEYCLOAK_PASSWORD=admin
-    - JDBC_PARAMS=${KEYCLOAK_JDBC_PARAMS:-useSSL=false&serverTimezone=UTC}
+      - DB_VENDOR=mysql
+      - DB_ADDR=kcdb
+      - DB_USER=keycloak
+      - DB_PORT=3306
+      - DB_PASSWORD=password
+      - DB_DATABASE=keycloak
+      - KEYCLOAK_USER=admin
+      - KEYCLOAK_PASSWORD=admin
+      - JDBC_PARAMS=${KEYCLOAK_JDBC_PARAMS:-useSSL=false&serverTimezone=UTC}
 
   kcdb:
     networks:
-    - cbio-net
+      - cbio-net
     image: ${DOCKER_IMAGE_MYSQL}
     container_name: kcdb
     restart: unless-stopped
     volumes:
-    - $E2E_WORKSPACE/kc_db_data:/var/lib/mysql
+      - $E2E_WORKSPACE/kc_db_data:/var/lib/mysql
     environment:
       - MYSQL_ROOT_PASSWORD=root_password
       - MYSQL_USER=keycloak
       - MYSQL_PASSWORD=password
       - MYSQL_DATABASE=keycloak
-    command: --ssl=0 --lower_case_table_names=1
+    command: --ssl=0 --lower_case_table_names=1 --local-infile=1
 networks:
-  cbio-net: 
+  cbio-net:
