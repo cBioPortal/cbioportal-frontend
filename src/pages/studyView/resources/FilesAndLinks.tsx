@@ -34,11 +34,10 @@ class FilesLinksTableComponent extends LazyMobXTable<{
 
 const RECORD_LIMIT = 500;
 
-function getResourceDataOfEntireStudy(studyClinicalData: {
-    [uniqueSampleKey: string]: ClinicalData[];
-}) {
-    // Need a better way to get just the studyId
-    const studyId = Object.values(studyClinicalData)[0][0]['studyId'];
+function getResourceDataOfEntireStudy(studyIds: string[]) {
+    // Only handle the first studyId for now. Can be expanded to make a call per
+    // studyId.
+    const studyId = studyIds[0];
     const allResources = internalClient.getAllStudyResourceDataInStudyPatientSampleUsingGET(
         {
             studyId: studyId,
@@ -112,7 +111,6 @@ function buildItemsAndResources(resourceData: {
 async function fetchFilesLinksData(
     filters: StudyViewFilter,
     selectedSamples: Array<any>,
-    // sampleIdResourceData: { [sampleId: string]: ResourceData[] },
     searchTerm: string | undefined,
     sortAttributeId: string | undefined,
     sortDirection: 'asc' | 'desc' | undefined,
@@ -127,20 +125,25 @@ async function fetchFilesLinksData(
         0
     );
 
-    const selectedSamplesList = selectedSamples.map(item => item.sampleId);
-    const selectedPatientsList = [
+    const selectedStudyIds = [
+        ...new Set(selectedSamples.map(item => item.studyId)),
+    ];
+    const selectedSampleIds = selectedSamples.map(item => item.sampleId);
+    const selectedPatientIds = [
         ...new Set(selectedSamples.map(item => item.patientId)),
     ];
 
     const resourcesForEntireStudy = await getResourceDataOfEntireStudy(
-        studyClinicalDataResponse.data
+        selectedStudyIds
     );
 
     const resourcesForPatientsAndSamples = resourcesForEntireStudy
+        // Filter the resources to consist of only studyView selected samples
+        // Also keep patient level resources (e.g. Those don't have a sampleId)
         .filter(
             (resource: ResourceData) =>
-                selectedSamplesList.includes(resource.sampleId) ||
-                selectedPatientsList.includes(resource.patientId)
+                selectedSampleIds.includes(resource.sampleId) ||
+                selectedPatientIds.includes(resource.patientId)
         )
         .reduce(
             (
@@ -246,7 +249,6 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
         await: () => [
             this.props.store.selectedSamples,
             this.props.store.resourceDefinitions,
-            // this.props.store.sampleResourceData,
         ],
         onError: () => {},
         invoke: async () => {
@@ -257,7 +259,6 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
             const resources = await fetchFilesLinksData(
                 this.props.store.filters,
                 this.props.store.selectedSamples.result,
-                // this.props.store.sampleResourceData.result!,
                 this.searchTerm,
                 'patientId',
                 'asc',
