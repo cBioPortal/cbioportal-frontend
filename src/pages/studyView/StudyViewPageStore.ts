@@ -2871,6 +2871,8 @@ export class StudyViewPageStore
         this.clearSampleTreatmentFilters();
         this.clearSampleTreatmentGroupFilters();
         this.clearSampleTreatmentTargetFilters();
+        // For cancer studies chart reset
+        this.studyIds = this.unfilteredStudyIds;
         if (this.hesitateUpdate) {
             this.filters = this.filtersProxy;
         }
@@ -5362,12 +5364,15 @@ export class StudyViewPageStore
     }
 
     readonly molecularProfiles = remoteData<MolecularProfile[]>({
-        await: () => [this.queriedPhysicalStudyIds],
+        await: () => [this.queriedPhysicalStudyIdsFromOriginalQuery],
         invoke: async () => {
-            if (this.queriedPhysicalStudyIds.result.length > 0) {
+            if (
+                this.queriedPhysicalStudyIdsFromOriginalQuery.result.length > 0
+            ) {
                 return await defaultClient.fetchMolecularProfilesUsingPOST({
                     molecularProfileFilter: {
-                        studyIds: this.queriedPhysicalStudyIds.result,
+                        studyIds: this.queriedPhysicalStudyIdsFromOriginalQuery
+                            .result,
                     } as MolecularProfileFilter,
                 });
             }
@@ -5951,12 +5956,15 @@ export class StudyViewPageStore
     });
 
     readonly clinicalAttributes = remoteData({
-        await: () => [this.queriedPhysicalStudyIds],
+        await: () => [this.queriedPhysicalStudyIdsFromOriginalQuery],
         invoke: async () => {
-            if (this.queriedPhysicalStudyIds.result.length > 0) {
+            if (
+                this.queriedPhysicalStudyIdsFromOriginalQuery.result.length > 0
+            ) {
                 return _.uniqBy(
                     await defaultClient.fetchClinicalAttributesUsingPOST({
-                        studyIds: this.queriedPhysicalStudyIds.result,
+                        studyIds: this.queriedPhysicalStudyIdsFromOriginalQuery
+                            .result,
                     }),
                     clinicalAttribute =>
                         `${clinicalAttribute.patientAttribute}-${clinicalAttribute.clinicalAttributeId}`
@@ -10274,10 +10282,10 @@ export class StudyViewPageStore
 
     // Poll ClinicalEventTypeCounts API  with no filter to determine if table should be added to StudyView Page
     public readonly shouldDisplayClinicalEventTypeCounts = remoteData({
-        await: () => [this.queriedPhysicalStudyIds],
+        await: () => [this.queriedPhysicalStudyIdsFromOriginalQuery],
         invoke: async () => {
             const filters: Partial<StudyViewFilter> = {};
-            filters.studyIds = this.queriedPhysicalStudyIds.result;
+            filters.studyIds = this.queriedPhysicalStudyIdsFromOriginalQuery.result;
             return Promise.resolve(
                 (
                     await this.internalClient.getClinicalEventTypeCountsUsingPOST(
@@ -10619,19 +10627,23 @@ export class StudyViewPageStore
     });
 
     public readonly shouldDisplayPatientTreatments = remoteData({
-        await: () => [this.queriedPhysicalStudyIds],
+        await: () => [this.queriedPhysicalStudyIdsFromOriginalQuery],
         invoke: () => {
             return this.internalClient.getContainsTreatmentDataUsingPOST({
-                studyIds: toJS(this.queriedPhysicalStudyIds.result),
+                studyIds: toJS(
+                    this.queriedPhysicalStudyIdsFromOriginalQuery.result
+                ),
             });
         },
     });
 
     public readonly shouldDisplaySampleTreatments = remoteData({
-        await: () => [this.queriedPhysicalStudyIds],
+        await: () => [this.queriedPhysicalStudyIdsFromOriginalQuery],
         invoke: () => {
             return this.internalClient.getContainsSampleTreatmentDataUsingPOST({
-                studyIds: toJS(this.queriedPhysicalStudyIds.result),
+                studyIds: toJS(
+                    this.queriedPhysicalStudyIdsFromOriginalQuery.result
+                ),
             });
         },
     });
@@ -10667,26 +10679,30 @@ export class StudyViewPageStore
     });
 
     public readonly shouldDisplayPatientTreatmentGroups = remoteData({
-        await: () => [this.queriedPhysicalStudyIds],
+        await: () => [this.queriedPhysicalStudyIdsFromOriginalQuery],
         invoke: () => {
             if (!getServerConfig().enable_treatment_groups) {
                 return Promise.resolve(false);
             }
             return this.internalClient.getContainsTreatmentDataUsingPOST({
-                studyIds: toJS(this.queriedPhysicalStudyIds.result),
+                studyIds: toJS(
+                    this.queriedPhysicalStudyIdsFromOriginalQuery.result
+                ),
                 tier: 'AgentClass',
             });
         },
     });
 
     public readonly shouldDisplaySampleTreatmentGroups = remoteData({
-        await: () => [this.queriedPhysicalStudyIds],
+        await: () => [this.queriedPhysicalStudyIdsFromOriginalQuery],
         invoke: () => {
             if (!getServerConfig().enable_treatment_groups) {
                 return Promise.resolve(false);
             }
             return this.internalClient.getContainsSampleTreatmentDataUsingPOST({
-                studyIds: toJS(this.queriedPhysicalStudyIds.result),
+                studyIds: toJS(
+                    this.queriedPhysicalStudyIdsFromOriginalQuery.result
+                ),
                 tier: 'AgentClass',
             });
         },
@@ -10721,26 +10737,30 @@ export class StudyViewPageStore
     });
 
     public readonly shouldDisplayPatientTreatmentTarget = remoteData({
-        await: () => [this.queriedPhysicalStudyIds],
+        await: () => [this.queriedPhysicalStudyIdsFromOriginalQuery],
         invoke: () => {
             if (!getServerConfig().enable_treatment_groups) {
                 return Promise.resolve(false);
             }
             return this.internalClient.getContainsTreatmentDataUsingPOST({
-                studyIds: toJS(this.queriedPhysicalStudyIds.result),
+                studyIds: toJS(
+                    this.queriedPhysicalStudyIdsFromOriginalQuery.result
+                ),
                 tier: 'AgentTarget',
             });
         },
     });
 
     public readonly shouldDisplaySampleTreatmentTarget = remoteData({
-        await: () => [this.queriedPhysicalStudyIds],
+        await: () => [this.queriedPhysicalStudyIdsFromOriginalQuery],
         invoke: () => {
             if (!getServerConfig().enable_treatment_groups) {
                 return Promise.resolve(false);
             }
             return this.internalClient.getContainsSampleTreatmentDataUsingPOST({
-                studyIds: toJS(this.queriedPhysicalStudyIds.result),
+                studyIds: toJS(
+                    this.queriedPhysicalStudyIdsFromOriginalQuery.result
+                ),
                 tier: 'AgentTarget',
             });
         },
