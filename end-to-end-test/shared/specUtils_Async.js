@@ -664,7 +664,7 @@ function postDataToUrl(url, data, authenticated = true) {
 }
 
 function keycloakLogin(timeout) {
-    browser.waitUntil(() => browser.getUrl().includes('/auth/realms/cbio'), {
+    browser.waitUntil(() => browser.getUrl().includes('/realms/cbio'), {
         timeout,
         timeoutMsg: 'No redirect to Keycloak could be detected.',
     });
@@ -674,7 +674,7 @@ function keycloakLogin(timeout) {
     $('#password').setValue('P@ssword1');
     $('#kc-login').click();
 
-    browser.waitUntil(() => !browser.getUrl().includes('/auth/realms/cbio'));
+    browser.waitUntil(() => !browser.getUrl().includes('/realms/cbio'));
     $('body').waitForDisplayed(timeout);
 }
 
