@@ -22,13 +22,13 @@ fi
 docker-compose $compose_extensions up -d keycloak
 healthy=
 for i in {1..30}; do
-    [[ $(curl --write-out '%{http_code}' --silent --output /dev/null http://localhost:8081) == 200 ]] && { healthy=1; break; } || echo "Waiting for Keycloak service                    ..."
+    [[ $(curl --write-out '%{http_code}' --silent --output /dev/null http://localhost:8081/realms/cbio) == 200 ]] && { healthy=1; break; } || echo "Waiting for Keycloak service                    ..."
     sleep 10
 done
 [ -z "$healthy" ] && { echo "Error starting Keycloak service."; exit 1; } || echo "Waiting for Keycloak service                    ... done"
 
 rm -rf $E2E_WORKSPACE/keycloak/idp-metadata.xml
-wget -O $E2E_WORKSPACE/keycloak/idp-metadata.xml http://localhost:8081/auth/realms/cbio/protocol/saml/descriptor
+wget -O $E2E_WORKSPACE/keycloak/idp-metadata.xml http://localhost:8081/realms/cbio/protocol/saml/descriptor
 
 docker-compose $compose_extensions pull
 docker-compose $compose_extensions up -d

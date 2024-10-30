@@ -15,23 +15,23 @@ services:
     networks:
       - cbio-net
     container_name: keycloak
-    image: quay.io/keycloak/keycloak:11.0.3
+    image: quay.io/keycloak/keycloak:26.0.2
     restart: unless-stopped
     depends_on:
       - kcdb
     ports:
       - "8081:8080"
     environment:
-      - DB_VENDOR=mysql
-      - DB_ADDR=kcdb
-      - DB_USER=keycloak
-      - DB_PORT=3306
-      - DB_PASSWORD=password
-      - DB_DATABASE=keycloak
-      - KEYCLOAK_USER=admin
-      - KEYCLOAK_PASSWORD=admin
-      - JDBC_PARAMS=${KEYCLOAK_JDBC_PARAMS:-useSSL=false&serverTimezone=UTC}
-
+      - KC_DB=mysql
+      - KC_DB_PASSWORD=password
+      - KC_DB_USERNAME=keycloak
+      - KC_DB_URL=jdbc:mysql://kcdb:3306/keycloak?useSSL=false&allowPublicKeyRetrieval=true
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KC_HEALTH_ENABLED=true
+    command: start-dev --health-enabled
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
   kcdb:
     networks:
       - cbio-net

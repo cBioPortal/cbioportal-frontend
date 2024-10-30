@@ -1,8 +1,8 @@
-version: '3'
+version: "3"
 
 services:
   keycloak:
     volumes:
-    - $E2E_WORKSPACE/keycloak/keycloak-config-generated.json:/tmp/realm.json:ro
-    environment:
-    - KEYCLOAK_IMPORT=/tmp/realm.json
+      - $E2E_WORKSPACE/keycloak/keycloak-config-generated.json:/tmp/realm.json:ro
+      - $TEST_HOME/docker_compose/keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json
+    command: start-dev --import-realm
