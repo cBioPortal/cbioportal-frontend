@@ -128,49 +128,26 @@ async function fetchFilesLinksData(
     const selectedStudyIds = [
         ...new Set(selectedSamples.map(item => item.studyId)),
     ];
-    const selectedSampleIds = selectedSamples.map(item => item.sampleId);
-    const selectedPatientIds = [
-        ...new Set(selectedSamples.map(item => item.patientId)),
-    ];
 
+    // sampleIds (+patientIds) for the selectedSamples
+    const selectedIds = new Map([
+        ...new Map(selectedSamples.map(item => [item.sampleId, item.studyId])),
+        ...new Map(selectedSamples.map(item => [item.patientId, item.studyId])),
+    ]);
+
+    // Fetch resources for entire study
     const resourcesForEntireStudy = await getResourceDataOfEntireStudy(
         selectedStudyIds
     );
 
-    const resourcesForPatientsAndSamples = resourcesForEntireStudy
-        // Filter the resources to consist of only studyView selected samples
-        // Also keep patient level resources (e.g. Those don't have a sampleId)
-        .filter(
-            (resource: ResourceData) =>
-                selectedSampleIds.includes(resource.sampleId) ||
-                selectedPatientIds.includes(resource.patientId)
+    // Filter the resources to consist of only studyView selected samples
+    // Also keep patient level resources (e.g. Those don't have a sampleId)
+    const resourcesForPatientsAndSamples = _(resourcesForEntireStudy)
+        .filter(resource =>
+            selectedIds.has(resource.sampleId || resource.patientId)
         )
-        .reduce(
-            (
-                idMap: { [key: string]: ResourceData[] },
-                resource: ResourceData
-            ) => {
-                const { resourceType } = resource.resourceDefinition;
-                const { patientId, sampleId } = resource;
-
-                if (resourceType == 'PATIENT') {
-                    if (idMap.hasOwnProperty(patientId)) {
-                        idMap[patientId].push(resource);
-                    } else {
-                        idMap[patientId] = [resource];
-                    }
-                } else if (resourceType == 'SAMPLE') {
-                    if (idMap.hasOwnProperty(sampleId)) {
-                        idMap[sampleId].push(resource);
-                    } else {
-                        idMap[sampleId] = [resource];
-                    }
-                }
-
-                return idMap;
-            },
-            {}
-        );
+        .groupBy('patientId')
+        .value();
 
     // we create objects with the necessary properties for each resource
     // calculate the total number of resources per patient.
