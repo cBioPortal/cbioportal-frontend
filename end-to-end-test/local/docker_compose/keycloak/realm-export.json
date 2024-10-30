@@ -28,7 +28,7 @@
   "oauth2DeviceCodeLifespan": 600,
   "oauth2DevicePollingInterval": 5,
   "enabled": true,
-  "sslRequired": "external",
+  "sslRequired": "none",
   "registrationAllowed": false,
   "registrationEmailAsUsername": false,
   "rememberMe": false,
@@ -2096,7 +2096,7 @@
         {
           "authenticator": "auth-cookie",
           "authenticatorFlow": false,
-          "requirement": "ALTERNATIVE",
+          "requirement": "DISABLED",
           "priority": 10,
           "autheticatorFlow": false,
           "userSetupAllowed": false
