@@ -146,7 +146,7 @@ async function fetchFilesLinksData(
         .filter(resource =>
             selectedIds.has(resource.sampleId || resource.patientId)
         )
-        .groupBy('patientId')
+        .groupBy(r => r.patientId)
         .value();
 
     // we create objects with the necessary properties for each resource
