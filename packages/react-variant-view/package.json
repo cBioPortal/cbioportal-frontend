@@ -1,6 +1,6 @@
 {
   "name": "react-variant-view",
-  "version": "0.3.115",
+  "version": "0.3.116",
   "description": "cBioPortal Variant Viewer",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
