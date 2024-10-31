@@ -14,7 +14,6 @@ import {
     getSampleViewUrlWithPathname,
     getPatientViewUrlWithPathname,
 } from 'shared/api/urls';
-import { getAllClinicalDataByStudyViewFilter } from '../StudyViewUtils';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
 import { isUrl, remoteData } from 'cbioportal-frontend-commons';
 import { makeObservable, observable, computed } from 'mobx';
@@ -116,23 +115,14 @@ async function fetchFilesLinksData(
     sortDirection: 'asc' | 'desc' | undefined,
     recordLimit: number
 ) {
-    const studyClinicalDataResponse = await getAllClinicalDataByStudyViewFilter(
-        filters,
-        searchTerm,
-        sortAttributeId,
-        sortDirection,
-        recordLimit,
-        0
-    );
-
     const selectedStudyIds = [
         ...new Set(selectedSamples.map(item => item.studyId)),
     ];
 
     // sampleIds (+patientIds) for the selectedSamples
     const selectedIds = new Map([
-        ...new Map(selectedSamples.map(item => [item.sampleId, item.studyId])),
-        ...new Map(selectedSamples.map(item => [item.patientId, item.studyId])),
+        ...selectedSamples.map(item => [item.sampleId, item.studyId] as const),
+        ...selectedSamples.map(item => [item.patientId, item.studyId] as const),
     ]);
 
     // Fetch resources for entire study
