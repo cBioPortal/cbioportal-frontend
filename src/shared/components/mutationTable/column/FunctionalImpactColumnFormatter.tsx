@@ -318,7 +318,8 @@ class FunctionalImpactColumnTooltip extends React.Component<
                 ).
                 <br />
                 <b>
-                    Mutation Assessor V4 data is now available in the portal!
+                    Mutation Assessor V4 data is available in the portal since
+                    Oct. 8, 2024.
                 </b>{' '}
                 New manuscript is in progress. Click{` `}
                 <a href="http://mutationassessor.org/r3/" target="_blank">
