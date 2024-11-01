@@ -14,7 +14,6 @@ import {
     getSampleViewUrlWithPathname,
     getPatientViewUrlWithPathname,
 } from 'shared/api/urls';
-import { getAllClinicalDataByStudyViewFilter } from '../StudyViewUtils';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
 import { isUrl, remoteData } from 'cbioportal-frontend-commons';
 import { makeObservable, observable, computed } from 'mobx';
@@ -33,6 +32,19 @@ class FilesLinksTableComponent extends LazyMobXTable<{
 }> {}
 
 const RECORD_LIMIT = 500;
+
+function getResourceDataOfEntireStudy(studyIds: string[]) {
+    // Only handle the first studyId for now. Can be expanded to make a call per
+    // studyId.
+    const studyId = studyIds[0];
+    const allResources = internalClient.getAllStudyResourceDataInStudyPatientSampleUsingGET(
+        {
+            studyId: studyId,
+            projection: 'DETAILED',
+        }
+    );
+    return allResources;
+}
 
 function getResourceDataOfPatients(studyClinicalData: {
     [uniqueSampleKey: string]: ClinicalData[];
@@ -97,28 +109,35 @@ function buildItemsAndResources(resourceData: {
 
 async function fetchFilesLinksData(
     filters: StudyViewFilter,
-    sampleIdResourceData: { [sampleId: string]: ResourceData[] },
+    selectedSamples: Array<any>,
     searchTerm: string | undefined,
     sortAttributeId: string | undefined,
     sortDirection: 'asc' | 'desc' | undefined,
     recordLimit: number
 ) {
-    const studyClinicalDataResponse = await getAllClinicalDataByStudyViewFilter(
-        filters,
-        searchTerm,
-        sortAttributeId,
-        sortDirection,
-        recordLimit,
-        0
+    const selectedStudyIds = [
+        ...new Set(selectedSamples.map(item => item.studyId)),
+    ];
+
+    // sampleIds (+patientIds) for the selectedSamples
+    const selectedIds = new Map([
+        ...selectedSamples.map(item => [item.sampleId, item.studyId] as const),
+        ...selectedSamples.map(item => [item.patientId, item.studyId] as const),
+    ]);
+
+    // Fetch resources for entire study
+    const resourcesForEntireStudy = await getResourceDataOfEntireStudy(
+        selectedStudyIds
     );
 
-    const resourcesForPatients = await getResourceDataOfPatients(
-        studyClinicalDataResponse.data
-    );
-    const resourcesForPatientsAndSamples: { [key: string]: ResourceData[] } = {
-        ...sampleIdResourceData,
-        ...resourcesForPatients,
-    };
+    // Filter the resources to consist of only studyView selected samples
+    // Also keep patient level resources (e.g. Those don't have a sampleId)
+    const resourcesForPatientsAndSamples = _(resourcesForEntireStudy)
+        .filter(resource =>
+            selectedIds.has(resource.sampleId || resource.patientId)
+        )
+        .groupBy(r => r.patientId)
+        .value();
 
     // we create objects with the necessary properties for each resource
     // calculate the total number of resources per patient.
@@ -197,7 +216,6 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
         await: () => [
             this.props.store.selectedSamples,
             this.props.store.resourceDefinitions,
-            this.props.store.sampleResourceData,
         ],
         onError: () => {},
         invoke: async () => {
@@ -207,12 +225,13 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
 
             const resources = await fetchFilesLinksData(
                 this.props.store.filters,
-                this.props.store.sampleResourceData.result!,
+                this.props.store.selectedSamples.result,
                 this.searchTerm,
                 'patientId',
                 'asc',
                 RECORD_LIMIT
             );
+
             return Promise.resolve(resources);
         },
     });
