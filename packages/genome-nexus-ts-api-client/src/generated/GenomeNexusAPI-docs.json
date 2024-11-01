@@ -1348,6 +1348,18 @@
         }
       }
     },
+    "AlphaMissense": {
+      "type": "object",
+      "properties": {
+        "pathogenicity": {
+          "type": "string"
+        },
+        "score": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
     "ArticleAbstract": {
       "type": "object",
       "properties": {
@@ -1593,6 +1605,15 @@
           "type": "string"
         },
         "ncitCode": {
+          "type": "string"
+        },
+        "synonyms": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "uuid": {
           "type": "string"
         }
       }
@@ -2494,6 +2515,26 @@
         }
       }
     },
+    "IntergenicConsequenceSummary": {
+      "type": "object",
+      "properties": {
+        "consequenceTerms": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "impact": {
+          "type": "string"
+        },
+        "variantAllele": {
+          "type": "string"
+        },
+        "variantClassification": {
+          "type": "string"
+        }
+      }
+    },
     "IntergenicConsequences": {
       "type": "object",
       "required": [
@@ -2542,124 +2583,32 @@
     },
     "MutationAssessor": {
       "type": "object",
-      "required": [
-        "input"
-      ],
       "properties": {
-        "codonStartPosition": {
-          "type": "string",
-          "description": "Codon start position"
-        },
-        "cosmicCount": {
-          "type": "integer",
-          "format": "int32",
-          "description": "Number of mutations in COSMIC for this protein"
-        },
-        "functionalImpact": {
-          "type": "string",
-          "description": "Functional impact"
+        "functionalImpactPrediction": {
+          "type": "string"
         },
         "functionalImpactScore": {
           "type": "number",
           "format": "double",
           "description": "Functional impact score"
         },
-        "hgvs": {
+        "hgvspShort": {
           "type": "string"
         },
-        "hugoSymbol": {
-          "type": "string",
-          "description": "Hugo gene symbol"
-        },
-        "input": {
-          "type": "string",
-          "description": "User-input variants"
-        },
-        "mappingIssue": {
-          "type": "string",
-          "description": "Mapping issue info"
-        },
-        "msaGaps": {
-          "type": "number",
-          "format": "double",
-          "description": "Portion of gaps in variant position in multiple sequence alignment"
-        },
-        "msaHeight": {
+        "mav": {
           "type": "integer",
-          "format": "int32",
-          "description": "Number of diverse sequences in multiple sequence alignment (identical or highly similar sequences filtered out)"
+          "format": "int32"
         },
-        "msaLink": {
-          "type": "string",
-          "description": "Link to multiple sequence alignment"
+        "msa": {
+          "type": "string"
         },
-        "pdbLink": {
-          "type": "string",
-          "description": "Link to 3d structure browser"
-        },
-        "referenceGenomeVariant": {
-          "type": "string",
-          "description": "Reference genome variant"
-        },
-        "referenceGenomeVariantType": {
-          "type": "string",
-          "description": "Reference genome variant type"
-        },
-        "refseqId": {
-          "type": "string",
-          "description": "Refseq protein ID"
-        },
-        "refseqPosition": {
+        "sv": {
           "type": "integer",
-          "format": "int32",
-          "description": "Variant position in Refseq protein, can be different from the one in Uniprot"
-        },
-        "refseqResidue": {
-          "type": "string",
-          "description": "Reference residue in Refseq protein, can be different from the one in Uniprot"
-        },
-        "snpCount": {
-          "type": "integer",
-          "format": "int32",
-          "description": "Number of SNPs in dbSNP for this protein"
+          "format": "int32"
         },
         "uniprotId": {
           "type": "string",
           "description": "Uniprot protein accession ID"
-        },
-        "uniprotPosition": {
-          "type": "integer",
-          "format": "int32",
-          "description": "Variant position in Uniprot protein, can be different from the one in Refseq"
-        },
-        "uniprotResidue": {
-          "type": "string",
-          "description": "Reference residue in Uniprot protein, can be different from the one in Refseq"
-        },
-        "variant": {
-          "type": "string",
-          "description": "Amino acid substitution"
-        },
-        "variantConservationScore": {
-          "type": "number",
-          "format": "double",
-          "description": "Variant conservation score"
-        },
-        "variantSpecificityScore": {
-          "type": "number",
-          "format": "double",
-          "description": "Variant specificity score"
-        }
-      }
-    },
-    "MutationAssessorAnnotation": {
-      "type": "object",
-      "properties": {
-        "annotation": {
-          "$ref": "#/definitions/MutationAssessor"
-        },
-        "license": {
-          "type": "string"
         }
       }
     },
@@ -3309,6 +3258,9 @@
         "transcript_id"
       ],
       "properties": {
+        "alphaMissense": {
+          "$ref": "#/definitions/AlphaMissense"
+        },
         "amino_acids": {
           "type": "string",
           "description": "Amino acids"
@@ -3413,6 +3365,9 @@
         "transcriptId"
       ],
       "properties": {
+        "alphaMissense": {
+          "$ref": "#/definitions/AlphaMissense"
+        },
         "aminoAcidAlt": {
           "type": "string",
           "description": "Alt Amino Acid"
@@ -3658,8 +3613,8 @@
           "description": "Most severe consequence"
         },
         "mutation_assessor": {
-          "description": "Mutation Assessor Annotation",
-          "$ref": "#/definitions/MutationAssessorAnnotation"
+          "description": "Mutation Assessor",
+          "$ref": "#/definitions/MutationAssessor"
         },
         "my_variant_info": {
           "description": "My Variant Info Annotation",
@@ -3725,6 +3680,9 @@
         "variant"
       ],
       "properties": {
+        "alphaMissense": {
+          "$ref": "#/definitions/AlphaMissense"
+        },
         "assemblyName": {
           "type": "string",
           "description": "Assembly name"
@@ -3736,6 +3694,12 @@
         "genomicLocation": {
           "description": "Genomic location",
           "$ref": "#/definitions/GenomicLocation"
+        },
+        "intergenicConsequenceSummaries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/IntergenicConsequenceSummary"
+          }
         },
         "strandSign": {
           "type": "string",

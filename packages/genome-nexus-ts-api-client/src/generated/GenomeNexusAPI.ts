@@ -73,6 +73,12 @@ export type Alleles = {
     'allele': string
 
 };
+export type AlphaMissense = {
+    'pathogenicity': string
+
+        'score': number
+
+};
 export type ArticleAbstract = {
     'abstract': string
 
@@ -185,6 +191,10 @@ export type Drug = {
     'drugName': string
 
         'ncitCode': string
+
+        'synonyms': Array < string >
+
+        'uuid': string
 
 };
 export type EnsemblFilter = {
@@ -478,6 +488,16 @@ export type IntegerRange = {
         'start': number
 
 };
+export type IntergenicConsequenceSummary = {
+    'consequenceTerms': Array < string >
+
+        'impact': string
+
+        'variantAllele': string
+
+        'variantClassification': string
+
+};
 export type IntergenicConsequences = {
     'impact': string
 
@@ -495,59 +515,19 @@ export type MainType = {
 
 };
 export type MutationAssessor = {
-    'codonStartPosition': string
-
-        'cosmicCount': number
-
-        'functionalImpact': string
+    'functionalImpactPrediction': string
 
         'functionalImpactScore': number
 
-        'hgvs': string
+        'hgvspShort': string
 
-        'hugoSymbol': string
+        'mav': number
 
-        'input': string
+        'msa': string
 
-        'mappingIssue': string
-
-        'msaGaps': number
-
-        'msaHeight': number
-
-        'msaLink': string
-
-        'pdbLink': string
-
-        'referenceGenomeVariant': string
-
-        'referenceGenomeVariantType': string
-
-        'refseqId': string
-
-        'refseqPosition': number
-
-        'refseqResidue': string
-
-        'snpCount': number
+        'sv': number
 
         'uniprotId': string
-
-        'uniprotPosition': number
-
-        'uniprotResidue': string
-
-        'variant': string
-
-        'variantConservationScore': number
-
-        'variantSpecificityScore': number
-
-};
-export type MutationAssessorAnnotation = {
-    'annotation': MutationAssessor
-
-        'license': string
 
 };
 export type MutationEffectResp = {
@@ -840,7 +820,9 @@ export type StatsByTumorType = {
 
 };
 export type TranscriptConsequence = {
-    'amino_acids': string
+    'alphaMissense': AlphaMissense
+
+        'amino_acids': string
 
         'canonical': string
 
@@ -886,7 +868,9 @@ export type TranscriptConsequence = {
 
 };
 export type TranscriptConsequenceSummary = {
-    'aminoAcidAlt': string
+    'alphaMissense': AlphaMissense
+
+        'aminoAcidAlt': string
 
         'aminoAcidRef': string
 
@@ -998,7 +982,7 @@ export type VariantAnnotation = {
 
         'most_severe_consequence': string
 
-        'mutation_assessor': MutationAssessorAnnotation
+        'mutation_assessor': MutationAssessor
 
         'my_variant_info': MyVariantInfoAnnotation
 
@@ -1026,11 +1010,15 @@ export type VariantAnnotation = {
 
 };
 export type VariantAnnotationSummary = {
-    'assemblyName': string
+    'alphaMissense': AlphaMissense
+
+        'assemblyName': string
 
         'canonicalTranscriptId': string
 
         'genomicLocation': GenomicLocation
+
+        'intergenicConsequenceSummaries': Array < IntergenicConsequenceSummary >
 
         'strandSign': string
 

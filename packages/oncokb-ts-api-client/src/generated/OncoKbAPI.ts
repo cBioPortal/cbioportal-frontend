@@ -79,6 +79,18 @@ export type QueryGene = {
         'hugoSymbol': string
 
 };
+export type ApiHttpError = {
+    'detail': string
+
+        'message': string
+
+        'path': string
+
+        'status': number
+
+        'title': string
+
+};
 export type CancerGene = {
     'entrezGeneId': number
 
@@ -2056,7 +2068,7 @@ export default class OncoKbAPI {
         let headers: any = {};
         let form: any = {};
         return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'text/plain';
+            headers['Accept'] = 'text/plain;charset=UTF-8';
             headers['Content-Type'] = 'application/json';
 
             if (parameters['version'] !== undefined) {
@@ -2211,7 +2223,7 @@ export default class OncoKbAPI {
         let headers: any = {};
         let form: any = {};
         return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'text/plain';
+            headers['Accept'] = 'text/plain;charset=UTF-8';
             headers['Content-Type'] = 'application/json';
 
             if (parameters['version'] !== undefined) {
