@@ -114,7 +114,12 @@ export const DEFAULT_SORTING_COLUMN = 'Freq';
 const studyViewFrontEnd = {
     alwaysShownClinicalAttributes: ['CANCER_TYPE', 'CANCER_TYPE_DETAILED'],
     defaultPriority: 1,
-    tableAttrs: ['CANCER_TYPE', 'CANCER_TYPE_DETAILED'],
+    tableAttrs: [
+        'CANCER_TYPE',
+        'CANCER_TYPE_DETAILED',
+        'PRIMARY_DIAGNOSIS',
+        'RACE',
+    ],
     initialBins: {
         MSI_SCORE: [4, 10],
         MSI_SENSOR_SCORE: [4, 10],

@@ -354,7 +354,7 @@ export default class ClinicalTable extends React.Component<
                 removeAll={this.removeAll}
                 numberOfSelectedRows={this.props.filters.length}
                 showAddRemoveAllButton={this.props.showAddRemoveAllButtons}
-                extraButtons={this.extraButtons}
+                // extraButtons={this.extraButtons}
                 sortBy={this.sortBy}
                 sortDirection={this.sortDirection}
                 afterSorting={this.afterSorting}

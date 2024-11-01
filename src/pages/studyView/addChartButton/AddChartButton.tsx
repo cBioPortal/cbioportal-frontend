@@ -847,57 +847,6 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                             onToggleOption={this.onToggleOption}
                         />
                     </MSKTab>
-                    <MSKTab
-                        key={2}
-                        id={ChartMetaDataTypeEnum.GENE_SPECIFIC}
-                        linkText={TabNamesEnum.GENE_SPECIFIC}
-                        hide={this.hideGeneSpecificTab}
-                    >
-                        <GeneLevelSelection
-                            containerWidth={this.getTabsWidth}
-                            molecularProfileOptionsPromise={
-                                this.props.store.molecularProfileOptions
-                            }
-                            submitButtonText={'Add Chart'}
-                            onSubmit={(charts: GenomicChart[]) => {
-                                if (charts.length === 1) {
-                                    const uniqueKey = getGenomicChartUniqueKey(
-                                        charts[0].hugoGeneSymbol,
-                                        charts[0].profileType,
-                                        charts[0].mutationOptionType
-                                    );
-                                    this.updateInfoMessage(
-                                        `${charts[0].name} ${
-                                            this.selectedAttrs.includes(
-                                                uniqueKey
-                                            )
-                                                ? 'is already'
-                                                : 'has been'
-                                        } added.`
-                                    );
-                                } else {
-                                    this.updateInfoMessage(
-                                        `${charts.length} charts added`
-                                    );
-                                }
-                                this.props.store.addGeneSpecificCharts(charts);
-                            }}
-                        />
-                        {this.geneSpecificChartOptions.length > 0 && (
-                            <div style={{ marginTop: 10 }}>
-                                <AddChartByType
-                                    width={this.getTabsWidth}
-                                    options={this.geneSpecificChartOptions}
-                                    freqPromise={this.dataCount}
-                                    onAddAll={this.onAddAll}
-                                    onClearAll={this.onClearAll}
-                                    onToggleOption={this.onToggleOption}
-                                    hideControls={true}
-                                    firstColumnHeaderName="Gene Specific Chart"
-                                />
-                            </div>
-                        )}
-                    </MSKTab>
                     {!this.hideGenericAssayTabs && this.genericAssayTabs}
 
                     {this.showResetButton && (

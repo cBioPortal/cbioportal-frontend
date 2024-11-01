@@ -496,16 +496,16 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
             );
         }
 
-        if (
-            this.props.chartControls &&
-            this.props.chartControls.showComparisonPageIcon
-        ) {
-            items.push(
-                <li style={{ position: 'relative' }}>
-                    {this.comparisonButton}
-                </li>
-            );
-        }
+        // if (
+        //     this.props.chartControls &&
+        //     this.props.chartControls.showComparisonPageIcon
+        // ) {
+        //     items.push(
+        //         <li style={{ position: 'relative' }}>
+        //             {this.comparisonButton}
+        //         </li>
+        //     );
+        // }
 
         if (
             this.props.chartControls &&
@@ -604,70 +604,70 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
             }
         }
 
-        if (this.showDownload) {
-            const downloadSubmenuWidth = 70;
-            items.push(
-                <li style={{ position: 'relative' }}>
-                    <div
-                        className={classnames(
-                            'dropdown-item',
-                            styles.dropdownHoverEffect
-                        )}
-                        style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            padding: '3px 20px',
-                        }}
-                        onMouseEnter={() => (this.downloadSubmenuOpen = true)}
-                        onMouseLeave={() => (this.downloadSubmenuOpen = false)}
-                    >
-                        <div>
-                            <i
-                                className={classnames(
-                                    'fa fa-xs',
-                                    'fa-download',
-                                    styles.menuItemIcon
-                                )}
-                                aria-hidden="true"
-                            />
-                            <span>Download</span>
-                        </div>
-                        <i
-                            className={'fa fa-xs fa-fw fa-caret-right'}
-                            style={{ lineHeight: 'inherit' }}
-                        />
+        // if (this.showDownload) {
+        //     const downloadSubmenuWidth = 70;
+        //     items.push(
+        //         <li style={{ position: 'relative' }}>
+        //             <div
+        //                 className={classnames(
+        //                     'dropdown-item',
+        //                     styles.dropdownHoverEffect
+        //                 )}
+        //                 style={{
+        //                     display: 'flex',
+        //                     justifyContent: 'space-between',
+        //                     padding: '3px 20px',
+        //                 }}
+        //                 onMouseEnter={() => (this.downloadSubmenuOpen = true)}
+        //                 onMouseLeave={() => (this.downloadSubmenuOpen = false)}
+        //             >
+        //                 <div>
+        //                     <i
+        //                         className={classnames(
+        //                             'fa fa-xs',
+        //                             'fa-download',
+        //                             styles.menuItemIcon
+        //                         )}
+        //                         aria-hidden="true"
+        //                     />
+        //                     <span>Download</span>
+        //                 </div>
+        //                 <i
+        //                     className={'fa fa-xs fa-fw fa-caret-right'}
+        //                     style={{ lineHeight: 'inherit' }}
+        //                 />
 
-                        {this.downloadSubmenuOpen && (
-                            <DownloadControls
-                                filename={this.fileName}
-                                buttons={this.props.downloadTypes}
-                                getSvg={this.props.getSVG}
-                                getData={this.props.getData}
-                                type="dropdown"
-                                className={classnames({
-                                    show: this.downloadSubmenuOpen,
-                                })}
-                                style={{
-                                    top: 0,
-                                    margin: '-6px 0',
-                                    left:
-                                        this.props.placement === 'left'
-                                            ? -downloadSubmenuWidth
-                                            : '100%',
-                                    minWidth: downloadSubmenuWidth,
-                                }}
-                                dontFade={true}
-                                showDownload={
-                                    getServerConfig()
-                                        .skin_hide_download_controls ===
-                                    DownloadControlOption.SHOW_ALL
-                                }
-                            />
-                        )}
-                    </div>
-                </li>
-            );
-        }
+        //                 {this.downloadSubmenuOpen && (
+        //                     <DownloadControls
+        //                         filename={this.fileName}
+        //                         buttons={this.props.downloadTypes}
+        //                         getSvg={this.props.getSVG}
+        //                         getData={this.props.getData}
+        //                         type="dropdown"
+        //                         className={classnames({
+        //                             show: this.downloadSubmenuOpen,
+        //                         })}
+        //                         style={{
+        //                             top: 0,
+        //                             margin: '-6px 0',
+        //                             left:
+        //                                 this.props.placement === 'left'
+        //                                     ? -downloadSubmenuWidth
+        //                                     : '100%',
+        //                             minWidth: downloadSubmenuWidth,
+        //                         }}
+        //                         dontFade={true}
+        //                         showDownload={
+        //                             getServerConfig()
+        //                                 .skin_hide_download_controls ===
+        //                             DownloadControlOption.SHOW_ALL
+        //                         }
+        //                     />
+        //                 )}
+        //             </div>
+        //         </li>
+        //     );
+        // }
         return items;
     }
 

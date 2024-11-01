@@ -8027,7 +8027,13 @@ export class StudyViewPageStore
         return isFiltered(this.userSelections);
     }
 
-    readonly samples = remoteData<Sample[]>({
+    get samples() {
+        console.trace();
+        console.log('=====');
+        return this._samples;
+    }
+
+    readonly _samples = remoteData<Sample[]>({
         await: () => [
             this.clinicalAttributes,
             this.queriedSampleIdentifiers,
@@ -8145,7 +8151,16 @@ export class StudyViewPageStore
 
     @observable blockLoading = false;
 
-    readonly selectedSamples = remoteData<Sample[]>({
+    get selectedSamples() {
+        console.log(
+            Object.getOwnPropertyDescriptor(this, 'selectedSamples')?.get
+                ?.caller
+        );
+        console.log('====');
+        return this._selectedSamples;
+    }
+
+    readonly _selectedSamples = remoteData<Sample[]>({
         await: () => [this.samples, this.molecularProfiles],
         invoke: () => {
             //fetch samples when there are only filters applied
