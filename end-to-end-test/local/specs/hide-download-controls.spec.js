@@ -128,7 +128,7 @@ describe('hide download controls feature', function() {
             });
         });
 
-        describe.only('results view page', () => {
+        describe('results view page', () => {
             const expectedTabNames = [
                 'OncoPrint',
                 'Cancer Types Summary',
@@ -595,7 +595,7 @@ describe('hide download controls feature', function() {
                 await waitForTabs(expectedTabNames.length);
             });
             describe('summary tab', () => {
-                it.only('covers all tabs with download control tests', async () => {
+                it('covers all tabs with download control tests', async () => {
                     const tabElements = await $$('.tabAnchor');
                     console.log('visibleTabs', { tabElements });
                     const displayedTabs = await Promise.all(
