@@ -35,14 +35,12 @@ const RECORD_LIMIT = 500;
 
 function getResourceDataOfEntireStudy(studyIds: string[]) {
     // Fetch resource data for each studyId, then return combined results
-    const allResources = _(studyIds)
-        .map(studyId =>
-            internalClient.getAllStudyResourceDataInStudyPatientSampleUsingGET({
-                studyId: studyId,
-                projection: 'DETAILED',
-            })
-        )
-        .value();
+    const allResources = studyIds.map(studyId =>
+        internalClient.getAllStudyResourceDataInStudyPatientSampleUsingGET({
+            studyId: studyId,
+            projection: 'DETAILED',
+        })
+    );
 
     return Promise.all(allResources).then(allResources =>
         _(allResources)
