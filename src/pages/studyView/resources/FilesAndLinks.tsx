@@ -34,16 +34,19 @@ class FilesLinksTableComponent extends LazyMobXTable<{
 const RECORD_LIMIT = 500;
 
 function getResourceDataOfEntireStudy(studyIds: string[]) {
-    // Only handle the first studyId for now. Can be expanded to make a call per
-    // studyId.
-    const studyId = studyIds[0];
-    const allResources = internalClient.getAllStudyResourceDataInStudyPatientSampleUsingGET(
-        {
+    // Fetch resource data for each studyId, then return combined results
+    const allResources = studyIds.map(studyId =>
+        internalClient.getAllStudyResourceDataInStudyPatientSampleUsingGET({
             studyId: studyId,
             projection: 'DETAILED',
-        }
+        })
     );
-    return allResources;
+
+    return Promise.all(allResources).then(allResources =>
+        _(allResources)
+            .flatMap()
+            .value()
+    );
 }
 
 function getResourceDataOfPatients(studyClinicalData: {
