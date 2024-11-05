@@ -918,13 +918,24 @@ export function getVirtualStudyDescription(
             _.flatMap(studyWithSamples, study => study.uniqueSampleKeys)
         );
         descriptionLines.push(
-            (hideSampleCounts ? 'Samples' : `${uniqueSampleKeys.length} sample${uniqueSampleKeys.length > 1 ? 's' : ''}`)
-            + ` from ${studyWithSamples.length} ${studyWithSamples.length > 1 ? 'studies:' : 'study:'}`
+            (hideSampleCounts
+                ? 'Samples'
+                : `${uniqueSampleKeys.length} sample${
+                      uniqueSampleKeys.length > 1 ? 's' : ''
+                  }`) +
+                ` from ${studyWithSamples.length} ${
+                    studyWithSamples.length > 1 ? 'studies:' : 'study:'
+                }`
         );
         //add individual studies sample count
         studyWithSamples.forEach(studyObj => {
-            descriptionLines.push(`- ${studyObj.name}`
-                + (hideSampleCounts ? '' : ` (${studyObj.uniqueSampleKeys.length} sample${uniqueSampleKeys.length > 1 ? 's' : ''})`)
+            descriptionLines.push(
+                `- ${studyObj.name}` +
+                    (hideSampleCounts
+                        ? ''
+                        : ` (${studyObj.uniqueSampleKeys.length} sample${
+                              uniqueSampleKeys.length > 1 ? 's' : ''
+                          })`)
             );
         });
         //add filters

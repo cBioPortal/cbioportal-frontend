@@ -224,7 +224,8 @@ export default class VirtualStudy extends React.Component<
     }
 
     updateDescriptionIfBlankOrDefault(hideSampleCounts: boolean) {
-        const getVirtualStudyDescriptionWithCounts = getVirtualStudyDescription.bind(null,
+        const getVirtualStudyDescriptionWithCounts = getVirtualStudyDescription.bind(
+            null,
             this.props.description,
             this.props.studyWithSamples,
             this.props.filter,
@@ -233,9 +234,15 @@ export default class VirtualStudy extends React.Component<
             this.props.caseListNameSet,
             this.props.user
         );
-        const blankOrDefaultDescription = !this.description || !this.description.trim() || this.description === getVirtualStudyDescriptionWithCounts(!hideSampleCounts);
+        const blankOrDefaultDescription =
+            !this.description ||
+            !this.description.trim() ||
+            this.description ===
+                getVirtualStudyDescriptionWithCounts(!hideSampleCounts);
         if (blankOrDefaultDescription) {
-            this.description = getVirtualStudyDescriptionWithCounts(hideSampleCounts);
+            this.description = getVirtualStudyDescriptionWithCounts(
+                hideSampleCounts
+            );
         }
     }
 
@@ -320,7 +327,11 @@ export default class VirtualStudy extends React.Component<
                                                     name="option"
                                                     value="static"
                                                     checked={!this.dynamic}
-                                                    onChange={_ => this.setDynamicTypeTo(false) }
+                                                    onChange={_ =>
+                                                        this.setDynamicTypeTo(
+                                                            false
+                                                        )
+                                                    }
                                                 />{' '}
                                                 Static
                                             </label>
@@ -330,7 +341,11 @@ export default class VirtualStudy extends React.Component<
                                                     name="option"
                                                     value="dynamic"
                                                     checked={this.dynamic}
-                                                    onChange={_ => this.setDynamicTypeTo(true) }
+                                                    onChange={_ =>
+                                                        this.setDynamicTypeTo(
+                                                            true
+                                                        )
+                                                    }
                                                 />{' '}
                                                 Dynamic
                                             </label>
@@ -346,12 +361,14 @@ export default class VirtualStudy extends React.Component<
                                                             </strong>
                                                         </p>
                                                         <p>
-                                                            This Virtual Study will
-                                                            contain the set of sample IDs
+                                                            This Virtual Study
+                                                            will contain the set
+                                                            of sample IDs
                                                             currently selected.
                                                             Furthermore, you can
-                                                            define this Virtual Study  either
-                                                            static or dynamic:
+                                                            define this Virtual
+                                                            Study either static
+                                                            or dynamic:
                                                         </p>
                                                         <ul>
                                                             <li>
@@ -359,22 +376,38 @@ export default class VirtualStudy extends React.Component<
                                                                     Static
                                                                 </strong>{' '}
                                                                 – Sample IDs are
-                                                                the ones currently selected
-                                                                and no new samples are
-                                                                added to this Virtual Study set,
-                                                                even if the database gets updated with
-                                                                new samples that match the
-                                                                same filtering/selection criteria
-                                                                as the samples in the current set.
+                                                                the ones
+                                                                currently
+                                                                selected and no
+                                                                new samples are
+                                                                added to this
+                                                                Virtual Study
+                                                                set, even if the
+                                                                database gets
+                                                                updated with new
+                                                                samples that
+                                                                match the same
+                                                                filtering/selection
+                                                                criteria as the
+                                                                samples in the
+                                                                current set.
                                                             </li>
                                                             <li>
                                                                 <strong>
                                                                     Dynamic
                                                                 </strong>{' '}
-                                                                – Unlike the Static option, 
-                                                                any new samples added to the database
-                                                                that match the criteria of this Virtual Study
-                                                                will automatically be included in its sample set.
+                                                                – Unlike the
+                                                                Static option,
+                                                                any new samples
+                                                                added to the
+                                                                database that
+                                                                match the
+                                                                criteria of this
+                                                                Virtual Study
+                                                                will
+                                                                automatically be
+                                                                included in its
+                                                                sample set.
                                                             </li>
                                                         </ul>
                                                     </div>
