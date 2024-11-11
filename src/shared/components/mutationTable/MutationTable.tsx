@@ -906,7 +906,8 @@ export default class MutationTable<
                     return FunctionalImpactColumnFormatter.renderFunction(
                         d,
                         this.props.genomeNexusCache,
-                        this.props.genomeNexusMutationAssessorCache
+                        this.props.genomeNexusMutationAssessorCache,
+                        this.props.selectedTranscriptId
                     );
                 } else {
                     return <span></span>;
@@ -917,7 +918,8 @@ export default class MutationTable<
                     d,
                     this.props.genomeNexusCache as GenomeNexusCache,
                     this.props
-                        .genomeNexusMutationAssessorCache as GenomeNexusMutationAssessorCache
+                        .genomeNexusMutationAssessorCache as GenomeNexusMutationAssessorCache,
+                    this.props.selectedTranscriptId
                 ),
             headerRender: FunctionalImpactColumnFormatter.headerRender,
             visible: false,
