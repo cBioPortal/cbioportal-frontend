@@ -405,6 +405,15 @@ export const makeRoutes = () => {
                     )}
                 />
                 <Route
+                    path={'/dash/:tab?'}
+                    component={ScrollToTop(
+                        LocationValidationWrapper(
+                            StudyViewPage,
+                            tabParamValidator(StudyViewPageTabKeyEnum)
+                        )
+                    )}
+                />
+                <Route
                     path="/comparison/:tab?"
                     component={ScrollToTop(
                         LocationValidationWrapper(
