@@ -15,9 +15,14 @@ import { Mutation, DiscreteCopyNumberData } from 'cbioportal-ts-api-client';
 import MutationAssessor from 'shared/components/annotation/genomeNexus/MutationAssessor';
 import Sift from 'shared/components/annotation/genomeNexus/Sift';
 import PolyPhen2 from 'shared/components/annotation/genomeNexus/PolyPhen2';
+import {
+    AlphaMissense_URL,
+    AlphaMissense,
+} from 'shared/components/annotation/genomeNexus/AlphaMissense';
 import siftStyles from 'shared/components/annotation/genomeNexus/styles/siftTooltip.module.scss';
 import polyPhen2Styles from 'shared/components/annotation/genomeNexus/styles/polyPhen2Tooltip.module.scss';
 import mutationAssessorStyles from 'shared/components/annotation/genomeNexus/styles/mutationAssessorColumn.module.scss';
+import alphaMissenseStyles from 'shared/components/annotation/genomeNexus/styles/alphaMissenseTooltip.module.scss';
 import annotationStyles from 'shared/components/annotation/styles/annotation.module.scss';
 import GenomeNexusMutationAssessorCache from 'shared/cache/GenomeNexusMutationAssessorCache';
 import GenomeNexusCache, {
@@ -27,17 +32,18 @@ import _ from 'lodash';
 import { shouldShowMutationAssessor } from 'shared/lib/genomeNexusAnnotationSourcesUtils';
 
 type FunctionalImpactColumnTooltipProps = {
-    active: 'mutationAssessor' | 'sift' | 'polyPhen2';
+    active: 'mutationAssessor' | 'sift' | 'polyPhen2' | 'alphaMissense';
 };
 
 interface IFunctionalImpactColumnTooltipState {
-    active: 'mutationAssessor' | 'sift' | 'polyPhen2';
+    active: 'mutationAssessor' | 'sift' | 'polyPhen2' | 'alphaMissense';
 }
 
 enum FunctionalImpactColumnsName {
     MUTATION_ASSESSOR,
     SIFT,
     POLYPHEN2,
+    ALPHAMISSENSE,
 }
 
 interface FunctionalImpactData {
@@ -46,6 +52,8 @@ interface FunctionalImpactData {
     siftPrediction: string | undefined;
     polyPhenScore: number | undefined;
     polyPhenPrediction: string | undefined;
+    alphaMissenseScore: number | undefined;
+    alphaMissensePrediction: string | undefined;
 }
 
 class FunctionalImpactColumnTooltip extends React.Component<
@@ -128,6 +136,27 @@ class FunctionalImpactColumnTooltip extends React.Component<
                                     />
                                 </span>
                             </th>
+                            <th>
+                                <span
+                                    style={{
+                                        display: 'inline-block',
+                                        width: 22,
+                                    }}
+                                    title="AlphaMissense"
+                                    onMouseOver={() =>
+                                        this.setState({
+                                            active: 'alphaMissense',
+                                        })
+                                    }
+                                >
+                                    <img
+                                        height={14}
+                                        width={14}
+                                        src={require('./alphaMissenseGoogleDeepmind.png')}
+                                        alt="alphaMissense"
+                                    />
+                                </span>
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
@@ -168,6 +197,15 @@ class FunctionalImpactColumnTooltip extends React.Component<
                             >
                                 probably_damaging
                             </td>
+                            <td
+                                className={
+                                    alphaMissenseStyles[
+                                        'alphaMissense-pathogenic'
+                                    ]
+                                }
+                            >
+                                pathogenic
+                            </td>
                         </tr>
                         {showMutationAssessor && (
                             <tr>
@@ -193,6 +231,7 @@ class FunctionalImpactColumnTooltip extends React.Component<
                                 >
                                     medium
                                 </td>
+                                <td>-</td>
                                 <td>-</td>
                                 <td>-</td>
                             </tr>
@@ -238,6 +277,15 @@ class FunctionalImpactColumnTooltip extends React.Component<
                             >
                                 possibly_damaging
                             </td>
+                            <td
+                                className={
+                                    alphaMissenseStyles[
+                                        'alphaMissense-ambiguous'
+                                    ]
+                                }
+                            >
+                                ambiguous
+                            </td>
                         </tr>
                         <tr>
                             <td>
@@ -274,6 +322,13 @@ class FunctionalImpactColumnTooltip extends React.Component<
                             <td className={polyPhen2Styles['polyPhen2-benign']}>
                                 benign
                             </td>
+                            <td
+                                className={
+                                    alphaMissenseStyles['alphaMissense-benign']
+                                }
+                            >
+                                benign
+                            </td>
                         </tr>
                         <tr>
                             <td>
@@ -296,6 +351,7 @@ class FunctionalImpactColumnTooltip extends React.Component<
                                 tolerated
                             </td>
                             <td>-</td>
+                            <td>-</td>
                         </tr>
                     </tbody>
                 </table>
@@ -305,7 +361,7 @@ class FunctionalImpactColumnTooltip extends React.Component<
 
     public static mutationAssessorText() {
         return (
-            <div style={{ width: 450, height: 130 }}>
+            <div style={{ width: 530, height: 110 }}>
                 Mutation Assessor predicts the functional impact of amino-acid
                 substitutions in proteins, such as mutations discovered in
                 cancer or missense polymorphisms. The functional impact is
@@ -332,7 +388,7 @@ class FunctionalImpactColumnTooltip extends React.Component<
 
     public static siftText() {
         return (
-            <div style={{ width: 450, height: 100 }}>
+            <div style={{ width: 530, height: 60 }}>
                 <a href={Sift.SIFT_URL} target="_blank">
                     SIFT
                 </a>{' '}
@@ -347,7 +403,7 @@ class FunctionalImpactColumnTooltip extends React.Component<
 
     public static polyPhen2Text() {
         return (
-            <div style={{ width: 450, height: 100 }}>
+            <div style={{ width: 530, height: 60 }}>
                 <a href={PolyPhen2.POLYPHEN2_URL} target="_blank">
                     PolyPhen-2
                 </a>{' '}
@@ -355,6 +411,23 @@ class FunctionalImpactColumnTooltip extends React.Component<
                 impact of an amino acid substitution on the structure and
                 function of a human protein using straightforward physical and
                 comparative considerations.
+            </div>
+        );
+    }
+
+    public static alphaMissenseText() {
+        return (
+            <div style={{ width: 530, height: 70 }}>
+                <a href={AlphaMissense_URL} target="_blank">
+                    AlphaMissense
+                </a>{' '}
+                takes as input a missense variant and predicts its
+                pathogenicity. It is an adaptation of fine-tuned AlphaFold on
+                human and primate variant population frequency data and
+                calibrated the confidence on known disease variants.
+                AlphaMissense predicts the probability of a missense variant
+                being pathogenic and classifies it as either likely benign,
+                likely pathogenic, or uncertain.
             </div>
         );
     }
@@ -368,6 +441,8 @@ class FunctionalImpactColumnTooltip extends React.Component<
                     FunctionalImpactColumnTooltip.siftText()}
                 {this.state.active === 'polyPhen2' &&
                     FunctionalImpactColumnTooltip.polyPhen2Text()}
+                {this.state.active === 'alphaMissense' &&
+                    FunctionalImpactColumnTooltip.alphaMissenseText()}
                 {this.legend()}
             </div>
         );
@@ -449,6 +524,25 @@ export default class FunctionalImpactColumnFormatter {
                             />
                         </span>
                     </DefaultTooltip>
+                    <DefaultTooltip
+                        overlay={
+                            <FunctionalImpactColumnTooltip active="alphaMissense" />
+                        }
+                        placement="topLeft"
+                        trigger={['hover', 'focus']}
+                        arrowContent={arrowContent}
+                        destroyTooltipOnHide={true}
+                        onPopupAlign={placeArrow}
+                    >
+                        <span style={{ display: 'inline-block', width: 22 }}>
+                            <img
+                                height={14}
+                                width={14}
+                                src={require('./alphaMissenseGoogleDeepmind.png')}
+                                alt="alphaMissense"
+                            />
+                        </span>
+                    </DefaultTooltip>
                 </div>
             </div>
         );
@@ -483,12 +577,22 @@ export default class FunctionalImpactColumnFormatter {
         const mutationAssessor = mutationAssessorCacheData
             ? this.getMutationAssessorData(mutationAssessorCacheData.data)
             : undefined;
+        const alphaMissenseData = siftPolyphenCacheData
+            ? this.getAlphaMissenseData(
+                  siftPolyphenCacheData.data,
+                  selectedTranscriptId
+              )
+            : undefined;
 
         const siftScore = siftData && siftData.siftScore;
         const siftPrediction = siftData && siftData.siftPrediction;
         const polyPhenScore = polyphenData && polyphenData.polyPhenScore;
         const polyPhenPrediction =
             polyphenData && polyphenData.polyPhenPrediction;
+        const alphaMissenseScore =
+            alphaMissenseData && alphaMissenseData.alphaMissenseScore;
+        const alphaMissensePrediction =
+            alphaMissenseData && alphaMissenseData.alphaMissensePrediction;
 
         const functionalImpactData: FunctionalImpactData = {
             mutationAssessor,
@@ -496,6 +600,8 @@ export default class FunctionalImpactColumnFormatter {
             siftPrediction,
             polyPhenScore,
             polyPhenPrediction,
+            alphaMissenseScore,
+            alphaMissensePrediction,
         };
         return functionalImpactData;
     }
@@ -547,6 +653,30 @@ export default class FunctionalImpactColumnFormatter {
         };
     }
 
+    public static getAlphaMissenseData(
+        alphaMissenseDataCache: VariantAnnotation | null,
+        selectedTranscriptId?: string
+    ) {
+        let alphaMissenseScore: number | undefined = undefined;
+        let alphaMissensePrediction: string | undefined = undefined;
+        if (alphaMissenseDataCache && selectedTranscriptId) {
+            // find transcript consequence that matches the selected transcript
+            const transcriptConsequence = alphaMissenseDataCache.transcript_consequences.find(
+                tc => tc.transcript_id === selectedTranscriptId
+            );
+            if (transcriptConsequence && transcriptConsequence.alphaMissense) {
+                alphaMissenseScore = transcriptConsequence.alphaMissense.score;
+                alphaMissensePrediction =
+                    transcriptConsequence.alphaMissense.pathogenicity;
+            }
+        }
+
+        return {
+            alphaMissenseScore,
+            alphaMissensePrediction,
+        };
+    }
+
     public static getMutationAssessorData(
         mutationAssessorDataCache: VariantAnnotation | null
     ): MutationAssessorData | undefined {
@@ -588,6 +718,11 @@ export default class FunctionalImpactColumnFormatter {
                     FunctionalImpactColumnsName.POLYPHEN2,
                     selectedTranscriptId
                 )}
+                {FunctionalImpactColumnFormatter.makeFunctionalImpactViz(
+                    siftPolyphenCacheData,
+                    FunctionalImpactColumnsName.ALPHAMISSENSE,
+                    selectedTranscriptId
+                )}
             </div>
         );
     }
@@ -623,6 +758,12 @@ export default class FunctionalImpactColumnFormatter {
                         functionalImpactData.polyPhenScore,
                         functionalImpactData.polyPhenPrediction
                     )}`,
+                    `AlphaMissense: ${
+                        functionalImpactData.alphaMissenseScore ||
+                        functionalImpactData.alphaMissensePrediction
+                            ? `pathogenicity: ${functionalImpactData.alphaMissensePrediction}, score: ${functionalImpactData.alphaMissenseScore}`
+                            : 'NA'
+                    }`,
                 ]);
                 return downloadData.join(';');
             }
@@ -686,6 +827,21 @@ export default class FunctionalImpactColumnFormatter {
                             polyPhenScore={functionalImpactData.polyPhenScore}
                             polyPhenPrediction={
                                 functionalImpactData.polyPhenPrediction
+                            }
+                        />
+                    );
+                case FunctionalImpactColumnsName.ALPHAMISSENSE:
+                    functionalImpactData = FunctionalImpactColumnFormatter.getAlphaMissenseData(
+                        cacheData.data,
+                        selectedTranscriptId
+                    );
+                    return (
+                        <AlphaMissense
+                            alphaMissenseScore={
+                                functionalImpactData.alphaMissenseScore
+                            }
+                            alphaMissensePrediction={
+                                functionalImpactData.alphaMissensePrediction
                             }
                         />
                     );
