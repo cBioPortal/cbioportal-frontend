@@ -27,7 +27,7 @@ function fixRequestBodyNames(json_data) {
         const path = json_data.paths[pathKey];
         for (const methodKey in path) {
             const method = path[methodKey];
-            const bodyParam = method.parameters.find(
+            const bodyParam = method.parameters?.find(
                 param => param.name === 'body'
             );
 

@@ -1,0 +1,810 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "contact": {
+      "email": "cbioportal@googlegroups.com",
+      "name": "cbioportal",
+      "url": "https://www.cbioportal.org"
+    },
+    "description": "A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.",
+    "license": {
+      "name": "License",
+      "url": "https://github.com/cBioPortal/cbioportal/blob/master/LICENSE"
+    },
+    "title": "cBioPortal web Public API [Alpha]",
+    "version": "1.0 (beta). Backwards compatibility will be maintained (after 1.0 release)"
+  },
+  "paths": {
+    "/api-fed/clinical-attributes/fetch": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "default": "SUMMARY",
+            "description": "Level of detail of the response",
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ],
+            "in": "query",
+            "name": "projection",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "studyIds",
+            "required": true,
+            "schema": {
+              "description": "List of Study IDs",
+              "items": {
+                "maxLength": 10000000,
+                "minLength": 1,
+                "type": "string"
+              },
+              "maxItems": 10000000,
+              "minItems": 1,
+              "type": "array"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/ClinicalAttribute"
+              },
+              "type": "array"
+            }
+          }
+        },
+        "tags": [
+          "Clinical Attributes"
+        ],
+        "description": "Fetch clinical attributes",
+        "operationId": "fetchClinicalAttributesUsingPOST"
+      }
+    },
+    "/api-fed/clinical-data-bin-counts/fetch": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "default": "DYNAMIC",
+            "description": "Method for data binning",
+            "enum": [
+              "STATIC",
+              "DYNAMIC"
+            ],
+            "in": "query",
+            "name": "dataBinMethod",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "clinicalDataBinCountFilter",
+            "schema": {
+              "$ref": "#/definitions/ClinicalDataBinCountFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/ClinicalDataBin"
+              },
+              "type": "array"
+            }
+          }
+        },
+        "tags": [
+          "Clinical Attributes"
+        ],
+        "description": "Fetch clinical data bin counts by study view filter",
+        "operationId": "fetchClinicalDataBinCountsUsingPOST"
+      }
+    },
+    "/api-fed/clinical-data-counts/fetch": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "clinicalDataCountFilter",
+            "schema": {
+              "$ref": "#/definitions/ClinicalDataCountFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/ClinicalDataCountItem"
+              },
+              "type": "array"
+            }
+          }
+        },
+        "tags": [
+          "Clinical Attributes"
+        ],
+        "description": "Fetch clinical data counts by study view filter",
+        "operationId": "fetchClinicalDataCountsUsingPOST"
+      }
+    }
+  },
+  "definitions": {
+    "AlterationFilter": {
+      "properties": {
+        "copyNumberAlterationEventTypes": {
+          "additionalProperties": {
+            "type": "boolean"
+          },
+          "type": "object"
+        },
+        "includeDriver": {
+          "type": "boolean"
+        },
+        "includeGermline": {
+          "type": "boolean"
+        },
+        "includeSomatic": {
+          "type": "boolean"
+        },
+        "includeUnknownOncogenicity": {
+          "type": "boolean"
+        },
+        "includeUnknownStatus": {
+          "type": "boolean"
+        },
+        "includeUnknownTier": {
+          "type": "boolean"
+        },
+        "includeVUS": {
+          "type": "boolean"
+        },
+        "mutationEventTypes": {
+          "additionalProperties": {
+            "type": "boolean"
+          },
+          "type": "object"
+        },
+        "structuralVariants": {
+          "type": "boolean"
+        },
+        "tiersBooleanMap": {
+          "additionalProperties": {
+            "type": "boolean"
+          },
+          "type": "object"
+        }
+      },
+      "type": "object"
+    },
+    "AndedPatientTreatmentFilters": {
+      "properties": {
+        "filters": {
+          "items": {
+            "$ref": "#/definitions/OredPatientTreatmentFilters"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "AndedSampleTreatmentFilters": {
+      "properties": {
+        "filters": {
+          "items": {
+            "$ref": "#/definitions/OredSampleTreatmentFilters"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "BinsGeneratorConfig": {
+      "properties": {
+        "anchorValue": {
+          "type": "number"
+        },
+        "binSize": {
+          "type": "number"
+        }
+      },
+      "type": "object"
+    },
+    "ClinicalAttribute": {
+      "properties": {
+        "clinicalAttributeId": {
+          "type": "string"
+        },
+        "datatype": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "patientAttribute": {
+          "type": "boolean"
+        },
+        "priority": {
+          "type": "string"
+        },
+        "studyId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "clinicalAttributeId",
+        "displayName",
+        "patientAttribute",
+        "studyId"
+      ],
+      "type": "object"
+    },
+    "ClinicalDataBin": {
+      "properties": {
+        "attributeId": {
+          "type": "string"
+        },
+        "count": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "end": {
+          "type": "number"
+        },
+        "specialValue": {
+          "type": "string"
+        },
+        "start": {
+          "type": "number"
+        }
+      },
+      "type": "object"
+    },
+    "ClinicalDataBinCountFilter": {
+      "description": "Clinical data bin count filter",
+      "properties": {
+        "attributes": {
+          "items": {
+            "$ref": "#/definitions/ClinicalDataBinFilter"
+          },
+          "type": "array"
+        },
+        "studyViewFilter": {
+          "$ref": "#/definitions/StudyViewFilter"
+        }
+      },
+      "type": "object"
+    },
+    "ClinicalDataBinFilter": {
+      "properties": {
+        "attributeId": {
+          "type": "string"
+        },
+        "binMethod": {
+          "enum": [
+            "MEDIAN",
+            "QUARTILE",
+            "CUSTOM",
+            "GENERATE"
+          ],
+          "type": "string"
+        },
+        "binsGeneratorConfig": {
+          "$ref": "#/definitions/BinsGeneratorConfig"
+        },
+        "customBins": {
+          "items": {
+            "type": "number"
+          },
+          "type": "array"
+        },
+        "disableLogScale": {
+          "type": "boolean"
+        },
+        "end": {
+          "type": "number"
+        },
+        "start": {
+          "type": "number"
+        }
+      },
+      "type": "object"
+    },
+    "ClinicalDataCount": {
+      "properties": {
+        "count": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "ClinicalDataCountFilter": {
+      "description": "Clinical data count filter",
+      "properties": {
+        "attributes": {
+          "items": {
+            "$ref": "#/definitions/ClinicalDataFilter"
+          },
+          "type": "array"
+        },
+        "studyViewFilter": {
+          "$ref": "#/definitions/StudyViewFilter"
+        }
+      },
+      "type": "object"
+    },
+    "ClinicalDataCountItem": {
+      "properties": {
+        "attributeId": {
+          "type": "string"
+        },
+        "counts": {
+          "items": {
+            "$ref": "#/definitions/ClinicalDataCount"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "ClinicalDataFilter": {
+      "properties": {
+        "attributeId": {
+          "type": "string"
+        },
+        "values": {
+          "items": {
+            "$ref": "#/definitions/DataFilterValue"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "DataFilter": {
+      "properties": {
+        "values": {
+          "items": {
+            "$ref": "#/definitions/DataFilterValue"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "DataFilterValue": {
+      "properties": {
+        "end": {
+          "type": "number"
+        },
+        "start": {
+          "type": "number"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "GeneFilter": {
+      "properties": {
+        "geneQueries": {
+          "items": {
+            "items": {
+              "$ref": "#/definitions/GeneFilterQuery"
+            },
+            "type": "array"
+          },
+          "type": "array"
+        },
+        "molecularProfileIds": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        }
+      },
+      "type": "object"
+    },
+    "GeneFilterQuery": {
+      "properties": {
+        "alterations": {
+          "items": {
+            "enum": [
+              "AMP",
+              "GAIN",
+              "DIPLOID",
+              "HETLOSS",
+              "HOMDEL"
+            ],
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "entrezGeneId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "hugoGeneSymbol": {
+          "type": "string"
+        },
+        "includeDriver": {
+          "type": "boolean"
+        },
+        "includeGermline": {
+          "type": "boolean"
+        },
+        "includeSomatic": {
+          "type": "boolean"
+        },
+        "includeUnknownOncogenicity": {
+          "type": "boolean"
+        },
+        "includeUnknownStatus": {
+          "type": "boolean"
+        },
+        "includeUnknownTier": {
+          "type": "boolean"
+        },
+        "includeVUS": {
+          "type": "boolean"
+        },
+        "tiersBooleanMap": {
+          "additionalProperties": {
+            "type": "boolean"
+          },
+          "type": "object"
+        }
+      },
+      "type": "object"
+    },
+    "GenericAssayDataFilter": {
+      "properties": {
+        "profileType": {
+          "type": "string"
+        },
+        "stableId": {
+          "type": "string"
+        },
+        "values": {
+          "items": {
+            "$ref": "#/definitions/DataFilterValue"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "GenomicDataFilter": {
+      "properties": {
+        "hugoGeneSymbol": {
+          "type": "string"
+        },
+        "profileType": {
+          "type": "string"
+        },
+        "values": {
+          "items": {
+            "$ref": "#/definitions/DataFilterValue"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "MutationDataFilter": {
+      "properties": {
+        "categorization": {
+          "enum": [
+            "MUTATED",
+            "MUTATION_TYPE"
+          ],
+          "type": "string"
+        },
+        "hugoGeneSymbol": {
+          "type": "string"
+        },
+        "profileType": {
+          "type": "string"
+        },
+        "values": {
+          "items": {
+            "items": {
+              "$ref": "#/definitions/DataFilterValue"
+            },
+            "type": "array"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "categorization"
+      ],
+      "type": "object"
+    },
+    "OredPatientTreatmentFilters": {
+      "properties": {
+        "filters": {
+          "items": {
+            "$ref": "#/definitions/PatientTreatmentFilter"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "OredSampleTreatmentFilters": {
+      "properties": {
+        "filters": {
+          "items": {
+            "$ref": "#/definitions/SampleTreatmentFilter"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "PatientTreatmentFilter": {
+      "properties": {
+        "treatment": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "SampleIdentifier": {
+      "properties": {
+        "sampleId": {
+          "type": "string"
+        },
+        "studyId": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "SampleTreatmentFilter": {
+      "properties": {
+        "time": {
+          "enum": [
+            "Pre",
+            "Post"
+          ],
+          "type": "string"
+        },
+        "treatment": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "StructuralVariantFilterQuery": {
+      "properties": {
+        "gene1Query": {
+          "$ref": "#/definitions/StructuralVariantGeneSubQuery"
+        },
+        "gene2Query": {
+          "$ref": "#/definitions/StructuralVariantGeneSubQuery"
+        },
+        "includeDriver": {
+          "type": "boolean"
+        },
+        "includeGermline": {
+          "type": "boolean"
+        },
+        "includeSomatic": {
+          "type": "boolean"
+        },
+        "includeUnknownOncogenicity": {
+          "type": "boolean"
+        },
+        "includeUnknownStatus": {
+          "type": "boolean"
+        },
+        "includeUnknownTier": {
+          "type": "boolean"
+        },
+        "includeVUS": {
+          "type": "boolean"
+        },
+        "tiersBooleanMap": {
+          "additionalProperties": {
+            "type": "boolean"
+          },
+          "type": "object"
+        }
+      },
+      "type": "object"
+    },
+    "StructuralVariantGeneSubQuery": {
+      "properties": {
+        "entrezId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "hugoSymbol": {
+          "type": "string"
+        },
+        "specialValue": {
+          "enum": [
+            "ANY_GENE",
+            "NO_GENE"
+          ],
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "StudyViewFilter": {
+      "properties": {
+        "alterationFilter": {
+          "$ref": "#/definitions/AlterationFilter"
+        },
+        "caseLists": {
+          "items": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "type": "array"
+        },
+        "clinicalDataFilters": {
+          "items": {
+            "$ref": "#/definitions/ClinicalDataFilter"
+          },
+          "type": "array"
+        },
+        "clinicalEventFilters": {
+          "items": {
+            "$ref": "#/definitions/DataFilter"
+          },
+          "type": "array"
+        },
+        "customDataFilters": {
+          "items": {
+            "$ref": "#/definitions/ClinicalDataFilter"
+          },
+          "type": "array"
+        },
+        "geneFilters": {
+          "items": {
+            "$ref": "#/definitions/GeneFilter"
+          },
+          "type": "array"
+        },
+        "genericAssayDataFilters": {
+          "items": {
+            "$ref": "#/definitions/GenericAssayDataFilter"
+          },
+          "type": "array"
+        },
+        "genomicDataFilters": {
+          "items": {
+            "$ref": "#/definitions/GenomicDataFilter"
+          },
+          "type": "array"
+        },
+        "genomicProfiles": {
+          "items": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "type": "array"
+        },
+        "mutationDataFilters": {
+          "items": {
+            "$ref": "#/definitions/MutationDataFilter"
+          },
+          "type": "array"
+        },
+        "patientTreatmentFilters": {
+          "$ref": "#/definitions/AndedPatientTreatmentFilters"
+        },
+        "patientTreatmentGroupFilters": {
+          "$ref": "#/definitions/AndedPatientTreatmentFilters"
+        },
+        "patientTreatmentTargetFilters": {
+          "$ref": "#/definitions/AndedPatientTreatmentFilters"
+        },
+        "sampleIdentifiers": {
+          "items": {
+            "$ref": "#/definitions/SampleIdentifier"
+          },
+          "maxItems": 2147483647,
+          "minItems": 1,
+          "type": "array"
+        },
+        "sampleTreatmentFilters": {
+          "$ref": "#/definitions/AndedSampleTreatmentFilters"
+        },
+        "sampleTreatmentGroupFilters": {
+          "$ref": "#/definitions/AndedSampleTreatmentFilters"
+        },
+        "sampleTreatmentTargetFilters": {
+          "$ref": "#/definitions/AndedSampleTreatmentFilters"
+        },
+        "structuralVariantFilters": {
+          "items": {
+            "$ref": "#/definitions/StudyViewStructuralVariantFilter"
+          },
+          "type": "array"
+        },
+        "studyIds": {
+          "items": {
+            "maxLength": 2147483647,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 2147483647,
+          "minItems": 1,
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "StudyViewStructuralVariantFilter": {
+      "properties": {
+        "molecularProfileIds": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "structVarQueries": {
+          "items": {
+            "items": {
+              "$ref": "#/definitions/StructuralVariantFilterQuery"
+            },
+            "type": "array"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "externalDocs": {
+    "description": "SpringShop Wiki Documentation",
+    "url": "https://springshop.wiki.github.org/docs"
+  },
+  "x-components": {}
+}

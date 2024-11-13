@@ -10,8 +10,10 @@ fi
 
 mv packages/cbioportal-ts-api-client/src/generated/CBioPortalAPI-docs.json packages/cbioportal-ts-api-client/src/generated/public.json
 mv packages/cbioportal-ts-api-client/src/generated/CBioPortalAPIInternal-docs.json packages/cbioportal-ts-api-client/src/generated/internal.json
+mv packages/cbioportal-ts-api-client/src/generated/CBioPortalAPIFederated-docs.json packages/cbioportal-ts-api-client/src/generated/federated.json
 
 api-spec-converter --from=openapi_3 --to=swagger_2 --syntax=json packages/cbioportal-ts-api-client/src/generated/public.json | jq 'del(.host, .basePath, .schemes)' > packages/cbioportal-ts-api-client/src/generated/CBioPortalAPI-docs.json
 api-spec-converter --from=openapi_3 --to=swagger_2 --syntax=json packages/cbioportal-ts-api-client/src/generated/internal.json | jq 'del(.host, .basePath, .schemes)' > packages/cbioportal-ts-api-client/src/generated/CBioPortalAPIInternal-docs.json
+api-spec-converter --from=openapi_3 --to=swagger_2 --syntax=json packages/cbioportal-ts-api-client/src/generated/federated.json | jq 'del(.host, .basePath, .schemes)' > packages/cbioportal-ts-api-client/src/generated/CBioPortalAPIFederated-docs.json
 
-rm packages/cbioportal-ts-api-client/src/generated/public.json packages/cbioportal-ts-api-client/src/generated/internal.json
+rm packages/cbioportal-ts-api-client/src/generated/public.json packages/cbioportal-ts-api-client/src/generated/internal.json packages/cbioportal-ts-api-client/src/generated/federated.json
