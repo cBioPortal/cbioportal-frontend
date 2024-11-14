@@ -2072,8 +2072,11 @@ export class StudyViewPageStore
 
     @observable private initialFiltersQuery: Partial<StudyViewFilter> = {};
 
-    @observable studyIds: string[] = [];
-    @observable unfilteredStudyIds: string[] = [];
+    @observable _selectedStudyIds: string[] | undefined;
+    @observable _studyIds: string[] = [];
+    @computed get studyIds(): string[] {
+        return this._selectedStudyIds || this._studyIds;
+    }
 
     private _clinicalDataFilterSet = observable.map<
         AttributeId,
@@ -2872,7 +2875,7 @@ export class StudyViewPageStore
         this.clearSampleTreatmentGroupFilters();
         this.clearSampleTreatmentTargetFilters();
         // For cancer studies chart reset
-        this.studyIds = this.unfilteredStudyIds;
+        this._selectedStudyIds = undefined;
         if (this.hesitateUpdate) {
             this.filters = this.filtersProxy;
         }
@@ -3086,8 +3089,8 @@ export class StudyViewPageStore
                 if (
                     chartUniqueKey === SpecialChartsUniqueKeyEnum.CANCER_STUDIES
                 ) {
+                    this._selectedStudyIds = values;
                     // this is for pre-defined custom charts
-                    this.studyIds = values;
                     this.preDefinedCustomChartFilterSet.set(
                         chartUniqueKey,
                         clinicalDataFilter
@@ -3102,8 +3105,8 @@ export class StudyViewPageStore
                 if (
                     chartUniqueKey === SpecialChartsUniqueKeyEnum.CANCER_STUDIES
                 ) {
+                    this._selectedStudyIds = undefined;
                     // this is for pre-defined custom charts
-                    this.studyIds = this.unfilteredStudyIds;
                     this.preDefinedCustomChartFilterSet.delete(chartUniqueKey);
                 } else {
                     this._customDataFilterSet.delete(chartUniqueKey);
@@ -5364,15 +5367,12 @@ export class StudyViewPageStore
     }
 
     readonly molecularProfiles = remoteData<MolecularProfile[]>({
-        await: () => [this.queriedPhysicalStudyIdsFromOriginalQuery],
+        await: () => [this.queriedPhysicalStudyIds],
         invoke: async () => {
-            if (
-                this.queriedPhysicalStudyIdsFromOriginalQuery.result.length > 0
-            ) {
+            if (this.queriedPhysicalStudyIds.result.length > 0) {
                 return await defaultClient.fetchMolecularProfilesUsingPOST({
                     molecularProfileFilter: {
-                        studyIds: this.queriedPhysicalStudyIdsFromOriginalQuery
-                            .result,
+                        studyIds: this.queriedPhysicalStudyIds.result,
                     } as MolecularProfileFilter,
                 });
             }
@@ -5506,7 +5506,7 @@ export class StudyViewPageStore
         invoke: async () => {
             const everyStudyIdToStudy = this.everyStudyIdToStudy.result!;
             return _.reduce(
-                this.unfilteredStudyIds,
+                this._studyIds,
                 (acc: CancerStudy[], next) => {
                     if (
                         everyStudyIdToStudy[next] &&
@@ -5528,7 +5528,7 @@ export class StudyViewPageStore
         invoke: async () => {
             if (
                 this.filteredPhysicalStudiesFromOriginalQuery.result.length ===
-                this.unfilteredStudyIds.length
+                this._studyIds.length
             ) {
                 return [];
             }
@@ -5537,7 +5537,7 @@ export class StudyViewPageStore
                 study => study.studyId
             );
             let virtualStudyIds = _.filter(
-                this.unfilteredStudyIds,
+                this._studyIds,
                 id => !_.includes(validFilteredPhysicalStudyIds, id)
             );
 
@@ -10082,10 +10082,16 @@ export class StudyViewPageStore
                     );
                 }
                 return this.internalClient.fetchFilteredSamplesUsingPOST({
-                    studyViewFilter: _.merge(_.clone(this.filters), {
+                    studyViewFilter: {
+                        ...this.filters,
                         studyIds: this.queriedPhysicalStudyIdsFromOriginalQuery
                             .result,
-                    }),
+                        // TODO somehow find the missing relevant molecular profile ids from this.molecularProfilesFromOriginalQuery
+                        // geneFilters: this.filters.geneFilters.map(gf => ({
+                        //     ...gf,
+                        //     molecularProfileIds: [],
+                        // })),
+                    },
                 });
             } else {
                 return Promise.resolve(this.samplesFromOriginalQuery.result);

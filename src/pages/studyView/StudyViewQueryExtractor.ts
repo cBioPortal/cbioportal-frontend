@@ -32,13 +32,9 @@ export class StudyIdQueryExtractor implements StudyViewQueryExtractor<void> {
             query.studyId ?? query.cancer_study_id ?? query.id ?? '';
         if (studyIdsString) {
             studyIds = studyIdsString.trim().split(',');
-            if (!_.isEqual(studyIds, toJS(store.studyIds))) {
+            if (!_.isEqual(studyIds, toJS(store._studyIds))) {
                 // update if different
-                store.studyIds = studyIds;
-            }
-            if (!_.isEqual(studyIds, toJS(store.unfilteredStudyIds))) {
-                // update if different
-                store.unfilteredStudyIds = studyIds;
+                store._studyIds = studyIds;
             }
         }
     }
