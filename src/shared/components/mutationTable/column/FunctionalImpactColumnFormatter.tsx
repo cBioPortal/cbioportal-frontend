@@ -272,7 +272,7 @@ class FunctionalImpactColumnTooltip extends React.Component<
                         <a href={AlphaMissense_URL} target="_blank">
                             AlphaMissense
                         </a>{' '}
-                        takes as input a missense variant and predicts its
+                        takes a missense variant as input and predicts its
                         pathogenicity. It is an adaptation of fine-tuned
                         AlphaFold on human and primate variant population
                         frequency data and calibrated the confidence on known
