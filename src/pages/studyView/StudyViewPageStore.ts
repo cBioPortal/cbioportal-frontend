@@ -374,7 +374,6 @@ import {
     PlotsSelectionParam,
 } from 'pages/resultsView/ResultsViewURLWrapper';
 import { SortDirection } from 'shared/components/lazyMobXTable/LazyMobXTable';
-import { IStudyViewPageStore } from './IStudyViewPageStore';
 
 export const STUDY_VIEW_FILTER_AUTOSUBMIT = 'study_view_filter_autosubmit';
 
@@ -533,10 +532,7 @@ export type SamplesSpecificationElement =
     | { studyId: string; sampleId: undefined; sampleListId: string };
 
 export class StudyViewPageStore
-    implements
-        IStudyViewPageStore,
-        IAnnotationFilterSettings,
-        ISettingsMenuButtonVisible {
+    implements IAnnotationFilterSettings, ISettingsMenuButtonVisible {
     private reactionDisposers: IReactionDisposer[] = [];
 
     private chartItemToColor: Map<string, string>;
@@ -8031,13 +8027,7 @@ export class StudyViewPageStore
         return isFiltered(this.userSelections);
     }
 
-    get samples() {
-        console.trace();
-        console.log('=====');
-        return this._samples;
-    }
-
-    readonly _samples = remoteData<Sample[]>({
+    readonly samples = remoteData<Sample[]>({
         await: () => [
             this.clinicalAttributes,
             this.queriedSampleIdentifiers,
@@ -8155,16 +8145,7 @@ export class StudyViewPageStore
 
     @observable blockLoading = false;
 
-    get selectedSamples() {
-        console.log(
-            Object.getOwnPropertyDescriptor(this, 'selectedSamples')?.get
-                ?.caller
-        );
-        console.log('====');
-        return this._selectedSamples;
-    }
-
-    readonly _selectedSamples = remoteData<Sample[]>({
+    readonly selectedSamples = remoteData<Sample[]>({
         await: () => [this.samples, this.molecularProfiles],
         invoke: () => {
             //fetch samples when there are only filters applied

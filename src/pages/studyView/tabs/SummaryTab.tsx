@@ -47,10 +47,9 @@ import { DataType } from 'cbioportal-frontend-commons';
 import DelayedRender from 'shared/components/DelayedRender';
 import { getRemoteDataGroupStatus } from 'cbioportal-utils';
 import { getServerConfig } from 'config/config';
-import { IStudyViewPageStore } from '../IStudyViewPageStore';
 
 export interface IStudySummaryTabProps {
-    store: IStudyViewPageStore;
+    store: StudyViewPageStore;
 }
 
 // making this an observer (mobx-react) causes this component to re-render any time
@@ -61,7 +60,7 @@ export class StudySummaryTab extends React.Component<
     IStudySummaryTabProps,
     {}
 > {
-    private store: IStudyViewPageStore;
+    private store: StudyViewPageStore;
     private handlers: any;
     private chartTypeConfig: any;
 
