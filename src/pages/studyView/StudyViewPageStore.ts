@@ -374,6 +374,7 @@ import {
     PlotsSelectionParam,
 } from 'pages/resultsView/ResultsViewURLWrapper';
 import { SortDirection } from 'shared/components/lazyMobXTable/LazyMobXTable';
+import { IStudyViewPageStore } from './IStudyViewPageStore';
 
 export const STUDY_VIEW_FILTER_AUTOSUBMIT = 'study_view_filter_autosubmit';
 
@@ -532,7 +533,10 @@ export type SamplesSpecificationElement =
     | { studyId: string; sampleId: undefined; sampleListId: string };
 
 export class StudyViewPageStore
-    implements IAnnotationFilterSettings, ISettingsMenuButtonVisible {
+    implements
+        IStudyViewPageStore,
+        IAnnotationFilterSettings,
+        ISettingsMenuButtonVisible {
     private reactionDisposers: IReactionDisposer[] = [];
 
     private chartItemToColor: Map<string, string>;

@@ -95,11 +95,11 @@ export class StudyResultsSummary extends React.Component<
     render() {
         return (
             <div className={styles.selectedInfo} data-test="selected-info">
-                <strong>Selected:&nbsp;</strong>
+                {/* <strong>Selected:&nbsp;</strong>
                 <strong data-test="selected-patients">
                     {this.props.store.selectedPatients.length.toLocaleString()}
                 </strong>
-                &nbsp;<strong>patients</strong>
+                &nbsp;<strong>patients</strong> */}
             </div>
         );
     }
@@ -151,7 +151,7 @@ export default class DashboardPage extends React.Component<
             this.urlWrapper.tabId &&
             extractResourceIdFromTabId(this.urlWrapper.tabId);
         if (openResourceId) {
-            this.store.setResourceTabOpen(openResourceId, true);
+            // this.store.setResourceTabOpen(openResourceId, true);
         }
 
         getBrowserWindow().studyPage = this;
@@ -263,12 +263,12 @@ export default class DashboardPage extends React.Component<
         return filterJson;
     }
 
-    @computed get customTabsConfigs() {
-        return prepareCustomTabConfigurations(
-            getServerConfig().custom_tabs,
-            'STUDY_PAGE'
-        );
-    }
+    // @computed get customTabsConfigs() {
+    //     return prepareCustomTabConfigurations(
+    //         getServerConfig().custom_tabs,
+    //         'STUDY_PAGE'
+    //     );
+    // }
 
     @autobind
     private toolbarRef(ref: any) {
@@ -350,35 +350,36 @@ export default class DashboardPage extends React.Component<
 
     @action.bound
     private openResource(resource: ResourceData) {
-        // open tab
-        this.store.setResourceTabOpen(resource.resourceId, true);
-        // go to tab
-        this.urlWrapper.setTab(getStudyViewResourceTabId(resource.resourceId));
-        // deep link
-        this.urlWrapper.setResourceUrl(resource.url);
+        // // open tab
+        // this.store.setResourceTabOpen(resource.resourceId, true);
+        // // go to tab
+        // this.urlWrapper.setTab(getStudyViewResourceTabId(resource.resourceId));
+        // // deep link
+        // this.urlWrapper.setResourceUrl(resource.url);
     }
 
     @action.bound
     private closeResourceTab(tabId: string) {
-        // close tab
-        const resourceId = extractResourceIdFromTabId(tabId);
-        if (resourceId) {
-            this.store.setResourceTabOpen(resourceId, false);
-            // go to resources tab if we're currently on that tab
-            if (
-                this.urlWrapper.tabId === getStudyViewResourceTabId(resourceId)
-            ) {
-                this.urlWrapper.setTab(StudyViewPageTabKeyEnum.FILES_AND_LINKS);
-            }
-        }
+        // // close tab
+        // const resourceId = extractResourceIdFromTabId(tabId);
+        // if (resourceId) {
+        //     this.store.setResourceTabOpen(resourceId, false);
+        //     // go to resources tab if we're currently on that tab
+        //     if (
+        //         this.urlWrapper.tabId === getStudyViewResourceTabId(resourceId)
+        //     ) {
+        //         this.urlWrapper.setTab(StudyViewPageTabKeyEnum.FILES_AND_LINKS);
+        //     }
+        // }
     }
 
     @computed get shouldShowResources() {
-        if (this.store.resourceDefinitions.isComplete) {
-            return this.store.resourceDefinitions.result.length > 0;
-        } else {
-            return false;
-        }
+        // if (this.store.resourceDefinitions.isComplete) {
+        //     return this.store.resourceDefinitions.result.length > 0;
+        // } else {
+        //     return false;
+        // }
+        return false;
     }
 
     @computed get isLoading() {
@@ -422,16 +423,16 @@ export default class DashboardPage extends React.Component<
             return [
                 ..._.values(this.store.clinicalDataBinPromises),
                 ..._.values(this.store.clinicalDataCountPromises),
-                ..._.values(this.store.genericAssayDataCountPromises),
-                this.store.mutationProfiles,
-                this.store.cnaProfiles,
+                // ..._.values(this.store.genericAssayDataCountPromises),
+                // this.store.mutationProfiles,
+                // this.store.cnaProfiles,
                 this.store.selectedSamples,
-                this.store.molecularProfileSampleCounts,
-                this.store.sampleTreatments,
-                this.store.patientTreatments,
-                this.store.patientTreatmentGroups,
-                this.store.sampleTreatmentGroups,
-                this.store.clinicalEventTypeCounts,
+                // this.store.molecularProfileSampleCounts,
+                // this.store.sampleTreatments,
+                // this.store.patientTreatments,
+                // this.store.patientTreatmentGroups,
+                // this.store.sampleTreatmentGroups,
+                // this.store.clinicalEventTypeCounts,
             ];
         },
         invoke: async () => {
@@ -455,108 +456,108 @@ export default class DashboardPage extends React.Component<
         }
     }
 
-    @computed
-    get groupsButton() {
-        return (
-            <>
-                {/* MODEL FOF USER OF INFO BEACON.  YOU NEED TO CUSTOMIZE <WrappedTour> COMPONENT FOR USE CASE */}
-                {/*<If condition={!isWebdriver()}>*/}
-                {/*    <InfoBeacon*/}
-                {/*        top={-15}*/}
-                {/*        right={45}*/}
-                {/*        interaction={'mouseover'}*/}
-                {/*        color={'green'}*/}
-                {/*        id={'groupComparison1'}*/}
-                {/*    >*/}
-                {/*        <WrappedTour/>*/}
-                {/*    </InfoBeacon>*/}
-                {/*</If>*/}
-                <DefaultTooltip
-                    trigger={['click']}
-                    placement="bottomLeft"
-                    destroyTooltipOnHide={true}
-                    onPopupAlign={(tooltipEl: any) => {
-                        const arrowEl = tooltipEl.querySelector(
-                            '.rc-tooltip-arrow'
-                        );
-                        arrowEl.style.right = '10px';
-                    }}
-                    getTooltipContainer={() =>
-                        document.getElementById(
-                            'comparisonGroupManagerContainer'
-                        )!
-                    }
-                    overlay={
-                        <div style={{ width: 350 }}>
-                            <ComparisonGroupManager
-                                store={this.store}
-                                shareGroups={this.openShareUrlModal}
-                                onGroupColorChange={
-                                    this.store.onGroupColorChange
-                                }
-                            />
-                        </div>
-                    }
-                >
-                    <button
-                        className={classNames('btn btn-primary btn-xs', {
-                            active: this.store.showComparisonGroupUI,
-                        })}
-                        id={'groupManagementButton'}
-                        data-test="groups-button"
-                        aria-pressed={this.store.showComparisonGroupUI}
-                        style={{ marginLeft: '10px' }}
-                        data-event={serializeEvent({
-                            action: 'openGroupManagement',
-                            label: '',
-                            category: 'groupComparison',
-                        })}
-                    >
-                        {getButtonNameWithDownPointer('Groups')}
-                    </button>
-                </DefaultTooltip>
-            </>
-        );
-    }
+    // @computed
+    // get groupsButton() {
+    //     return (
+    //         <>
+    //             {/* MODEL FOF USER OF INFO BEACON.  YOU NEED TO CUSTOMIZE <WrappedTour> COMPONENT FOR USE CASE */}
+    //             {/*<If condition={!isWebdriver()}>*/}
+    //             {/*    <InfoBeacon*/}
+    //             {/*        top={-15}*/}
+    //             {/*        right={45}*/}
+    //             {/*        interaction={'mouseover'}*/}
+    //             {/*        color={'green'}*/}
+    //             {/*        id={'groupComparison1'}*/}
+    //             {/*    >*/}
+    //             {/*        <WrappedTour/>*/}
+    //             {/*    </InfoBeacon>*/}
+    //             {/*</If>*/}
+    //             <DefaultTooltip
+    //                 trigger={['click']}
+    //                 placement="bottomLeft"
+    //                 destroyTooltipOnHide={true}
+    //                 onPopupAlign={(tooltipEl: any) => {
+    //                     const arrowEl = tooltipEl.querySelector(
+    //                         '.rc-tooltip-arrow'
+    //                     );
+    //                     arrowEl.style.right = '10px';
+    //                 }}
+    //                 getTooltipContainer={() =>
+    //                     document.getElementById(
+    //                         'comparisonGroupManagerContainer'
+    //                     )!
+    //                 }
+    //                 overlay={
+    //                     <div style={{ width: 350 }}>
+    //                         <ComparisonGroupManager
+    //                             store={this.store}
+    //                             shareGroups={this.openShareUrlModal}
+    //                             // onGroupColorChange={
+    //                             //     this.store.onGroupColorChange
+    //                             // }
+    //                         />
+    //                     </div>
+    //                 }
+    //             >
+    //                 <button
+    //                     className={classNames('btn btn-primary btn-xs', {
+    //                         active: this.store.showComparisonGroupUI,
+    //                     })}
+    //                     id={'groupManagementButton'}
+    //                     data-test="groups-button"
+    //                     aria-pressed={this.store.showComparisonGroupUI}
+    //                     style={{ marginLeft: '10px' }}
+    //                     data-event={serializeEvent({
+    //                         action: 'openGroupManagement',
+    //                         label: '',
+    //                         category: 'groupComparison',
+    //                     })}
+    //                 >
+    //                     {getButtonNameWithDownPointer('Groups')}
+    //                 </button>
+    //             </DefaultTooltip>
+    //         </>
+    //     );
+    // }
 
-    @computed get customTabs() {
-        return buildCustomTabs(this.customTabsConfigs);
-    }
+    // @computed get customTabs() {
+    //     return buildCustomTabs(this.customTabsConfigs);
+    // }
 
-    @computed get bookmarkModal() {
-        // urls have a length limit after which browser will fail to read them
-        // when the url WITH FILTERS exceed this length, the only option is to make a virtual
-        // study with filtered cohort
-        // this will NOT show any fitlers, but it's the best we can do right now
-        if (this.studyViewFullUrlWithFilter.length > MAX_URL_LENGTH) {
-            return (
-                <VirtualStudyModal
-                    appStore={this.props.appStore}
-                    pageStore={this.store}
-                    message={
-                        <div className={'alert alert-warning'}>
-                            The url is too long to share. Please consider making
-                            a virtual study containing the selected samples.
-                        </div>
-                    }
-                    onHide={this.toggleBookmarkModal}
-                />
-            );
-        } else {
-            return (
-                <BookmarkModal
-                    onHide={this.toggleBookmarkModal}
-                    title={'Bookmark this filter'}
-                    urlPromise={this.getBookmarkUrl()}
-                />
-            );
-        }
-    }
+    // @computed get bookmarkModal() {
+    //     // urls have a length limit after which browser will fail to read them
+    //     // when the url WITH FILTERS exceed this length, the only option is to make a virtual
+    //     // study with filtered cohort
+    //     // this will NOT show any fitlers, but it's the best we can do right now
+    //     if (this.studyViewFullUrlWithFilter.length > MAX_URL_LENGTH) {
+    //         return (
+    //             <VirtualStudyModal
+    //                 appStore={this.props.appStore}
+    //                 pageStore={this.store}
+    //                 message={
+    //                     <div className={'alert alert-warning'}>
+    //                         The url is too long to share. Please consider making
+    //                         a virtual study containing the selected samples.
+    //                     </div>
+    //                 }
+    //                 onHide={this.toggleBookmarkModal}
+    //             />
+    //         );
+    //     } else {
+    //         return (
+    //             <BookmarkModal
+    //                 onHide={this.toggleBookmarkModal}
+    //                 title={'Bookmark this filter'}
+    //                 urlPromise={this.getBookmarkUrl()}
+    //             />
+    //         );
+    //     }
+    // }
 
     content() {
         return (
             <div className="studyView">
-                {this.showBookmarkModal && this.bookmarkModal}
+                {/* this.showBookmarkModal && this.bookmarkModal */}
 
                 {this.shareLinkModal && (
                     <BookmarkModal
@@ -584,13 +585,14 @@ export default class DashboardPage extends React.Component<
                     />
                 )}
 
-                {this.store.comparisonConfirmationModal}
+                {/* TODO: not really sure what this is */}
+                {/* {this.store.comparisonConfirmationModal} */}
                 {this.store.queriedSampleIdentifiers.isComplete &&
                     this.store.invalidSampleIds.isComplete &&
                     this.store.unknownQueriedIds.isComplete &&
                     this.store.displayedStudies.isComplete &&
                     this.store.queriedPhysicalStudies.isComplete &&
-                    this.store.shouldDisplaySampleTreatments.isComplete &&
+                    // this.store.shouldDisplaySampleTreatments.isComplete &&
                     this.store.queriedPhysicalStudies.result.length > 0 && (
                         <div>
                             <StudyPageHeader
@@ -714,8 +716,7 @@ export default class DashboardPage extends React.Component<
                                                         infoElement={
                                                             <AlterationMenuHeader
                                                                 includeCnaTable={
-                                                                    this.store
-                                                                        .hasCnaProfileData
+                                                                    false
                                                                 }
                                                             />
                                                         }
@@ -724,12 +725,10 @@ export default class DashboardPage extends React.Component<
                                                                 .oncoprint_custom_driver_annotation_binary_menu_label!
                                                         }
                                                         showDriverAnnotationSection={
-                                                            this.store
-                                                                .doShowDriverAnnotationSectionInGlobalMenu
+                                                            false
                                                         }
                                                         showTierAnnotationSection={
-                                                            this.store
-                                                                .doShowTierAnnotationSectionInGlobalMenu
+                                                            false
                                                         }
                                                     />
                                                 }
@@ -766,10 +765,7 @@ export default class DashboardPage extends React.Component<
                                                     this.store.currentTab
                                                 }
                                                 defaultActiveTab={
-                                                    this.store
-                                                        .showCustomDataSelectionUI
-                                                        ? ChartMetaDataTypeEnum.CUSTOM_DATA
-                                                        : ChartMetaDataTypeEnum.CLINICAL
+                                                    ChartMetaDataTypeEnum.CLINICAL
                                                 }
                                                 addChartOverlayClassName="studyViewAddChartOverlay"
                                                 disableCustomTab={
