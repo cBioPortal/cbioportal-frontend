@@ -457,7 +457,8 @@ export default class FunctionalImpactColumnFormatter {
     public static getData(
         data: Mutation[],
         siftPolyphenCache: GenomeNexusCache,
-        mutationAssessorCache: GenomeNexusMutationAssessorCache
+        mutationAssessorCache: GenomeNexusMutationAssessorCache,
+        selectedTranscriptId?: string
     ): FunctionalImpactData {
         const siftPolyphenCacheData = FunctionalImpactColumnFormatter.getDataFromCache(
             data,
@@ -471,10 +472,13 @@ export default class FunctionalImpactColumnFormatter {
             : null;
 
         const siftData = siftPolyphenCacheData
-            ? this.getSiftData(siftPolyphenCacheData.data)
+            ? this.getSiftData(siftPolyphenCacheData.data, selectedTranscriptId)
             : undefined;
         const polyphenData = siftPolyphenCacheData
-            ? this.getPolyphenData(siftPolyphenCacheData.data)
+            ? this.getPolyphenData(
+                  siftPolyphenCacheData.data,
+                  selectedTranscriptId
+              )
             : undefined;
         const mutationAssessor = mutationAssessorCacheData
             ? this.getMutationAssessorData(mutationAssessorCacheData.data)
@@ -496,17 +500,21 @@ export default class FunctionalImpactColumnFormatter {
         return functionalImpactData;
     }
 
-    public static getSiftData(siftDataCache: VariantAnnotation | null) {
+    public static getSiftData(
+        siftDataCache: VariantAnnotation | null,
+        selectedTranscriptId?: string
+    ) {
         let siftScore: number | undefined = undefined;
         let siftPrediction: string | undefined = undefined;
-
-        if (
-            siftDataCache &&
-            !_.isEmpty(siftDataCache.transcript_consequences)
-        ) {
-            siftScore = siftDataCache.transcript_consequences[0].sift_score;
-            siftPrediction =
-                siftDataCache.transcript_consequences[0].sift_prediction;
+        if (siftDataCache && selectedTranscriptId) {
+            // find transcript consequence that matches the selected transcript
+            const transcriptConsequence = siftDataCache.transcript_consequences.find(
+                tc => tc.transcript_id === selectedTranscriptId
+            );
+            if (transcriptConsequence) {
+                siftScore = transcriptConsequence.sift_score;
+                siftPrediction = transcriptConsequence.sift_prediction;
+            }
         }
 
         return {
@@ -515,19 +523,22 @@ export default class FunctionalImpactColumnFormatter {
         };
     }
 
-    public static getPolyphenData(polyphenDataCache: VariantAnnotation | null) {
+    public static getPolyphenData(
+        polyphenDataCache: VariantAnnotation | null,
+        selectedTranscriptId?: string
+    ) {
         let polyPhenScore: number | undefined = undefined;
         let polyPhenPrediction: string | undefined = undefined;
 
-        if (
-            polyphenDataCache &&
-            !_.isEmpty(polyphenDataCache.transcript_consequences)
-        ) {
-            polyPhenScore =
-                polyphenDataCache.transcript_consequences[0].polyphen_score;
-            polyPhenPrediction =
-                polyphenDataCache.transcript_consequences[0]
-                    .polyphen_prediction;
+        if (polyphenDataCache && selectedTranscriptId) {
+            // find transcript consequence that matches the selected transcript
+            const transcriptConsequence = polyphenDataCache.transcript_consequences.find(
+                tc => tc.transcript_id === selectedTranscriptId
+            );
+            if (transcriptConsequence) {
+                polyPhenScore = transcriptConsequence.polyphen_score;
+                polyPhenPrediction = transcriptConsequence.polyphen_prediction;
+            }
         }
 
         return {
@@ -545,7 +556,8 @@ export default class FunctionalImpactColumnFormatter {
     public static renderFunction(
         data: Mutation[],
         siftPolyphenCache: GenomeNexusCache | undefined,
-        mutationAssessorCache: GenomeNexusMutationAssessorCache | undefined
+        mutationAssessorCache: GenomeNexusMutationAssessorCache | undefined,
+        selectedTranscriptId?: string
     ) {
         const showMutationAssessor = shouldShowMutationAssessor();
 
@@ -568,11 +580,13 @@ export default class FunctionalImpactColumnFormatter {
                     )}
                 {FunctionalImpactColumnFormatter.makeFunctionalImpactViz(
                     siftPolyphenCacheData,
-                    FunctionalImpactColumnsName.SIFT
+                    FunctionalImpactColumnsName.SIFT,
+                    selectedTranscriptId
                 )}
                 {FunctionalImpactColumnFormatter.makeFunctionalImpactViz(
                     siftPolyphenCacheData,
-                    FunctionalImpactColumnsName.POLYPHEN2
+                    FunctionalImpactColumnsName.POLYPHEN2,
+                    selectedTranscriptId
                 )}
             </div>
         );
@@ -581,13 +595,15 @@ export default class FunctionalImpactColumnFormatter {
     public static download(
         data: Mutation[],
         siftPolyphenCache: GenomeNexusCache,
-        mutationAssessorCache: GenomeNexusMutationAssessorCache
+        mutationAssessorCache: GenomeNexusMutationAssessorCache,
+        selectedTranscriptId?: string
     ): string {
         if (siftPolyphenCache || mutationAssessorCache) {
             const functionalImpactData = FunctionalImpactColumnFormatter.getData(
                 data,
                 siftPolyphenCache,
-                mutationAssessorCache
+                mutationAssessorCache,
+                selectedTranscriptId
             );
             let downloadData = [];
             if (functionalImpactData) {
@@ -626,7 +642,8 @@ export default class FunctionalImpactColumnFormatter {
 
     private static makeFunctionalImpactViz(
         cacheData: GenomeNexusCacheDataType | null,
-        column: FunctionalImpactColumnsName
+        column: FunctionalImpactColumnsName,
+        selectedTranscriptId?: string
     ) {
         let status: TableCellStatus | null = null;
 
@@ -650,7 +667,8 @@ export default class FunctionalImpactColumnFormatter {
                     );
                 case FunctionalImpactColumnsName.SIFT:
                     functionalImpactData = FunctionalImpactColumnFormatter.getSiftData(
-                        cacheData.data
+                        cacheData.data,
+                        selectedTranscriptId
                     );
                     return (
                         <Sift
@@ -660,7 +678,8 @@ export default class FunctionalImpactColumnFormatter {
                     );
                 case FunctionalImpactColumnsName.POLYPHEN2:
                     functionalImpactData = FunctionalImpactColumnFormatter.getPolyphenData(
-                        cacheData.data
+                        cacheData.data,
+                        selectedTranscriptId
                     );
                     return (
                         <PolyPhen2
