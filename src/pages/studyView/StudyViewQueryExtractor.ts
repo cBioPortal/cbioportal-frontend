@@ -1,4 +1,4 @@
-import { toJS } from 'mobx';
+import { observable, toJS } from 'mobx';
 import { StudyViewPageStore, StudyViewURLQuery } from './StudyViewPageStore';
 import _ from 'lodash';
 import {
@@ -32,9 +32,9 @@ export class StudyIdQueryExtractor implements StudyViewQueryExtractor<void> {
             query.studyId ?? query.cancer_study_id ?? query.id ?? '';
         if (studyIdsString) {
             studyIds = studyIdsString.trim().split(',');
-            if (!_.isEqual(studyIds, toJS(store.studyIds))) {
+            if (!_.isEqual(studyIds, toJS(store._studyIds))) {
                 // update if different
-                store.studyIds = studyIds;
+                store._studyIds = studyIds;
             }
         }
     }
