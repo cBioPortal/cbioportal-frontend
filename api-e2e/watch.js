@@ -5,8 +5,7 @@ const path = require('path');
 // get rid of railing slash
 const BACKEND_ROOT = (process.env.BACKEND_ROOT || '').replace(/\/$/, '');
 
-const SPEC_ROOT =
-    '/Users/lismana/Documents/projects/cbioportal6/test/api-e2e/specs';
+const SPEC_ROOT = `${BACKEND_ROOT}/test/api-e2e/specs`;
 
 // watch(SPEC_ROOT, async function(event, filename) {
 //     if (event === 'change') {

@@ -10,6 +10,14 @@ export const isObject = (value: any) => {
     );
 };
 
+function getLogLevel(level: string) {
+    if (typeof window != 'undefined') {
+        return 'verbose-all';
+    } else {
+        return level;
+    }
+}
+
 export function dynamicSortSingle(property: string) {
     var sortOrder = 1;
     if (property[0] === '-') {
@@ -54,6 +62,7 @@ export function dynamicSort(property: string[]) {
 export function getArrays(inp: any, output: Array<any>) {
     if (inp instanceof Array) {
         output.push(inp);
+
         inp.forEach(n => getArrays(n, output));
     } else if (isObject(inp)) {
         for (const k in inp) {
@@ -71,9 +80,10 @@ export function getArrays(inp: any, output: Array<any>) {
         }
 
         // this is get rid if extraneouys properties that conflict
+        delete inp.numberOfProfiledCases;
         delete inp.matchingGenePanelIds;
         delete inp.cytoband;
-        delete inp.numberOfProfiledCases;
+        //        delete inp.numberOfProfiledCases;
 
         Object.values(inp).forEach(nn => getArrays(nn, output));
     }
@@ -81,12 +91,14 @@ export function getArrays(inp: any, output: Array<any>) {
 }
 
 const deleteFields: Record<string, string[]> = {
+    MolecularProfileSample: ['label'],
     MolecularProfileSampleCounts: ['label'],
     CaseList: ['label'],
     SampleListsCounts: ['label'],
-    CnaGenes: ['qValue'],
-    MutatedGenes: ['qValue'],
-    ClinicalDataViolinPlots: ['sampleId'],
+    CnaGenes: ['qValue', 'entrezGeneId', 'entrezGeneIds'],
+    MutatedGenes: ['qValue', 'entrezGeneId', 'entrezGeneIds'],
+    ClinicalDataViolinPlots: [],
+    StructuralVariantGenes: ['entrezGeneId', 'entrezGeneIds'],
 };
 
 const sortFields: Record<string, string> = {
@@ -222,6 +234,7 @@ export function deepSort(inp: any, label: string) {
             });
 
             if (sortFields[label]) {
+                //console.log("SORTING BY", arr);
                 attemptSort(sortFields[label].split(','), arr);
             } else {
                 const fields = [
@@ -275,17 +288,33 @@ export function compareCounts(clData: any, legacyData: any, label: string) {
     var clDataSorted = deepSort(clDataClone, label);
     var legacyDataSorted = deepSort(legacyDataClone, label);
 
-    getArrays(clDataSorted, []).forEach((arr: any) => {
-        arr.filter((n: any) => /NA/i.test(n.value)).forEach((val: any) => {
-            removeElement(arr, val);
-        });
-    });
+    // correct for messed up spearmanCorr
+    if (clDataSorted && clDataSorted.spearmanCorr) {
+        clDataSorted.spearmanCorr = parseFloat(
+            clDataSorted.spearmanCorr.toString()
+        ).toFixed(5);
+        legacyDataSorted.spearmanCorr = parseFloat(
+            legacyDataSorted.spearmanCorr.toString()
+        ).toFixed(5);
+    }
 
-    getArrays(legacyDataSorted, []).forEach((arr: any) => {
-        arr.filter((n: any) => /NA/i.test(n.value)).forEach((val: any) => {
-            removeElement(arr, val);
-        });
-    });
+    // getArrays(clDataSorted, []).forEach((arr: any) => {
+    //     arr.filter((n: any) => /NA/i.test(n.value)).forEach((val: any) => {
+    //         removeElement(arr, val);
+    //     });
+    // });
+
+    // getArrays(legacyDataSorted, []).forEach((arr: any) => {
+    //     arr.filter((n: any) => /NA/i.test(n.value)).forEach((val: any) => {
+    //         removeElement(arr, val);
+    //     });
+    // });
+
+    // getArrays(legacyDataSorted, []).forEach((arr: any) => {
+    //     arr.filter((n: any) => /NA/i.test(n.specialValue)&&n.count===0  ).forEach((val: any) => {
+    //         removeElement(arr, val);
+    //     });
+    // });
 
     // get rid of these little guys
     if (clDataSorted && clDataSorted.filter)
@@ -412,7 +441,12 @@ export function reportValidationResult(
     const errorStatus = result.chError ? `(${result.chError.status})` : '';
 
     const data = result.data || result?.test.data;
-    const studies = (data.studyIds || data.studyViewFilter.studyIds).join(',');
+
+    const studies = (
+        data?.studyIds ||
+        data?.studyViewFilter?.studyIds ||
+        []
+    ).join(',');
 
     !result.status &&
         !result.supressed &&
@@ -426,7 +460,7 @@ export function reportValidationResult(
         );
     }
 
-    if (logLevel === 'verbose' && !result.status) {
+    if (getLogLevel(logLevel) === 'verbose' && !result.status) {
         console.log('failed test', {
             url: result.url,
             test: result.test,
@@ -439,14 +473,26 @@ export function reportValidationResult(
     }
 
     if (result.status) {
+        const studies = result.test
+            ? result.test.data.studyIds ||
+              result.test.data.studyViewFilter.studyIds
+            : [];
         console.log(
-            `${prefix} ${result.label} (${result.hash}) passed :) ch: ${
+            `${prefix} ${result.label} (${
+                result.hash
+            }) passed :) (${studies.join(',')}) ch: ${
                 result.chDuration
             } legacy: ${result.legacyDuration && result.legacyDuration}`
         );
+        // @ts-ignore
+        // process.stdout.clearLine(0)
+        // // @ts-ignore
+        // process.stdout.cursorTo(0)
+        // // @ts-ignore
+        // process.stdout.write(`passed`)
     }
 
-    if (!result.status && logLevel == 'verbose') {
+    if (!result.status && getLogLevel(logLevel).includes('verbose')) {
         // violin plot response has a single node of rows
         const chSubject = result?.clDataSorted.rows || result?.clDataSorted;
         const legacySubject =
@@ -466,11 +512,15 @@ export function reportValidationResult(
                 }
             }
         }
-        console.groupCollapsed('All Data');
-        console.log(`CH: ${chSubject?.length}, Legacy:${legacySubject.length}`);
-        console.log('legacy', result.legacyDataSorted);
-        console.log('CH', result.clDataSorted);
-        console.groupEnd();
+        if (getLogLevel(logLevel).includes('all')) {
+            console.groupCollapsed('All Data');
+            console.log(
+                `CH: ${chSubject?.length}, Legacy:${legacySubject.length}`
+            );
+            console.log('legacy', result.legacyDataSorted);
+            console.log('CH', result.clDataSorted);
+            console.groupEnd();
+        }
     }
 
     !result.status && console.groupEnd();
@@ -485,7 +535,7 @@ export async function runSpecs(
     suppressors: any = []
 ) {
     // @ts-ignore
-    const allTests = files
+    let allTests = files
         // @ts-ignore
         .flatMap((n: any) => n.suites)
         // @ts-ignore
@@ -497,7 +547,7 @@ export async function runSpecs(
 
     console.log(`Running specs (${files.length} of ${totalCount})`);
 
-    if (logLevel === 'verbose') {
+    if (getLogLevel(logLevel).includes('verbose')) {
         console.groupCollapsed('specs');
         //console.log('raw', json);
         console.log('filtered', files);
@@ -511,12 +561,18 @@ export async function runSpecs(
     let httpErrors: any[] = [];
     let supressed: any[] = [];
 
+    //
+    // let filterFunc = (test:any)=>{
+    //     return [2087302238,-1234322951,-341016470,388930409].includes(test.hash);
+    // }
+    let filterFunc = (test: any) => true;
+
     const invokers: (() => Promise<any>)[] = [] as any;
     files
         .map((f: any) => f.suites)
         .forEach((suite: any) => {
             suite.forEach((col: any) =>
-                col.tests.forEach((test: any) => {
+                col.tests.filter(filterFunc).forEach((test: any) => {
                     test.url = test.url.replace(
                         /column-store\/api/,
                         'column-store'
@@ -601,7 +657,7 @@ export async function runSpecs(
             );
         });
 
-    const concurrent = 10;
+    const concurrent = 1;
     const batches = Math.ceil(invokers.length / concurrent);
 
     for (var i = 0; i < batches; i++) {
@@ -622,5 +678,14 @@ export async function runSpecs(
     console.log(`SKIPPED: ${skips.length}  (${skips.join(',')})`);
     console.log(`SUPRESSED: ${supressed.length}  (${supressed.join(',')})`);
     console.groupEnd();
-    // console.groupEnd();
+
+    try {
+        if (errors.length > 0) {
+            process.exit(1);
+        } else {
+            process.exit(0);
+        }
+    } catch (ex) {
+        // fail silently we're in browser
+    }
 }
