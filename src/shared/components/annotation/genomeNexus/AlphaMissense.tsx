@@ -14,8 +14,7 @@ export function hideArrow(tooltipEl: any) {
     arrowEl.style.display = 'none';
 }
 
-export const AlphaMissense_URL: string =
-    'https://www.science.org/doi/10.1126/science.adg7492';
+export const AlphaMissenseUrl: string = 'https://alphamissense.hegelab.org/';
 
 export const AlphaMissense: React.FC<IAlphaMissenseProps> = ({
     alphaMissensePrediction,
@@ -28,7 +27,7 @@ export const AlphaMissense: React.FC<IAlphaMissenseProps> = ({
                     <tr>
                         <td>Source</td>
                         <td>
-                            <a href={AlphaMissense_URL}>AlphaMissense</a>
+                            <a href={AlphaMissenseUrl}>AlphaMissense</a>
                         </td>
                     </tr>
                     <tr>
