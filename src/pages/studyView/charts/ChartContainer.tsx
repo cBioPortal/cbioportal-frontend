@@ -803,7 +803,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                 },
                             ]}
                             defaultSortBy={
-                                MultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS
+                                MultiSelectionTableColumnKey.NUMBER
                             }
                             setOperationsButtonText={
                                 this.props.store.hesitateUpdate
