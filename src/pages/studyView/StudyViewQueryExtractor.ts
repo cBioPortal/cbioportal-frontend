@@ -35,6 +35,8 @@ export class StudyIdQueryExtractor implements StudyViewQueryExtractor<void> {
             if (!_.isEqual(studyIds, toJS(store.studyIds))) {
                 // update if different
                 store.studyIds = studyIds;
+                store.useDashboardView =
+                    studyIds.length === 1 && studyIds[0] === 'enclave_2024';
             }
         }
     }
@@ -139,7 +141,7 @@ export class ClinicalAttributeQueryExtractor
     ): Promise<void> {
         const filters: Partial<StudyViewFilter> = {};
         const clinicalAttributes = _.uniqBy(
-            await defaultClient.fetchClinicalAttributesUsingPOST({
+            await store.fetchClinicalAttributesUsingPOST({
                 studyIds: store.studyIds,
             }),
             clinicalAttribute =>

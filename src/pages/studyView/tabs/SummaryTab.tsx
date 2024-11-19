@@ -1105,7 +1105,7 @@ export class StudySummaryTab extends React.Component<
                             </div>
                         </div>
                     )}
-                {this.props.store.selectedSamples.isComplete &&
+                {/* {this.props.store.selectedSamples.isComplete &&
                     this.props.store.selectedSamples.result.length === 0 && (
                         <div className={styles.studyViewNoSamples}>
                             <div className={styles.studyViewNoSamplesInner}>
@@ -1121,7 +1121,7 @@ export class StudySummaryTab extends React.Component<
                                 </p>
                             </div>
                         </div>
-                    )}
+                    )} */}
             </div>
         );
     }

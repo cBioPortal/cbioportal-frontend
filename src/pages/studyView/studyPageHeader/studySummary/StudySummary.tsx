@@ -33,6 +33,7 @@ export default class StudySummary extends React.Component<
 > {
     constructor(props: any) {
         super(props);
+        console.log(props.studies);
         makeObservable(this);
     }
     @observable private showMoreDescription = false;

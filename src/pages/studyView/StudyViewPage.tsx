@@ -585,13 +585,14 @@ export default class StudyViewPage extends React.Component<
                 )}
 
                 {this.store.comparisonConfirmationModal}
-                {this.store.queriedSampleIdentifiers.isComplete &&
-                    this.store.invalidSampleIds.isComplete &&
-                    this.store.unknownQueriedIds.isComplete &&
-                    this.store.displayedStudies.isComplete &&
-                    this.store.queriedPhysicalStudies.isComplete &&
-                    this.store.shouldDisplaySampleTreatments.isComplete &&
-                    this.store.queriedPhysicalStudies.result.length > 0 && (
+                {//this.store.queriedSampleIdentifiers.isComplete &&
+                //this.store.invalidSampleIds.isComplete &&
+                //this.store.unknownQueriedIds.isComplete &&
+                this.store.displayedStudies.isComplete &&
+                    //this.store.queriedPhysicalStudies.isComplete &&
+                    //this.store.shouldDisplaySampleTreatments.isComplete &&
+                    //this.store.queriedPhysicalStudies.result.length > 0 &&
+                    true && (
                         <div>
                             <StudyPageHeader
                                 store={this.store}
@@ -872,8 +873,9 @@ export default class StudyViewPage extends React.Component<
             // by looking to see if there is anything in queriedPhysicalStudyIds
             // we have to do this because studyIds property has the virtualStudy id (in that setting)
             if (
-                this.store.unknownQueriedIds.result.length &&
-                this.store.queriedPhysicalStudyIds.result.length === 0
+                // this.store.unknownQueriedIds.result.length &&
+                // this.store.queriedPhysicalStudyIds.result.length === 0
+                false
             ) {
                 const pluralForm =
                     this.store.unknownQueriedIds.result.length > 1

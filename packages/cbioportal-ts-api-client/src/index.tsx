@@ -94,3 +94,5 @@ export {
     AlterationFilter,
     default as CBioPortalAPIInternal,
 } from './generated/CBioPortalAPIInternal';
+
+export { default as CBioPortalAPIFederated } from './generated/CBioPortalAPIFederated';

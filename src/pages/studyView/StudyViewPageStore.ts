@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
 import defaultClient from 'shared/api/cbioportalClientInstance';
+import federatedClient from 'shared/api/cbioportalFederatedClientInstance';
 import client from 'shared/api/cbioportalClientInstance';
 import oncoKBClient from 'shared/api/oncokbClientInstance';
 import {
@@ -76,6 +77,7 @@ import {
     StructuralVariantFilterQuery,
     StudyViewFilter,
     StudyViewStructuralVariantFilter,
+    ClinicalDataBin,
 } from 'cbioportal-ts-api-client';
 import {
     evaluatePutativeDriverInfo,
@@ -555,6 +557,8 @@ export class StudyViewPageStore
     @observable typeIdsMode: string = CustomDataTypeEnum.CATEGORICAL;
     @observable chartsBinMethod: { [chartKey: string]: BinMethodOption } = {};
     chartsBinsGeneratorConfigs = observable.map<string, BinsGeneratorConfig>();
+
+    useDashboardView = false;
 
     private getDataBinFilterSet(uniqueKey: string) {
         if (this.isGenericAssayChart(uniqueKey)) {
@@ -4515,10 +4519,40 @@ export class StudyViewPageStore
         });
     }
 
+    fetchClinicalAttributesUsingPOST(
+        params: any
+    ): Promise<ClinicalAttribute[]> {
+        if (this.useDashboardView) {
+            return federatedClient.fetchClinicalAttributesUsingPOST(params);
+        } else {
+            return defaultClient.fetchClinicalAttributesUsingPOST(params);
+        }
+    }
+
+    fetchClinicalDataCountsUsingPOST(
+        params: any
+    ): Promise<ClinicalDataCountItem[]> {
+        if (this.useDashboardView) {
+            return federatedClient.fetchClinicalDataCountsUsingPOST(params);
+        } else {
+            return internalClient.fetchClinicalDataCountsUsingPOST(params);
+        }
+    }
+
+    fetchClinicalDataBinCountsUsingPOST(
+        params: any
+    ): Promise<ClinicalDataBin[]> {
+        if (this.useDashboardView) {
+            return federatedClient.fetchClinicalDataBinCountsUsingPOST(params);
+        } else {
+            return internalClient.fetchClinicalDataBinCountsUsingPOST(params);
+        }
+    }
+
     readonly unfilteredClinicalDataCount = remoteData<ClinicalDataCountItem[]>({
         invoke: () => {
             if (!_.isEmpty(this.unfilteredAttrsForNonNumerical)) {
-                return internalClient.fetchClinicalDataCountsUsingPOST({
+                return this.fetchClinicalDataCountsUsingPOST({
                     clinicalDataCountFilter: {
                         attributes: this.unfilteredAttrsForNonNumerical,
                         studyViewFilter: this.filters,
@@ -4572,7 +4606,7 @@ export class StudyViewPageStore
     >({
         invoke: () => {
             if (!_.isEmpty(this.newlyAddedUnfilteredAttrsForNonNumerical)) {
-                return internalClient.fetchClinicalDataCountsUsingPOST({
+                return this.fetchClinicalDataCountsUsingPOST({
                     clinicalDataCountFilter: {
                         attributes: this
                             .newlyAddedUnfilteredAttrsForNonNumerical,
@@ -4601,7 +4635,7 @@ export class StudyViewPageStore
                 this.hasSampleIdentifiersInFilter &&
                 this.newlyAddedUnfilteredAttrsForNumerical.length > 0
             ) {
-                const clinicalDataBinCountData = await internalClient.fetchClinicalDataBinCountsUsingPOST(
+                const clinicalDataBinCountData = await this.fetchClinicalDataBinCountsUsingPOST(
                     {
                         dataBinMethod: 'STATIC',
                         clinicalDataBinCountFilter: {
@@ -4642,7 +4676,7 @@ export class StudyViewPageStore
                         return element !== undefined;
                     }
                 );
-                const clinicalDataBinCountData = await internalClient.fetchClinicalDataBinCountsUsingPOST(
+                const clinicalDataBinCountData = await this.fetchClinicalDataBinCountsUsingPOST(
                     {
                         dataBinMethod: 'STATIC',
                         clinicalDataBinCountFilter: {
@@ -4768,7 +4802,7 @@ export class StudyViewPageStore
                             this._clinicalDataFilterSet.has(uniqueKey) ||
                             this.isInitialFilterState
                         ) {
-                            result = await internalClient.fetchClinicalDataCountsUsingPOST(
+                            result = await this.fetchClinicalDataCountsUsingPOST(
                                 {
                                     clinicalDataCountFilter: {
                                         attributes: [
@@ -5209,7 +5243,7 @@ export class StudyViewPageStore
                             if (!this.hasSampleIdentifiersInFilter) {
                                 return [];
                             }
-                            result = await internalClient.fetchClinicalDataBinCountsUsingPOST(
+                            result = await this.fetchClinicalDataBinCountsUsingPOST(
                                 {
                                     dataBinMethod,
                                     clinicalDataBinCountFilter: {
@@ -5403,6 +5437,9 @@ export class StudyViewPageStore
     readonly filteredVirtualStudies = remoteData({
         await: () => [this.filteredPhysicalStudies],
         invoke: async () => {
+            if (this.useDashboardView) {
+                return [];
+            }
             if (
                 this.filteredPhysicalStudies.result.length ===
                 this.studyIds.length
@@ -5442,6 +5479,25 @@ export class StudyViewPageStore
             this.filteredVirtualStudies,
         ],
         invoke: async () => {
+            if (this.useDashboardView) {
+                let study: any = {
+                    name: 'NCI Enclave (2024)',
+                    description:
+                        'Cohort-level data sourced from the NCI Secure Enclave.',
+                    publicStudy: true,
+                    pmid: '',
+                    citation: '',
+                    groups: 'PUBLIC',
+                    status: 0,
+                    importDate: '',
+                    allSampleCount: 1,
+                    readPermission: true,
+                    studyId: 'enclave_2024',
+                    cancerTypeId: 'mixed',
+                };
+                return [study];
+            }
+
             let everyStudyIdToStudy = this.everyStudyIdToStudy.result!;
 
             let studies = _.reduce(
@@ -5570,7 +5626,24 @@ export class StudyViewPageStore
             this.queriedPhysicalStudies,
         ],
         invoke: async () => {
-            if (
+            if (this.useDashboardView) {
+                let study: any = {
+                    name: 'NCI Enclave (2024)',
+                    description:
+                        'Cohort-level data sourced from the NCI Secure Enclave.',
+                    publicStudy: true,
+                    pmid: '',
+                    citation: '',
+                    groups: 'PUBLIC',
+                    status: 0,
+                    importDate: '',
+                    allSampleCount: 1,
+                    readPermission: true,
+                    studyId: 'enclave_2024',
+                    cancerTypeId: 'mixed',
+                };
+                return [study];
+            } else if (
                 this.filteredPhysicalStudies.result.length === 0 &&
                 this.filteredVirtualStudies.result.length === 1
             ) {
@@ -5614,6 +5687,10 @@ export class StudyViewPageStore
             this.everyStudyIdToStudy,
         ],
         invoke: async () => {
+            if (this.useDashboardView) {
+                return [];
+            }
+
             let studies: CancerStudy[] = [];
             if (this.showOriginStudiesInSummaryDescription) {
                 const originStudyIds = this.filteredVirtualStudies.result[0]
@@ -5868,7 +5945,7 @@ export class StudyViewPageStore
         invoke: async () => {
             if (this.queriedPhysicalStudyIds.result.length > 0) {
                 return _.uniqBy(
-                    await defaultClient.fetchClinicalAttributesUsingPOST({
+                    await this.fetchClinicalAttributesUsingPOST({
                         studyIds: this.queriedPhysicalStudyIds.result,
                     }),
                     clinicalAttribute =>
@@ -7761,7 +7838,7 @@ export class StudyViewPageStore
                 attr => attr.attributeId
             );
 
-            return internalClient.fetchClinicalDataCountsUsingPOST({
+            return this.fetchClinicalDataCountsUsingPOST({
                 clinicalDataCountFilter: {
                     attributes,
                     studyViewFilter: this.initialFilters,
@@ -7792,7 +7869,7 @@ export class StudyViewPageStore
     >({
         await: () => [this.initialVisibleAttributesClinicalDataBinAttributes],
         invoke: async () => {
-            const clinicalDataBinCountData = await internalClient.fetchClinicalDataBinCountsUsingPOST(
+            const clinicalDataBinCountData = await this.fetchClinicalDataBinCountsUsingPOST(
                 {
                     dataBinMethod: 'STATIC',
                     clinicalDataBinCountFilter: {
@@ -8176,11 +8253,14 @@ export class StudyViewPageStore
         onError: () => {},
         default: [],
         onResult: samples => {
+            /*
             if (samples.length === 0) {
                 this.blockLoading = true;
             } else {
                 this.blockLoading = false;
             }
+            */
+            this.blockLoading = false;
         },
     });
 
@@ -9250,6 +9330,10 @@ export class StudyViewPageStore
     >({
         await: () => [this.molecularProfiles],
         invoke: async () => {
+            if (this.useDashboardView) {
+                return [];
+            }
+
             const [counts, selectedSamples] = await Promise.all([
                 internalClient.fetchMolecularProfileSampleCountsUsingPOST({
                     studyViewFilter: this.filters,
@@ -9275,6 +9359,10 @@ export class StudyViewPageStore
 
     readonly caseListSampleCounts = remoteData<MultiSelectionTableRow[]>({
         invoke: async () => {
+            if (this.useDashboardView) {
+                return [];
+            }
+
             const [counts, selectedSamples] = await Promise.all([
                 internalClient.fetchCaseListCountsUsingPOST({
                     studyViewFilter: this.filters,
@@ -9317,6 +9405,10 @@ export class StudyViewPageStore
 
     readonly initialMolecularProfileSampleCounts = remoteData({
         invoke: async () => {
+            if (this.useDashboardView) {
+                return [];
+            }
+
             return internalClient.fetchMolecularProfileSampleCountsUsingPOST({
                 studyViewFilter: this.initialFilters,
             });
@@ -10088,6 +10180,10 @@ export class StudyViewPageStore
     }
     public readonly clinicalEventTypeCounts = remoteData({
         invoke: async () => {
+            if (this.useDashboardView) {
+                return Promise.resolve([]);
+            }
+
             return internalClient.getClinicalEventTypeCountsUsingPOST({
                 studyViewFilter: this.filters,
             });
@@ -10098,6 +10194,10 @@ export class StudyViewPageStore
     public readonly shouldDisplayClinicalEventTypeCounts = remoteData({
         await: () => [this.queriedPhysicalStudyIds],
         invoke: async () => {
+            if (this.useDashboardView) {
+                return Promise.resolve(false);
+            }
+
             const filters: Partial<StudyViewFilter> = {};
             filters.studyIds = this.queriedPhysicalStudyIds.result;
             return Promise.resolve(
@@ -10441,6 +10541,10 @@ export class StudyViewPageStore
     public readonly shouldDisplayPatientTreatments = remoteData({
         await: () => [this.queriedPhysicalStudyIds],
         invoke: () => {
+            if (this.useDashboardView) {
+                return Promise.resolve(false);
+            }
+
             return internalClient.getContainsTreatmentDataUsingPOST({
                 studyIds: toJS(this.queriedPhysicalStudyIds.result),
             });
@@ -10450,6 +10554,10 @@ export class StudyViewPageStore
     public readonly shouldDisplaySampleTreatments = remoteData({
         await: () => [this.queriedPhysicalStudyIds],
         invoke: () => {
+            if (this.useDashboardView) {
+                return Promise.resolve(false);
+            }
+
             return internalClient.getContainsSampleTreatmentDataUsingPOST({
                 studyIds: toJS(this.queriedPhysicalStudyIds.result),
             });
@@ -10499,7 +10607,10 @@ export class StudyViewPageStore
     public readonly shouldDisplaySampleTreatmentGroups = remoteData({
         await: () => [this.queriedPhysicalStudyIds],
         invoke: () => {
-            if (!getServerConfig().enable_treatment_groups) {
+            if (
+                !getServerConfig().enable_treatment_groups ||
+                this.useDashboardView
+            ) {
                 return Promise.resolve(false);
             }
             return internalClient.getContainsSampleTreatmentDataUsingPOST({
@@ -10540,7 +10651,10 @@ export class StudyViewPageStore
     public readonly shouldDisplayPatientTreatmentTarget = remoteData({
         await: () => [this.queriedPhysicalStudyIds],
         invoke: () => {
-            if (!getServerConfig().enable_treatment_groups) {
+            if (
+                !getServerConfig().enable_treatment_groups ||
+                this.useDashboardView
+            ) {
                 return Promise.resolve(false);
             }
             return internalClient.getContainsTreatmentDataUsingPOST({
@@ -10553,7 +10667,10 @@ export class StudyViewPageStore
     public readonly shouldDisplaySampleTreatmentTarget = remoteData({
         await: () => [this.queriedPhysicalStudyIds],
         invoke: () => {
-            if (!getServerConfig().enable_treatment_groups) {
+            if (
+                !getServerConfig().enable_treatment_groups ||
+                this.useDashboardView
+            ) {
                 return Promise.resolve(false);
             }
             return internalClient.getContainsSampleTreatmentDataUsingPOST({
