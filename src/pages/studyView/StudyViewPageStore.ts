@@ -5743,6 +5743,7 @@ export class StudyViewPageStore
         },
         onError: () => {},
         onResult: unknownIds => {
+            /*
             if (unknownIds.length > 0) {
                 this.pageStatusMessages['unknownIds'] = {
                     status: 'danger',
@@ -5751,6 +5752,7 @@ export class StudyViewPageStore
                     } ${unknownIds.join(', ')}`,
                 };
             }
+            */
         },
         default: [],
     });
@@ -6859,6 +6861,15 @@ export class StudyViewPageStore
 
     @computed
     get loadingInitialDataForSummaryTab(): boolean {
+        if (this.useDashboardView) {
+            return (
+                this.clinicalAttributes.isPending ||
+                this.initialVisibleAttributesClinicalDataBinCountData
+                    .isPending ||
+                this.initialVisibleAttributesClinicalDataCountData.isPending
+            );
+        }
+
         // Only add Mobx Promises that are not dependent on StudyViewFilter will force re-render
         if (
             !this.queriedPhysicalStudyIds.isComplete ||
