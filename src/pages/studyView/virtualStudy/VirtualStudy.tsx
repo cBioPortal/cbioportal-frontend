@@ -367,8 +367,8 @@ export default class VirtualStudy extends React.Component<
                                                             currently selected.
                                                             Furthermore, you can
                                                             define this Virtual
-                                                            Study to be either static
-                                                            or dynamic:
+                                                            Study to be either
+                                                            static or dynamic:
                                                         </p>
                                                         <ul>
                                                             <li>
