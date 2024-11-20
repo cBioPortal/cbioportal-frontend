@@ -97,7 +97,7 @@ export default class VirtualStudy extends React.Component<
     {}
 > {
     @observable.ref private name: string;
-    @observable.ref private description: string = '';
+    @observable.ref private customDescription: string | undefined;
     @observable.ref private dynamic: boolean = false;
 
     @observable private saving = false;
@@ -108,7 +108,6 @@ export default class VirtualStudy extends React.Component<
         super(props);
         makeObservable(this);
         this.name = props.name || '';
-        this.setDynamicTypeTo(false);
     }
 
     @computed get namePlaceHolder() {
@@ -223,33 +222,32 @@ export default class VirtualStudy extends React.Component<
         );
     }
 
-    updateDescriptionIfBlankOrDefault(hideSampleCounts: boolean) {
-        const getVirtualStudyDescriptionWithCounts = getVirtualStudyDescription.bind(
-            null,
+    getDefuaultDescriptionByType(dynamic: boolean) {
+        return getVirtualStudyDescription(
             this.props.description,
             this.props.studyWithSamples,
             this.props.filter,
             this.attributeNamesSet,
             this.props.molecularProfileNameSet,
             this.props.caseListNameSet,
-            this.props.user
+            this.props.user,
+            dynamic
         );
-        const blankOrDefaultDescription =
-            !this.description ||
-            !this.description.trim() ||
-            this.description ===
-                getVirtualStudyDescriptionWithCounts(!hideSampleCounts);
-        if (blankOrDefaultDescription) {
-            this.description = getVirtualStudyDescriptionWithCounts(
-                hideSampleCounts
-            );
-        }
     }
 
-    setDynamicTypeTo(dynamic: boolean) {
-        this.dynamic = dynamic;
+    @computed get description() {
+        const noCustomDescriptionProvided =
+            this.customDescription == undefined ||
+            this.customDescription ===
+                this.getDefuaultDescriptionByType(!this.dynamic);
+        if (noCustomDescriptionProvided) {
+            return this.getDefuaultDescriptionByType(this.dynamic);
+        }
+        return this.customDescription || '';
+    }
 
-        this.updateDescriptionIfBlankOrDefault(dynamic);
+    set description(description: string) {
+        this.customDescription = description;
     }
 
     render() {
@@ -328,9 +326,7 @@ export default class VirtualStudy extends React.Component<
                                                     value="static"
                                                     checked={!this.dynamic}
                                                     onChange={_ =>
-                                                        this.setDynamicTypeTo(
-                                                            false
-                                                        )
+                                                        (this.dynamic = false)
                                                     }
                                                 />{' '}
                                                 Static
@@ -342,9 +338,7 @@ export default class VirtualStudy extends React.Component<
                                                     value="dynamic"
                                                     checked={this.dynamic}
                                                     onChange={_ =>
-                                                        this.setDynamicTypeTo(
-                                                            true
-                                                        )
+                                                        (this.dynamic = true)
                                                     }
                                                 />{' '}
                                                 Dynamic
