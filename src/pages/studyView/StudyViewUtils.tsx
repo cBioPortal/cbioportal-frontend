@@ -903,7 +903,8 @@ export function getVirtualStudyDescription(
     attributeNamesSet: { [id: string]: string },
     molecularProfileNameSet: { [id: string]: string },
     caseListNameSet: { [key: string]: string },
-    user?: string
+    user?: string,
+    hideSampleCounts: boolean = false
 ) {
     let descriptionLines: string[] = [];
     const createdOnStr = 'Created on';
@@ -917,18 +918,24 @@ export function getVirtualStudyDescription(
             _.flatMap(studyWithSamples, study => study.uniqueSampleKeys)
         );
         descriptionLines.push(
-            `${uniqueSampleKeys.length} sample${
-                uniqueSampleKeys.length > 1 ? 's' : ''
-            } from ${studyWithSamples.length} ${
-                studyWithSamples.length > 1 ? 'studies:' : 'study:'
-            }`
+            (hideSampleCounts
+                ? 'Samples'
+                : `${uniqueSampleKeys.length} sample${
+                      uniqueSampleKeys.length > 1 ? 's' : ''
+                  }`) +
+                ` from ${studyWithSamples.length} ${
+                    studyWithSamples.length > 1 ? 'studies:' : 'study:'
+                }`
         );
         //add individual studies sample count
         studyWithSamples.forEach(studyObj => {
             descriptionLines.push(
-                `- ${studyObj.name} (${
-                    studyObj.uniqueSampleKeys.length
-                } sample${uniqueSampleKeys.length > 1 ? 's' : ''})`
+                `- ${studyObj.name}` +
+                    (hideSampleCounts
+                        ? ''
+                        : ` (${studyObj.uniqueSampleKeys.length} sample${
+                              uniqueSampleKeys.length > 1 ? 's' : ''
+                          })`)
             );
         });
         //add filters
