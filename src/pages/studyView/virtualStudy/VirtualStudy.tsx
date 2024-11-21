@@ -246,10 +246,6 @@ export default class VirtualStudy extends React.Component<
         return this.customDescription || '';
     }
 
-    set description(description: string) {
-        this.customDescription = description;
-    }
-
     render() {
         return (
             <div
@@ -311,7 +307,7 @@ export default class VirtualStudy extends React.Component<
                                                 placeholder="Virtual study description (Optional)"
                                                 value={this.description}
                                                 onChange={event =>
-                                                    (this.description =
+                                                    (this.customDescription =
                                                         event.currentTarget.value)
                                                 }
                                             />
