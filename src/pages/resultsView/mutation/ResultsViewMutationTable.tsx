@@ -38,6 +38,7 @@ export default class ResultsViewMutationTable extends MutationTable<
     public static defaultProps = {
         ...MutationTable.defaultProps,
         columns: [
+            MutationTableColumnType.GENE,
             MutationTableColumnType.STUDY,
             MutationTableColumnType.SAMPLE_ID,
             MutationTableColumnType.COPY_NUM,
@@ -190,6 +191,8 @@ export default class ResultsViewMutationTable extends MutationTable<
                 this._columns[columnName] = column;
             }
         );
+
+        this._columns[MutationTableColumnType.GENE].visible = false;
 
         // override default visibility for some columns
         this._columns[
