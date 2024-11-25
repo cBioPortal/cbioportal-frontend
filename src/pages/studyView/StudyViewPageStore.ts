@@ -5826,7 +5826,7 @@ export class StudyViewPageStore
             const res = _(this.samples.result!)
                 .map(sample =>
                     sampleResourceDefinitions.map(resource =>
-                        internalClient.getAllResourceDataOfSampleInStudyUsingGET(
+                        this.internalClient.getAllResourceDataOfSampleInStudyUsingGET(
                             {
                                 sampleId: sample.sampleId,
                                 studyId: sample.studyId,
@@ -10462,7 +10462,7 @@ export class StudyViewPageStore
         invoke: async () => {
             if (this.shouldDisplaySampleTreatments.result) {
                 if (isClickhouseMode()) {
-                    return await this.internalClient.fetchSampleTreatmentCountsUsing(
+                    return await this.internalClient.fetchSampleTreatmentCountsUsingPOST(
                         {
                             studyViewFilter: this.filters,
                         }
@@ -10515,7 +10515,7 @@ export class StudyViewPageStore
         invoke: async () => {
             if (this.shouldDisplayPatientTreatments.result) {
                 if (isClickhouseMode()) {
-                    return await this.internalClient.fetchPatientTreatmentCountsUsing(
+                    return await this.internalClient.fetchPatientTreatmentCountsUsingPOST(
                         {
                             studyViewFilter: this.filters,
                         }
@@ -10590,10 +10590,12 @@ export class StudyViewPageStore
         await: () => [this.shouldDisplayPatientTreatmentGroups],
         invoke: () => {
             if (this.shouldDisplayPatientTreatmentGroups.result) {
-                return this.internalClient.fetchPatientTreatmentCountsUsing({
-                    studyViewFilter: this.filters,
-                    tier: 'AgentClass',
-                });
+                return this.internalClient.fetchPatientTreatmentCountsUsingPOST(
+                    {
+                        studyViewFilter: this.filters,
+                        tier: 'AgentClass',
+                    }
+                );
             }
             return Promise.resolve(undefined);
         },
@@ -10643,7 +10645,7 @@ export class StudyViewPageStore
     public readonly patientTreatmentTarget = remoteData({
         await: () => [this.shouldDisplayPatientTreatmentTarget],
         invoke: () => {
-            return this.internalClient.fetchPatientTreatmentCountsUsing({
+            return this.internalClient.fetchPatientTreatmentCountsUsingPOST({
                 studyViewFilter: this.filters,
                 tier: 'AgentTarget',
             });
