@@ -7,9 +7,7 @@ on:
       - master
   # Run whenever labels are modified on PRs. To also consider closed PRs, use issues as trigger because all PRs are issues.
   issues:
-    types:
-      - labeled
-      - unlabeled
+    types: [labeled, unlabeled]
 
 jobs:
   update_draft_release:
