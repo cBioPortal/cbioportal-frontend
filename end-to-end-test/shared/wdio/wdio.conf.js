@@ -165,7 +165,7 @@ exports.config = {
     //
     //
 
-    specs: ['./remote/home.spec.js'],
+    specs: ['./remote/specs/core/home.spec.js'],
 
     exclude: ['./local/specs/web-tour.spec.js'],
 
