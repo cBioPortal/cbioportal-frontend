@@ -6,9 +6,9 @@ import OncoprintModel, {
     ColumnProp,
     CustomTrackOption,
     Datum,
+    GAP_MODE_ENUM,
     LibraryTrackSpec,
     SortConfig,
-    TrackGroup,
     TrackGroupHeader,
     TrackGroupIndex,
     TrackId,
@@ -1234,7 +1234,7 @@ export default class Oncoprint {
 
             if (this.model.getTrackSortDirection(track_id) === 0) {
                 if (this.model.getTrackShowGaps(track_id)) {
-                    this.setTrackShowGaps(track_id, false);
+                    this.setTrackShowGaps(track_id, GAP_MODE_ENUM.HIDE_GAPS);
                 }
             }
         }
@@ -1292,9 +1292,12 @@ export default class Oncoprint {
         this.resizeAndOrganizeAfterTimeout();
     }
 
-    public setTrackShowGaps(track_id: TrackId, showGaps: boolean) {
-        this.model.setTrackShowGaps(track_id, showGaps);
-        if (this.model.getTrackSortDirection(track_id) === 0 && showGaps) {
+    public setTrackShowGaps(track_id: TrackId, gap_mode: GAP_MODE_ENUM) {
+        this.model.setTrackShowGaps(track_id, gap_mode);
+        if (
+            this.model.getTrackSortDirection(track_id) === 0 &&
+            gap_mode !== GAP_MODE_ENUM.HIDE_GAPS
+        ) {
             this.setTrackSortDirection(track_id, 1);
         }
         this.track_options_view.setTrackShowGaps(

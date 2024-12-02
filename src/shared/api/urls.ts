@@ -139,6 +139,15 @@ export function getSampleViewUrlWithPathname(
     return buildCBioPortalPageUrl(pathname, { sampleId, studyId }, hash);
 }
 
+export function getResourceViewUrlWithPathname(
+    studyId: string,
+    pathname: string,
+    patientId: string
+) {
+    let caseId: string = `${patientId}`;
+    return buildCBioPortalPageUrl(pathname, { studyId, caseId });
+}
+
 export function getPatientViewUrl(
     studyId: string,
     caseId: string,

@@ -10,10 +10,10 @@ import { Else, If, Then } from 'react-if';
 import { WindowWidthBox } from '../../../shared/components/WindowWidthBox/WindowWidthBox';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import {
+    getResourceViewUrlWithPathname,
     getSampleViewUrlWithPathname,
     getPatientViewUrlWithPathname,
 } from 'shared/api/urls';
-import { getAllClinicalDataByStudyViewFilter } from '../StudyViewUtils';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
 import { isUrl, remoteData } from 'cbioportal-frontend-commons';
 import { makeObservable, observable, computed } from 'mobx';
@@ -32,6 +32,22 @@ class FilesLinksTableComponent extends LazyMobXTable<{
 }> {}
 
 const RECORD_LIMIT = 500;
+
+function getResourceDataOfEntireStudy(studyIds: string[]) {
+    // Fetch resource data for each studyId, then return combined results
+    const allResources = studyIds.map(studyId =>
+        internalClient.getAllStudyResourceDataInStudyPatientSampleUsingGET({
+            studyId: studyId,
+            projection: 'DETAILED',
+        })
+    );
+
+    return Promise.all(allResources).then(allResources =>
+        _(allResources)
+            .flatMap()
+            .value()
+    );
+}
 
 function getResourceDataOfPatients(studyClinicalData: {
     [uniqueSampleKey: string]: ClinicalData[];
@@ -86,6 +102,7 @@ function buildItemsAndResources(resourceData: {
                 typeOfResource: resource?.resourceDefinition?.displayName,
                 description: resource?.resourceDefinition?.description,
                 url: resource?.url,
+                resourceId: resource?.resourceId,
             }))
         )
         .value();
@@ -95,28 +112,35 @@ function buildItemsAndResources(resourceData: {
 
 async function fetchFilesLinksData(
     filters: StudyViewFilter,
-    sampleIdResourceData: { [sampleId: string]: ResourceData[] },
+    selectedSamples: Array<any>,
     searchTerm: string | undefined,
     sortAttributeId: string | undefined,
     sortDirection: 'asc' | 'desc' | undefined,
     recordLimit: number
 ) {
-    const studyClinicalDataResponse = await getAllClinicalDataByStudyViewFilter(
-        filters,
-        searchTerm,
-        sortAttributeId,
-        sortDirection,
-        recordLimit,
-        0
+    const selectedStudyIds = [
+        ...new Set(selectedSamples.map(item => item.studyId)),
+    ];
+
+    // sampleIds (+patientIds) for the selectedSamples
+    const selectedIds = new Map([
+        ...selectedSamples.map(item => [item.sampleId, item.studyId] as const),
+        ...selectedSamples.map(item => [item.patientId, item.studyId] as const),
+    ]);
+
+    // Fetch resources for entire study
+    const resourcesForEntireStudy = await getResourceDataOfEntireStudy(
+        selectedStudyIds
     );
 
-    const resourcesForPatients = await getResourceDataOfPatients(
-        studyClinicalDataResponse.data
-    );
-    const resourcesForPatientsAndSamples: { [key: string]: ResourceData[] } = {
-        ...sampleIdResourceData,
-        ...resourcesForPatients,
-    };
+    // Filter the resources to consist of only studyView selected samples
+    // Also keep patient level resources (e.g. Those don't have a sampleId)
+    const resourcesForPatientsAndSamples = _(resourcesForEntireStudy)
+        .filter(resource =>
+            selectedIds.has(resource.sampleId || resource.patientId)
+        )
+        .groupBy(r => r.patientId)
+        .value();
 
     // we create objects with the necessary properties for each resource
     // calculate the total number of resources per patient.
@@ -195,7 +219,6 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
         await: () => [
             this.props.store.selectedSamples,
             this.props.store.resourceDefinitions,
-            this.props.store.sampleResourceData,
         ],
         onError: () => {},
         invoke: async () => {
@@ -205,12 +228,13 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
 
             const resources = await fetchFilesLinksData(
                 this.props.store.filters,
-                this.props.store.sampleResourceData.result!,
+                this.props.store.selectedSamples.result,
                 this.searchTerm,
                 'patientId',
                 'asc',
                 RECORD_LIMIT
             );
+
             return Promise.resolve(resources);
         },
     });
@@ -259,18 +283,41 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
                     'Type Of Resource'
                 ),
                 render: (data: { [id: string]: string }) => {
+                    const path = `patient/openResource_${data.resourceId}`;
                     return (
                         <div>
-                            <a href={data.url} target="_blank">
+                            <a
+                                href={getResourceViewUrlWithPathname(
+                                    data.studyId,
+                                    path,
+                                    data.patientId
+                                )}
+                            >
+                                {data.typeOfResource}
+                            </a>
+                        </div>
+                    );
+                },
+            },
+
+            {
+                ...this.getDefaultColumnConfig('resourceUrl', ''),
+                render: (data: { [id: string]: string }) => {
+                    return (
+                        <div>
+                            <a
+                                href={data.url}
+                                style={{ fontSize: 10 }}
+                                target={'_blank'}
+                            >
                                 <i
                                     className={`fa fa-external-link fa-sm`}
                                     style={{
                                         marginRight: 5,
                                         color: 'black',
-                                        fontSize: 10,
                                     }}
                                 />
-                                {data.typeOfResource}
+                                Open in new window
                             </a>
                         </div>
                     );
@@ -287,7 +334,7 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
             {
                 ...this.getDefaultColumnConfig(
                     'resourcesPerPatient',
-                    'Number of Resource Per Patient',
+                    'Resources per Patient',
                     true
                 ),
                 render: (data: { [id: string]: number }) => {

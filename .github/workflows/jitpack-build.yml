@@ -17,14 +17,29 @@ jobs:
 
       - name: Get release tag
         id: get_tag
-        run: echo "::set-output name=tag::${GITHUB_REF#refs/tags/}"
+        run: echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
       - name: Trigger JitPack Build
         run: |
           TAG=${{ steps.get_tag.outputs.tag }}
           JITPACK_BUILD_URL="https://jitpack.io/com/github/cbioportal/cbioportal-frontend/$TAG/build.log"
-          echo "Triggering JitPack build for $TAG"
-          curl -I $JITPACK_BUILD_URL
-
-      - name: Notify success
-        run: echo "JitPack build triggered successfully."
+          
+          MAX_RETRIES=10
+          RETRY_DELAY=30
+          COUNTER=0
+          
+          while [ $COUNTER -lt $MAX_RETRIES ]; do
+            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$JITPACK_BUILD_URL")
+          
+            if [ "$HTTP_STATUS" -eq 200 ]; then
+              echo "Build triggered successfully for version ${TAG}."
+              exit 0
+            else
+              echo "Attempt $((COUNTER+1)) failed with status $HTTP_STATUS: Tag not found yet. Retrying in $RETRY_DELAY seconds..."
+              COUNTER=$((COUNTER+1))
+              sleep $RETRY_DELAY
+            fi
+          done
+          
+          echo "Failed to trigger JitPack build after $MAX_RETRIES attempts."
+          exit 1

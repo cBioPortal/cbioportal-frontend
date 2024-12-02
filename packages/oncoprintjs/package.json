@@ -1,6 +1,6 @@
 {
   "name": "oncoprintjs",
-  "version": "6.0.5",
+  "version": "6.0.6",
   "description": "A data visualization for cancer genomic data.",
   "types": "./dist/js/oncoprint.d.ts",
   "main": "dist/index.js",
