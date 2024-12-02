@@ -71,6 +71,7 @@ export type IMtbState = {
     deletions: IDeletions;
     loggedIn: boolean;
     permission: boolean;
+    admin: boolean;
     username: string; // currently not used
     successfulSave: boolean;
 };
@@ -96,6 +97,7 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
             deletions: props.deletions,
             loggedIn: false,
             permission: false,
+            admin: false,
             username: 'Unknown', // currently not used
             successfulSave: false,
         };
@@ -197,7 +199,8 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
                                 (this.isDisabled(mtb) &&
                                     !(
                                         sessionStorage.getItem(mtb.id) ===
-                                        MtbState.FINAL.toUpperCase()
+                                            MtbState.FINAL.toUpperCase() ||
+                                        this.state.admin
                                     )) ||
                                 !this.state.permission
                             }
@@ -548,6 +551,7 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
             console.log('checkPermission returned with ' + res);
             this.setState({ loggedIn: res[0] });
             this.setState({ permission: res[1] });
+            this.setState({ admin: res[2] });
         });
     }
 
@@ -666,6 +670,7 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
             console.log('checkPermission returned with ' + res);
             this.setState({ loggedIn: res[0] });
             this.setState({ permission: res[1] });
+            this.setState({ admin: res[2] });
         });
     }
 }

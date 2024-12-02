@@ -384,7 +384,7 @@ export async function checkPermissionUsingGET(url: string, studyId: string) {
                         res.status +
                         ')'
                 );
-                let boolArray: boolean[] = [true, true];
+                let boolArray: boolean[] = [true, true, res.text === 'ADMIN'];
                 return boolArray;
             } else {
                 if (res.status === 403) {
