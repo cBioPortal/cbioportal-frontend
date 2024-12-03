@@ -187,6 +187,8 @@ import {
     MutationCategorization,
     getChartMetaSet,
     getVisibleAttributes,
+    getPatientTreatmentReport,
+    getSampleTreatmentReport,
 } from './StudyViewUtils';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import autobind from 'autobind-decorator';
@@ -10469,20 +10471,11 @@ export class StudyViewPageStore
                     );
                 } else {
                     // we need to transform old response into new SampleTreatmentReport
-                    const old = await oldInternalClient.getAllSampleTreatmentsUsingPOST(
-                        {
-                            studyViewFilter: this.filters,
-                        }
+                    return await getSampleTreatmentReport(
+                        this.filters,
+                        undefined,
+                        this.internalClient
                     );
-                    const resp: SampleTreatmentReport = {
-                        treatments: old,
-                        totalSamples: _(old)
-                            .flatMap(r => r.samples)
-                            .map(r => r.sampleId)
-                            .uniq()
-                            .value().length,
-                    };
-                    return resp;
                 }
             } else {
                 return Promise.resolve(undefined);
@@ -10521,23 +10514,12 @@ export class StudyViewPageStore
                         }
                     );
                 } else {
-                    // we need to transform pre-clickhouse response into new SampleTreatmentReport
-                    const legacyData = await this.internalClient.getAllPatientTreatmentsUsingPOST(
-                        {
-                            studyViewFilter: this.filters,
-                        }
+                    //we need to transform pre-clickhouse response into new SampleTreatmentReport
+                    return await getPatientTreatmentReport(
+                        this.filters,
+                        undefined,
+                        this.internalClient
                     );
-                    const totalPatients = _(legacyData)
-                        .flatMap(r => r.samples)
-                        .map(r => r.patientId)
-                        .uniq()
-                        .value().length;
-                    const resp: PatientTreatmentReport = {
-                        patientTreatments: legacyData,
-                        totalSamples: 0, // this is always zero, should be cleaned up in backend and deleted
-                        totalPatients,
-                    };
-                    return resp;
                 }
             } else {
                 return Promise.resolve(undefined);
@@ -10590,12 +10572,20 @@ export class StudyViewPageStore
         await: () => [this.shouldDisplayPatientTreatmentGroups],
         invoke: () => {
             if (this.shouldDisplayPatientTreatmentGroups.result) {
-                return this.internalClient.fetchPatientTreatmentCountsUsingPOST(
-                    {
-                        studyViewFilter: this.filters,
-                        tier: 'AgentClass',
-                    }
-                );
+                if (isClickhouseMode()) {
+                    return this.internalClient.fetchPatientTreatmentCountsUsingPOST(
+                        {
+                            studyViewFilter: this.filters,
+                            tier: 'AgentClass',
+                        }
+                    );
+                } else {
+                    return getPatientTreatmentReport(
+                        this.filters,
+                        'AgentClass',
+                        this.internalClient
+                    );
+                }
             }
             return Promise.resolve(undefined);
         },
@@ -10603,12 +10593,20 @@ export class StudyViewPageStore
 
     public readonly sampleTreatmentTarget = remoteData({
         await: () => [this.shouldDisplaySampleTreatmentTarget],
-        invoke: () => {
+        invoke: async () => {
             if (this.shouldDisplaySampleTreatmentTarget.result) {
-                return this.internalClient.getAllSampleTreatmentsUsingPOST({
-                    studyViewFilter: this.filters,
-                    tier: 'AgentTarget',
-                });
+                if (isClickhouseMode()) {
+                    return this.internalClient.getAllSampleTreatmentsUsingPOST({
+                        studyViewFilter: this.filters,
+                        tier: 'AgentTarget',
+                    });
+                } else {
+                    return await getSampleTreatmentReport(
+                        this.filters,
+                        'AgentTarget',
+                        this.internalClient
+                    );
+                }
             }
             return Promise.resolve([]);
         },
@@ -10644,11 +10642,22 @@ export class StudyViewPageStore
     // a specific treatment
     public readonly patientTreatmentTarget = remoteData({
         await: () => [this.shouldDisplayPatientTreatmentTarget],
-        invoke: () => {
-            return this.internalClient.fetchPatientTreatmentCountsUsingPOST({
-                studyViewFilter: this.filters,
-                tier: 'AgentTarget',
-            });
+        invoke: async () => {
+            if (isClickhouseMode()) {
+                return await this.internalClient.fetchPatientTreatmentCountsUsingPOST(
+                    {
+                        studyViewFilter: this.filters,
+                        tier: 'AgentTarget',
+                    }
+                );
+            } else {
+                //we need to transform pre-clickhouse response into new SampleTreatmentReport
+                return await getPatientTreatmentReport(
+                    this.filters,
+                    'AgentTarget',
+                    this.internalClient
+                );
+            }
         },
     });
 

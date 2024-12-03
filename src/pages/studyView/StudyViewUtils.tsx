@@ -3,6 +3,7 @@ import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import {
     BinsGeneratorConfig,
     CancerStudy,
+    CBioPortalAPIInternal,
     ClinicalAttribute,
     ClinicalData,
     ClinicalDataBin,
@@ -23,6 +24,7 @@ import {
     MolecularDataMultipleStudyFilter,
     MolecularProfile,
     NumericGeneMolecularData,
+    OredPatientTreatmentFilters,
     Patient,
     PatientIdentifier,
     PatientTreatmentReport,
@@ -4895,4 +4897,45 @@ export function getVisibleAttributes(
         },
         []
     );
+}
+
+export async function getPatientTreatmentReport(
+    filter: StudyViewFilter,
+    tier: any,
+    client: CBioPortalAPIInternal
+) {
+    const legacyData = await client.getAllPatientTreatmentsUsingPOST({
+        studyViewFilter: filter,
+        tier,
+    });
+    const totalPatients = _(legacyData)
+        .flatMap(r => r.samples)
+        .map(r => r.patientId)
+        .uniq()
+        .value().length;
+    const resp: PatientTreatmentReport = {
+        patientTreatments: legacyData,
+        totalSamples: 0, // this is always zero, should be cleaned up in backend and deleted
+        totalPatients,
+    };
+    return resp;
+}
+
+export async function getSampleTreatmentReport(
+    filter: StudyViewFilter,
+    tier: any,
+    client: CBioPortalAPIInternal
+) {
+    const old = await client.getAllSampleTreatmentsUsingPOST({
+        studyViewFilter: filter,
+    });
+    const resp: SampleTreatmentReport = {
+        treatments: old,
+        totalSamples: _(old)
+            .flatMap(r => r.samples)
+            .map(r => r.sampleId)
+            .uniq()
+            .value().length,
+    };
+    return resp;
 }
