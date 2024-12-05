@@ -370,14 +370,14 @@ $(document).ready(async () => {
 
     initializeAppStore(stores.appStore);
 
-    if (
-        ['genie-public-portal', 'public-portal'].includes(
-            stores.appStore.serverConfig.app_name!
-        ) &&
-        !isWebdriver()
-    ) {
-        enableDataDogTracking(stores.appStore);
-    }
+    // if (
+    //     ['genie-public-portal', 'public-portal'].includes(
+    //         stores.appStore.serverConfig.app_name!
+    //     ) &&
+    //     !isWebdriver()
+    // ) {
+    //     enableDataDogTracking(stores.appStore);
+    // }
 
     await loadCustomJs();
 
