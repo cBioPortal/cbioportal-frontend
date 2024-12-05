@@ -259,7 +259,33 @@ export class CopyDownloadControls extends React.Component<
     }
 
     public download(text: string) {
-        fileDownload(text, this.props.downloadFilename);
+        try {
+            let jsonData = JSON.parse(text);
+
+            if (Array.isArray(jsonData)) {
+                if (!jsonData.length) {
+                    fileDownload('', this.props.downloadFilename); // Handle empty arrays
+                    return;
+                }
+
+                let headers = Object.keys(jsonData[0]); // Extract headers from the first object
+
+                // Use reduce to create TSV data
+                let tsvData = jsonData.reduce((accumulator, row) => {
+                    let rowData = headers
+                        .map(header => (header in row ? row[header] : '')) // Handle missing keys
+                        .join('\t'); // Convert row to tab-separated values
+                    return `${accumulator}\n${rowData}`; // Properly use template literal
+                }, headers.join('\t')); // Start with headers as the initial accumulator value
+
+                fileDownload(tsvData, this.props.downloadFilename); // Download the TSV file
+                return; // Exit after successful file creation
+            }
+        } catch (err) {
+            // If parsing fails, fallback to raw text download
+            console.error('Error while parsing or generating TSV:', err);
+            fileDownload(text, this.props.downloadFilename);
+        }
     }
 
     @action
