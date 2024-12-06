@@ -1,10 +1,13 @@
 const assert = require('assert');
 const {
     waitForNetworkQuiet,
-    waitForStudyView,
-} = require('../../shared/specUtils');
-const goToUrlAndSetLocalStorage = require('../../shared/specUtils')
-    .goToUrlAndSetLocalStorage;
+    goToUrlAndSetLocalStorage,
+    getNestedElement,
+    getElement,
+    clickElement,
+    waitForElementDisplayed,
+    isSelected,
+} = require('../../shared/specUtils_Async');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 const STUDY_VIEW_URL = `${CBIOPORTAL_URL}/study/summary?id=study_es_0`;
@@ -23,97 +26,107 @@ const SHOW_UNKNOWN_ONCOGENICITY = `input[data-test="ShowUnknownOncogenicity"]`;
 
 describe('custom driver annotations feature in study view', function() {
     describe('structural variants', () => {
-        beforeEach(() => {
-            goToUrlAndSetLocalStorage(STUDY_VIEW_URL, true);
-            waitForNetworkQuiet();
+        beforeEach(async () => {
+            await goToUrlAndSetLocalStorage(STUDY_VIEW_URL, true);
+            await waitForNetworkQuiet();
         });
 
-        it('shows all structural variants', () => {
-            $(SV_TABLE)
-                .$(BRAF_ROW)
-                .waitForDisplayed();
-            expect($(SV_TABLE).$$(ANY_ROW).length).toBe(21);
-            let geneName = $(SV_TABLE)
-                .$(BRAF_ROW)
-                .$(GENE_NAME)
-                .getText();
+        it('shows all structural variants', async () => {
+            const elements = await getNestedElement([SV_TABLE, BRAF_ROW]);
+            await elements.waitForDisplayed();
+
+            expect(
+                (await (await getElement(SV_TABLE)).$$(ANY_ROW)).length
+            ).toBe(21);
+            let geneName = await (
+                await getNestedElement([SV_TABLE, BRAF_ROW, GENE_NAME])
+            ).getText();
+
             expect(geneName).toBe('BRAF');
-            const alterations = $(SV_TABLE)
-                .$(BRAF_ROW)
-                .$(ALTERATIONS_TOTAL);
-            expect(alterations.getText()).toBe('37');
-            const alterationCases = $(SV_TABLE)
-                .$(BRAF_ROW)
-                .$(ALTERATION_CASES)
-                .getText();
+            const alterations = await getNestedElement([
+                SV_TABLE,
+                BRAF_ROW,
+                ALTERATIONS_TOTAL,
+            ]);
+            expect(await alterations.getText()).toBe('37');
+
+            const alterationCases = await (
+                await getNestedElement([SV_TABLE, BRAF_ROW, ALTERATION_CASES])
+            ).getText();
             expect(alterationCases).toBe('35');
         });
 
-        it('can exclude unknown (and NULL) driver tiers', () => {
-            $(ALTERATION_MENU_BTN).click();
-            $(SHOW_UNKNOWN_TIER).waitForDisplayed(5000);
-            assert($(SHOW_UNKNOWN_TIER).isSelected());
-            $(SHOW_UNKNOWN_TIER).click();
-            $(SV_TABLE)
-                .$(BRAF_ROW)
-                .waitForDisplayed();
-            expect($(SV_TABLE).$$(ANY_ROW).length).toBe(10);
-            const alterations = $(SV_TABLE)
-                .$(BRAF_ROW)
-                .$(ALTERATIONS_TOTAL)
-                .getText();
+        it('can exclude unknown (and NULL) driver tiers', async () => {
+            await clickElement(ALTERATION_MENU_BTN);
+            await waitForElementDisplayed(SHOW_UNKNOWN_TIER, { timeout: 5000 });
+            assert(await isSelected(SHOW_UNKNOWN_TIER));
+            await clickElement(SHOW_UNKNOWN_TIER);
+
+            await (
+                await getNestedElement([SV_TABLE, BRAF_ROW])
+            ).waitForDisplayed();
+
+            expect(
+                (await (await getElement(SV_TABLE)).$$(ANY_ROW)).length
+            ).toBe(10);
+            const alterations = await (
+                await getNestedElement([SV_TABLE, BRAF_ROW, ALTERATIONS_TOTAL])
+            ).getText();
             expect(alterations).toBe('1');
-            const brafCases = $(SV_TABLE)
-                .$(BRAF_ROW)
-                .$(ALTERATION_CASES)
-                .getText();
+            const brafCases = await (
+                await getNestedElement([SV_TABLE, BRAF_ROW, ALTERATION_CASES])
+            ).getText();
             expect(brafCases).toBe('1');
         });
 
-        it('can exclude custom driver tiers', () => {
-            $(ALTERATION_MENU_BTN).click();
-            $(SHOW_UNKNOWN_TIER).waitForDisplayed(5000);
-            assert($(SHOW_UNKNOWN_TIER).isSelected());
-            $(SHOW_UNKNOWN_TIER).click();
+        it('can exclude custom driver tiers', async () => {
+            await clickElement(ALTERATION_MENU_BTN);
+            await waitForElementDisplayed(SHOW_UNKNOWN_TIER, { timeout: 5000 });
+            assert(await isSelected(SHOW_UNKNOWN_TIER));
+            await clickElement(SHOW_UNKNOWN_TIER);
 
-            assert($(SHOW_CLASS_3).isSelected());
-            $(SHOW_CLASS_3).click();
+            assert(await isSelected(SHOW_CLASS_3));
+            await clickElement(SHOW_CLASS_3);
 
-            assert($(SHOW_CLASS_4).isSelected());
-            $(SHOW_CLASS_4).click();
+            assert(await isSelected(SHOW_CLASS_4));
+            await clickElement(SHOW_CLASS_4);
 
-            $(SV_TABLE)
-                .$(ANY_ROW)
-                .waitForDisplayed();
+            await (
+                await getNestedElement([SV_TABLE, ANY_ROW])
+            ).waitForDisplayed();
 
-            expect($(SV_TABLE).$$(ANY_ROW).length).toBe(5);
-            assert(getAllGeneNames() === 'ALK,EGFR,EML4,ERG,TMPRSS2');
+            expect(
+                (await (await getElement(SV_TABLE)).$$(ANY_ROW)).length
+            ).toBe(5);
+            assert((await getAllGeneNames()) === 'ALK,EGFR,EML4,ERG,TMPRSS2');
         });
 
-        it('can exclude custom drivers', () => {
-            $(ALTERATION_MENU_BTN).click();
-            $(SHOW_UNKNOWN_TIER).waitForDisplayed(5000);
+        it('can exclude custom drivers', async () => {
+            await clickElement(ALTERATION_MENU_BTN);
+            await waitForElementDisplayed(SHOW_UNKNOWN_TIER, { timeout: 5000 });
 
-            assert($(SHOW_PUTATIVE_DRIVERS).isSelected());
-            $(SHOW_PUTATIVE_DRIVERS).click();
+            assert(await isSelected(SHOW_PUTATIVE_DRIVERS));
+            await clickElement(SHOW_PUTATIVE_DRIVERS);
 
-            assert($(SHOW_UNKNOWN_ONCOGENICITY).isSelected());
-            $(SHOW_UNKNOWN_ONCOGENICITY).click();
+            assert(await isSelected(SHOW_UNKNOWN_ONCOGENICITY));
+            await clickElement(SHOW_UNKNOWN_ONCOGENICITY);
 
-            $(SV_TABLE)
-                .$(ANY_ROW)
-                .waitForDisplayed();
+            await (
+                await getNestedElement([SV_TABLE, ANY_ROW])
+            ).waitForDisplayed();
 
-            expect($(SV_TABLE).$$(ANY_ROW).length).toBe(2);
-            expect(getAllGeneNames()).toBe('NCOA4,RET');
+            expect(
+                (await (await getElement(SV_TABLE)).$$(ANY_ROW)).length
+            ).toBe(2);
+            expect(await getAllGeneNames()).toBe('NCOA4,RET');
         });
     });
 });
 
-function getAllGeneNames() {
-    return $(SV_TABLE)
-        .$$(ANY_ROW)
-        .map(e => e.$(GENE_NAME).getText())
-        .sort()
-        .join();
+async function getAllGeneNames() {
+    const geneNames = await (await $(SV_TABLE)).$$(ANY_ROW);
+    const words = await Promise.all(
+        geneNames.map(async e => await (await e.$(GENE_NAME)).getText())
+    );
+    return words.sort().join();
 }

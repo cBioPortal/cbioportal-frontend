@@ -1,23 +1,24 @@
-var assert = require('assert');
-var goToUrlAndSetLocalStorage = require('../../shared/specUtils')
-    .goToUrlAndSetLocalStorage;
-var goToUrlAndSetLocalStorageWithProperty = require('../../shared/specUtils')
-    .goToUrlAndSetLocalStorageWithProperty;
-var waitForStudyQueryPage = require('../../shared/specUtils')
-    .waitForStudyQueryPage;
-var waitForGeneQueryPage = require('../../shared/specUtils')
-    .waitForGeneQueryPage;
-var waitForOncoprint = require('../../shared/specUtils').waitForOncoprint;
-var waitForPlotsTab = require('../../shared/specUtils').waitForPlotsTab;
-var waitForCoExpressionTab = require('../../shared/specUtils')
-    .waitForCoExpressionTab;
-var reactSelectOption = require('../../shared/specUtils').reactSelectOption;
-var getReactSelectOptions = require('../../shared/specUtils')
-    .getReactSelectOptions;
-var selectReactSelectOption = require('../../shared/specUtils')
-    .selectReactSelectOption;
-
-var { clickQueryByGeneButton, showGsva } = require('../../shared/specUtils');
+const assert = require('assert');
+const {
+    goToUrlAndSetLocalStorage,
+    goToUrlAndSetLocalStorageWithProperty,
+    waitForStudyQueryPage,
+    waitForGeneQueryPage,
+    waitForOncoprint,
+    waitForPlotsTab,
+    waitForCoExpressionTab,
+    reactSelectOption,
+    getReactSelectOptions,
+    selectReactSelectOption,
+    getElement,
+    clickElement,
+    clickQueryByGeneButton,
+    showGsva,
+    isDisplayed,
+    setInputText,
+    getNestedElement,
+    getNthElements,
+} = require('../../shared/specUtils_Async');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 const oncoprintTabUrl =
@@ -35,535 +36,643 @@ describe('gsva feature', function() {
     //this.retries(2);
 
     describe('query page', () => {
-        beforeEach(() => {
-            goToUrlAndSetLocalStorage(CBIOPORTAL_URL, true);
-            showGsva();
-            waitForStudyQueryPage();
+        beforeEach(async () => {
+            await goToUrlAndSetLocalStorage(CBIOPORTAL_URL, true);
+            await showGsva();
+            await waitForStudyQueryPage();
         });
 
-        it('shows GSVA-profile option when selecting study_es_0', () => {
+        it('shows GSVA-profile option when selecting study_es_0', async () => {
             // somehow reloading the page is needed to turn on the GSVA feature for the first test
-            goToUrlAndSetLocalStorage(CBIOPORTAL_URL, true);
-            waitForStudyQueryPage();
-            checkTestStudy();
-
-            var gsvaProfileCheckbox = $('[data-test=GENESET_SCORE]');
-            assert(gsvaProfileCheckbox.isDisplayed());
+            await goToUrlAndSetLocalStorage(CBIOPORTAL_URL, true);
+            await waitForStudyQueryPage();
+            await checkTestStudy();
+            assert(await isDisplayed('[data-test=GENESET_SCORE]'));
         });
 
-        it('shows gene set entry component when selecting gsva-profile data type', () => {
-            checkTestStudy();
-            checkGSVAprofile();
+        it('shows gene set entry component when selecting gsva-profile data type', async () => {
+            await checkTestStudy();
+            await checkGSVAprofile();
 
-            assert($('h2=Enter Gene Sets:').isDisplayed());
-            assert(
-                browser.$('[data-test=GENESET_HIERARCHY_BUTTON]').isDisplayed()
-            );
-            assert($('[data-test=GENESET_VOLCANO_BUTTON]').isDisplayed());
-            assert($('[data-test=GENESETS_TEXT_AREA]').isDisplayed());
+            assert(await isDisplayed('h2=Enter Gene Sets:'));
+            assert(await isDisplayed('[data-test=GENESET_HIERARCHY_BUTTON]'));
+            assert(await isDisplayed('[data-test=GENESET_VOLCANO_BUTTON]'));
+            assert(await isDisplayed('[data-test=GENESETS_TEXT_AREA]'));
         });
 
-        it('adds gene set parameter to url after submit', () => {
-            checkTestStudy();
-            checkGSVAprofile();
-
-            $('[data-test=GENESETS_TEXT_AREA]').setValue(
+        it('adds gene set parameter to url after submit', async () => {
+            await checkTestStudy();
+            await checkGSVAprofile();
+            await setInputText(
+                '[data-test=GENESETS_TEXT_AREA]',
                 'GO_ATP_DEPENDENT_CHROMATIN_REMODELING'
             );
-            $('[data-test=geneSet]').setValue('TP53');
-            var queryButton = $('[data-test=queryButton]');
-            queryButton.waitForEnabled();
-            queryButton.click();
-            var url = browser.getUrl();
-            var regex = /geneset_list=GO_ATP_DEPENDENT_CHROMATIN_REMODELING/;
+            await setInputText('[data-test=geneSet]', 'TP53');
+            const queryButton = await getElement('[data-test=queryButton]');
+            await queryButton.waitForEnabled();
+            await queryButton.click();
+            const url = await browser.getUrl();
+            const regex = /geneset_list=GO_ATP_DEPENDENT_CHROMATIN_REMODELING/;
             assert(url.match(regex));
         });
     });
 
     describe('GenesetsHierarchySelector', () => {
-        before(() => {
-            goToUrlAndSetLocalStorage(CBIOPORTAL_URL, true);
-            showGsva();
-            waitForStudyQueryPage();
-            checkTestStudy();
-            checkGSVAprofile();
+        before(async () => {
+            await goToUrlAndSetLocalStorage(CBIOPORTAL_URL, true);
+            await showGsva();
+            await waitForStudyQueryPage();
+            await checkTestStudy();
+            await checkGSVAprofile();
         });
 
-        it('adds gene set name to entry component from hierachy selector', () => {
-            openGsvaHierarchyDialog();
+        it('adds gene set name to entry component from hierachy selector', async () => {
+            await openGsvaHierarchyDialog();
 
-            var checkBox = $('*=GO_ATP_DEPENDENT_CHROMATIN_REMODELING');
-            checkBox.click();
+            const checkBox = await getElement(
+                '*=GO_ATP_DEPENDENT_CHROMATIN_REMODELING'
+            );
+            await checkBox.click();
 
             // wait for jstree to process the click
-            browser.waitUntil(() =>
-                checkBox.getAttribute('class').includes('jstree-clicked')
+            await browser.waitUntil(async () =>
+                (await checkBox.getAttribute('class')).includes(
+                    'jstree-clicked'
+                )
             );
 
-            $('button=Select').click();
+            await clickElement('button=Select');
 
-            $('span*=All gene sets are valid').waitForExist();
+            await (
+                await getElement('span*=All gene sets are valid')
+            ).waitForExist();
 
             assert.equal(
-                $('[data-test=GENESETS_TEXT_AREA]').getHTML(false),
+                await (
+                    await getElement('[data-test=GENESETS_TEXT_AREA]')
+                ).getHTML(false),
                 'GO_ATP_DEPENDENT_CHROMATIN_REMODELING'
             );
         });
 
-        it('filters gene sets with the GSVA score input field', () => {
-            openGsvaHierarchyDialog();
+        it('filters gene sets with the GSVA score input field', async () => {
+            await openGsvaHierarchyDialog();
 
-            $('[id=GSVAScore]').setValue('0');
-            $('[id=filterButton]').click();
-            waitForModalUpdate();
+            await setInputText('[id=GSVAScore]', '0');
+            await clickElement('[id=filterButton]');
+            await waitForModalUpdate();
 
-            assert.equal($$('*=GO_').length, 5);
+            assert.equal((await $$('*=GO_')).length, 5);
 
             // reset state
-            $('[id=GSVAScore]').setValue('0.5');
-            $('[id=filterButton]').click();
-            waitForModalUpdate();
+            await setInputText('[id=GSVAScore]', '0.5');
+            await clickElement('[id=filterButton]');
+            await waitForModalUpdate();
         });
 
-        it('filters gene sets with the search input field', () => {
-            $('[id=GSVAScore]').setValue('0');
-            $('[id=filterButton]').click();
-            waitForModalUpdate();
+        it('filters gene sets with the search input field', async () => {
+            await setInputText('[id=GSVAScore]', '0');
+            await clickElement('[id=filterButton]');
+            await waitForModalUpdate();
 
             // note: search inbox hides elements in JTree rather than reload data
-            const hiddenBefore = $$('.jstree-hidden').length;
+            const hiddenBefore = (await $$('.jstree-hidden')).length;
             assert(
                 hiddenBefore == 0,
                 'The tree should not have hidden elements at this point'
             );
 
-            $('[id=geneset-hierarchy-search]').setValue(
+            await setInputText(
+                '[id=geneset-hierarchy-search]',
                 'GO_ACYLGLYCEROL_HOMEOSTASIS'
             );
-            waitForModalUpdate();
-            const hiddenAfter = $$('.jstree-hidden').length;
-            assert.equal(hiddenAfter, 7);
-            assert($('*=GO_ACYLGLYCEROL_HOMEOSTASIS'));
+            await waitForModalUpdate();
+            assert.equal((await $$('.jstree-hidden')).length, 7);
+            assert(await getElement('*=GO_ACYLGLYCEROL_HOMEOSTASIS'));
 
             // reset state
-            $('[id=geneset-hierarchy-search]').setValue('');
-            $('[id=GSVAScore]').setValue('0.5');
-            $('[id=filterButton]').click();
-            waitForModalUpdate();
+            await setInputText('[id=geneset-hierarchy-search]', '');
+            await setInputText('[id=GSVAScore]', '0.5');
+            await clickElement('[id=filterButton]');
+            await waitForModalUpdate();
         });
 
-        it('filters gene sets with the gene set pvalue input field', () => {
-            $('[id=Pvalue]').setValue('0.0005');
-            $('[id=filterButton]').click();
-            waitForModalUpdate();
-            var after = $$('*=GO_');
-
-            assert.equal($$('*=GO_').length, 0);
-
+        it('filters gene sets with the gene set pvalue input field', async () => {
+            await setInputText('[id=Pvalue]', '0.0005');
+            await clickElement('[id=filterButton]');
+            await waitForModalUpdate();
+            const after = await $$('*=GO_');
+            assert.equal((await $$('*=GO_')).length, 0);
             // reset state
-            $('[id=Pvalue]').setValue('0.05');
-            $('[id=filterButton]').click();
-            waitForModalUpdate();
+            await setInputText('[id=Pvalue]', '0.05');
+            await clickElement('[id=filterButton]');
+            await waitForModalUpdate();
         });
 
-        it('filters gene sets with the gene set percentile select box', () => {
-            var modal = $('div.modal-body');
-            modal.$('.Select-value-label').click();
-            modal.$('.Select-option=100%').click();
-            modal.$('[id=filterButton]').click();
-            waitForModalUpdate();
+        it('filters gene sets with the gene set percentile select box', async () => {
+            const modal = await getElement('div.modal-body');
+            await (await modal.$('.Select-value-label')).click();
+            await (await modal.$('.Select-option=100%')).click();
+            await (await modal.$('[id=filterButton]')).click();
+            await waitForModalUpdate();
 
-            assert.equal($$('*=GO_').length, 2);
+            assert.equal(await $$('*=GO_').length, 2);
 
             // reset state
-            modal.$('.Select-value-label').click();
-            modal.$('.Select-option=75%').click();
-            modal.$('[id=filterButton]').click();
-            waitForModalUpdate();
+            await (await modal.$('.Select-value-label')).click();
+            await (await modal.$('.Select-option=75%')).click();
+            await (await modal.$('[id=filterButton]')).click();
+            await waitForModalUpdate();
         });
 
         describe('skin.geneset_hierarchy.collapse_by_default property', () => {
-            it('collapses tree on init when property set to true', () => {
-                goToUrlAndSetLocalStorageWithProperty(CBIOPORTAL_URL, true, {
-                    skin_geneset_hierarchy_collapse_by_default: true,
-                });
-                showGsva();
-                waitForStudyQueryPage();
-                checkTestStudy();
-                checkGSVAprofile();
-                openGsvaHierarchyDialog();
-                var gsvaEntriesNotShown = $$('*=GO_').length === 0;
+            it('collapses tree on init when property set to true', async () => {
+                await goToUrlAndSetLocalStorageWithProperty(
+                    CBIOPORTAL_URL,
+                    true,
+                    {
+                        skin_geneset_hierarchy_collapse_by_default: true,
+                    }
+                );
+                await showGsva();
+                await waitForStudyQueryPage();
+                await checkTestStudy();
+                await checkGSVAprofile();
+                await openGsvaHierarchyDialog();
+                const gsvaEntriesNotShown = (await $$('*=GO_')).length === 0;
                 assert(gsvaEntriesNotShown);
             });
-            it('expands tree on init when property set to false', () => {
-                goToUrlAndSetLocalStorageWithProperty(CBIOPORTAL_URL, true, {
-                    skin_geneset_hierarchy_collapse_by_default: false,
-                });
-                showGsva();
-                waitForStudyQueryPage();
-                checkTestStudy();
-                checkGSVAprofile();
-                openGsvaHierarchyDialog();
-                var gsvaEntriesShown = $$('*=GO_').length > 0;
+            it('expands tree on init when property set to false', async () => {
+                await goToUrlAndSetLocalStorageWithProperty(
+                    CBIOPORTAL_URL,
+                    true,
+                    {
+                        skin_geneset_hierarchy_collapse_by_default: false,
+                    }
+                );
+                await showGsva();
+                await waitForStudyQueryPage();
+                await checkTestStudy();
+                await checkGSVAprofile();
+                await openGsvaHierarchyDialog();
+                const gsvaEntriesShown = (await $$('*=GO_')).length > 0;
                 assert(gsvaEntriesShown);
             });
-            it('expands tree on init when property not defined', () => {
-                goToUrlAndSetLocalStorage(CBIOPORTAL_URL, true);
-                showGsva();
-                waitForStudyQueryPage();
-                checkTestStudy();
-                checkGSVAprofile();
-                openGsvaHierarchyDialog();
-                var gsvaEntriesShown = $$('*=GO_').length > 0;
+            it('expands tree on init when property not defined', async () => {
+                await goToUrlAndSetLocalStorage(CBIOPORTAL_URL, true);
+                await showGsva();
+                await waitForStudyQueryPage();
+                await checkTestStudy();
+                await checkGSVAprofile();
+                await openGsvaHierarchyDialog();
+                const gsvaEntriesShown = (await $$('*=GO_')).length > 0;
                 assert(gsvaEntriesShown);
             });
         });
     });
 
     describe('GenesetVolcanoPlotSelector', () => {
-        before(() => {
-            goToUrlAndSetLocalStorage(CBIOPORTAL_URL, true);
-            showGsva();
-            waitForStudyQueryPage();
-            checkTestStudy();
-            checkGSVAprofile();
+        before(async () => {
+            await goToUrlAndSetLocalStorage(CBIOPORTAL_URL, true);
+            await showGsva();
+            await waitForStudyQueryPage();
+            await checkTestStudy();
+            await checkGSVAprofile();
         });
 
-        it('adds gene set name to entry component', () => {
-            openGsvaVolcanoDialog();
+        it('adds gene set name to entry component', async () => {
+            await openGsvaVolcanoDialog();
             // find the GO_ATP_DEPENDENT_CHROMATIN_REMODELING entry and check its checkbox
-            $('span=GO_ATP_DEPENDENT_CHROMATIN_REMODELING').waitForExist();
-            var checkBox = $('span=GO_ATP_DEPENDENT_CHROMATIN_REMODELING')
-                .$('..')
-                .$('..')
-                .$$('td')[3]
-                .$('label input');
-            checkBox.waitForDisplayed();
-            browser.waitUntil(() => {
-                checkBox.click();
+            await (
+                await getElement('span=GO_ATP_DEPENDENT_CHROMATIN_REMODELING')
+            ).waitForExist();
+            const checkBoxParent = await getNestedElement([
+                'span=GO_ATP_DEPENDENT_CHROMATIN_REMODELING',
+                '..',
+                '..',
+            ]);
+            const checkBox = await (await checkBoxParent.$$('td'))[3].$(
+                'label input'
+            );
+            await checkBox.waitForDisplayed();
+            await browser.waitUntil(async () => {
+                await checkBox.click();
                 return checkBox.isSelected();
             });
 
-            $('button=Add selection to the query').waitForExist();
-            $('button=Add selection to the query').click();
+            await (
+                await getElement('button=Add selection to the query')
+            ).waitForExist();
+            await clickElement('button=Add selection to the query');
 
-            $('span*=All gene sets are valid').waitForExist();
+            await (
+                await getElement('span*=All gene sets are valid')
+            ).waitForExist();
 
-            var textArea = $('[data-test=GENESETS_TEXT_AREA]');
-            textArea.waitForExist();
+            const textArea = await getElement('[data-test=GENESETS_TEXT_AREA]');
             assert.equal(
-                textArea.getHTML(false),
+                await textArea.getHTML(false),
                 'GO_ATP_DEPENDENT_CHROMATIN_REMODELING'
             );
         });
 
-        it('selects gene sets from query page text area', () => {
-            openGsvaVolcanoDialog();
+        it('selects gene sets from query page text area', async () => {
+            await openGsvaVolcanoDialog();
 
-            var checkBox = $('span=GO_ATP_DEPENDENT_CHROMATIN_REMODELING')
-                .$('..')
-                .$('..')
-                .$$('td')[3]
-                .$('label input');
+            const checkBoxParent = await getNestedElement([
+                'span=GO_ATP_DEPENDENT_CHROMATIN_REMODELING',
+                '..',
+                '..',
+            ]);
+            const checkBox = await (await checkBoxParent.$$('td'))[3].$(
+                'label input'
+            );
 
-            assert(checkBox.isSelected());
+            assert(await checkBox.isSelected());
         });
 
-        it('reset keeps gene sets from query page text area', () => {
-            var checkBox = $('span=GO_ATP_DEPENDENT_CHROMATIN_REMODELING')
-                .$('..')
-                .$('..')
-                .$$('td')[3]
-                .$('label input');
-            $('button=Clear selection').click();
+        it('reset keeps gene sets from query page text area', async () => {
+            const checkBoxParent = await getNestedElement([
+                'span=GO_ATP_DEPENDENT_CHROMATIN_REMODELING',
+                '..',
+                '..',
+            ]);
+            const checkBox = await (await checkBoxParent.$$('td'))[3].$(
+                'label input'
+            );
 
-            assert(checkBox.isSelected());
+            await clickElement('button=Clear selection');
+
+            assert(await checkBox.isSelected());
         });
 
-        it('searchbox filters gene set list', () => {
-            const lengthBefore = $$('span*=GO_').length;
+        it('searchbox filters gene set list', async () => {
+            const lengthBefore = (await $$('span*=GO_')).length;
             assert.equal(lengthBefore, 5);
 
-            $('input.tableSearchInput').waitForExist();
-            $('input.tableSearchInput').setValue('GO_ACYL');
+            await (await getElement('input.tableSearchInput')).waitForExist();
+            await setInputText('input.tableSearchInput', 'GO_ACYL');
 
-            browser.waitUntil(() => $$('span*=GO_').length < lengthBefore, {
-                timeout: 10000,
-            });
+            await browser.waitUntil(
+                async () => (await $$('span*=GO_')).length < lengthBefore,
+                {
+                    timeout: 10000,
+                }
+            );
 
-            const lengthAfter = $$('span*=GO_').length;
+            const lengthAfter = (await $$('span*=GO_')).length;
             assert.equal(lengthAfter, 1);
         });
     });
 
     describe('results view page', () => {
-        beforeEach(() => {
-            goToUrlAndSetLocalStorage(oncoprintTabUrl, true);
-            waitForOncoprint();
+        beforeEach(async () => {
+            await goToUrlAndSetLocalStorage(oncoprintTabUrl, true);
+            await waitForOncoprint();
         });
 
-        it('shows co-expression tab when genes with expression data selected', () => {
-            assert($('ul.nav-tabs li.tabAnchor_coexpression'));
+        it('shows co-expression tab when genes with expression data selected', async () => {
+            assert(await getElement('ul.nav-tabs li.tabAnchor_coexpression'));
         });
     });
 
     describe('oncoprint tab', () => {
-        beforeEach(() => {
-            goToUrlAndSetLocalStorage(oncoprintTabUrl, true);
-            waitForOncoprint();
+        beforeEach(async () => {
+            await goToUrlAndSetLocalStorage(oncoprintTabUrl, true);
+            await waitForOncoprint();
         });
 
-        it('has GSVA profile option in heatmap menu', () => {
-            var addTracksButton = $('button[id=addTracksDropdown]');
-            addTracksButton.waitForExist();
-            addTracksButton.click();
+        it('has GSVA profile option in heatmap menu', async () => {
+            await clickElement('button[id=addTracksDropdown]');
 
-            var addTracksMenu = $(ADD_TRACKS_HEATMAP_TAB);
-            addTracksMenu.waitForExist();
-            addTracksMenu.click();
+            await clickElement(ADD_TRACKS_HEATMAP_TAB);
 
-            var heatmapDropdown = $$('.Select-control')[0];
-            heatmapDropdown.waitForExist();
-            heatmapDropdown.click();
+            const heatmapDropdown = await getNthElements('.Select-control', 0);
+            await heatmapDropdown.waitForExist();
+            await heatmapDropdown.click();
             assert(
-                $(
+                await isDisplayed(
                     'div=GSVA scores on oncogenic signatures gene sets'
-                ).isDisplayed()
+                )
             );
         });
     });
 
     describe('plots tab', () => {
-        beforeEach(() => {
-            goToUrlAndSetLocalStorage(plotsTabUrl, true);
-            waitForPlotsTab();
+        beforeEach(async () => {
+            await goToUrlAndSetLocalStorage(plotsTabUrl, true);
+            await waitForPlotsTab();
         });
 
-        it('shows gsva option in horizontal data type selection box', () => {
-            var horzDataSelect = $('[name=h-profile-type-selector]').$('..');
-            horzDataSelect.$('.Select-arrow-zone').click();
-            assert(horzDataSelect.$('.Select-option=Gene Sets'));
+        it('shows gsva option in horizontal data type selection box', async () => {
+            const horzDataSelect = await getNestedElement([
+                '[name=h-profile-type-selector]',
+                '..',
+            ]);
+            await (await horzDataSelect.$('.Select-arrow-zone')).click();
+            assert(await horzDataSelect.$('.Select-option=Gene Sets'));
         });
 
-        it('shows gsva option in vertical data type selection box', () => {
-            var vertDataSelect = $('[name=v-profile-type-selector]').$('..');
-            vertDataSelect.$('.Select-arrow-zone').click();
-            assert(vertDataSelect.$('.Select-option=Gene Sets'));
+        it('shows gsva option in vertical data type selection box', async () => {
+            const vertDataSelect = await getNestedElement([
+                '[name=v-profile-type-selector]',
+                '..',
+                '.Select-arrow-zone',
+            ]);
+            await vertDataSelect.click();
+            assert(await vertDataSelect.$('.Select-option=Gene Sets'));
         });
 
-        it('horizontal axis menu shows gsva score and pvalue in profile menu', () => {
-            var horzDataSelect = $('[name=h-profile-type-selector]').$('..');
-            horzDataSelect.$('.Select-arrow-zone').click();
-            horzDataSelect.$('.Select-option=Gene Sets').click();
+        it('horizontal axis menu shows gsva score and pvalue in profile menu', async () => {
+            const horzDataSelect = await getNestedElement([
+                '[name=h-profile-type-selector]',
+                '..',
+            ]);
+            await (await horzDataSelect.$('.Select-arrow-zone')).click();
+            await (await horzDataSelect.$('.Select-option=Gene Sets')).click();
 
-            var horzProfileSelect = $('[name=h-profile-name-selector]').$('..');
-            horzProfileSelect.$('.Select-arrow-zone').click();
+            const horzProfileSelect = await getNestedElement([
+                '[name=h-profile-name-selector]',
+                '..',
+            ]);
+            await (await horzProfileSelect.$('.Select-arrow-zone')).click();
 
             assert(
-                horzProfileSelect.$(
+                await horzProfileSelect.$(
                     '.Select-option=GSVA scores on oncogenic signatures gene sets'
                 )
             );
             assert(
-                horzProfileSelect.$(
+                await horzProfileSelect.$(
                     '.Select-option=Pvalues of GSVA scores on oncogenic signatures gene sets'
                 )
             );
         });
 
-        it('vertical axis menu shows gsva score and pvalue in profile menu', () => {
-            var vertDataSelect = $('[name=v-profile-type-selector]').$('..');
-            vertDataSelect.$('.Select-arrow-zone').click();
-            vertDataSelect.$('.Select-option=Gene Sets').click();
+        it('vertical axis menu shows gsva score and pvalue in profile menu', async () => {
+            const vertDataSelect = await getNestedElement([
+                '[name=v-profile-type-selector]',
+                '..',
+            ]);
+            await (await vertDataSelect.$('.Select-arrow-zone')).click();
+            await (await vertDataSelect.$('.Select-option=Gene Sets')).click();
 
-            var vertProfileSelect = $('[name=v-profile-name-selector]').$('..');
-            vertProfileSelect.$('.Select-arrow-zone').click();
+            const vertProfileSelect = await getNestedElement([
+                '[name=v-profile-name-selector]',
+                '..',
+            ]);
+            await (await vertProfileSelect.$('.Select-arrow-zone')).click();
 
             assert(
-                vertProfileSelect.$(
+                await vertProfileSelect.$(
                     '.Select-option=GSVA scores on oncogenic signatures gene sets'
                 )
             );
             assert(
-                vertProfileSelect.$(
+                await vertProfileSelect.$(
                     '.Select-option=Pvalues of GSVA scores on oncogenic signatures gene sets'
                 )
             );
         });
 
-        it('horizontal axis menu shows gene set entry in entity menu', () => {
-            var horzDataSelect = $('[name=h-profile-type-selector]').$('..');
-            horzDataSelect.$('.Select-arrow-zone').click();
-            horzDataSelect.$('.Select-option=Gene Sets').click();
+        it('horizontal axis menu shows gene set entry in entity menu', async () => {
+            const horzDataSelect = await getNestedElement([
+                '[name=h-profile-type-selector]',
+                '..',
+            ]);
+            await (await horzDataSelect.$('.Select-arrow-zone')).click();
+            await (await horzDataSelect.$('.Select-option=Gene Sets')).click();
 
-            var horzProfileSelect = $('[name=h-profile-name-selector]').$('..');
-            horzProfileSelect.$('.Select-arrow-zone').click();
-            var profileMenuEntry =
+            const horzProfileSelect = await getNestedElement([
+                '[name=h-profile-name-selector]',
+                '..',
+            ]);
+            await (await horzProfileSelect.$('.Select-arrow-zone')).click();
+            const profileMenuEntry =
                 '.Select-option=Pvalues of GSVA scores on oncogenic signatures gene sets';
-            horzProfileSelect.$(profileMenuEntry).waitForExist();
-            horzProfileSelect.$(profileMenuEntry).click();
+            await (await horzProfileSelect.$(profileMenuEntry)).waitForExist();
+            await (await horzProfileSelect.$(profileMenuEntry)).click();
 
-            var horzEntitySelect = $('[name=h-geneset-selector]').$('..');
-            horzEntitySelect.$('.Select-arrow-zone').click();
-            var entityMenuEntry =
+            const horzEntitySelect = await getNestedElement([
+                '[name=h-geneset-selector]',
+                '..',
+            ]);
+            await (await horzEntitySelect.$('.Select-arrow-zone')).click();
+            const entityMenuEntry =
                 '.Select-option=GO_ATP_DEPENDENT_CHROMATIN_REMODELING';
-            horzEntitySelect.$(entityMenuEntry).waitForExist();
+            await (await horzEntitySelect.$(entityMenuEntry)).waitForExist();
 
-            assert(horzEntitySelect.$(entityMenuEntry));
+            assert(await horzEntitySelect.$(entityMenuEntry));
         });
 
-        it('vertical axis menu shows gene set entry in entity menu', () => {
-            var vertDataSelect = $('[name=v-profile-type-selector]').$('..');
-            vertDataSelect.$('.Select-arrow-zone').click();
-            vertDataSelect.$('.Select-option=Gene Sets').click();
+        it('vertical axis menu shows gene set entry in entity menu', async () => {
+            const vertDataSelect = await getNestedElement([
+                '[name=v-profile-type-selector]',
+                '..',
+            ]);
+            await (await vertDataSelect.$('.Select-arrow-zone')).click();
+            await (await vertDataSelect.$('.Select-option=Gene Sets')).click();
 
-            var vertProfileSelect = $('[name=v-profile-name-selector]').$('..');
-            vertProfileSelect.$('.Select-arrow-zone').click();
-            var profileMenuEntry =
+            const vertProfileSelect = await getNestedElement([
+                '[name=v-profile-name-selector]',
+                '..',
+            ]);
+            await (await vertProfileSelect.$('.Select-arrow-zone')).click();
+            const profileMenuEntry =
                 '.Select-option=Pvalues of GSVA scores on oncogenic signatures gene sets';
-            vertProfileSelect.$(profileMenuEntry).waitForExist();
-            vertProfileSelect.$(profileMenuEntry).click();
+            await (await vertProfileSelect.$(profileMenuEntry)).waitForExist();
+            await (await vertProfileSelect.$(profileMenuEntry)).click();
 
-            var vertEntitySelect = $('[name=v-geneset-selector]').$('..');
-            vertEntitySelect.$('.Select-arrow-zone').click();
-            var entityMenuEntry =
+            const vertEntitySelect = await getNestedElement([
+                '[name=v-geneset-selector]',
+                '..',
+            ]);
+            await (await vertEntitySelect.$('.Select-arrow-zone')).click();
+            const entityMenuEntry =
                 '.Select-option=GO_ATP_DEPENDENT_CHROMATIN_REMODELING';
-            vertEntitySelect.$(entityMenuEntry).waitForExist();
+            await (await vertEntitySelect.$(entityMenuEntry)).waitForExist();
 
-            assert(vertEntitySelect.$(entityMenuEntry));
+            assert(await vertEntitySelect.$(entityMenuEntry));
         });
     });
 
     describe('co-expression tab', () => {
-        beforeEach(() => {
-            goToUrlAndSetLocalStorage(coexpressionTabUrl, true);
+        beforeEach(async () => {
+            await goToUrlAndSetLocalStorage(coexpressionTabUrl, true);
             waitForCoExpressionTab();
         });
 
-        it('shows buttons for genes', () => {
+        it('shows buttons for genes', async () => {
             const genes = coexpressionTabUrl
                 .match(/gene_list=(.*)\&/)[1]
                 .split('%20');
-            var container = $('//*[@id="coexpressionTabGeneTabs"]');
-            var icons = genes.map(g => container.$('a=' + g));
+            const container = await getElement(
+                '//*[@id="coexpressionTabGeneTabs"]'
+            );
+            const icons = await Promise.all(
+                genes.map(async g => await container.$(`a=${g}`))
+            );
             assert.equal(genes.length, icons.length);
         });
 
-        it('shows buttons for genes and gene sets', () => {
+        it('shows buttons for genes and gene sets', async () => {
             const geneSets = coexpressionTabUrl
                 .match(/geneset_list=(.*)\&/)[1]
                 .split('%20');
-            var container = $('//*[@id="coexpressionTabGeneTabs"]');
-            var icons = geneSets.map(g => container.$('a=' + g));
+            const container = await getElement(
+                '//*[@id="coexpressionTabGeneTabs"]'
+            );
+            const icons = await Promise.all(
+                geneSets.map(async g => container.$('a=' + g))
+            );
             assert.equal(geneSets.length, icons.length);
         });
 
-        it('shows mRNA expression/GSVA scores in query profile select box when reference gene selected', () => {
-            var icon = $('//*[@id="coexpressionTabGeneTabs"]').$('a=RPS11');
-            icon.click();
-            $('//*[@id="coexpressionTabGeneTabs"]').waitForExist();
+        it('shows mRNA expression/GSVA scores in query profile select box when reference gene selected', async () => {
+            const icon = await getNestedElement([
+                '#coexpressionTabGeneTabs',
+                'a=RPS11',
+            ]);
+            await icon.click();
+            await (await getElement('#coexpressionTabGeneTabs')).waitForExist();
 
             assert.equal(
-                getReactSelectOptions($('.coexpression-select-query-profile'))
-                    .length,
+                (
+                    await getReactSelectOptions(
+                        await getElement('.coexpression-select-query-profile')
+                    )
+                ).length,
                 2
             );
             assert(
-                reactSelectOption(
-                    $('.coexpression-select-query-profile'),
+                await reactSelectOption(
+                    await getElement('.coexpression-select-query-profile'),
                     'mRNA expression (microarray) (526 samples)'
                 )
             );
             assert(
-                reactSelectOption(
-                    $('.coexpression-select-query-profile'),
+                await reactSelectOption(
+                    await getElement('.coexpression-select-query-profile'),
                     'GSVA scores on oncogenic signatures gene sets (5 samples)'
                 )
             );
         });
 
-        it('shows mRNA expression in subject profile select box when reference gene selected', () => {
-            var icon = $('//*[@id="coexpressionTabGeneTabs"]').$('a=RPS11');
-            icon.click();
-            $('//*[@id="coexpressionTabGeneTabs"]').waitForExist();
+        it('shows mRNA expression in subject profile select box when reference gene selected', async () => {
+            const icon = await getNestedElement([
+                '//*[@id="coexpressionTabGeneTabs"]',
+                'a=RPS11',
+            ]);
+            await icon.click();
+            await (
+                await getElement('//*[@id="coexpressionTabGeneTabs"]')
+            ).waitForExist();
             assert.equal(
-                getReactSelectOptions($('.coexpression-select-subject-profile'))
-                    .length,
+                (
+                    await getReactSelectOptions(
+                        await getElement('.coexpression-select-subject-profile')
+                    )
+                ).length,
                 1
             );
             assert(
-                reactSelectOption(
-                    $('.coexpression-select-subject-profile'),
+                await reactSelectOption(
+                    await getElement('.coexpression-select-subject-profile'),
                     'mRNA expression (microarray) (526 samples)'
                 )
             );
         });
 
-        it('shows name of gene in `correlated with` field when reference gene selected', () => {
-            var icon = $('//*[@id="coexpressionTabGeneTabs"]').$('a=RPS11');
-            icon.click();
-            $('//*[@id="coexpressionTabGeneTabs"]').waitForExist();
-            var text = $('span*=that are correlated').getText();
+        it('shows name of gene in `correlated with` field when reference gene selected', async () => {
+            const icon = await getNestedElement([
+                '//*[@id="coexpressionTabGeneTabs"]',
+                'a=RPS11',
+            ]);
+            await icon.click();
+            await (
+                await getElement('//*[@id="coexpressionTabGeneTabs"]')
+            ).waitForExist();
+            const text = await (
+                await getElement('span*=that are correlated')
+            ).getText();
             assert(text.match('RPS11'));
         });
 
-        it('shows mRNA expression/GSVA scores in subject profile box when reference gene set selected', () => {
-            var icon = $('//*[@id="coexpressionTabGeneTabs"]').$(
-                'a=GO_ACYLGLYCEROL_HOMEOSTASIS'
-            );
-            icon.click();
-            $('//*[@id="coexpressionTabGeneTabs"]').waitForExist();
+        it('shows mRNA expression/GSVA scores in subject profile box when reference gene set selected', async () => {
+            const icon = await getNestedElement([
+                '//*[@id="coexpressionTabGeneTabs"]',
+                'a=GO_ACYLGLYCEROL_HOMEOSTASIS',
+            ]);
+            await icon.click();
+            await (
+                await getElement('//*[@id="coexpressionTabGeneTabs"]')
+            ).waitForExist();
             assert.equal(
-                getReactSelectOptions($('.coexpression-select-query-profile'))
-                    .length,
+                (
+                    await getReactSelectOptions(
+                        await getElement('.coexpression-select-query-profile')
+                    )
+                ).length,
                 2
             );
             assert(
-                reactSelectOption(
-                    $('.coexpression-select-query-profile'),
+                await reactSelectOption(
+                    await getElement('.coexpression-select-query-profile'),
                     'mRNA expression (microarray) (526 samples)'
                 )
             );
             assert(
-                reactSelectOption(
-                    $('.coexpression-select-query-profile'),
+                await reactSelectOption(
+                    await getElement('.coexpression-select-query-profile'),
                     'GSVA scores on oncogenic signatures gene sets (5 samples)'
                 )
             );
         });
 
-        it('shows disabled subject query select box when reference gene set selected', () => {
-            var icon = $('//*[@id="coexpressionTabGeneTabs"]').$(
-                'a=GO_ACYLGLYCEROL_HOMEOSTASIS'
-            );
-            icon.click();
-            $('//*[@id="coexpressionTabGeneTabs"]').waitForExist();
-            assert($('.coexpression-select-subject-profile.is-disabled '));
+        it('shows disabled subject query select box when reference gene set selected', async () => {
+            const icon = await getNestedElement([
+                '//*[@id="coexpressionTabGeneTabs"]',
+                'a=GO_ACYLGLYCEROL_HOMEOSTASIS',
+            ]);
+            await icon.click();
+            await (
+                await getElement('//*[@id="coexpressionTabGeneTabs"]')
+            ).waitForExist();
             assert(
-                $('.coexpression-select-subject-profile').$(
-                    '.Select-value-label*=GSVA scores on oncogenic'
+                await getElement(
+                    '.coexpression-select-subject-profile.is-disabled '
                 )
             );
-        });
-
-        it('shows gene sets in table when GSVA scores selected in subject profile select box', () => {
-            selectReactSelectOption(
-                $('.coexpression-select-query-profile'),
-                'GSVA scores on oncogenic signatures gene sets (5 samples)'
-            );
-            $('//*[@id="coexpressionTabGeneTabs"]').waitForExist();
-            $('span*=GO_').waitForExist();
-            assert.equal($$('span*=GO_').length, 7);
-        });
-
-        it('shows `Enter gene set.` placeholder in table search box when GSVA scores selected in first select box', () => {
-            selectReactSelectOption(
-                $('.coexpression-select-query-profile'),
-                'GSVA scores on oncogenic signatures gene sets (5 samples)'
-            );
-            $('//*[@id="coexpressionTabGeneTabs"]').waitForExist();
             assert(
-                $(
+                await getNestedElement([
+                    '.coexpression-select-subject-profile',
+                    '.Select-value-label*=GSVA scores on oncogenic',
+                ])
+            );
+        });
+
+        it('shows gene sets in table when GSVA scores selected in subject profile select box', async () => {
+            await selectReactSelectOption(
+                await getElement('.coexpression-select-query-profile'),
+                'GSVA scores on oncogenic signatures gene sets (5 samples)'
+            );
+            await (
+                await getElement('//*[@id="coexpressionTabGeneTabs"]')
+            ).waitForExist();
+            await (await getElement('span*=GO_')).waitForExist();
+            assert.equal((await $$('span*=GO_')).length, 7);
+        });
+
+        it('shows `Enter gene set.` placeholder in table search box when GSVA scores selected in first select box', async () => {
+            await selectReactSelectOption(
+                await getElement('.coexpression-select-query-profile'),
+                'GSVA scores on oncogenic signatures gene sets (5 samples)'
+            );
+            await (
+                await getElement('//*[@id="coexpressionTabGeneTabs"]')
+            ).waitForExist();
+            assert(
+                await getElement(
                     '[data-test=CoExpressionGeneTabContent] input[placeholder="Enter gene set.."]'
                 )
             );
@@ -571,35 +680,40 @@ describe('gsva feature', function() {
     });
 });
 
-const checkTestStudy = () => {
-    // check the'Test study es_0' checkbox
-    $('span=Test study es_0').waitForExist();
-    var checkbox = $('span=Test study es_0')
-        .$('..')
-        .$('input[type=checkbox]');
-    checkbox.click();
-    clickQueryByGeneButton();
+const checkTestStudy = async () => {
+    await (await getElement('span=Test study es_0')).waitForExist();
+
+    const checkbox = await getNestedElement([
+        'span=Test study es_0',
+        '..',
+        'input[type=checkbox]',
+    ]);
+    await checkbox.click();
+    await clickQueryByGeneButton();
     waitForGeneQueryPage();
 };
 
-const checkGSVAprofile = () => {
-    $('[data-test=GENESET_SCORE]').waitForExist();
-    var gsvaProfileCheckbox = $('[data-test=GENESET_SCORE]');
-    gsvaProfileCheckbox.click();
-    $('[data-test=GENESETS_TEXT_AREA]').waitForExist();
+const checkGSVAprofile = async () => {
+    await (await getElement('[data-test=GENESET_SCORE]')).waitForExist();
+    await clickElement('[data-test=GENESET_SCORE]');
+    await (await getElement('[data-test=GENESETS_TEXT_AREA]')).waitForExist();
 };
 
-const openGsvaHierarchyDialog = () => {
-    $('button[data-test=GENESET_HIERARCHY_BUTTON]').click();
-    $('div.modal-dialog').waitForExist();
-    $('div[data-test=gsva-tree-container] ul').waitForExist();
-    waitForModalUpdate();
+const openGsvaHierarchyDialog = async () => {
+    await clickElement('button[data-test=GENESET_HIERARCHY_BUTTON]');
+    await (await getElement('div.modal-dialog')).waitForExist();
+    await (
+        await getElement('div[data-test=gsva-tree-container] ul')
+    ).waitForExist();
+    await waitForModalUpdate();
 };
 
-const openGsvaVolcanoDialog = () => {
-    $('button[data-test=GENESET_VOLCANO_BUTTON]').waitForExist();
-    $('button[data-test=GENESET_VOLCANO_BUTTON]').click();
-    $('div.modal-dialog').waitForExist();
+const openGsvaVolcanoDialog = async () => {
+    await (
+        await getElement('button[data-test=GENESET_VOLCANO_BUTTON]')
+    ).waitForExist();
+    await clickElement('button[data-test=GENESET_VOLCANO_BUTTON]');
+    await (await getElement('div.modal-dialog')).waitForExist();
 };
 
 module.exports = {
@@ -611,6 +725,9 @@ module.exports = {
     coexpressionTabUrl: coexpressionTabUrl,
 };
 
-function waitForModalUpdate() {
-    browser.waitUntil(() => $$('.sk-spinner').length === 0, { timeout: 10000 });
+async function waitForModalUpdate() {
+    await browser.waitUntil(
+        async () => (await $$('.sk-spinner')).length === 0,
+        { timeout: 10000 }
+    );
 }

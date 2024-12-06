@@ -1,8 +1,8 @@
 const assert = require('assert');
 const {
     goToUrlAndSetLocalStorageWithProperty,
-    getElementByTestHandle,
-} = require('../../shared/specUtils');
+    getNestedElement,
+} = require('../../shared/specUtils_Async');
 const { waitForTable } = require('./namespace-columns-utils');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
@@ -20,58 +20,72 @@ describe('namespace columns in cna tables', function() {
         const patientViewUrl = `${CBIOPORTAL_URL}/patient?studyId=study_es_0&caseId=TCGA-A2-A04U`;
         const patientCnaTable = 'patientview-copynumber-table';
 
-        it('shows default columns when property is not set', () => {
-            goToUrlAndSetLocalStorageWithProperty(patientViewUrl, true, {});
-            waitForTable(patientCnaTable);
-            assert(defaultColumnsAreDisplayed());
+        it('shows default columns when property is not set', async () => {
+            await goToUrlAndSetLocalStorageWithProperty(
+                patientViewUrl,
+                true,
+                {}
+            );
+            await waitForTable(patientCnaTable);
+            assert(await defaultColumnsAreDisplayed());
         });
 
-        it('shows selected columns when property is set', () => {
-            goToUrlAndSetLocalStorageWithProperty(patientViewUrl, true, {
+        it('shows selected columns when property is set', async () => {
+            await goToUrlAndSetLocalStorageWithProperty(patientViewUrl, true, {
                 skin_patient_view_copy_number_table_columns_show_on_init:
                     'Gene,Annotation,Gene panel',
             });
-            waitForTable(patientCnaTable);
-            assert(columnIsDisplayed(DEFAULT_COLS.GENE));
-            assert(columnIsNotDisplayed(DEFAULT_COLS.CNA));
-            assert(columnIsDisplayed(DEFAULT_COLS.ANNOTATION));
-            assert(columnIsNotDisplayed(DEFAULT_COLS.CYTOBAND));
-            assert(columnIsNotDisplayed(DEFAULT_COLS.COHORT));
-            assert(columnIsDisplayed('Gene panel')); //Failing
+            await waitForTable(patientCnaTable);
+            assert(await columnIsDisplayed(DEFAULT_COLS.GENE));
+            assert(await columnIsNotDisplayed(DEFAULT_COLS.CNA));
+            assert(await columnIsDisplayed(DEFAULT_COLS.ANNOTATION));
+            assert(await columnIsNotDisplayed(DEFAULT_COLS.CYTOBAND));
+            assert(await columnIsNotDisplayed(DEFAULT_COLS.COHORT));
+            assert(await columnIsDisplayed('Gene panel')); //Failing
         });
     });
 });
-
-defaultColumnsAreDisplayed = () => {
-    const patientCnaTable = 'patientview-copynumber-table';
+const patientCnaTable = '[data-test="patientview-copynumber-table"]';
+const defaultColumnsAreDisplayed = async () => {
     return (
-        getElementByTestHandle(patientCnaTable).$(
-            `span=${DEFAULT_COLS.GENE}`
-        ) &&
-        getElementByTestHandle(patientCnaTable).$(`span=${DEFAULT_COLS.CNA}`) &&
-        getElementByTestHandle(patientCnaTable).$(
-            `span=${DEFAULT_COLS.ANNOTATION}`
-        ) &&
-        getElementByTestHandle(patientCnaTable).$(
-            `span=${DEFAULT_COLS.CYTOBAND}`
-        ) &&
-        getElementByTestHandle(patientCnaTable).$(
-            `span=${DEFAULT_COLS.COHORT}`
-        ) &&
-        !$(`[data-test=${patientCnaTable}]`)
-            .$("//span[text() = 'Gene panel']")
-            .isDisplayed()
+        (await getNestedElement([
+            patientCnaTable,
+            `span=${DEFAULT_COLS.GENE}`,
+        ])) &&
+        (await getNestedElement([
+            patientCnaTable,
+            `span=${DEFAULT_COLS.CNA}`,
+        ])) &&
+        (await getNestedElement([
+            patientCnaTable,
+            `span=${DEFAULT_COLS.ANNOTATION}`,
+        ])) &&
+        (await getNestedElement([
+            patientCnaTable,
+            `span=${DEFAULT_COLS.CYTOBAND}`,
+        ])) &&
+        (await getNestedElement([
+            patientCnaTable,
+            `span=${DEFAULT_COLS.COHORT}`,
+        ])) &&
+        !(await (
+            await getNestedElement([
+                patientCnaTable,
+                "//span[text() = 'Gene panel']",
+            ])
+        ).isDisplayed())
     );
 };
 
-function columnIsDisplayed(column) {
-    return getElementByTestHandle('patientview-copynumber-table').$(
-        `span=${column}`
-    );
+async function columnIsDisplayed(column) {
+    return getNestedElement([patientCnaTable, `span=${column}`]);
 }
 
-function columnIsNotDisplayed(column) {
-    return !$(`[data-test=${'patientview-copynumber-table'}]`)
-        .$("//span[text() = '" + column + "']")
-        .isDisplayed();
+async function columnIsNotDisplayed(column) {
+    return !(await (
+        await getNestedElement([
+            patientCnaTable,
+            "//span[text() = '" + column + "']",
+        ])
+    ).isDisplayed());
 }
