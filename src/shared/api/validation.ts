@@ -657,7 +657,7 @@ export async function runSpecs(
             );
         });
 
-    const concurrent = 5;
+    const concurrent = 1;
     const batches = Math.ceil(invokers.length / concurrent);
 
     for (var i = 0; i < batches; i++) {
