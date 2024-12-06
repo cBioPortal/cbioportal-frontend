@@ -37,6 +37,7 @@ import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
 import MutationTableWrapper from './mutation/MutationTableWrapper';
 import { PatientViewPageInner } from 'pages/patientView/PatientViewPage';
 import { Else, If } from 'react-if';
+import AnnotationVisualisationComponent from 'pages/patientView/oncokbAnnotation/AnnotationVisualisation';
 
 export enum PatientViewPageTabs {
     Summary = 'summary',
@@ -49,6 +50,7 @@ export enum PatientViewPageTabs {
     TrialMatchTab = 'trialMatchTab',
     MutationalSignatures = 'mutationalSignatures',
     PathwayMapper = 'pathways',
+    Oncokb = 'oncokb',
 }
 
 export const PatientViewResourceTabPrefix = 'openResource_';
@@ -501,6 +503,34 @@ export function tabs(
                     store={pageComponent.patientViewPageStore}
                     sampleManager={sampleManager}
                 />
+            ) : (
+                <LoadingIndicator isLoading={true} size={'big'} center={true} />
+            )}
+        </MSKTab>
+    );
+
+    tabs.push(
+        <MSKTab key={8} id={PatientViewPageTabs.Oncokb} linkText={'OncoKB'}>
+            {pageComponent.patientViewPageStore.oncoKbData.isComplete &&
+            pageComponent.patientViewPageStore.structuralVariantOncoKbData
+                .isComplete &&
+            pageComponent.patientViewPageStore.cnaOncoKbData.isComplete ? (
+                <div style={{ margin: '2vh' }}>
+                    <AnnotationVisualisationComponent
+                        mutationData={
+                            pageComponent.patientViewPageStore.oncoKbData.result
+                                .indicatorMap
+                        }
+                        structuralVariantData={
+                            pageComponent.patientViewPageStore
+                                .structuralVariantOncoKbData.result.indicatorMap
+                        }
+                        cnaData={
+                            pageComponent.patientViewPageStore.cnaOncoKbData
+                                .result.indicatorMap
+                        }
+                    />
+                </div>
             ) : (
                 <LoadingIndicator isLoading={true} size={'big'} center={true} />
             )}
