@@ -660,6 +660,8 @@ export async function runSpecs(
     const concurrent = 1;
     const batches = Math.ceil(invokers.length / concurrent);
 
+    console.log('validating concurrently ' + concurrent);
+
     for (var i = 0; i < batches; i++) {
         const proms = [];
         for (const inv of invokers.slice(
