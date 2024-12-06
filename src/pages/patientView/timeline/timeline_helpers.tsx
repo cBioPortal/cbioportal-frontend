@@ -309,8 +309,10 @@ export function buildBaseConfig(
             'Diagnostic',
             'Imaging',
             'Imaging Assessment',
-            'Lab_test',
             'Treatment',
+            'Diagnosis',
+            'Lab_test',
+            'Measurements',
         ],
         trackStructures: [
             ['TREATMENT', 'TREATMENT_TYPE', 'SUBTYPE', 'AGENT'],
