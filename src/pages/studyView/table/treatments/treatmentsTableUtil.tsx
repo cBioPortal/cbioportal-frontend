@@ -3,6 +3,7 @@ import {
     SampleTreatmentFilter,
     PatientTreatmentFilter,
     PatientTreatmentRow,
+    PatientTreatment,
 } from 'cbioportal-ts-api-client';
 import { ChartMeta } from 'pages/studyView/StudyViewUtils';
 import styles from 'pages/studyView/table/tables.module.scss';
@@ -90,7 +91,7 @@ export const TreatmentGenericColumnHeader = class GenericColumnHeader extends Re
 };
 
 export const TreatmentColumnCell = class TreatmentColumnCell extends React.Component<
-    { row: PatientTreatmentRow | SampleTreatmentRow },
+    { row: PatientTreatment | SampleTreatmentRow },
     {}
 > {
     render() {
@@ -99,7 +100,7 @@ export const TreatmentColumnCell = class TreatmentColumnCell extends React.Compo
 };
 
 export function filterTreatmentCell(
-    cell: PatientTreatmentRow | SampleTreatmentRow,
+    cell: PatientTreatment | SampleTreatmentRow,
     filter: string
 ): boolean {
     return cell.treatment.toUpperCase().includes(filter.toUpperCase());

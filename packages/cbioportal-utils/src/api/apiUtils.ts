@@ -1,6 +1,8 @@
 import { Buffer } from 'buffer';
 import _ from 'lodash';
 import * as request from 'superagent';
+// import {getServerConfig} from "../../../../src/config/config";
+// import {getBrowserWindow} from "cbioportal-frontend-commons";
 
 const BASE64_ENCODING = 'base64';
 const UTF8_ENCODING = 'utf8';
