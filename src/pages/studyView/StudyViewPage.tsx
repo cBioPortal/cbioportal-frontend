@@ -1240,7 +1240,7 @@ export default class StudyViewPage extends React.Component<
                         isLoggedIn={this.props.appStore.isLoggedIn}
                     />
                 )}
-                <RFC80Test />
+                {localStorage.rfc80 && <RFC80Test />}
             </PageLayout>
         );
     }
