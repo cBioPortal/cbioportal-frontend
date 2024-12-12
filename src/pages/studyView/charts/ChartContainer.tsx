@@ -584,6 +584,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         labelDescription={this.props.chartMeta.description}
                         patientAttribute={this.props.chartMeta.patientAttribute}
                         showAddRemoveAllButtons={this.mouseInChart}
+                        title={this.props.title}
                     />
                 );
             }

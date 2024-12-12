@@ -15,9 +15,13 @@ import {
     getFixedHeaderTableMaxLengthStringPixel,
 } from '../StudyViewUtils';
 import { SortDirection } from '../../../shared/components/lazyMobXTable/LazyMobXTable';
-import { EllipsisTextTooltip } from 'cbioportal-frontend-commons';
+import {
+    EllipsisTextTooltip,
+    lowerCaseAndCapitalizeString,
+} from 'cbioportal-frontend-commons';
 import { DEFAULT_SORTING_COLUMN } from '../StudyViewConfig';
 import ComparisonVsIcon from 'shared/components/ComparisonVsIcon';
+import { capitalizeFirstLetters } from 'cbioportal-frontend-commons/src';
 
 export interface IClinicalTableProps {
     data: ClinicalDataCountSummary[];
@@ -31,6 +35,7 @@ export interface IClinicalTableProps {
     width?: number;
     height?: number;
     showAddRemoveAllButtons?: boolean;
+    title?: string;
 }
 
 class ClinicalTableComponent extends FixedHeaderTable<
@@ -113,6 +118,23 @@ export default class ClinicalTable extends React.Component<
         return this.props.label ? this.props.label : ColumnKey.CATEGORY;
     }
 
+    // this code should be deleted when we have fixed RFC80 capitalization issues in backedn (12/12/2024)
+    valueFormatters = {
+        'Cancer Type': (str: string) => capitalizeFirstLetters(str),
+        'Cancer Type Detailed': (str: string) => capitalizeFirstLetters(str),
+        'Sample Type Detailed': (str: string) => capitalizeFirstLetters(str),
+    };
+
+    // this code should be deleted when we have fixed RFC80 capitalization issues in backedn (12/12/2024)
+    @computed get valueFormatter() {
+        if (this.props.title && this.props.title in this.valueFormatters) {
+            // @ts-ignore
+            return this.valueFormatters[this.props.title];
+        } else {
+            return (str: string) => str;
+        }
+    }
+
     @computed
     private get columns() {
         return [
@@ -143,7 +165,9 @@ export default class ClinicalTable extends React.Component<
                                 </g>
                             </svg>
                             <EllipsisTextTooltip
-                                text={data.displayedValue || data.value}
+                                text={this.valueFormatter(
+                                    data.displayedValue || data.value
+                                )}
                             ></EllipsisTextTooltip>
                         </div>
                     );
