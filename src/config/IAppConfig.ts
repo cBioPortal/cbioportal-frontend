@@ -120,6 +120,7 @@ export interface IServerConfig {
     skin_show_tutorials_tab: boolean;
     skin_show_web_api_tab: boolean;
     skin_show_tweet_button: boolean;
+    skin_show_donate_button: boolean;
     skin_show_tissue_image_tab: boolean;
     skin_hide_logout_button: boolean;
     skin_show_settings_menu: boolean;
