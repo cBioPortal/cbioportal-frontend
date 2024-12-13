@@ -35,7 +35,6 @@ export type StudyView = {
 };
 
 export interface IServerConfig {
-    show_donate_button: any;
     app_name: string | null;
     app_version: string | null; // default: "1.0"
     authenticationMethod: string | undefined;
