@@ -7836,7 +7836,7 @@ export class StudyViewPageStore
         if (this.shouldDisplayClinicalEventTypeCounts.result) {
             this.changeChartVisibility(
                 SpecialChartsUniqueKeyEnum.CLINICAL_EVENT_TYPE_COUNTS,
-                true
+                false
             );
             this.chartsType.set(
                 SpecialChartsUniqueKeyEnum.CLINICAL_EVENT_TYPE_COUNTS,
