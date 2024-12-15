@@ -119,8 +119,17 @@ export function getTabularDownloadData(
             for (const alteration in alterationsMap) {
                 var disp = alterationsMap[alteration] as keyof typeof string;
                 if (geneticTrackDatum[disp] !== undefined) {
-                    var current_value = cnaMap[geneticTrackDatum[disp]]
-                        ? cnaMap[geneticTrackDatum[disp]]
+                    const geneticAlterationMap: any = {
+                        CNA: cnaMap,
+                        MUTATIONS: mutationMap,
+                        MRNA: mrnaMap,
+                        PROTEIN: proteinMap,
+                        STRUCTURAL_VARIANT: structuralVariantMap,
+                    };
+
+                    const currentMap = geneticAlterationMap[alteration];
+                    var current_value = currentMap[geneticTrackDatum[disp]]
+                        ? currentMap[geneticTrackDatum[disp]]
                         : geneticTrackDatum[disp];
 
                     if (
