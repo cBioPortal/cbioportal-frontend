@@ -431,7 +431,8 @@ workflows:
             - install
 
   e2e_localdb_tests:
-    jobs: e2e_localdb_tests
+    jobs:
+      - e2e_localdb_tests
 
   nightly:
     triggers:
