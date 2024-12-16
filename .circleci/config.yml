@@ -374,6 +374,28 @@ jobs:
           name: 'Check code style with Prettier'
           command: cd /tmp/repo/ && yarn run prettierCheckCircleCI
 
+  e2e_localdb_tests:
+    machine:
+      image: ubuntu-2204:2024.08.1
+      docker_layer_caching: true
+    resource_class: large
+    working_directory: /tmp/repo
+    steps:
+      - attach_workspace:
+          at: /tmp/repo
+      - checkout:
+          path: /tmp/repo/cbioportal-frontend
+      - run:
+          name: Run e2e_localdb tests
+          environment:
+            DOCKER_IMAGE_CBIOPORTAL: cbioportal/cbioportal:6.0.17
+            FRONTEND_SRC: /tmp/repo/cbioportal-frontend
+            SEED: /tmp/repo/cbioportal-frontend/end-to-end-test/local/test_data/seed.sql.gz
+            SCHEMA: /tmp/repo/cbioportal-frontend/end-to-end-test/local/test_data/cgds.sql
+            STUDIES: /tmp/repo/cbioportal-frontend/end-to-end-test/local/test_data
+          command: |
+            ./tmp/repo/cbioportal-frontend/scripts/e2e-localdb.sh
+
 workflows:
   install_and_test:
     jobs:
@@ -407,6 +429,10 @@ workflows:
       - check_incorrect_import_statements:
           requires:
             - install
+
+  e2e_localdb_tests:
+    jobs: e2e_localdb_tests
+
   nightly:
     triggers:
       - schedule:
