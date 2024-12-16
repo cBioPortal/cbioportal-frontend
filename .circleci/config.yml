@@ -394,7 +394,8 @@ jobs:
             SCHEMA: /tmp/repo/cbioportal-frontend/end-to-end-test/local/test_data/cgds.sql
             STUDIES: /tmp/repo/cbioportal-frontend/end-to-end-test/local/test_data
           command: |
-            ./tmp/repo/cbioportal-frontend/scripts/e2e-localdb.sh
+            cd cbioportal-frontend
+            ./scripts/e2e-localdb.sh
 
 workflows:
   install_and_test:
