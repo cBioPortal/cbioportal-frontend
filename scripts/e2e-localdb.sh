@@ -1,4 +1,5 @@
 #!/bin/sh
+set -e
 
 TEST_REPO_URL="https://github.com/cBioPortal/cbioportal-test.git"
 

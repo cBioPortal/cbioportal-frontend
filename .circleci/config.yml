@@ -376,8 +376,8 @@ jobs:
 
   e2e_localdb_tests:
     machine:
-      image: ubuntu-2204:2024.08.1
-      docker_layer_caching: true
+      enabled: true
+      image: default
     resource_class: large
     working_directory: /tmp/repo
     steps:
@@ -385,6 +385,12 @@ jobs:
           at: /tmp/repo
       - checkout:
           path: /tmp/repo/cbioportal-frontend
+      - run:
+          name: Install yarn
+          command: |
+            nvm install 15.2.1
+            nvm use 15.2.1
+            npm install -g yarn@1.22.5
       - run:
           name: Run e2e_localdb tests
           environment:
