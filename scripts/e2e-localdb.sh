@@ -22,6 +22,7 @@ cd "$TEMP_DIR/cbioportal-test" || exit 1
 printf "\nBuilding frontend ...\n\n"
 cd "$FRONTEND_SRC" || exit 1
 export BRANCH_ENV=master
+yarn install --frozen-lockfile
 yarn run buildAll
 
 # Start frontend http server, delete if previous server exists
