@@ -49,7 +49,7 @@ jobs:
           TAG=${{ steps.get_tag.outputs.tag }}
           JITPACK_POM_URL="https://jitpack.io/com/github/cbioportal/cbioportal-frontend/$TAG/cbioportal-frontend-$TAG.pom"
           
-          MAX_RETRIES=10
+          MAX_RETRIES=60
           RETRY_DELAY=30
           COUNTER=0
           
