@@ -13,7 +13,7 @@ cd "$TEMP_DIR/cbioportal-test" || exit 1
 ./scripts/docker-compose.sh --portal_type='web-and-data' --docker_args='-d'
 
 # Wait for backend at localhost:8080
-./utils/check-connection.sh --url=localhost:8080
+./utils/check-connection.sh --url=localhost:8080 --max_retries=50
 
 # Import studies into backend
 ./scripts/import-data.sh --seed="$SEED" --schema="$SCHEMA" --studies="$STUDIES"

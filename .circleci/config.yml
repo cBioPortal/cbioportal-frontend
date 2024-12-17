@@ -394,7 +394,6 @@ jobs:
       - run:
           name: Run e2e_localdb tests
           environment:
-            DOCKER_IMAGE_CBIOPORTAL: cbioportal/cbioportal:6.0.17
             FRONTEND_SRC: /tmp/repo/cbioportal-frontend
             SEED: /tmp/repo/cbioportal-frontend/end-to-end-test/local/test_data/seed.sql.gz
             SCHEMA: /tmp/repo/cbioportal-frontend/end-to-end-test/local/test_data/cgds.sql
