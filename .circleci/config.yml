@@ -400,6 +400,8 @@ jobs:
             STUDIES: /tmp/repo/cbioportal-frontend/end-to-end-test/local/test_data
           command: |
             cd cbioportal-frontend
+            nvm use 15.2.1
+            yarn set version 1.22.5
             ./scripts/e2e-localdb.sh
 
 workflows:
