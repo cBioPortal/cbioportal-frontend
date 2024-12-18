@@ -79,11 +79,12 @@ export default class CustomBinsModal extends React.Component<
     updateCurrentBinsValue() {
         let newBins: number[] = [];
         if (this.currentBinMethod === BinMethodOption.CUSTOM) {
-            newBins = _.sortBy(
-                this.newStringBins
-                    .filter(item => item !== '')
-                    .map(item => Number(item.trim()))
-            );
+            const newBins = _(this.newStringBins)
+                .filter(item => item !== '')
+                .map(item => Number(item.trim()))
+                .sortBy()
+                .value();
+
             this.currentBinsValue = newBins.join(`${this.binSeparator} `);
         }
 

@@ -184,6 +184,7 @@ import {
     MutationCategorization,
     getChartMetaSet,
     getVisibleAttributes,
+    CategoryDataBin,
 } from './StudyViewUtils';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import autobind from 'autobind-decorator';
@@ -592,7 +593,9 @@ export class StudyViewPageStore
         }
     };
 
-    public isShowNAToggleVisible(dataBins: DataBin[]): boolean {
+    public isShowNAToggleVisible(
+        dataBins: DataBin[] | CategoryDataBin[]
+    ): boolean {
         return (
             dataBins.length !== 0 &&
             dataBins.some(dataBin => dataBin.specialValue === 'NA')
@@ -2153,6 +2156,11 @@ export class StudyViewPageStore
     @observable public chartsDimension = observable.map<
         ChartUniqueKey,
         ChartDimension
+    >();
+
+    @observable public availableChartTypes = observable.map<
+        ChartUniqueKey,
+        ChartType[]
     >();
 
     @observable public chartsType = observable.map<ChartUniqueKey, ChartType>();
@@ -4532,7 +4540,7 @@ export class StudyViewPageStore
             data.forEach(item => {
                 const uniqueKey = item.attributeId;
                 if (this.isNewlyAdded(uniqueKey)) {
-                    this.showAsPieChart(uniqueKey, item.counts.length);
+                    this.showAsPieChart(uniqueKey, item.counts);
                     this.newlyAddedCharts.remove(uniqueKey);
                 }
             });
@@ -4559,7 +4567,7 @@ export class StudyViewPageStore
             data.forEach(item => {
                 const uniqueKey = item.attributeId;
                 if (this.isNewlyAdded(uniqueKey)) {
-                    this.showAsPieChart(uniqueKey, item.counts.length);
+                    this.showAsPieChart(uniqueKey, item.counts);
                     this.newlyAddedCharts.remove(uniqueKey);
                 }
             });
@@ -4588,7 +4596,7 @@ export class StudyViewPageStore
             data.forEach(item => {
                 const uniqueKey = item.attributeId;
                 this.unfilteredClinicalDataCountCache[uniqueKey] = item;
-                this.showAsPieChart(uniqueKey, item.counts.length);
+                this.showAsPieChart(uniqueKey, item.counts);
                 this.newlyAddedCharts.remove(uniqueKey);
             });
         },
@@ -5881,7 +5889,10 @@ export class StudyViewPageStore
         onError: () => {},
         onResult: clinicalAttributes => {
             clinicalAttributes.forEach((obj: ClinicalAttribute) => {
-                if (obj.datatype === DataType.NUMBER) {
+                if (
+                    obj.datatype === DataType.NUMBER ||
+                    obj.datatype === DataType.STRING
+                ) {
                     const uniqueKey = getUniqueKey(obj);
                     let filter = getDefaultClinicalDataBinFilter(obj);
 
@@ -7638,7 +7649,7 @@ export class StudyViewPageStore
         if (this.queriedPhysicalStudyIds.result.length > 1) {
             this.showAsPieChart(
                 SpecialChartsUniqueKeyEnum.CANCER_STUDIES,
-                this.queriedPhysicalStudyIds.result.length
+                this.queriedPhysicalStudyIds.result
             );
         }
     }
@@ -7681,7 +7692,7 @@ export class StudyViewPageStore
                     this.getTableDimensionByNumberOfRecords(data.result!.length)
                 );
             }
-            this.chartsType.set(attr.uniqueKey, ChartTypeEnum.TABLE);
+            this.chartsType.set(attr.uniqueKey, newChartType);
         } else {
             this.chartsDimension.set(
                 attr.uniqueKey,
@@ -7830,7 +7841,7 @@ export class StudyViewPageStore
         _.each(
             this.initialVisibleAttributesClinicalDataCountData.result,
             item => {
-                this.showAsPieChart(item.attributeId, item.counts.length);
+                this.showAsPieChart(item.attributeId, item.counts);
             }
         );
     }
@@ -9917,31 +9928,93 @@ export class StudyViewPageStore
     });
 
     @action
-    showAsPieChart(uniqueKey: string, dataSize: number): void {
+    showAsPieChart(
+        uniqueKey: string,
+        data: ClinicalDataCount[] | string[]
+    ): void {
+        // Aggregate the total count and the count of 'NA'
+        // values from the ClinicalDataCount[] array
+        const { totalCount, naCount } = (data as (
+            | ClinicalDataCount
+            | string
+        )[]).reduce(
+            (acc: { totalCount: number; naCount: number }, item) => {
+                if (
+                    typeof item === 'object' &&
+                    'value' in item &&
+                    'count' in item
+                ) {
+                    acc.totalCount += item.count;
+                    if (item.value === 'NA') {
+                        acc.naCount += item.count;
+                    }
+                }
+                return acc;
+            },
+            { totalCount: 0, naCount: 0 }
+        );
+
+        // Determine the proportion of 'NA' values relative to the total data count
+        const naProportion = totalCount > 0 ? naCount / totalCount : 0;
+
         if (
             shouldShowChart(
                 this.initialFilters,
-                dataSize,
+                data.length,
                 this.samples.result.length
             )
         ) {
             this.changeChartVisibility(uniqueKey, true);
-
+            // Display the data as a table if it exceeds the defined threshold
+            // or contains specific table attributes
             if (
-                dataSize > STUDY_VIEW_CONFIG.thresholds.pieToTable ||
-                _.includes(STUDY_VIEW_CONFIG.tableAttrs, uniqueKey)
+                data.length > STUDY_VIEW_CONFIG.thresholds.pieToTable ||
+                STUDY_VIEW_CONFIG.tableAttrs.includes(uniqueKey)
             ) {
                 this.chartsType.set(uniqueKey, ChartTypeEnum.TABLE);
                 this.chartsDimension.set(
                     uniqueKey,
-                    this.getTableDimensionByNumberOfRecords(dataSize)
+                    this.getTableDimensionByNumberOfRecords(data.length)
                 );
-            } else {
+                this.availableChartTypes.set(uniqueKey, [
+                    ChartTypeEnum.PIE_CHART,
+                    ChartTypeEnum.TABLE,
+                ]);
+            }
+            // Use a bar chart if the data is exceeds the pie chart
+            // threshold or if 'NA' values are greater than 50%
+            else if (
+                data.length > STUDY_VIEW_CONFIG.thresholds.pieToBar ||
+                naProportion > 0.5
+            ) {
+                this.chartsType.set(
+                    uniqueKey,
+                    ChartTypeEnum.BAR_CATEGORICAL_CHART
+                );
+                this.chartsDimension.set(
+                    uniqueKey,
+                    STUDY_VIEW_CONFIG.layout.dimensions[
+                        ChartTypeEnum.BAR_CATEGORICAL_CHART
+                    ]
+                );
+                this.availableChartTypes.set(uniqueKey, [
+                    ChartTypeEnum.PIE_CHART,
+                    ChartTypeEnum.BAR_CATEGORICAL_CHART,
+                    ChartTypeEnum.TABLE,
+                ]);
+            }
+            // Default to a pie chart for simpler data sets
+            else {
                 this.chartsType.set(uniqueKey, ChartTypeEnum.PIE_CHART);
                 this.chartsDimension.set(
                     uniqueKey,
                     STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.PIE_CHART]
                 );
+                this.availableChartTypes.set(uniqueKey, [
+                    ChartTypeEnum.PIE_CHART,
+                    ChartTypeEnum.BAR_CATEGORICAL_CHART,
+                    ChartTypeEnum.TABLE,
+                ]);
             }
         }
     }
