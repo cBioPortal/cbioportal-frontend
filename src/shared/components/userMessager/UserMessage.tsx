@@ -53,8 +53,8 @@ if (
     ) {
         MESSAGE_DATA.push({
             dateEnd: 100000000000000,
-            content: `The <a href="https://cbioportal.mskcc.org/study/summary?id=mskimpact" _target="_blank">MSK-IMPACT cohort</a> now includes additional NLP-derived data elements from the Cancer Data Science Initiative (<a href="https://mskcc.sharepoint.com/sites/pub-CDSI" target="_blank">Read more</a>)`,
-            id: '2023_msk_chord_release',
+            content: `New clinical data elements available as part of the <a href="https://mskcc.sharepoint.com/sites/pub-CDSI/SitePages/CDSI-Data.aspx" target="_blank">3rd CDSI data release</a>: BMI, Yost Index, lab measurements, including, CEA, PSA, TSH, and others`,
+            id: '2024_cdsi_release_3',
         });
     }
 }

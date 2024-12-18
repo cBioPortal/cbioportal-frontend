@@ -115,14 +115,25 @@ export default class ResourceTab extends React.Component<
 
         return (
             <div>
-                <FeatureTitle
-                    title={
-                        this.currentResourceDatum.resourceDefinition.displayName
-                    }
-                    isLoading={false}
-                    className="pull-left"
-                    style={{ marginBottom: 10 }}
-                />
+                <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+                    <FeatureTitle
+                        title={
+                            this.currentResourceDatum.resourceDefinition
+                                .displayName
+                        }
+                        isLoading={false}
+                        className="pull-left"
+                        style={{ marginBottom: 10 }}
+                    />
+                    <p style={{ marginLeft: 10 }}>
+                        {this.currentResourceDatum.sampleId
+                            ? this.currentResourceDatum.sampleId
+                            : this.currentResourceDatum.patientId}
+                        {this.currentResourceDatum.resourceDefinition
+                            .description &&
+                            ` | ${this.currentResourceDatum.resourceDefinition.description}`}
+                    </p>
+                </div>
                 <div
                     style={{
                         width: '100%',

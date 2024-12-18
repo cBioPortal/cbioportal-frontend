@@ -97,7 +97,8 @@ export default class VirtualStudy extends React.Component<
     {}
 > {
     @observable.ref private name: string;
-    @observable.ref private description: string;
+    @observable.ref private customDescription: string | undefined;
+    @observable.ref private dynamic: boolean = false;
 
     @observable private saving = false;
     @observable private sharing = false;
@@ -107,17 +108,6 @@ export default class VirtualStudy extends React.Component<
         super(props);
         makeObservable(this);
         this.name = props.name || '';
-        this.description =
-            props.description ||
-            getVirtualStudyDescription(
-                this.props.description,
-                this.props.studyWithSamples,
-                this.props.filter,
-                this.attributeNamesSet,
-                this.props.molecularProfileNameSet,
-                this.props.caseListNameSet,
-                this.props.user
-            );
     }
 
     @computed get namePlaceHolder() {
@@ -167,6 +157,7 @@ export default class VirtualStudy extends React.Component<
                             study => study.studyId
                         ),
                         studies: studies,
+                        dynamic: this.dynamic,
                     };
                     return await sessionServiceClient.saveVirtualStudy(
                         parameters,
@@ -231,6 +222,30 @@ export default class VirtualStudy extends React.Component<
         );
     }
 
+    getDefuaultDescriptionByType(dynamic: boolean) {
+        return getVirtualStudyDescription(
+            this.props.description,
+            this.props.studyWithSamples,
+            this.props.filter,
+            this.attributeNamesSet,
+            this.props.molecularProfileNameSet,
+            this.props.caseListNameSet,
+            this.props.user,
+            dynamic
+        );
+    }
+
+    @computed get description() {
+        const noCustomDescriptionProvided =
+            this.customDescription == undefined ||
+            this.customDescription ===
+                this.getDefuaultDescriptionByType(!this.dynamic);
+        if (noCustomDescriptionProvided) {
+            return this.getDefuaultDescriptionByType(this.dynamic);
+        }
+        return this.customDescription || '';
+    }
+
     render() {
         return (
             <div
@@ -292,10 +307,104 @@ export default class VirtualStudy extends React.Component<
                                                 placeholder="Virtual study description (Optional)"
                                                 value={this.description}
                                                 onChange={event =>
-                                                    (this.description =
+                                                    (this.customDescription =
                                                         event.currentTarget.value)
                                                 }
                                             />
+                                        </div>
+
+                                        <div className="form-group-inline">
+                                            <label>Type:</label>
+                                            <label>
+                                                <input
+                                                    type="radio"
+                                                    name="option"
+                                                    value="static"
+                                                    checked={!this.dynamic}
+                                                    onChange={_ =>
+                                                        (this.dynamic = false)
+                                                    }
+                                                />{' '}
+                                                Static
+                                            </label>
+                                            <label>
+                                                <input
+                                                    type="radio"
+                                                    name="option"
+                                                    value="dynamic"
+                                                    checked={this.dynamic}
+                                                    onChange={_ =>
+                                                        (this.dynamic = true)
+                                                    }
+                                                />{' '}
+                                                Dynamic
+                                            </label>
+                                            <DefaultTooltip
+                                                mouseEnterDelay={0}
+                                                placement="right"
+                                                overlay={
+                                                    <div>
+                                                        <p>
+                                                            <strong>
+                                                                Type of Virtual
+                                                                Study:
+                                                            </strong>
+                                                        </p>
+                                                        <p>
+                                                            This Virtual Study
+                                                            will contain the set
+                                                            of sample IDs
+                                                            currently selected.
+                                                            Furthermore, you can
+                                                            define this Virtual
+                                                            Study to be either
+                                                            static or dynamic:
+                                                        </p>
+                                                        <ul>
+                                                            <li>
+                                                                <strong>
+                                                                    Static
+                                                                </strong>{' '}
+                                                                – Sample IDs are
+                                                                the ones
+                                                                currently
+                                                                selected and no
+                                                                new samples are
+                                                                added to this
+                                                                Virtual Study
+                                                                set, even if the
+                                                                database gets
+                                                                updated with new
+                                                                samples that
+                                                                match the same
+                                                                filtering/selection
+                                                                criteria as the
+                                                                samples in the
+                                                                current set.
+                                                            </li>
+                                                            <li>
+                                                                <strong>
+                                                                    Dynamic
+                                                                </strong>{' '}
+                                                                – Unlike the
+                                                                Static option,
+                                                                any new samples
+                                                                added to the
+                                                                database that
+                                                                match the
+                                                                criteria of this
+                                                                Virtual Study
+                                                                will
+                                                                automatically be
+                                                                included in its
+                                                                sample set.
+                                                            </li>
+                                                        </ul>
+                                                    </div>
+                                                }
+                                            >
+                                                <FontAwesome name="question-circle" />
+                                            </DefaultTooltip>
                                         </div>
 
                                         <div>

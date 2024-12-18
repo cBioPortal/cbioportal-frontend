@@ -9,6 +9,6 @@ export {
 } from './js/oncoprint';
 
 export * from './js/oncoprintruleset';
-export { default as OncoprintModel } from './js/oncoprintmodel';
+export { default as OncoprintModel, GAP_MODE_ENUM } from './js/oncoprintmodel';
 export * from './js/oncoprintmodel';
 export { default as shapeToSvg } from './js/oncoprintshapetosvg';

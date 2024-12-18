@@ -17,14 +17,80 @@ jobs:
 
       - name: Get release tag
         id: get_tag
-        run: echo "::set-output name=tag::${GITHUB_REF#refs/tags/}"
+        run: echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
       - name: Trigger JitPack Build
         run: |
           TAG=${{ steps.get_tag.outputs.tag }}
           JITPACK_BUILD_URL="https://jitpack.io/com/github/cbioportal/cbioportal-frontend/$TAG/build.log"
-          echo "Triggering JitPack build for $TAG"
-          curl -I $JITPACK_BUILD_URL
+          
+          MAX_RETRIES=10
+          RETRY_DELAY=30
+          COUNTER=0
+          
+          while [ $COUNTER -lt $MAX_RETRIES ]; do
+            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$JITPACK_BUILD_URL")
+          
+            if [ "$HTTP_STATUS" -eq 200 ]; then
+              echo "Build triggered successfully for version ${TAG}."
+              exit 0
+            else
+              echo "Attempt $((COUNTER+1)) failed with status $HTTP_STATUS: Tag not found yet. Retrying in $RETRY_DELAY seconds..."
+              COUNTER=$((COUNTER+1))
+              sleep $RETRY_DELAY
+            fi
+          done
+          
+          echo "Failed to trigger JitPack build after $MAX_RETRIES attempts."
+          exit 1
 
-      - name: Notify success
-        run: echo "JitPack build triggered successfully."
+      - name: Get POM File
+        run: |
+          TAG=${{ steps.get_tag.outputs.tag }}
+          JITPACK_POM_URL="https://jitpack.io/com/github/cbioportal/cbioportal-frontend/$TAG/cbioportal-frontend-$TAG.pom"
+          
+          MAX_RETRIES=60
+          RETRY_DELAY=30
+          COUNTER=0
+          
+          while [ $COUNTER -lt $MAX_RETRIES ]; do
+            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$JITPACK_POM_URL")
+          
+            if [ "$HTTP_STATUS" -eq 200 ]; then
+              echo "POM file successfully found."
+              exit 0
+            else
+              echo "Attempt $((COUNTER+1)) failed with status $HTTP_STATUS: POM file not found yet. Retrying in $RETRY_DELAY seconds..."
+              COUNTER=$((COUNTER+1))
+              sleep $RETRY_DELAY
+            fi
+          done
+          
+          echo "Failed to find POM file after $MAX_RETRIES attempts."
+          exit 1
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.BACKEND_REPO_TOKEN }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+      - name: Set up git
+        run: |
+          git config --global user.name 'github-actions'
+          git config --global user.email 'github-actions@github.com'
+
+      - name: Checkout cbioportal/cbioportal
+        run: |
+          git clone git@github.com:cBioPortal/cbioportal.git
+
+      - name: Update backend to use latest frontend commit
+        run: |
+          TAG=${{ steps.get_tag.outputs.tag }}
+          cd cbioportal
+          sed -i "s|<version>\(.*\)-SNAPSHOT</version>|<version>\1</version>|" pom.xml
+          sed -i "s|<frontend.version>.*</frontend.version>|<frontend.version>$TAG</frontend.version>|" pom.xml
+          git add pom.xml
+          git commit -m "Frontend $TAG"
+          git push

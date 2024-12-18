@@ -161,7 +161,7 @@ async function bootstrap() {
     const filteredReportData = de.filter(test => {
         return (
             test.state === 'failed' &&
-            /isWithinMisMatchTolerance/i.test(test.error)
+            /assertScreenShotMatch/i.test(test.standardError)
         );
     });
 

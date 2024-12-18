@@ -15,6 +15,7 @@ interface IUsageAgreement {
     clauses: JSX.Element[];
     useCheckboxes?: boolean;
     expirationInDays?: number;
+    dismissButtonText?: string;
 }
 
 @observer
@@ -68,7 +69,6 @@ export default class UsageAgreement extends React.Component<
             'true',
             this.expirationInSeconds
         );
-        //localStorage.setItem(this.props.persistenceKey, 'true');
     }
 
     @autobind
@@ -111,7 +111,7 @@ export default class UsageAgreement extends React.Component<
                                 bsSize="xsmall"
                                 onClick={this.handleModalShow}
                             >
-                                Dismiss
+                                {this.props.dismissButtonText || 'Dismiss'}
                             </Button>
                         </ButtonGroup>
                     </Alert>
@@ -122,7 +122,7 @@ export default class UsageAgreement extends React.Component<
                         container={this}
                         aria-labelledby="contained-modal-title"
                     >
-                        <Modal.Header closeButton>
+                        <Modal.Header>
                             <Modal.Title
                                 id="contained-modal-title"
                                 style={{ textAlign: 'center' }}

@@ -9,6 +9,7 @@ export interface IResourceTableProps {
     resources: ResourceData[];
     isTabOpen: (resourceId: string) => boolean;
     openResource: (resource: ResourceData) => void;
+    sampleId?: React.ReactNode;
 }
 
 function icon(resource: ResourceData) {
@@ -45,7 +46,7 @@ function icon(resource: ResourceData) {
 }
 
 const ResourceTable = observer(
-    ({ resources, isTabOpen, openResource }: IResourceTableProps) => {
+    ({ resources, isTabOpen, openResource, sampleId }: IResourceTableProps) => {
         const resourceTable = useLocalObservable(() => ({
             get data() {
                 return _.sortBy(resources, r => r.resourceDefinition.priority);
@@ -56,6 +57,7 @@ const ResourceTable = observer(
             <table className="simple-table table table-striped table-border-top">
                 <thead>
                     <tr>
+                        {sampleId && <th>Sample ID</th>}
                         <th>Resource</th>
                         <th></th>
                         <th>Description</th>
@@ -64,6 +66,7 @@ const ResourceTable = observer(
                 <tbody>
                     {resourceTable.data.map(resource => (
                         <tr>
+                            {sampleId && <td>{sampleId}</td>}
                             <td>
                                 <a onClick={() => openResource(resource)}>
                                     {icon(resource)}

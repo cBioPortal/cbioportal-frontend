@@ -151,7 +151,7 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
         await: () => [
             this.props.store.clinicalAttributes,
             this.clinicalAttributeIdToAvailableFrequency,
-            this.props.store.clinicalAttributes_customCharts,
+            this.props.store.customAttributes,
         ],
         invoke: () => {
             const uniqueAttributes = _.uniqBy(
@@ -167,7 +167,7 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
             };
 
             const customChartClinicalAttributeIds = _.keyBy(
-                this.props.store.clinicalAttributes_customCharts.result!,
+                this.props.store.customAttributes.result!,
                 a => a.clinicalAttributeId
             );
 

@@ -28,28 +28,21 @@ interface IFunctionalImpactData {
 @observer
 class FunctionalPrediction extends React.Component<IFunctionalPredictionProps> {
     public getData(
-        genomeNexusData: VariantAnnotation | undefined
+        genomeNexusData: VariantAnnotation | undefined,
+        selectedTranscriptId?: string
     ): IFunctionalImpactData {
-        const mutationAssessor =
-            genomeNexusData &&
-            genomeNexusData.mutation_assessor &&
-            genomeNexusData.mutation_assessor.annotation;
-        const siftScore =
-            genomeNexusData &&
-            genomeNexusData.transcript_consequences &&
-            genomeNexusData.transcript_consequences[0].sift_score;
-        const siftPrediction =
-            genomeNexusData &&
-            genomeNexusData.transcript_consequences &&
-            genomeNexusData.transcript_consequences[0].sift_prediction;
-        const polyPhenScore =
-            genomeNexusData &&
-            genomeNexusData.transcript_consequences &&
-            genomeNexusData.transcript_consequences[0].polyphen_score;
-        const polyPhenPrediction =
-            genomeNexusData &&
-            genomeNexusData.transcript_consequences &&
-            genomeNexusData.transcript_consequences[0].polyphen_prediction;
+        const mutationAssessor = genomeNexusData?.mutation_assessor;
+        const transcriptConsequence =
+            genomeNexusData && selectedTranscriptId
+                ? genomeNexusData.transcript_consequences.find(
+                      tc => tc.transcript_id === selectedTranscriptId
+                  )
+                : undefined;
+
+        const siftScore = transcriptConsequence?.sift_score;
+        const siftPrediction = transcriptConsequence?.sift_prediction;
+        const polyPhenScore = transcriptConsequence?.polyphen_score;
+        const polyPhenPrediction = transcriptConsequence?.polyphen_prediction;
 
         return {
             mutationAssessor,

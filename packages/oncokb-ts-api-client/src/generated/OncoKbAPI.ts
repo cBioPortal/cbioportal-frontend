@@ -79,6 +79,18 @@ export type QueryGene = {
         'hugoSymbol': string
 
 };
+export type ApiHttpError = {
+    'detail': string
+
+        'message': string
+
+        'path': string
+
+        'status': number
+
+        'title': string
+
+};
 export type CancerGene = {
     'entrezGeneId': number
 

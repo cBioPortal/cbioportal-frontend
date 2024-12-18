@@ -13,7 +13,7 @@ import _ from 'lodash';
 import { COLOR_ATTRIBUTE_KEY } from '../renderHelpers';
 
 export const TIMELINE_TRACK_HEIGHT = 20;
-export const TIMELINE_LINE_CHART_TRACK_HEIGHT = 100; // TODO: dynamic?
+export const TIMELINE_LINE_CHART_TRACK_HEIGHT = 50; // TODO: dynamic?
 export const REMOVE_FOR_DOWNLOAD_CLASSNAME = 'tl-remove-for-download';
 
 export function getTrackHeight(track: TimelineTrackSpecification) {

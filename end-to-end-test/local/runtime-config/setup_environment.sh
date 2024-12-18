@@ -14,7 +14,7 @@ SPEC_FILE_PATTERN=./local/specs/**/*.spec.js
 echo export CBIO_DB_DATA_DIR=$E2E_WORKSPACE/cbio_db_data
 echo export KC_DB_DATA_DIR=$E2E_WORKSPACE/kc_db_data
 
-echo export DB_CGDS_URL=https://raw.githubusercontent.com/cBioPortal/cbioportal/v5.3.6/db-scripts/src/main/resources/cgds.sql
+echo export DB_CGDS_URL=https://raw.githubusercontent.com/cBioPortal/cbioportal/refs/tags/v6.0.17/src/main/resources/db-scripts/cgds.sql
 echo export DB_SEED_URL=https://raw.githubusercontent.com/cBioPortal/datahub/master/seedDB/seedDB_hg19_archive/seed-cbioportal_hg19_v2.12.14.sql.gz
 
 # -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-

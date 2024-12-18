@@ -74,11 +74,13 @@ export default class SignificantMutationalSignatures extends React.Component<
                     )}
                     {_.map(dataToShow, significantSignature => (
                         <div>
-                            <a href={significantSignature.meta.url}>
-                                {significantSignature.meta.name}
+                            <a href={significantSignature.meta?.url || '#'}>
+                                {significantSignature.meta?.name || 'NA'}
                             </a>
                             <span>: </span>
-                            <span>{significantSignature.meta.description}</span>
+                            <span>
+                                {significantSignature.meta?.description || 'NA'}
+                            </span>
                         </div>
                     ))}
                 </div>
@@ -89,13 +91,14 @@ export default class SignificantMutationalSignatures extends React.Component<
                     {dataToShow.map(significantSignature => (
                         <tr>
                             <td style={{ paddingTop: 3 }}>
-                                {significantSignature.meta.name}
+                                {significantSignature.meta?.name || 'NA'}
                             </td>
                             <td style={{ paddingTop: 3 }}>
                                 <SampleProgressBar
                                     contribution={significantSignature.value.toString()}
                                     color={getColorByMutationalSignatureCategory(
-                                        significantSignature.meta.category
+                                        significantSignature.meta?.category ||
+                                            'NA'
                                     )}
                                 />
                             </td>
@@ -113,7 +116,7 @@ export default class SignificantMutationalSignatures extends React.Component<
             significantMutationalSignaturesForSample,
             (acc, significantSignature) => {
                 const color = getColorByMutationalSignatureCategory(
-                    significantSignature.meta.category
+                    significantSignature.meta?.category
                 );
                 if (color in acc) {
                     acc[color] += significantSignature.value;

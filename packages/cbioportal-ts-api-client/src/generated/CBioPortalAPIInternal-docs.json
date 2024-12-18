@@ -2831,6 +2831,103 @@
         "operationId": "getAllStudyResourceDataInStudyUsingGET"
       }
     },
+    "/api/studies/{studyId}/resource-data-all": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "description": "Study ID e.g. acc_tcga",
+            "in": "path",
+            "name": "studyId",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "Resource ID",
+            "in": "query",
+            "name": "resourceId",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "default": "SUMMARY",
+            "description": "Level of detail of the response",
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ],
+            "in": "query",
+            "name": "projection",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "default": 10000000,
+            "description": "Page size of the result list",
+            "format": "int32",
+            "in": "query",
+            "maximum": 10000000,
+            "minimum": 1,
+            "name": "pageSize",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "default": 0,
+            "description": "Page number of the result list",
+            "format": "int32",
+            "in": "query",
+            "minimum": 0,
+            "name": "pageNumber",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "description": "Name of the property that the result list is sorted by",
+            "enum": [
+              "ResourceId",
+              "url"
+            ],
+            "in": "query",
+            "name": "sortBy",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "default": "ASC",
+            "description": "Direction of the sort",
+            "enum": [
+              "ASC",
+              "DESC"
+            ],
+            "in": "query",
+            "name": "direction",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/ResourceData"
+              },
+              "type": "array"
+            }
+          }
+        },
+        "tags": [
+          "Resource Data"
+        ],
+        "description": "Get all resource data for for all patients and all samples within a study",
+        "operationId": "getAllStudyResourceDataInStudyPatientSampleUsingGET"
+      }
+    },
     "/api/studies/{studyId}/resource-definitions": {
       "get": {
         "produces": [

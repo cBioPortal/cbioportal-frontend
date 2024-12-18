@@ -11,18 +11,19 @@ import OncoprintModel, {
     ColumnId,
     ColumnLabel,
     ColumnProp,
+    GAP_MODE_ENUM,
     IdentifiedShapeList,
     TrackId,
     TrackOverlappingCells,
     TrackProp,
 } from './oncoprintmodel';
 import OncoprintToolTip from './oncoprinttooltip';
-import { arrayFindIndex, ifndef, sgndiff } from './utils';
-import MouseUpEvent = JQuery.MouseUpEvent;
-import MouseMoveEvent = JQuery.MouseMoveEvent;
+import { ifndef, sgndiff } from './utils';
 import { CellClickCallback, CellMouseOverCallback } from './oncoprint';
 import { getFragmentShaderSource, getVertexShaderSource } from './shaders';
 import _ from 'lodash';
+import MouseUpEvent = JQuery.MouseUpEvent;
+import MouseMoveEvent = JQuery.MouseMoveEvent;
 
 type ColorBankIndex = number; // index into vertex bank (e.g. 0, 4, 8, ...)
 type ColorBank = number[]; // flat list of color: [c0,c0,c0,c0,v1,v1,v1,c1,c1,c1,c1,...]
@@ -846,7 +847,10 @@ export default class OncoprintWebGLCellView {
             const cell_top = model.getCellTops(track_id);
             const cell_height = model.getCellHeight(track_id);
 
-            if (model.showGaps()) {
+            if (
+                model.showGaps() &&
+                model.gapMode() === GAP_MODE_ENUM.SHOW_GAPS_PERCENT
+            ) {
                 const gaps = this.getGaps(model, track_id);
                 if (gaps) {
                     gaps.forEach((gap: OncoprintGapConfig, i: number) => {
@@ -854,7 +858,8 @@ export default class OncoprintWebGLCellView {
                         const y =
                             model.getZoomedTrackTops()[track_id] +
                             cell_height -
-                            scroll_y;
+                            scroll_y -
+                            4;
 
                         this.drawGapLabel(gap.labelFormatter(), x, y);
 

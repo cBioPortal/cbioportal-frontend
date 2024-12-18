@@ -91,6 +91,14 @@ export default class PortalHeader extends React.Component<
                 internal: false,
                 hide: () => !getServerConfig().installation_map_url,
             },
+
+            {
+                id: 'donate',
+                text: 'Donate',
+                address: 'https://docs.cbioportal.org/donate/',
+                internal: false,
+                hide: () => !getServerConfig().skin_show_donate_button === true,
+            },
         ];
     }
 
