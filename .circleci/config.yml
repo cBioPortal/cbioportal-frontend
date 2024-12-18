@@ -376,8 +376,7 @@ jobs:
 
   e2e_localdb_tests:
     machine:
-      enabled: true
-      image: default
+      image: ubuntu-2204:2024.08.1
     resource_class: large
     working_directory: /tmp/repo
     steps:
