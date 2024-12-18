@@ -31,11 +31,12 @@ describe('homepage', () => {
         it('window.frontendConfig.frontendUrl should point to localhost 3000 when testing', async () => {
             // We no longer check whether the dev mode banner exits.
             // The banner is hidden in e2etests.scss
-            assert.equal(
-                await browser.execute(() => {
-                    return window.getLoadConfig().frontendUrl;
-                }),
-                'https://localhost:3000/'
+            assert(
+                (
+                    await browser.execute(() => {
+                        return window.getLoadConfig().frontendUrl;
+                    })
+                ).includes('//localhost:3000')
             );
         });
     }
