@@ -21,7 +21,7 @@ import {
 } from 'cbioportal-frontend-commons';
 import { DEFAULT_SORTING_COLUMN } from '../StudyViewConfig';
 import ComparisonVsIcon from 'shared/components/ComparisonVsIcon';
-import { capitalizeFirstLetters } from 'cbioportal-frontend-commons/src';
+import { capitalizeFirstLetters } from 'cbioportal-frontend-commons';
 
 export interface IClinicalTableProps {
     data: ClinicalDataCountSummary[];
