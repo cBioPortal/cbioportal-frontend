@@ -4899,6 +4899,9 @@ export function getVisibleAttributes(
     );
 }
 
+// this function takes legacy patient treatment data and puts it in the form
+// of the clickhouse treatment report.  it makes the new code backward
+// compatible.  when rfc80 is complete this should be removed
 export async function getPatientTreatmentReport(
     filter: StudyViewFilter,
     tier: any,
@@ -4921,6 +4924,9 @@ export async function getPatientTreatmentReport(
     return resp;
 }
 
+// like the above, this function takes legacy patient treatment data and puts it in the form
+// of the clickhouse treatment report.  it makes the new code backward
+// compatible.  when rfc80 is complete this should be removed
 export async function getSampleTreatmentReport(
     filter: StudyViewFilter,
     tier: any,
