@@ -379,9 +379,6 @@ import {
     PlotsColoringParam,
     PlotsSelectionParam,
 } from 'pages/resultsView/ResultsViewURLWrapper';
-import internalClient from 'shared/api/cbioportalInternalClientInstance';
-
-const oldInternalClient = internalClient;
 
 export const STUDY_VIEW_FILTER_AUTOSUBMIT = 'study_view_filter_autosubmit';
 
