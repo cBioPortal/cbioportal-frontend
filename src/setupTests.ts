@@ -16,3 +16,4 @@ jest.setMock('webpack-raphael', {});
 jest.setMock('jquery-migrate', {});
 jest.setMock('igv', {});
 jest.setMock('react-markdown', {});
+jest.setMock('axios', {});

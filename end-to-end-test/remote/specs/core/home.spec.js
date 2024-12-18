@@ -35,7 +35,7 @@ describe('homepage', () => {
                 await browser.execute(() => {
                     return window.getLoadConfig().frontendUrl;
                 }),
-                '//localhost:3000/'
+                'https://localhost:3000/'
             );
         });
     }

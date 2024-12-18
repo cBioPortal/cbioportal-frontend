@@ -7,7 +7,10 @@ import {
     Column,
     SortDirection,
 } from '../../../../shared/components/lazyMobXTable/LazyMobXTable';
-import { SampleTreatmentRow } from 'cbioportal-ts-api-client';
+import {
+    SampleTreatmentReport,
+    SampleTreatmentRow,
+} from 'cbioportal-ts-api-client';
 import { correctColumnWidth } from 'pages/studyView/StudyViewUtils';
 import LabeledCheckbox from 'shared/components/labeledCheckbox/LabeledCheckbox';
 import styles from 'pages/studyView/table/tables.module.scss';
@@ -37,7 +40,7 @@ export type SampleTreatmentsTableColumn = {
 
 export type SampleTreatmentsTableProps = {
     tableType: TreatmentTableType;
-    promise: MobxPromise<SampleTreatmentRow[]>;
+    promise: MobxPromise<SampleTreatmentReport>;
     width: number;
     height: number;
     filters: string[][];
@@ -214,7 +217,7 @@ export class SampleTreatmentsTable extends TreatmentsTable<
     }
 
     @computed get tableData(): SampleTreatmentRow[] {
-        return this.props.promise.result || [];
+        return this.props.promise.result?.treatments || [];
     }
 
     @computed get selectableTableData() {
