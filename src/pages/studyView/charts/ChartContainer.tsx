@@ -802,7 +802,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                         MultiSelectionTableColumnKey.FREQ,
                                 },
                             ]}
-                            defaultSortBy={MultiSelectionTableColumnKey.FREQ}
+                            defaultSortBy={
+                                MultiSelectionTableColumnKey.NUMBER
+                            }
                             setOperationsButtonText={
                                 this.props.store.hesitateUpdate
                                     ? 'Add Filters '
