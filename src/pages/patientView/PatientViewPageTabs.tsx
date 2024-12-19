@@ -552,25 +552,26 @@ export function tabs(
             )}
         </MSKTab>
     );
-
-    tabs.push(
-        <MSKTab
-            key={4}
-            id={PatientViewPageTabs.FilesAndLinks}
-            linkText={RESOURCES_TAB_NAME}
-            hide={!pageComponent.shouldShowResources}
-        >
-            <div>
-                <ResourcesTab
-                    store={pageComponent.patientViewPageStore}
-                    sampleManager={
-                        pageComponent.patientViewPageStore.sampleManager.result!
-                    }
-                    openResource={pageComponent.openResource}
-                />
-            </div>
-        </MSKTab>
-    );
+    if (pageComponent.shouldShowResources)
+        tabs.push(
+            <MSKTab
+                key={4}
+                id={PatientViewPageTabs.FilesAndLinks}
+                linkText={RESOURCES_TAB_NAME}
+                hide={!pageComponent.shouldShowResources}
+            >
+                <div>
+                    <ResourcesTab
+                        store={pageComponent.patientViewPageStore}
+                        sampleManager={
+                            pageComponent.patientViewPageStore.sampleManager
+                                .result!
+                        }
+                        openResource={pageComponent.openResource}
+                    />
+                </div>
+            </MSKTab>
+        );
 
     tabs.push(
         <MSKTab
