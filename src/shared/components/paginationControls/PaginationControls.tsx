@@ -42,6 +42,7 @@ export interface IPaginationControlsProps {
     groupButtons?: boolean;
     hidePaginationIfOnePage?: boolean;
     bsStyle?: 'default' | 'primary' | 'success' | 'info' | 'warning';
+    isResultLimitedAtMaxPage?: boolean;
 }
 
 @observer
@@ -142,6 +143,7 @@ export class PaginationControls extends React.Component<
                     id="showMoreButton"
                     bsSize="sm"
                     disabled={
+                        this.props.isResultLimitedAtMaxPage ||
                         !this.props.itemsPerPageOptions ||
                         !this.props.itemsPerPage ||
                         !this.props.totalItems ||
