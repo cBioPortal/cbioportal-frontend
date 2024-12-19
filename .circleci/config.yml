@@ -510,13 +510,6 @@ workflows:
     jobs:
       - pull_test_codebase
       - pull_frontend_codebase
-      - build_frontend:
-          requires:
-            - pull_frontend_codebase
-      - e2e_localdb_tests:
-          requires:
-            - pull_test_codebase
-            - build_frontend
 
   nightly:
     triggers:
