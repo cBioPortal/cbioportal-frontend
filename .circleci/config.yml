@@ -383,7 +383,7 @@ jobs:
       - run:
           name: Checkout cbioportal/cbioportal-test
           environment:
-            TEST_REPO_URL: https://github.com/cbioportal/cbioporta-test
+            TEST_REPO_URL: https://github.com/cbioportal/cbioportal-test
           command: |
             git clone ${TEST_REPO_URL}
       - persist_to_workspace:
