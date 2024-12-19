@@ -19,6 +19,7 @@ export type BarChartToolTipProps = {
     currentBarIndex: number;
     model: ToolTipModel | null;
     windowWidth: number;
+    isCategorical?: boolean;
 };
 
 export const VERTICAL_OFFSET = 17;
@@ -59,6 +60,15 @@ export default class BarChartToolTip extends React.Component<
         return this.placement === 'left' ? 'translate(-100%,0%)' : undefined;
     }
 
+    @computed
+    get toolTipLabel(): string {
+        if (this.props.isCategorical) {
+            return 'Category:';
+        }
+
+        return 'Range:';
+    }
+
     render() {
         if (!this.props.model) {
             return null;
@@ -79,7 +89,7 @@ export default class BarChartToolTip extends React.Component<
                         <strong>{this.props.model.sampleCount}</strong>
                     </div>
                     <div>
-                        Range:{' '}
+                        {this.toolTipLabel}{' '}
                         <strong>
                             {formatRange(
                                 this.props.model.start,
