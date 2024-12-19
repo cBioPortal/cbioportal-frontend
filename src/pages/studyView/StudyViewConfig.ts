@@ -64,6 +64,7 @@ export type StudyViewConfig = StudyView & StudyViewFrontEndConfig;
 export enum ChartTypeEnum {
     PIE_CHART = 'PIE_CHART',
     BAR_CHART = 'BAR_CHART',
+    BAR_PREVIEW_CHART = 'BAR_PREVIEW_CHART',
     SURVIVAL = 'SURVIVAL',
     TABLE = 'TABLE',
     SCATTER = 'SCATTER',
@@ -88,6 +89,7 @@ export enum ChartTypeEnum {
 export enum ChartTypeNameEnum {
     PIE_CHART = 'pie chart',
     BAR_CHART = 'bar chart',
+    BAR_PREVIEW_CHART = 'bar preview chart',
     SURVIVAL = 'survival plot',
     TABLE = 'table',
     SCATTER = 'density plot',
@@ -185,6 +187,10 @@ const studyViewFrontEnd = {
             [ChartTypeEnum.BAR_CHART]: {
                 w: 2,
                 h: 1,
+            },
+            [ChartTypeEnum.BAR_PREVIEW_CHART]: {
+                w: 2,
+                h: 2,
             },
             [ChartTypeEnum.SCATTER]: {
                 w: 2,
