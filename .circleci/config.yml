@@ -381,11 +381,11 @@ jobs:
     working_directory: /tmp/repo
     steps:
       - run:
-        name: Checkout cbioportal/cbioportal-test
-        environment:
-          TEST_REPO_URL: https://github.com/cbioportal/cbioporta-test
-        command: |
-          git clone ${TEST_REPO_URL}
+          name: Checkout cbioportal/cbioportal-test
+          environment:
+            TEST_REPO_URL: https://github.com/cbioportal/cbioporta-test
+          command: |
+            git clone ${TEST_REPO_URL}
       - persist_to_workspace:
           root: /tmp/repo
           paths: cbioportal-test
@@ -510,6 +510,13 @@ workflows:
     jobs:
       - pull_test_codebase
       - pull_frontend_codebase
+      - build_frontend:
+          requires:
+            - pull_frontend_codebase
+      - e2e_localdb_tests:
+          requires:
+            - pull_test_codebase
+            - build_frontend
 
   nightly:
     triggers:
