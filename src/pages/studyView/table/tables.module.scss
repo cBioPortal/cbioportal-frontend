@@ -63,23 +63,11 @@ $study-view-table-icon-size: 10px;
         display: none;
     }
 
-    %addGeneUIHover {
-        display: flex !important;
-        opacity: 0.5;
-    }
-    &:hover {
-        .addGeneUI {
-            @extend %addGeneUIHover;
-        }
-    }
     .addGeneUI {
         display: none;
         &.selected {
             display: flex !important;
             opacity: 1 !important;
-        }
-        &.hover {
-            @extend %addGeneUIHover;
         }
         padding-left: 3px;
         font-size: 12px;
@@ -87,7 +75,11 @@ $study-view-table-icon-size: 10px;
         position: relative;
         top: -2px;
     }
-    cursor: pointer;
+}
+
+%addGeneUIHover {
+    display: flex !important;
+    opacity: 0.5;
 }
 
 .cancerGene {
@@ -111,6 +103,13 @@ $study-view-table-icon-size: 10px;
 
 .row {
     font-size: 13px;
+
+    &:hover {
+        .addGeneUI {
+            @extend %addGeneUIHover;
+        }
+    }
+    cursor: pointer;
 }
 
 .oddRow {
