@@ -3,6 +3,7 @@ import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import {
     BinsGeneratorConfig,
     CancerStudy,
+    CBioPortalAPIInternal,
     ClinicalAttribute,
     ClinicalData,
     ClinicalDataBin,
@@ -23,12 +24,15 @@ import {
     MolecularDataMultipleStudyFilter,
     MolecularProfile,
     NumericGeneMolecularData,
+    OredPatientTreatmentFilters,
     Patient,
     PatientIdentifier,
+    PatientTreatmentReport,
     PatientTreatmentRow,
     Sample,
     SampleClinicalDataCollection,
     SampleIdentifier,
+    SampleTreatmentReport,
     SampleTreatmentRow,
     StructuralVariantFilterQuery,
     StudyViewFilter,
@@ -47,7 +51,9 @@ import {
 } from './StudyViewPageStore';
 import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
 import { Layout } from 'react-grid-layout';
-import internalClient from 'shared/api/cbioportalInternalClientInstance';
+import internalClient, {
+    getInternalClient,
+} from 'shared/api/cbioportalInternalClientInstance';
 import defaultClient from 'shared/api/cbioportalClientInstance';
 import client from 'shared/api/cbioportalClientInstance';
 import {
@@ -2546,7 +2552,7 @@ export function getSamplesByExcludingFiltersOnChart(
             updatedFilter.sampleIdentifiers = queriedSampleIdentifiers;
         }
     }
-    return internalClient.fetchFilteredSamplesUsingPOST({
+    return getInternalClient().fetchFilteredSamplesUsingPOST({
         studyViewFilter: updatedFilter,
     });
 }
@@ -3189,7 +3195,7 @@ export async function getAllClinicalDataByStudyViewFilter(
     const [remoteClinicalDataCollection, totalItems]: [
         SampleClinicalDataCollection,
         number
-    ] = await internalClient
+    ] = await getInternalClient()
         .fetchClinicalDataClinicalTableUsingPOSTWithHttpInfo({
             studyViewFilter,
             pageSize: pageSize | 500,
@@ -4080,7 +4086,7 @@ export async function invokeGenericAssayDataCount(
     chartInfo: GenericAssayChart,
     filters: StudyViewFilter
 ) {
-    const result: GenericAssayDataCountItem[] = await internalClient.fetchGenericAssayDataCountsUsingPOST(
+    const result: GenericAssayDataCountItem[] = await getInternalClient().fetchGenericAssayDataCountsUsingPOST(
         {
             genericAssayDataCountFilter: {
                 genericAssayDataFilters: [
@@ -4142,12 +4148,16 @@ export async function invokeGenomicDataCount(
                 projection: 'SUMMARY',
             },
         };
-        result = await internalClient.fetchMutationDataCountsUsingPOST(params);
+        result = await getInternalClient().fetchMutationDataCountsUsingPOST(
+            params
+        );
         getDisplayedValue = transformMutatedType;
         getDisplayedColor = (value: string) =>
             getMutationColorByCategorization(transformMutatedType(value));
     } else {
-        result = await internalClient.fetchGenomicDataCountsUsingPOST(params);
+        result = await getInternalClient().fetchGenomicDataCountsUsingPOST(
+            params
+        );
         getDisplayedValue = getCNAByAlteration;
         getDisplayedColor = (value: string | number) =>
             getCNAColorByAlteration(getCNAByAlteration(value));
@@ -4201,7 +4211,7 @@ export async function invokeMutationDataCount(
         },
     } as any;
 
-    const result = await internalClient.fetchMutationDataCountsUsingPOST(
+    const result = await getInternalClient().fetchMutationDataCountsUsingPOST(
         params
     );
 
@@ -4543,26 +4553,29 @@ export async function getGenesCNADownloadData(
 }
 
 export async function getPatientTreatmentDownloadData(
-    promise: MobxPromise<PatientTreatmentRow[]>
+    promise: MobxPromise<PatientTreatmentReport>
 ): Promise<string> {
     if (promise.result) {
         const header = ['Treatment', '#'];
         let data = [header.join('\t')];
-        _.each(promise.result, (record: PatientTreatmentRow) => {
-            let rowData = [record.treatment, record.count];
-            data.push(rowData.join('\t'));
-        });
+        _.each(
+            promise.result.patientTreatments,
+            (record: PatientTreatmentRow) => {
+                let rowData = [record.treatment, record.count];
+                data.push(rowData.join('\t'));
+            }
+        );
         return data.join('\n');
     } else return '';
 }
 
 export async function getSampleTreatmentDownloadData(
-    promise: MobxPromise<SampleTreatmentRow[]>
+    promise: MobxPromise<SampleTreatmentReport>
 ): Promise<string> {
     if (promise.result) {
         const header = ['Treatment', 'Pre/Post', '#'];
         let data = [header.join('\t')];
-        _.each(promise.result, (record: SampleTreatmentRow) => {
+        _.each(promise.result.treatments, (record: SampleTreatmentRow) => {
             let rowData = [record.treatment, record.time, record.count];
             data.push(rowData.join('\t'));
         });
@@ -4884,4 +4897,51 @@ export function getVisibleAttributes(
         },
         []
     );
+}
+
+// this function takes legacy patient treatment data and puts it in the form
+// of the clickhouse treatment report.  it makes the new code backward
+// compatible.  when rfc80 is complete this should be removed
+export async function getPatientTreatmentReport(
+    filter: StudyViewFilter,
+    tier: any,
+    client: CBioPortalAPIInternal
+) {
+    const legacyData = await client.getAllPatientTreatmentsUsingPOST({
+        studyViewFilter: filter,
+        tier,
+    });
+    const totalPatients = _(legacyData)
+        .flatMap(r => r.samples)
+        .map(r => r.patientId)
+        .uniq()
+        .value().length;
+    const resp: PatientTreatmentReport = {
+        patientTreatments: legacyData,
+        totalSamples: 0, // this is always zero, should be cleaned up in backend and deleted
+        totalPatients,
+    };
+    return resp;
+}
+
+// like the above, this function takes legacy patient treatment data and puts it in the form
+// of the clickhouse treatment report.  it makes the new code backward
+// compatible.  when rfc80 is complete this should be removed
+export async function getSampleTreatmentReport(
+    filter: StudyViewFilter,
+    tier: any,
+    client: CBioPortalAPIInternal
+) {
+    const old = await client.getAllSampleTreatmentsUsingPOST({
+        studyViewFilter: filter,
+    });
+    const resp: SampleTreatmentReport = {
+        treatments: old,
+        totalSamples: _(old)
+            .flatMap(r => r.samples)
+            .map(r => r.sampleId)
+            .uniq()
+            .value().length,
+    };
+    return resp;
 }

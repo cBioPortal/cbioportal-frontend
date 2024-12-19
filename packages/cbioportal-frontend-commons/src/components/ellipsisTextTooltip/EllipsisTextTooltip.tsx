@@ -4,12 +4,13 @@ import { observer } from 'mobx-react';
 import styles from './EllipsisTextTooltip.module.scss';
 import DefaultTooltip from '../defaultTooltip/DefaultTooltip';
 import $ from 'jquery';
+import classNames from 'classnames';
 import autobind from 'autobind-decorator';
 
 // This is a block component
 @observer
 export default class EllipsisTextTooltip extends React.Component<
-    { text: any; style?: any; hideTooltip?: boolean },
+    { text: any; style?: any; hideTooltip?: boolean; className?: string },
     {}
 > {
     constructor(props: any) {
@@ -44,7 +45,7 @@ export default class EllipsisTextTooltip extends React.Component<
                 onVisibleChange={this.onVisibleChange}
             >
                 <div
-                    className={styles.text}
+                    className={classNames(styles.text, this.props.className)}
                     style={this.props.style}
                     ref={this.setRef}
                 >
