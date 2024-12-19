@@ -5061,7 +5061,9 @@ export class ResultsViewPageStore extends AnalysisStore
                                     this.uniqueSampleKeyToTumorType.result!,
                                     this.structuralVariantOncoKbData,
                                     this.oncoKbCancerGenes,
-                                    this.usingPublicOncoKbInstance
+                                    this.usingPublicOncoKbInstance,
+                                    this.genomeNexusClient,
+                                    this.genomeNexusInternalClient
                                 );
                                 return map;
                             },

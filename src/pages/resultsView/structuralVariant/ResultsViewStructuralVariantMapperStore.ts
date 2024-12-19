@@ -38,7 +38,11 @@ import {
     fetchCanonicalTranscripts,
     fetchEnsemblTranscriptsByEnsemblFilter,
 } from 'shared/lib/StoreUtils';
-import { Exon } from 'genome-nexus-ts-api-client';
+import {
+    Exon,
+    GenomeNexusAPI,
+    GenomeNexusAPIInternal,
+} from 'genome-nexus-ts-api-client';
 
 export class ResultsViewStructuralVariantMapperStore {
     constructor(
@@ -53,7 +57,9 @@ export class ResultsViewStructuralVariantMapperStore {
         },
         public structuralVariantOncoKbData: MobxPromise<IOncoKbData | Error>,
         public oncoKbCancerGenes: MobxPromise<CancerGene[] | Error>,
-        public usingPublicOncoKbInstance: boolean
+        public usingPublicOncoKbInstance: boolean,
+        protected genomenexusClient?: GenomeNexusAPI,
+        protected genomenexusInternalClient?: GenomeNexusAPIInternal
     ) {
         makeObservable(this);
         labelMobxPromises(this);
@@ -69,9 +75,12 @@ export class ResultsViewStructuralVariantMapperStore {
                     transcriptIds.add(fusion.site2EnsemblTranscriptId);
                 });
                 // Fetch ensembl transcript data with transcript ids as request params
-                return await fetchEnsemblTranscriptsByEnsemblFilter({
-                    transcriptIds: Array.from(transcriptIds),
-                });
+                return await fetchEnsemblTranscriptsByEnsemblFilter(
+                    {
+                        transcriptIds: Array.from(transcriptIds),
+                    },
+                    this.genomenexusClient
+                );
             },
         },
         []
@@ -91,7 +100,8 @@ export class ResultsViewStructuralVariantMapperStore {
                 // Fetch ensembl transcript data with transcript ids as request params
                 return await fetchCanonicalTranscripts(
                     Array.from(hugoSymbols),
-                    'mskcc'
+                    'mskcc',
+                    this.genomenexusClient
                 );
             },
         },
