@@ -277,6 +277,94 @@ export class StudySummaryTab extends React.Component<
                     isShowNAChecked: this.store.isShowNAChecked(
                         chartMeta.uniqueKey
                     ),
+                    onChangeChartType: this.handlers.onChangeChartType,
+                    downloadTypes: ['Data', 'SVG', 'PDF'],
+                },
+                [ChartMetaDataTypeEnum.GENE_SPECIFIC]: () => ({
+                    promise: this.store.getGenomicChartDataBin(chartMeta),
+                    filters: this.store.getGenomicDataFiltersByUniqueKey(
+                        chartMeta.uniqueKey
+                    ),
+                    onDataBinSelection: this.handlers.onGenomicDataBinSelection,
+                    onResetSelection: this.handlers.onGenomicDataBinSelection,
+                    getData: () =>
+                        this.store.getChartDownloadableData(chartMeta),
+                    showLogScaleToggle: this.store.isLogScaleToggleVisible(
+                        chartMeta.uniqueKey,
+                        this.store.getGenomicChartDataBin(chartMeta).result
+                    ),
+                    showNAToggle: this.store.isShowNAToggleVisible(
+                        this.store.getGenomicChartDataBin(chartMeta).result!
+                    ),
+                }),
+                [ChartMetaDataTypeEnum.GENERIC_ASSAY]: () => ({
+                    promise: this.store.getGenericAssayChartDataBin(chartMeta),
+                    filters: this.store.getGenericAssayDataFiltersByUniqueKey(
+                        chartMeta.uniqueKey
+                    ),
+                    onDataBinSelection: this.handlers
+                        .onGenericAssayDataBinSelection,
+                    onResetSelection: this.handlers
+                        .onGenericAssayDataBinSelection,
+                    getData: () =>
+                        this.store.getChartDownloadableData(chartMeta),
+                    showLogScaleToggle: this.store.isLogScaleToggleVisible(
+                        chartMeta.uniqueKey,
+                        this.store.getGenericAssayChartDataBin(chartMeta).result
+                    ),
+                    showNAToggle: this.store.isShowNAToggleVisible(
+                        this.store.getGenericAssayChartDataBin(chartMeta)
+                            .result!
+                    ),
+                }),
+                [ChartMetaDataTypeEnum.CUSTOM_DATA]: () => ({
+                    promise: this.store.getCustomDataNumerical(chartMeta),
+                    onDataBinSelection: this.handlers
+                        .onCustomChartDataBinSelection,
+                    filters: this.store.getCustomDataFiltersByUniqueKey(
+                        chartMeta.uniqueKey
+                    ),
+                    onResetSelection: this.handlers.onDataBinSelection,
+                    getData: () =>
+                        this.store.getChartDownloadableData(chartMeta),
+                    showLogScaleToggle: this.store.isLogScaleToggleVisible(
+                        chartMeta.uniqueKey,
+                        this.store.getCustomDataNumerical(chartMeta).result
+                    ),
+                    showNAToggle: this.store.isShowNAToggleVisible(
+                        this.store.getCustomDataNumerical(chartMeta).result!
+                    ),
+                }),
+                [ChartMetaDataTypeEnum.CLINICAL]: () => ({
+                    promise: this.store.getClinicalDataBin(chartMeta),
+                    onDataBinSelection: this.handlers.onDataBinSelection,
+                    filters: this.store.getClinicalDataFiltersByUniqueKey(
+                        chartMeta.uniqueKey
+                    ),
+                    onResetSelection: this.handlers.onDataBinSelection,
+                    getData: () =>
+                        this.store.getChartDownloadableData(chartMeta),
+                    showLogScaleToggle: this.store.isLogScaleToggleVisible(
+                        chartMeta.uniqueKey,
+                        this.store.getClinicalDataBin(chartMeta).result
+                    ),
+                    showNAToggle: this.store.isShowNAToggleVisible(
+                        this.store.getClinicalDataBin(chartMeta).result!
+                    ),
+                }),
+            }),
+            [ChartTypeEnum.LINE_CHART]: () => ({
+                commonProps: {
+                    onToggleNAValue: this.handlers.onToggleNAValue,
+                    logScaleChecked: this.store.isLogScaleChecked(
+                        chartMeta.uniqueKey
+                    ),
+                    isShowNAChecked: this.store.isShowNAChecked(
+                        chartMeta.uniqueKey
+                    ),
+                    onTogglePreview: this.handlers.onTogglePreview,
+                    previewShown: false,
+                    onChangeChartType: this.handlers.onChangeChartType,
                     downloadTypes: ['Data', 'SVG', 'PDF'],
                 },
                 [ChartMetaDataTypeEnum.GENE_SPECIFIC]: () => ({
