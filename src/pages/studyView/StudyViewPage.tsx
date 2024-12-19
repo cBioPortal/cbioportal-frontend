@@ -844,15 +844,13 @@ export default class StudyViewPage extends React.Component<
                                                     .driverAnnotationSettings
                                             }
                                             studyIdToStudy={
-                                                this.store.studyIdToStudy.result
+                                                this.store.studyIdToStudy
                                             }
                                             structuralVariants={
                                                 this.store.structuralVariants
-                                                    .result
                                             }
-                                            hugoGeneSymbols={
+                                            allHugoGeneSymbols={
                                                 this.store.allHugoGeneSymbols
-                                                    .result
                                             }
                                             selectedGenericAssayEntitiesGroupByMolecularProfileId={
                                                 this.store
@@ -867,7 +865,6 @@ export default class StudyViewPage extends React.Component<
                                             genePanelDataForAllProfiles={
                                                 this.store
                                                     .genePanelDataForAllProfiles
-                                                    .result
                                             }
                                             patients={this.store.patients}
                                         />
