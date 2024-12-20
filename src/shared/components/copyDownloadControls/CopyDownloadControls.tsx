@@ -259,7 +259,25 @@ export class CopyDownloadControls extends React.Component<
     }
 
     public download(text: string) {
-        fileDownload(text, this.props.downloadFilename);
+        try {
+            const jsonData = JSON.parse(text);
+            if (Array.isArray(jsonData)) {
+                const headers = Object.keys(jsonData[0]);
+
+                const tsvContent = [
+                    headers.join('\t'),
+                    ...jsonData.map(row =>
+                        headers.map(header => row[header] || '').join('\t')
+                    ),
+                ].join('\n');
+
+                fileDownload(tsvContent, this.props.downloadFilename);
+                return;
+            }
+        } catch (error) {
+            // Fallback to downloading raw text if JSON parsing fails
+            fileDownload(text, this.props.downloadFilename);
+        }
     }
 
     @action

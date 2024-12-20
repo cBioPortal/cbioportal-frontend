@@ -1,3 +1,5 @@
+import _ from 'lodash';
+
 export function longestCommonStartingSubstring(str1: string, str2: string) {
     // from https://github.com/cBioPortal/mutation-mapper/blob/master/src/js/util/cbio-util.js
     let i = 0;
@@ -78,6 +80,13 @@ export function lowerCaseAndCapitalizeString(str: string) {
             return s.toUpperCase();
         });
     }
+}
+
+export function capitalizeFirstLetters(str: string) {
+    return str
+        .split(' ')
+        .map(s => _.capitalize(s))
+        .join(' ');
 }
 
 export function isUrl(str: string) {
