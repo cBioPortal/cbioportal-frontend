@@ -96,6 +96,20 @@ function applyDefaultConfigurationValues(serverConfig: any) {
             }
         }
     });
+
+    // This pass handles boolean values that aren't in ServerConfigDefaults
+    // Without this, these boolean properties will be rendered as string
+    Object.keys(serverConfig).forEach(key => {
+        if (typeof serverConfig[key] === 'string') {
+            const lowerVal = serverConfig[key].toLowerCase();
+            if (lowerVal === 'true' || lowerVal === 'false') {
+                serverConfig[key] = lowerVal === 'true';
+            }
+            console.warn(
+                `Warning: Boolean value for key "${key}" encountered, but it's missing from ServerConfigDefaults.`
+            );
+        }
+    });
 }
 
 export class ServerConfigHelpers {
