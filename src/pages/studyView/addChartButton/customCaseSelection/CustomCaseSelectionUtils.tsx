@@ -70,7 +70,7 @@ export function getLine(line: string): InputLine {
         parsedResult.caseId = content[0];
     } else if (content.length > 1) {
         parsedResult.studyId = content[0];
-        const groupInfo = content[1].split(/\s|\t/g);
+        const groupInfo = content[1].split(/[\s,\t]+/g);
         if (groupInfo.length > 1) {
             parsedResult.value = groupInfo[1];
         }
