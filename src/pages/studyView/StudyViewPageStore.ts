@@ -5481,18 +5481,17 @@ export class StudyViewPageStore
         invoke: async () => {
             if (this.useDashboardView) {
                 let study: any = {
-                    name: 'NCI Enclave (2024)',
-                    description:
-                        'Cohort-level data sourced from the NCI Secure Enclave.',
+                    name: 'GENIE Cohort v16.1-public',
+                    description: 'GENIE v16.1-public',
                     publicStudy: true,
                     pmid: '',
                     citation: '',
                     groups: 'PUBLIC',
                     status: 0,
                     importDate: '',
-                    allSampleCount: 1,
+                    allSampleCount: 214475,
                     readPermission: true,
-                    studyId: 'enclave_2024',
+                    studyId: 'genie_public',
                     cancerTypeId: 'mixed',
                 };
                 return [study];
@@ -5628,18 +5627,17 @@ export class StudyViewPageStore
         invoke: async () => {
             if (this.useDashboardView) {
                 let study: any = {
-                    name: 'NCI Enclave (2024)',
-                    description:
-                        'Cohort-level data sourced from the NCI Secure Enclave.',
+                    name: 'GENIE Cohort v16.1-public',
+                    description: 'GENIE v16.1-public',
                     publicStudy: true,
                     pmid: '',
                     citation: '',
                     groups: 'PUBLIC',
                     status: 0,
                     importDate: '',
-                    allSampleCount: 1,
+                    allSampleCount: 214475,
                     readPermission: true,
-                    studyId: 'enclave_2024',
+                    studyId: 'genie_public',
                     cancerTypeId: 'mixed',
                 };
                 return [study];

@@ -36,7 +36,7 @@ export class StudyIdQueryExtractor implements StudyViewQueryExtractor<void> {
                 // update if different
                 store.studyIds = studyIds;
                 store.useDashboardView =
-                    studyIds.length === 1 && studyIds[0] === 'enclave_2024';
+                    studyIds.length === 1 && studyIds[0] === 'genie_public';
             }
         }
     }
