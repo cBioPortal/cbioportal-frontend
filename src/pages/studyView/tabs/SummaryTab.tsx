@@ -105,6 +105,9 @@ export class StudySummaryTab extends React.Component<
             onToggleNAValue: (chartMeta: ChartMeta) => {
                 this.store.toggleNAValue(chartMeta.uniqueKey);
             },
+            onTogglePreview: (chartMeta: ChartMeta) => {
+                this.store.togglePreview(chartMeta.uniqueKey);
+            },
             onDeleteChart: (chartMeta: ChartMeta) => {
                 this.store.resetFilterAndChangeChartVisibility(
                     chartMeta.uniqueKey,
@@ -277,6 +280,11 @@ export class StudySummaryTab extends React.Component<
                     isShowNAChecked: this.store.isShowNAChecked(
                         chartMeta.uniqueKey
                     ),
+                    onTogglePreview: this.handlers.onTogglePreview,
+                    isPreviewShown: this.store.isPreviewShown(
+                        chartMeta.uniqueKey
+                    ),
+                    previewShown: false,
                     downloadTypes: ['Data', 'SVG', 'PDF'],
                 },
                 [ChartMetaDataTypeEnum.GENE_SPECIFIC]: () => ({
