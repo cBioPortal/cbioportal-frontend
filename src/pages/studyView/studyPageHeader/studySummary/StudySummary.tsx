@@ -40,42 +40,48 @@ export default class StudySummary extends React.Component<
 
     @computed
     get name() {
-        return this.props.studies.length === 1
-            ? this.props.studies[0].name
-            : 'Combined Study';
+        return 'Dashboard View (beta)';
     }
 
     @computed
     get descriptionFirstLine() {
-        if (this.props.studies.length === 1) {
-            let elems = [
-                <span
-                    dangerouslySetInnerHTML={{
-                        __html: this.props.studies[0].description.split(
-                            /\n+/g
-                        )[0],
-                    }}
-                />,
-            ];
-            if (this.props.studies[0].pmid) {
-                elems.push(
-                    <a
-                        target="_blank"
-                        href={getNCBIlink(
-                            `/pubmed/${this.props.studies[0].pmid}`
-                        )}
-                        style={{ marginLeft: '5px' }}
-                    >
-                        PubMed
-                    </a>
-                );
-            }
-            return <span>{elems}</span>;
-        } else {
-            return (
-                <span>{`This combined study contains samples from ${this.props.studies.length} studies`}</span>
-            );
-        }
+        return (
+            <span>
+                {
+                    'Contains summary-level data collected from multiple data sources.'
+                }
+            </span>
+        );
+
+        // if (this.props.studies.length === 1) {
+        //     let elems = [
+        //         <span
+        //             dangerouslySetInnerHTML={{
+        //                 __html: this.props.studies[0].description.split(
+        //                     /\n+/g
+        //                 )[0],
+        //             }}
+        //         />,
+        //     ];
+        //     if (this.props.studies[0].pmid) {
+        //         elems.push(
+        //             <a
+        //                 target="_blank"
+        //                 href={getNCBIlink(
+        //                     `/pubmed/${this.props.studies[0].pmid}`
+        //                 )}
+        //                 style={{ marginLeft: '5px' }}
+        //             >
+        //                 PubMed
+        //             </a>
+        //         );
+        //     }
+        //     return <span>{elems}</span>;
+        // } else {
+        //     return (
+        //         <span>{`This combined study contains samples from ${this.props.studies.length} studies`}</span>
+        //     );
+        // }
     }
 
     @computed
@@ -121,11 +127,7 @@ export default class StudySummary extends React.Component<
 
     @computed
     get showDownload() {
-        return (
-            this.props.hasRawDataForDownload &&
-            getServerConfig().skin_hide_download_controls ===
-                DownloadControlOption.SHOW_ALL
-        );
+        return false;
     }
 
     render() {

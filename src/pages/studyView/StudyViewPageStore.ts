@@ -396,6 +396,7 @@ export enum StudyViewPageTabDescriptions {
     HEATMAPS = 'Heatmaps',
     CN_SEGMENTS = 'CN Segments',
     PLOTS = 'Plots',
+    DASHBOARD = 'Dashboard',
 }
 
 const DEFAULT_CHART_NAME = 'Custom Data';

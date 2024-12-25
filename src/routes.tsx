@@ -120,6 +120,7 @@ import {
 import { MapValues } from 'shared/lib/TypeScriptUtils';
 import { ResultsViewURLQuery } from 'pages/resultsView/ResultsViewURLWrapper';
 import { EnumDeclaration, EnumType } from 'typescript';
+import DashboardPage from 'pages/studyView/DashboardPage';
 
 function SuspenseWrapper(Component: any) {
     return (props: any) => (
@@ -400,6 +401,15 @@ export const makeRoutes = () => {
                     component={ScrollToTop(
                         LocationValidationWrapper(
                             StudyViewPage,
+                            tabParamValidator(StudyViewPageTabKeyEnum)
+                        )
+                    )}
+                />
+                <Route
+                    path={'/dash/:tab?'}
+                    component={ScrollToTop(
+                        LocationValidationWrapper(
+                            DashboardPage,
                             tabParamValidator(StudyViewPageTabKeyEnum)
                         )
                     )}

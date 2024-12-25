@@ -153,7 +153,7 @@ export default class ActionButtons extends React.Component<
     render() {
         return (
             <div className={classNames(styles.actionButtons, 'btn-group')}>
-                {this.showVirtualStudiesDialog && (
+                {/* {this.showVirtualStudiesDialog && (
                     <VirtualStudyModal
                         appStore={this.props.appStore}
                         pageStore={this.props.store}
@@ -180,7 +180,7 @@ export default class ActionButtons extends React.Component<
                     >
                         <i className="fa fa-bookmark"></i>
                     </button>
-                </DefaultTooltip>
+                </DefaultTooltip> */}
             </div>
         );
     }
