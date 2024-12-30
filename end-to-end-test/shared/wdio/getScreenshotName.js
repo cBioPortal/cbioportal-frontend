@@ -8,11 +8,15 @@ module.exports = function getScreenshotName(basePath, browserName) {
         var browserWidth = browserViewport.width;
         var browserHeight = browserViewport.height;
 
+        // regular expression that matches invalid path characters for some systems (such as Windows)
+        var invalidChars = /[<>:"\/\\|?*]/g;
+
         return path.join(
             basePath,
             `${testName}_element_chrome_1600x1000.png`
                 .toLowerCase()
                 .replace(/ /g, '_')
+                .replace(invalidChars, '_')
         );
     };
 };
