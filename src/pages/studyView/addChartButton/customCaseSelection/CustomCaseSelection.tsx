@@ -167,7 +167,6 @@ export default class CustomCaseSelection extends React.Component<
 
         // Assign normalized content and trigger validation
         this.validContent = normalizedContent;
-        // this.validContent = newContent;
         this.validateContent = true;
     }
 
