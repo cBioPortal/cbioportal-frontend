@@ -208,36 +208,6 @@ set +o allexport
 ./scripts/e2e-localdb.sh
 ```
 
-3. Install dev dependencies:
-```bash
-cd end-to-end-test
-yarn
-```
-5. In a second terminal at project root, spinup the backend (api) instance:
-
-```
-// if you are running for first time, you will need to build the docker containers.
-// Answer yes when it prompts you to do so. This will take at least 20 minutes depending
-// on your system speed.
-// Once you have done this, you can answer no on subsequent attempts
-
-yarn run e2e:spinup
-```
-
-6. When backend instance is operational, you can run tests. Upon executing
-the command below, a browser should open and you should see your tests execute.
-
-```
-//grep accepts fragments of file name, 
-//but you MUST using trailing *
-//you need only match the file name, not path
-
-yarn run e2e:local --grep=some.spec*   
-
-```
-
-
-
 ### Running e2e-localdb tests _CircleCI_ or _CircleCI+PR_ context
 E2e-tests on _CircleCI_ and _CircleCI+PR_ context are triggered via _hooks_ configured on GitHub. Configuration of hooks falls beyond the scope of this manual.
 
