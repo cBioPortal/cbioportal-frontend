@@ -199,7 +199,6 @@ In a terminal, export the necessary environment variables and run the script.
 
 ```
 set -o allexport
-export BRANCH_ENV=custom
 export SEED=/path/to/database-seed.sql.gz
 export SCHEMA=/path/to/schema.sql
 export STUDIES=/path/to/studies-dir
