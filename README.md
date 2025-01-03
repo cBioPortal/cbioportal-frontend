@@ -184,7 +184,7 @@ A custom frontend can be tested against any backend in the web browser using a l
 ## Run of `localdb` e2e-tests
 To enable e2e-tests on for features that depend on data that are not included in studies served by the public cBioPortal instance, cbioportal-frontend provides the `e2e local database` (refered to as _e2e-localdb_ or _local e2e_ in this text) facility that allows developers to load custom studies in any backend version used for e2e-tests. CircleCI runs the `e2e-localdb` tests as a separate job.
 
-Files for the local database e2e-tests are located in the `./end-to-end-test/local` directory of cbioportal-frontend. The directory structure of `./end-to-end-test/local` is comparable to that of the `./end-to-end-test/remote` directory used for e2e-tests against remote public cBioPortal instances.
+The script that can be used to run e2e-localdb tests is located at [./scripts/e2e-localdb.sh](./scripts/e2e-localdb.sh).
 
 ### Running `localdb` e2e-tests for development
 
@@ -195,44 +195,18 @@ Files for the local database e2e-tests are located in the `./end-to-end-test/loc
 
 3. You need to have a global version of Maven installed.
 
-In a terminal, start the frontend dev server
+In a terminal, export the necessary environment variables and run the script.
 
 ```
-export BRANCH_ENV=custom
-yarn install --frozen-lockfile // only necessary first time
-yarn buildDLL:dev // only necessary first tiem
-yarn start
+set -o allexport
+export SEED=/path/to/database-seed.sql.gz
+export SCHEMA=/path/to/schema.sql
+export STUDIES=/path/to/studies-dir
+export FRONTEND_SRC=/path/to/cbioportal-frontend
+set +o allexport
+
+./scripts/e2e-localdb.sh
 ```
-
-3. Install dev dependencies:
-```bash
-cd end-to-end-test
-yarn
-```
-5. In a second terminal at project root, spinup the backend (api) instance:
-
-```
-// if you are running for first time, you will need to build the docker containers.
-// Answer yes when it prompts you to do so. This will take at least 20 minutes depending
-// on your system speed.
-// Once you have done this, you can answer no on subsequent attempts
-
-yarn run e2e:spinup
-```
-
-6. When backend instance is operational, you can run tests. Upon executing
-the command below, a browser should open and you should see your tests execute.
-
-```
-//grep accepts fragments of file name, 
-//but you MUST using trailing *
-//you need only match the file name, not path
-
-yarn run e2e:local --grep=some.spec*   
-
-```
-
-
 
 ### Running e2e-localdb tests _CircleCI_ or _CircleCI+PR_ context
 E2e-tests on _CircleCI_ and _CircleCI+PR_ context are triggered via _hooks_ configured on GitHub. Configuration of hooks falls beyond the scope of this manual.
