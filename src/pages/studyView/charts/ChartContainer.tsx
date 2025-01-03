@@ -20,6 +20,7 @@ import SurvivalChart, {
 } from '../../resultsView/survival/SurvivalChart';
 
 import BarChart from './barChart/BarChart';
+import CategoryBarChart from './categoryBarChart/CategoryBarChart';
 import {
     ChartMeta,
     ChartType,
@@ -198,6 +199,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     @observable chartType: ChartType;
 
     @observable newlyAdded = false;
+    @observable chartChanged = false;
     @observable private selectedRowsKeys: string[] = [];
 
     @observable alertContent: JSX.Element | string | null = null;
@@ -300,9 +302,14 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             },
             onChangeChartType: (newChartType: ChartType) => {
                 this.mouseInChart = false;
+                this.chartChanged = true;
                 this.props.onChangeChartType(
                     this.props.chartMeta,
                     newChartType
+                );
+                setTimeout(
+                    () => (this.chartChanged = false),
+                    STUDY_VIEW_CONFIG.thresholds.chartHighlight
                 );
             },
             onDeleteChart: () => {
@@ -359,11 +366,19 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 };
                 break;
             case ChartTypeEnum.PIE_CHART: {
-                controls = { showTableIcon: true };
+                controls = { showChartChangeOptions: true };
                 break;
             }
             case ChartTypeEnum.TABLE: {
-                controls = { showPieIcon: true };
+                controls = { showChartChangeOptions: true };
+                break;
+            }
+            case ChartTypeEnum.BAR_CATEGORICAL_CHART: {
+                controls = {
+                    showChartChangeOptions: true,
+                    showNAToggle: this.props.showNAToggle,
+                    isShowNAChecked: this.props.isShowNAChecked,
+                };
                 break;
             }
             case ChartTypeEnum.SURVIVAL: {
@@ -414,6 +429,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             switch (this.props.chartType) {
                 case ChartTypeEnum.PIE_CHART:
                 case ChartTypeEnum.TABLE:
+                case ChartTypeEnum.BAR_CATEGORICAL_CHART:
                     this.props.store.openComparisonPage(this.props.chartMeta, {
                         clinicalAttributeValues: this.props.promise
                             .result! as ClinicalDataCountSummary[],
@@ -549,6 +565,27 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             case ChartTypeEnum.BAR_CHART: {
                 return () => (
                     <BarChart
+                        width={getWidthByDimension(
+                            this.props.dimension,
+                            this.borderWidth
+                        )}
+                        height={getHeightByDimension(
+                            this.props.dimension,
+                            this.chartHeaderHeight
+                        )}
+                        ref={this.handlers.ref}
+                        onUserSelection={this.handlers.onDataBinSelection}
+                        filters={this.props.filters}
+                        data={this.props.promise.result}
+                        showNAChecked={this.props.store.isShowNAChecked(
+                            this.props.chartMeta.uniqueKey
+                        )}
+                    />
+                );
+            }
+            case ChartTypeEnum.BAR_CATEGORICAL_CHART: {
+                return () => (
+                    <CategoryBarChart
                         width={getWidthByDimension(
                             this.props.dimension,
                             this.borderWidth
@@ -1437,7 +1474,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
 
     @computed
     get highlightChart() {
-        return this.newlyAdded;
+        return this.newlyAdded || this.chartChanged;
     }
 
     @action.bound
