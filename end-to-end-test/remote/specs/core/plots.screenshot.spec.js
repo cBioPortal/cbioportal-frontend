@@ -486,6 +486,13 @@ describe('plots tab screenshot tests', function() {
 
         await waitForAndCheckPlotsTab();
     });
+    it('plots tab box plot log scale zero', async () => {
+        await goToUrlAndSetLocalStorage(
+            `${CBIOPORTAL_URL}/results/plots?cancer_study_list=msk_spectrum_tme_2022&tab_index=tab_visualize&case_set_id=msk_spectrum_tme_2022_all&Action=Submit&gene_list=EGFR&plots_horz_selection=%7B"dataType"%3A"clinical_attribute"%2C"selectedDataSourceOption"%3A"METASTATIC_SITE"%2C"selectedGeneOption"%3A1956%2C"selectedGenericAssayOption"%3A"T_cell"%2C"mutationCountBy"%3A"MutationType"%2C"logScale"%3A"false"%7D&plots_vert_selection=%7B"selectedGeneOption"%3A1956%2C"dataType"%3A"SINGLE_CELL_RELATIVE_CELL_TYPE_COUNTS"%2C"logScale"%3A"true"%2C"selectedDataSourceOption"%3A"cell_type_relative_counts"%2C"mutationCountBy"%3A"MutationType"%2C"selectedGenericAssayOption"%3A"T_cell"%7D&plots_coloring_selection=%7B"selectedOption"%3A"-10000_undefined"%7D`
+        );
+
+        await waitForAndCheckPlotsTab();
+    });
 });
 
 describe('plots tab multiple studies screenshot tests', () => {
