@@ -61,9 +61,14 @@ export type StudyViewFrontEndConfig = {
 
 export type StudyViewConfig = StudyView & StudyViewFrontEndConfig;
 
+export type ChangeChartOptionsMap = {
+    [chartType in ChartTypeEnum]?: ChartType[];
+};
+
 export enum ChartTypeEnum {
     PIE_CHART = 'PIE_CHART',
     BAR_CHART = 'BAR_CHART',
+    LINE_CHART = 'LINE_CHART',
     SURVIVAL = 'SURVIVAL',
     TABLE = 'TABLE',
     SCATTER = 'SCATTER',
@@ -88,6 +93,7 @@ export enum ChartTypeEnum {
 export enum ChartTypeNameEnum {
     PIE_CHART = 'pie chart',
     BAR_CHART = 'bar chart',
+    LINE_CHART = 'line chart',
     SURVIVAL = 'survival plot',
     TABLE = 'table',
     SCATTER = 'density plot',
@@ -183,6 +189,10 @@ const studyViewFrontEnd = {
                 h: 1,
             },
             [ChartTypeEnum.BAR_CHART]: {
+                w: 2,
+                h: 1,
+            },
+            [ChartTypeEnum.LINE_CHART]: {
                 w: 2,
                 h: 1,
             },
@@ -312,3 +322,8 @@ export const STUDY_VIEW_CONFIG: StudyViewConfig = _.assign(
     studyViewFrontEnd,
     (getServerConfig() || {}).study_view
 );
+
+export const chartChangeOptionsMap: ChangeChartOptionsMap = {
+    [ChartTypeEnum.LINE_CHART]: [ChartTypeEnum.BAR_CHART],
+    [ChartTypeEnum.BAR_CHART]: [ChartTypeEnum.LINE_CHART],
+};
