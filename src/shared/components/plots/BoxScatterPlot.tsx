@@ -563,7 +563,7 @@ export default class BoxScatterPlot<
                 }}
                 orientation="bottom"
                 offsetY={50}
-                domain={this.props.horizontal && this.plotDomain.x}
+                domain={this.plotDomain.x}
                 crossAxis={false}
                 label={this.props.axisLabelX}
                 tickValues={
@@ -633,7 +633,7 @@ export default class BoxScatterPlot<
             <VictoryAxis
                 orientation="left"
                 offsetX={50}
-                domain={!this.props.horizontal && this.plotDomain.y}
+                domain={this.plotDomain.y}
                 crossAxis={false}
                 label={this.yAxisLabel}
                 dependentAxis={true}
