@@ -411,37 +411,37 @@ describe('plots tab screenshot tests', function() {
         await waitForAndCheckPlotsTab();
     });
 
-    it('plots tab scatter plot color by tumor type', async () => {
+    it('plots tab scatter plot color by cancer type', async () => {
         await goToUrlAndSetLocalStorage(
-            `${CBIOPORTAL_URL}/results/plots?Action=Submit&plots_coloring_selection=%7B"selectedOption"%3A"undefined_%7B%5C"clinicalAttributeId%5C"%3A%5C"TUMOR_TYPE%5C"%2C%5C"patientAttribute%5C"%3Afalse%2C%5C"studyId%5C"%3A%5C"ccle_broad_2019%5C"%7D"%7D&plots_horz_selection=%7B"dataType"%3A"MRNA_EXPRESSION"%2C"selectedGeneOption"%3A672%2C"mutationCountBy"%3A"MutationType"%2C"logScale"%3A"false"%7D&plots_vert_selection=%7B"selectedGeneOption"%3A672%2C"dataType"%3A"TREATMENT_RESPONSE"%2C"selectedGenericAssayOption"%3A"Afatinib-1"%2C"selectedDataSourceOption"%3A"CCLE_drug_treatment_AUC"%2C"mutationCountBy"%3A"MutationType"%2C"logScale"%3A"false"%7D&session_id=5ed80b90e4b030a3bfd0c662&tab_index=tab_visualize`
+            `${CBIOPORTAL_URL}/results/plots?Action=Submit&plots_coloring_selection=%7B"selectedOption"%3A"undefined_%7B%5C"clinicalAttributeId%5C"%3A%5C"CANCER_TYPE%5C"%2C%5C"patientAttribute%5C"%3Afalse%2C%5C"studyId%5C"%3A%5C"ccle_broad_2019%5C"%7D"%7D&plots_horz_selection=%7B"dataType"%3A"MRNA_EXPRESSION"%2C"selectedGeneOption"%3A672%2C"mutationCountBy"%3A"MutationType"%2C"logScale"%3A"false"%7D&plots_vert_selection=%7B"selectedGeneOption"%3A672%2C"dataType"%3A"TREATMENT_RESPONSE"%2C"selectedGenericAssayOption"%3A"Afatinib-1"%2C"selectedDataSourceOption"%3A"CCLE_drug_treatment_AUC"%2C"mutationCountBy"%3A"MutationType"%2C"logScale"%3A"false"%7D&session_id=5ed80b90e4b030a3bfd0c662&tab_index=tab_visualize`
         );
         await waitForAndCheckPlotsTab();
     });
-    it('plots tab scatter plot color by tumor type highlight categories', async () => {
+    it('plots tab scatter plot color by cancer type highlight categories', async () => {
         await clickElement(`svg#plots-tab-plot-svg .legendLabel_breast`);
         await clickElement(`svg#plots-tab-plot-svg .legendLabel_glioma`);
         await waitForAndCheckPlotsTab();
     });
 
-    it('plots tab box plot color by tumor type', async () => {
+    it('plots tab box plot color by cancer type', async () => {
         await goToUrlAndSetLocalStorage(
-            `${CBIOPORTAL_URL}/results/plots?Action=Submit&plots_coloring_selection=%7B"selectedOption"%3A"undefined_%7B%5C"clinicalAttributeId%5C"%3A%5C"TUMOR_TYPE%5C"%2C%5C"patientAttribute%5C"%3Afalse%2C%5C"studyId%5C"%3A%5C"ccle_broad_2019%5C"%7D"%7D&plots_horz_selection=%7B"dataType"%3A"MRNA_EXPRESSION"%2C"selectedGeneOption"%3A672%2C"mutationCountBy"%3A"MutationType"%2C"logScale"%3A"false"%7D&plots_vert_selection=%7B"selectedGeneOption"%3A672%2C"dataType"%3A"MUTATION_EXTENDED"%2C"selectedGenericAssayOption"%3A"Afatinib-1"%2C"mutationCountBy"%3A"MutationType"%2C"logScale"%3A"false"%7D&session_id=5ed80b90e4b030a3bfd0c662&tab_index=tab_visualize`
+            `${CBIOPORTAL_URL}/results/plots?Action=Submit&plots_coloring_selection=%7B"selectedOption"%3A"undefined_%7B%5C"clinicalAttributeId%5C"%3A%5C"CANCER_TYPE%5C"%2C%5C"patientAttribute%5C"%3Afalse%2C%5C"studyId%5C"%3A%5C"ccle_broad_2019%5C"%7D"%7D&plots_horz_selection=%7B"dataType"%3A"MRNA_EXPRESSION"%2C"selectedGeneOption"%3A672%2C"mutationCountBy"%3A"MutationType"%2C"logScale"%3A"false"%7D&plots_vert_selection=%7B"selectedGeneOption"%3A672%2C"dataType"%3A"MUTATION_EXTENDED"%2C"selectedGenericAssayOption"%3A"Afatinib-1"%2C"mutationCountBy"%3A"MutationType"%2C"logScale"%3A"false"%7D&session_id=5ed80b90e4b030a3bfd0c662&tab_index=tab_visualize`
         );
         await waitForAndCheckPlotsTab();
     });
-    it('plots tab box plot color by tumor type highlight categories', async () => {
+    it('plots tab box plot color by cancer type highlight categories', async () => {
         await clickElement(`svg#plots-tab-plot-svg .legendLabel_breast`);
         await clickElement(`svg#plots-tab-plot-svg .legendLabel_glioma`);
         await waitForAndCheckPlotsTab();
     });
 
-    it('plots tab waterfall plot color by tumor type', async () => {
+    it('plots tab waterfall plot cancer by tumor type', async () => {
         await goToUrlAndSetLocalStorage(
-            `${CBIOPORTAL_URL}/results/plots?Action=Submit&plots_coloring_selection=%7B"selectedOption"%3A"undefined_%7B%5C"clinicalAttributeId%5C"%3A%5C"TUMOR_TYPE%5C"%2C%5C"patientAttribute%5C"%3Afalse%2C%5C"studyId%5C"%3A%5C"ccle_broad_2019%5C"%7D"%7D&plots_horz_selection=%7B"dataType"%3A"none"%2C"selectedGeneOption"%3A672%2C"mutationCountBy"%3A"MutationType"%2C"logScale"%3A"false"%7D&plots_vert_selection=%7B"selectedGeneOption"%3A672%2C"dataType"%3A"TREATMENT_RESPONSE"%2C"selectedGenericAssayOption"%3A"Afatinib-1"%2C"mutationCountBy"%3A"MutationType"%2C"logScale"%3A"false"%7D&session_id=5ed80b90e4b030a3bfd0c662&tab_index=tab_visualize`
+            `${CBIOPORTAL_URL}/results/plots?Action=Submit&plots_coloring_selection=%7B"selectedOption"%3A"undefined_%7B%5C"clinicalAttributeId%5C"%3A%5C"CANCER_TYPE%5C"%2C%5C"patientAttribute%5C"%3Afalse%2C%5C"studyId%5C"%3A%5C"ccle_broad_2019%5C"%7D"%7D&plots_horz_selection=%7B"dataType"%3A"none"%2C"selectedGeneOption"%3A672%2C"mutationCountBy"%3A"MutationType"%2C"logScale"%3A"false"%7D&plots_vert_selection=%7B"selectedGeneOption"%3A672%2C"dataType"%3A"TREATMENT_RESPONSE"%2C"selectedGenericAssayOption"%3A"Afatinib-1"%2C"mutationCountBy"%3A"MutationType"%2C"logScale"%3A"false"%7D&session_id=5ed80b90e4b030a3bfd0c662&tab_index=tab_visualize`
         );
         await waitForAndCheckPlotsTab();
     });
-    it('plots tab waterfall plot color by tumor type highlight categories', async () => {
+    it('plots tab waterfall plot color by cancer type highlight categories', async () => {
         await clickElement(`svg#plots-tab-plot-svg .legendLabel_breast`);
         await clickElement(`svg#plots-tab-plot-svg .legendLabel_glioma`);
         await waitForAndCheckPlotsTab();
