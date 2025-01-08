@@ -1,119 +1,129 @@
-var goToUrlAndSetLocalStorage = require('../../shared/specUtils')
-    .goToUrlAndSetLocalStorage;
-var assertScreenShotMatch = require('../../shared/lib/testUtils')
-    .assertScreenShotMatch;
-var waitForStudyQueryPage = require('../../shared/specUtils')
-    .waitForStudyQueryPage;
-var waitForOncoprint = require('../../shared/specUtils').waitForOncoprint;
-var waitForPlotsTab = require('../../shared/specUtils').waitForPlotsTab;
-var waitForCoExpressionTab = require('../../shared/specUtils')
-    .waitForCoExpressionTab;
-var checkTestStudy = require('./gsva.spec').checkTestStudy;
-var checkGSVAprofile = require('./gsva.spec').checkGSVAprofile;
-var queryPageUrl = require('./gsva.spec').queryPageUrl;
-var plotsTabUrl = require('./gsva.spec').plotsTabUrl;
-var oncoprintTabUrl = require('./gsva.spec').oncoprintTabUrl;
-var coexpressionTabUrl = require('./gsva.spec').coexpressionTabUrl;
-var selectReactSelectOption = require('../../shared/specUtils')
-    .selectReactSelectOption;
-var showGsva = require('../../shared/specUtils').showGsva;
-var getNthOncoprintTrackOptionsElements = require('../../shared/specUtils')
-    .getNthOncoprintTrackOptionsElements;
-var waitForOncoprint = require('../../shared/specUtils').waitForOncoprint;
-var { setDropdownOpen } = require('../../shared/specUtils.js');
-const { checkOncoprintElement } = require('../../shared/specUtils');
+const {
+    goToUrlAndSetLocalStorage,
+    waitForStudyQueryPage,
+    waitForOncoprint,
+    waitForPlotsTab,
+    waitForCoExpressionTab,
+    selectReactSelectOption,
+    showGsva,
+    getNthOncoprintTrackOptionsElements,
+    setDropdownOpen,
+    checkOncoprintElement,
+    clickElement,
+    getElement,
+    waitForElementDisplayed,
+} = require('../../shared/specUtils_Async.js');
+const { assertScreenShotMatch } = require('../../shared/lib/testUtils');
+const {
+    checkTestStudy,
+    coexpressionTabUrl,
+    queryPageUrl,
+    plotsTabUrl,
+    oncoprintTabUrl,
+    checkGSVAprofile,
+} = require('./gsva.spec');
 
 describe('gsva feature', () => {
     describe('GenesetVolcanoPlotSelector', () => {
-        beforeEach(() => {
-            goToUrlAndSetLocalStorage(queryPageUrl, true);
-            showGsva();
-            waitForStudyQueryPage(20000);
-            checkTestStudy();
-            checkGSVAprofile();
-            $('button[data-test=GENESET_VOLCANO_BUTTON]').click();
-            $('div.modal-dialog').waitForExist();
+        beforeEach(async () => {
+            await goToUrlAndSetLocalStorage(queryPageUrl, true);
+            await showGsva();
+            await waitForStudyQueryPage(20000);
+            await checkTestStudy();
+            await checkGSVAprofile();
+            await clickElement('button[data-test=GENESET_VOLCANO_BUTTON]');
+            await (await getElement('div.modal-dialog')).waitForExist();
         });
 
-        it('shows volcano plot for gene sets selection', () => {
-            var res = browser.checkElement('div.VictoryContainer');
+        it('shows volcano plot for gene sets selection', async () => {
+            const res = await browser.checkElement('div.VictoryContainer');
             assertScreenShotMatch(res);
         });
 
-        it('updates volcano plot after change of `percentile of score calculation`', () => {
-            var modal = $('div.modal-body');
-            modal.$('.Select-value-label').waitForExist();
-            modal.$('.Select-value-label').click();
-            modal.$('.Select-option=50%').waitForExist();
-            modal.$('.Select-option=50%').click();
-            var res = browser.checkElement('div.VictoryContainer');
+        it('updates volcano plot after change of `percentile of score calculation`', async () => {
+            const modal = await getElement('div.modal-body');
+            await (await modal.$('.Select-value-label')).waitForExist();
+            await (await modal.$('.Select-value-label')).click();
+            await (await modal.$('.Select-option=50%')).waitForExist();
+            await (await modal.$('.Select-option=50%')).click();
+            const res = await browser.checkElement('div.VictoryContainer');
             assertScreenShotMatch(res);
         });
     });
 
     describe('oncoprint tab', () => {
-        beforeEach(() => {
-            goToUrlAndSetLocalStorage(oncoprintTabUrl, true);
-            waitForOncoprint();
+        beforeEach(async () => {
+            await goToUrlAndSetLocalStorage(oncoprintTabUrl, true);
+            await waitForOncoprint();
         });
 
-        it('shows GSVA heatmap track', () => {
-            var res = browser.checkElement('div[id=oncoprintDiv]');
+        it('shows GSVA heatmap track', async () => {
+            const res = await browser.checkElement('div[id=oncoprintDiv]');
             assertScreenShotMatch(res);
         });
 
-        it('expands and shows correlation genes for GO_ATP_DEPENDENT_CHROMATIN_REMODELING', () => {
-            var trackOptionsElts = getNthOncoprintTrackOptionsElements(12);
+        it('expands and shows correlation genes for GO_ATP_DEPENDENT_CHROMATIN_REMODELING', async () => {
+            const trackOptionsElts = await getNthOncoprintTrackOptionsElements(
+                12
+            );
             // open menu
-            setDropdownOpen(
+            await setDropdownOpen(
                 true,
                 trackOptionsElts.button_selector,
                 trackOptionsElts.dropdown_selector
             );
             // click Show genes
-            $(
+            await waitForElementDisplayed(
                 trackOptionsElts.dropdown_selector + ' li:nth-child(7)'
-            ).waitForDisplayed();
-            $(trackOptionsElts.dropdown_selector + ' li:nth-child(7)').click();
+            );
+            await clickElement(
+                trackOptionsElts.dropdown_selector + ' li:nth-child(7)'
+            );
 
-            waitForOncoprint();
-            var res = checkOncoprintElement('.oncoprintContainer');
+            await waitForOncoprint();
+            const res = await checkOncoprintElement('.oncoprintContainer');
             assertScreenShotMatch(res);
         });
     });
 
     describe('plots tab', () => {
-        beforeEach(() => {
-            goToUrlAndSetLocalStorage(plotsTabUrl, true);
-            waitForPlotsTab(20000);
+        beforeEach(async () => {
+            await goToUrlAndSetLocalStorage(plotsTabUrl, true);
+            await waitForPlotsTab(20000);
         });
 
-        it('shows gsva profile data on horizontal and vertical axes', () => {
-            var horzDataSelect = $('[name=h-profile-type-selector]').$('..');
-            horzDataSelect.$('.Select-arrow-zone').click();
-            horzDataSelect.$('.Select-option=Gene Sets').click();
+        it('shows gsva profile data on horizontal and vertical axes', async () => {
+            const horzDataSelect = await (
+                await getElement('[name=h-profile-type-selector]')
+            ).$('..');
+            await (await horzDataSelect.$('.Select-arrow-zone')).click();
+            await (await horzDataSelect.$('.Select-option=Gene Sets')).click();
 
-            var vertDataSelect = $('[name=v-profile-type-selector]').$('..');
-            vertDataSelect.$('.Select-arrow-zone').click();
-            vertDataSelect.$('.Select-option=Gene Sets').click();
-            var res = browser.checkElement('div[data-test="PlotsTabPlotDiv"]');
+            const vertDataSelect = await (
+                await getElement('[name=v-profile-type-selector]')
+            ).$('..');
+            await (await vertDataSelect.$('.Select-arrow-zone')).click();
+            await (await vertDataSelect.$('.Select-option=Gene Sets')).click();
+            const res = await browser.checkElement(
+                'div[data-test="PlotsTabPlotDiv"]'
+            );
             assertScreenShotMatch(res);
         });
     });
 
     describe('co-expression tab', () => {
-        beforeEach(() => {
-            goToUrlAndSetLocalStorage(coexpressionTabUrl, true);
-            waitForCoExpressionTab(20000);
+        beforeEach(async () => {
+            await goToUrlAndSetLocalStorage(coexpressionTabUrl, true);
+            await waitForCoExpressionTab(20000);
         });
 
-        it('shows GSVA scores in scatterplot', () => {
-            selectReactSelectOption(
-                $('.coexpression-select-query-profile'),
+        it('shows GSVA scores in scatterplot', async () => {
+            await selectReactSelectOption(
+                await getElement('.coexpression-select-query-profile'),
                 'GSVA scores on oncogenic signatures gene sets (5 samples)'
             );
-            $('#coexpressionTabGeneTabs').waitForExist();
-            var res = browser.checkElement('#coexpression-plot-svg');
+            await (await getElement('#coexpressionTabGeneTabs')).waitForExist();
+            const res = await browser.checkElement('#coexpression-plot-svg');
             assertScreenShotMatch(res);
         });
     });
