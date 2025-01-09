@@ -628,93 +628,6 @@
         "operationId": "fetchCNAGenesUsingPOST"
       }
     },
-    "/api/column-store/treatments/patient-counts/fetch": {
-      "post": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "default": "Agent",
-            "enum": [
-              "Agent",
-              "AgentClass",
-              "AgentTarget"
-            ],
-            "in": "query",
-            "name": "tier",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "in": "body",
-            "name": "studyViewFilter",
-            "schema": {
-              "$ref": "#/definitions/StudyViewFilter"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/PatientTreatmentReport"
-            }
-          }
-        },
-        "tags": [
-          "study-view-column-store-controller"
-        ],
-        "description": "Get all patient level treatments",
-        "operationId": "fetchPatientTreatmentCountsUsingPOST"
-      }
-    },
-    "/api/column-store/treatments/sample-counts/fetch": {
-      "post": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "default": "Agent",
-            "enum": [
-              "Agent",
-              "AgentClass",
-              "AgentTarget"
-            ],
-            "in": "query",
-            "name": "tier",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "in": "body",
-            "name": "studyViewFilter",
-            "schema": {
-              "$ref": "#/definitions/StudyViewFilter"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/SampleTreatmentReport"
-            }
-          }
-        },
-        "tags": [
-          "study-view-column-store-controller"
-        ],
-        "operationId": "fetchSampleTreatmentCountsUsingPOST"
-      }
-    },
     "/api/cosmic-counts/fetch": {
       "post": {
         "consumes": [
@@ -5791,41 +5704,10 @@
       },
       "type": "object"
     },
-    "PatientTreatment": {
-      "properties": {
-        "count": {
-          "format": "int32",
-          "type": "integer"
-        },
-        "treatment": {
-          "type": "string"
-        }
-      },
-      "type": "object"
-    },
     "PatientTreatmentFilter": {
       "properties": {
         "treatment": {
           "type": "string"
-        }
-      },
-      "type": "object"
-    },
-    "PatientTreatmentReport": {
-      "properties": {
-        "patientTreatments": {
-          "items": {
-            "$ref": "#/definitions/PatientTreatment"
-          },
-          "type": "array"
-        },
-        "totalPatients": {
-          "format": "int32",
-          "type": "integer"
-        },
-        "totalSamples": {
-          "format": "int32",
-          "type": "integer"
         }
       },
       "type": "object"
@@ -6044,21 +5926,6 @@
         },
         "treatment": {
           "type": "string"
-        }
-      },
-      "type": "object"
-    },
-    "SampleTreatmentReport": {
-      "properties": {
-        "totalSamples": {
-          "format": "int32",
-          "type": "integer"
-        },
-        "treatments": {
-          "items": {
-            "$ref": "#/definitions/SampleTreatmentRow"
-          },
-          "type": "array"
         }
       },
       "type": "object"
