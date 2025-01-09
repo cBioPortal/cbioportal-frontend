@@ -35,6 +35,7 @@ describe('Custom Bins menu in study view chart header', function() {
         selectMenuOption('label=Median split');
         clickUpdate();
         $('body').moveTo();
+        browser.pause(2000);
         const res = checkElementWithMouseDisabled(MUTATION_COUNT_CHART);
         assertScreenShotMatch(res);
     });
