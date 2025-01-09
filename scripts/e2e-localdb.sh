@@ -9,18 +9,19 @@ TEMP_DIR=$(mktemp -d)
 git clone "$TEST_REPO_URL" "$TEMP_DIR/cbioportal-test" || exit 1
 cd "$TEMP_DIR/cbioportal-test" || exit 1
 
+# Use database image with preloaded studies
+set -o allexport
+export DOCKER_IMAGE_MYSQL=cbioportal/cbioportal-dev:database
+
 # Start backend
 ./scripts/docker-compose.sh --portal_type='web-and-data' --docker_args='-d'
 
 # Wait for backend at localhost:8080
 ./utils/check-connection.sh --url=localhost:8080 --max_retries=50
 
-# Import studies into backend
-./scripts/import-data.sh --seed="$SEED" --schema="$SCHEMA" --studies="$STUDIES"
-
 # Build frontend
 printf "\nBuilding frontend ...\n\n"
-cd "$FRONTEND_SRC" || exit 1
+cd "$ROOT_DIR" || exit 1
 export BRANCH_ENV=master
 yarn install --frozen-lockfile
 yarn run buildAll
@@ -38,11 +39,11 @@ cd "$TEMP_DIR/cbioportal-test" || exit 1
 ./utils/check-connection.sh --url=localhost:3000
 
 # Build e2e localdb tests
-cd "$FRONTEND_SRC/end-to-end-test" || exit 1
+cd "$ROOT_DIR/end-to-end-test" || exit 1
 yarn --ignore-engines
 
 # Run e2e localdb tests
-cd "$FRONTEND_SRC" || exit 1
+cd "$ROOT_DIR" || exit 1
 yarn run e2e:local
 
 # Cleanup

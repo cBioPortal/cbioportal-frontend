@@ -195,16 +195,9 @@ The script that can be used to run e2e-localdb tests is located at [./scripts/e2
 
 3. You need to have a global version of Maven installed.
 
-In a terminal, export the necessary environment variables and run the script.
+In a terminal, call script from root directory.
 
 ```
-set -o allexport
-export SEED=/path/to/database-seed.sql.gz
-export SCHEMA=/path/to/schema.sql
-export STUDIES=/path/to/studies-dir
-export FRONTEND_SRC=/path/to/cbioportal-frontend
-set +o allexport
-
 ./scripts/e2e-localdb.sh
 ```
 
