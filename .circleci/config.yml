@@ -513,7 +513,7 @@ workflows:
             - checkout_pr
       - e2e_localdb_tests:
           requires:
-            - pull_test_codebase
+            - pull_cbioportal_test_codebase
             - build_frontend
 
   nightly:
