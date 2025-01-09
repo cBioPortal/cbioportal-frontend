@@ -10520,11 +10520,12 @@ export class StudyViewPageStore
     }
     // a row represents a list of patients that either have or have not recieved
     // a specific treatment
-    public readonly sampleTreatments = remoteData({
+    public readonly sampleTreatments = remoteData<SampleTreatmentReport>({
         await: () => [this.shouldDisplaySampleTreatments],
         invoke: async () => {
             if (this.shouldDisplaySampleTreatments.result) {
                 if (isClickhouseMode()) {
+                    // @ts-ignore (will be available when go live with Clickhouse for all portals)
                     return await this.internalClient.fetchSampleTreatmentCountsUsingPOST(
                         {
                             studyViewFilter: this.filters,
@@ -10564,11 +10565,12 @@ export class StudyViewPageStore
 
     // a row represents a list of samples that ether have or have not recieved
     // a specific treatment
-    public readonly patientTreatments = remoteData({
+    public readonly patientTreatments = remoteData<PatientTreatmentReport>({
         await: () => [this.shouldDisplayPatientTreatments],
         invoke: async () => {
             if (this.shouldDisplayPatientTreatments.result) {
                 if (isClickhouseMode()) {
+                    // @ts-ignore (will be available when go live with Clickhouse for all portals)
                     return await this.internalClient.fetchPatientTreatmentCountsUsingPOST(
                         {
                             studyViewFilter: this.filters,
@@ -10629,28 +10631,31 @@ export class StudyViewPageStore
 
     // a row represents a list of samples that ether have or have not recieved
     // a specific treatment
-    public readonly patientTreatmentGroups = remoteData({
-        await: () => [this.shouldDisplayPatientTreatmentGroups],
-        invoke: () => {
-            if (this.shouldDisplayPatientTreatmentGroups.result) {
-                if (isClickhouseMode()) {
-                    return this.internalClient.fetchPatientTreatmentCountsUsingPOST(
-                        {
-                            studyViewFilter: this.filters,
-                            tier: 'AgentClass',
-                        }
-                    );
-                } else {
-                    return getPatientTreatmentReport(
-                        this.filters,
-                        'AgentClass',
-                        this.internalClient
-                    );
+    public readonly patientTreatmentGroups = remoteData<PatientTreatmentReport>(
+        {
+            await: () => [this.shouldDisplayPatientTreatmentGroups],
+            invoke: () => {
+                if (this.shouldDisplayPatientTreatmentGroups.result) {
+                    if (isClickhouseMode()) {
+                        // @ts-ignore (will be available when go live with Clickhouse for all portals)
+                        return this.internalClient.fetchPatientTreatmentCountsUsingPOST(
+                            {
+                                studyViewFilter: this.filters,
+                                tier: 'AgentClass',
+                            }
+                        );
+                    } else {
+                        return getPatientTreatmentReport(
+                            this.filters,
+                            'AgentClass',
+                            this.internalClient
+                        );
+                    }
                 }
-            }
-            return Promise.resolve(undefined);
-        },
-    });
+                return Promise.resolve(undefined);
+            },
+        }
+    );
 
     public readonly sampleTreatmentTarget = remoteData({
         await: () => [this.shouldDisplaySampleTreatmentTarget],
@@ -10701,26 +10706,29 @@ export class StudyViewPageStore
 
     // a row represents a list of samples that ether have or have not recieved
     // a specific treatment
-    public readonly patientTreatmentTarget = remoteData({
-        await: () => [this.shouldDisplayPatientTreatmentTarget],
-        invoke: async () => {
-            if (isClickhouseMode()) {
-                return await this.internalClient.fetchPatientTreatmentCountsUsingPOST(
-                    {
-                        studyViewFilter: this.filters,
-                        tier: 'AgentTarget',
-                    }
-                );
-            } else {
-                //we need to transform pre-clickhouse response into new SampleTreatmentReport
-                return await getPatientTreatmentReport(
-                    this.filters,
-                    'AgentTarget',
-                    this.internalClient
-                );
-            }
-        },
-    });
+    public readonly patientTreatmentTarget = remoteData<PatientTreatmentReport>(
+        {
+            await: () => [this.shouldDisplayPatientTreatmentTarget],
+            invoke: async () => {
+                if (isClickhouseMode()) {
+                    // @ts-ignore (will be available when go live with Clickhouse for all portals)
+                    return await this.internalClient.fetchPatientTreatmentCountsUsingPOST(
+                        {
+                            studyViewFilter: this.filters,
+                            tier: 'AgentTarget',
+                        }
+                    );
+                } else {
+                    //we need to transform pre-clickhouse response into new SampleTreatmentReport
+                    return await getPatientTreatmentReport(
+                        this.filters,
+                        'AgentTarget',
+                        this.internalClient
+                    );
+                }
+            },
+        }
+    );
 
     @action.bound
     public onTreatmentSelection(meta: ChartMeta, values: string[][]): void {
