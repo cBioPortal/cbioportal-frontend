@@ -3,7 +3,7 @@ import { observer } from 'mobx-react';
 import { computed, makeObservable } from 'mobx';
 import MultipleCategoryBarPlot, {
     IMultipleCategoryBarPlotProps,
-} from 'pages/groupComparison/MultipleCategoryBarPlot';
+} from 'shared/components/plots/MultipleCategoryBarPlot';
 import MultipleCategoryHeatmap from 'shared/components/plots/MultipleCategoryHeatmap';
 import autobind from 'autobind-decorator';
 import { OncoprintJS } from 'oncoprintjs';

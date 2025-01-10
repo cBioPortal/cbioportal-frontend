@@ -108,7 +108,7 @@ import {
     scatterPlotSize,
 } from '../../../shared/components/plots/PlotUtils';
 import { getTablePlotDownloadData } from '../../../shared/components/plots/TablePlotUtils';
-import MultipleCategoryBarPlot from 'pages/groupComparison/MultipleCategoryBarPlot';
+import MultipleCategoryBarPlot from 'shared/components/plots/MultipleCategoryBarPlot';
 import { RESERVED_CLINICAL_VALUE_COLORS } from 'shared/lib/Colors';
 import {
     DownloadControlOption,

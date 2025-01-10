@@ -21,13 +21,13 @@ import {
     VictoryGroup,
 } from 'victory';
 import { tickFormatNumeral } from 'cbioportal-frontend-commons';
-import { makeUniqueColorGetter } from '../../shared/components/plots/PlotUtils';
+import { makeUniqueColorGetter } from './PlotUtils';
 import {
     makePlotData,
     makeBarSpecs,
     sortDataByCategory,
     getSortedMajorCategories,
-} from '../../shared/components/plots/MultipleCategoryBarPlotUtils';
+} from './MultipleCategoryBarPlotUtils';
 import * as ReactDOM from 'react-dom';
 import { Popover } from 'react-bootstrap';
 import classnames from 'classnames';

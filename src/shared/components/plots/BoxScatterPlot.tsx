@@ -43,7 +43,7 @@ import classnames from 'classnames';
 import WindowStore from '../window/WindowStore';
 import LegendDataComponent from './LegendDataComponent';
 import LegendLabelComponent from './LegendLabelComponent';
-import { PQValueLabel } from 'pages/groupComparison/MultipleCategoryBarPlot';
+import { PQValueLabel } from 'shared/components/plots/MultipleCategoryBarPlot';
 
 export interface IBaseBoxScatterPlotPoint {
     value: number;

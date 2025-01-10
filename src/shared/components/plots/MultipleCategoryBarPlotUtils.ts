@@ -1,7 +1,7 @@
 import { IStringAxisData } from './PlotsTabUtils';
 import { SortByOptions } from './PlotsTab';
 import _ from 'lodash';
-import { IMultipleCategoryBarPlotData } from '../../../pages/groupComparison/MultipleCategoryBarPlot';
+import { IMultipleCategoryBarPlotData } from 'shared/components/plots/MultipleCategoryBarPlot';
 interface CountItem {
     majorCategory: string;
     count: number;
