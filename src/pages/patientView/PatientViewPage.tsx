@@ -277,6 +277,11 @@ export class PatientViewPageInner extends React.Component<
 
     @computed
     get shouldShowResources(): boolean {
+        const tabId: string = this.urlWrapper.activeTabId;
+        if (tabId === 'filesAndLinks') {
+            return true;
+        }
+
         if (this.pageStore.resourceIdToResourceData.isComplete) {
             return _.some(
                 this.pageStore.resourceIdToResourceData.result,
