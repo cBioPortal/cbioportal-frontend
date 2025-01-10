@@ -13,7 +13,7 @@ import {
 } from 'shared/model/PatientIdentifierFilter';
 import { Sample } from 'cbioportal-ts-api-client/dist';
 import { SampleIdentifier } from 'cbioportal-ts-api-client/dist';
-import defaultClient from 'shared/api/cbioportalClientInstance';
+import { getClient } from 'shared/api/cbioportalClientInstance';
 import {
     getClinicalEqualityFilterValuesByString,
     DataType,
@@ -35,8 +35,8 @@ export class StudyIdQueryExtractor implements StudyViewQueryExtractor<void> {
             if (!_.isEqual(studyIds, toJS(store.studyIds))) {
                 // update if different
                 store.studyIds = studyIds;
-                store.useDashboardView =
-                    studyIds.length === 1 && studyIds[0] === 'genie_public';
+                // store.useDashboardView =
+                //     studyIds.length === 1 && studyIds[0] === 'genie_public';
             }
         }
     }
@@ -141,7 +141,7 @@ export class ClinicalAttributeQueryExtractor
     ): Promise<void> {
         const filters: Partial<StudyViewFilter> = {};
         const clinicalAttributes = _.uniqBy(
-            await store.fetchClinicalAttributesUsingPOST({
+            await getClient('federated').fetchClinicalAttributesUsingPOST({
                 studyIds: store.studyIds,
             }),
             clinicalAttribute =>

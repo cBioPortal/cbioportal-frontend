@@ -19,8 +19,12 @@ import genomeNexusClient from '../shared/api/genomeNexusClientInstance';
 import internalGenomeNexusClient from '../shared/api/genomeNexusInternalClientInstance';
 import oncoKBClient from '../shared/api/oncokbClientInstance';
 import genome2StructureClient from '../shared/api/g2sClientInstance';
-import client from '../shared/api/cbioportalClientInstance';
-import internalClient from '../shared/api/cbioportalInternalClientInstance';
+import client, {
+    federatedClient,
+} from '../shared/api/cbioportalClientInstance';
+import internalClient, {
+    federatedInternalClient,
+} from '../shared/api/cbioportalInternalClientInstance';
 import $ from 'jquery';
 import { AppStore } from '../AppStore';
 import { CBioPortalAPI, CBioPortalAPIInternal } from 'cbioportal-ts-api-client';
@@ -193,7 +197,9 @@ export function pairMatchesPath(
 export function initializeAPIClients() {
     // we need to set the domain of our api clients
     (client as any).domain = getCbioPortalApiUrl();
+    (federatedClient as any).domain = getCbioPortalApiUrl();
     (internalClient as any).domain = getCbioPortalApiUrl();
+    (federatedInternalClient as any).domain = getCbioPortalApiUrl();
     (genomeNexusClient as any).domain = getGenomeNexusApiUrl();
     (internalGenomeNexusClient as any).domain = getGenomeNexusApiUrl();
     (oncoKBClient as any).domain = getOncoKbApiUrl();
