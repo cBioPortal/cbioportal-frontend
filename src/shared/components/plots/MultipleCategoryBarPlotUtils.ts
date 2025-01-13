@@ -105,7 +105,7 @@ export function sortDataByCategory<D>(
 }
 export function getSortedMajorCategories(
     data: IMultipleCategoryBarPlotData[],
-    sortByOption: string | undefined
+    sortByOption: string
 ): string[] {
     if (sortByOption === 'SortByTotalSum') {
         const majorCategoryCounts: { [key: string]: number } = {};

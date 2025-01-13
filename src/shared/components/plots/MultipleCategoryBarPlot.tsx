@@ -433,7 +433,8 @@ export default class MultipleCategoryBarPlot extends React.Component<
         if (this.data.length > 0) {
             if (
                 this.props.sortByOption === SortByOptions.SortByTotalSum ||
-                (this.props.sortByOption !== '' &&
+                (this.props.sortByOption &&
+                    this.props.sortByOption !== '' &&
                     this.props.sortByOption !== SortByOptions.Alphabetically)
             ) {
                 return getSortedMajorCategories(
@@ -947,6 +948,8 @@ export default class MultipleCategoryBarPlot extends React.Component<
     }
 
     render() {
+        console.log(this.labels);
+        console.log(this.props.sortByOption);
         if (!this.data.length) {
             return <div className={'alert alert-info'}>No data to plot.</div>;
         }
