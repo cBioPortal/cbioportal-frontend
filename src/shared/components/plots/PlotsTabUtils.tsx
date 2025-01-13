@@ -2583,11 +2583,12 @@ export function logScalePossible(
     ) {
         return true;
     } else if (
+        axisData &&
         isGenericAssaySelected(axisSelection) &&
         axisSelection.genericAssayDataType === DataTypeConstants.LIMITVALUE
     ) {
-        // Generic Assay numeric profile is log scale possible
-        return true;
+        // Check negative values in log scale
+        axisHasNegativeNumbers(axisData) ? false : true;
     } else {
         // molecular profile
         return !!(
