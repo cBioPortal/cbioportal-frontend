@@ -2588,7 +2588,7 @@ export function logScalePossible(
         axisSelection.genericAssayDataType === DataTypeConstants.LIMITVALUE
     ) {
         // Check negative values in log scale
-        axisHasNegativeNumbers(axisData) ? false : true;
+        return axisHasNegativeNumbers(axisData) ? false : true;
     } else {
         // molecular profile
         return !!(
