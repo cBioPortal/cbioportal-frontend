@@ -291,7 +291,7 @@ import {
 } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 import {
     fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecularProfileId,
-    fetchGenericAssayMetaByMolecularProfileIdsGroupedByGenericAssayType,
+    fetchGenericAssayMetaGroupedByMolecularProfileIdSuffix,
 } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import {
     buildDriverAnnotationSettings,
@@ -6074,17 +6074,6 @@ export class StudyViewPageStore
         default: [],
     });
 
-    readonly genericAssayEntitiesGroupedByGenericAssayType = remoteData<{
-        [genericAssayType: string]: GenericAssayMeta[];
-    }>({
-        await: () => [this.genericAssayProfiles],
-        invoke: async () => {
-            return await fetchGenericAssayMetaByMolecularProfileIdsGroupedByGenericAssayType(
-                this.genericAssayProfiles.result
-            );
-        },
-    });
-
     readonly genericAssayEntitiesGroupedByProfileId = remoteData<{
         [profileId: string]: GenericAssayMeta[];
     }>({
@@ -6096,20 +6085,13 @@ export class StudyViewPageStore
         },
     });
 
-    readonly genericAssayStableIdToMeta = remoteData<{
-        [genericAssayStableId: string]: GenericAssayMeta;
+    readonly genericAssayEntitiesGroupedByProfileIdSuffix = remoteData<{
+        [profileIdSuffix: string]: GenericAssayMeta[];
     }>({
-        await: () => [this.genericAssayEntitiesGroupedByGenericAssayType],
-        invoke: () => {
-            return Promise.resolve(
-                _.chain(
-                    this.genericAssayEntitiesGroupedByGenericAssayType.result
-                )
-                    .values()
-                    .flatten()
-                    .uniqBy(meta => meta.stableId)
-                    .keyBy(meta => meta.stableId)
-                    .value()
+        await: () => [this.genericAssayProfiles],
+        invoke: async () => {
+            return await fetchGenericAssayMetaGroupedByMolecularProfileIdSuffix(
+                this.genericAssayProfiles.result
             );
         },
     });
@@ -6128,20 +6110,32 @@ export class StudyViewPageStore
         default: [],
     });
 
+    readonly genericAssayProfilesGroupedByGenericAssayType = remoteData({
+        await: () => [this.genericAssayProfiles],
+        invoke: () => {
+            return Promise.resolve(
+                _.groupBy(
+                    this.genericAssayProfiles.result,
+                    profile => profile.genericAssayType
+                )
+            );
+        },
+        default: {},
+    });
+
     readonly genericAssayProfileOptionsByType = remoteData({
         await: () => [
-            this.genericAssayProfiles,
+            this.genericAssayProfilesGroupedByGenericAssayType,
             this.molecularProfileSampleCountSet,
         ],
         invoke: () => {
             return Promise.resolve(
-                _.chain(this.genericAssayProfiles.result)
-                    .filter(
-                        profile =>
-                            profile.molecularAlterationType ===
-                            AlterationTypeConstants.GENERIC_ASSAY
-                    )
-                    .groupBy(profile => profile.genericAssayType)
+                // Each Generic Assay Profile has a type "profile.genericAssayType"
+                // But one Generic Assay Type can then have different suffix, meaning they are the same Generic Assay Type but different kind of data
+                // Then we need to distinguish them using suffix of the profile id
+                _.chain(
+                    this.genericAssayProfilesGroupedByGenericAssayType.result
+                )
                     .mapValues(profiles => {
                         return _.chain(profiles)
                             .groupBy(molecularProfile =>
@@ -10491,11 +10485,14 @@ export class StudyViewPageStore
     }
     // a row represents a list of patients that either have or have not recieved
     // a specific treatment
-    public readonly sampleTreatments = remoteData({
+    public readonly sampleTreatments = remoteData<
+        SampleTreatmentReport | undefined
+    >({
         await: () => [this.shouldDisplaySampleTreatments],
         invoke: async () => {
             if (this.shouldDisplaySampleTreatments.result) {
                 if (isClickhouseMode()) {
+                    // @ts-ignore (will be available when go live with Clickhouse for all portals)
                     return await this.internalClient.fetchSampleTreatmentCountsUsingPOST(
                         {
                             studyViewFilter: this.filters,
@@ -10535,11 +10532,14 @@ export class StudyViewPageStore
 
     // a row represents a list of samples that ether have or have not recieved
     // a specific treatment
-    public readonly patientTreatments = remoteData({
+    public readonly patientTreatments = remoteData<
+        PatientTreatmentReport | undefined
+    >({
         await: () => [this.shouldDisplayPatientTreatments],
         invoke: async () => {
             if (this.shouldDisplayPatientTreatments.result) {
                 if (isClickhouseMode()) {
+                    // @ts-ignore (will be available when go live with Clickhouse for all portals)
                     return await this.internalClient.fetchPatientTreatmentCountsUsingPOST(
                         {
                             studyViewFilter: this.filters,
@@ -10600,11 +10600,14 @@ export class StudyViewPageStore
 
     // a row represents a list of samples that ether have or have not recieved
     // a specific treatment
-    public readonly patientTreatmentGroups = remoteData({
+    public readonly patientTreatmentGroups = remoteData<
+        PatientTreatmentReport | undefined
+    >({
         await: () => [this.shouldDisplayPatientTreatmentGroups],
         invoke: () => {
             if (this.shouldDisplayPatientTreatmentGroups.result) {
                 if (isClickhouseMode()) {
+                    // @ts-ignore (will be available when go live with Clickhouse for all portals)
                     return this.internalClient.fetchPatientTreatmentCountsUsingPOST(
                         {
                             studyViewFilter: this.filters,
@@ -10672,26 +10675,29 @@ export class StudyViewPageStore
 
     // a row represents a list of samples that ether have or have not recieved
     // a specific treatment
-    public readonly patientTreatmentTarget = remoteData({
-        await: () => [this.shouldDisplayPatientTreatmentTarget],
-        invoke: async () => {
-            if (isClickhouseMode()) {
-                return await this.internalClient.fetchPatientTreatmentCountsUsingPOST(
-                    {
-                        studyViewFilter: this.filters,
-                        tier: 'AgentTarget',
-                    }
-                );
-            } else {
-                //we need to transform pre-clickhouse response into new SampleTreatmentReport
-                return await getPatientTreatmentReport(
-                    this.filters,
-                    'AgentTarget',
-                    this.internalClient
-                );
-            }
-        },
-    });
+    public readonly patientTreatmentTarget = remoteData<PatientTreatmentReport>(
+        {
+            await: () => [this.shouldDisplayPatientTreatmentTarget],
+            invoke: async () => {
+                if (isClickhouseMode()) {
+                    // @ts-ignore (will be available when go live with Clickhouse for all portals)
+                    return await this.internalClient.fetchPatientTreatmentCountsUsingPOST(
+                        {
+                            studyViewFilter: this.filters,
+                            tier: 'AgentTarget',
+                        }
+                    );
+                } else {
+                    //we need to transform pre-clickhouse response into new SampleTreatmentReport
+                    return await getPatientTreatmentReport(
+                        this.filters,
+                        'AgentTarget',
+                        this.internalClient
+                    );
+                }
+            },
+        }
+    );
 
     @action.bound
     public onTreatmentSelection(meta: ChartMeta, values: string[][]): void {
