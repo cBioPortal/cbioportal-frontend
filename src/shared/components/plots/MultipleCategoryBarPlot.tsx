@@ -948,8 +948,6 @@ export default class MultipleCategoryBarPlot extends React.Component<
     }
 
     render() {
-        console.log(this.labels);
-        console.log(this.props.sortByOption);
         if (!this.data.length) {
             return <div className={'alert alert-info'}>No data to plot.</div>;
         }

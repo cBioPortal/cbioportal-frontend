@@ -224,7 +224,8 @@ export function makeBarSpecs(
         );
         return {
             fill,
-            data: (sortByOption != '' &&
+            data: (sortByOption &&
+            sortByOption != '' &&
             sortByOption != SortByOptions.Alphabetically
                 ? counts
                 : sortedCounts
