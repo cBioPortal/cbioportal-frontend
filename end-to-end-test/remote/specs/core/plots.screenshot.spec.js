@@ -418,8 +418,8 @@ describe('plots tab screenshot tests', function() {
         await waitForAndCheckPlotsTab();
     });
     it('plots tab scatter plot color by cancer type highlight categories', async () => {
-        await clickElement(`svg#plots-tab-plot-svg .legendLabel_breast`);
-        await clickElement(`svg#plots-tab-plot-svg .legendLabel_glioma`);
+        await clickElement(`svg#plots-tab-plot-svg .legendLabel_Breast`);
+        await clickElement(`svg#plots-tab-plot-svg .legendLabel_Glioma`);
         await waitForAndCheckPlotsTab();
     });
 
@@ -430,8 +430,8 @@ describe('plots tab screenshot tests', function() {
         await waitForAndCheckPlotsTab();
     });
     it('plots tab box plot color by cancer type highlight categories', async () => {
-        await clickElement(`svg#plots-tab-plot-svg .legendLabel_breast`);
-        await clickElement(`svg#plots-tab-plot-svg .legendLabel_glioma`);
+        await clickElement(`svg#plots-tab-plot-svg .legendLabel_Breast`);
+        await clickElement(`svg#plots-tab-plot-svg .legendLabel_Glioma`);
         await waitForAndCheckPlotsTab();
     });
 
@@ -442,8 +442,8 @@ describe('plots tab screenshot tests', function() {
         await waitForAndCheckPlotsTab();
     });
     it('plots tab waterfall plot color by cancer type highlight categories', async () => {
-        await clickElement(`svg#plots-tab-plot-svg .legendLabel_breast`);
-        await clickElement(`svg#plots-tab-plot-svg .legendLabel_glioma`);
+        await clickElement(`svg#plots-tab-plot-svg .legendLabel_Breast`);
+        await clickElement(`svg#plots-tab-plot-svg .legendLabel_Glioma`);
         await waitForAndCheckPlotsTab();
     });
 
