@@ -18,6 +18,7 @@ import _ from 'lodash';
 import {
     axisHasNegativeNumbers,
     boxPlotTooltip,
+    CUSTOM_ATTR_DATA_TYPE,
     CLIN_ATTR_DATA_TYPE,
     CNA_STROKE_WIDTH,
     dataTypeDisplayOrder,
@@ -277,6 +278,7 @@ export interface IPlotsTabProps {
     sampleKeyToSample: MobxPromise<_.Dictionary<Sample>>;
     genes: MobxPromise<Gene[]>;
     clinicalAttributes: MobxPromise<ExtendedClinicalAttribute[]>;
+    customAttributes: MobxPromise<ExtendedClinicalAttribute[]>;
     genesets: MobxPromise<Geneset[]>;
     genericAssayEntitiesGroupByMolecularProfileId: MobxPromise<{
         [profileId: string]: GenericAssayMeta[];
@@ -696,6 +698,31 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     );
                 }
                 break;
+            case CUSTOM_ATTR_DATA_TYPE:
+                if (
+                    this.horzSelection.dataSourceId !== undefined &&
+                    this.customAttributesGroupByclinicalAttributeId.isComplete
+                ) {
+                    const attributes = this
+                        .customAttributesGroupByclinicalAttributeId.result![
+                        this.horzSelection.dataSourceId
+                    ];
+                    const studyIds = attributes.map(
+                        attribute => attribute.studyId
+                    );
+                    horzAxisStudies = this.props.studies.result.filter(study =>
+                        studyIds.includes(study.studyId)
+                    );
+                    components.push(
+                        <div>
+                            <strong>Horizontal Axis: </strong>
+                            {`${horzAxisDataSampleCount} samples from ${
+                                horzAxisStudies.length
+                            } ${Pluralize('study', horzAxisStudies.length)}`}
+                        </div>
+                    );
+                }
+                break;
             default:
                 // molecular profile
                 if (
@@ -730,6 +757,31 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             // when no datatype is selected (`None`)
             case NONE_SELECTED_OPTION_STRING_VALUE:
                 isVertAxisNoneOptionSelected = true;
+                break;
+            case CUSTOM_ATTR_DATA_TYPE:
+                if (
+                    this.vertSelection.dataSourceId !== undefined &&
+                    this.customAttributesGroupByclinicalAttributeId.isComplete
+                ) {
+                    const attributes = this
+                        .customAttributesGroupByclinicalAttributeId.result![
+                        this.vertSelection.dataSourceId
+                    ];
+                    const studyIds = attributes.map(
+                        attribute => attribute.studyId
+                    );
+                    vertAxisStudies = this.props.studies.result.filter(study =>
+                        studyIds.includes(study.studyId)
+                    );
+                    components.push(
+                        <div>
+                            <strong>Vertical Axis: </strong>
+                            {`${vertAxisDataSampleCount} samples from ${
+                                vertAxisStudies.length
+                            } ${Pluralize('study', vertAxisStudies.length)}`}
+                        </div>
+                    );
+                }
                 break;
             case CLIN_ATTR_DATA_TYPE:
                 if (
@@ -1121,9 +1173,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     this._selectedGenesetOption &&
                     this._selectedGenesetOption.value ===
                         SAME_SELECTED_OPTION_STRING_VALUE &&
-                    self.horzSelection.dataType === CLIN_ATTR_DATA_TYPE
+                    (self.horzSelection.dataType === CLIN_ATTR_DATA_TYPE ||
+                        self.horzSelection.dataType === CUSTOM_ATTR_DATA_TYPE)
                 ) {
-                    // if vertical gene set option is "same as horizontal", and horizontal is clinical, then use the actual
+                    // if vertical gene set option is "same as horizontal", and horizontal is clinical or custom, then use the actual
                     //      gene set option value instead of "Same gene" option value, because that would be slightly weird UX
                     return self.horzSelection.selectedGenesetOption;
                 } else {
@@ -1195,9 +1248,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     this._selectedGenericAssayOption &&
                     this._selectedGenericAssayOption.value ===
                         SAME_SELECTED_OPTION_STRING_VALUE &&
-                    self.horzSelection.dataType === CLIN_ATTR_DATA_TYPE
+                    (self.horzSelection.dataType === CLIN_ATTR_DATA_TYPE ||
+                        self.horzSelection.dataType === CUSTOM_ATTR_DATA_TYPE)
                 ) {
-                    // if vertical gene set option is "same as horizontal", and horizontal is clinical, then use the actual
+                    // if vertical gene set option is "same as horizontal", and horizontal is clinical or custom, then use the actual
                     //      gene set option value instead of "Same gene" option value, because that would be slightly weird UX
                     return self.horzSelection.selectedGenericAssayOption;
                 } else {
@@ -2063,10 +2117,45 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         },
     });
 
+    readonly clinicalAndCustomAttributes = remoteData<
+        ExtendedClinicalAttribute[]
+    >({
+        await: () => [
+            this.props.clinicalAttributes,
+            this.props.customAttributes,
+        ],
+        invoke: () => {
+            return Promise.resolve([
+                ...this.props.clinicalAttributes.result!,
+                ...this.props.customAttributes.result!,
+            ]);
+        },
+    });
+
+    readonly clinicalAttributeOptions = remoteData({
+        await: () => [this.props.clinicalAttributes],
+        invoke: () =>
+            Promise.resolve(
+                makeClinicalAttributeOptions(
+                    this.props.clinicalAttributes.result!
+                )
+            ),
+    });
+
+    readonly customAttributeOptions = remoteData({
+        await: () => [this.props.customAttributes],
+        invoke: () =>
+            Promise.resolve(
+                makeClinicalAttributeOptions(
+                    this.props.customAttributes.result!
+                )
+            ),
+    });
+
     readonly coloringMenuOmnibarOptions = remoteData<
         (ColoringMenuOmnibarOption | ColoringMenuOmnibarGroup)[]
     >({
-        await: () => [this.props.genes, this.props.clinicalAttributes],
+        await: () => [this.props.genes, this.clinicalAndCustomAttributes],
         invoke: () => {
             const allOptions: (
                 | Omit<ColoringMenuOmnibarOption, 'value'>
@@ -2088,7 +2177,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
 
             allOptions.push({
                 label: 'Clinical Attributes',
-                options: this.props.clinicalAttributes
+                options: this.clinicalAndCustomAttributes
                     .result!.filter(a => {
                         return (
                             a.clinicalAttributeId !==
@@ -2104,7 +2193,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                         };
                     }),
             });
-
             if (allOptions.length > 0) {
                 // add 'None' option to the top of the list to allow removing coloring of samples
                 allOptions.unshift({
@@ -2365,6 +2453,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             dataType !== NONE_SELECTED_OPTION_STRING_VALUE &&
             dataType !== GENESET_DATA_TYPE &&
             dataType !== CLIN_ATTR_DATA_TYPE &&
+            dataType !== CUSTOM_ATTR_DATA_TYPE &&
             !isGenericAssaySelected
         );
     }
@@ -2408,12 +2497,27 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     readonly clinicalAttributeIdToClinicalAttribute = remoteData<{
         [clinicalAttributeId: string]: ClinicalAttribute;
     }>({
-        await: () => [this.props.clinicalAttributes, this.props.studyIds],
+        await: () => [this.props.studyIds, this.props.clinicalAttributes],
         invoke: () => {
             let _map: {
                 [clinicalAttributeId: string]: ClinicalAttribute;
             } = _.keyBy(
-                this.props.clinicalAttributes.result,
+                this.props.clinicalAttributes.result!,
+                c => c.clinicalAttributeId
+            );
+            return Promise.resolve(_map);
+        },
+    });
+
+    readonly customAttributeIdToClinicalAttribute = remoteData<{
+        [clinicalAttributeId: string]: ClinicalAttribute;
+    }>({
+        await: () => [this.props.studyIds, this.props.customAttributes],
+        invoke: () => {
+            let _map: {
+                [clinicalAttributeId: string]: ClinicalAttribute;
+            } = _.keyBy(
+                this.props.customAttributes.result!,
                 c => c.clinicalAttributeId
             );
             return Promise.resolve(_map);
@@ -2427,21 +2531,25 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         invoke: () => {
             return Promise.resolve(
                 _.groupBy(
-                    this.props.clinicalAttributes.result,
+                    this.props.clinicalAttributes.result!,
                     c => c.clinicalAttributeId
                 )
             );
         },
     });
 
-    readonly clinicalAttributeOptions = remoteData({
-        await: () => [this.props.clinicalAttributes],
-        invoke: () =>
-            Promise.resolve(
-                makeClinicalAttributeOptions(
-                    this.props.clinicalAttributes.result!
+    readonly customAttributesGroupByclinicalAttributeId = remoteData<{
+        [clinicalAttributeId: string]: ClinicalAttribute[];
+    }>({
+        await: () => [this.props.customAttributes],
+        invoke: () => {
+            return Promise.resolve(
+                _.groupBy(
+                    this.props.customAttributes.result!,
+                    c => c.clinicalAttributeId
                 )
-            ),
+            );
+        },
     });
 
     readonly dataTypeOptions = remoteData<PlotsTabOption[]>({
@@ -2450,6 +2558,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.clinicalAttributeOptions,
             this.props.molecularProfilesInStudies,
             this.props.genesets,
+            this.customAttributeOptions,
         ],
         invoke: () => {
             const profiles = this.props.molecularProfilesWithData.result!;
@@ -2474,6 +2583,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             if (this.clinicalAttributeOptions.result!.length) {
                 // add "clinical attribute" to list if we have any clinical attribute options
                 dataTypeIds.push(CLIN_ATTR_DATA_TYPE);
+            }
+
+            if (!_.isEmpty(this.customAttributeOptions.result)) {
+                dataTypeIds.push(CUSTOM_ATTR_DATA_TYPE);
             }
 
             if (
@@ -2532,6 +2645,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         await: () => [
             this.props.molecularProfilesInStudies,
             this.clinicalAttributeOptions,
+            this.customAttributeOptions,
         ],
         invoke: () => {
             const profiles = this.props.molecularProfilesInStudies.result!;
@@ -2583,6 +2697,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 map[
                     CLIN_ATTR_DATA_TYPE
                 ] = this.clinicalAttributeOptions.result!;
+            }
+
+            if (!_.isEmpty(this.customAttributeOptions.result)) {
+                // add custom attributes
+                map[
+                    CUSTOM_ATTR_DATA_TYPE
+                ] = this.customAttributeOptions.result!;
             }
             return Promise.resolve(map);
         },
@@ -2686,6 +2807,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     @computed get hasMolecularProfile() {
         return (dataType: string | undefined) =>
             dataType !== CLIN_ATTR_DATA_TYPE &&
+            dataType !== CUSTOM_ATTR_DATA_TYPE &&
             dataType !== AlterationTypeConstants.GENERIC_ASSAY;
     }
 
@@ -2822,6 +2944,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             selection.dataType !== undefined &&
             selection.dataType !== NONE_SELECTED_OPTION_STRING_VALUE &&
             selection.dataType !== CLIN_ATTR_DATA_TYPE &&
+            selection.dataType !== CUSTOM_ATTR_DATA_TYPE &&
             selection.dataType !== GENESET_DATA_TYPE &&
             !isGenericAssaySelected(selection)
         );
@@ -3048,6 +3171,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         return makeAxisDataPromise(
             this.horzSelection,
             this.clinicalAttributeIdToClinicalAttribute,
+            this.customAttributeIdToClinicalAttribute,
             this.props.molecularProfileIdSuffixToMolecularProfiles,
             this.props.patientKeyToFilteredSamples,
             this.props.entrezGeneIdToGene,
@@ -3075,6 +3199,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         return makeAxisDataPromise(
             this.vertSelection,
             this.clinicalAttributeIdToClinicalAttribute,
+            this.customAttributeIdToClinicalAttribute,
             this.props.molecularProfileIdSuffixToMolecularProfiles,
             this.props.patientKeyToFilteredSamples,
             this.props.entrezGeneIdToGene,
@@ -3154,6 +3279,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.props.molecularProfileIdSuffixToMolecularProfiles,
             this.props.entrezGeneIdToGene,
             this.clinicalAttributeIdToClinicalAttribute,
+            this.customAttributeIdToClinicalAttribute,
             this.plotType,
         ],
         invoke: () => {
@@ -3164,6 +3290,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                         .result!,
                     this.props.entrezGeneIdToGene.result!,
                     this.clinicalAttributeIdToClinicalAttribute.result!,
+                    this.customAttributeIdToClinicalAttribute.result!,
                     this.horzLogScaleFunction
                 )
             );
@@ -3175,6 +3302,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.props.molecularProfileIdSuffixToMolecularProfiles,
             this.props.entrezGeneIdToGene,
             this.clinicalAttributeIdToClinicalAttribute,
+            this.customAttributeIdToClinicalAttribute,
         ],
         invoke: () => {
             return Promise.resolve(
@@ -3184,6 +3312,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                         .result!,
                     this.props.entrezGeneIdToGene.result!,
                     this.clinicalAttributeIdToClinicalAttribute.result!,
+                    this.customAttributeIdToClinicalAttribute.result!,
                     this.vertLogScaleFunction
                 )
             );
@@ -3195,6 +3324,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.props.molecularProfileIdSuffixToMolecularProfiles,
             this.props.entrezGeneIdToGene,
             this.clinicalAttributeIdToClinicalAttribute,
+            this.customAttributeIdToClinicalAttribute,
             this.plotType,
         ],
         invoke: () => {
@@ -3212,6 +3342,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                         .result!,
                     this.props.entrezGeneIdToGene.result!,
                     this.clinicalAttributeIdToClinicalAttribute.result!,
+                    this.customAttributeIdToClinicalAttribute.result!,
                     logScaleFunc
                 )
             );
@@ -3564,6 +3695,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             : structuralVariantCountByOptions;
 
         switch (axisSelection.dataType) {
+            case CUSTOM_ATTR_DATA_TYPE:
+                dataSourceLabel = 'Custom Attribute';
+                break;
             case CLIN_ATTR_DATA_TYPE:
                 dataSourceLabel = 'Clinical Attribute';
                 break;
@@ -3607,6 +3741,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             if (axisSelection.dataType === CLIN_ATTR_DATA_TYPE) {
                 dataSourceDescription = this
                     .clinicalAttributeIdToClinicalAttribute.result![
+                    dataSourceValue
+                ].description;
+            } else if (axisSelection.dataType === CUSTOM_ATTR_DATA_TYPE) {
+                dataSourceDescription = this
+                    .customAttributeIdToClinicalAttribute.result![
                     dataSourceValue
                 ].description;
             } else {
@@ -3939,7 +4078,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                 style={{
                                     display:
                                         axisSelection.dataType ===
-                                        CLIN_ATTR_DATA_TYPE
+                                            CLIN_ATTR_DATA_TYPE ||
+                                        axisSelection.dataType ===
+                                            CUSTOM_ATTR_DATA_TYPE
                                             ? 'none'
                                             : 'block',
                                 }}
@@ -3979,7 +4120,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                                     axisSelection.dataType ===
                                                         CLIN_ATTR_DATA_TYPE ||
                                                     axisSelection.dataType ===
-                                                        GENESET_DATA_TYPE
+                                                        GENESET_DATA_TYPE ||
+                                                    axisSelection.dataType ===
+                                                        CUSTOM_ATTR_DATA_TYPE
                                                 }
                                                 loadOptions={loadOptions}
                                                 cacheOptions={true}
@@ -4017,7 +4160,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                                     axisSelection.dataType ===
                                                         CLIN_ATTR_DATA_TYPE ||
                                                     axisSelection.dataType ===
-                                                        GENESET_DATA_TYPE
+                                                        GENESET_DATA_TYPE ||
+                                                    axisSelection.dataType ===
+                                                        CUSTOM_ATTR_DATA_TYPE
                                                 }
                                             />
                                         </Else>
@@ -4125,6 +4270,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                                 undefined ||
                                             axisSelection.dataType ===
                                                 CLIN_ATTR_DATA_TYPE ||
+                                            axisSelection.dataType ===
+                                                CUSTOM_ATTR_DATA_TYPE ||
                                             !isGenericAssaySelected(
                                                 axisSelection
                                             )

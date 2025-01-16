@@ -334,14 +334,20 @@ export default class Mutations extends React.Component<
         count: number,
         mutations: Mutation[],
         axisMode: AxisScale
-    ): JSX.Element {
-        return (
-            <LollipopTooltipCountInfo
-                count={count}
-                mutations={mutations}
-                axisMode={axisMode}
-                patientCount={this.props.store.filteredPatients.result!.length}
-            />
-        );
+    ) {
+        if (this.props.store.filteredPatients.isComplete) {
+            return (
+                <LollipopTooltipCountInfo
+                    count={count}
+                    mutations={mutations}
+                    axisMode={axisMode}
+                    patientCount={
+                        this.props.store.filteredPatients.result.length
+                    }
+                />
+            );
+        } else {
+            return <></>;
+        }
     }
 }

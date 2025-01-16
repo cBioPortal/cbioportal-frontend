@@ -47,6 +47,10 @@ import {
 import { GroupComparisonMutation } from 'shared/model/GroupComparisonMutation';
 import { getTwoTailedPValue } from 'shared/lib/calculation/FisherExactTestCalculator';
 import { calculateQValues } from 'shared/lib/calculation/BenjaminiHochbergFDRCalculator';
+import {
+    IBaseBoxScatterPlotPoint,
+    IBoxScatterPlotData,
+} from 'shared/components/plots/BoxScatterPlot';
 
 type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
 

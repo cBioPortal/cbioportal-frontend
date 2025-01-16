@@ -767,7 +767,18 @@ describe('PlotsTabUtils', () => {
     });
 
     describe('logScalePossible', () => {
-        it('should return true when data is type number', () => {
+        it('should return true when positive data is type number', () => {
+            const axisData = ({
+                datatype: 'number',
+                data: [{ value: 1 }, { value: 2 }],
+            } as any) as IAxisData;
+            const axisMenuSelection = ({
+                dataType: CLIN_ATTR_DATA_TYPE,
+                genericAssayDataType: DataTypeConstants.LIMITVALUE,
+            } as any) as AxisMenuSelection;
+            assert.isTrue(logScalePossible(axisMenuSelection, axisData));
+        });
+        it('should return false when negative data is type number', () => {
             const axisData = ({
                 datatype: 'number',
                 data: [{ value: 1 }, { value: -2 }],
@@ -776,7 +787,7 @@ describe('PlotsTabUtils', () => {
                 dataType: CLIN_ATTR_DATA_TYPE,
                 genericAssayDataType: DataTypeConstants.LIMITVALUE,
             } as any) as AxisMenuSelection;
-            assert.isTrue(logScalePossible(axisMenuSelection, axisData));
+            assert.isFalse(logScalePossible(axisMenuSelection, axisData));
         });
     });
 

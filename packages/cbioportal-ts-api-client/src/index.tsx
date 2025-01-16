@@ -97,3 +97,9 @@ export {
     AlterationFilter,
     default as CBioPortalAPIInternal,
 } from './generated/CBioPortalAPIInternal';
+
+export {
+    SampleTreatmentReport,
+    PatientTreatmentReport,
+    PatientTreatment,
+} from './CBioPortalAPIInternal_clickhouse';

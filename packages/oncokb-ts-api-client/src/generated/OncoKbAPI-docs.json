@@ -97,7 +97,7 @@
           {
             "name": "evidenceType",
             "in": "query",
-            "description": "Evidence type to compute. This could help to improve the performance if you only look for sub-content. Example: ONCOGENIC. All available evidence type are GENE_SUMMARY, MUTATION_SUMMARY, TUMOR_TYPE_SUMMARY, PROGNOSTIC_SUMMARY, DIAGNOSTIC_SUMMARY, ONCOGENIC, MUTATION_EFFECT, PROGNOSTIC_IMPLICATION, DIAGNOSTIC_IMPLICATION, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE. For multiple evidence types query, use ',' as separator.",
+            "description": "DEPRECATED. We do not recommend using this parameter and it will eventually be removed.",
             "required": false,
             "type": "string"
           }
@@ -112,7 +112,7 @@
           "400": {
             "description": "Error, error message will be given.",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/ApiHttpError"
             }
           }
         }
@@ -157,7 +157,7 @@
           "400": {
             "description": "Error, error message will be given.",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/ApiHttpError"
             }
           }
         }
@@ -181,7 +181,7 @@
           {
             "name": "genomicLocation",
             "in": "query",
-            "description": "Genomic location. Example: 7,140453136,140453136,A,T",
+            "description": "Genomic location following TCGA MAF format. Example: 7,140453136,140453136,A,T",
             "required": true,
             "type": "string"
           },
@@ -203,7 +203,7 @@
           {
             "name": "evidenceType",
             "in": "query",
-            "description": "Evidence type to compute. This could help to improve the performance if you only look for sub-content. Example: ONCOGENIC. All available evidence type are GENE_SUMMARY, MUTATION_SUMMARY, TUMOR_TYPE_SUMMARY, PROGNOSTIC_SUMMARY, DIAGNOSTIC_SUMMARY, ONCOGENIC, MUTATION_EFFECT, PROGNOSTIC_IMPLICATION, DIAGNOSTIC_IMPLICATION, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE. For multiple evidence types query, use ',' as separator.",
+            "description": "DEPRECATED. We do not recommend using this parameter and it will eventually be removed.",
             "required": false,
             "type": "string"
           }
@@ -218,7 +218,7 @@
           "400": {
             "description": "Error, error message will be given.",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/ApiHttpError"
             }
           }
         }
@@ -263,7 +263,7 @@
           "400": {
             "description": "Error, error message will be given.",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/ApiHttpError"
             }
           }
         }
@@ -287,7 +287,7 @@
           {
             "name": "hgvsg",
             "in": "query",
-            "description": "HGVS genomic format. Example: 7:g.140453136A>T",
+            "description": "HGVS genomic format following HGVS nomenclature. Example: 7:g.140453136A>T",
             "required": true,
             "type": "string"
           },
@@ -309,7 +309,7 @@
           {
             "name": "evidenceType",
             "in": "query",
-            "description": "Evidence type to compute. This could help to improve the performance if you only look for sub-content. Example: ONCOGENIC. All available evidence type are GENE_SUMMARY, MUTATION_SUMMARY, TUMOR_TYPE_SUMMARY, PROGNOSTIC_SUMMARY, DIAGNOSTIC_SUMMARY, ONCOGENIC, MUTATION_EFFECT, PROGNOSTIC_IMPLICATION, DIAGNOSTIC_IMPLICATION, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE. For multiple evidence types query, use ',' as separator.",
+            "description": "DEPRECATED. We do not recommend using this parameter and it will eventually be removed.",
             "required": false,
             "type": "string"
           }
@@ -324,7 +324,7 @@
           "400": {
             "description": "Error, error message will be given.",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/ApiHttpError"
             }
           }
         }
@@ -334,7 +334,7 @@
           "Annotations"
         ],
         "summary": "annotateMutationsByHGVSgPost",
-        "description": "Annotate mutations by genomic change.",
+        "description": "Annotate mutations by HGVSg.",
         "operationId": "annotateMutationsByHGVSgPostUsingPOST_1",
         "consumes": [
           "application/json"
@@ -369,7 +369,7 @@
           "400": {
             "description": "Error, error message will be given.",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/ApiHttpError"
             }
           }
         }
@@ -465,7 +465,7 @@
           {
             "name": "evidenceType",
             "in": "query",
-            "description": "Evidence type to compute. This could help to improve the performance if you only look for sub-content. Example: ONCOGENIC. All available evidence type are GENE_SUMMARY, MUTATION_SUMMARY, TUMOR_TYPE_SUMMARY, PROGNOSTIC_SUMMARY, DIAGNOSTIC_SUMMARY, ONCOGENIC, MUTATION_EFFECT, PROGNOSTIC_IMPLICATION, DIAGNOSTIC_IMPLICATION, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE. For multiple evidence types query, use ',' as separator.",
+            "description": "DEPRECATED. We do not recommend using this parameter and it will eventually be removed.",
             "required": false,
             "type": "string"
           }
@@ -480,7 +480,7 @@
           "400": {
             "description": "Error, error message will be given.",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/ApiHttpError"
             }
           }
         }
@@ -525,7 +525,7 @@
           "400": {
             "description": "Error, error message will be given.",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/ApiHttpError"
             }
           }
         }
@@ -618,7 +618,7 @@
           {
             "name": "evidenceType",
             "in": "query",
-            "description": "Evidence type to compute. This could help to improve the performance if you only look for sub-content. Example: ONCOGENIC. All available evidence type are GENE_SUMMARY, MUTATION_SUMMARY, TUMOR_TYPE_SUMMARY, PROGNOSTIC_SUMMARY, DIAGNOSTIC_SUMMARY, ONCOGENIC, MUTATION_EFFECT, PROGNOSTIC_IMPLICATION, DIAGNOSTIC_IMPLICATION, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE. For multiple evidence types query, use ',' as separator.",
+            "description": "DEPRECATED. We do not recommend using this parameter and it will eventually be removed.",
             "required": false,
             "type": "string"
           }
@@ -633,7 +633,7 @@
           "400": {
             "description": "Error, error message will be given.",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/ApiHttpError"
             }
           }
         }
@@ -678,7 +678,7 @@
           "400": {
             "description": "Error, error message will be given.",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/ApiHttpError"
             }
           }
         }
@@ -1173,6 +1173,27 @@
           "format": "int32"
         },
         "hugoSymbol": {
+          "type": "string"
+        }
+      }
+    },
+    "ApiHttpError": {
+      "type": "object",
+      "properties": {
+        "detail": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "status": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "title": {
           "type": "string"
         }
       }

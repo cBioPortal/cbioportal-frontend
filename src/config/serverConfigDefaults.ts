@@ -246,6 +246,8 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
 
     skin_study_view_show_sv_table: false,
 
+    clickhouse_mode: false,
+
     download_custom_buttons_json: '',
 };
 

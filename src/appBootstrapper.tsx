@@ -149,8 +149,8 @@ browserWindow.postLoadForMskCIS = () => {};
 // this is the only supported way to disable tracking for the $3Dmol.js
 (browserWindow as any).$3Dmol = { notrack: true };
 
-// make sure lodash doesn't overwrite (or set) global underscore
-_.noConflict();
+// expose lodash on window
+getBrowserWindow()._ = _;
 
 const routingStore = new ExtendedRoutingStore();
 
@@ -213,7 +213,7 @@ superagent.Request.prototype.end = function(callback) {
     });
 };
 
-function enableDataDogTracking() {
+function enableDataDogTracking(store: AppStore) {
     datadogLogs.init({
         clientToken: 'pub9a94ebb002f105ff44d8e427b6549775',
         site: 'datadoghq.com',
@@ -246,10 +246,17 @@ function enableDataDogTracking() {
     const oldRequest = (internalClient as any).request;
     (internalClient as any).request = function(...args: any) {
         try {
-            const url = args[1];
+            let url = args[1];
+
+            if (Object.keys(args[4]).length) {
+                url = url + '?' + $.param(args[4]);
+            }
+
             const data = args[2];
 
             const studyIds = data.studyIds || data.studyViewFilter.studyIds;
+
+            const appName = store.serverConfig.app_name;
 
             if (studyIds.length < 4 && _.some(match, re => re.test(url))) {
                 const hash = hashString(url + JSON.stringify(toJS(data)));
@@ -257,6 +264,7 @@ function enableDataDogTracking() {
                     url,
                     data,
                     hash,
+                    appName,
                 });
             }
         } catch (ex) {
@@ -362,12 +370,14 @@ $(document).ready(async () => {
 
     initializeAppStore(stores.appStore);
 
-    if (
-        stores.appStore.serverConfig.app_name === 'public-portal' &&
-        !isWebdriver()
-    ) {
-        enableDataDogTracking();
-    }
+    // if (
+    //     ['genie-public-portal', 'public-portal'].includes(
+    //         stores.appStore.serverConfig.app_name!
+    //     ) &&
+    //     !isWebdriver()
+    // ) {
+    //     enableDataDogTracking(stores.appStore);
+    // }
 
     await loadCustomJs();
 

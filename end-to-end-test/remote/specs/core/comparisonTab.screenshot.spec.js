@@ -408,32 +408,6 @@ describe('results view comparison tab screenshot tests', () => {
             );
             assertScreenShotMatch(res);
         });
-
-        it('results view comparison tab microbiome signature tab two groups', async () => {
-            await clickElement('button[data-test="groupSelectorButtonBRAF"]', {
-                timeout: 20000,
-            });
-
-            await (
-                await getElement(
-                    'div[data-test="GroupComparisonMethylationEnrichments"]'
-                )
-            ).waitForDisplayed({ timeout: 10000 });
-            await waitForElementDisplayed('b=RER1', { timeout: 10000 });
-            await clickElement('b=RER1');
-            await (await getElement('body')).moveTo({
-                x: 0,
-                y: 0,
-            });
-            const res = await browser.checkElement(
-                '.msk-tab:not(.hiddenByPosition)',
-                '',
-                {
-                    hide: ['.qtip'],
-                }
-            );
-            assertScreenShotMatch(res);
-        });
     });
 
     describe('delete group from session', () => {

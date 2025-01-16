@@ -192,6 +192,10 @@ export type Drug = {
 
         'ncitCode': string
 
+        'synonyms': Array < string >
+
+        'uuid': string
+
 };
 export type EnsemblFilter = {
     'geneIds': Array < string >
@@ -484,6 +488,16 @@ export type IntegerRange = {
         'start': number
 
 };
+export type IntergenicConsequenceSummary = {
+    'consequenceTerms': Array < string >
+
+        'impact': string
+
+        'variantAllele': string
+
+        'variantClassification': string
+
+};
 export type IntergenicConsequences = {
     'impact': string
 
@@ -501,59 +515,19 @@ export type MainType = {
 
 };
 export type MutationAssessor = {
-    'codonStartPosition': string
-
-        'cosmicCount': number
-
-        'functionalImpact': string
+    'functionalImpactPrediction': string
 
         'functionalImpactScore': number
 
-        'hgvs': string
+        'hgvspShort': string
 
-        'hugoSymbol': string
+        'mav': number
 
-        'input': string
+        'msa': string
 
-        'mappingIssue': string
-
-        'msaGaps': number
-
-        'msaHeight': number
-
-        'msaLink': string
-
-        'pdbLink': string
-
-        'referenceGenomeVariant': string
-
-        'referenceGenomeVariantType': string
-
-        'refseqId': string
-
-        'refseqPosition': number
-
-        'refseqResidue': string
-
-        'snpCount': number
+        'sv': number
 
         'uniprotId': string
-
-        'uniprotPosition': number
-
-        'uniprotResidue': string
-
-        'variant': string
-
-        'variantConservationScore': number
-
-        'variantSpecificityScore': number
-
-};
-export type MutationAssessorAnnotation = {
-    'annotation': MutationAssessor
-
-        'license': string
 
 };
 export type MutationEffectResp = {
@@ -1008,7 +982,7 @@ export type VariantAnnotation = {
 
         'most_severe_consequence': string
 
-        'mutation_assessor': MutationAssessorAnnotation
+        'mutation_assessor': MutationAssessor
 
         'my_variant_info': MyVariantInfoAnnotation
 
@@ -1043,6 +1017,8 @@ export type VariantAnnotationSummary = {
         'canonicalTranscriptId': string
 
         'genomicLocation': GenomicLocation
+
+        'intergenicConsequenceSummaries': Array < IntergenicConsequenceSummary >
 
         'strandSign': string
 
