@@ -105,7 +105,8 @@ export function sortDataByCategory<D>(
 }
 export function getSortedMajorCategories(
     data: IMultipleCategoryBarPlotData[],
-    sortByOption: string
+    sortByOption: string,
+    sortByPercentage: boolean
 ): string[] {
     if (sortByOption === 'SortByTotalSum') {
         const majorCategoryCounts: { [key: string]: number } = {};
@@ -130,8 +131,13 @@ export function getSortedMajorCategories(
             item => item.minorCategory === sortByOption
         );
         if (sortedEntityData) {
-            sortedEntityData.counts.sort((a, b) => b.percentage - a.percentage);
-
+            if (sortByPercentage) {
+                sortedEntityData.counts.sort(
+                    (a, b) => b.percentage - a.percentage
+                );
+            } else {
+                sortedEntityData.counts.sort((a, b) => b.count - a.count);
+            }
             return sortedEntityData.counts.map(item => item.majorCategory);
         }
     }
@@ -140,9 +146,14 @@ export function getSortedMajorCategories(
 }
 export function sortDataByOption(
     data: IMultipleCategoryBarPlotData[],
-    sortByOption: string
+    sortByOption: string,
+    sortByPercentage: boolean
 ): IMultipleCategoryBarPlotData[] {
-    const sortedMajorCategories = getSortedMajorCategories(data, sortByOption);
+    const sortedMajorCategories = getSortedMajorCategories(
+        data,
+        sortByOption,
+        sortByPercentage
+    );
 
     if (sortByOption === 'SortByTotalSum' || sortedMajorCategories.length > 0) {
         const reorderCounts = (counts: CountItem[]): CountItem[] => {
@@ -202,7 +213,7 @@ export function makeBarSpecs(
         sortByOption !== '' &&
         sortByOption !== SortByOptions.Alphabetically
     ) {
-        data = sortDataByOption(data, sortByOption);
+        data = sortDataByOption(data, sortByOption, percentage);
     } else {
         // one bar spec per minor category, in correct order - either specified, or alphabetical
         data = sortDataByCategory(

@@ -4601,36 +4601,38 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                             </div>
                         </div>
                     )}
-                    {this.discreteVsDiscretePlotType == 'StackedBar' && (
-                        <div className="form-group">
-                            <label>Sort By</label>
-                            <div style={{ display: 'flex' }}>
-                                <ReactSelect
-                                    name="Sort By"
-                                    value={this.sortByOption}
-                                    onChange={this.handleSortByChange}
-                                    options={this.sortByDropDownOptions}
-                                    clearable={false}
-                                    searchable={true}
-                                    placeholder="Sort by..."
-                                />
-                            </div>
-                        </div>
-                    )}
                     {showStackedBarHorizontalOption && (
-                        <div className="checkbox">
-                            <label>
-                                <input
-                                    data-test="horizontalBars"
-                                    type="checkbox"
-                                    name="utilities_horizontalBars"
-                                    value={EventKey.utilities_horizontalBars}
-                                    checked={this.horizontalBars}
-                                    onClick={this.onInputClick}
-                                />{' '}
-                                Horizontal Bars
-                            </label>
-                        </div>
+                        <>
+                            <div className="form-group">
+                                <label>Sort By</label>
+                                <div style={{ display: 'flex' }}>
+                                    <ReactSelect
+                                        name="Sort By"
+                                        value={this.sortByOption}
+                                        onChange={this.handleSortByChange}
+                                        options={this.sortByDropDownOptions}
+                                        clearable={false}
+                                        searchable={true}
+                                        placeholder="Sort by..."
+                                    />
+                                </div>
+                            </div>
+                            <div className="checkbox">
+                                <label>
+                                    <input
+                                        data-test="horizontalBars"
+                                        type="checkbox"
+                                        name="utilities_horizontalBars"
+                                        value={
+                                            EventKey.utilities_horizontalBars
+                                        }
+                                        checked={this.horizontalBars}
+                                        onClick={this.onInputClick}
+                                    />{' '}
+                                    Horizontal Bars
+                                </label>
+                            </div>
+                        </>
                     )}
                     {showRegression && (
                         <div className="checkbox" style={{ marginTop: 14 }}>

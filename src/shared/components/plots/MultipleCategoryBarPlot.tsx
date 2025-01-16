@@ -439,7 +439,8 @@ export default class MultipleCategoryBarPlot extends React.Component<
             ) {
                 return getSortedMajorCategories(
                     this.data,
-                    this.props.sortByOption
+                    this.props.sortByOption,
+                    !!this.props.percentage
                 );
             }
             return sortDataByCategory(
