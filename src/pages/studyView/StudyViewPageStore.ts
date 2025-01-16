@@ -189,6 +189,7 @@ import {
     getVisibleAttributes,
     getPatientTreatmentReport,
     getSampleTreatmentReport,
+    CategoryDataBin,
 } from './StudyViewUtils';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import autobind from 'autobind-decorator';
@@ -291,7 +292,7 @@ import {
 } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 import {
     fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecularProfileId,
-    fetchGenericAssayMetaByMolecularProfileIdsGroupedByGenericAssayType,
+    fetchGenericAssayMetaGroupedByMolecularProfileIdSuffix,
 } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import {
     buildDriverAnnotationSettings,
@@ -597,7 +598,9 @@ export class StudyViewPageStore
         }
     };
 
-    public isShowNAToggleVisible(dataBins: DataBin[]): boolean {
+    public isShowNAToggleVisible(
+        dataBins: DataBin[] | CategoryDataBin[]
+    ): boolean {
         return (
             dataBins.length !== 0 &&
             dataBins.some(dataBin => dataBin.specialValue === 'NA')
@@ -2159,6 +2162,11 @@ export class StudyViewPageStore
     @observable public chartsDimension = observable.map<
         ChartUniqueKey,
         ChartDimension
+    >();
+
+    @observable public availableChartTypes = observable.map<
+        ChartUniqueKey,
+        ChartType[]
     >();
 
     @observable public chartsType = observable.map<ChartUniqueKey, ChartType>();
@@ -4538,7 +4546,7 @@ export class StudyViewPageStore
             data.forEach(item => {
                 const uniqueKey = item.attributeId;
                 if (this.isNewlyAdded(uniqueKey)) {
-                    this.showAsPieChart(uniqueKey, item.counts.length);
+                    this.showAsPieChart(uniqueKey, item.counts);
                     this.newlyAddedCharts.remove(uniqueKey);
                 }
             });
@@ -4565,7 +4573,7 @@ export class StudyViewPageStore
             data.forEach(item => {
                 const uniqueKey = item.attributeId;
                 if (this.isNewlyAdded(uniqueKey)) {
-                    this.showAsPieChart(uniqueKey, item.counts.length);
+                    this.showAsPieChart(uniqueKey, item.counts);
                     this.newlyAddedCharts.remove(uniqueKey);
                 }
             });
@@ -4594,7 +4602,7 @@ export class StudyViewPageStore
             data.forEach(item => {
                 const uniqueKey = item.attributeId;
                 this.unfilteredClinicalDataCountCache[uniqueKey] = item;
-                this.showAsPieChart(uniqueKey, item.counts.length);
+                this.showAsPieChart(uniqueKey, item.counts);
                 this.newlyAddedCharts.remove(uniqueKey);
             });
         },
@@ -5907,7 +5915,10 @@ export class StudyViewPageStore
         onError: () => {},
         onResult: clinicalAttributes => {
             clinicalAttributes.forEach((obj: ClinicalAttribute) => {
-                if (obj.datatype === DataType.NUMBER) {
+                if (
+                    obj.datatype === DataType.NUMBER ||
+                    obj.datatype === DataType.STRING
+                ) {
                     const uniqueKey = getUniqueKey(obj);
                     let filter = getDefaultClinicalDataBinFilter(obj);
 
@@ -6039,17 +6050,6 @@ export class StudyViewPageStore
         default: [],
     });
 
-    readonly genericAssayEntitiesGroupedByGenericAssayType = remoteData<{
-        [genericAssayType: string]: GenericAssayMeta[];
-    }>({
-        await: () => [this.genericAssayProfiles],
-        invoke: async () => {
-            return await fetchGenericAssayMetaByMolecularProfileIdsGroupedByGenericAssayType(
-                this.genericAssayProfiles.result
-            );
-        },
-    });
-
     readonly genericAssayEntitiesGroupedByProfileId = remoteData<{
         [profileId: string]: GenericAssayMeta[];
     }>({
@@ -6061,20 +6061,13 @@ export class StudyViewPageStore
         },
     });
 
-    readonly genericAssayStableIdToMeta = remoteData<{
-        [genericAssayStableId: string]: GenericAssayMeta;
+    readonly genericAssayEntitiesGroupedByProfileIdSuffix = remoteData<{
+        [profileIdSuffix: string]: GenericAssayMeta[];
     }>({
-        await: () => [this.genericAssayEntitiesGroupedByGenericAssayType],
-        invoke: () => {
-            return Promise.resolve(
-                _.chain(
-                    this.genericAssayEntitiesGroupedByGenericAssayType.result
-                )
-                    .values()
-                    .flatten()
-                    .uniqBy(meta => meta.stableId)
-                    .keyBy(meta => meta.stableId)
-                    .value()
+        await: () => [this.genericAssayProfiles],
+        invoke: async () => {
+            return await fetchGenericAssayMetaGroupedByMolecularProfileIdSuffix(
+                this.genericAssayProfiles.result
             );
         },
     });
@@ -6093,20 +6086,32 @@ export class StudyViewPageStore
         default: [],
     });
 
+    readonly genericAssayProfilesGroupedByGenericAssayType = remoteData({
+        await: () => [this.genericAssayProfiles],
+        invoke: () => {
+            return Promise.resolve(
+                _.groupBy(
+                    this.genericAssayProfiles.result,
+                    profile => profile.genericAssayType
+                )
+            );
+        },
+        default: {},
+    });
+
     readonly genericAssayProfileOptionsByType = remoteData({
         await: () => [
-            this.genericAssayProfiles,
+            this.genericAssayProfilesGroupedByGenericAssayType,
             this.molecularProfileSampleCountSet,
         ],
         invoke: () => {
             return Promise.resolve(
-                _.chain(this.genericAssayProfiles.result)
-                    .filter(
-                        profile =>
-                            profile.molecularAlterationType ===
-                            AlterationTypeConstants.GENERIC_ASSAY
-                    )
-                    .groupBy(profile => profile.genericAssayType)
+                // Each Generic Assay Profile has a type "profile.genericAssayType"
+                // But one Generic Assay Type can then have different suffix, meaning they are the same Generic Assay Type but different kind of data
+                // Then we need to distinguish them using suffix of the profile id
+                _.chain(
+                    this.genericAssayProfilesGroupedByGenericAssayType.result
+                )
                     .mapValues(profiles => {
                         return _.chain(profiles)
                             .groupBy(molecularProfile =>
@@ -7664,7 +7669,7 @@ export class StudyViewPageStore
         if (this.queriedPhysicalStudyIds.result.length > 1) {
             this.showAsPieChart(
                 SpecialChartsUniqueKeyEnum.CANCER_STUDIES,
-                this.queriedPhysicalStudyIds.result.length
+                this.queriedPhysicalStudyIds.result
             );
         }
     }
@@ -7707,7 +7712,7 @@ export class StudyViewPageStore
                     this.getTableDimensionByNumberOfRecords(data.result!.length)
                 );
             }
-            this.chartsType.set(attr.uniqueKey, ChartTypeEnum.TABLE);
+            this.chartsType.set(attr.uniqueKey, newChartType);
         } else {
             this.chartsDimension.set(
                 attr.uniqueKey,
@@ -7856,7 +7861,7 @@ export class StudyViewPageStore
         _.each(
             this.initialVisibleAttributesClinicalDataCountData.result,
             item => {
-                this.showAsPieChart(item.attributeId, item.counts.length);
+                this.showAsPieChart(item.attributeId, item.counts);
             }
         );
     }
@@ -9945,31 +9950,84 @@ export class StudyViewPageStore
     });
 
     @action
-    showAsPieChart(uniqueKey: string, dataSize: number): void {
+    showAsPieChart(
+        uniqueKey: string,
+        data: ClinicalDataCount[] | string[]
+    ): void {
+        const { totalCount, naCount } = (data as (
+            | ClinicalDataCount
+            | string
+        )[]).reduce(
+            (acc: { totalCount: number; naCount: number }, item) => {
+                if (
+                    typeof item === 'object' &&
+                    'value' in item &&
+                    'count' in item
+                ) {
+                    acc.totalCount += item.count;
+                    if (item.value === 'NA') {
+                        acc.naCount += item.count;
+                    }
+                }
+                return acc;
+            },
+            { totalCount: 0, naCount: 0 }
+        );
+
+        const naProportion = totalCount > 0 ? naCount / totalCount : 0;
+
         if (
             shouldShowChart(
                 this.initialFilters,
-                dataSize,
+                data.length,
                 this.samples.result.length
             )
         ) {
             this.changeChartVisibility(uniqueKey, true);
 
             if (
-                dataSize > STUDY_VIEW_CONFIG.thresholds.pieToTable ||
-                _.includes(STUDY_VIEW_CONFIG.tableAttrs, uniqueKey)
+                data.length > STUDY_VIEW_CONFIG.thresholds.pieToTable ||
+                STUDY_VIEW_CONFIG.tableAttrs.includes(uniqueKey)
             ) {
                 this.chartsType.set(uniqueKey, ChartTypeEnum.TABLE);
                 this.chartsDimension.set(
                     uniqueKey,
-                    this.getTableDimensionByNumberOfRecords(dataSize)
+                    this.getTableDimensionByNumberOfRecords(data.length)
                 );
+                this.availableChartTypes.set(uniqueKey, [
+                    ChartTypeEnum.PIE_CHART,
+                    ChartTypeEnum.TABLE,
+                ]);
+            } else if (
+                data.length > STUDY_VIEW_CONFIG.thresholds.pieToBar ||
+                naProportion > 0.5
+            ) {
+                this.chartsType.set(
+                    uniqueKey,
+                    ChartTypeEnum.BAR_CATEGORICAL_CHART
+                );
+                this.chartsDimension.set(
+                    uniqueKey,
+                    STUDY_VIEW_CONFIG.layout.dimensions[
+                        ChartTypeEnum.BAR_CATEGORICAL_CHART
+                    ]
+                );
+                this.availableChartTypes.set(uniqueKey, [
+                    ChartTypeEnum.PIE_CHART,
+                    ChartTypeEnum.BAR_CATEGORICAL_CHART,
+                    ChartTypeEnum.TABLE,
+                ]);
             } else {
                 this.chartsType.set(uniqueKey, ChartTypeEnum.PIE_CHART);
                 this.chartsDimension.set(
                     uniqueKey,
                     STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.PIE_CHART]
                 );
+                this.availableChartTypes.set(uniqueKey, [
+                    ChartTypeEnum.PIE_CHART,
+                    ChartTypeEnum.BAR_CATEGORICAL_CHART,
+                    ChartTypeEnum.TABLE,
+                ]);
             }
         }
     }
@@ -10456,11 +10514,14 @@ export class StudyViewPageStore
     }
     // a row represents a list of patients that either have or have not recieved
     // a specific treatment
-    public readonly sampleTreatments = remoteData({
+    public readonly sampleTreatments = remoteData<
+        SampleTreatmentReport | undefined
+    >({
         await: () => [this.shouldDisplaySampleTreatments],
         invoke: async () => {
             if (this.shouldDisplaySampleTreatments.result) {
                 if (isClickhouseMode()) {
+                    // @ts-ignore (will be available when go live with Clickhouse for all portals)
                     return await this.internalClient.fetchSampleTreatmentCountsUsingPOST(
                         {
                             studyViewFilter: this.filters,
@@ -10500,11 +10561,14 @@ export class StudyViewPageStore
 
     // a row represents a list of samples that ether have or have not recieved
     // a specific treatment
-    public readonly patientTreatments = remoteData({
+    public readonly patientTreatments = remoteData<
+        PatientTreatmentReport | undefined
+    >({
         await: () => [this.shouldDisplayPatientTreatments],
         invoke: async () => {
             if (this.shouldDisplayPatientTreatments.result) {
                 if (isClickhouseMode()) {
+                    // @ts-ignore (will be available when go live with Clickhouse for all portals)
                     return await this.internalClient.fetchPatientTreatmentCountsUsingPOST(
                         {
                             studyViewFilter: this.filters,
@@ -10565,11 +10629,14 @@ export class StudyViewPageStore
 
     // a row represents a list of samples that ether have or have not recieved
     // a specific treatment
-    public readonly patientTreatmentGroups = remoteData({
+    public readonly patientTreatmentGroups = remoteData<
+        PatientTreatmentReport | undefined
+    >({
         await: () => [this.shouldDisplayPatientTreatmentGroups],
         invoke: () => {
             if (this.shouldDisplayPatientTreatmentGroups.result) {
                 if (isClickhouseMode()) {
+                    // @ts-ignore (will be available when go live with Clickhouse for all portals)
                     return this.internalClient.fetchPatientTreatmentCountsUsingPOST(
                         {
                             studyViewFilter: this.filters,
@@ -10637,26 +10704,29 @@ export class StudyViewPageStore
 
     // a row represents a list of samples that ether have or have not recieved
     // a specific treatment
-    public readonly patientTreatmentTarget = remoteData({
-        await: () => [this.shouldDisplayPatientTreatmentTarget],
-        invoke: async () => {
-            if (isClickhouseMode()) {
-                return await this.internalClient.fetchPatientTreatmentCountsUsingPOST(
-                    {
-                        studyViewFilter: this.filters,
-                        tier: 'AgentTarget',
-                    }
-                );
-            } else {
-                //we need to transform pre-clickhouse response into new SampleTreatmentReport
-                return await getPatientTreatmentReport(
-                    this.filters,
-                    'AgentTarget',
-                    this.internalClient
-                );
-            }
-        },
-    });
+    public readonly patientTreatmentTarget = remoteData<PatientTreatmentReport>(
+        {
+            await: () => [this.shouldDisplayPatientTreatmentTarget],
+            invoke: async () => {
+                if (isClickhouseMode()) {
+                    // @ts-ignore (will be available when go live with Clickhouse for all portals)
+                    return await this.internalClient.fetchPatientTreatmentCountsUsingPOST(
+                        {
+                            studyViewFilter: this.filters,
+                            tier: 'AgentTarget',
+                        }
+                    );
+                } else {
+                    //we need to transform pre-clickhouse response into new SampleTreatmentReport
+                    return await getPatientTreatmentReport(
+                        this.filters,
+                        'AgentTarget',
+                        this.internalClient
+                    );
+                }
+            },
+        }
+    );
 
     @action.bound
     public onTreatmentSelection(meta: ChartMeta, values: string[][]): void {

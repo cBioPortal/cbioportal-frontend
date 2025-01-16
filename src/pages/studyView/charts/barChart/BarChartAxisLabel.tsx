@@ -28,6 +28,16 @@ export class BarChartAxisLabel extends VictoryLabel {
             key: style[0].textAnchor || textAnchor,
         };
 
+        let tspan = this.getTspan(content, tspanProps, style, datum);
+
+        return React.cloneElement(
+            props.textComponent,
+            { dx, dy, x, y, events, transform, className, title, desc },
+            tspan
+        );
+    }
+
+    getTspan(content: string[], tspanProps: any, style: any, datum: any) {
         let tspan = [];
 
         // add the second string as a superscript
@@ -47,11 +57,7 @@ export class BarChartAxisLabel extends VictoryLabel {
             tspan.push(<tspan {...tspanProps}>{content[0]}</tspan>);
         }
 
-        return React.cloneElement(
-            props.textComponent,
-            { dx, dy, x, y, events, transform, className, title, desc },
-            tspan
-        );
+        return tspan;
     }
 }
 

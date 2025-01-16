@@ -39,7 +39,6 @@ import {
 } from 'cbioportal-ts-api-client';
 import * as React from 'react';
 import { buildCBioPortalPageUrl } from '../../shared/api/urls';
-import { BarDatum } from './charts/barChart/BarChart';
 import {
     BinMethodOption,
     GenericAssayChart,
@@ -230,6 +229,18 @@ export type DataBin = {
     end: number;
     specialValue: string;
     start: number;
+};
+
+export type BarDatum = {
+    x: number;
+    y: number;
+    dataBin: DataBin;
+};
+
+export type CategoryDataBin = {
+    id: string;
+    count: number;
+    specialValue: string;
 };
 
 export type MutationCategorization = 'MUTATED' | 'MUTATION_TYPE';
@@ -1259,6 +1270,16 @@ export function filterIntervalBins(numericalBins: DataBin[]) {
     );
 }
 
+export function clinicalDataToDataBin(
+    data: ClinicalDataCountSummary[]
+): CategoryDataBin[] {
+    return data.map(item => ({
+        id: item.value,
+        count: item.count,
+        specialValue: `${item.value}`,
+    }));
+}
+
 export function calcIntervalBinValues(intervalBins: DataBin[]) {
     const values = intervalBins.map(dataBin => dataBin.start);
 
@@ -1345,6 +1366,19 @@ export function generateCategoricalData(
     }));
 }
 
+export function generateCategoricalBarData(
+    categoryBins: CategoryDataBin[],
+    startIndex: number
+): BarDatum[] {
+    // x is not the actual data value, it is the normalized data for representation
+    // y is the actual count value
+    return categoryBins.map((dataBin: DataBin, index: number) => ({
+        x: startIndex + index + 1,
+        y: dataBin.count,
+        dataBin,
+    }));
+}
+
 export function isLogScaleByValues(values: number[]) {
     return (
         // empty list is not considered log scale
@@ -1374,6 +1408,14 @@ export function isEveryBinDistinct(data?: DataBin[]) {
         data.find(dataBin => dataBin.start !== dataBin.end) === undefined
     );
 }
+
+export const onlyContainsNA = (element: BarDatum): boolean => {
+    return element.dataBin.specialValue === 'NA';
+};
+
+export const doesNotContainNA = (element: BarDatum): boolean => {
+    return !onlyContainsNA(element);
+};
 
 function createRangeForDataBinOrFilter(
     start?: number,
