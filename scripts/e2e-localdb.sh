@@ -1,7 +1,13 @@
 #!/bin/sh
 set -e
+set -o allexport
 
 TEST_REPO_URL="https://github.com/cBioPortal/cbioportal-test.git"
+KEYCLOAK="true"
+STUDIES='ascn_test_study study_hg38 teststudy_genepanels study_es_0 lgg_ucsf_2014_test_generic_assay'
+
+# Use database image with preloaded studies
+export DOCKER_IMAGE_MYSQL=cbioportal/cbioportal-dev:database
 
 # Create a temp dir and clone test repo
 ROOT_DIR=$(pwd)
@@ -9,15 +15,24 @@ TEMP_DIR=$(mktemp -d)
 git clone "$TEST_REPO_URL" "$TEMP_DIR/cbioportal-test" || exit 1
 cd "$TEMP_DIR/cbioportal-test" || exit 1
 
-# Use database image with preloaded studies
-set -o allexport
-export DOCKER_IMAGE_MYSQL=cbioportal/cbioportal-dev:database
+# Generate keycloak config
+if [ "$KEYCLOAK" = "true" ]; then
+  ./utils/gen-keycloak-config.sh --studies=$STUDIES --template='$ROOT_DIR/end-to-end-test/local/docker_compose/keycloak/keycloak-config.json' --out='keycloak-config-generated.json'
+  export KEYCLOAK_CONFIG_PATH="$TEMP_DIR/cbioportal-test/keycloak-config-generated.json"
+fi
 
 # Start backend
-./scripts/docker-compose.sh --portal_type='web-and-data' --docker_args='-d'
+if [ "$KEYCLOAK" = "true" ]; then
+  ./scripts/docker-compose.sh --portal_type='keycloak' --docker_args='-d'
 
-# Wait for backend at localhost:8080
-./utils/check-connection.sh --url=localhost:8080 --max_retries=50
+  # Check keycloak connection at localhost:8081
+  ./utils/check-connection.sh --url=localhost:8081 --max_retries=50
+else
+  ./scripts/docker-compose.sh --portal_type='web-and-data' --docker_args='-d'
+fi
+
+# Check backend connection at localhost:8080
+./utils/check-connection.sh --url=localhost:8080/api/health --max_retries=50
 
 # Build frontend
 printf "\nBuilding frontend ...\n\n"
@@ -30,7 +45,9 @@ yarn run buildAll
 if [ -e "/var/tmp/cbioportal-pid" ]; then
   pkill -F /var/tmp/cbioportal-pid
 fi
-nohup ./node_modules/http-server/bin/http-server --cors dist/ -p 3000 > /dev/null 2>&1 &
+openssl \
+  req -newkey rsa:2048 -new -nodes -x509 -days 1 -keyout key.pem -out cert.pem -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=localhost" && \
+  nohup ./node_modules/http-server/bin/http-server --cors dist/ -p 3000 > /dev/null 2>&1 &
 echo $! > /var/tmp/cbioportal-pid
 
 # Wait for frontend at localhost:3000
