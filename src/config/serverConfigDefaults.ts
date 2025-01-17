@@ -245,6 +245,9 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
     skin_study_view_show_sv_table: false,
 
     download_custom_buttons_json: '',
+
+    priority_studies:
+        'Federated Studies#Test_cBioPortal_Instance_1,Test_cBioPortal_Instance_2',
 };
 
 export default ServerConfigDefaults;

@@ -112,7 +112,11 @@ export enum ChartTypeNameEnum {
 export const DEFAULT_SORTING_COLUMN = 'Freq';
 
 const studyViewFrontEnd = {
-    alwaysShownClinicalAttributes: ['CANCER_TYPE', 'CANCER_TYPE_DETAILED'],
+    alwaysShownClinicalAttributes: [
+        'DATA_SOURCE',
+        'CANCER_TYPE',
+        'CANCER_TYPE_DETAILED',
+    ],
     defaultPriority: 1,
     tableAttrs: [
         'CANCER_TYPE',
@@ -126,6 +130,7 @@ const studyViewFrontEnd = {
         MSI_SCORE_MANTIS: [0.4, 0.6],
     },
     priority: {
+        DATA_SOURCE: 5000,
         CANCER_TYPE: 3000,
         CANCER_TYPE_DETAILED: 2000,
         GENOMIC_PROFILES_SAMPLE_COUNT: 1000,

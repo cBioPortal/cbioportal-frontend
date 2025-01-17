@@ -648,6 +648,43 @@ export class QueryStore {
         []
     );
 
+    mockFederatedStudies(): CancerStudy[] {
+        const source1: any = {
+            name: 'Test cBioPortal Instance 1',
+            description: 'Test cBioPortal Instance 1',
+            publicStudy: true,
+            groups: 'PUBLIC',
+            studyId: 'Test_cBioPortal_Instance_1',
+            cancerType: 'mixed',
+            referenceGenome: 'hg19',
+            allSampleCount: 123,
+        };
+        const source2: any = {
+            name: 'Test cBioPortal Instance 2',
+            description: 'Test cBioPortal Instance 2',
+            publicStudy: true,
+            groups: 'PUBLIC',
+            studyId: 'Test_cBioPortal_Instance_2',
+            cancerType: 'mixed',
+            referenceGenome: 'hg19',
+            allSampleCount: 456,
+        };
+        return [source1 as CancerStudy, source2 as CancerStudy];
+    }
+
+    mockFederatedStudiesIdsSet(): { [studyId: string]: boolean } {
+        return stringListToSet(
+            this.federatedStudies.result.map(x => x.studyId)
+        );
+    }
+
+    readonly federatedStudies = remoteData<CancerStudy[]>({
+        invoke: async () => {
+            return Promise.resolve(this.mockFederatedStudies());
+        },
+        default: this.mockFederatedStudies(),
+    });
+
     readonly cancerStudyIdsSet = remoteData<{ [studyId: string]: boolean }>({
         await: () => [this.cancerStudies],
         invoke: async () => {
@@ -656,6 +693,16 @@ export class QueryStore {
             );
         },
         default: {},
+    });
+
+    readonly federatedStudiesIdsSet = remoteData<{
+        [studyId: string]: boolean;
+    }>({
+        await: () => [this.federatedStudies],
+        invoke: async () => {
+            return Promise.resolve(this.mockFederatedStudiesIdsSet());
+        },
+        default: this.mockFederatedStudiesIdsSet(),
     });
 
     readonly cancerStudyTags = remoteData({
@@ -1537,9 +1584,13 @@ export class QueryStore {
     // CANCER STUDY
 
     @cached @computed get treeData() {
+        const mergedStudies = [
+            ...this.cancerStudies.result,
+            ...this.federatedStudies.result,
+        ];
         return new CancerStudyTreeData({
             cancerTypes: this.cancerTypes.result,
-            studies: this.cancerStudies.result,
+            studies: mergedStudies,
             allStudyTags: this.cancerStudyTags.result,
             priorityStudies: this.priorityStudies,
             virtualStudies: this.forDownloadTab
@@ -1588,7 +1639,10 @@ export class QueryStore {
 
     public isVirtualStudy(studyId: string): boolean {
         // if the study id doesn't correspond to one in this.cancerStudies, then its a virtual Study
-        return !this.cancerStudyIdsSet.result[studyId];
+        return (
+            !this.cancerStudyIdsSet.result[studyId] &&
+            !this.federatedStudiesIdsSet.result[studyId]
+        );
     }
 
     public isPublicVirtualStudy(studyId: string): boolean {
@@ -1603,6 +1657,10 @@ export class QueryStore {
             return true;
         }
         return false;
+    }
+
+    public isFederatedStudy(studyId: string): boolean {
+        return this.federatedStudiesIdsSet.result[studyId];
     }
 
     private isSingleStudySelected(shouldBeVirtualStudy: boolean) {

@@ -340,6 +340,9 @@ export class FilteredCancerTreeView {
             if (this.store.isDeletedVirtualStudy(study.studyId)) {
                 return true;
             }
+            if (this.store.isFederatedStudy(study.studyId)) {
+                return true;
+            }
             if (study.readPermission === false) {
                 return true;
             }

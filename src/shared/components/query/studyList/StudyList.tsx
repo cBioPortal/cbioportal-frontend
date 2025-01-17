@@ -320,6 +320,10 @@ export default class StudyList extends QueryStoreComponent<
                 });
             }
 
+            const studyDescription = this.store.isVirtualStudy(study.studyId)
+                ? study.description.replace(/\r?\n/g, '<br />')
+                : study.description;
+
             return (
                 <span className={styles.StudyLinks}>
                     {links.map((link, i) => {
@@ -373,14 +377,7 @@ export default class StudyList extends QueryStoreComponent<
                             content = (
                                 <StudyTagsTooltip
                                     key={i}
-                                    studyDescription={
-                                        this.store.isVirtualStudy(study.studyId)
-                                            ? study.description.replace(
-                                                  /\r?\n/g,
-                                                  '<br />'
-                                              )
-                                            : study.description
-                                    }
+                                    studyDescription={studyDescription}
                                     studyId={study.studyId}
                                     isVirtualStudy={this.store.isVirtualStudy(
                                         study.studyId
