@@ -447,7 +447,7 @@ jobs:
           command: |
             git clone https://github.com/cbioportal/cbioportal-docker-compose.git
             cd cbioportal-docker-compose
-            ./utils/gen-keycloak-config.sh --studies=$STUDIES --template='/tmp/repo/cbioportal-docker-compose/dev/keycloak/keycloak-config.json --out='/tmp/repo/keycloak-config-generated.json'
+            ./utils/gen-keycloak-config.sh --studies=$STUDIES --template='/tmp/repo/cbioportal-docker-compose/dev/keycloak/keycloak-config.json' --out='/tmp/repo/keycloak-config-generated.json'
       - run:
           name: Start backend server with keycloak
           environment:
