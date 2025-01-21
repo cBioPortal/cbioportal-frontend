@@ -61,6 +61,28 @@ export class SharedGroupsAndCustomDataQueryExtractor
     }
 }
 
+export class DataSourceQueryExtractor
+    implements StudyViewQueryExtractor<Promise<void>> {
+    async accept(
+        query: StudyViewURLQuery,
+        store: StudyViewPageStore
+    ): Promise<void> {
+        const filters: Partial<StudyViewFilter> = {
+            clinicalDataFilters: [
+                {
+                    attributeId: 'DATA_SOURCE',
+                    values: [
+                        {
+                            value: query.dataSourceId!,
+                        } as DataFilterValue,
+                    ],
+                },
+            ],
+        };
+        store.updateStoreByFilters(filters);
+    }
+}
+
 export class StudyViewFilterQueryExtractor
     implements StudyViewQueryExtractor<Promise<void>> {
     async accept(

@@ -60,7 +60,7 @@ import { MakeMobxView } from '../../shared/components/MobxView';
 import ResourceTab from '../../shared/components/resources/ResourceTab';
 import StudyViewURLWrapper from './StudyViewURLWrapper';
 import ResourcesTab, { RESOURCES_TAB_NAME } from './resources/ResourcesTab';
-import { ResourceData } from 'cbioportal-ts-api-client';
+import { DataFilterValue, ResourceData } from 'cbioportal-ts-api-client';
 import $ from 'jquery';
 import { StudyViewComparisonGroup } from 'pages/groupComparison/GroupComparisonUtils';
 import { parse } from 'query-string';
@@ -180,7 +180,15 @@ export default class DashboardPage extends React.Component<
             'filterValues',
         ]);
 
-        newStudyViewFilter.studyId = 'federated_data';
+        if (!newStudyViewFilter.id) {
+            newStudyViewFilter.id = 'federated_data';
+        } else {
+            const targetSource = newStudyViewFilter.id;
+            newStudyViewFilter.id = 'federated_data';
+
+            // apply this filter to Data Source once the page loads
+            newStudyViewFilter.dataSourceId = targetSource;
+        }
 
         newStudyViewFilter.filterJson = query['filters'];
 
@@ -212,6 +220,7 @@ export default class DashboardPage extends React.Component<
             this.store.studyViewQueryFilter = newStudyViewFilter;
             updateStoreFromURLPromise = remoteData(async () => {
                 await this.store.updateStoreFromURL(newStudyViewFilter);
+
                 return [];
             });
         }

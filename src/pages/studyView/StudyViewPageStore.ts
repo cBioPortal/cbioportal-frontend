@@ -327,6 +327,7 @@ import {
 } from 'pages/studyView/StructVarUtils';
 import {
     ClinicalAttributeQueryExtractor,
+    DataSourceQueryExtractor,
     SharedGroupsAndCustomDataQueryExtractor,
     StudyIdQueryExtractor,
     StudyViewFilterQueryExtractor,
@@ -435,6 +436,7 @@ export type StudyViewURLQuery = {
     plots_coloring_selection?: PlotsColoringParam;
     generic_assay_groups?: string;
     geneset_list?: string;
+    dataSourceId?: string;
 };
 
 export type XvsYScatterChart = {
@@ -687,6 +689,16 @@ export class StudyViewPageStore
                 ],
                 () => {
                     this.updateLayout();
+
+                    // for now, just hide all of the charts that are having issues
+                    this.hideChart('OS_SURVIVAL');
+                    this.hideChart('DFS_SURVIVAL');
+                    this.hideChart(
+                        'X-VS-Y-FRACTION_GENOME_ALTERED-MUTATION_COUNT'
+                    );
+                    this.hideChart('MUTATION_COUNT');
+                    this.hideChart('FRACTION_GENOME_ALTERED');
+                    this.hideChart('AGE');
                 }
             )
         );
@@ -2339,6 +2351,10 @@ export class StudyViewPageStore
             asyncQueryExtractors.push(new StudyViewFilterQueryExtractor());
         } else if (query.filterAttributeId && query.filterValues) {
             asyncQueryExtractors.push(new ClinicalAttributeQueryExtractor());
+        }
+
+        if (query.dataSourceId) {
+            asyncQueryExtractors.push(new DataSourceQueryExtractor());
         }
 
         for (const extractor of queryExtractors) {

@@ -406,6 +406,9 @@ export default class StudyList extends QueryStoreComponent<
                             <span>
                                 <StudyLink
                                     studyId={study.studyId}
+                                    useDashboard={this.store.isFederatedStudy(
+                                        study.studyId
+                                    )}
                                     className={classNames(
                                         styles.summaryIcon,
                                         'ci ci-pie-chart'
