@@ -3,6 +3,7 @@ set -e
 set -o allexport
 
 TEST_REPO_URL="https://github.com/cBioPortal/cbioportal-test.git"
+DOCKER_COMPOSE_REPO_URL="https://github.com/cBioPortal/cbioportal-docker-compose.git"
 KEYCLOAK="true"
 STUDIES='ascn_test_study study_hg38 teststudy_genepanels study_es_0 lgg_ucsf_2014_test_generic_assay'
 
@@ -13,11 +14,12 @@ export DOCKER_IMAGE_MYSQL=cbioportal/cbioportal-dev:database
 ROOT_DIR=$(pwd)
 TEMP_DIR=$(mktemp -d)
 git clone "$TEST_REPO_URL" "$TEMP_DIR/cbioportal-test" || exit 1
+git clone "$DOCKER_COMPOSE_REPO_URL" "$TEMP_DIR/cbioportal-docker-compose" || exit 1
 cd "$TEMP_DIR/cbioportal-test" || exit 1
 
 # Generate keycloak config
 if [ "$KEYCLOAK" = "true" ]; then
-  ./utils/gen-keycloak-config.sh --studies=$STUDIES --template='$ROOT_DIR/end-to-end-test/local/docker_compose/keycloak/keycloak-config.json' --out='keycloak-config-generated.json'
+  ./utils/gen-keycloak-config.sh --studies=$STUDIES --template='$TEMP_DIR/cbioportal-docker-compose/dev/keycloak/keycloak-config.json' --out='keycloak-config-generated.json'
   export KEYCLOAK_CONFIG_PATH="$TEMP_DIR/cbioportal-test/keycloak-config-generated.json"
 fi
 
