@@ -1782,6 +1782,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 break;
             case EventKey.utilities_horizontalBars:
                 this.horizontalBars = !this.horizontalBars;
+                this.handleSortByChange({
+                    value: SortByOptions.Alphabetically,
+                    label: 'Alphabetically',
+                });
                 break;
             case EventKey.utilities_viewLimitValues:
                 this.viewLimitValues = !this.viewLimitValues;
