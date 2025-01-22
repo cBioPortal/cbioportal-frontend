@@ -4,8 +4,10 @@ set -o allexport
 
 TEST_REPO_URL="https://github.com/cBioPortal/cbioportal-test.git"
 DOCKER_COMPOSE_REPO_URL="https://github.com/cBioPortal/cbioportal-docker-compose.git"
-KEYCLOAK="true"
 STUDIES='ascn_test_study study_hg38 teststudy_genepanels study_es_0 lgg_ucsf_2014_test_generic_assay'
+KEYCLOAK="true"
+RUN_FRONTEND="false" # Set to "true" if you want to build and run frontend at localhost:3000
+RUN_TESTS="false" # Set to "true" if you want to run all e2e:local tests
 
 # Use database image with preloaded studies
 export DOCKER_IMAGE_MYSQL=cbioportal/cbioportal-dev:database
@@ -19,7 +21,7 @@ cd "$TEMP_DIR/cbioportal-test" || exit 1
 
 # Generate keycloak config
 if [ "$KEYCLOAK" = "true" ]; then
-  ./utils/gen-keycloak-config.sh --studies=$STUDIES --template='$TEMP_DIR/cbioportal-docker-compose/dev/keycloak/keycloak-config.json' --out='keycloak-config-generated.json'
+  ./utils/gen-keycloak-config.sh --studies="$STUDIES" --template='$TEMP_DIR/cbioportal-docker-compose/dev/keycloak/keycloak-config.json' --out='keycloak-config-generated.json'
   export KEYCLOAK_CONFIG_PATH="$TEMP_DIR/cbioportal-test/keycloak-config-generated.json"
 fi
 
@@ -36,34 +38,38 @@ fi
 # Check backend connection at localhost:8080
 ./utils/check-connection.sh --url=localhost:8080/api/health --max_retries=50
 
-# Build frontend
-printf "\nBuilding frontend ...\n\n"
-cd "$ROOT_DIR" || exit 1
-export BRANCH_ENV=master
-yarn install --frozen-lockfile
-yarn run buildAll
+if [ "$RUN_FRONTEND" = "true" ]; then
+  # Build frontend
+  printf "\nBuilding frontend ...\n\n"
+  cd "$ROOT_DIR" || exit 1
+  export BRANCH_ENV=master
+  yarn install --frozen-lockfile
+  yarn run buildAll
 
-# Start frontend http server, delete if previous server exists
-if [ -e "/var/tmp/cbioportal-pid" ]; then
-  pkill -F /var/tmp/cbioportal-pid
+  # Start frontend http server, delete if previous server exists
+  if [ -e "/var/tmp/cbioportal-pid" ]; then
+    pkill -F /var/tmp/cbioportal-pid
+  fi
+  openssl \
+    req -newkey rsa:2048 -new -nodes -x509 -days 1 -keyout key.pem -out cert.pem -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=localhost" && \
+    nohup ./node_modules/http-server/bin/http-server --cors dist/ -p 3000 > /dev/null 2>&1 &
+  echo $! > /var/tmp/cbioportal-pid
+
+  # Wait for frontend at localhost:3000
+  printf "\nVerifying frontend connection ...\n\n"
+  cd "$TEMP_DIR/cbioportal-test" || exit 1
+  ./utils/check-connection.sh --url=localhost:3000
 fi
-openssl \
-  req -newkey rsa:2048 -new -nodes -x509 -days 1 -keyout key.pem -out cert.pem -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=localhost" && \
-  nohup ./node_modules/http-server/bin/http-server --cors dist/ -p 3000 > /dev/null 2>&1 &
-echo $! > /var/tmp/cbioportal-pid
 
-# Wait for frontend at localhost:3000
-printf "\nVerifying frontend connection ...\n\n"
-cd "$TEMP_DIR/cbioportal-test" || exit 1
-./utils/check-connection.sh --url=localhost:3000
+if [ "$RUN_TESTS" = "true" ]; then
+  # Build e2e localdb tests
+  cd "$ROOT_DIR/end-to-end-test" || exit 1
+  yarn --ignore-engines
 
-# Build e2e localdb tests
-cd "$ROOT_DIR/end-to-end-test" || exit 1
-yarn --ignore-engines
-
-# Run e2e localdb tests
-cd "$ROOT_DIR" || exit 1
-yarn run e2e:local
+  # Run e2e localdb tests
+  cd "$ROOT_DIR" || exit 1
+  yarn run e2e:local
+fi
 
 # Cleanup
 cd "$ROOT_DIR" || exit 1

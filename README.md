@@ -195,10 +195,10 @@ The script that can be used to run e2e-localdb tests is located at [./scripts/e2
 
 3. You need to have a global version of Maven installed.
 
-In a terminal, call script from root directory.
-
+In a terminal, run the following commands from root directory.
 ```
 ./scripts/e2e-localdb.sh
+yarn run e2e:local
 ```
 
 ### Running e2e-localdb tests _CircleCI_ or _CircleCI+PR_ context
