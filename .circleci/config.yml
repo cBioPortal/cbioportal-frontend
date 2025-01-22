@@ -446,12 +446,12 @@ jobs:
             STUDIES: 'ascn_test_study study_hg38 teststudy_genepanels study_es_0 lgg_ucsf_2014_test_generic_assay'
           command: |
             git clone https://github.com/cbioportal/cbioportal-docker-compose.git
-            cd cbioportal-docker-compose
-            ./utils/gen-keycloak-config.sh --studies=$STUDIES --template='/tmp/repo/cbioportal-docker-compose/dev/keycloak/keycloak-config.json' --out='/tmp/repo/keycloak-config-generated.json'
+            cd cbioportal-test
+            ./utils/gen-keycloak-config.sh --studies="$STUDIES" --template='/tmp/repo/cbioportal-docker-compose/dev/keycloak/keycloak-config.json' --out='/tmp/repo/keycloak-config-generated.json'
       - run:
           name: Start backend server with keycloak
           environment:
-            KEYCLOAK_CONFIG_PATH: 'tmp/repo/keycloak-config-generated.json'
+            KEYCLOAK_CONFIG_PATH: '/tmp/repo/keycloak-config-generated.json'
           command: |
             cd cbioportal-test
             ./scripts/docker-compose.sh --portal_type='keycloak' --docker_args='-d'
