@@ -144,14 +144,37 @@ export function getJitterForCase(uniqueKey: string) {
     return getDeterministicRandomNumber(seed, [-1, 1]);
 }
 
+export function getSamplesToHighlightInLineHover<D>(
+    samples: string[],
+    highlightfunction: (d: D) => Boolean
+) {
+    // Get sample ids and set their highlight status to 'on'
+    const sampleIds = samples;
+}
+
 export function makeScatterPlotSizeFunction<D>(
     highlight?: (d: D) => boolean,
-    size?: number | ((d: D, active: Boolean, isHighlighted?: boolean) => number)
+    size?:
+        | number
+        | ((
+              d: D,
+              active: Boolean,
+              isHighlighted?: boolean,
+              isLineHighlighted?: boolean
+          ) => number),
+    line?: (d: D) => boolean
 ) {
+    console.log('ets the line', line);
+    // When we search the text box with a sample, this function is called
     // need to regenerate this function whenever highlight changes in order to trigger immediate Victory rerender
     if (size) {
         if (highlight && typeof size === 'function') {
+            console.log('first one');
             return (d: D, active: boolean) => size(d, active, highlight(d));
+        }
+        if (line && typeof size === 'function') {
+            console.log('entering the line');
+            return (d: D, active: boolean) => size(d, true, line(d));
         } else {
             return size;
         }
@@ -165,14 +188,15 @@ export function makeScatterPlotSizeFunction<D>(
 export function scatterPlotSize(
     d: any,
     active: boolean,
-    isHighlighted: boolean
+    isHighlighted: boolean,
+    isLineHighlighted?: boolean
 ) {
     if (isHighlighted) {
         return 8;
     } else if (active) {
         return 6;
-    // } else if (d.lineHovered) {
-    //     return 6;
+    } else if (isLineHighlighted) {
+        return 7;
     } else {
         return 4;
     }

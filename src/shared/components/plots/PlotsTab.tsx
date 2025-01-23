@@ -387,7 +387,7 @@ export type PlotsTabGeneOption = {
     label: string; // hugo symbol
 };
 
-// Represents the sample IDs for each patient ID 
+// Represents the sample IDs for each patient ID
 export type SampleIdsForPatientIds = {
     [patientId: string]: string[];
 };
@@ -1835,7 +1835,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             case EventKey.utilities_viewLimitValues:
                 this.viewLimitValues = !this.viewLimitValues;
                 break;
-            case EventKey.utilities_compareSamples: 
+            case EventKey.utilities_compareSamples:
                 this.compareSamples = !this.compareSamples;
                 break;
             case EventKey.sortByMedian:
@@ -3627,6 +3627,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 x => x.highlighting!.isDatumHighlighted
             ),
         ];
+
         return (d: IPlotSampleData) => {
             return _.some(highlightFunctions, f => f(d));
         };
@@ -5828,7 +5829,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                     }
                                     legendTitle={this.legendTitle}
                                     renderLinePlot={this.compareSamples} // render line plot if checkbox is checked
-                                    samplesForPatients={this.samplesForEachPatient}
+                                    samplesForPatients={
+                                        this.samplesForEachPatient
+                                    }
+                                    testPairwise={this.highlightedLegendItems}
                                 />
                             );
                             break;

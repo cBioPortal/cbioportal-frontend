@@ -105,6 +105,7 @@ export interface IBoxScatterPlotProps<D extends IBaseBoxScatterPlotPoint> {
     qValue?: number | null;
     renderLinePlot?: boolean;
     samplesForPatients?: SampleIdsForPatientIds[] | [];
+    testPairwise?: any;
 }
 
 export type BoxModel = {
@@ -146,12 +147,49 @@ export default class BoxScatterPlot<
     @observable private mousePosition = { x: 0, y: 0 };
     @observable visibleLines = new Map();
     @observable removingLines: boolean = false;
-
+    @observable _lineHighlight: boolean = false;
     private scatterPlotTooltipHelper: ScatterPlotTooltipHelper = new ScatterPlotTooltipHelper();
 
     constructor(props: any) {
         super(props);
         makeObservable(this);
+    }
+
+    @action.bound
+    line?: (d: any) => boolean = (d: any) => false;
+
+    @action.bound
+    line?: (d: any) => boolean = (d: any) => false;
+
+    @action.bound
+    isLineHovered(data: any, hovered: boolean) {
+        console.log('isLineHovered is called');
+        if (hovered) {
+            // Define the line function dynamically based on the data
+            this.line = (d: any) => {
+                return data.some((sampleArray: any) => {
+                    console.log('Checking if line matches');
+                    return this.scatterPlotData.some(dataWithAppearance =>
+                        dataWithAppearance.data.some(
+                            sample =>
+                                sample.sampleId === sampleArray.sampleId &&
+                                sample.sampleId === d.sampleId
+                        )
+                    );
+                });
+            };
+        } else {
+            // Reset the line function to always return false
+            this.line = (d: any) => false;
+        }
+    }
+
+    @computed get scatterPlotSize() {
+        const highlight = this.props.highlight;
+        const size = this.props.size;
+        const line = this.line;
+        // need to regenerate this function whenever highlight changes in order to trigger immediate Victory rerender
+        return makeScatterPlotSizeFunction(highlight, size, line);
     }
 
     @bind
@@ -531,13 +569,6 @@ export default class BoxScatterPlot<
         }
     }
 
-    @computed get scatterPlotSize() {
-        const highlight = this.props.highlight;
-        const size = this.props.size;
-        // need to regenerate this function whenever highlight changes in order to trigger immediate Victory rerender
-        return makeScatterPlotSizeFunction(highlight, size);
-    }
-
     @computed get labels() {
         return this.props.data.map(d => {
             if (!!this.props.compressXAxis) {
@@ -812,14 +843,16 @@ export default class BoxScatterPlot<
                     this.scatterPlotData.forEach(datawithAppearance => {
                         datawithAppearance.data.forEach(sampleArray => {
                             if (sampleIds.includes(sampleArray.sampleId)) {
-                                patientDataForLinePlot[patientId].push(sampleArray);
+                                patientDataForLinePlot[patientId].push(
+                                    sampleArray
+                                );
                             }
-                        });                   
+                        });
                     });
                 });
-            }); 
+            });
         }
-        return patientDataForLinePlot;  
+        return patientDataForLinePlot;
     }
 
     // to populate the very first time (or everytime the page refreshes)
@@ -851,22 +884,6 @@ export default class BoxScatterPlot<
         }
         return null;
     }
-
-    // @action.bound
-    // isLineHovered(data: any, hovered: boolean) {
-    //     console.log(this.scatterPlotData);
-    //     data.forEach((sampleArray: any) => {
-    //         this.scatterPlotData.map(dataWithAppearance => {
-    //             dataWithAppearance.data.map(sample => {
-    //                 if (sample.sampleId === sampleArray.sampleId) {
-    //                     sample.lineHovered = hovered; // TODO: gets updated when clicked but not when hovered
-    //                     console.log(`Sample ${sample.sampleId} lineHovered: ${sample.lineHovered}`);
-    //                     console.log(sample);
-    //                 }
-    //             })
-    //         })
-    //     })
-    // }
 
     @autobind
     private getChart() {
@@ -930,7 +947,11 @@ export default class BoxScatterPlot<
                                             <VictoryLine
                                                 name="line"
                                                 key={patientId}
-                                                data={this.patientLinePlotData![patientId]}
+                                                data={
+                                                    this.patientLinePlotData![
+                                                        patientId
+                                                    ]
+                                                }
                                                 x={this.scatterPlotX}
                                                 y={this.scatterPlotY}
                                                 style={{
@@ -948,27 +969,55 @@ export default class BoxScatterPlot<
                                                             onMouseOver: () => {
                                                                 return [
                                                                     {
-                                                                        target: 'data',
-                                                                        mutation: () => {    
-                                                                            // this.isLineHovered(this.patientLinePlotData![patientId], true);
-                                                                            return { style: { stroke: 'black', strokeWidth: 3 } }
-                                                                        }
-                                                                    }
-                                                                ]
+                                                                        target:
+                                                                            'data',
+                                                                        mutation: () => {
+                                                                            this.isLineHovered(
+                                                                                this
+                                                                                    .patientLinePlotData![
+                                                                                    patientId
+                                                                                ],
+                                                                                true
+                                                                            );
+                                                                            return {
+                                                                                style: {
+                                                                                    stroke:
+                                                                                        'black',
+                                                                                    strokeWidth: 3,
+                                                                                },
+                                                                            };
+                                                                        },
+                                                                    },
+                                                                ];
                                                             },
                                                             onMouseOut: () => {
                                                                 return [
                                                                     {
-                                                                        target: 'data',
+                                                                        target:
+                                                                            'data',
                                                                         mutation: () => {
-                                                                            // this.isLineHovered(this.patientLinePlotData![patientId], false);
-                                                                            return { style: { stroke: 'grey', strokeWidth: 2 } }
-                                                                        }
-                                                                    }
+                                                                            this.isLineHovered(
+                                                                                this
+                                                                                    .patientLinePlotData![
+                                                                                    patientId
+                                                                                ],
+                                                                                false
+                                                                            );
+                                                                            return {
+                                                                                style: {
+                                                                                    stroke:
+                                                                                        'grey',
+                                                                                    strokeWidth: 2,
+                                                                                },
+                                                                            };
+                                                                        },
+                                                                    },
                                                                 ];
                                                             },
                                                             onClick: () => {
-                                                                this.toggleLineVisibility(patientId);
+                                                                this.toggleLineVisibility(
+                                                                    patientId
+                                                                );
                                                                 return [];
                                                             },
                                                         },
