@@ -53,10 +53,32 @@ export function computeRenderData(
     mutationProfileId: string,
     coverageInformation: CoverageInformation,
     groupByOption: string,
+    selectedSamplesOption: string[],
     sampleIdToClinicalValue: { [sampleId: string]: string }
 ) {
     const grayPoints: IPoint[] = []; // points that are purely interpolated for rendering, dont have data of their own
     const lineData: IPoint[][] = [];
+    console.log(`Selected Samples : ${JSON.stringify(selectedSamplesOption)}`);
+    samples = samples.filter(sample => {
+        return _.some(selectedSamplesOption, {
+            label: sample.sampleId,
+            value: sample.sampleId,
+        });
+    });
+    mutations = mutations
+        .map(mutationArr =>
+            mutationArr.filter(mutation => {
+                return _.some(selectedSamplesOption, {
+                    label: mutation.sampleId,
+                    value: mutation.sampleId,
+                });
+            })
+        )
+        .filter(mutation => mutation.length > 0);
+    console.log(`Samples : ${JSON.stringify(samples)}`);
+    console.log(`Count of Samples : ${samples.length}`);
+    console.log(`Mutations : ${JSON.stringify(mutations)}`);
+    console.log(`Count of Mutations : ${mutations.length}`);
 
     if (groupByOption && groupByOption != GROUP_BY_NONE)
         mutations = splitMutationsBySampleGroup(

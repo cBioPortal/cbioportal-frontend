@@ -183,6 +183,7 @@ export default class VAFChartWrapper extends React.Component<
             this.props.mutationProfileId,
             this.props.coverageInformation,
             this.props.wrapperStore.groupByOption!,
+            this.props.wrapperStore.selectedSamplesOptions,
             this.sampleIdToClinicalValue
         ).lineData;
     }
