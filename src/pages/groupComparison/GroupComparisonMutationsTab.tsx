@@ -7,6 +7,7 @@ import _ from 'lodash';
 import {
     MUTATIONS_NOT_ENOUGH_GROUPS_MSG,
     MUTATIONS_TOO_MANY_GROUPS_MSG,
+    NO_MUTATIONS_AVAILABLE_MSG,
 } from './GroupComparisonUtils';
 import { MakeMobxView } from 'shared/components/MobxView';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
@@ -55,8 +56,8 @@ export default class GroupComparisonMutationsTab extends React.Component<
         let activeTabId;
         if (this.props.store.userSelectedMutationMapperGene) {
             activeTabId = this.props.store.userSelectedMutationMapperGene;
-        } else {
-            activeTabId = this.props.store.activeMutationMapperGene!
+        } else if (this.props.store.activeMutationMapperGene) {
+            activeTabId = this.props.store.activeMutationMapperGene
                 .hugoGeneSymbol;
         }
         return activeTabId;
@@ -101,6 +102,15 @@ export default class GroupComparisonMutationsTab extends React.Component<
                         {MUTATIONS_TOO_MANY_GROUPS_MSG}
                     </div>
                 );
+            } else if (!this.props.store.activeMutationMapperGene) {
+                return (
+                    <div
+                        className="alert alert-info"
+                        data-test="NoMutationsAvailableAlert"
+                    >
+                        {NO_MUTATIONS_AVAILABLE_MSG}
+                    </div>
+                );
             }
 
             return (
@@ -139,7 +149,7 @@ export default class GroupComparisonMutationsTab extends React.Component<
                             handleGeneChange={this.handleGeneChange}
                             key={
                                 'comparisonLollipopGene' +
-                                this.props.store.activeMutationMapperGene!
+                                this.props.store.activeMutationMapperGene
                                     .hugoGeneSymbol
                             }
                         />

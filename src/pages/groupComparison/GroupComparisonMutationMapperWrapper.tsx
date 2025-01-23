@@ -151,9 +151,12 @@ export default class GroupComparisonMutationMapperWrapper extends React.Componen
             this.props.store.profiledPatientCounts,
         ],
         render: () => {
-            const mutationMapperStore = this.mutationMapperToolStore.getMutationMapperStore(
-                this.props.store.activeMutationMapperGene!.hugoGeneSymbol
-            );
+            let mutationMapperStore;
+            if (this.props.store.activeMutationMapperGene) {
+                mutationMapperStore = this.mutationMapperToolStore.getMutationMapperStore(
+                    this.props.store.activeMutationMapperGene.hugoGeneSymbol
+                );
+            }
             if (mutationMapperStore) {
                 return (
                     <div
@@ -161,8 +164,8 @@ export default class GroupComparisonMutationMapperWrapper extends React.Componen
                         style={{ marginTop: 20 }}
                     >
                         <h3>
-                            {this.props.store.activeMutationMapperGene
-                                ?.hugoGeneSymbol +
+                            {this.props.store.activeMutationMapperGene!
+                                .hugoGeneSymbol +
                                 ' mutations: ' +
                                 this.props.store.activeGroups
                                     .result!.map(g => g.nameWithOrdinal)

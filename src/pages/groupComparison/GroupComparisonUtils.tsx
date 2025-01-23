@@ -556,6 +556,9 @@ export const MUTATIONS_NOT_ENOUGH_GROUPS_MSG =
 export const MUTATIONS_TOO_MANY_GROUPS_MSG =
     "We can't show mutations for more than 2 groups. Please deselect groups in the Groups section.";
 
+export const NO_MUTATIONS_AVAILABLE_MSG =
+    'No mutations are available. Try selecting some mutation alteration types in the Genomic Alterations tab.';
+
 export function getDefaultGroupName(
     filters: StudyViewFilter,
     customChartFilterSet: { [chartId: string]: string[] },
