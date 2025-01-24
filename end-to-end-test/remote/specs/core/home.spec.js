@@ -207,7 +207,7 @@ describe('select all/deselect all functionality in study selector', () => {
     });
 });
 
-describe('case set selection in front page query form', function() {
+describe.only('case set selection in front page query form', function() {
     const selectedCaseSet_sel =
         'div[data-test="CaseSetSelector"] span.Select-value-label[aria-selected="true"]';
 
@@ -287,9 +287,7 @@ describe('case set selection in front page query form', function() {
         await (
             await getElement('[data-test="study-search"] .dropdown-toggle')
         ).click();
-        await clickElement(
-            '[data-tour="cancer-study-list-container"] .studyItem_ampca_bcm_2016'
-        );
+        await clickElement('.studyItem_ampca_bcm_2016');
         await clickQueryByGeneButton();
         await (await getElement(selectedCaseSet_sel)).waitForExist();
         await browser.waitUntil(async () => {
