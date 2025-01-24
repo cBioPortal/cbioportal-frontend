@@ -53,7 +53,7 @@ export function computeRenderData(
     mutationProfileId: string,
     coverageInformation: CoverageInformation,
     groupByOption: string,
-    selectedSamplesOption: string[],
+    selectedSamplesOption: any[],
     sampleIdToClinicalValue: { [sampleId: string]: string }
 ) {
     const grayPoints: IPoint[] = []; // points that are purely interpolated for rendering, dont have data of their own

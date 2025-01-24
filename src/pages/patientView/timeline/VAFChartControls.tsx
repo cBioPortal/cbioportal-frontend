@@ -8,7 +8,7 @@ import SampleManager, {
 import LabeledCheckbox from '../../../shared/components/labeledCheckbox/LabeledCheckbox';
 import VAFChartWrapperStore from './VAFChartWrapperStore';
 import _ from 'lodash';
-
+import { CheckedSelect } from 'cbioportal-frontend-commons';
 interface IVAFChartControlsProps {
     wrapperStore: VAFChartWrapperStore;
     sampleManager: SampleManager;
@@ -23,6 +23,7 @@ export const SELECT_SAMPLE_NONE = {
     label: 'None',
     value: 'None',
 };
+export const SELECTED_SAMPLE_PLACEHOLDER = 'Selected Samples';
 
 const VAFChartControls: React.FunctionComponent<IVAFChartControlsProps> = observer(
     function({ wrapperStore, sampleManager }) {
@@ -32,8 +33,6 @@ const VAFChartControls: React.FunctionComponent<IVAFChartControlsProps> = observ
         ] = useState(true);
 
         const selectedSamplesOptions = [
-            SELECT_SAMPLE_ALL,
-            SELECT_SAMPLE_NONE,
             ...sampleIdsForSamples(sampleManager.samples).map(item => ({
                 label: `${item.value}`,
                 value: `${item.id}`,
@@ -42,36 +41,19 @@ const VAFChartControls: React.FunctionComponent<IVAFChartControlsProps> = observ
 
         function selectSamplesByValue() {
             let allSelectedSamples = selectedSamplesOptions;
-            allSelectedSamples = allSelectedSamples.filter(sample => {
-                return (
-                    sample.label != SELECT_SAMPLE_ALL.label &&
-                    sample.label != SELECT_SAMPLE_NONE.label
-                );
-            });
             if (isInitialSelectedSamples) {
                 console.log('running initial');
                 wrapperStore.setSelectedSamplesOptions(allSelectedSamples);
                 setisInitialSelectedSamples(!isInitialSelectedSamples);
             }
-            if (wrapperStore.selectedSamplesOptions.length === 0) {
-                return {
-                    label: 'None',
-                    value: 'None',
-                };
-            }
-            if (
-                _.isEqual(
-                    wrapperStore.selectedSamplesOptions,
-                    allSelectedSamples
-                )
-            ) {
-                return {
-                    label: 'All',
-                    value: 'All',
-                };
-            }
-
-            return wrapperStore.selectedSamplesOptions;
+            console.log(
+                `wrapper store : ${JSON.stringify(
+                    wrapperStore.selectedSamplesOptions
+                )}`
+            );
+            return wrapperStore.selectedSamplesOptions.map(sample => ({
+                value: sample.value,
+            }));
         }
 
         const groupByOptions = [
@@ -127,60 +109,30 @@ const VAFChartControls: React.FunctionComponent<IVAFChartControlsProps> = observ
 
         return (
             <div className={'VAFChartControls'} data-test={'VAFChartControls'}>
-                <label>
-                    Select Samples:&nbsp;
-                    <ReactSelect
+                <div style={{ width: '100%', maxWidth: '300px' }}>
+                    <CheckedSelect
                         name={'select-by-sample-select'}
                         value={selectSamplesByValue()}
                         options={selectedSamplesOptions}
+                        placeholder={SELECTED_SAMPLE_PLACEHOLDER}
                         onChange={(options: Array<any>) => {
-                            if (options.indexOf(SELECT_SAMPLE_ALL) !== -1) {
-                                wrapperStore.setSelectedSamplesOptions(
-                                    sampleIdsForSamples(
-                                        sampleManager.samples
-                                    ).map(item => ({
-                                        label: `${item.value}`,
-                                        value: `${item.id}`,
-                                    }))
-                                );
-                            } else if (
-                                options.indexOf(SELECT_SAMPLE_NONE) !== -1
-                            ) {
-                                wrapperStore.setSelectedSamplesOptions([]);
-                            } else {
-                                console.log(
-                                    `options before filter : ${JSON.stringify(
-                                        options
-                                    )}`
-                                );
-                                options = options.filter(
-                                    sample =>
-                                        sample.label !=
-                                            SELECT_SAMPLE_NONE.label &&
-                                        sample.label != SELECT_SAMPLE_ALL.label
-                                );
-                                console.log(
-                                    `options after filter : ${JSON.stringify(
-                                        options
-                                    )}`
-                                );
-                                wrapperStore.setSelectedSamplesOptions(options);
-                            }
+                            console.log(`Options : ${JSON.stringify(options)}`);
+                            options = options.map(option => {
+                                return {
+                                    value: option.value,
+                                    label: option.value,
+                                };
+                            });
+                            wrapperStore.setSelectedSamplesOptions(options);
                         }}
-                        styles={{
-                            container: (styles: any) => ({
-                                ...styles,
-                                width: 250,
-                            }),
-                        }}
-                        isMulti
-                        components={{
-                            Option: SelectedSampleChecklistComponent,
-                        }}
-                        closeMenuOnSelect={false}
-                        hideSelectedOptions={false}
+                        // isMulti
+                        // components={{
+                        //     Option: SelectedSampleChecklistComponent,
+                        // }}
+                        // closeMenuOnSelect={false}
+                        // hideSelectedOptions={false}
                     />
-                </label>
+                </div>
 
                 <label>
                     Group by:&nbsp;

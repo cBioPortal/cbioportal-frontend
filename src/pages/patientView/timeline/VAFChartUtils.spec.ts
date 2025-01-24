@@ -88,6 +88,13 @@ describe('VAFChartUtils', () => {
             } as Sample;
         }
 
+        function makeSelectedSample(i: number) {
+            return {
+                label: `sample${i}`,
+                value: `sample${i}`,
+            };
+        }
+
         function makeMutation(
             sampleI: number,
             hugoGeneSymbol: string,
@@ -187,7 +194,11 @@ describe('VAFChartUtils', () => {
                     'mutations',
                     makeCoverageInfo([1, 2, 3], []),
                     GROUP_BY_NONE,
-                    [],
+                    [
+                        makeSelectedSample(1),
+                        makeSelectedSample(2),
+                        makeSelectedSample(3),
+                    ],
                     {}
                 ),
                 {
@@ -229,7 +240,11 @@ describe('VAFChartUtils', () => {
                     'mutations',
                     makeCoverageInfo([1, 2, 3], []),
                     GROUP_BY_NONE,
-                    [],
+                    [
+                        makeSelectedSample(1),
+                        makeSelectedSample(2),
+                        makeSelectedSample(3),
+                    ],
                     {}
                 ),
                 {
@@ -382,7 +397,11 @@ describe('VAFChartUtils', () => {
                     'mutations',
                     makeCoverageInfo([1, 2, 3], []),
                     GROUP_BY_NONE,
-                    [],
+                    [
+                        makeSelectedSample(1),
+                        makeSelectedSample(2),
+                        makeSelectedSample(3),
+                    ],
                     {}
                 ),
                 {
@@ -518,7 +537,11 @@ describe('VAFChartUtils', () => {
                     'mutations',
                     makeCoverageInfo([1, 2, 3], []),
                     GROUP_BY_NONE,
-                    [],
+                    [
+                        makeSelectedSample(1),
+                        makeSelectedSample(2),
+                        makeSelectedSample(3),
+                    ],
                     {}
                 ),
                 {
@@ -615,7 +638,11 @@ describe('VAFChartUtils', () => {
                     'mutations',
                     makeCoverageInfo([1, 2, 3], []),
                     GROUP_BY_NONE,
-                    [],
+                    [
+                        makeSelectedSample(1),
+                        makeSelectedSample(2),
+                        makeSelectedSample(3),
+                    ],
                     {}
                 ),
                 {
@@ -741,7 +768,11 @@ describe('VAFChartUtils', () => {
                         ]
                     ),
                     GROUP_BY_NONE,
-                    [],
+                    [
+                        makeSelectedSample(1),
+                        makeSelectedSample(2),
+                        makeSelectedSample(3),
+                    ],
                     {}
                 ),
                 {
@@ -839,7 +870,11 @@ describe('VAFChartUtils', () => {
                     'mutations',
                     makeCoverageInfo([1, 2], [3]),
                     GROUP_BY_NONE,
-                    [],
+                    [
+                        makeSelectedSample(1),
+                        makeSelectedSample(2),
+                        makeSelectedSample(3),
+                    ],
                     {}
                 ),
                 {
@@ -925,7 +960,11 @@ describe('VAFChartUtils', () => {
                     'mutations',
                     makeCoverageInfo([1, 2, 3], []),
                     'SampleType',
-                    [],
+                    [
+                        makeSelectedSample(1),
+                        makeSelectedSample(2),
+                        makeSelectedSample(3),
+                    ],
                     {
                         sample1: 'Primary',
                         sample2: 'Recurrence',
@@ -1086,7 +1125,11 @@ describe('VAFChartUtils', () => {
                     'mutations',
                     makeCoverageInfo([1, 2, 3], []),
                     'SampleCollectionSource',
-                    [],
+                    [
+                        makeSelectedSample(1),
+                        makeSelectedSample(2),
+                        makeSelectedSample(3),
+                    ],
                     {
                         sample1: 'Outside',
                         sample2: 'Inside',
@@ -1199,7 +1242,11 @@ describe('VAFChartUtils', () => {
                     'mutations',
                     makeCoverageInfo([1, 2, 3], []),
                     'SampleCollectionSource',
-                    [],
+                    [
+                        makeSelectedSample(1),
+                        makeSelectedSample(2),
+                        makeSelectedSample(3),
+                    ],
                     {
                         sample1: 'Outside',
                         sample2: 'Inside',
@@ -1286,7 +1333,11 @@ describe('VAFChartUtils', () => {
                     'mutations',
                     makeCoverageInfo([1, 2, 3], []),
                     'SampleCollectionSource',
-                    [],
+                    [
+                        makeSelectedSample(1),
+                        makeSelectedSample(2),
+                        makeSelectedSample(3),
+                    ],
                     {
                         sample1: 'Outside',
                         sample2: 'Inside',
@@ -1399,7 +1450,11 @@ describe('VAFChartUtils', () => {
                         ]
                     ),
                     'SampleCollectionSource',
-                    [],
+                    [
+                        makeSelectedSample(1),
+                        makeSelectedSample(2),
+                        makeSelectedSample(3),
+                    ],
                     {
                         sample1: 'Outside',
                         sample2: 'Inside',
@@ -1482,7 +1537,11 @@ describe('VAFChartUtils', () => {
                     'mutations',
                     makeCoverageInfo([1, 2], [3]),
                     'SampleType',
-                    [],
+                    [
+                        makeSelectedSample(1),
+                        makeSelectedSample(2),
+                        makeSelectedSample(3),
+                    ],
                     {
                         sample1: 'Primary',
                         sample2: 'Recurrence',
@@ -1565,7 +1624,12 @@ describe('VAFChartUtils', () => {
                     'mutations',
                     makeCoverageInfo([1, 2, 3, 4], []),
                     'TumorPurity',
-                    [],
+                    [
+                        makeSelectedSample(1),
+                        makeSelectedSample(2),
+                        makeSelectedSample(3),
+                        makeSelectedSample(4),
+                    ],
                     { sample2: '40', sample3: '30', sample4: '30' }
                 ),
                 {
