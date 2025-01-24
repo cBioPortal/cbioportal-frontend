@@ -944,12 +944,8 @@ export default class MultipleCategoryBarPlot extends React.Component<
         }
     }
 
-    componentDidUpdate(prevProps: IMultipleCategoryBarPlotProps) {
+    componentDidUpdate() {
         this.updateLegendWidth();
-
-        if (this.props.horizontalBars !== prevProps.horizontalBars) {
-            this.setInitialSelectedOption();
-        }
     }
 
     render() {

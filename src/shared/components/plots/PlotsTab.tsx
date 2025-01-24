@@ -5597,6 +5597,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                         this.updateDropDownOptions
                                     }
                                     sortByOption={this.sortByOption}
+                                    key={`categoryPlot-${
+                                        this.horizontalBars
+                                            ? 'horizontal'
+                                            : 'vertical'
+                                    }`}
                                 />
                             );
                         }

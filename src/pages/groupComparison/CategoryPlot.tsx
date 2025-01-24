@@ -80,6 +80,9 @@ export default class CategoryPlot extends React.Component<
                 stacked={this.props.stacked}
                 pValue={this.props.pValue}
                 qValue={this.props.qValue}
+                key={`categoryPlot-${
+                    this.props.horizontalBars ? 'horizontal' : 'vertical'
+                }`}
             />
         );
     }
