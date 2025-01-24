@@ -21,7 +21,7 @@ describe('Patient Cohort View Custom Tab Tests', () => {
 
         await browser.pause(2000);
 
-        const res = await browser.checkDocument();
+        const res = await checkElementWithMouseDisabled('body', 500);
         assertScreenShotMatch(res);
 
         // now reload so that we get to the patient via direct initial load (not cohort navigation)
@@ -30,7 +30,7 @@ describe('Patient Cohort View Custom Tab Tests', () => {
         await waitForNetworkQuiet();
 
         // check that it matches again
-        const res2 = await browser.checkDocument();
+        const res2 = await checkElementWithMouseDisabled('body', 500);
         assertScreenShotMatch(res2);
     });
 });
