@@ -1,6 +1,9 @@
 var assert = require('assert');
 
-const { goToUrlAndSetLocalStorage } = require('../../../shared/specUtils');
+const {
+    goToUrlAndSetLocalStorage,
+    checkElementWithMouseDisabled,
+} = require('../../../shared/specUtils');
 const { assertScreenShotMatch } = require('../../../shared/lib/testUtils');
 const {
     clickElement,

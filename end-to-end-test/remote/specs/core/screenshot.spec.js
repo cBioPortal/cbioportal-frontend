@@ -36,7 +36,7 @@ function runResultsTestSuite(prefix, options = {}) {
     it(`${prefix} igv_tab tab`, async function() {
         await clickElement('a.tabAnchor_cnSegments');
         await getElement('.igv-column-container', { timeout: 20000 });
-        const res = await browser.checkElement('.pillTabs');
+        const res = await checkElementWithMouseDisabled('.pillTabs');
         assertScreenShotMatch(res);
     });
 
