@@ -7834,10 +7834,6 @@ export class StudyViewPageStore
     @action
     initializeClinicalEventTypeCountChart(): void {
         if (this.shouldDisplayClinicalEventTypeCounts.result) {
-            this.changeChartVisibility(
-                SpecialChartsUniqueKeyEnum.CLINICAL_EVENT_TYPE_COUNTS,
-                true
-            );
             this.chartsType.set(
                 SpecialChartsUniqueKeyEnum.CLINICAL_EVENT_TYPE_COUNTS,
                 ChartTypeEnum.CLINICAL_EVENT_TYPE_COUNTS_TABLE
