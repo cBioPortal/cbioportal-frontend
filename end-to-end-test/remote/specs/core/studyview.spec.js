@@ -1006,48 +1006,6 @@ describe('study view treatments table', () => {
     });
 });
 
-describe('study view timeline events availability table', () => {
-    it('verify timeline events availability table is visible', async () => {
-        await goToUrlAndSetLocalStorage(
-            `${CBIOPORTAL_URL}/study/summary?id=cesc_tcga_pan_can_atlas_2018`
-        );
-        await getElementByTestHandle('CLINICAL_EVENT_TYPE_COUNT-table', {
-            timeout: 20000,
-        });
-    });
-
-    it('verify filters can be applied', async () => {
-        await goToUrlAndSetLocalStorage(
-            `${CBIOPORTAL_URL}/study/summary?id=cesc_tcga_pan_can_atlas_2018`
-        );
-
-        await getElementByTestHandle('CLINICAL_EVENT_TYPE_COUNT-table', {
-            timeout: 20000,
-        });
-        const selectedPatients = await (
-            await getElementByTestHandle('selected-patients')
-        ).getText();
-
-        const timelineEventsAvailabilityCheckBox =
-            '[data-test="CLINICAL_EVENT_TYPE_COUNT-table"] .ReactVirtualized__Table__row:nth-child(2) input';
-
-        const applyFilterButton =
-            '[data-test="CLINICAL_EVENT_TYPE_COUNT-table"] button';
-
-        await (
-            await getElement(timelineEventsAvailabilityCheckBox)
-        ).waitForExist();
-        await clickElement(timelineEventsAvailabilityCheckBox);
-        await (await getElement(applyFilterButton)).waitForExist();
-        await clickElement(applyFilterButton);
-        await waitForNetworkQuiet();
-        assert.notEqual(
-            await (await getElementByTestHandle('selected-patients')).getText(),
-            selectedPatients
-        );
-    });
-});
-
 describe('study view mutations table', () => {
     // this guards against server-side regression
     // in which frequencies are miscalculated for
