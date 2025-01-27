@@ -287,9 +287,7 @@ describe('case set selection in front page query form', function() {
         await (
             await getElement('[data-test="study-search"] .dropdown-toggle')
         ).click();
-        await clickElement(
-            '[data-tour="cancer-study-list-container"] .studyItem_ampca_bcm_2016'
-        );
+        await clickElement('.studyItem_ampca_bcm_2016');
         await clickQueryByGeneButton();
         await (await getElement(selectedCaseSet_sel)).waitForExist();
         await browser.waitUntil(async () => {
