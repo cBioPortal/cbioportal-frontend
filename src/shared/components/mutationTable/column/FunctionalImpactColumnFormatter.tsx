@@ -393,7 +393,7 @@ export default class FunctionalImpactColumnFormatter {
         }
 
         const transcript = selectedTranscriptId
-            ? cacheData.data.transcript_consequences.find(
+            ? cacheData?.data?.transcript_consequences?.find(
                   tc => tc.transcript_id === selectedTranscriptId
               )
             : undefined;
