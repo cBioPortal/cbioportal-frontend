@@ -60,10 +60,11 @@ export const LollipopGeneSelector: React.FC<ILollipopGeneSelectorProps> = observ
                             value: gene,
                         }))}
                     value={
-                        store.userSelectedMutationMapperGene &&
                         store.activeMutationMapperGene
                             ? {
-                                  label: store.userSelectedMutationMapperGene,
+                                  label:
+                                      store.activeMutationMapperGene
+                                          .hugoGeneSymbol,
                                   value: store.activeMutationMapperGene,
                               }
                             : null

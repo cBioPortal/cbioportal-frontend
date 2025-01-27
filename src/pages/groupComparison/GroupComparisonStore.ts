@@ -368,9 +368,6 @@ export default class GroupComparisonStore extends ComparisonStore {
     readonly mutations = remoteData({
         await: () => [this.samples, this.mutationEnrichmentProfiles],
         invoke: async () => {
-            if (!this.activeMutationMapperGene) {
-                return [];
-            }
             const sampleMolecularIdentifiers = getSampleMolecularIdentifiers(
                 this.samples.result!,
                 this.mutationEnrichmentProfiles.result!
@@ -380,7 +377,7 @@ export default class GroupComparisonStore extends ComparisonStore {
                     projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
                     mutationMultipleStudyFilter: {
                         entrezGeneIds: [
-                            this.activeMutationMapperGene.entrezGeneId,
+                            this.activeMutationMapperGene!.entrezGeneId,
                         ],
                         sampleMolecularIdentifiers,
                     } as MutationMultipleStudyFilter,
@@ -486,24 +483,15 @@ export default class GroupComparisonStore extends ComparisonStore {
     }
 
     @computed get activeMutationMapperGene() {
-        let gene;
-        if (this.genes.isComplete) {
-            if (this.userSelectedMutationMapperGene) {
-                return this.genes.result!.find(
-                    g =>
-                        g.hugoGeneSymbol === this.userSelectedMutationMapperGene
-                );
-            } else if (
-                this.genesSortedByMutationFrequency.isComplete &&
-                this.genesSortedByMutationFrequency.result.length > 0
-            ) {
-                return this.genes.result!.find(
-                    g =>
-                        g.hugoGeneSymbol ===
-                        this.genesSortedByMutationFrequency.result![0]
-                );
-            }
-        }
+        let gene =
+            this.genes.result!.find(
+                g => g.hugoGeneSymbol === this.userSelectedMutationMapperGene
+            ) ||
+            this.genes.result!.find(
+                g =>
+                    g.hugoGeneSymbol ===
+                    this.genesSortedByMutationFrequency.result![0]
+            );
         return gene;
     }
 

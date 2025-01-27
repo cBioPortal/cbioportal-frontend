@@ -149,22 +149,24 @@ export default class GroupComparisonMutationMapperWrapper extends React.Componen
             this.props.store.coverageInformation,
             this.props.store.groupToProfiledPatients,
             this.props.store.profiledPatientCounts,
+            this.props.store.genes,
+            this.props.store.genesSortedByMutationFrequency,
         ],
         render: () => {
             let mutationMapperStore;
-            if (this.props.store.activeMutationMapperGene) {
-                mutationMapperStore = this.mutationMapperToolStore.getMutationMapperStore(
+            if (
+                this.props.store.activeMutationMapperGene &&
+                (mutationMapperStore = this.mutationMapperToolStore.getMutationMapperStore(
                     this.props.store.activeMutationMapperGene.hugoGeneSymbol
-                );
-            }
-            if (mutationMapperStore) {
+                ))
+            ) {
                 return (
                     <div
                         data-test="ComparisonPageMutationsTabPlot"
                         style={{ marginTop: 20 }}
                     >
                         <h3>
-                            {this.props.store.activeMutationMapperGene!
+                            {this.props.store.activeMutationMapperGene
                                 .hugoGeneSymbol +
                                 ' mutations: ' +
                                 this.props.store.activeGroups

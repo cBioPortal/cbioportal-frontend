@@ -7,6 +7,7 @@ import {
     getOverlapComputations,
     getSampleIdentifiers,
     getStudyIds,
+    getStudyMutationEnrichmentProfileMap,
     IOverlapComputations,
     isGroupEmpty,
     partitionCasesByGroupMembership,
@@ -235,10 +236,14 @@ export default abstract class ComparisonStore extends AnalysisStore
             );
         } else {
             // default
-            return mutationEventTypeSelectInit(
-                this.alterationEnrichmentProfiles.result?.mutationProfiles || []
-            );
+            return this.defaultMutationEnrichmentEventTypes;
         }
+    }
+
+    @computed get defaultMutationEnrichmentEventTypes() {
+        return mutationEventTypeSelectInit(
+            this.alterationEnrichmentProfiles.result?.mutationProfiles || []
+        );
     }
 
     @computed get isStructuralVariantEnrichmentSelected() {
@@ -713,32 +718,23 @@ export default abstract class ComparisonStore extends AnalysisStore
     } = {};
     readonly selectedStudyMutationEnrichmentProfileMap = remoteData({
         await: () => [this.mutationEnrichmentProfiles],
-        invoke: () => {
-            //Only return Mutation profile if any mutation type is selected, otherwise return {}
-            if (
-                _(this.selectedMutationEnrichmentEventTypes)
-                    .values()
-                    .some()
-            ) {
-                // set default enrichmentProfileMap if not selected yet
-                if (_.isEmpty(this._mutationEnrichmentProfileMap)) {
-                    const molecularProfilesbyStudyId = _.groupBy(
-                        this.mutationEnrichmentProfiles.result!,
-                        profile => profile.studyId
-                    );
-                    // Select only one molecular profile for each study
-                    return Promise.resolve(
-                        _.mapValues(
-                            molecularProfilesbyStudyId,
-                            molecularProfiles => molecularProfiles[0]
-                        )
-                    );
-                } else {
-                    return Promise.resolve(this._mutationEnrichmentProfileMap);
-                }
-            } else {
-                return Promise.resolve({});
-            }
+        invoke: async () => {
+            return getStudyMutationEnrichmentProfileMap(
+                this.selectedMutationEnrichmentEventTypes,
+                this.mutationEnrichmentProfiles.result!,
+                this._mutationEnrichmentProfileMap
+            );
+        },
+    });
+
+    readonly defaultStudyMutationEnrichmentProfileMap = remoteData({
+        await: () => [this.mutationEnrichmentProfiles],
+        invoke: async () => {
+            return getStudyMutationEnrichmentProfileMap(
+                this.defaultMutationEnrichmentEventTypes,
+                this.mutationEnrichmentProfiles.result!,
+                this._mutationEnrichmentProfileMap
+            );
         },
     });
 
@@ -1225,11 +1221,11 @@ export default abstract class ComparisonStore extends AnalysisStore
     readonly mutationsEnrichmentDataRequestGroups = remoteData({
         await: () => [
             this.alterationsEnrichmentAnalysisGroups,
-            this.selectedStudyMutationEnrichmentProfileMap,
+            this.defaultStudyMutationEnrichmentProfileMap,
         ],
         invoke: () => {
             if (
-                _(this.selectedMutationEnrichmentEventTypes)
+                _(this.defaultMutationEnrichmentEventTypes)
                     .values()
                     .some()
             ) {
@@ -1243,7 +1239,7 @@ export default abstract class ComparisonStore extends AnalysisStore
                             group.samples.forEach(sample => {
                                 if (
                                     this
-                                        .selectedStudyMutationEnrichmentProfileMap
+                                        .defaultStudyMutationEnrichmentProfileMap
                                         .result![sample.studyId]
                                 ) {
                                     molecularProfileCaseIdentifiers.push({
@@ -1251,7 +1247,7 @@ export default abstract class ComparisonStore extends AnalysisStore
                                             ? sample.patientId
                                             : sample.sampleId,
                                         molecularProfileId: this
-                                            .selectedStudyMutationEnrichmentProfileMap
+                                            .defaultStudyMutationEnrichmentProfileMap
                                             .result![sample.studyId]
                                             .molecularProfileId,
                                     });
@@ -1358,14 +1354,14 @@ export default abstract class ComparisonStore extends AnalysisStore
         await: () => [this.mutationsEnrichmentDataRequestGroups],
         resultsViewPageStore: this.resultsViewStore,
         getSelectedProfileMaps: () => [
-            this.selectedStudyMutationEnrichmentProfileMap.result!,
+            this.defaultStudyMutationEnrichmentProfileMap.result!,
         ],
         referenceGenesPromise: this.hugoGeneSymbolToReferenceGene,
         fetchData: () => {
             if (
                 this.mutationsEnrichmentDataRequestGroups.result &&
                 this.mutationsEnrichmentDataRequestGroups.result.length > 1 &&
-                _(this.selectedMutationEnrichmentEventTypes)
+                _(this.defaultMutationEnrichmentEventTypes)
                     .values()
                     .some()
             ) {
@@ -1374,7 +1370,7 @@ export default abstract class ComparisonStore extends AnalysisStore
                         .mutationsEnrichmentDataRequestGroups.result!,
                     alterationEventTypes: ({
                         mutationEventTypes: getMutationEventTypesAPIParameter(
-                            this.selectedMutationEnrichmentEventTypes
+                            this.defaultMutationEnrichmentEventTypes
                         ),
                         includeDriver: this.driverAnnotationSettings
                             .includeDriver,

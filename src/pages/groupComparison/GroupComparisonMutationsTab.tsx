@@ -54,9 +54,7 @@ export default class GroupComparisonMutationsTab extends React.Component<
 
     @computed get activeTabId(): string | undefined {
         let activeTabId;
-        if (this.props.store.userSelectedMutationMapperGene) {
-            activeTabId = this.props.store.userSelectedMutationMapperGene;
-        } else if (this.props.store.activeMutationMapperGene) {
+        if (this.props.store.activeMutationMapperGene) {
             activeTabId = this.props.store.activeMutationMapperGene
                 .hugoGeneSymbol;
         }
