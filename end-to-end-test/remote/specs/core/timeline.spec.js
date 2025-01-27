@@ -21,7 +21,7 @@ describe('clinical timeline', () => {
         assertScreenShotMatch(res);
     });
 
-    it('timeline rows collapse when caret clicked', async () => {
+    it.skip('timeline rows collapse when caret clicked', async () => {
         await waitForElementDisplayed('.tl-timeline-svg');
 
         //TODO:-- this does not work

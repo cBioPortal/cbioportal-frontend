@@ -597,7 +597,7 @@ describe('DownloadUtils', () => {
                     'WT',
                     'G598A [germline] G239C',
                 ],
-                ['skcm_tcga', 'TCGA-EE-A20C-06', 'NS', 'WT', 'WT'],
+                ['skcm_tcga', 'TCGA-EE-A20C-06', 'NP', 'WT', 'WT'],
             ];
 
             assert.deepEqual(

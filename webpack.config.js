@@ -35,13 +35,10 @@ function cleanAndValidateUrl(url) {
 
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
-var jsonFN = require('json-fn');
-
 const dotenv = require('dotenv');
 
 const webpack = require('webpack');
 const path = require('path');
-
 const join = path.join;
 const resolve = path.resolve;
 
@@ -170,6 +167,7 @@ var config = {
                 { from: './common-dist', to: 'reactapp' },
                 { from: './src/rootImages', to: 'images' },
                 { from: './src/common', to: 'common' },
+                { from: './api-e2e/json', to: 'common' },
                 {
                     from: './src/globalStyles/prefixed-bootstrap.min.css',
                     to: 'reactapp/prefixed-bootstrap.min.css',

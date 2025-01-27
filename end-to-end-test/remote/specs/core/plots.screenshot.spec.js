@@ -411,39 +411,39 @@ describe('plots tab screenshot tests', function() {
         await waitForAndCheckPlotsTab();
     });
 
-    it('plots tab scatter plot color by tumor type', async () => {
+    it('plots tab scatter plot color by cancer type', async () => {
         await goToUrlAndSetLocalStorage(
-            `${CBIOPORTAL_URL}/results/plots?Action=Submit&plots_coloring_selection=%7B"selectedOption"%3A"undefined_%7B%5C"clinicalAttributeId%5C"%3A%5C"TUMOR_TYPE%5C"%2C%5C"patientAttribute%5C"%3Afalse%2C%5C"studyId%5C"%3A%5C"ccle_broad_2019%5C"%7D"%7D&plots_horz_selection=%7B"dataType"%3A"MRNA_EXPRESSION"%2C"selectedGeneOption"%3A672%2C"mutationCountBy"%3A"MutationType"%2C"logScale"%3A"false"%7D&plots_vert_selection=%7B"selectedGeneOption"%3A672%2C"dataType"%3A"TREATMENT_RESPONSE"%2C"selectedGenericAssayOption"%3A"Afatinib-1"%2C"selectedDataSourceOption"%3A"CCLE_drug_treatment_AUC"%2C"mutationCountBy"%3A"MutationType"%2C"logScale"%3A"false"%7D&session_id=5ed80b90e4b030a3bfd0c662&tab_index=tab_visualize`
+            `${CBIOPORTAL_URL}/results/plots?Action=Submit&plots_coloring_selection=%7B"selectedOption"%3A"undefined_%7B%5C"clinicalAttributeId%5C"%3A%5C"CANCER_TYPE%5C"%2C%5C"patientAttribute%5C"%3Afalse%2C%5C"studyId%5C"%3A%5C"ccle_broad_2019%5C"%7D"%7D&plots_horz_selection=%7B"dataType"%3A"MRNA_EXPRESSION"%2C"selectedGeneOption"%3A672%2C"mutationCountBy"%3A"MutationType"%2C"logScale"%3A"false"%7D&plots_vert_selection=%7B"selectedGeneOption"%3A672%2C"dataType"%3A"TREATMENT_RESPONSE"%2C"selectedGenericAssayOption"%3A"Afatinib-1"%2C"selectedDataSourceOption"%3A"CCLE_drug_treatment_AUC"%2C"mutationCountBy"%3A"MutationType"%2C"logScale"%3A"false"%7D&session_id=5ed80b90e4b030a3bfd0c662&tab_index=tab_visualize`
         );
         await waitForAndCheckPlotsTab();
     });
-    it('plots tab scatter plot color by tumor type highlight categories', async () => {
-        await clickElement(`svg#plots-tab-plot-svg .legendLabel_breast`);
-        await clickElement(`svg#plots-tab-plot-svg .legendLabel_glioma`);
+    it('plots tab scatter plot color by cancer type highlight categories', async () => {
+        await clickElement(`svg#plots-tab-plot-svg .legendLabel_Breast`);
+        await clickElement(`svg#plots-tab-plot-svg .legendLabel_Glioma`);
         await waitForAndCheckPlotsTab();
     });
 
-    it('plots tab box plot color by tumor type', async () => {
+    it('plots tab box plot color by cancer type', async () => {
         await goToUrlAndSetLocalStorage(
-            `${CBIOPORTAL_URL}/results/plots?Action=Submit&plots_coloring_selection=%7B"selectedOption"%3A"undefined_%7B%5C"clinicalAttributeId%5C"%3A%5C"TUMOR_TYPE%5C"%2C%5C"patientAttribute%5C"%3Afalse%2C%5C"studyId%5C"%3A%5C"ccle_broad_2019%5C"%7D"%7D&plots_horz_selection=%7B"dataType"%3A"MRNA_EXPRESSION"%2C"selectedGeneOption"%3A672%2C"mutationCountBy"%3A"MutationType"%2C"logScale"%3A"false"%7D&plots_vert_selection=%7B"selectedGeneOption"%3A672%2C"dataType"%3A"MUTATION_EXTENDED"%2C"selectedGenericAssayOption"%3A"Afatinib-1"%2C"mutationCountBy"%3A"MutationType"%2C"logScale"%3A"false"%7D&session_id=5ed80b90e4b030a3bfd0c662&tab_index=tab_visualize`
+            `${CBIOPORTAL_URL}/results/plots?Action=Submit&plots_coloring_selection=%7B"selectedOption"%3A"undefined_%7B%5C"clinicalAttributeId%5C"%3A%5C"CANCER_TYPE%5C"%2C%5C"patientAttribute%5C"%3Afalse%2C%5C"studyId%5C"%3A%5C"ccle_broad_2019%5C"%7D"%7D&plots_horz_selection=%7B"dataType"%3A"MRNA_EXPRESSION"%2C"selectedGeneOption"%3A672%2C"mutationCountBy"%3A"MutationType"%2C"logScale"%3A"false"%7D&plots_vert_selection=%7B"selectedGeneOption"%3A672%2C"dataType"%3A"MUTATION_EXTENDED"%2C"selectedGenericAssayOption"%3A"Afatinib-1"%2C"mutationCountBy"%3A"MutationType"%2C"logScale"%3A"false"%7D&session_id=5ed80b90e4b030a3bfd0c662&tab_index=tab_visualize`
         );
         await waitForAndCheckPlotsTab();
     });
-    it('plots tab box plot color by tumor type highlight categories', async () => {
-        await clickElement(`svg#plots-tab-plot-svg .legendLabel_breast`);
-        await clickElement(`svg#plots-tab-plot-svg .legendLabel_glioma`);
+    it('plots tab box plot color by cancer type highlight categories', async () => {
+        await clickElement(`svg#plots-tab-plot-svg .legendLabel_Breast`);
+        await clickElement(`svg#plots-tab-plot-svg .legendLabel_Glioma`);
         await waitForAndCheckPlotsTab();
     });
 
-    it('plots tab waterfall plot color by tumor type', async () => {
+    it('plots tab waterfall plot color by cancer type', async () => {
         await goToUrlAndSetLocalStorage(
-            `${CBIOPORTAL_URL}/results/plots?Action=Submit&plots_coloring_selection=%7B"selectedOption"%3A"undefined_%7B%5C"clinicalAttributeId%5C"%3A%5C"TUMOR_TYPE%5C"%2C%5C"patientAttribute%5C"%3Afalse%2C%5C"studyId%5C"%3A%5C"ccle_broad_2019%5C"%7D"%7D&plots_horz_selection=%7B"dataType"%3A"none"%2C"selectedGeneOption"%3A672%2C"mutationCountBy"%3A"MutationType"%2C"logScale"%3A"false"%7D&plots_vert_selection=%7B"selectedGeneOption"%3A672%2C"dataType"%3A"TREATMENT_RESPONSE"%2C"selectedGenericAssayOption"%3A"Afatinib-1"%2C"mutationCountBy"%3A"MutationType"%2C"logScale"%3A"false"%7D&session_id=5ed80b90e4b030a3bfd0c662&tab_index=tab_visualize`
+            `${CBIOPORTAL_URL}/results/plots?Action=Submit&plots_coloring_selection=%7B"selectedOption"%3A"undefined_%7B%5C"clinicalAttributeId%5C"%3A%5C"CANCER_TYPE%5C"%2C%5C"patientAttribute%5C"%3Afalse%2C%5C"studyId%5C"%3A%5C"ccle_broad_2019%5C"%7D"%7D&plots_horz_selection=%7B"dataType"%3A"none"%2C"selectedGeneOption"%3A672%2C"mutationCountBy"%3A"MutationType"%2C"logScale"%3A"false"%7D&plots_vert_selection=%7B"selectedGeneOption"%3A672%2C"dataType"%3A"TREATMENT_RESPONSE"%2C"selectedGenericAssayOption"%3A"Afatinib-1"%2C"mutationCountBy"%3A"MutationType"%2C"logScale"%3A"false"%7D&session_id=5ed80b90e4b030a3bfd0c662&tab_index=tab_visualize`
         );
         await waitForAndCheckPlotsTab();
     });
-    it('plots tab waterfall plot color by tumor type highlight categories', async () => {
-        await clickElement(`svg#plots-tab-plot-svg .legendLabel_breast`);
-        await clickElement(`svg#plots-tab-plot-svg .legendLabel_glioma`);
+    it('plots tab waterfall plot color by cancer type highlight categories', async () => {
+        await clickElement(`svg#plots-tab-plot-svg .legendLabel_Breast`);
+        await clickElement(`svg#plots-tab-plot-svg .legendLabel_Glioma`);
         await waitForAndCheckPlotsTab();
     });
 
@@ -482,6 +482,13 @@ describe('plots tab screenshot tests', function() {
     it('plots tab with structural variant coloring', async () => {
         await goToUrlAndSetLocalStorage(
             `${CBIOPORTAL_URL}/results/plots?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=prad_mich&case_set_id=prad_mich_cna&data_priority=0&gene_list=ERG&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=prad_mich_cna&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=prad_mich_mutations&genetic_profile_ids_PROFILE_STRUCTURAL_VARIANT=prad_mich_fusion&plots_coloring_selection=%7B"colorByCopyNumber"%3A"true"%2C"colorBySv"%3A"true"%7D&plots_horz_selection=%7B"dataType"%3A"clinical_attribute"%7D&plots_vert_selection=%7B"selectedGeneOption"%3A2078%2C"dataType"%3A"COPY_NUMBER_ALTERATION"%7D&profileFilter=0&tab_index=tab_visualize`
+        );
+
+        await waitForAndCheckPlotsTab();
+    });
+    it('plots tab box plot log scale zero', async () => {
+        await goToUrlAndSetLocalStorage(
+            `${CBIOPORTAL_URL}/results/plots?cancer_study_list=msk_spectrum_tme_2022&tab_index=tab_visualize&case_set_id=msk_spectrum_tme_2022_all&Action=Submit&gene_list=EGFR&plots_horz_selection=%7B"dataType"%3A"clinical_attribute"%2C"selectedDataSourceOption"%3A"METASTATIC_SITE"%2C"selectedGeneOption"%3A1956%2C"selectedGenericAssayOption"%3A"T_cell"%2C"mutationCountBy"%3A"MutationType"%2C"logScale"%3A"false"%7D&plots_vert_selection=%7B"selectedGeneOption"%3A1956%2C"dataType"%3A"SINGLE_CELL_RELATIVE_CELL_TYPE_COUNTS"%2C"logScale"%3A"true"%2C"selectedDataSourceOption"%3A"cell_type_relative_counts"%2C"mutationCountBy"%3A"MutationType"%2C"selectedGenericAssayOption"%3A"T_cell"%7D&plots_coloring_selection=%7B"selectedOption"%3A"-10000_undefined"%7D`
         );
 
         await waitForAndCheckPlotsTab();

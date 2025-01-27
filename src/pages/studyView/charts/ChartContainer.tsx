@@ -584,6 +584,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         labelDescription={this.props.chartMeta.description}
                         patientAttribute={this.props.chartMeta.patientAttribute}
                         showAddRemoveAllButtons={this.mouseInChart}
+                        title={this.props.title}
                     />
                 );
             }
@@ -802,7 +803,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                         MultiSelectionTableColumnKey.FREQ,
                                 },
                             ]}
-                            defaultSortBy={MultiSelectionTableColumnKey.FREQ}
+                            defaultSortBy={
+                                MultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS
+                            }
                             setOperationsButtonText={
                                 this.props.store.hesitateUpdate
                                     ? 'Add Filters '

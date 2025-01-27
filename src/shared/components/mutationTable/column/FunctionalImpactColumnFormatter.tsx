@@ -6,38 +6,33 @@ import {
     TableCellStatusIndicator,
     TableCellStatus,
 } from 'cbioportal-frontend-commons';
-import {
-    MutationAssessor as MutationAssessorData,
-    VariantAnnotation,
-} from 'genome-nexus-ts-api-client';
+import { MutationAssessor as MutationAssessorData } from 'genome-nexus-ts-api-client';
 import 'rc-tooltip/assets/bootstrap_white.css';
-import { Mutation, DiscreteCopyNumberData } from 'cbioportal-ts-api-client';
+import { Mutation } from 'cbioportal-ts-api-client';
 import MutationAssessor from 'shared/components/annotation/genomeNexus/MutationAssessor';
 import Sift from 'shared/components/annotation/genomeNexus/Sift';
 import PolyPhen2 from 'shared/components/annotation/genomeNexus/PolyPhen2';
-import siftStyles from 'shared/components/annotation/genomeNexus/styles/siftTooltip.module.scss';
-import polyPhen2Styles from 'shared/components/annotation/genomeNexus/styles/polyPhen2Tooltip.module.scss';
-import mutationAssessorStyles from 'shared/components/annotation/genomeNexus/styles/mutationAssessorColumn.module.scss';
+import {
+    AlphaMissense,
+    AlphaMissenseUrl,
+} from 'shared/components/annotation/genomeNexus/AlphaMissense';
+import functionalImpactStyles from 'shared/components/annotation/genomeNexus/styles/mutationAssessorColumn.module.scss';
 import annotationStyles from 'shared/components/annotation/styles/annotation.module.scss';
-import GenomeNexusMutationAssessorCache from 'shared/cache/GenomeNexusMutationAssessorCache';
 import GenomeNexusCache, {
     GenomeNexusCacheDataType,
-} from 'shared/cache/GenomeNexusCache';
+} from 'shared/cache/GenomeNexusMutationAssessorCache';
 import _ from 'lodash';
 import { shouldShowMutationAssessor } from 'shared/lib/genomeNexusAnnotationSourcesUtils';
 
 type FunctionalImpactColumnTooltipProps = {
-    active: 'mutationAssessor' | 'sift' | 'polyPhen2';
+    active: FunctionalImpactColumnName;
 };
 
-interface IFunctionalImpactColumnTooltipState {
-    active: 'mutationAssessor' | 'sift' | 'polyPhen2';
-}
-
-enum FunctionalImpactColumnsName {
-    MUTATION_ASSESSOR,
-    SIFT,
-    POLYPHEN2,
+enum FunctionalImpactColumnName {
+    MUTATION_ASSESSOR = 'MUTATION_ASSESSOR',
+    SIFT = 'SIFT',
+    POLYPHEN2 = 'POLYPHEN2',
+    ALPHAMISSENSE = 'ALPHAMISSENSE',
 }
 
 interface FunctionalImpactData {
@@ -46,333 +41,235 @@ interface FunctionalImpactData {
     siftPrediction: string | undefined;
     polyPhenScore: number | undefined;
     polyPhenPrediction: string | undefined;
+    alphaMissenseScore: number | undefined;
+    alphaMissensePrediction: string | undefined;
 }
 
-class FunctionalImpactColumnTooltip extends React.Component<
-    FunctionalImpactColumnTooltipProps,
-    IFunctionalImpactColumnTooltipState
-> {
-    constructor(props: FunctionalImpactColumnTooltipProps) {
-        super(props);
-        this.state = {
-            active: this.props.active,
-        };
-    }
+const FunctionalImpactColumnTooltip: React.FC<FunctionalImpactColumnTooltipProps> = ({
+    active: initialActive,
+}) => {
+    const [active, setActive] = React.useState<FunctionalImpactColumnName>(
+        initialActive
+    );
 
-    legend() {
-        const showMutationAssessor = shouldShowMutationAssessor();
+    const showMutationAssessor = shouldShowMutationAssessor();
+
+    const renderHeaderIcon = (
+        title: string,
+        imageSrc: string,
+        onMouseOver: () => void
+    ) => {
+        return (
+            <th>
+                <span
+                    style={{ display: 'inline-block', width: 22 }}
+                    title={title}
+                    onMouseOver={onMouseOver}
+                >
+                    <img height={14} width={14} src={imageSrc} alt={title} />
+                </span>
+            </th>
+        );
+    };
+
+    const renderImpactRow = (
+        iconClass: string,
+        impactData: string[],
+        showMutationAssessor: boolean,
+        key: number
+    ) => {
+        return (
+            <tr key={key}>
+                <td>
+                    <span
+                        className={classNames(
+                            annotationStyles['annotation-item-text'],
+                            iconClass
+                        )}
+                    >
+                        <i className="fa fa-circle" aria-hidden="true"></i>
+                    </span>
+                </td>
+                {showMutationAssessor && (
+                    <td className={classNames(iconClass)}>{impactData[0]}</td>
+                )}
+                <td className={classNames(iconClass)}>{impactData[1]}</td>
+                <td className={classNames(iconClass)}>{impactData[2]}</td>
+                <td className={classNames(iconClass)}>{impactData[3]}</td>
+            </tr>
+        );
+    };
+
+    const legend = () => {
+        // Each line in the legend table uses the same style
+        const impactData = [
+            {
+                level: 'high',
+                iconClass: functionalImpactStyles['ma-high'],
+                mutationAssessor: 'high',
+                sift: 'deleterious',
+                polyPhen2: 'probably_damaging',
+                alphaMissense: 'pathogenic',
+            },
+            {
+                level: 'medium',
+                iconClass: functionalImpactStyles['ma-medium'],
+                mutationAssessor: 'medium',
+                sift: '-',
+                polyPhen2: '-',
+                alphaMissense: '-',
+            },
+            {
+                level: 'low',
+                iconClass: functionalImpactStyles['ma-low'],
+                mutationAssessor: 'low',
+                sift: 'deleterious_low_confidence',
+                polyPhen2: 'possibly_damaging',
+                alphaMissense: 'ambiguous',
+            },
+            {
+                level: 'neutral',
+                iconClass: functionalImpactStyles['ma-neutral'],
+                mutationAssessor: 'neutral',
+                sift: 'tolerated_low_confidence',
+                polyPhen2: 'benign',
+                alphaMissense: 'benign',
+            },
+            {
+                level: 'NA',
+                iconClass: functionalImpactStyles['ma-neutral'],
+                mutationAssessor: '-',
+                sift: 'tolerated',
+                polyPhen2: '-',
+                alphaMissense: '-',
+            },
+        ];
+
         return (
             <div>
                 <table className="table table-striped table-border-top">
                     <thead>
                         <tr>
                             <th>Legend</th>
-                            {showMutationAssessor && (
-                                <th>
-                                    <span
-                                        style={{
-                                            display: 'inline-block',
-                                            width: 22,
-                                        }}
-                                        title="Mutation Asessor"
-                                        onMouseOver={() =>
-                                            this.setState({
-                                                active: 'mutationAssessor',
-                                            })
-                                        }
-                                    >
-                                        <img
-                                            height={14}
-                                            width={14}
-                                            src={require('./mutationAssessor.png')}
-                                            alt="Mutation Assessor"
-                                        />
-                                    </span>
-                                </th>
+                            {showMutationAssessor &&
+                                renderHeaderIcon(
+                                    FunctionalImpactColumnName.MUTATION_ASSESSOR,
+                                    require('./mutationAssessor.png'),
+                                    () =>
+                                        setActive(
+                                            FunctionalImpactColumnName.MUTATION_ASSESSOR
+                                        )
+                                )}
+                            {renderHeaderIcon(
+                                FunctionalImpactColumnName.SIFT,
+                                require('./siftFunnel.png'),
+                                () => setActive(FunctionalImpactColumnName.SIFT)
                             )}
-                            <th>
-                                <span
-                                    style={{
-                                        display: 'inline-block',
-                                        width: 22,
-                                    }}
-                                    title="SIFT"
-                                    onMouseOver={() =>
-                                        this.setState({ active: 'sift' })
-                                    }
-                                >
-                                    <img
-                                        height={14}
-                                        width={14}
-                                        src={require('./siftFunnel.png')}
-                                        alt="SIFT"
-                                    />
-                                </span>
-                            </th>
-                            <th>
-                                <span
-                                    style={{
-                                        display: 'inline-block',
-                                        width: 22,
-                                    }}
-                                    title="PolyPhen-2"
-                                    onMouseOver={() =>
-                                        this.setState({ active: 'polyPhen2' })
-                                    }
-                                >
-                                    <img
-                                        height={14}
-                                        width={14}
-                                        src={require('./polyPhen-2.png')}
-                                        alt="PolyPhen-2"
-                                    />
-                                </span>
-                            </th>
+                            {renderHeaderIcon(
+                                FunctionalImpactColumnName.POLYPHEN2,
+                                require('./polyPhen-2.png'),
+                                () =>
+                                    setActive(
+                                        FunctionalImpactColumnName.POLYPHEN2
+                                    )
+                            )}
+                            {renderHeaderIcon(
+                                FunctionalImpactColumnName.ALPHAMISSENSE,
+                                require('./alphaMissenseGoogleDeepmind.png'),
+                                () =>
+                                    setActive(
+                                        FunctionalImpactColumnName.ALPHAMISSENSE
+                                    )
+                            )}
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>
-                                <span
-                                    className={classNames(
-                                        annotationStyles[
-                                            'annotation-item-text'
-                                        ],
-                                        mutationAssessorStyles[`ma-high`]
-                                    )}
-                                >
-                                    <i
-                                        className="fa fa-circle"
-                                        aria-hidden="true"
-                                    ></i>
-                                </span>
-                            </td>
-                            {showMutationAssessor && (
-                                <td
-                                    className={
-                                        mutationAssessorStyles['ma-high']
-                                    }
-                                >
-                                    high
-                                </td>
-                            )}
-                            <td className={siftStyles['sift-deleterious']}>
-                                deleterious
-                            </td>
-                            <td
-                                className={
-                                    polyPhen2Styles[
-                                        'polyPhen2-probably_damaging'
-                                    ]
-                                }
-                            >
-                                probably_damaging
-                            </td>
-                        </tr>
-                        {showMutationAssessor && (
-                            <tr>
-                                <td>
-                                    <span
-                                        className={classNames(
-                                            annotationStyles[
-                                                'annotation-item-text'
-                                            ],
-                                            mutationAssessorStyles[`ma-medium`]
-                                        )}
-                                    >
-                                        <i
-                                            className="fa fa-circle"
-                                            aria-hidden="true"
-                                        ></i>
-                                    </span>
-                                </td>
-                                <td
-                                    className={
-                                        mutationAssessorStyles['ma-medium']
-                                    }
-                                >
-                                    medium
-                                </td>
-                                <td>-</td>
-                                <td>-</td>
-                            </tr>
+                        {impactData.map((data, index) =>
+                            renderImpactRow(
+                                data.iconClass,
+                                [
+                                    data.mutationAssessor,
+                                    data.sift,
+                                    data.polyPhen2,
+                                    data.alphaMissense,
+                                ],
+                                showMutationAssessor,
+                                index
+                            )
                         )}
-                        <tr>
-                            <td>
-                                <span
-                                    className={classNames(
-                                        annotationStyles[
-                                            'annotation-item-text'
-                                        ],
-                                        mutationAssessorStyles[`ma-low`]
-                                    )}
-                                >
-                                    <i
-                                        className="fa fa-circle"
-                                        aria-hidden="true"
-                                    ></i>
-                                </span>
-                            </td>
-                            {showMutationAssessor && (
-                                <td
-                                    className={mutationAssessorStyles['ma-low']}
-                                >
-                                    low
-                                </td>
-                            )}
-                            <td
-                                className={
-                                    siftStyles[
-                                        'sift-deleterious_low_confidence'
-                                    ]
-                                }
-                            >
-                                deleterious_low_confidence
-                            </td>
-                            <td
-                                className={
-                                    polyPhen2Styles[
-                                        'polyPhen2-possibly_damaging'
-                                    ]
-                                }
-                            >
-                                possibly_damaging
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <span
-                                    className={classNames(
-                                        annotationStyles[
-                                            'annotation-item-text'
-                                        ],
-                                        mutationAssessorStyles[`ma-neutral`]
-                                    )}
-                                >
-                                    <i
-                                        className="fa fa-circle"
-                                        aria-hidden="true"
-                                    ></i>
-                                </span>
-                            </td>
-                            {showMutationAssessor && (
-                                <td
-                                    className={
-                                        mutationAssessorStyles['ma-neutral']
-                                    }
-                                >
-                                    neutral
-                                </td>
-                            )}
-                            <td
-                                className={
-                                    siftStyles['sift-tolerated_low_confidence']
-                                }
-                            >
-                                tolerated_low_confidence
-                            </td>
-                            <td className={polyPhen2Styles['polyPhen2-benign']}>
-                                benign
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <span
-                                    className={classNames(
-                                        annotationStyles[
-                                            'annotation-item-text'
-                                        ],
-                                        mutationAssessorStyles[`ma-neutral`]
-                                    )}
-                                >
-                                    <i
-                                        className="fa fa-circle"
-                                        aria-hidden="true"
-                                    ></i>
-                                </span>
-                            </td>
-                            {showMutationAssessor && <td>-</td>}
-                            <td className={siftStyles['sift-tolerated']}>
-                                tolerated
-                            </td>
-                            <td>-</td>
-                        </tr>
                     </tbody>
                 </table>
             </div>
         );
-    }
+    };
 
-    public static mutationAssessorText() {
-        return (
-            <div style={{ width: 450, height: 130 }}>
-                Mutation Assessor predicts the functional impact of amino-acid
-                substitutions in proteins, such as mutations discovered in
-                cancer or missense polymorphisms. The functional impact is
-                assessed based on evolutionary conservation of the affected
-                amino acid in protein homologs. The method has been validated on
-                a large set of disease associated and polymorphic variants (
-                <a href="https://www.ncbi.nlm.nih.gov/clinvar/" target="_blank">
-                    ClinVar
-                </a>
-                ).
-                <br />
-                <b>
-                    Mutation Assessor V4 data is available in the portal since
-                    Oct. 8, 2024.
-                </b>{' '}
-                New manuscript is in progress. Click{` `}
-                <a href="http://mutationassessor.org/r3/" target="_blank">
-                    here
-                </a>
-                {` `} to see information about V3 data.
-            </div>
-        );
-    }
-
-    public static siftText() {
-        return (
-            <div style={{ width: 450, height: 100 }}>
-                <a href={Sift.SIFT_URL} target="_blank">
-                    SIFT
-                </a>{' '}
-                predicts whether an amino acid substitution affects protein
-                function based on sequence homology and the physical properties
-                of amino acids. SIFT can be applied to naturally occurring
-                nonsynonymous polymorphisms and laboratory-induced missense
-                mutations.
-            </div>
-        );
-    }
-
-    public static polyPhen2Text() {
-        return (
-            <div style={{ width: 450, height: 100 }}>
-                <a href={PolyPhen2.POLYPHEN2_URL} target="_blank">
-                    PolyPhen-2
-                </a>{' '}
-                (Polymorphism Phenotyping v2) is a tool which predicts possible
-                impact of an amino acid substitution on the structure and
-                function of a human protein using straightforward physical and
-                comparative considerations.
-            </div>
-        );
-    }
-
-    public render() {
-        return (
-            <div>
-                {this.state.active === 'mutationAssessor' &&
-                    FunctionalImpactColumnTooltip.mutationAssessorText()}
-                {this.state.active === 'sift' &&
-                    FunctionalImpactColumnTooltip.siftText()}
-                {this.state.active === 'polyPhen2' &&
-                    FunctionalImpactColumnTooltip.polyPhen2Text()}
-                {this.legend()}
-            </div>
-        );
-    }
-}
+    return (
+        <div>
+            {active === FunctionalImpactColumnName.MUTATION_ASSESSOR && (
+                <div style={{ width: 530, height: 110 }}>
+                    Mutation Assessor predicts the functional impact of
+                    amino-acid substitutions in proteins, such as mutations
+                    discovered in cancer or missense polymorphisms. The
+                    functional impact is assessed based on evolutionary
+                    conservation of the affected amino acid in protein homologs.
+                    The method has been validated on a large set of disease
+                    associated and polymorphic variants (
+                    <a
+                        href="https://www.ncbi.nlm.nih.gov/clinvar/"
+                        target="_blank"
+                    >
+                        ClinVar
+                    </a>
+                    ).
+                    <br />
+                    <b>
+                        Mutation Assessor V4 data is available in the portal
+                        since Oct. 8, 2024.
+                    </b>{' '}
+                    New manuscript is in progress. Click{` `}
+                    <a href="http://mutationassessor.org/r3/" target="_blank">
+                        here
+                    </a>
+                    {` `} to see information about V3 data.
+                </div>
+            )}
+            {active === FunctionalImpactColumnName.SIFT && (
+                <div style={{ width: 530, height: 60 }}>
+                    <a href={Sift.SIFT_URL} target="_blank">
+                        SIFT
+                    </a>{' '}
+                    predicts whether an amino acid substitution affects protein
+                    function based on sequence homology and the physical
+                    properties of amino acids. SIFT can be applied to naturally
+                    occurring nonsynonymous polymorphisms and laboratory-induced
+                    missense mutations.
+                </div>
+            )}
+            {active === FunctionalImpactColumnName.POLYPHEN2 && (
+                <div style={{ width: 530, height: 60 }}>
+                    <a href={PolyPhen2.POLYPHEN2_URL} target="_blank">
+                        PolyPhen-2
+                    </a>{' '}
+                    (Polymorphism Phenotyping v2) is a tool which predicts
+                    possible impact of an amino acid substitution on the
+                    structure and function of a human protein using
+                    straightforward physical and comparative considerations.
+                </div>
+            )}
+            {active === FunctionalImpactColumnName.ALPHAMISSENSE && (
+                <div style={{ width: 530, height: 60 }}>
+                    <a href={AlphaMissenseUrl} target="_blank">
+                        AlphaMissense
+                    </a>{' '}
+                    predicts the probability of a missense single nucleotide
+                    variant being pathogenic and classifies it as either likely
+                    benign, likely pathogenic, or uncertain.
+                </div>
+            )}
+            {legend()}
+        </div>
+    );
+};
 
 export function placeArrow(tooltipEl: any) {
     const arrowEl = tooltipEl.querySelector('.rc-tooltip-arrow');
@@ -391,7 +288,11 @@ export default class FunctionalImpactColumnFormatter {
                     {showMutationAssessor && (
                         <DefaultTooltip
                             overlay={
-                                <FunctionalImpactColumnTooltip active="mutationAssessor" />
+                                <FunctionalImpactColumnTooltip
+                                    active={
+                                        FunctionalImpactColumnName.MUTATION_ASSESSOR
+                                    }
+                                />
                             }
                             placement="topLeft"
                             trigger={['hover', 'focus']}
@@ -413,7 +314,9 @@ export default class FunctionalImpactColumnFormatter {
                     )}
                     <DefaultTooltip
                         overlay={
-                            <FunctionalImpactColumnTooltip active="sift" />
+                            <FunctionalImpactColumnTooltip
+                                active={FunctionalImpactColumnName.SIFT}
+                            />
                         }
                         placement="topLeft"
                         trigger={['hover', 'focus']}
@@ -432,7 +335,9 @@ export default class FunctionalImpactColumnFormatter {
                     </DefaultTooltip>
                     <DefaultTooltip
                         overlay={
-                            <FunctionalImpactColumnTooltip active="polyPhen2" />
+                            <FunctionalImpactColumnTooltip
+                                active={FunctionalImpactColumnName.POLYPHEN2}
+                            />
                         }
                         placement="topLeft"
                         trigger={['hover', 'focus']}
@@ -449,190 +354,146 @@ export default class FunctionalImpactColumnFormatter {
                             />
                         </span>
                     </DefaultTooltip>
+                    <DefaultTooltip
+                        overlay={
+                            <FunctionalImpactColumnTooltip
+                                active={
+                                    FunctionalImpactColumnName.ALPHAMISSENSE
+                                }
+                            />
+                        }
+                        placement="topLeft"
+                        trigger={['hover', 'focus']}
+                        arrowContent={arrowContent}
+                        destroyTooltipOnHide={true}
+                        onPopupAlign={placeArrow}
+                    >
+                        <span style={{ display: 'inline-block', width: 22 }}>
+                            <img
+                                height={14}
+                                width={14}
+                                src={require('./alphaMissenseGoogleDeepmind.png')}
+                                alt="alphaMissense"
+                            />
+                        </span>
+                    </DefaultTooltip>
                 </div>
             </div>
         );
     }
 
-    public static getData(
+    static getData(
         data: Mutation[],
-        siftPolyphenCache: GenomeNexusCache,
-        mutationAssessorCache: GenomeNexusMutationAssessorCache,
+        cache?: GenomeNexusCache,
         selectedTranscriptId?: string
     ): FunctionalImpactData {
-        const siftPolyphenCacheData = FunctionalImpactColumnFormatter.getDataFromCache(
-            data,
-            siftPolyphenCache
-        );
-        const mutationAssessorCacheData = shouldShowMutationAssessor()
-            ? FunctionalImpactColumnFormatter.getDataFromCache(
-                  data,
-                  mutationAssessorCache
-              )
-            : null;
-
-        const siftData = siftPolyphenCacheData
-            ? this.getSiftData(siftPolyphenCacheData.data, selectedTranscriptId)
-            : undefined;
-        const polyphenData = siftPolyphenCacheData
-            ? this.getPolyphenData(
-                  siftPolyphenCacheData.data,
-                  selectedTranscriptId
-              )
-            : undefined;
-        const mutationAssessor = mutationAssessorCacheData
-            ? this.getMutationAssessorData(mutationAssessorCacheData.data)
-            : undefined;
-
-        const siftScore = siftData && siftData.siftScore;
-        const siftPrediction = siftData && siftData.siftPrediction;
-        const polyPhenScore = polyphenData && polyphenData.polyPhenScore;
-        const polyPhenPrediction =
-            polyphenData && polyphenData.polyPhenPrediction;
-
-        const functionalImpactData: FunctionalImpactData = {
-            mutationAssessor,
-            siftScore,
-            siftPrediction,
-            polyPhenScore,
-            polyPhenPrediction,
-        };
-        return functionalImpactData;
-    }
-
-    public static getSiftData(
-        siftDataCache: VariantAnnotation | null,
-        selectedTranscriptId?: string
-    ) {
-        let siftScore: number | undefined = undefined;
-        let siftPrediction: string | undefined = undefined;
-        if (siftDataCache && selectedTranscriptId) {
-            // find transcript consequence that matches the selected transcript
-            const transcriptConsequence = siftDataCache.transcript_consequences.find(
-                tc => tc.transcript_id === selectedTranscriptId
-            );
-            if (transcriptConsequence) {
-                siftScore = transcriptConsequence.sift_score;
-                siftPrediction = transcriptConsequence.sift_prediction;
-            }
+        const cacheData = this.getDataFromCache(data, cache);
+        if (!cacheData?.data) {
+            return {} as FunctionalImpactData;
         }
 
-        return {
-            siftScore,
-            siftPrediction,
-        };
-    }
-
-    public static getPolyphenData(
-        polyphenDataCache: VariantAnnotation | null,
-        selectedTranscriptId?: string
-    ) {
-        let polyPhenScore: number | undefined = undefined;
-        let polyPhenPrediction: string | undefined = undefined;
-
-        if (polyphenDataCache && selectedTranscriptId) {
-            // find transcript consequence that matches the selected transcript
-            const transcriptConsequence = polyphenDataCache.transcript_consequences.find(
-                tc => tc.transcript_id === selectedTranscriptId
-            );
-            if (transcriptConsequence) {
-                polyPhenScore = transcriptConsequence.polyphen_score;
-                polyPhenPrediction = transcriptConsequence.polyphen_prediction;
-            }
-        }
+        const transcript = selectedTranscriptId
+            ? cacheData.data.transcript_consequences.find(
+                  tc => tc.transcript_id === selectedTranscriptId
+              )
+            : undefined;
 
         return {
-            polyPhenScore,
-            polyPhenPrediction,
+            mutationAssessor: shouldShowMutationAssessor()
+                ? cacheData.data.mutation_assessor
+                : undefined,
+            siftScore: transcript?.sift_score,
+            siftPrediction: transcript?.sift_prediction,
+            polyPhenScore: transcript?.polyphen_score,
+            polyPhenPrediction: transcript?.polyphen_prediction,
+            alphaMissenseScore: transcript?.alphaMissense?.score,
+            alphaMissensePrediction: transcript?.alphaMissense?.pathogenicity,
         };
-    }
-
-    public static getMutationAssessorData(
-        mutationAssessorDataCache: VariantAnnotation | null
-    ): MutationAssessorData | undefined {
-        return mutationAssessorDataCache?.mutation_assessor;
     }
 
     public static renderFunction(
         data: Mutation[],
-        siftPolyphenCache: GenomeNexusCache | undefined,
-        mutationAssessorCache: GenomeNexusMutationAssessorCache | undefined,
+        genomeNexusCache: GenomeNexusCache | undefined,
         selectedTranscriptId?: string
     ) {
         const showMutationAssessor = shouldShowMutationAssessor();
 
-        const siftPolyphenCacheData = FunctionalImpactColumnFormatter.getDataFromCache(
-            data,
-            siftPolyphenCache
-        );
-        const mutationAssessorCacheData = showMutationAssessor
-            ? FunctionalImpactColumnFormatter.getDataFromCache(
-                  data,
-                  mutationAssessorCache
-              )
-            : null;
         return (
             <div>
                 {showMutationAssessor &&
                     FunctionalImpactColumnFormatter.makeFunctionalImpactViz(
-                        mutationAssessorCacheData,
-                        FunctionalImpactColumnsName.MUTATION_ASSESSOR
+                        data,
+                        FunctionalImpactColumnName.MUTATION_ASSESSOR,
+                        genomeNexusCache,
+                        selectedTranscriptId
                     )}
                 {FunctionalImpactColumnFormatter.makeFunctionalImpactViz(
-                    siftPolyphenCacheData,
-                    FunctionalImpactColumnsName.SIFT,
+                    data,
+                    FunctionalImpactColumnName.SIFT,
+                    genomeNexusCache,
                     selectedTranscriptId
                 )}
                 {FunctionalImpactColumnFormatter.makeFunctionalImpactViz(
-                    siftPolyphenCacheData,
-                    FunctionalImpactColumnsName.POLYPHEN2,
+                    data,
+                    FunctionalImpactColumnName.POLYPHEN2,
+                    genomeNexusCache,
+                    selectedTranscriptId
+                )}
+                {FunctionalImpactColumnFormatter.makeFunctionalImpactViz(
+                    data,
+                    FunctionalImpactColumnName.ALPHAMISSENSE,
+                    genomeNexusCache,
                     selectedTranscriptId
                 )}
             </div>
         );
     }
 
-    public static download(
+    static download(
         data: Mutation[],
-        siftPolyphenCache: GenomeNexusCache,
-        mutationAssessorCache: GenomeNexusMutationAssessorCache,
+        cache: GenomeNexusCache,
         selectedTranscriptId?: string
     ): string {
-        if (siftPolyphenCache || mutationAssessorCache) {
-            const functionalImpactData = FunctionalImpactColumnFormatter.getData(
-                data,
-                siftPolyphenCache,
-                mutationAssessorCache,
-                selectedTranscriptId
-            );
-            let downloadData = [];
-            if (functionalImpactData) {
-                if (shouldShowMutationAssessor()) {
-                    downloadData.push(
-                        `MutationAssessor: ${MutationAssessor.download(
-                            functionalImpactData.mutationAssessor
-                        )}`
-                    );
-                }
-                downloadData = downloadData.concat([
-                    `SIFT: ${Sift.download(
-                        functionalImpactData.siftScore,
-                        functionalImpactData.siftPrediction
-                    )}`,
-                    `Polyphen-2: ${PolyPhen2.download(
-                        functionalImpactData.polyPhenScore,
-                        functionalImpactData.polyPhenPrediction
-                    )}`,
-                ]);
-                return downloadData.join(';');
-            }
-        }
-        return '';
+        const functionalImpactData = this.getData(
+            data,
+            cache,
+            selectedTranscriptId
+        );
+        if (!functionalImpactData) return '';
+
+        const downloadData = [
+            shouldShowMutationAssessor() &&
+                `MutationAssessor: ${
+                    functionalImpactData.mutationAssessor
+                        ? `impact: ${functionalImpactData.mutationAssessor.functionalImpactPrediction}, score: ${functionalImpactData.mutationAssessor.functionalImpactScore}`
+                        : 'NA'
+                }`,
+            `SIFT: ${
+                functionalImpactData.siftScore ||
+                functionalImpactData.siftPrediction
+                    ? `impact: ${functionalImpactData.siftPrediction}, score: ${functionalImpactData.siftScore}`
+                    : 'NA'
+            }`,
+            `Polyphen-2: ${
+                functionalImpactData.polyPhenScore ||
+                functionalImpactData.polyPhenPrediction
+                    ? `impact: ${functionalImpactData.polyPhenPrediction}, score: ${functionalImpactData.polyPhenScore}`
+                    : 'NA'
+            }`,
+            `AlphaMissense: ${
+                functionalImpactData.alphaMissenseScore ||
+                functionalImpactData.alphaMissensePrediction
+                    ? `pathogenicity: ${functionalImpactData.alphaMissensePrediction}, score: ${functionalImpactData.alphaMissenseScore}`
+                    : 'NA'
+            }`,
+        ];
+
+        return downloadData.join(';');
     }
 
     private static getDataFromCache(
         data: Mutation[],
-        cache: GenomeNexusCache | GenomeNexusMutationAssessorCache | undefined
+        cache: GenomeNexusCache | GenomeNexusCache | undefined
     ): GenomeNexusCacheDataType | null {
         if (data.length === 0 || !cache) {
             return null;
@@ -641,12 +502,13 @@ export default class FunctionalImpactColumnFormatter {
     }
 
     private static makeFunctionalImpactViz(
-        cacheData: GenomeNexusCacheDataType | null,
-        column: FunctionalImpactColumnsName,
+        mutation: Mutation[],
+        column: FunctionalImpactColumnName,
+        genomeNexusCache?: GenomeNexusCache,
         selectedTranscriptId?: string
     ) {
         let status: TableCellStatus | null = null;
-
+        const cacheData = this.getDataFromCache(mutation, genomeNexusCache);
         if (cacheData === null) {
             status = TableCellStatus.LOADING;
         } else if (cacheData.status === 'error') {
@@ -654,38 +516,38 @@ export default class FunctionalImpactColumnFormatter {
         } else if (cacheData.data === null) {
             status = TableCellStatus.NA;
         } else {
-            let functionalImpactData;
+            const data = this.getData(
+                mutation,
+                genomeNexusCache,
+                selectedTranscriptId
+            );
             switch (column) {
-                case FunctionalImpactColumnsName.MUTATION_ASSESSOR:
-                    functionalImpactData = FunctionalImpactColumnFormatter.getMutationAssessorData(
-                        cacheData.data
-                    );
+                case FunctionalImpactColumnName.MUTATION_ASSESSOR:
                     return (
                         <MutationAssessor
-                            mutationAssessor={functionalImpactData}
+                            mutationAssessor={data.mutationAssessor}
                         />
                     );
-                case FunctionalImpactColumnsName.SIFT:
-                    functionalImpactData = FunctionalImpactColumnFormatter.getSiftData(
-                        cacheData.data,
-                        selectedTranscriptId
-                    );
+                case FunctionalImpactColumnName.SIFT:
                     return (
                         <Sift
-                            siftScore={functionalImpactData.siftScore}
-                            siftPrediction={functionalImpactData.siftPrediction}
+                            siftScore={data.siftScore}
+                            siftPrediction={data.siftPrediction}
                         />
                     );
-                case FunctionalImpactColumnsName.POLYPHEN2:
-                    functionalImpactData = FunctionalImpactColumnFormatter.getPolyphenData(
-                        cacheData.data,
-                        selectedTranscriptId
-                    );
+                case FunctionalImpactColumnName.POLYPHEN2:
                     return (
                         <PolyPhen2
-                            polyPhenScore={functionalImpactData.polyPhenScore}
-                            polyPhenPrediction={
-                                functionalImpactData.polyPhenPrediction
+                            polyPhenScore={data.polyPhenScore}
+                            polyPhenPrediction={data.polyPhenPrediction}
+                        />
+                    );
+                case FunctionalImpactColumnName.ALPHAMISSENSE:
+                    return (
+                        <AlphaMissense
+                            alphaMissenseScore={data.alphaMissenseScore}
+                            alphaMissensePrediction={
+                                data.alphaMissensePrediction
                             }
                         />
                     );

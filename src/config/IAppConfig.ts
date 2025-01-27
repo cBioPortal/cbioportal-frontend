@@ -120,6 +120,7 @@ export interface IServerConfig {
     skin_show_tutorials_tab: boolean;
     skin_show_web_api_tab: boolean;
     skin_show_tweet_button: boolean;
+    skin_show_donate_button: boolean;
     skin_show_tissue_image_tab: boolean;
     skin_hide_logout_button: boolean;
     skin_show_settings_menu: boolean;
@@ -186,5 +187,6 @@ export interface IServerConfig {
     vaf_log_scale_default: boolean; // this has a default
     skin_study_view_show_sv_table: boolean; // this has a default
     enable_study_tags: boolean;
+    clickhouse_mode: boolean;
     download_custom_buttons_json: string;
 }

@@ -1129,6 +1129,8 @@ export default class LazyMobXTable<T> extends React.Component<
             textBeforeButtons: this.store.paginationStatusText,
             groupButtons: false,
             bsStyle: 'primary',
+            isResultLimitedAtMaxPage:
+                this.props.isResultLimited && this.isAtMaxPage(),
         };
         // override with given paginationProps if they exist
         if (this.props.paginationProps) {
@@ -1326,14 +1328,17 @@ export default class LazyMobXTable<T> extends React.Component<
         );
     }
 
+    private isAtMaxPage() {
+        return this.store.maxPage > 0 && this.store.page === this.store.maxPage;
+    }
+
     render() {
         return (
             <div className="lazy-mobx-table" data-test="LazyMobXTable">
                 <Observer>{this.getTopToolbar}</Observer>
                 <Observer>{this.getTable}</Observer>
                 {this.props.isResultLimited &&
-                    this.store.maxPage > 0 &&
-                    this.store.page === this.store.maxPage && (
+                    (this.store.showingAllRows || this.isAtMaxPage()) && (
                         <div className={'text-center alert alert-info'}>
                             <strong>
                                 You've reached the maximum viewable records.{' '}

@@ -28,16 +28,6 @@ export default class MutationAssessor extends React.Component<
         this.tooltipContent = this.tooltipContent.bind(this);
     }
 
-    public static download(
-        mutationAssessorData: MutationAssessorData | undefined
-    ): string {
-        if (mutationAssessorData) {
-            return `impact: ${mutationAssessorData.functionalImpactPrediction}, score: ${mutationAssessorData.functionalImpactScore}`;
-        } else {
-            return 'NA';
-        }
-    }
-
     public render() {
         let maContent: JSX.Element = (
             <span className={`${annotationStyles['annotation-item-text']}`} />

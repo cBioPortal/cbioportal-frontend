@@ -158,7 +158,15 @@ export default class CustomCaseSelection extends React.Component<
 
     @action.bound
     onChange(newContent: string) {
-        this.validContent = newContent;
+        // Preprocess content to allow spaces, tabs, and commas as valid delimiters
+        const normalizedContent = newContent
+            .split(/[, ]+/) // Split the content by either commas or spaces
+            .map(line => line.trim()) // Remove extra spaces around each line
+            .filter(line => line.length > 0) // Remove empty lines
+            .join('\n'); // Use newline as the final delimiter
+
+        // Assign normalized content and trigger validation
+        this.validContent = normalizedContent;
         this.validateContent = true;
     }
 
@@ -207,11 +215,26 @@ export default class CustomCaseSelection extends React.Component<
             this.caseIdsMode === ClinicalDataTypeEnum.SAMPLE
                 ? 'sample_id'
                 : 'patient_id';
-        return `Example:\nstudy_id:${caseIdentifier}1${
+
+        // Creating example strings for each delimiter type
+        const newLineExample = `study_id:${caseIdentifier}1${
             this.props.disableGrouping ? '' : ' value1'
         }\nstudy_id:${caseIdentifier}2${
             this.props.disableGrouping ? '' : ' value2'
         }`;
+        const commaExample = `study_id:${caseIdentifier}1${
+            this.props.disableGrouping ? '' : ' value1'
+        }, study_id:${caseIdentifier}2${
+            this.props.disableGrouping ? '' : ' value2'
+        }`;
+        const spaceExample = `study_id:${caseIdentifier}1${
+            this.props.disableGrouping ? '' : ' value1'
+        } study_id:${caseIdentifier}2${
+            this.props.disableGrouping ? '' : ' value2'
+        }`;
+
+        // Combining all three cases into one string
+        return `Example with newline:\n${newLineExample}\n\nExample with comma:\n${commaExample}\n\nExample with space:\n${spaceExample}`;
     }
 
     @computed
