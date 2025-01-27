@@ -21,19 +21,20 @@ import {
     VictoryGroup,
 } from 'victory';
 import { tickFormatNumeral } from 'cbioportal-frontend-commons';
-import { makeUniqueColorGetter } from '../../shared/components/plots/PlotUtils';
+import { makeUniqueColorGetter } from './PlotUtils';
 import {
     makePlotData,
     makeBarSpecs,
     sortDataByCategory,
-} from '../../shared/components/plots/MultipleCategoryBarPlotUtils';
+    getSortedMajorCategories,
+} from './MultipleCategoryBarPlotUtils';
 import * as ReactDOM from 'react-dom';
 import { Popover } from 'react-bootstrap';
 import classnames from 'classnames';
 import { toConditionalPrecisionWithMinimum } from 'shared/lib/FormatUtils';
 import { IStringAxisData } from 'shared/components/plots/PlotsTabUtils';
 import WindowStore from 'shared/components/window/WindowStore';
-
+import { SortByOptions } from 'shared/components/plots/PlotsTab';
 export interface IMultipleCategoryBarPlotProps {
     svgId?: string;
     domainPadding?: number;
@@ -58,6 +59,11 @@ export interface IMultipleCategoryBarPlotProps {
     svgRef?: (svgContainer: SVGElement | null) => void;
     pValue: number | null;
     qValue: number | null;
+    sortByDropDownOptions?: { value: string; label: string }[];
+    updateDropDownOptions?: (
+        option: { value: string; label: string }[]
+    ) => void;
+    sortByOption?: string;
 }
 
 export interface IMultipleCategoryBarPlotData {
@@ -425,6 +431,18 @@ export default class MultipleCategoryBarPlot extends React.Component<
 
     @computed get labels() {
         if (this.data.length > 0) {
+            if (
+                this.props.sortByOption === SortByOptions.SortByTotalSum ||
+                (this.props.sortByOption &&
+                    this.props.sortByOption !== '' &&
+                    this.props.sortByOption !== SortByOptions.Alphabetically)
+            ) {
+                return getSortedMajorCategories(
+                    this.data,
+                    this.props.sortByOption,
+                    !!this.props.percentage
+                );
+            }
             return sortDataByCategory(
                 this.data[0].counts.map(c => c.majorCategory),
                 x => x,
@@ -435,6 +453,18 @@ export default class MultipleCategoryBarPlot extends React.Component<
         }
     }
 
+    private setInitialSelectedOption = () => {
+        if (this.props.updateDropDownOptions) {
+            const minorCategoriesArray = this.data.map(item => ({
+                value: item.minorCategory,
+                label: item.minorCategory,
+            }));
+            this.props.updateDropDownOptions(minorCategoriesArray);
+        }
+    };
+    componentDidMount() {
+        this.setInitialSelectedOption();
+    }
     @bind
     private formatCategoryTick(t: number, index: number) {
         //return wrapTick(this.labels[index], MAXIMUM_CATEGORY_LABEL_SIZE);
@@ -739,7 +769,8 @@ export default class MultipleCategoryBarPlot extends React.Component<
             this.categoryCoord,
             !!this.props.horizontalBars,
             !!this.props.stacked,
-            !!this.props.percentage
+            !!this.props.percentage,
+            this.props.sortByOption
         );
         return barSpecs.map(spec => (
             <VictoryBar

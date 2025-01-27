@@ -189,15 +189,47 @@ describe('plots tab screenshot tests', function() {
         });
         await waitForAndCheckPlotsTab();
     });
+    it('plots tab clinical vs clinical stacked bar plot sort by number of samples', async () => {
+        await browser.execute(() => {
+            resultsViewPlotsTab.handleSortByChange({
+                value: 'SortByTotalSum',
+            });
+        });
+        await waitForAndCheckPlotsTab();
+    });
+    it('plots tab clinical vs clinical stacked bar plot sort by category', async () => {
+        await browser.execute(() => {
+            resultsViewPlotsTab.handleSortByChange({
+                value: 'Stage I',
+            });
+        });
+        await waitForAndCheckPlotsTab();
+    });
     //commenting this for now because of https://github.com/zinserjan/wdio-screenshot/issues/87
     /* it("plots tab clinical vs clinical grouped bar plot", () => {
         await browser.execute(() => { resultsViewPlotsTab.onDiscreteVsDiscretePlotTypeSelect({ value: "Bar" }); });
         await waitForAndCheckPlotsTab();
     }); */
-    it('plots tab clinical vs clinical percentage stacked bar plot', async () => {
+    it('plots tab clinical vs clinical percentage stacked bar plot sort by category', async () => {
         await browser.execute(() => {
             resultsViewPlotsTab.onDiscreteVsDiscretePlotTypeSelect({
                 value: 'PercentageStackedBar',
+            });
+        });
+        await waitForAndCheckPlotsTab();
+    });
+    it('plots tab clinical vs clinical percentage stacked bar plot sort by number of samples', async () => {
+        await browser.execute(() => {
+            resultsViewPlotsTab.handleSortByChange({
+                value: 'SortByTotalSum',
+            });
+        });
+        await waitForAndCheckPlotsTab();
+    });
+    it('plots tab clinical vs clinical percentage stacked bar plot', async () => {
+        await browser.execute(() => {
+            resultsViewPlotsTab.handleSortByChange({
+                value: 'alphabetically',
             });
         });
         await waitForAndCheckPlotsTab();
@@ -214,10 +246,42 @@ describe('plots tab screenshot tests', function() {
         await clickElement('input[data-test="horizontalBars"]');
         await waitForAndCheckPlotsTab();
     });
-    it('plots tab clinical vs clinical horizontal grouped bar plot', async () => {
+    it('plots tab clinical vs clinical horizontal stacked bar plot sort by number of samples', async () => {
+        await browser.execute(() => {
+            resultsViewPlotsTab.handleSortByChange({
+                value: 'SortByTotalSum',
+            });
+        });
+        await waitForAndCheckPlotsTab();
+    });
+    it('plots tab clinical vs clinical horizontal stacked bar plot sort by category', async () => {
+        await browser.execute(() => {
+            resultsViewPlotsTab.handleSortByChange({
+                value: 'T2',
+            });
+        });
+        await waitForAndCheckPlotsTab();
+    });
+    it('plots tab clinical vs clinical horizontal grouped bar plot sort by category', async () => {
         await browser.execute(() => {
             resultsViewPlotsTab.onDiscreteVsDiscretePlotTypeSelect({
                 value: 'Bar',
+            });
+        });
+        await waitForAndCheckPlotsTab();
+    });
+    it('plots tab clinical vs clinical horizontal grouped bar plot sort by number of samples', async () => {
+        await browser.execute(() => {
+            resultsViewPlotsTab.handleSortByChange({
+                value: 'SortByTotalSum',
+            });
+        });
+        await waitForAndCheckPlotsTab();
+    });
+    it('plots tab clinical vs clinical horizontal grouped bar plot', async () => {
+        await browser.execute(() => {
+            resultsViewPlotsTab.handleSortByChange({
+                value: 'alphabetically',
             });
         });
         await waitForAndCheckPlotsTab();
@@ -226,6 +290,22 @@ describe('plots tab screenshot tests', function() {
         await browser.execute(() => {
             resultsViewPlotsTab.onDiscreteVsDiscretePlotTypeSelect({
                 value: 'PercentageStackedBar',
+            });
+        });
+        await waitForAndCheckPlotsTab();
+    });
+    it('plots tab clinical vs clinical horizontal percentage stacked bar plot sort by number of samples', async () => {
+        await browser.execute(() => {
+            resultsViewPlotsTab.handleSortByChange({
+                value: 'SortByTotalSum',
+            });
+        });
+        await waitForAndCheckPlotsTab();
+    });
+    it('plots tab clinical vs clinical horizontal percentage stacked bar plot sort by category', async () => {
+        await browser.execute(() => {
+            resultsViewPlotsTab.handleSortByChange({
+                value: 'T2',
             });
         });
         await waitForAndCheckPlotsTab();
