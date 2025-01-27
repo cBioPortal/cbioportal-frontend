@@ -59,11 +59,10 @@ if (
 
         MESSAGE_DATA.push({
             dateEnd: 1000000000000000,
-            content: `As MSK clinical systems are transitioning to EPIC, we are
-            trying our best to update the de-identified clinical data in
-            cBioPortal, but please expect some delay (months) . Genomics data
-            will be updated regularly. If you have any questions or concerns
-            regarding these delays, please email <a href="mailto:cdsi@mskcc.org">cdsi@mskcc.org</a>.`,
+            content: `During the MSK Epic transition, updates to de-identified
+            clinical data in cBioPortal will be delayed several months, but
+            genomics data will update regularly. For questions, please email <a
+            href="mailto:cdsi@mskcc.org">cdsi@mskcc.org</a>.`,
             id: '2025_epic_transition_warning',
         });
     }
