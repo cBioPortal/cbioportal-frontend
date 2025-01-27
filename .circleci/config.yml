@@ -452,6 +452,7 @@ jobs:
           name: Start backend server with keycloak
           environment:
             KEYCLOAK_CONFIG_PATH: '/tmp/repo/keycloak-config-generated.json'
+            APPLICATION_PROPERTIES_PATH: '/tmp/repo/cbioportal-frontend/end-to-end-test/local/runtime-config/portal.properties'
           command: |
             cd cbioportal-test
             ./scripts/docker-compose.sh --portal_type='keycloak' --docker_args='-d'

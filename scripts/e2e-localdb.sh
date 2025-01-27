@@ -5,12 +5,16 @@ set -o allexport
 TEST_REPO_URL="https://github.com/cBioPortal/cbioportal-test.git"
 DOCKER_COMPOSE_REPO_URL="https://github.com/cBioPortal/cbioportal-docker-compose.git"
 STUDIES='ascn_test_study study_hg38 teststudy_genepanels study_es_0 lgg_ucsf_2014_test_generic_assay'
+APPLICATION_PROPERTIES_PATH=$(cd -- "$(dirname -- "$0")" && cd .. && pwd)/end-to-end-test/local/runtime-config/portal.properties
 KEYCLOAK="true"
 RUN_FRONTEND="false" # Set to "true" if you want to build and run frontend at localhost:3000
 RUN_TESTS="false" # Set to "true" if you want to run all e2e:local tests
 
 # Use database image with preloaded studies
 export DOCKER_IMAGE_MYSQL=cbioportal/cbioportal-dev:database
+
+# Use custom application properties
+export APPLICATION_PROPERTIES_PATH=$APPLICATION_PROPERTIES_PATH
 
 # Create a temp dir and clone test repo
 ROOT_DIR=$(pwd)
