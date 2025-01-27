@@ -56,6 +56,16 @@ if (
             content: `New clinical data elements available as part of the <a href="https://mskcc.sharepoint.com/sites/pub-CDSI/SitePages/CDSI-Data.aspx" target="_blank">3rd CDSI data release</a>: BMI, Yost Index, lab measurements, including, CEA, PSA, TSH, and others`,
             id: '2024_cdsi_release_3',
         });
+
+        MESSAGE_DATA.push({
+            dateEnd: 1000000000000000,
+            content: `As MSK clinical systems are transitioning to EPIC, we are
+            trying our best to update the de-identified clinical data in
+            cBioPortal, but please expect some delay (months) . Genomics data
+            will be updated regularly. If you have any questions or concerns
+            regarding these delays, please email <a href="mailto:cdsi@mskcc.org">cdsi@mskcc.org</a>.`,
+            id: '2025_epic_transition_warning',
+        });
     }
 }
 
