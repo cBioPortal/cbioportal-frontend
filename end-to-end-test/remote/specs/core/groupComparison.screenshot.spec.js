@@ -478,6 +478,27 @@ describe('group comparison page screenshot tests', () => {
             assertScreenShotMatch(res);
         });
 
+        it('group comparison page mutations tab two groups no mutations types selected', async () => {
+            await goToUrlAndSetLocalStorage(
+                `${CBIOPORTAL_URL}/comparison/mutations?sessionId=5cf89323e4b0ab413787436c&selectedEnrichmentEventTypes=%5B"HOMDEL"%2C"AMP"%2C"structural_variant"%5D`
+            );
+            await (
+                await getElement('.borderedChart svg', {
+                    timeout: 20000,
+                })
+            ).waitForDisplayed({
+                timeout: 20000,
+            });
+            const res = await browser.checkElement(
+                '[data-test="ComparisonPageMutationsTabPlot"]',
+                '',
+                {
+                    viewportChangePause: 4000,
+                }
+            ); // hide these things because the timing of data loading makes this test so flaky
+            assertScreenShotMatch(res);
+        });
+
         it('group comparison page mutations tab three groups first unselected', async () => {
             await goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/comparison/mutations?comparisonId=634006c24dd45f2bc4c3d4aa&unselectedGroups=%5B"Colon%20Adenocarcinoma"%5D`
