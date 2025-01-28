@@ -394,7 +394,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     get comparisonPagePossible(): boolean {
         return (
             this.props.promise.isComplete &&
-            this.props.promise.result!.length > 1 &&
+            (this.props.promise.result.treatments ??
+                this.props.promise.result.patientTreatments ??
+                this.props.promise.result)!.length > 1 &&
             COMPARISON_CHART_TYPES.indexOf(this.props.chartType) > -1 &&
             !this.props.chartMeta.mutationOptionType
         );
@@ -492,6 +494,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 content: (
                     <div
                         data-tour="mutated-genes-table-compare-btn"
+                        data-test="table-compare-btn"
                         style={{ display: 'flex', alignItems: 'center' }}
                     >
                         <ComparisonVsIcon
