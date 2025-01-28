@@ -162,19 +162,19 @@ export function makeScatterPlotSizeFunction<D>(
               isHighlighted?: boolean,
               isLineHighlighted?: boolean
           ) => number),
-    line?: (d: D) => boolean
+    hovered?: (d: D) => boolean
 ) {
-    console.log('ets the line', line);
+    console.log('Is line highlighed', hovered);
     // When we search the text box with a sample, this function is called
     // need to regenerate this function whenever highlight changes in order to trigger immediate Victory rerender
     if (size) {
-        if (highlight && typeof size === 'function') {
-            console.log('first one');
-            return (d: D, active: boolean) => size(d, active, highlight(d));
+        if (hovered && typeof size === 'function') {
+            console.log('hovered');
+            return (d: D, active: boolean) => size(d, active, hovered(d));
         }
-        if (line && typeof size === 'function') {
-            console.log('entering the line');
-            return (d: D, active: boolean) => size(d, true, line(d));
+        if (highlight && typeof size === 'function') {
+            console.log('hihglight');
+            return (d: D, active: boolean) => size(d, active, highlight(d));
         } else {
             return size;
         }

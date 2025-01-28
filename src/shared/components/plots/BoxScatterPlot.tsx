@@ -78,7 +78,12 @@ export interface IBoxScatterPlotProps<D extends IBaseBoxScatterPlotPoint> {
     highlight?: (d: D) => boolean;
     size?:
         | number
-        | ((d: D, active: boolean, isHighlighted?: boolean) => number);
+        | ((
+              d: D,
+              active: boolean,
+              isHighlighted?: boolean,
+              isHovered?: boolean
+          ) => number);
     fill?: string | ((d: D) => string);
     stroke?: string | ((d: D) => string);
     fillOpacity?: number | ((d: D) => number);
@@ -155,41 +160,34 @@ export default class BoxScatterPlot<
         makeObservable(this);
     }
 
-    @action.bound
-    line?: (d: any) => boolean = (d: any) => false;
-
-    @action.bound
-    line?: (d: any) => boolean = (d: any) => false;
+    @observable
+    lineHovered?: (d: any) => boolean = (d: any) => false;
 
     @action.bound
     isLineHovered(data: any, hovered: boolean) {
-        console.log('isLineHovered is called');
         if (hovered) {
             // Define the line function dynamically based on the data
-            this.line = (d: any) => {
+            this.lineHovered = (d: any) => {
                 return data.some((sampleArray: any) => {
-                    console.log('Checking if line matches');
-                    return this.scatterPlotData.some(dataWithAppearance =>
-                        dataWithAppearance.data.some(
-                            sample =>
-                                sample.sampleId === sampleArray.sampleId &&
-                                sample.sampleId === d.sampleId
-                        )
-                    );
+                    return this.scatterPlotData.some(dataWithAppearance => {
+                        return dataWithAppearance.data.some(sample => {
+                            return sample.sampleId === sampleArray.sampleId;
+                        });
+                    });
                 });
             };
         } else {
             // Reset the line function to always return false
-            this.line = (d: any) => false;
+            this.lineHovered = (d: any) => false;
         }
     }
 
     @computed get scatterPlotSize() {
         const highlight = this.props.highlight;
         const size = this.props.size;
-        const line = this.line;
+        const hovered = this.lineHovered;
         // need to regenerate this function whenever highlight changes in order to trigger immediate Victory rerender
-        return makeScatterPlotSizeFunction(highlight, size, line);
+        return makeScatterPlotSizeFunction(highlight, size, hovered);
     }
 
     @bind
