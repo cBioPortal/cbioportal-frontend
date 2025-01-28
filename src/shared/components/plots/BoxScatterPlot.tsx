@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer, Observer } from 'mobx-react';
-import { computed, observable, action, makeObservable } from 'mobx';
+import { computed, observable, action, makeObservable, toJS } from 'mobx';
 import { bind } from 'bind-decorator';
 import ifNotDefined from '../../lib/ifNotDefined';
 import { calculateBoxPlotModel } from '../../lib/boxPlotUtils';
@@ -50,7 +50,6 @@ export interface IBaseBoxScatterPlotPoint {
     value: number;
     jitter?: number; // between -1 and 1
     sampleId: string;
-    // lineHovered?: boolean;
 }
 
 export interface IBoxScatterPlotData<D extends IBaseBoxScatterPlotPoint> {
@@ -110,7 +109,6 @@ export interface IBoxScatterPlotProps<D extends IBaseBoxScatterPlotPoint> {
     qValue?: number | null;
     renderLinePlot?: boolean;
     samplesForPatients?: SampleIdsForPatientIds[] | [];
-    testPairwise?: any;
 }
 
 export type BoxModel = {
@@ -160,33 +158,32 @@ export default class BoxScatterPlot<
         makeObservable(this);
     }
 
-    @observable
-    lineHovered?: (d: any) => boolean = (d: any) => false;
+    @observable samplesInLineHover: string[] = [];
 
     @action.bound
-    isLineHovered(data: any, hovered: boolean) {
+    setSamplesInLineHover(data: any, hovered: boolean) {
         if (hovered) {
-            // Define the line function dynamically based on the data
-            this.lineHovered = (d: any) => {
-                return data.some((sampleArray: any) => {
-                    return this.scatterPlotData.some(dataWithAppearance => {
-                        return dataWithAppearance.data.some(sample => {
-                            return sample.sampleId === sampleArray.sampleId;
-                        });
-                    });
-                });
-            };
+            this.samplesInLineHover = data.map(
+                (dataEntries: any) => dataEntries.sampleId
+            );
         } else {
-            // Reset the line function to always return false
-            this.lineHovered = (d: any) => false;
+            this.samplesInLineHover = [];
         }
     }
 
-    @computed get scatterPlotSize() {
+    @computed
+    get lineHovered() {
+        const lineSamples = this.samplesInLineHover;
+        return (d: any) => {
+            return _.some(lineSamples, sampleId => sampleId === d.sampleId);
+        };
+    }
+
+    @computed
+    get scatterPlotSize() {
         const highlight = this.props.highlight;
         const size = this.props.size;
         const hovered = this.lineHovered;
-        // need to regenerate this function whenever highlight changes in order to trigger immediate Victory rerender
         return makeScatterPlotSizeFunction(highlight, size, hovered);
     }
 
@@ -970,7 +967,7 @@ export default class BoxScatterPlot<
                                                                         target:
                                                                             'data',
                                                                         mutation: () => {
-                                                                            this.isLineHovered(
+                                                                            this.setSamplesInLineHover(
                                                                                 this
                                                                                     .patientLinePlotData![
                                                                                     patientId
@@ -994,7 +991,7 @@ export default class BoxScatterPlot<
                                                                         target:
                                                                             'data',
                                                                         mutation: () => {
-                                                                            this.isLineHovered(
+                                                                            this.setSamplesInLineHover(
                                                                                 this
                                                                                     .patientLinePlotData![
                                                                                     patientId

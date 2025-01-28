@@ -161,7 +161,7 @@ export function makeScatterPlotSizeFunction<D>(
         return (d: D, active: boolean) => {
             const isHighlighted = highlight ? highlight(d) : false;
             const isHovered = hovered ? hovered(d) : false;
-            const isLineHighlighted = isHovered || isHighlighted; // You can adjust this logic as needed
+            const isLineHighlighted = isHovered || isHighlighted;
 
             if (hovered && typeof size === 'function') {
                 return size(d, active, isHighlighted, isLineHighlighted);
@@ -176,7 +176,7 @@ export function makeScatterPlotSizeFunction<D>(
             const isHighlighted = highlight ? highlight(d) : false;
             const isHovered = hovered ? hovered(d) : false;
 
-            const isLineHighlighted = isHovered || isHighlighted; // You can adjust this logic as needed
+            const isLineHighlighted = isHovered || isHighlighted;
             return active || isLineHighlighted ? 6 : 3;
         };
     }
