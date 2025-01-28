@@ -5832,7 +5832,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                     samplesForPatients={
                                         this.samplesForEachPatient
                                     }
-                                    testPairwise={this.highlightedLegendItems}
                                 />
                             );
                             break;

@@ -8,6 +8,7 @@ import {
     legendLabelStyles,
 } from 'cbioportal-frontend-commons';
 import { clamp } from '../../lib/NumberUtils';
+import { string } from 'yargs';
 
 export type LegendDataWithId<D = any> = {
     name: string | string[];
@@ -144,45 +145,42 @@ export function getJitterForCase(uniqueKey: string) {
     return getDeterministicRandomNumber(seed, [-1, 1]);
 }
 
-export function getSamplesToHighlightInLineHover<D>(
-    samples: string[],
-    highlightfunction: (d: D) => Boolean
-) {
-    // Get sample ids and set their highlight status to 'on'
-    const sampleIds = samples;
-}
-
 export function makeScatterPlotSizeFunction<D>(
     highlight?: (d: D) => boolean,
     size?:
         | number
         | ((
               d: D,
-              active: Boolean,
+              active: boolean,
               isHighlighted?: boolean,
               isLineHighlighted?: boolean
           ) => number),
     hovered?: (d: D) => boolean
 ) {
-    console.log('Is line highlighed', hovered);
-    // When we search the text box with a sample, this function is called
-    // need to regenerate this function whenever highlight changes in order to trigger immediate Victory rerender
     if (size) {
-        if (hovered && typeof size === 'function') {
-            return (d: D, active: boolean) => size(d, active, hovered(d));
-        }
-        if (highlight && typeof size === 'function') {
-            return (d: D, active: boolean) => size(d, active, highlight(d));
-        } else {
-            return size;
-        }
+        return (d: D, active: boolean) => {
+            const isHighlighted = highlight ? highlight(d) : false;
+            const isHovered = hovered ? hovered(d) : false;
+            const isLineHighlighted = isHovered || isHighlighted; // You can adjust this logic as needed
+
+            if (hovered && typeof size === 'function') {
+                return size(d, active, isHighlighted, isLineHighlighted);
+            } else if (highlight && typeof size === 'function') {
+                return size(d, active, isHighlighted, isLineHighlighted);
+            } else {
+                return size;
+            }
+        };
     } else {
         return (d: D, active: boolean) => {
-            return active || !!(highlight && highlight(d)) ? 6 : 3;
+            const isHighlighted = highlight ? highlight(d) : false;
+            const isHovered = hovered ? hovered(d) : false;
+
+            const isLineHighlighted = isHovered || isHighlighted; // You can adjust this logic as needed
+            return active || isLineHighlighted ? 6 : 3;
         };
     }
 }
-
 export function scatterPlotSize(
     d: any,
     active: boolean,
