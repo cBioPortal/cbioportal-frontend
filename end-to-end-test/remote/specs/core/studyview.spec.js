@@ -984,6 +984,24 @@ describe('study view treatments table', () => {
         assertScreenShotMatch(res);
     });
 
+    it('compare button appears when selecting multiple rows in sample treatments', async () => {
+        const sampleTreatmentsFirstCheckbox =
+            '[data-test="SAMPLE_TREATMENTS-table"] .ReactVirtualized__Table__row:nth-child(1) input';
+        const sampleTreatmentsSecondCheckbox =
+            '[data-test="SAMPLE_TREATMENTS-table"] .ReactVirtualized__Table__row:nth-child(2) input';
+        const sampleTreatmentsCompareButton = '[data-test="table-compare-btn"]';
+        const url = `${CBIOPORTAL_URL}/study/summary?id=lgg_ucsf_2014`;
+        await goToUrlAndSetLocalStorage(url);
+
+        await (await getElement(sampleTreatmentsFirstCheckbox)).waitForExist();
+        await clickElement(sampleTreatmentsFirstCheckbox);
+        await (await getElement(sampleTreatmentsSecondCheckbox)).waitForExist();
+        await clickElement(sampleTreatmentsSecondCheckbox);
+        assert(
+            await (await getElement(sampleTreatmentsCompareButton)).isExisting()
+        );
+    });
+
     it('can filter a study by patient treatments', async () => {
         const url = `${CBIOPORTAL_URL}/study/summary?id=lgg_ucsf_2014`;
         await goToUrlAndSetLocalStorage(url);
@@ -1003,6 +1021,30 @@ describe('study view treatments table', () => {
 
         const res = await checkElementWithMouseDisabled('#mainColumn');
         assertScreenShotMatch(res);
+    });
+
+    it('compare button appears when selecting multiple rows in patient treatments', async () => {
+        const url = `${CBIOPORTAL_URL}/study/summary?id=lgg_ucsf_2014`;
+        await goToUrlAndSetLocalStorage(url);
+
+        const patientTreatmentsFirstCheckbox =
+            '[data-test="PATIENT_TREATMENTS-table"] .ReactVirtualized__Table__row:nth-child(1) input';
+        const patientTreatmentsSecondCheckbox =
+            '[data-test="PATIENT_TREATMENTS-table"] .ReactVirtualized__Table__row:nth-child(2) input';
+        const patientTreatmentsCompareButton =
+            '[data-test="table-compare-btn"]';
+
+        await (await getElement(patientTreatmentsFirstCheckbox)).waitForExist();
+        await clickElement(patientTreatmentsFirstCheckbox);
+        await (
+            await getElement(patientTreatmentsSecondCheckbox)
+        ).waitForExist();
+        await clickElement(patientTreatmentsSecondCheckbox);
+        assert(
+            await (
+                await getElement(patientTreatmentsCompareButton)
+            ).isExisting()
+        );
     });
 });
 
