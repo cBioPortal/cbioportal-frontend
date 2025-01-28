@@ -169,11 +169,9 @@ export function makeScatterPlotSizeFunction<D>(
     // need to regenerate this function whenever highlight changes in order to trigger immediate Victory rerender
     if (size) {
         if (hovered && typeof size === 'function') {
-            console.log('hovered');
             return (d: D, active: boolean) => size(d, active, hovered(d));
         }
         if (highlight && typeof size === 'function') {
-            console.log('hihglight');
             return (d: D, active: boolean) => size(d, active, highlight(d));
         } else {
             return size;
