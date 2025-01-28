@@ -26,8 +26,11 @@ import { SimpleGetterLazyMobXTableApplicationDataStore } from 'shared/lib/ILazyM
 import { SelectionOperatorEnum } from '../TableUtils';
 import { DropdownButton, MenuItem } from 'react-bootstrap';
 import classNames from 'classnames';
+import SaveAllChartsButton from '../addChartButton/SaveAllChartsButton';
+import { StudyViewPageStore } from '../StudyViewPageStore';
 
 export type IFixedHeaderTableProps<T> = {
+    store?: StudyViewPageStore;
     columns: Column<T>[];
     fixedTopRowsData?: T[];
     data: T[];
@@ -54,6 +57,7 @@ export type IFixedHeaderTableProps<T> = {
     }[];
     extraFooterElements?: any[];
     showAddRemoveAllButton?: boolean;
+    showSaveAllChartsButton?: boolean;
     addAll?: (data: T[]) => void;
     removeAll?: (data: T[]) => void;
     showSelectableNumber?: boolean;
@@ -106,7 +110,8 @@ export default class FixedHeaderTable<T> extends React.Component<
 
     public static defaultProps = {
         showControlsAtTop: false,
-        showAddRemoveAllButton: false,
+        showSaveAllChartsButton: false,
+        showAllChartsButton: false,
         autoFocusSearchAfterRendering: false,
         width: 398,
         height: 350,
@@ -395,6 +400,10 @@ export default class FixedHeaderTable<T> extends React.Component<
     }
 
     getControls() {
+        const { store, showSaveAllChartsButton } = this.props;
+        const { isSavingUserPreferencePossible, appStore, pageUserSession } =
+            store || {};
+
         return (
             <div
                 className={classnames(styles.controls, {
@@ -463,17 +472,27 @@ export default class FixedHeaderTable<T> extends React.Component<
                         </button>
                     ))}
                 {this.props.showControlsAtTop && (
-                    <input
-                        placeholder={'Search...'}
-                        type="text"
-                        onInput={this.onFilterTextChange()}
-                        ref={this.setInputRef}
-                        data-test="fixed-header-table-search-input"
-                        className={classnames(
-                            'form-control',
-                            styles.tableSearchInput
-                        )}
-                    />
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <input
+                            placeholder={'Search...'}
+                            type="text"
+                            onInput={this.onFilterTextChange()}
+                            ref={this.setInputRef}
+                            data-test="fixed-header-table-search-input"
+                            className={classnames(
+                                'form-control',
+                                styles.tableSearchInput
+                            )}
+                            style={{ marginRight: '10px' }}
+                        />
+                        {isSavingUserPreferencePossible &&
+                            showSaveAllChartsButton && (
+                                <SaveAllChartsButton
+                                    isLoggedIn={appStore?.isLoggedIn ?? false}
+                                    pageUserSession={pageUserSession}
+                                />
+                            )}
+                    </div>
                 )}
                 {this.props.extraFooterElements}
             </div>
