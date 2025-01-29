@@ -367,7 +367,7 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                         </button>
                     )}
 
-                    {!store.zoomBounds && (
+                    {!store.zoomBounds && disableZoom !== true && (
                         <span
                             onClick={() => {
                                 store.setZoomBounds();
