@@ -16,6 +16,9 @@ export DOCKER_IMAGE_MYSQL=cbioportal/mysql:8.0-database-test
 # Use custom application properties
 export APPLICATION_PROPERTIES_PATH=$APPLICATION_PROPERTIES_PATH
 
+# Backend image
+export DOCKER_IMAGE_CBIOPORTAL=cbioportal/cbioportal:master
+
 # Create a temp dir and clone test repo
 ROOT_DIR=$(pwd)
 TEMP_DIR=$(mktemp -d)
