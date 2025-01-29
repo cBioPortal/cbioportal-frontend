@@ -437,6 +437,7 @@ jobs:
       NODE_VERSION: 15.2.1
       YARN_VERSION: 1.22.5
       DOCKER_IMAGE_MYSQL: cbioportal/mysql:8.0-database-test
+      DOCKER_IMAGE_CBIOPORTAL: cbioportal/cbioportal:master
     steps:
       - attach_workspace:
           at: /tmp/repo
