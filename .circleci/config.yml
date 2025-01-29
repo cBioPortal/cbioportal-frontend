@@ -436,7 +436,7 @@ jobs:
       FRONTEND_PORT: 3000
       NODE_VERSION: 15.2.1
       YARN_VERSION: 1.22.5
-      DOCKER_IMAGE_MYSQL: cbioportal/cbioportal-dev:database
+      DOCKER_IMAGE_MYSQL: cbioportal/mysql:8.0-database-test
     steps:
       - attach_workspace:
           at: /tmp/repo
