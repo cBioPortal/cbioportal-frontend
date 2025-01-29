@@ -456,7 +456,7 @@ jobs:
             APPLICATION_PROPERTIES_PATH: '/tmp/repo/cbioportal-frontend/end-to-end-test/local/runtime-config/portal.properties'
           command: |
             cd cbioportal-test
-            ./scripts/docker-compose.sh --portal_type='keycloak' --docker_args='-d'
+            nohup ./scripts/docker-compose.sh --portal_type='keycloak' >> /tmp/repo/docker-compose-logs.txt 2>&1 &
       - run:
           name: Check keycloak connection at localhost
           command: |
@@ -487,6 +487,8 @@ jobs:
             nvm use ${NODE_VERSION}
             npm install -g yarn@${YARN_VERSION}
             yarn run e2e:local
+      - store_artifacts:
+          path: /tmp/repo/docker-compose-logs.txt
             
 
 workflows:
