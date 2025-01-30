@@ -467,6 +467,7 @@ jobs:
           command: |
             cd cbioportal-test
             ./utils/check-connection.sh --url=localhost:${BACKEND_PORT} --max_retries=50
+            curl -s http://localhost:8080/api/info | jq
       - run:
           name: Start frontend server
           command: |
@@ -493,6 +494,22 @@ jobs:
             yarn run e2e:local
       - store_artifacts:
           path: /tmp/repo/docker-compose-logs.txt
+      - store_artifacts:
+          path: /tmp/repo/end-to-end-test/local/screenshots
+          destination: /screenshots
+      - store_artifacts:
+          path: /tmp/repo/end-to-end-test/local/errorShots
+          destination: /errorShots
+      - store_test_results:
+          path: /tmp/repo/end-to-end-test/local/junit
+      - store_artifacts:
+          path: /tmp/repo/end-to-end-test/local/junit
+      - store_artifacts:
+          path: /tmp/repo/end-to-end-test/local/junit/completeResults.json
+          destination: /completeResults.json
+      - store_artifacts:
+          path: /tmp/repo/end-to-end-test/local/junit/errors
+          destination: /errors
             
 
 workflows:
