@@ -738,7 +738,7 @@ export default class ClinicalData extends React.Component<
                         className="form-group"
                         style={{ display: 'flex', alignItems: 'center' }}
                     >
-                        <label>Visualisation Type</label>
+                        <label>Plot Type</label>
                         <div
                             style={{ width: 240, marginLeft: 5 }}
                             data-test="plotTypeSelector"
