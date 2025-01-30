@@ -484,7 +484,6 @@ jobs:
           environment:
             SPEC_FILE_PATTERN: << pipeline.parameters.localdb_spec_pattern >>
             JUNIT_REPORT_PATH: /tmp/repo/end-to-end-test/local/junit
-            SCREENSHOT_DIRECTORY: /tmp/repo/end-to-end-test/local/screenshots
             PORTAL_SOURCE_DIR: /tmp/repo
           command: |
             cd cbioportal-frontend
@@ -495,10 +494,10 @@ jobs:
       - store_artifacts:
           path: /tmp/repo/docker-compose-logs.txt
       - store_artifacts:
-          path: /tmp/repo/end-to-end-test/local/screenshots
+          path: /local/screenshots
           destination: /screenshots
       - store_artifacts:
-          path: /tmp/repo/end-to-end-test/local/errorShots
+          path: /local/errorShots
           destination: /errorShots
       - store_test_results:
           path: /tmp/repo/end-to-end-test/local/junit
