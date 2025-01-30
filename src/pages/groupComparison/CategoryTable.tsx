@@ -1,6 +1,6 @@
 import { FunctionComponent } from 'react';
 import * as React from 'react';
-import { IMultipleCategoryBarPlotData } from 'pages/groupComparison/MultipleCategoryBarPlot';
+import { IMultipleCategoryBarPlotData } from 'shared/components/plots/MultipleCategoryBarPlot';
 
 type CategoryTableProps = {
     data: IMultipleCategoryBarPlotData[];
