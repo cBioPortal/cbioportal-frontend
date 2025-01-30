@@ -109,93 +109,95 @@ export default class GroupComparisonMutationsTab extends React.Component<
                         {NO_MUTATIONS_AVAILABLE_MSG}
                     </div>
                 );
-            }
-
-            return (
-                <>
-                    {/* {!this.props.store.userSelectedMutationMapperGene ? (
-                        <div className="alert alert-info">
-                            <div>
-                                Gene with highest frequency is displayed by
-                                default. Gene can be changed in the dropdown
-                                below.
+            } else {
+                return (
+                    <>
+                        {/* {!this.props.store.userSelectedMutationMapperGene ? (
+                            <div className="alert alert-info">
+                                <div>
+                                    Gene with highest frequency is displayed by
+                                    default. Gene can be changed in the dropdown
+                                    below.
+                                </div>
+                                <div>
+                                    The top 10 genes with highest frequency are
+                                    shown below the dropdown and can be selected by
+                                    clicking on their respective tabs.
+                                </div>
                             </div>
-                            <div>
-                                The top 10 genes with highest frequency are
-                                shown below the dropdown and can be selected by
-                                clicking on their respective tabs.
+                        ) : (
+                            <div className="alert alert-info">
+                                The top 10 genes with highest frequency are shown
+                                below the dropdown and can be selected by clicking
+                                on their respective tabs.
                             </div>
-                        </div>
-                    ) : (
-                        <div className="alert alert-info">
-                            The top 10 genes with highest frequency are shown
-                            below the dropdown and can be selected by clicking
-                            on their respective tabs.
-                        </div>
-                    )} */}
-                    <OverlapExclusionIndicator
-                        store={this.props.store}
-                        only="sample"
-                    />
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <LollipopGeneSelector
+                        )} */}
+                        <OverlapExclusionIndicator
                             store={this.props.store}
-                            genes={this.props.store.genes.result!}
-                            genesWithMutations={
-                                this.props.store.genesWithMutations.result!
-                            }
-                            handleGeneChange={this.handleGeneChange}
-                            key={
-                                'comparisonLollipopGene' +
-                                this.props.store.activeMutationMapperGene
-                                    .hugoGeneSymbol
-                            }
+                            only="sample"
                         />
-                        <div style={{ paddingRight: 5 }}>
-                            Highest Frequency:
-                        </div>
-                        <div>
-                            <MSKTabs
-                                activeTabId={this.activeTabId}
-                                onTabClick={(id: string) =>
-                                    this.handleGeneChange(id)
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                            <LollipopGeneSelector
+                                store={this.props.store}
+                                genes={this.props.store.genes.result!}
+                                genesWithMutations={
+                                    this.props.store.genesWithMutations.result!
                                 }
-                                className="pillTabs comparisonMutationMapperTabs"
-                                tabButtonStyle="pills"
-                                defaultTabId={false}
-                            >
-                                {this.tabs}
-                            </MSKTabs>
+                                handleGeneChange={this.handleGeneChange}
+                                key={
+                                    'comparisonLollipopGene' +
+                                    this.props.store.activeMutationMapperGene
+                                        .hugoGeneSymbol
+                                }
+                            />
+                            <div style={{ paddingRight: 5 }}>
+                                Highest Frequency:
+                            </div>
+                            <div>
+                                <MSKTabs
+                                    activeTabId={this.activeTabId}
+                                    onTabClick={(id: string) =>
+                                        this.handleGeneChange(id)
+                                    }
+                                    className="pillTabs comparisonMutationMapperTabs"
+                                    tabButtonStyle="pills"
+                                    defaultTabId={false}
+                                >
+                                    {this.tabs}
+                                </MSKTabs>
+                            </div>
                         </div>
-                    </div>
-                    <GroupComparisonMutationMapperWrapper
-                        store={this.props.store}
-                        onScaleToggle={this.onScaleToggle}
-                        mutations={_(this.props.store.mutationsByGroup.result!)
-                            .values()
-                            .flatten()
-                            .value()}
-                        filters={{
-                            groupFilters: _.keys(
+                        <GroupComparisonMutationMapperWrapper
+                            store={this.props.store}
+                            onScaleToggle={this.onScaleToggle}
+                            mutations={_(
                                 this.props.store.mutationsByGroup.result!
-                            ).map(group => ({
-                                group: group,
-                                filter: {
-                                    type: 'GroupComparisonFilter',
-                                    values: [group],
+                            )
+                                .values()
+                                .flatten()
+                                .value()}
+                            filters={{
+                                groupFilters: _.keys(
+                                    this.props.store.mutationsByGroup.result!
+                                ).map(group => ({
+                                    group: group,
+                                    filter: {
+                                        type: 'GroupComparisonFilter',
+                                        values: [group],
+                                    },
+                                })),
+                                filterAppliersOverride: {
+                                    GroupComparisonFilter: this.props.store
+                                        .shouldApplySampleIdFilter,
+                                    [ANNOTATED_PROTEIN_IMPACT_FILTER_TYPE]: createAnnotatedProteinImpactTypeFilter(
+                                        this.isPutativeDriver
+                                    ),
                                 },
-                            })),
-                            filterAppliersOverride: {
-                                GroupComparisonFilter: this.props.store
-                                    .shouldApplySampleIdFilter,
-                                [ANNOTATED_PROTEIN_IMPACT_FILTER_TYPE]: createAnnotatedProteinImpactTypeFilter(
-                                    this.isPutativeDriver
-                                ),
-                            },
-                        }}
-                    />
-                </>
-            );
+                            }}
+                        />
+                    </>
+                );
+            }
         },
         renderPending: () => (
             <LoadingIndicator isLoading={true} center={true} size={'big'} />

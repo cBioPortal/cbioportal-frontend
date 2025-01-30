@@ -339,8 +339,8 @@ export default class GroupComparisonStore extends ComparisonStore {
                                 isSampleProfiled(
                                     sample.uniqueSampleKey,
                                     p.molecularProfileId,
-                                    this.activeMutationMapperGene
-                                        ?.hugoGeneSymbol,
+                                    this.activeMutationMapperGene!
+                                        .hugoGeneSymbol,
                                     this.coverageInformation.result!
                                 )
                             )

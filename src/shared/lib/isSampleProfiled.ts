@@ -5,7 +5,7 @@ import { GenePanelData } from 'cbioportal-ts-api-client';
 export function isSampleProfiled(
     uniqueSampleKey: string,
     molecularProfileId: string,
-    hugoGeneSymbol: string | undefined,
+    hugoGeneSymbol: string,
     coverageInformation: CoverageInformation
 ): boolean {
     return !!getSampleProfiledReport(
