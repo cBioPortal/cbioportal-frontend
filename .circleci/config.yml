@@ -481,6 +481,10 @@ jobs:
             ./utils/check-connection.sh --url=localhost:${FRONTEND_PORT} --max_retries=50
       - run:
           name: Run e2e localdb tests
+          environment:
+            SPEC_FILE_PATTERN: << pipeline.parameters.localdb_spec_pattern >>
+            JUNIT_REPORT_PATH: ./local/junit/
+            PORTAL_SOURCE_DIR: /tmp/repo
           command: |
             cd cbioportal-frontend
             nvm install ${NODE_VERSION}
