@@ -467,7 +467,6 @@ jobs:
           command: |
             cd cbioportal-test
             ./utils/check-connection.sh --url=localhost:${BACKEND_PORT} --max_retries=50
-            curl -s http://localhost:8080/api/info | jq
       - run:
           name: Start frontend server
           command: |
@@ -484,7 +483,8 @@ jobs:
           name: Run e2e localdb tests
           environment:
             SPEC_FILE_PATTERN: << pipeline.parameters.localdb_spec_pattern >>
-            JUNIT_REPORT_PATH: ./local/junit/
+            JUNIT_REPORT_PATH: /tmp/repo/end-to-end-test/local/junit
+            SCREENSHOT_DIRECTORY: /tmp/repo/end-to-end-test/local/screenshots
             PORTAL_SOURCE_DIR: /tmp/repo
           command: |
             cd cbioportal-frontend
