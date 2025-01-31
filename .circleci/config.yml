@@ -492,7 +492,7 @@ jobs:
             SCREENSHOT_DIRECTORY: ./local/screenshots
             PORTAL_SOURCE_DIR: /tmp/repo/cbioportal-frontend
           command: |
-            cd ${PORTAL_SOURCE_DIR}
+            cd ${PORTAL_SOURCE_DIR}/end-to-end-test
             nvm install ${NODE_VERSION}
             nvm use ${NODE_VERSION}
             npm install -g yarn@${YARN_VERSION}
