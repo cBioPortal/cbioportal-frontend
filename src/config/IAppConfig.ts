@@ -173,6 +173,7 @@ export interface IServerConfig {
     skin_comparison_view_mutation_table_columns_show_on_init: string;
     skin_patient_view_copy_number_table_columns_show_on_init: string;
     skin_patient_view_structural_variant_table_columns_show_on_init: string;
+    skin_survival_plot_clinical_event_types_show_on_init: string;
     skin_results_view_tables_default_sort_column: string;
     skin_patient_view_tables_default_sort_column: string;
     skin_patient_view_custom_sample_type_colors_json: string;

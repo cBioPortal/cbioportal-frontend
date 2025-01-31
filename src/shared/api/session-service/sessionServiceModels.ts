@@ -1,9 +1,14 @@
-import { ClinicalData, StudyViewFilter } from 'cbioportal-ts-api-client';
+import {
+    ClinicalData,
+    StudyViewFilter,
+    SurvivalRequest,
+} from 'cbioportal-ts-api-client';
 import { ChartType } from 'pages/studyView/StudyViewUtils';
 import {
     ClinicalTrackConfig,
     GeneticTrackConfig,
 } from 'shared/components/oncoprint/Oncoprint';
+import { CustomSurvivalPlots } from 'shared/lib/comparison/ComparisonStoreUtils';
 import { PageSettingsIdentifier } from 'shared/userSession/PageSettingsIdentifier';
 
 export interface Session {
@@ -60,6 +65,7 @@ export type ComparisonSession = {
     origin: string[];
     clinicalAttributeName?: string;
     groupNameOrder?: string[];
+    customSurvivalPlots?: Partial<SurvivalRequest> & { name: string }[];
 };
 
 export type SessionGroupData = GroupData & {

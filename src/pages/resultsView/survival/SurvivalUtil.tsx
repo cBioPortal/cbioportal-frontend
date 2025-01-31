@@ -676,7 +676,14 @@ export function getSurvivalChartDataByAlteredStatus(
 }
 
 export function generateSurvivalPlotTitleFromDisplayName(displayName: string) {
-    return displayName.replace(/status|survival/gi, '');
+    return (
+        displayName
+            // there is clinical event with name `Status`. If we replace it with empty string, the title will be empty
+            .replace(/Survival status/gi, '')
+            .replace(/\s+/g, ' ') // Replace multiple spaces with a single space
+            .trim()
+            .replace(/^\w/, c => c.toUpperCase())
+    );
 }
 
 export function generateSurvivalPlotYAxisLabelFromDisplayName(

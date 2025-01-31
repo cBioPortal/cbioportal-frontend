@@ -1,3 +1,43 @@
+import autobind from 'autobind-decorator';
+import { remoteData, stringListToIndexSet } from 'cbioportal-frontend-commons';
+import {
+    CancerStudy,
+    Gene,
+    GenePanelDataMultipleStudyFilter,
+    Mutation,
+    MutationMultipleStudyFilter,
+    SampleFilter,
+} from 'cbioportal-ts-api-client';
+import _ from 'lodash';
+import { action, computed, makeObservable, observable } from 'mobx';
+import { fetchPatients } from 'pages/resultsView/ResultsViewPageStoreUtils';
+import { getSampleMolecularIdentifiers } from 'pages/studyView/StudyViewComparisonUtils';
+import { pickClinicalDataColors } from 'pages/studyView/StudyViewUtils';
+import { AxisScale, DataFilter } from 'react-mutation-mapper';
+import sessionServiceClient from 'shared/api//sessionServiceInstance';
+import {
+    ComparisonSession,
+    SessionGroupData,
+    VirtualStudy,
+} from 'shared/api/session-service/sessionServiceModels';
+import { REQUEST_ARG_ENUM } from 'shared/constants';
+import { FeatureFlagEnum } from 'shared/featureFlags';
+import {
+    CoverageInformation,
+    getCoverageInformation,
+} from 'shared/lib/GenePanelUtils';
+import { getAllGenes } from 'shared/lib/StoreUtils';
+import ComplexKeySet from 'shared/lib/complexKeyDataStructures/ComplexKeySet';
+import { isSampleProfiled } from 'shared/lib/isSampleProfiled';
+import { AppStore } from '../../AppStore';
+import client from '../../shared/api/cbioportalClientInstance';
+import comparisonClient from '../../shared/api/comparisonGroupClientInstance';
+import ComparisonStore, {
+    OverlapStrategy,
+} from '../../shared/lib/comparison/ComparisonStore';
+import ifNotDefined from '../../shared/lib/ifNotDefined';
+import { COLORS } from '../studyView/StudyViewUtils';
+import GroupComparisonURLWrapper from './GroupComparisonURLWrapper';
 import {
     ComparisonGroup,
     defaultGroupOrder,
@@ -5,50 +45,6 @@ import {
     getOrdinals,
     getStudyIds,
 } from './GroupComparisonUtils';
-import { remoteData, stringListToIndexSet } from 'cbioportal-frontend-commons';
-import {
-    SampleFilter,
-    CancerStudy,
-    MutationMultipleStudyFilter,
-    GenePanelDataMultipleStudyFilter,
-    Mutation,
-    Gene,
-    GenePanelData,
-    Sample,
-    MutationCountByPosition,
-} from 'cbioportal-ts-api-client';
-import { action, observable, makeObservable, computed } from 'mobx';
-import client from '../../shared/api/cbioportalClientInstance';
-import comparisonClient from '../../shared/api/comparisonGroupClientInstance';
-import _ from 'lodash';
-import autobind from 'autobind-decorator';
-import { pickClinicalDataColors } from 'pages/studyView/StudyViewUtils';
-import { AppStore } from '../../AppStore';
-import { GACustomFieldsEnum, trackEvent } from 'shared/lib/tracking';
-import ifNotDefined from '../../shared/lib/ifNotDefined';
-import GroupComparisonURLWrapper from './GroupComparisonURLWrapper';
-import ComparisonStore, {
-    OverlapStrategy,
-} from '../../shared/lib/comparison/ComparisonStore';
-import sessionServiceClient from 'shared/api//sessionServiceInstance';
-import { COLORS } from '../studyView/StudyViewUtils';
-import {
-    ComparisonSession,
-    SessionGroupData,
-    VirtualStudy,
-} from 'shared/api/session-service/sessionServiceModels';
-import ComplexKeySet from 'shared/lib/complexKeyDataStructures/ComplexKeySet';
-import { REQUEST_ARG_ENUM } from 'shared/constants';
-import { AxisScale, DataFilter } from 'react-mutation-mapper';
-import { fetchGenes, getAllGenes } from 'shared/lib/StoreUtils';
-import {
-    CoverageInformation,
-    getCoverageInformation,
-} from 'shared/lib/GenePanelUtils';
-import { fetchPatients } from 'pages/resultsView/ResultsViewPageStoreUtils';
-import { isSampleProfiled } from 'shared/lib/isSampleProfiled';
-import { getSampleMolecularIdentifiers } from 'pages/studyView/StudyViewComparisonUtils';
-import { FeatureFlagEnum } from 'shared/featureFlags';
 
 export default class GroupComparisonStore extends ComparisonStore {
     @observable private sessionId: string;
@@ -146,7 +142,7 @@ export default class GroupComparisonStore extends ComparisonStore {
     }
 
     @action
-    protected async saveAndGoToSession(newSession: ComparisonSession) {
+    public async saveAndGoToSession(newSession: ComparisonSession) {
         const { id } = await comparisonClient.addComparisonSession(newSession);
         this.urlWrapper.updateURL({ comparisonId: id });
     }
@@ -655,7 +651,7 @@ export default class GroupComparisonStore extends ComparisonStore {
     }
 
     // override parent method
-    protected get isLeftTruncationFeatureFlagEnabled() {
+    public get isLeftTruncationFeatureFlagEnabled() {
         return this.appStore.featureFlagStore.has(
             FeatureFlagEnum.LEFT_TRUNCATION_ADJUSTMENT
         );
