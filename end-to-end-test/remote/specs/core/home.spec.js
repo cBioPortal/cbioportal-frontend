@@ -281,15 +281,20 @@ describe('case set selection in front page query form', function() {
         await clickModifyStudySelectionButton();
         await browser.pause(500);
         //Phase 3: Deselect Ampullary Carcinoma
-        await (await getElement(input)).waitForExist({ timeout: 10000 });
-        await setInputText(input, 'ampullary baylor');
+        //await (await getElement(input)).waitForExist({ timeout: 10000 });
+        //await setInputText(input, '');
+        await clickElement('[data-test="clearStudyFilter"]');
         await browser.pause(2000);
         await (
             await getElement('[data-test="study-search"] .dropdown-toggle')
         ).click();
+
         await clickElement('.studyItem_ampca_bcm_2016');
         await clickQueryByGeneButton();
         await (await getElement(selectedCaseSet_sel)).waitForExist();
+
+        //await browser.debug();
+
         await browser.waitUntil(async () => {
             const expectedText = 'Samples with mutation and CNA data (88)';
             const selectedText = (await getText(selectedCaseSet_sel)).trim();
@@ -392,7 +397,9 @@ describe('selects the right default case sets in a single->select all filtered->
     });
 });
 
-describe('genetic profile selection in front page query form', () => {
+describe('genetic profile selection in front page query form', function() {
+    this.retries(0);
+
     before(async () => {
         await goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
     });
@@ -447,9 +454,10 @@ describe('genetic profile selection in front page query form', () => {
             'Ampullary Carcinoma (Baylor College of Medicine, Cell Reports 2016)'
         );
         await (
-            await getElement('[data-test="StudySelect"]')
+            await getElement('.studyItem_ampca_bcm_2016')
         ).waitForDisplayed();
-        await clickElement('[data-test="StudySelect"]');
+
+        await clickElement('.studyItem_ampca_bcm_2016');
 
         await clickQueryByGeneButton();
 
