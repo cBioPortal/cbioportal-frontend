@@ -392,7 +392,9 @@ describe('selects the right default case sets in a single->select all filtered->
     });
 });
 
-describe('genetic profile selection in front page query form', () => {
+describe('genetic profile selection in front page query form', function() {
+    this.retries(0);
+
     before(async () => {
         await goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
     });
@@ -447,9 +449,10 @@ describe('genetic profile selection in front page query form', () => {
             'Ampullary Carcinoma (Baylor College of Medicine, Cell Reports 2016)'
         );
         await (
-            await getElement('[data-test="StudySelect"]')
+            await getElement('.studyItem_ampca_bcm_2016')
         ).waitForDisplayed();
-        await clickElement('[data-test="StudySelect"]');
+
+        await clickElement('.studyItem_ampca_bcm_2016');
 
         await clickQueryByGeneButton();
 
