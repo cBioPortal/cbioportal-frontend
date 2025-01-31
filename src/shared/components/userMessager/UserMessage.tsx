@@ -52,12 +52,6 @@ if (
         ['cbioportal.mskcc.org'].includes(getBrowserWindow().location.hostname)
     ) {
         MESSAGE_DATA.push({
-            dateEnd: 100000000000000,
-            content: `New clinical data elements available as part of the <a href="https://mskcc.sharepoint.com/sites/pub-CDSI/SitePages/CDSI-Data.aspx" target="_blank">3rd CDSI data release</a>: BMI, Yost Index, lab measurements, including, CEA, PSA, TSH, and others`,
-            id: '2024_cdsi_release_3',
-        });
-
-        MESSAGE_DATA.push({
             dateEnd: 1000000000000000,
             content: `During the MSK Epic transition, updates to de-identified
             clinical data in cBioPortal will be delayed several months, but
