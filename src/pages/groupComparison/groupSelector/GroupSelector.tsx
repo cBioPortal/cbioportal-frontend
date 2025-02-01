@@ -127,6 +127,33 @@ export default class GroupSelector extends React.Component<
     }
 
     @autobind
+    private reorderGroups(groups: any[]) {
+        const priorityMap: Record<string, number> = {
+            Primary: 1,
+            Metastasis: 2,
+            'Pre-treatment': 1,
+            'Post-treatment': 2,
+        };
+        const sortedGroups = [...groups].sort((a, b) => {
+            const nameA = a.name || '';
+            const nameB = b.name || '';
+
+            const orderA = priorityMap[nameA] ?? Number.MAX_VALUE;
+            const orderB = priorityMap[nameB] ?? Number.MAX_VALUE;
+
+            return orderA - orderB;
+        });
+
+        const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        sortedGroups.forEach((group, index) => {
+            const newOrdinal = alphabet[index];
+            group.ordinal = newOrdinal;
+            group.nameWithOrdinal = `(${newOrdinal}) ${group.name}`;
+        });
+        return sortedGroups;
+    }
+
+    @autobind
     private makeGroupButton(group: ComparisonGroup, index: number) {
         const excludedFromAnalysis =
             this.props.store.overlapStrategy === OverlapStrategy.EXCLUDE &&
@@ -160,25 +187,24 @@ export default class GroupSelector extends React.Component<
             if (numGroups === 0) {
                 return null;
             } else {
-                let buttons: any[] = [];
+                let buttons = [];
                 if (
                     this.props.groupCollapseThreshold === undefined ||
                     numGroups <= this.props.groupCollapseThreshold ||
                     this.collapsedGroupsShown
                 ) {
-                    // don't collapse, show all buttons
-                    buttons = this.props.store._originalGroups.result!.map(
-                        this.makeGroupButton
+                    const orderedGroups = this.reorderGroups(
+                        this.props.store._originalGroups.result!
                     );
+                    buttons = orderedGroups.map(this.makeGroupButton);
                 } else {
-                    buttons.push(
-                        ...this.props.store._originalGroups
-                            .result!.slice(
-                                0,
-                                this.props.groupCollapseThreshold - 1
-                            )
-                            .map(this.makeGroupButton)
+                    const orderedGroups = this.reorderGroups(
+                        this.props.store._originalGroups.result!.slice(
+                            0,
+                            this.props.groupCollapseThreshold - 1
+                        )
                     );
+                    buttons.push(...orderedGroups.map(this.makeGroupButton));
                 }
 
                 if (
