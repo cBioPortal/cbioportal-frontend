@@ -112,20 +112,12 @@ jobs:
       - run:
           name: "Concatenate all source files to use as hash key for caching dist folder"
           command: "cat yarn.lock $(find src/ -type f | sort) $(find packages/ -type f | sort) webpack.config.js vendor-bundles.webpack.config.js > has_source_changed"
-      - restore_cache:
-          keys:
-            - v10-dependencies-plus-dist-{{ checksum "has_source_changed" }}
-            - v10-dependencies-{{ checksum "yarn.lock" }}
       # Download and cache dependencies
       - run: yarn
       - run: yarn buildModules
       #- run:
       #    name: "Make sure lock file is still the same"
       #    command: 'git diff --exit-code yarn.lock > /dev/null || (echo -e "New package lock file at $(cat yarn.lock | curl -F c=@- https://ptpb.pw | grep url) (include this file in your PR to fix this test)"; git diff --exit-code yarn.lock; exit 1)'
-      - save_cache:
-          paths:
-            - node_modules
-          key: v10-dependencies-{{ checksum "yarn.lock" }}
       - run:
           name: "Run build if no dist folder"
           command: 'ls dist || yarn run build'
@@ -134,12 +126,6 @@ jobs:
             NO_PARALLEL: true
           no_output_timeout: 25m
       - run: cd /tmp/repo/end-to-end-test && (ls node_modules || yarn install --frozen-lockfile --ignore-engines)
-      - save_cache:
-          paths:
-            - node_modules
-            - dist
-            - common-dist
-          key: v10-dependencies-plus-dist-{{ checksum "has_source_changed" }}
       - persist_to_workspace:
           root: /tmp
           paths:
@@ -151,9 +137,12 @@ jobs:
       MANUAL_TRIGGER_BRANCH_ENV: << pipeline.parameters.manual_trigger_branch_env >>
     steps:
       - attach_workspace:
-          at: /tmp/
-      # check that all api responses are still the same
-      - run: "bash src/test/check_api_sync.sh"
+          at: /tmp/repo
+      - run:
+          name: Check that all api responses are still the same
+          command: |
+            cd cbioportal-frontend
+            bash src/test/check_api_sync.sh
 
   unit_tests_main:
     <<: *defaults
@@ -201,12 +190,13 @@ jobs:
     <<: *defaults
     steps:
       - attach_workspace:
-          at: /tmp/
-      # check that no `.only` statements are still in the tests
+          at: /tmp/repo
       # Ignore doTest.only in oql parser
       - run:
-          name: "Check Forgotten `.only` Statements"
-          command: "! grep '\\.only' $(find ./src ./end-to-end-test -type f -name '*spec*' | grep -v node_modules) | grep -v 'doTest.only = function' | grep -v expectedParsedResult"
+          name: "Check forgotten `.only` statements"
+          command: |
+            cd cbioportal-frontend
+            ! grep '\\.only' $(find ./src ./end-to-end-test -type f -name '*spec*' | grep -v node_modules) | grep -v 'doTest.only = function' | grep -v expectedParsedResult
 
   check_incorrect_import_statements:
     <<: *defaults
@@ -286,20 +276,46 @@ jobs:
       - attach_workspace:
           at: /tmp/repo
       - run:
+          name: Generate cache key for dist
+          command: |
+            cd cbioportal-frontend
+            echo "Concatenate all source files to use as hash key."
+            cat yarn.lock $(find src/ -type f | sort) $(find packages/ -type f | sort) webpack.config.js vendor-bundles.webpack.config.js > has_source_changed
+      - restore_cache:
+          keys:
+            - v10-dependencies-plus-dist-{{ checksum "has_source_changed" }}
+            - v10-dependencies-{{ checksum "yarn.lock" }}
+      - run:
+          name: Download dependencies
+          command: |
+            cd cbioportal-frontend
+            yarn
+            yarn buildModules
+      - save_cache:
+          name: Save dependency cache
+          key: v10-dependencies-{{ checksum "yarn.lock" }}
+          paths:
+            - cbioportal-frontend/node_modules
+      - run:
           name: Build frontend application
           environment:
             DISABLE_SOURCEMAP: true
             NO_PARALLEL: true
           command: |
             cd cbioportal-frontend
-            yarn
-            yarn buildModules
-            yarn run build
+            ls dist || yarn run build
       - run:
           name: Build frontend tests
           command: |
             cd cbioportal-frontend/end-to-end-test
-            yarn install --frozen-lockfile --ignore-engines
+            ls node_modules || yarn install --frozen-lockfile --ignore-engines
+      - save_cache:
+          name: Save dependency plus dist cache
+          key: v10-dependencies-plus-dist-{{ checksum "has_source_changed" }}
+          paths:
+            - cbioportal-frontend/node_modules
+            - cbioportal-frontend/dist
+            - cbioportal-frontend/common-dist
       - persist_to_workspace:
           root: /tmp/repo
           paths:
@@ -401,9 +417,6 @@ workflows:
       - end_to_end_tests:
           requires:
             - install
-      - check_forgotten_spec_only_statements:
-          requires:
-            - install
       - check_incorrect_import_statements:
           requires:
             - install
@@ -412,6 +425,9 @@ workflows:
     jobs:
       - pull_cbioportal_test_codebase
       - checkout
+      - check_forgotten_spec_only_statements:
+          requires:
+            - checkout
       - build_frontend:
           requires:
             - checkout
@@ -443,4 +459,7 @@ workflows:
       - e2e_localdb_tests:
           requires:
             - pull_cbioportal_test_codebase
+            - build_frontend
+      - api_sync:
+          requires:
             - build_frontend
