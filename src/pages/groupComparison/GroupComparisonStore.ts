@@ -431,14 +431,11 @@ export default class GroupComparisonStore extends ComparisonStore {
             this.patients,
         ],
         invoke: async () => {
-            if (!this.activeMutationMapperGene) {
-                return undefined;
-            }
             return getCoverageInformation(
                 this.genePanelDataForMutationProfiles.result!,
                 this.sampleKeyToSample.result!,
                 this.patients.result!,
-                [this.activeMutationMapperGene]
+                [this.activeMutationMapperGene!]
             );
         },
     });
