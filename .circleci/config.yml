@@ -293,7 +293,7 @@ jobs:
             yarn buildModules
       - save_cache:
           name: Save dependency cache
-          key: v10-dependencies-{{ checksum "yarn.lock" }}
+          key: v10-dependencies-{{ checksum "cbioportal-frontend/yarn.lock" }}
           paths:
             - cbioportal-frontend/node_modules
       - run:
