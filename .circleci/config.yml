@@ -33,59 +33,64 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
     - when:
         condition: << pipeline.parameters.enable_remote_e2e >>
         steps:
-    #    - run:
-    #        name: "Install yarn at specific version"
-    #        command:
-    #          sudo npm install --global yarn@1.22.4
           - attach_workspace:
-              at: /tmp/
+              at: /tmp/repo
           - run:
-              name: "Spin up frontend over ssl if necessary and run end to end tests"
+              name: "Install linux dependencies"
               command: |
-                sudo apt-get install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev & \
-                yarn serveDist & \
-                cd end-to-end-test && \
-                yarn install --frozen-lockfile --ignore-engines && \
-                ../scripts/env_vars.sh && \
-                eval "$(../scripts/env_vars.sh)" && \
-                curl $CBIOPORTAL_URL > /dev/null && \
-                sleep 5s && \
-                curl $CBIOPORTAL_URL > /dev/null && \
-                sleep 5s && \
-                curl $CBIOPORTAL_URL > /dev/null && \
-                sleep 20s && \
-                (curl --insecure https://localhost:3000 || curl http://localhost:3000) > /dev/null && \
-                sleep 1s && \
-                echo "CBIOPORTAL_URL=$CBIOPORTAL_URL"
-                yarn run test-webdriver-manager-remote
-              when: always
+                sudo apt-get install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
+          - run:
+              name: "Start frontend server"
+              command: |
+                cd cbioportal-frontend
+                yarn serveDist
+          - run:
+              name: "Check frontend connection"
+              command: |
+                cd cbioportal-test
+                sh ./utils/check-connection.sh --url=localhost:3000
+          - run:
+              name: "Check remote cbioportal connection"
+              command: |
+                cd cbioportal-test
+                sh ./utils/check-connection.sh --url=$CBIOPORTAL_URL
+          - run:
+              name: "Run end-to-end tests"
               environment:
                 FRONTEND_TEST_USE_LOCAL_DIST: true
                 WEBPACK_PARALLEL: false
+              when: always
+              command: |
+                cd cbioportal-frontend/end-to-end-test
+                ../scripts/env_vars.sh
+                eval "$(../scripts/env_vars.sh)"
+                yarn run test-webdriver-manager-remote
           - run:
               name: "Make sure all screenshots are tracked (otherwise the test will always be successful)"
-              command: 'for f in end-to-end-test/remote/screenshots/reference/*.png; do git ls-files --error-unmatch $f > /dev/null 2> /dev/null || (echo -e "\033[0;31m $f not tracked \033[0m" && touch screenshots_not_tracked); done; ls screenshots_not_tracked > /dev/null 2> /dev/null && exit 1 || exit 0'
+              command: |
+                cd cbioportal-frontend
+                for f in end-to-end-test/remote/screenshots/reference/*.png; do git ls-files --error-unmatch $f > /dev/null 2> /dev/null || (echo -e "\033[0;31m $f not tracked \033[0m" && touch screenshots_not_tracked); done; ls screenshots_not_tracked > /dev/null 2> /dev/null && exit 1 || exit 0
           -  store_artifacts:
-               path: /tmp/repo/end-to-end-test/remote/screenshots
+               path: /tmp/repo/cbioportal-frontend/end-to-end-test/remote/screenshots
                destination: /screenshots
           -  store_artifacts:
-               path: /tmp/repo/end-to-end-test/shared/image-compare
+               path: /tmp/repo/cbioportal-frontend/end-to-end-test/shared/image-compare
                destination: /image-compare
           -  store_artifacts:
-               path: /tmp/repo/end-to-end-test/remote/error
+               path: /tmp/repo/cbioportal-frontend/end-to-end-test/remote/error
                destination: /errorShots
           - store_test_results:
-              path: /tmp/repo/end-to-end-test/remote/junit
+              path: /tmp/repo/cbioportal-frontend/end-to-end-test/remote/junit
           - store_artifacts:
-              path: /tmp/repo/end-to-end-test/remote/junit
+              path: /tmp/repo/cbioportal-frontend/end-to-end-test/remote/junit
           - store_artifacts:
-              path: /tmp/repo/end-to-end-test/shared/imageCompare.html
+              path: /tmp/repo/cbioportal-frontend/end-to-end-test/shared/imageCompare.html
               destination: /imageCompare.html
           - store_artifacts:
-              path: /tmp/repo/end-to-end-test/remote/junit/completeResults.json
+              path: /tmp/repo/cbioportal-frontend/end-to-end-test/remote/junit/completeResults.json
               destination: /completeResults.json
           - store_artifacts:
-              path: /tmp/repo/end-to-end-test/remote/junit/errors
+              path: /tmp/repo/cbioportal-frontend/end-to-end-test/remote/junit/errors
               destination: /errors
     - unless:
         condition: << pipeline.parameters.enable_remote_e2e >>
@@ -147,15 +152,10 @@ jobs:
   unit_tests_main:
     <<: *defaults
     steps:
-      #      - run:
-      #          name: "Install yarn at specific version"
-      #          command:
-      #            sudo npm install --global yarn@1.22.4
       - attach_workspace:
-          at: /tmp/
-      # run tests!
+          at: /tmp/repo
       - run:
-          command: "yarn run testMain"
+          name: Run junit tests main
           environment:
             JEST_JUNIT_OUTPUT_DIR: ./junit/unit/main/
             JEST_JUNIT_OUTPUT_NAME: test-results-unit-main.xml
@@ -163,26 +163,27 @@ jobs:
             DISABLE_SOURCEMAP: true
             WEBPACK_PARALLEL: false
           when: always
+          command: |
+            cd cbioportal-frontend
+            yarn run testMain
       - store_test_results:
           path: ./junit/unit/main/
 
   unit_tests_packages:
     <<: *defaults
     steps:
-      #      - run:
-      #          name: "Install yarn at specific version"
-      #          command:
-      #            sudo npm install --global yarn@1.22.4
       - attach_workspace:
-          at: /tmp/
-      # run tests!
+          at: /tmp/repo
       - run:
-          command: "yarn run testPackagesCI"
+          name: Run jest junit tests
           environment:
             DISABLE_SOURCEMAP: true
             NODE_OPTIONS: --max-old-space-size=4096
             WEBPACK_PARALLEL: false
           when: always
+          command: |
+            cd cbioportal-frontend
+            yarn run testPackagesCI
       - store_test_results:
           path: /tmp/junit/module/
 
@@ -209,13 +210,14 @@ jobs:
             cd cbioportal-frontend
             yarn run checkIncorrectImportStatements
 
-  end_to_end_tests:
+  e2e_tests:
     <<: *defaults
     environment:
       MANUAL_TRIGGER_BRANCH_ENV: << pipeline.parameters.manual_trigger_branch_env >>
       SPEC_FILE_PATTERN: << pipeline.parameters.remote_spec_pattern >>
       JUNIT_REPORT_PATH: ./remote/junit/
       SCREENSHOT_DIRECTORY: ./remote/screenshots
+      CBIOPORTAL_URL: https://www.cbioportal.org
     <<: *run_e2e_and_save_artifacts
 
   end_to_end_tests_against_master:
@@ -398,27 +400,6 @@ jobs:
             
 
 workflows:
-  install_and_test:
-    jobs:
-      - install
-      - prettier:
-          requires:
-            - install
-          filters:
-            branches:
-              ignore:
-                - master
-                - release-*
-      - unit_tests_main:
-          requires:
-            - install
-      - unit_tests_packages:
-          requires:
-            - install
-      - end_to_end_tests:
-          requires:
-            - install
-
   tests:
     jobs:
       - pull_cbioportal_test_codebase
@@ -435,13 +416,29 @@ workflows:
       - prettier:
           requires:
             - build_frontend
+          filters:
+            branches:
+              ignore:
+                - master
+                - release-*
       - e2e_localdb_tests:
+          requires:
+            - pull_cbioportal_test_codebase
+            - build_frontend
+      - e2e_tests:
           requires:
             - pull_cbioportal_test_codebase
             - build_frontend
       - api_sync:
           requires:
             - build_frontend
+      - unit_tests_packages:
+          requires:
+            - build_frontend
+      - unit_tests_main:
+          requires:
+            - build_frontend
+
 
   nightly:
     triggers:
@@ -461,6 +458,16 @@ workflows:
           requires:
             - pull_cbioportal_test_codebase
             - build_frontend
+      - e2e_tests:
+          requires:
+            - pull_cbioportal_test_codebase
+            - build_frontend
       - api_sync:
+          requires:
+            - build_frontend
+      - unit_tests_main:
+          requires:
+            - build_frontend
+      - unit_tests_packages:
           requires:
             - build_frontend
