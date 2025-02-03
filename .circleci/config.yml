@@ -539,10 +539,13 @@ workflows:
           requires:
             - install
 
-  e2e_localdb_tests:
+  tests:
     jobs:
       - pull_cbioportal_test_codebase
       - checkout_pr
+      - prettier:
+          requires:
+            - checkout_pr
       - build_frontend:
           requires:
             - checkout_pr
