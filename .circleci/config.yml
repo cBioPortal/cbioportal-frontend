@@ -283,8 +283,8 @@ jobs:
             cat yarn.lock $(find src/ -type f | sort) $(find packages/ -type f | sort) webpack.config.js vendor-bundles.webpack.config.js > has_source_changed
       - restore_cache:
           keys:
-            - v10-dependencies-plus-dist-{{ checksum "has_source_changed" }}
-            - v10-dependencies-{{ checksum "yarn.lock" }}
+            - v10-dependencies-plus-dist-{{ checksum "cbioportal-frontend/has_source_changed" }}
+            - v10-dependencies-{{ checksum "cbioportal-frontend/yarn.lock" }}
       - run:
           name: Download dependencies
           command: |
@@ -311,7 +311,7 @@ jobs:
             ls node_modules || yarn install --frozen-lockfile --ignore-engines
       - save_cache:
           name: Save dependency plus dist cache
-          key: v10-dependencies-plus-dist-{{ checksum "has_source_changed" }}
+          key: v10-dependencies-plus-dist-{{ checksum "cbioportal-frontend/has_source_changed" }}
           paths:
             - cbioportal-frontend/node_modules
             - cbioportal-frontend/dist
