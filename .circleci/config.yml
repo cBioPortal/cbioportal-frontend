@@ -438,8 +438,6 @@ jobs:
     environment:
       BACKEND_PORT: 8080
       FRONTEND_PORT: 3000
-      NODE_VERSION: 15.2.1
-      YARN_VERSION: 1.22.5
       DOCKER_IMAGE_MYSQL: cbioportal/mysql:8.0-database-test
       DOCKER_IMAGE_CBIOPORTAL: cbioportal/cbioportal:master
     steps:
@@ -472,33 +470,17 @@ jobs:
             cd cbioportal-test
             ./utils/check-connection.sh --url=localhost:${BACKEND_PORT} --max_retries=50
       - run:
-          name: Start frontend server
-          command: |
-            cd cbioportal-frontend
-            #openssl \
-              #req -newkey rsa:2048 -new -nodes -x509 -days 1 -keyout key.pem -out cert.pem -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=localhost" && \
-              #nohup ./node_modules/http-server/bin/http-server --cors dist/ -p ${FRONTEND_PORT} > /dev/null 2>&1 &
-      - run:
-          name: Check frontend server at localhost
-          command: |
-            cd cbioportal-test
-            #./utils/check-connection.sh --url=localhost:${FRONTEND_PORT} --max_retries=50
-      - run:
           name: Run e2e localdb tests
           environment:
-            SPEC_FILE_PATTERN: ./local/specs/core/querypage.spec.js
+            SPEC_FILE_PATTERN: << pipeline.parameters.localdb_spec_pattern >>
             CBIOPORTAL_URL: http://localhost:8080
-            JUNIT_REPORT_PATH: ./local/junit
-            SCREENSHOT_DIRECTORY: ./local/screenshots
+            JUNIT_REPORT_PATH: /tmp/repo/cbioportal-frontend/end-to-end-test/local/junit
+            SCREENSHOT_DIRECTORY: /tmp/repo/cbioportal-frontend/end-to-end-test/screenshots
             PORTAL_SOURCE_DIR: /tmp/repo/cbioportal-frontend
             TEST_HOME: /tmp/repo/cbioportal-frontend/end-to-end-test/local
           command: |
             cd $PORTAL_SOURCE_DIR
             $TEST_HOME/docker_compose/test.sh
-            #nvm install ${NODE_VERSION}
-            #nvm use ${NODE_VERSION}
-            #npm install -g yarn@${YARN_VERSION}
-            #yarn run test-webdriver-manager-local
       - store_artifacts:
           path: /tmp/repo/cbioportal-frontend/end-to-end-test/local/screenshots
           destination: /screenshots

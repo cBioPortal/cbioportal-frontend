@@ -4,14 +4,9 @@ set -e
 set -u # unset variables throw error
 set -o pipefail # pipes fail when partial command fails
 
-#echo INSTALL SCREENSHOT DEPENDENCIES
-#cd /cbioportal-frontend/end-to-end-test
-#yarn install --frozen-lockfile
-
 export FRONTEND_TEST_USE_LOCAL_DIST=false
 export HEADLESS_CHROME=false
 
-#echo START SERVE_DIST
 cd /cbioportal-frontend
 yarn serveDistLocalDb &
 
