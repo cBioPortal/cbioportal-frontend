@@ -475,7 +475,7 @@ jobs:
             SPEC_FILE_PATTERN: << pipeline.parameters.localdb_spec_pattern >>
             CBIOPORTAL_URL: http://localhost:8080
             JUNIT_REPORT_PATH: /tmp/repo/cbioportal-frontend/end-to-end-test/local/junit
-            SCREENSHOT_DIRECTORY: /tmp/repo/cbioportal-frontend/end-to-end-test/screenshots
+            SCREENSHOT_DIRECTORY: /tmp/repo/cbioportal-frontend/end-to-end-test/local/screenshots
             PORTAL_SOURCE_DIR: /tmp/repo/cbioportal-frontend
             TEST_HOME: /tmp/repo/cbioportal-frontend/end-to-end-test/local
           command: |
