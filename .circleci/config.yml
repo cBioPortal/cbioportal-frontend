@@ -369,10 +369,12 @@ jobs:
       MANUAL_TRIGGER_BRANCH_ENV: << pipeline.parameters.manual_trigger_branch_env >>
     steps:
       - attach_workspace:
-          at: /tmp/
+          at: /tmp/repo
       - run:
           name: 'Check code style with Prettier'
-          command: cd /tmp/repo/ && yarn run prettierCheckCircleCI
+          command: |
+            cd cbioportal-frontend
+            yarn run prettierCheckCircleCI
 
   pull_cbioportal_test_codebase:
     machine:
