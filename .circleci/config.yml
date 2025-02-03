@@ -202,11 +202,12 @@ jobs:
     <<: *defaults
     steps:
       - attach_workspace:
-          at: /tmp/
-      # make sure that there are no relative/incorrect package imports
+          at: /tmp/repo
       - run:
-          name: "Check Incorrect Package Import Statements"
-          command: yarn run checkIncorrectImportStatements
+          name: "Check incorrect package import statements"
+          command: |
+            cd cbioportal-frontend
+            yarn run checkIncorrectImportStatements
 
   end_to_end_tests:
     <<: *defaults
@@ -417,15 +418,15 @@ workflows:
       - end_to_end_tests:
           requires:
             - install
-      - check_incorrect_import_statements:
-          requires:
-            - install
 
   tests:
     jobs:
       - pull_cbioportal_test_codebase
       - checkout
       - check_forgotten_spec_only_statements:
+          requires:
+            - checkout
+      - check_incorrect_import_statements:
           requires:
             - checkout
       - build_frontend:
