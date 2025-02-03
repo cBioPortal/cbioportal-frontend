@@ -236,133 +236,6 @@ jobs:
       CBIOPORTAL_URL: https://master.cbioportal.org
     <<: *run_e2e_and_save_artifacts
 
-  end_to_end_tests_localdb:
-    working_directory: /tmp/repo
-    machine:
-      enabled: true
-      image: default
-    resource_class: large
-    steps:
-      - when:
-          condition: << pipeline.parameters.enable_localdb_e2e >>
-          steps:
-            - attach_workspace:
-                at: /tmp/
-            - run:
-                name: Setup python libraries
-                command: |
-                  pip3 install requests pyyaml
-            - run:
-                name: Install dependencies
-                command: |
-                  sudo apt-get update && \
-                  sudo apt-get install jq unzip
-            - run:
-                name: Setup e2e-environment
-                command: |
-                  source $PORTAL_SOURCE_DIR/env/custom.sh || true && \
-                  cd $TEST_HOME/runtime-config && \
-                  ./setup_environment.sh && ./setup_environment.sh >> $BASH_ENV
-            - run:
-                name: Check build whether custom backend is needed
-                command: |
-                  echo "$CUSTOM_BACKEND" > /tmp/repo/custom_backend_switch
-            - restore_cache:
-                # when custom_backend_switch file has '1' a custom backend
-                # is used and the more extended set of maven repo's will be attached
-                keys:
-                  - maven-repo-v1-{{ checksum "custom_backend_switch" }}
-            - run:
-                name: Build custom backend
-                command: |
-                  grep -q 0 /tmp/repo/custom_backend_switch || $TEST_HOME/docker_compose/build.sh
-                no_output_timeout: 25m
-            - save_cache:
-                paths:
-                  - ~/.m2
-                key: maven-repo-v1-{{ checksum "custom_backend_switch" }}
-            - run:
-                name: Setup docker compose assets
-                command: |
-                  $TEST_HOME/docker_compose/setup.sh
-                no_output_timeout: 25m
-            - run:
-                name: Create MySQL data directory
-                command: |
-                  docker volume rm --force cbioportal-docker-compose_cbioportal_mysql_data && mkdir -p $CBIO_DB_DATA_DIR && rm -rf $CBIO_DB_DATA_DIR/*
-            - restore_cache:
-                keys:
-                  - v12-cbio-database-files-{{ checksum "/tmp/db_data_md5key" }}
-            - run:
-                name: Init database
-                command: |
-                  cd $TEST_HOME/docker_compose && echo $CBIO_DB_DATA_DIR && ls -la $CBIO_DB_DATA_DIR && \
-                  [ "$(ls -A $CBIO_DB_DATA_DIR)" ] && echo "DB initialization is not needed." || ./initdb.sh
-            - run:
-                name: Change owner of MySQL database files (needed by cache)
-                command: |
-                  sudo chmod -R 777 $CBIO_DB_DATA_DIR && \
-                  sudo chown -R circleci:circleci $CBIO_DB_DATA_DIR
-            - save_cache:
-                paths:
-                  - /tmp/repo/e2e-localdb-workspace/cbio_db_data
-                key: v12-cbio-database-files-{{ checksum "/tmp/db_data_md5key" }}
-            - run:
-                name: Start cbioportal and other services
-                command: |
-                  $TEST_HOME/docker_compose/start.sh
-            - run:
-                name: Change owner of keycloak MySQL database files (needed by cache)
-                command: |
-                  if (ls "$KC_DB_DATA_DIR"/* 2> /dev/null > /dev/null); then \
-                      sudo chmod -R 777 $KC_DB_DATA_DIR && \
-                      sudo chown -R circleci:circleci $KC_DB_DATA_DIR; \
-                  fi
-            - run:
-                name: Run end-2-end tests with studies in local database
-                command: |
-                  cd $PORTAL_SOURCE_DIR && \
-                  $TEST_HOME/docker_compose/test.sh
-            - run:
-                name: "Make sure all screenshots are tracked (otherwise the test will always be successful)"
-                command: 'for f in $TEST_HOME/screenshots/reference/*.png; do git ls-files --error-unmatch $f > /dev/null 2> /dev/null || (echo -e "\033[0;31m $f not tracked \033[0m" && touch screenshots_not_tracked); done; ls screenshots_not_tracked > /dev/null 2> /dev/null && exit 1 || exit 0'
-            -  store_artifacts:
-                 path: /tmp/repo/end-to-end-test/local/screenshots
-                 destination: /screenshots
-            -  store_artifacts:
-                 path: /tmp/repo/end-to-end-test/shared/image-compare
-                 destination: /image-compare
-            -  store_artifacts:
-                 path: /tmp/repo/end-to-end-test/local/errorShots
-                 destination: /errorShots
-            - store_test_results:
-                path: /tmp/repo/end-to-end-test/local/junit
-            - store_artifacts:
-                path: /tmp/repo/end-to-end-test/local/junit
-            - store_artifacts:
-                path: /tmp/repo/end-to-end-test/shared/imageCompare.html
-                destination: /imageCompare.html
-            - store_artifacts:
-                path: /tmp/repo/end-to-end-test/local/junit/completeResults.json
-                destination: /completeResults.json
-            - store_artifacts:
-                path: /tmp/repo/end-to-end-test/local/junit/errors
-                destination: /errors
-      - unless:
-          condition: << pipeline.parameters.enable_localdb_e2e >>
-          steps:
-            - run: echo "Job Ignored via enable_localdb_e2e"
-            - run: exit 1
-
-    environment:
-      PORTAL_SOURCE_DIR: /tmp/repo
-      TEST_HOME: /tmp/repo/end-to-end-test/local
-      E2E_WORKSPACE: /tmp/repo/e2e-localdb-workspace
-      CBIO_DB_DATA_DIR: /tmp/repo/e2e-localdb-workspace/cbio_db_data
-      KC_DB_DATA_DIR: /tmp/repo/e2e-localdb-workspace/kc_db_data
-      MANUAL_TRIGGER_BRANCH_ENV: << pipeline.parameters.manual_trigger_branch_env >>
-      CIRCLE_CI_LOCALDB_SPEC_PATTERN: << pipeline.parameters.localdb_spec_pattern >>
-
   prettier:
     <<: *defaults
     environment:
@@ -392,7 +265,7 @@ jobs:
           root: /tmp/repo
           paths: cbioportal-test
 
-  checkout_pr:
+  checkout:
     machine:
       image: ubuntu-2204:2024.08.1
     resource_class: medium
@@ -523,15 +396,9 @@ workflows:
           requires:
             - install
       - unit_tests_packages:
-            requires:
-              - install
+          requires:
+            - install
       - end_to_end_tests:
-          requires:
-            - install
-      - end_to_end_tests_localdb:
-          requires:
-            - install
-      - api_sync:
           requires:
             - install
       - check_forgotten_spec_only_statements:
@@ -544,16 +411,19 @@ workflows:
   tests:
     jobs:
       - pull_cbioportal_test_codebase
-      - checkout_pr
+      - checkout
       - build_frontend:
           requires:
-            - checkout_pr
+            - checkout
       - prettier:
           requires:
             - build_frontend
       - e2e_localdb_tests:
           requires:
             - pull_cbioportal_test_codebase
+            - build_frontend
+      - api_sync:
+          requires:
             - build_frontend
 
   nightly:
@@ -565,22 +435,12 @@ workflows:
               only:
                 - master
     jobs:
-      - install
-      - api_sync:
+      - pull_cbioportal_test_codebase
+      - checkout
+      - build_frontend:
           requires:
-            - install
-      - unit_tests_main:
+            - checkout
+      - e2e_localdb_tests:
           requires:
-            - install
-      - unit_tests_packages:
-          requires:
-            - install
-      - end_to_end_tests:
-          requires:
-            - install
-      - end_to_end_tests_against_master:
-          requires:
-            - install
-      - end_to_end_tests_localdb:
-          requires:
-            - install
+            - pull_cbioportal_test_codebase
+            - build_frontend
