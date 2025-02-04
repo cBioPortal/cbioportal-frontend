@@ -40,16 +40,6 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
               command: |
                 sudo apt-get install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev || true
           - run:
-              name: Start frontend server
-              command: |
-                cd cbioportal-frontend
-                yarn serveDist &
-          - run:
-              name: Check frontend connection
-              command: |
-                cd cbioportal-test
-                sh ./utils/check-connection.sh --url=https://localhost:3000 --insecure='true'
-          - run:
               name: Check remote cbioportal connection
               command: |
                 cd cbioportal-test
@@ -60,7 +50,9 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
                 FRONTEND_TEST_USE_LOCAL_DIST: true
                 WEBPACK_PARALLEL: false
               command: |
-                cd cbioportal-frontend/end-to-end-test
+                cd cbioportal-frontend && yarn serveDist &
+                cd ../cbioportal-test && ./utils/check-connection.sh --url=https://localhost:3000 --insecure='true'
+                cd ../cbioportal-frontend/end-to-end-test
                 ../scripts/env_vars.sh
                 eval "$(../scripts/env_vars.sh)"
                 yarn run test-webdriver-manager-remote
