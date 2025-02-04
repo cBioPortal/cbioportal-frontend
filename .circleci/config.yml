@@ -50,9 +50,11 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
                 FRONTEND_TEST_USE_LOCAL_DIST: true
                 WEBPACK_PARALLEL: false
               command: |
-                cd cbioportal-frontend && yarn serveDist &
-                cd ../cbioportal-test && ./utils/check-connection.sh --url=https://localhost:3000 --insecure='true'
-                cd ../cbioportal-frontend/end-to-end-test
+                cd /tmp/repo/cbioportal-frontend
+                yarn serveDist &
+                cd /tmp/repo/cbioportal-test
+                sh ./utils/check-connection.sh --url=https://localhost:3000 --insecure='true'
+                cd /tmp/repo/cbioportal-frontend/end-to-end-test
                 ../scripts/env_vars.sh
                 eval "$(../scripts/env_vars.sh)"
                 yarn run test-webdriver-manager-remote
