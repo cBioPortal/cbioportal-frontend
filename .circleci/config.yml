@@ -43,7 +43,7 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
               name: "Start frontend server"
               command: |
                 cd cbioportal-frontend
-                yarn serveDist
+                yarn serveDist &
           - run:
               name: "Check frontend connection"
               command: |
