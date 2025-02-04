@@ -37,6 +37,7 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
               at: /tmp/repo
           - run:
               name: "Install linux dependencies"
+              shell: /bin/bash
               command: |
                 sudo apt-get install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
           - run:
@@ -59,7 +60,6 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
               environment:
                 FRONTEND_TEST_USE_LOCAL_DIST: true
                 WEBPACK_PARALLEL: false
-              when: always
               command: |
                 cd cbioportal-frontend/end-to-end-test
                 ../scripts/env_vars.sh
@@ -162,7 +162,6 @@ jobs:
             NODE_OPTIONS: --max-old-space-size=4096
             DISABLE_SOURCEMAP: true
             WEBPACK_PARALLEL: false
-          when: always
           command: |
             cd cbioportal-frontend
             yarn run testMain
@@ -180,7 +179,6 @@ jobs:
             DISABLE_SOURCEMAP: true
             NODE_OPTIONS: --max-old-space-size=4096
             WEBPACK_PARALLEL: false
-          when: always
           command: |
             cd cbioportal-frontend
             yarn run testPackagesCI
