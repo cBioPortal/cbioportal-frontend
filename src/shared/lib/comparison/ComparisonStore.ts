@@ -7,6 +7,7 @@ import {
     getOverlapComputations,
     getSampleIdentifiers,
     getStudyIds,
+    getStudyMutationEnrichmentProfileMap,
     IOverlapComputations,
     isGroupEmpty,
     partitionCasesByGroupMembership,
@@ -224,6 +225,7 @@ export default abstract class ComparisonStore extends AnalysisStore
         }
     }
 
+    // pertains to selected mutation types in Genomic Alterations tab
     @computed get selectedMutationEnrichmentEventTypes() {
         if (this.urlWrapper.selectedEnrichmentEventTypes) {
             return stringListToMap(
@@ -235,10 +237,14 @@ export default abstract class ComparisonStore extends AnalysisStore
             );
         } else {
             // default
-            return mutationEventTypeSelectInit(
-                this.alterationEnrichmentProfiles.result?.mutationProfiles || []
-            );
+            return this.mutationEnrichmentEventTypes;
         }
+    }
+
+    @computed get mutationEnrichmentEventTypes() {
+        return mutationEventTypeSelectInit(
+            this.alterationEnrichmentProfiles.result?.mutationProfiles || []
+        );
     }
 
     @computed get isStructuralVariantEnrichmentSelected() {
@@ -711,34 +717,26 @@ export default abstract class ComparisonStore extends AnalysisStore
             [studyId: string]: MolecularProfile;
         };
     } = {};
+    // pertains to selected mutations types in Genomic Alterations tab
     readonly selectedStudyMutationEnrichmentProfileMap = remoteData({
         await: () => [this.mutationEnrichmentProfiles],
-        invoke: () => {
-            //Only return Mutation profile if any mutation type is selected, otherwise return {}
-            if (
-                _(this.selectedMutationEnrichmentEventTypes)
-                    .values()
-                    .some()
-            ) {
-                // set default enrichmentProfileMap if not selected yet
-                if (_.isEmpty(this._mutationEnrichmentProfileMap)) {
-                    const molecularProfilesbyStudyId = _.groupBy(
-                        this.mutationEnrichmentProfiles.result!,
-                        profile => profile.studyId
-                    );
-                    // Select only one molecular profile for each study
-                    return Promise.resolve(
-                        _.mapValues(
-                            molecularProfilesbyStudyId,
-                            molecularProfiles => molecularProfiles[0]
-                        )
-                    );
-                } else {
-                    return Promise.resolve(this._mutationEnrichmentProfileMap);
-                }
-            } else {
-                return Promise.resolve({});
-            }
+        invoke: async () => {
+            return getStudyMutationEnrichmentProfileMap(
+                this.selectedMutationEnrichmentEventTypes,
+                this.mutationEnrichmentProfiles.result!,
+                this._mutationEnrichmentProfileMap
+            );
+        },
+    });
+
+    readonly studyMutationEnrichmentProfileMap = remoteData({
+        await: () => [this.mutationEnrichmentProfiles],
+        invoke: async () => {
+            return getStudyMutationEnrichmentProfileMap(
+                this.mutationEnrichmentEventTypes,
+                this.mutationEnrichmentProfiles.result!,
+                this._mutationEnrichmentProfileMap
+            );
         },
     });
 
@@ -1225,11 +1223,11 @@ export default abstract class ComparisonStore extends AnalysisStore
     readonly mutationsEnrichmentDataRequestGroups = remoteData({
         await: () => [
             this.alterationsEnrichmentAnalysisGroups,
-            this.selectedStudyMutationEnrichmentProfileMap,
+            this.studyMutationEnrichmentProfileMap,
         ],
         invoke: () => {
             if (
-                _(this.selectedMutationEnrichmentEventTypes)
+                _(this.mutationEnrichmentEventTypes)
                     .values()
                     .some()
             ) {
@@ -1242,8 +1240,7 @@ export default abstract class ComparisonStore extends AnalysisStore
                             }[] = [];
                             group.samples.forEach(sample => {
                                 if (
-                                    this
-                                        .selectedStudyMutationEnrichmentProfileMap
+                                    this.studyMutationEnrichmentProfileMap
                                         .result![sample.studyId]
                                 ) {
                                     molecularProfileCaseIdentifiers.push({
@@ -1251,7 +1248,7 @@ export default abstract class ComparisonStore extends AnalysisStore
                                             ? sample.patientId
                                             : sample.sampleId,
                                         molecularProfileId: this
-                                            .selectedStudyMutationEnrichmentProfileMap
+                                            .studyMutationEnrichmentProfileMap
                                             .result![sample.studyId]
                                             .molecularProfileId,
                                     });
@@ -1358,14 +1355,14 @@ export default abstract class ComparisonStore extends AnalysisStore
         await: () => [this.mutationsEnrichmentDataRequestGroups],
         resultsViewPageStore: this.resultsViewStore,
         getSelectedProfileMaps: () => [
-            this.selectedStudyMutationEnrichmentProfileMap.result!,
+            this.studyMutationEnrichmentProfileMap.result!,
         ],
         referenceGenesPromise: this.hugoGeneSymbolToReferenceGene,
         fetchData: () => {
             if (
                 this.mutationsEnrichmentDataRequestGroups.result &&
                 this.mutationsEnrichmentDataRequestGroups.result.length > 1 &&
-                _(this.selectedMutationEnrichmentEventTypes)
+                _(this.mutationEnrichmentEventTypes)
                     .values()
                     .some()
             ) {
@@ -1374,7 +1371,7 @@ export default abstract class ComparisonStore extends AnalysisStore
                         .mutationsEnrichmentDataRequestGroups.result!,
                     alterationEventTypes: ({
                         mutationEventTypes: getMutationEventTypesAPIParameter(
-                            this.selectedMutationEnrichmentEventTypes
+                            this.mutationEnrichmentEventTypes
                         ),
                         includeDriver: this.driverAnnotationSettings
                             .includeDriver,

@@ -1,4 +1,5 @@
 import {
+    MolecularProfile,
     Mutation,
     PatientIdentifier,
     Sample,
@@ -555,6 +556,8 @@ export const MUTATIONS_NOT_ENOUGH_GROUPS_MSG =
 
 export const MUTATIONS_TOO_MANY_GROUPS_MSG =
     "We can't show mutations for more than 2 groups. Please deselect groups in the Groups section.";
+
+export const NO_MUTATIONS_AVAILABLE_MSG = 'There are no mutations available.';
 
 export function getDefaultGroupName(
     filters: StudyViewFilter,
@@ -1186,4 +1189,40 @@ export function getCountsByAttribute(
           });
 
     return map;
+}
+
+export function getStudyMutationEnrichmentProfileMap(
+    mutationEnrichmentEventTypes: {
+        [s: string]: boolean | undefined;
+    },
+    mutationEnrichmentProfiles: MolecularProfile[],
+    mutationEnrichmentProfileMap: {
+        [studyId: string]: MolecularProfile;
+    }
+): {
+    [studyId: string]: MolecularProfile;
+} {
+    //Only return Mutation profile if any mutation type is selected, otherwise return {}
+    if (
+        _(mutationEnrichmentEventTypes)
+            .values()
+            .some()
+    ) {
+        // set default enrichmentProfileMap if not selected yet
+        if (_.isEmpty(mutationEnrichmentProfileMap)) {
+            const molecularProfilesbyStudyId = _.groupBy(
+                mutationEnrichmentProfiles,
+                profile => profile.studyId
+            );
+            // Select only one molecular profile for each study
+            return _.mapValues(
+                molecularProfilesbyStudyId,
+                molecularProfiles => molecularProfiles[0]
+            );
+        } else {
+            return mutationEnrichmentProfileMap;
+        }
+    } else {
+        return {};
+    }
 }
