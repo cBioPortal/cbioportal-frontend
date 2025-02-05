@@ -101,6 +101,7 @@ describe('Patient View Genomic Evolution tab screenshot tests', () => {
         await clickElement(
             'div[data-test="GenomicEvolutionMutationTable"] table tbody > tr:nth-child(2)'
         );
+        await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
         const res = await browser.checkElement('[data-test=VAFChartWrapper]');
         assertScreenShotMatch(res);
     });
