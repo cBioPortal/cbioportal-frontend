@@ -285,9 +285,6 @@ describe('case set selection in front page query form', function() {
         //await setInputText(input, '');
         await clickElement('[data-test="clearStudyFilter"]');
         await browser.pause(2000);
-        await (
-            await getElement('[data-test="study-search"] .dropdown-toggle')
-        ).click();
 
         await clickElement('.studyItem_ampca_bcm_2016');
         await clickQueryByGeneButton();

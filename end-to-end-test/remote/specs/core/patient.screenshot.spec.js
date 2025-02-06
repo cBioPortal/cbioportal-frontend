@@ -1,13 +1,11 @@
 var assert = require('assert');
 
-const {
-    goToUrlAndSetLocalStorage,
-    checkElementWithMouseDisabled,
-} = require('../../../shared/specUtils');
 const { assertScreenShotMatch } = require('../../../shared/lib/testUtils');
 const {
     clickElement,
     waitForNetworkQuiet,
+    goToUrlAndSetLocalStorage,
+    checkElementWithMouseDisabled,
 } = require('../../../shared/specUtils_Async');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
