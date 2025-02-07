@@ -1,5 +1,0 @@
-Hugo_Symbol	Entrez_Gene_Id	sample1	sample2	sample3	sample4	sample5
-ABLIM1		-1	0	0	0	0
-CADM2		0	-2	0	0	-2
-ERBB2		0	0	-1	2	0
-PIEZO1		0	-2	0	0	0
