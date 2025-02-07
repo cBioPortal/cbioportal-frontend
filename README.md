@@ -1,6 +1,4 @@
 # cbioportal-frontend
-[![CircleCI](https://dl.circleci.com/status-badge/img/gh/cBioPortal/cbioportal-frontend/tree/master.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/cBioPortal/cbioportal-frontend/tree/master)
-
 This repo contains the frontend code for cBioPortal which uses React, MobX and TypeScript. Read more about the architecture of cBioPortal [here](https://docs.cbioportal.org/2.1-deployment/architecture-overview).
 
 ## Branch Information
