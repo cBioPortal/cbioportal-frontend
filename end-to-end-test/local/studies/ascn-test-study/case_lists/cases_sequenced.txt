@@ -1,6 +1,0 @@
-cancer_study_identifier: ascn_test_study
-stable_id: ascn_test_study_sequenced
-case_list_category: all_cases_with_mutation_data
-case_list_name: Sequenced Tumors
-case_list_description: All sequenced tumors
-case_list_ids: FAKE_P001_S2	FAKE_P001_S3	FAKE_P001_S4	FAKE_P001_S5	FAKE_P001_S6
