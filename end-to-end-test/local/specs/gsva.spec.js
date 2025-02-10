@@ -17,7 +17,11 @@ var getReactSelectOptions = require('../../shared/specUtils')
 var selectReactSelectOption = require('../../shared/specUtils')
     .selectReactSelectOption;
 
-var { clickQueryByGeneButton, showGsva } = require('../../shared/specUtils');
+var {
+    clickQueryByGeneButton,
+    showGsva,
+    jq,
+} = require('../../shared/specUtils');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 const oncoprintTabUrl =
@@ -220,7 +224,9 @@ describe('gsva feature', function() {
         });
     });
 
-    describe('GenesetVolcanoPlotSelector', () => {
+    describe('GenesetVolcanoPlotSelector', function() {
+        this.retries(0);
+
         before(() => {
             goToUrlAndSetLocalStorage(CBIOPORTAL_URL, true);
             showGsva();
@@ -281,17 +287,21 @@ describe('gsva feature', function() {
         });
 
         it('searchbox filters gene set list', () => {
-            const lengthBefore = $$('span*=GO_').length;
+            const lengthBefore = jq('td span:contains("GO_")').length;
+
             assert.equal(lengthBefore, 5);
 
             $('input.tableSearchInput').waitForExist();
             $('input.tableSearchInput').setValue('GO_ACYL');
 
-            browser.waitUntil(() => $$('span*=GO_').length < lengthBefore, {
-                timeout: 10000,
-            });
+            browser.waitUntil(
+                () => jq('td span:contains("GO_")').length < lengthBefore,
+                {
+                    timeout: 10000,
+                }
+            );
 
-            const lengthAfter = $$('span*=GO_').length;
+            const lengthAfter = jq('td span:contains("GO_")').length;
             assert.equal(lengthAfter, 1);
         });
     });
