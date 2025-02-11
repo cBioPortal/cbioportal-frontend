@@ -562,8 +562,8 @@ describe('gsva feature', function() {
                 'GSVA scores on oncogenic signatures gene sets (5 samples)'
             );
             $('//*[@id="coexpressionTabGeneTabs"]').waitForExist();
-            $('span*=GO_').waitForExist();
-            assert.equal($$('span*=GO_').length, 7);
+
+            assert.equal(jq('td span:contains("GO_")').length, 7);
         });
 
         it('shows `Enter gene set.` placeholder in table search box when GSVA scores selected in first select box', () => {
