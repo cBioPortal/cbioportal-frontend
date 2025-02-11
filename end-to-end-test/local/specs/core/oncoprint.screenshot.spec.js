@@ -40,6 +40,7 @@ const SERVER_CLINICAL_TRACK_CONFIG = [
         stableId: 'SUBTYPE',
         sortOrder: 'ASC',
         gapOn: true,
+        gapMode: 'HIDE_GAPS',
     },
     {
         stableId: 'OS_STATUS',
@@ -104,15 +105,12 @@ describe('oncoprint', function() {
         });
 
         it('updates url when changing gaps', () => {
-            changeNthTrack(1, "Don't show gaps");
+            changeNthTrack(1, 'Hide gaps (w/%)');
             const clinicalTracksUrlParam = getTracksFromBookmark(browser);
 
-            const expectedConfig = JSON.parse(
-                JSON.stringify(SERVER_CLINICAL_TRACK_CONFIG)
+            expect(clinicalTracksUrlParam).toEqual(
+                SERVER_CLINICAL_TRACK_CONFIG
             );
-            expectedConfig[0].gapOn = false;
-
-            expect(clinicalTracksUrlParam).toEqual(expectedConfig);
         });
 
         it('updates url when sorting', () => {
