@@ -116,7 +116,6 @@ describe('patient view page', function() {
         it('show stacked bar chart for patient who has significant ID signatures', () => {
             selectMutationalSignaturesVersionID();
 
-            browser.debug();
             $('div.patientSamples').waitForDisplayed({ timeout: 20000 });
             // bar chart does an animation we have to wait for
             browser.pause(5000);

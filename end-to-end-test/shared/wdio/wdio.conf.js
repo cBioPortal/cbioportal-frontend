@@ -273,7 +273,7 @@ exports.config = {
         ],
     ],
 
-    //port: 9515,
+    port: 53171,
     // FROM OLD webdriver config
     // capabilities: [
     //     {
