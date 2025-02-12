@@ -59,6 +59,7 @@ const MANUAL_TRACK_CONFIG = [
         stableId: 'SUBTYPE',
         sortOrder: 'ASC',
         gapOn: false,
+        gapMode: 'HIDE_GAPS',
     },
     {
         stableId: 'OS_STATUS',
