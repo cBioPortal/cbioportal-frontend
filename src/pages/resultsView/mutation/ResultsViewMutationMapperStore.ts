@@ -46,6 +46,7 @@ import _ from 'lodash';
 import NumericNamespaceColumnFormatter from 'shared/components/namespaceColumns/NumericNamespaceColumnFormatter';
 import CategoricalNamespaceColumnFormatter from 'shared/components/namespaceColumns/CategoricalNamespaceColumnFormatter';
 import { createNamespaceColumnName } from 'shared/components/namespaceColumns/namespaceColumnsUtils';
+import internalClient from 'shared/api/cbioportalInternalClientInstance';
 
 export default class ResultsViewMutationMapperStore extends MutationMapperStore {
     constructor(
@@ -138,6 +139,14 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
     readonly cosmicData = remoteData({
         await: () => [this.mutationData],
         invoke: () => fetchCosmicData(this.mutationData),
+    });
+
+    // cosmic counts used to check for last cosmic update (using KRAS G12 missense for most common pancan mutation)
+    readonly cosmicCountsForUpdateCheck = remoteData({
+        invoke: async () =>
+            await internalClient.fetchCosmicCountsUsingPOST({
+                keywords: ['KRAS G12 missense'],
+            }),
     });
 
     protected getDownloadDataFetcher(): MutationTableDownloadDataFetcher {

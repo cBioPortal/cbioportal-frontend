@@ -196,6 +196,22 @@ export default class ResultsViewMutationMapper extends MutationMapper<
             : 'None';
     }
 
+    @computed get lastUpdatedCosmicText() {
+        if (this.props.store.cosmicCountsForUpdateCheck.isComplete) {
+            const cosmicCountsForUpdateCheck = _.sumBy(
+                this.props.store.cosmicCountsForUpdateCheck.result,
+                'count'
+            );
+            // if counts are less than or equal to 25876 (the count currently in public portal), this means that cosmic was last updated before 2017
+            if (cosmicCountsForUpdateCheck <= 25876) {
+                return 'Last Updated: Before 2017';
+            } else {
+                return '';
+            }
+        }
+        return '';
+    }
+
     protected get mutationTableComponent(): JSX.Element | null {
         return (
             <ResultsViewMutationTable
@@ -229,6 +245,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                     this.props.store.indexedMyVariantInfoAnnotations
                 }
                 cosmicData={this.props.store.cosmicData.result}
+                lastUpdatedCosmicText={this.lastUpdatedCosmicText}
                 oncoKbData={this.props.store.oncoKbData}
                 usingPublicOncoKbInstance={
                     getServerConfig().show_oncokb &&
