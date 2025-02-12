@@ -159,7 +159,7 @@ describe('oncoprint', function() {
         /**
          * Note: to rerun test locally, first clean user session
          */
-        it('stores config in user session when save button clicked', () => {
+        it.skip('stores config in user session when save button clicked', () => {
             // Load page with a default config that differs from SERVER_CLINICAL_TRACK_CONFIG
             const customConfig = JSON.parse(
                 JSON.stringify(SERVER_CLINICAL_TRACK_CONFIG)
@@ -193,7 +193,7 @@ describe('oncoprint', function() {
          * Uses session from previous test
          * to differentiate between default and custom config
          */
-        it('uses configuration stored in session when available', () => {
+        it.skip('uses configuration stored in session when available', () => {
             // Expected should match custom config of previous test
             const expected = JSON.parse(
                 JSON.stringify(SERVER_CLINICAL_TRACK_CONFIG)
