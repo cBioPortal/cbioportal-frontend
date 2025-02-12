@@ -13,6 +13,7 @@ import { ICosmicData } from 'shared/model/Cosmic';
 import generalStyles from './styles.module.scss';
 import memoize from 'memoize-weak-decorator';
 import { Column } from 'shared/components/lazyMobXTable/LazyMobXTable';
+import { getServerConfig } from 'config/config';
 
 export function placeArrow(tooltipEl: any) {
     const arrowEl = tooltipEl.querySelector('.rc-tooltip-arrow');
@@ -169,6 +170,14 @@ export default class CosmicColumnFormatter {
         let display: string = '';
         let overlay: (() => JSX.Element) | null = null;
         let content: JSX.Element;
+        let lastUpdatedText: JSX.Element;
+
+        if (
+            getServerConfig().app_name === 'public-portal' ||
+            getServerConfig().app_name === 'mskcc-portal'
+        ) {
+            lastUpdatedText = <b>Last Updated: Before 2017</b>;
+        }
 
         // calculate sum of the all counts
         if (cosmic && cosmic.length > 0) {
@@ -185,7 +194,7 @@ export default class CosmicColumnFormatter {
                     <b>{value}</b> occurrences of <b>{cosmic[0].keyword}</b>{' '}
                     mutations in COSMIC
                     <CosmicMutationTable data={cosmic} columns={columns} />
-                    <b>Last Updated: Before 2017</b>
+                    {lastUpdatedText}
                 </span>
             );
 
