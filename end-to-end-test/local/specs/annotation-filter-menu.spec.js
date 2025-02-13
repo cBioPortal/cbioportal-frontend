@@ -131,7 +131,7 @@ describe('alteration filter menu', function() {
                 );
             });
 
-            it.only('does not filter mutation table when unchecking unknown status checkbox', () => {
+            it('does not filter mutation table when unchecking unknown status checkbox', () => {
                 //NOTE this is failing because somatic status filtering appears not to
                 // work on SVs where it once did
                 // this is probably because SVs were mutations
