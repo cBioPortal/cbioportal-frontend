@@ -13,6 +13,7 @@ const SHOW_UNKNOWN_TIER = `input[data-test="ShowUnknownTier"]`;
 const SV_TABLE = `div[data-test="structural variants-table"]`;
 const ANY_ROW = `div[aria-rowindex]`;
 const BRAF_ROW = `div[aria-rowindex="1"]`;
+const BRAF_ROW_EXCLUDE_UNKNOWN = `div[aria-rowindex="8"]`;
 const GENE_NAME = `div[data-test="geneNameCell"]`;
 const ALTERATIONS_TOTAL = `span[data-test="numberOfAlterations"]`;
 const ALTERATION_CASES = `span[data-test="numberOfAlteredCasesText"]`;
@@ -55,16 +56,16 @@ describe('custom driver annotations feature in study view', function() {
             assert($(SHOW_UNKNOWN_TIER).isSelected());
             $(SHOW_UNKNOWN_TIER).click();
             $(SV_TABLE)
-                .$(BRAF_ROW)
+                .$(BRAF_ROW_EXCLUDE_UNKNOWN)
                 .waitForDisplayed();
             expect($(SV_TABLE).$$(ANY_ROW).length).toBe(10);
             const alterations = $(SV_TABLE)
-                .$(BRAF_ROW)
+                .$(BRAF_ROW_EXCLUDE_UNKNOWN)
                 .$(ALTERATIONS_TOTAL)
                 .getText();
             expect(alterations).toBe('1');
             const brafCases = $(SV_TABLE)
-                .$(BRAF_ROW)
+                .$(BRAF_ROW_EXCLUDE_UNKNOWN)
                 .$(ALTERATION_CASES)
                 .getText();
             expect(brafCases).toBe('1');
