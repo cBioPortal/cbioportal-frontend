@@ -11,6 +11,9 @@ on:
 jobs:
   trigger_build:
     runs-on: ubuntu-latest
+    env:
+      ORG: cBioPortal
+      REPO: cbioportal-frontend
     steps:
       - name: Check out the code
         uses: actions/checkout@v2
@@ -22,7 +25,7 @@ jobs:
       - name: Trigger JitPack Build
         run: |
           TAG=${{ steps.get_tag.outputs.tag }}
-          JITPACK_BUILD_URL="https://jitpack.io/com/github/cbioportal/cbioportal-frontend/$TAG/build.log"
+          JITPACK_BUILD_URL="https://jitpack.io/com/github/$ORG/$REPO/$TAG/build.log"
           
           MAX_RETRIES=10
           RETRY_DELAY=30
@@ -47,7 +50,7 @@ jobs:
       - name: Get POM File
         run: |
           TAG=${{ steps.get_tag.outputs.tag }}
-          JITPACK_POM_URL="https://jitpack.io/com/github/cbioportal/cbioportal-frontend/$TAG/cbioportal-frontend-$TAG.pom"
+          JITPACK_POM_URL="https://jitpack.io/com/github/$ORG/$REPO/$TAG/cbioportal-frontend-$TAG.pom"
           
           MAX_RETRIES=60
           RETRY_DELAY=30
