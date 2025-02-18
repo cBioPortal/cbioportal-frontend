@@ -104,7 +104,6 @@ describe('alteration filter menu', function() {
                 });
                 // does not filter structural variant table
                 // (sort and take top ten, as react does not render all rows)
-                sortPaneByCount('structural variants-table');
                 assert.deepStrictEqual(
                     sortDescLimit(geneTableCounts('structural variants-table')),
                     SV_COUNTS_SORT_DESC_10
