@@ -8,6 +8,7 @@ import {
     legendLabelStyles,
 } from 'cbioportal-frontend-commons';
 import { clamp } from '../../lib/NumberUtils';
+import { string } from 'yargs';
 
 export type LegendDataWithId<D = any> = {
     name: string | string[];
@@ -146,31 +147,52 @@ export function getJitterForCase(uniqueKey: string) {
 
 export function makeScatterPlotSizeFunction<D>(
     highlight?: (d: D) => boolean,
-    size?: number | ((d: D, active: Boolean, isHighlighted?: boolean) => number)
+    size?:
+        | number
+        | ((
+              d: D,
+              active: boolean,
+              isHighlighted?: boolean,
+              isLineHighlighted?: boolean
+          ) => number),
+    hovered?: (d: D) => boolean
 ) {
-    // need to regenerate this function whenever highlight changes in order to trigger immediate Victory rerender
     if (size) {
-        if (highlight && typeof size === 'function') {
-            return (d: D, active: boolean) => size(d, active, highlight(d));
-        } else {
-            return size;
-        }
+        return (d: D, active: boolean) => {
+            const isHighlighted = highlight ? highlight(d) : false;
+            const isHovered = hovered ? hovered(d) : false;
+            const isLineHighlighted = isHovered || isHighlighted;
+
+            if (hovered && typeof size === 'function') {
+                return size(d, active, isHighlighted, isLineHighlighted);
+            } else if (highlight && typeof size === 'function') {
+                return size(d, active, isHighlighted, isLineHighlighted);
+            } else {
+                return size;
+            }
+        };
     } else {
         return (d: D, active: boolean) => {
-            return active || !!(highlight && highlight(d)) ? 6 : 3;
+            const isHighlighted = highlight ? highlight(d) : false;
+            const isHovered = hovered ? hovered(d) : false;
+
+            const isLineHighlighted = isHovered || isHighlighted;
+            return active || isLineHighlighted ? 6 : 3;
         };
     }
 }
-
 export function scatterPlotSize(
     d: any,
     active: boolean,
-    isHighlighted: boolean
+    isHighlighted: boolean,
+    isLineHighlighted?: boolean
 ) {
     if (isHighlighted) {
         return 8;
     } else if (active) {
         return 6;
+    } else if (isLineHighlighted) {
+        return 7;
     } else {
         return 4;
     }

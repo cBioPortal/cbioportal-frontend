@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer, Observer } from 'mobx-react';
-import { computed, observable, action, makeObservable } from 'mobx';
+import { computed, observable, action, makeObservable, toJS } from 'mobx';
 import { bind } from 'bind-decorator';
 import ifNotDefined from '../../lib/ifNotDefined';
 import { calculateBoxPlotModel } from '../../lib/boxPlotUtils';
@@ -11,6 +11,7 @@ import {
     VictoryScatter,
     VictoryLegend,
     VictoryLabel,
+    VictoryLine,
 } from 'victory';
 import { IBaseScatterPlotData } from './ScatterPlot';
 import {
@@ -48,6 +49,7 @@ import { PQValueLabel } from 'shared/components/plots/MultipleCategoryBarPlot';
 export interface IBaseBoxScatterPlotPoint {
     value: number;
     jitter?: number; // between -1 and 1
+    sampleId: string;
 }
 
 export interface IBoxScatterPlotData<D extends IBaseBoxScatterPlotPoint> {
@@ -55,6 +57,15 @@ export interface IBoxScatterPlotData<D extends IBaseBoxScatterPlotPoint> {
     median: number;
     data: D[];
 }
+
+export type SampleIdsForPatientIds = {
+    [patientId: string]: string[];
+};
+
+export type CoordinatesForLinePlot = {
+    x: number;
+    y: number;
+};
 
 export interface IBoxScatterPlotProps<D extends IBaseBoxScatterPlotPoint> {
     svgId?: string;
@@ -66,7 +77,12 @@ export interface IBoxScatterPlotProps<D extends IBaseBoxScatterPlotPoint> {
     highlight?: (d: D) => boolean;
     size?:
         | number
-        | ((d: D, active: boolean, isHighlighted?: boolean) => number);
+        | ((
+              d: D,
+              active: boolean,
+              isHighlighted?: boolean,
+              isHovered?: boolean
+          ) => number);
     fill?: string | ((d: D) => string);
     stroke?: string | ((d: D) => string);
     fillOpacity?: number | ((d: D) => number);
@@ -91,6 +107,8 @@ export interface IBoxScatterPlotProps<D extends IBaseBoxScatterPlotPoint> {
     legendTitle?: string | string[];
     pValue?: number | null;
     qValue?: number | null;
+    renderLinePlot?: boolean;
+    samplesForPatients?: SampleIdsForPatientIds[] | [];
 }
 
 export type BoxModel = {
@@ -130,12 +148,43 @@ export default class BoxScatterPlot<
     @observable.ref private container: HTMLDivElement;
     @observable.ref private boxPlotTooltipModel: any | null;
     @observable private mousePosition = { x: 0, y: 0 };
-
+    @observable visibleLines = new Map();
+    @observable removingLines: boolean = false;
+    @observable _lineHighlight: boolean = false;
     private scatterPlotTooltipHelper: ScatterPlotTooltipHelper = new ScatterPlotTooltipHelper();
 
     constructor(props: any) {
         super(props);
         makeObservable(this);
+    }
+
+    @observable samplesInLineHover: string[] = [];
+
+    @action.bound
+    setSamplesInLineHover(data: any, hovered: boolean) {
+        if (hovered) {
+            this.samplesInLineHover = data.map(
+                (dataEntries: any) => dataEntries.sampleId
+            );
+        } else {
+            this.samplesInLineHover = [];
+        }
+    }
+
+    @computed
+    get lineHovered() {
+        const lineSamples = this.samplesInLineHover;
+        return (d: any) => {
+            return _.some(lineSamples, sampleId => sampleId === d.sampleId);
+        };
+    }
+
+    @computed
+    get scatterPlotSize() {
+        const highlight = this.props.highlight;
+        const size = this.props.size;
+        const hovered = this.lineHovered;
+        return makeScatterPlotSizeFunction(highlight, size, hovered);
     }
 
     @bind
@@ -515,13 +564,6 @@ export default class BoxScatterPlot<
         }
     }
 
-    @computed get scatterPlotSize() {
-        const highlight = this.props.highlight;
-        const size = this.props.size;
-        // need to regenerate this function whenever highlight changes in order to trigger immediate Victory rerender
-        return makeScatterPlotSizeFunction(highlight, size);
-    }
-
     @computed get labels() {
         return this.props.data.map(d => {
             if (!!this.props.compressXAxis) {
@@ -664,6 +706,7 @@ export default class BoxScatterPlot<
                     Object.assign({}, d, {
                         [dataAxis]: d.value,
                         [categoryAxis]: categoryCoord,
+                        // lineHovered: false,
                     } as { x: number; y: number })
                 );
             }
@@ -781,8 +824,65 @@ export default class BoxScatterPlot<
         }
     }
 
+    // called everytime page refreshes
+    @computed get patientLinePlotData() {
+        const patientDataForLinePlot: { [patientId: string]: any[] } = {};
+
+        if (this.props.renderLinePlot && this.props.samplesForPatients) {
+            this.props.samplesForPatients.forEach(patientObject => {
+                Object.keys(patientObject).forEach(patientId => {
+                    const sampleIds: string[] = patientObject[patientId];
+
+                    patientDataForLinePlot[patientId] = [];
+
+                    this.scatterPlotData.forEach(datawithAppearance => {
+                        datawithAppearance.data.forEach(sampleArray => {
+                            if (sampleIds.includes(sampleArray.sampleId)) {
+                                patientDataForLinePlot[patientId].push(
+                                    sampleArray
+                                );
+                            }
+                        });
+                    });
+                });
+            });
+        }
+        return patientDataForLinePlot;
+    }
+
+    // to populate the very first time (or everytime the page refreshes)
+    @bind
+    private initLineVisibility() {
+        this.updateRemovingLines;
+        if (this.patientLinePlotData && this.props.renderLinePlot) {
+            Object.keys(this.patientLinePlotData).forEach(patientId => {
+                if (!this.visibleLines.has(patientId)) {
+                    this.visibleLines.set(patientId, true);
+                }
+                // on re-checking the checkbox, all patientIds should be set to true
+                if (this.visibleLines.has(patientId) && !this.removingLines) {
+                    this.visibleLines.set(patientId, true);
+                }
+            });
+        }
+    }
+
+    @action.bound
+    private toggleLineVisibility(patientId: string) {
+        this.removingLines = true;
+        this.visibleLines.set(patientId, false);
+    }
+
+    @computed get updateRemovingLines() {
+        if (!this.props.renderLinePlot) {
+            this.removingLines = false;
+        }
+        return null;
+    }
+
     @autobind
     private getChart() {
+        this.initLineVisibility();
         return (
             <div
                 ref={this.containerRef}
@@ -834,6 +934,93 @@ export default class BoxScatterPlot<
                                 horizontal={this.props.horizontal}
                                 events={this.boxPlotEvents}
                             />
+                            {this.props.renderLinePlot &&
+                                this.initLineVisibility &&
+                                Object.keys(this.patientLinePlotData!).map(
+                                    patientId =>
+                                        this.visibleLines.get(patientId) && (
+                                            <VictoryLine
+                                                name="line"
+                                                key={patientId}
+                                                data={
+                                                    this.patientLinePlotData![
+                                                        patientId
+                                                    ]
+                                                }
+                                                x={this.scatterPlotX}
+                                                y={this.scatterPlotY}
+                                                style={{
+                                                    data: {
+                                                        stroke: 'grey',
+                                                        strokeWidth: 2,
+                                                        cursor: 'pointer',
+                                                        pointerEvents: 'all',
+                                                    },
+                                                }}
+                                                events={[
+                                                    {
+                                                        target: 'data',
+                                                        eventHandlers: {
+                                                            onMouseOver: () => {
+                                                                return [
+                                                                    {
+                                                                        target:
+                                                                            'data',
+                                                                        mutation: () => {
+                                                                            this.setSamplesInLineHover(
+                                                                                this
+                                                                                    .patientLinePlotData![
+                                                                                    patientId
+                                                                                ],
+                                                                                true
+                                                                            );
+                                                                            return {
+                                                                                style: {
+                                                                                    stroke:
+                                                                                        'black',
+                                                                                    strokeWidth: 3,
+                                                                                },
+                                                                            };
+                                                                        },
+                                                                    },
+                                                                ];
+                                                            },
+                                                            onMouseOut: () => {
+                                                                return [
+                                                                    {
+                                                                        target:
+                                                                            'data',
+                                                                        mutation: () => {
+                                                                            this.setSamplesInLineHover(
+                                                                                this
+                                                                                    .patientLinePlotData![
+                                                                                    patientId
+                                                                                ],
+                                                                                false
+                                                                            );
+                                                                            return {
+                                                                                style: {
+                                                                                    stroke:
+                                                                                        'grey',
+                                                                                    strokeWidth: 2,
+                                                                                },
+                                                                            };
+                                                                        },
+                                                                    },
+                                                                ];
+                                                            },
+                                                            onClick: () => {
+                                                                this.toggleLineVisibility(
+                                                                    patientId
+                                                                );
+                                                                return [];
+                                                            },
+                                                        },
+                                                    },
+                                                ]}
+                                            />
+                                        )
+                                )}
                             {this.scatterPlotData.map(dataWithAppearance => (
                                 <VictoryScatter
                                     key={`${dataWithAppearance.fill},${dataWithAppearance.stroke},${dataWithAppearance.strokeWidth},${dataWithAppearance.strokeOpacity},${dataWithAppearance.fillOpacity},${dataWithAppearance.symbol}`}
