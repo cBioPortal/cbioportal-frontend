@@ -12,6 +12,7 @@ import SocialAuthButton from '../../shared/components/SocialAuthButton';
 import { Dropdown } from 'react-bootstrap';
 import { DataAccessTokensDropdown } from '../../shared/components/dataAccessTokens/DataAccessTokensDropdown';
 import { getLoadConfig, getServerConfig } from 'config/config';
+import FontAwesome from 'react-fontawesome';
 
 @observer
 export default class PortalHeader extends React.Component<
@@ -95,7 +96,14 @@ export default class PortalHeader extends React.Component<
 
             {
                 id: 'donate',
-                text: 'Donate',
+                text: (
+                    <>
+                        <span style={{ color: 'red' }}>
+                            <FontAwesome name="heart" />
+                        </span>{' '}
+                        Donate
+                    </>
+                ),
                 address: 'https://docs.cbioportal.org/donate/',
                 internal: false,
                 hide: () => !getServerConfig().skin_show_donate_button === true,
