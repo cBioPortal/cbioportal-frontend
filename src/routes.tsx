@@ -92,6 +92,11 @@ const WebAPIPage = SuspenseWrapper(
     React.lazy(() => import('./pages/staticPages/webAPI/WebAPIPage'))
 );
 
+const ContactPage = SuspenseWrapper(
+    // @ts-ignore
+    React.lazy(() => import('./pages/staticPages/contactPage/ContactPage'))
+);
+
 import $ from 'jquery';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
 import { seekUrlHash } from 'shared/lib/seekUrlHash';
@@ -420,6 +425,7 @@ export const makeRoutes = () => {
                 <Route path="/installations" component={InstallationMap} />
                 <Route path="/visualize" component={ScrollToTop(Visualize)} />
                 <Route path="/software" component={ScrollToTop(Software)} />
+                <Route path="/contact" component={ScrollToTop(ContactPage)} />
                 // legacy pages redirect to docs site
                 <Route
                     path="/tutorials"

@@ -12,7 +12,6 @@ import SocialAuthButton from '../../shared/components/SocialAuthButton';
 import { Dropdown } from 'react-bootstrap';
 import { DataAccessTokensDropdown } from '../../shared/components/dataAccessTokens/DataAccessTokensDropdown';
 import { getLoadConfig, getServerConfig } from 'config/config';
-import FontAwesome from 'react-fontawesome';
 
 @observer
 export default class PortalHeader extends React.Component<
@@ -31,34 +30,27 @@ export default class PortalHeader extends React.Component<
 
             {
                 id: 'webAPI',
-                text: 'Web API',
+                text: 'API',
                 address: 'https://docs.cbioportal.org/web-api-and-clients/',
                 internal: false,
                 hide: () => getServerConfig().skin_show_web_api_tab === false,
             },
 
             {
-                id: 'rMatlab',
-                text: 'R/MATLAB',
-                address: '/rmatlab',
-                internal: true,
-                hide: () => getServerConfig().skin_show_r_matlab_tab === false,
+                id: 'learn',
+                text: 'Learn',
+                address: 'https://docs.cbioportal.org/',
+                internal: false,
+                hide: () => getServerConfig().skin_show_learn_tab === false,
             },
 
             {
-                id: 'tutorials',
-                text: 'Tutorials/Webinars',
-                address: 'https://docs.cbioportal.org/user-guide/overview/',
+                id: 'contribute',
+                text: 'Contribute',
+                address: 'https://docs.cbioportal.org/',
                 internal: false,
-                hide: () => getServerConfig().skin_show_tutorials_tab === false,
-            },
-
-            {
-                id: 'faq',
-                text: 'FAQ',
-                address: 'https://docs.cbioportal.org/user-guide/faq/',
-                internal: false,
-                hide: () => getServerConfig().skin_show_faqs_tab === false,
+                hide: () =>
+                    getServerConfig().skin_show_contribute_tab === false,
             },
 
             {
@@ -86,6 +78,14 @@ export default class PortalHeader extends React.Component<
             },
 
             {
+                id: 'contact',
+                text: 'Contact',
+                address: '/contact',
+                internal: true,
+                hide: () => getServerConfig().skin_show_contact_tab === false,
+            },
+
+            {
                 id: 'installation-map',
                 text: 'cBioPortal Installations',
                 address: '/installations',
@@ -95,14 +95,7 @@ export default class PortalHeader extends React.Component<
 
             {
                 id: 'donate',
-                text: (
-                    <>
-                        <span style={{ color: 'red' }}>
-                            <FontAwesome name="heart" />
-                        </span>{' '}
-                        Donate
-                    </>
-                ),
+                text: 'Donate',
                 address: 'https://docs.cbioportal.org/donate/',
                 internal: false,
                 hide: () => !getServerConfig().skin_show_donate_button === true,
