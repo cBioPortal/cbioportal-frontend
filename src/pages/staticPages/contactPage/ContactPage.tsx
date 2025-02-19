@@ -1,7 +1,7 @@
 import React from 'react';
 import { observer } from 'mobx-react';
 import { PageLayout } from '../../../shared/components/PageLayout/PageLayout';
-import styles from './ContactPage.module.scss'; // Adjust styles as needed
+import styles from './ContactPage.module.scss'; 
 import { Helmet } from 'react-helmet';
 
 @observer
