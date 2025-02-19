@@ -170,6 +170,7 @@ export default class CosmicColumnFormatter {
         ];
 
         let value: number = -1;
+        let exactProteinChangeValue: number;
         let display: string = '';
         let overlay: (() => JSX.Element) | null = null;
         let content: JSX.Element;
@@ -184,10 +185,32 @@ export default class CosmicColumnFormatter {
                 0
             );
 
+            exactProteinChangeValue = _.reduce(
+                cosmic,
+                (sum: number, cosmicMutation: CosmicMutation) => {
+                    if (
+                        cosmicMutation.proteinChange === data[0].proteinChange
+                    ) {
+                        return sum + cosmicMutation.count;
+                    } else {
+                        return sum;
+                    }
+                },
+                0
+            );
+
             overlay = () => (
                 <span className={styles['cosmic-table']}>
-                    <b>{value}</b> occurrences of <b>{cosmic[0].keyword}</b>{' '}
-                    mutations in COSMIC
+                    There are{' '}
+                    <b>
+                        {exactProteinChangeValue} {data[0].gene.hugoGeneSymbol}{' '}
+                        {data[0].proteinChange}
+                    </b>{' '}
+                    and{' '}
+                    <b>
+                        {value} {cosmic[0].keyword} mutations
+                    </b>{' '}
+                    in <b>COSMIC</b>
                     <CosmicMutationTable data={cosmic} columns={columns} />
                     <b>{lastUpdatedCosmicText}</b>
                 </span>
