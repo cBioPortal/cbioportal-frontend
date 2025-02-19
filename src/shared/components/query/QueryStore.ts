@@ -465,38 +465,6 @@ export class QueryStore {
         return selectedIdSet;
     }
 
-    @observable
-    private calculateSampleZScoresForMolecularProfiles: ObservableSet<
-        MolecularProfile['molecularAlterationType']
-    > = observable.set<MolecularProfile['molecularAlterationType']>();
-
-    @computed get calculateSampleZScores() {
-        return this.calculateSampleZScoresForMolecularProfiles.size > 0;
-    }
-
-    isMolecularAlterationTypeSelectedForSampleZscoresCalculation(
-        molecularAlterationType: MolecularProfile['molecularAlterationType']
-    ) {
-        return this.calculateSampleZScoresForMolecularProfiles.has(
-            molecularAlterationType
-        );
-    }
-
-    @action selectCalculateSampleZscoresForMolecularAlterationType(
-        molecularAlterationType: MolecularProfile['molecularAlterationType'],
-        checked: boolean
-    ) {
-        if (checked) {
-            this.calculateSampleZScoresForMolecularProfiles.add(
-                molecularAlterationType
-            );
-        } else {
-            this.calculateSampleZScoresForMolecularProfiles.delete(
-                molecularAlterationType
-            );
-        }
-    }
-
     // used when single study is selected
     @action selectMolecularProfile(
         profile: MolecularProfile,

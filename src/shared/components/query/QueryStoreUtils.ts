@@ -127,7 +127,7 @@ export function currentQueryParams(store: QueryStore) {
             ? 'tab_download'
             : ('tab_visualize' as any),
         transpose_matrix: store.transposeDataMatrix ? 'on' : undefined,
-        calculate_sample_zscores: store.calculateSampleZScores + '',
+        calculate_sample_zscores: 'true',
         Action: 'Submit',
     };
 
