@@ -38,6 +38,7 @@ async function fetch(
                     molecularProfileIdToEntrezGeneIds[molecularProfileId],
                 ...molecularProfileIdToSampleFilter[molecularProfileId],
             } as MolecularDataFilter,
+            calculateSampleZScores: true,
         })
     );
     const results: NumericGeneMolecularData[][] = await Promise.all(

@@ -1836,6 +1836,7 @@ export class ResultsViewPageStore extends AnalysisStore
                                     molecularProfileId,
                                     molecularDataFilter: dataFilter,
                                     projection,
+                                    calculateSampleZScores: true,
                                 }
                             )
                             .then(function(response: request.Response) {
@@ -5684,6 +5685,7 @@ export class ResultsViewPageStore extends AnalysisStore
                         entrezGeneIds: [q.entrezGeneId],
                         ...dqf,
                     } as MolecularDataFilter,
+                    calculateSampleZScores: true,
                 });
             } else {
                 return Promise.resolve([]);

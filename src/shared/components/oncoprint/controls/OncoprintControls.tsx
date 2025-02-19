@@ -475,7 +475,12 @@ export default class OncoprintControls extends React.Component<
             return _.map(
                 this.props.state.heatmapProfilesPromise.result,
                 profile => ({
-                    label: profile.name,
+                    label:
+                        profile.name +
+                        (profile.datatype == 'CONTINUOUS' ||
+                        profile.datatype == 'LOG2-VALUE'
+                            ? ' --- z-scores will be calculated based on the sample subset'
+                            : ''),
                     value: profile.molecularProfileId,
                     type: profile.molecularAlterationType,
                 })

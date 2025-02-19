@@ -11630,6 +11630,7 @@ export class StudyViewPageStore
                         entrezGeneIds: [q.entrezGeneId],
                         ...dqf,
                     } as MolecularDataFilter,
+                    calculateSampleZScores: true,
                 });
             } else {
                 return Promise.resolve([]);

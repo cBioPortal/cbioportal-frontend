@@ -217,6 +217,7 @@ export default class ExpressionEnrichmentsBoxPlot extends React.Component<
                                     sample => sample.sampleId
                                 ),
                             } as any,
+                            calculateSampleZScores: true,
                         }
                     );
 

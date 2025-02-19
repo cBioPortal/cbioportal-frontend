@@ -3521,7 +3521,8 @@ export default class CBioPortalAPI {
         'molecularProfileId': string,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'molecularDataFilter': MolecularDataFilter,
-        $queryParameters ? : any
+        $queryParameters ? : any,
+        calculateSampleZScores?: boolean
     }): string {
         let queryParameters: any = {};
         let path = '/api/molecular-profiles/{molecularProfileId}/molecular-data/fetch';
@@ -3529,6 +3530,9 @@ export default class CBioPortalAPI {
         path = path.replace('{molecularProfileId}', parameters['molecularProfileId'] + '');
         if (parameters['projection'] !== undefined) {
             queryParameters['projection'] = parameters['projection'];
+        }
+        if (parameters['calculateSampleZScores'] !== undefined) {
+            queryParameters['calculateSampleZScores'] = parameters['calculateSampleZScores'];
         }
 
         if (parameters.$queryParameters) {
@@ -3554,7 +3558,8 @@ export default class CBioPortalAPI {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'molecularDataFilter': MolecularDataFilter,
         $queryParameters ? : any,
-        $domain ? : string
+        $domain ? : string,
+        calculateSampleZScores?: boolean
     }): Promise < request.Response > {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
@@ -3587,6 +3592,9 @@ export default class CBioPortalAPI {
                 reject(new Error('Missing required  parameter: molecularDataFilter'));
                 return;
             }
+            if (parameters['calculateSampleZScores'] !== undefined) {
+                queryParameters['calculateSampleZScores'] = parameters['calculateSampleZScores'];
+            }
 
             if (parameters.$queryParameters) {
                 Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -3613,7 +3621,8 @@ export default class CBioPortalAPI {
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'molecularDataFilter': MolecularDataFilter,
             $queryParameters ? : any,
-            $domain ? : string
+            $domain ? : string,
+            calculateSampleZScores?: boolean
         }): Promise < Array < NumericGeneMolecularData >
         > {
             return this.fetchAllMolecularDataInMolecularProfileUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
