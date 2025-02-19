@@ -2686,12 +2686,16 @@ export default class CBioPortalAPI {
     fetchMolecularDataInMultipleMolecularProfilesUsingPOSTURL(parameters: {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'molecularDataMultipleStudyFilter' ? : MolecularDataMultipleStudyFilter,
-        $queryParameters ? : any
+        $queryParameters ? : any,
+        calculateSampleZScores?: boolean
     }): string {
         let queryParameters: any = {};
         let path = '/api/molecular-data/fetch';
         if (parameters['projection'] !== undefined) {
             queryParameters['projection'] = parameters['projection'];
+        }
+        if (parameters['calculateSampleZScores'] !== undefined) {
+            queryParameters['calculateSampleZScores'] = parameters['calculateSampleZScores'];
         }
 
         if (parameters.$queryParameters) {
@@ -2715,7 +2719,8 @@ export default class CBioPortalAPI {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'molecularDataMultipleStudyFilter' ? : MolecularDataMultipleStudyFilter,
         $queryParameters ? : any,
-            $domain ? : string
+            $domain ? : string,
+            calculateSampleZScores?: boolean
     }): Promise < request.Response > {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
@@ -2731,6 +2736,10 @@ export default class CBioPortalAPI {
 
             if (parameters['projection'] !== undefined) {
                 queryParameters['projection'] = parameters['projection'];
+            }
+
+            if (parameters['calculateSampleZScores'] !== undefined) {
+                queryParameters['calculateSampleZScores'] = parameters['calculateSampleZScores'];
             }
 
             if (parameters['molecularDataMultipleStudyFilter'] !== undefined) {
@@ -2760,7 +2769,8 @@ export default class CBioPortalAPI {
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'molecularDataMultipleStudyFilter' ? : MolecularDataMultipleStudyFilter,
             $queryParameters ? : any,
-                $domain ? : string
+                $domain ? : string,
+                calculateSampleZScores?: boolean
         }): Promise < Array < NumericGeneMolecularData >
         > {
             return this.fetchMolecularDataInMultipleMolecularProfilesUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
@@ -2772,6 +2782,7 @@ export default class CBioPortalAPI {
         'pageSize' ? : number,
         'pageNumber' ? : number,
         'sortBy' ? : "molecularProfileId" | "molecularAlterationType" | "datatype" | "name" | "description" | "showProfileInAnalysisTab",
+        'calculateSampleZScores'?: boolean,
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any
     }): string {
@@ -2791,6 +2802,10 @@ export default class CBioPortalAPI {
 
         if (parameters['sortBy'] !== undefined) {
             queryParameters['sortBy'] = parameters['sortBy'];
+        }
+
+        if (parameters['calculateSampleZScores'] !== undefined) {
+            queryParameters['calculateSampleZScores'] = parameters['calculateSampleZScores'];
         }
 
         if (parameters['direction'] !== undefined) {

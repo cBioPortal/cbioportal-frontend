@@ -576,6 +576,12 @@ export class ResultsViewPageStore extends AnalysisStore
         return this.urlWrapper.query.profileFilter || '0';
     }
 
+    @computed get calculateSampleZScores() {
+        return this.urlWrapper.query.calculate_sample_zscores
+            ? JSON.parse(this.urlWrapper.query.calculate_sample_zscores)
+            : undefined;
+    }
+
     @observable ajaxErrors: Error[] = [];
 
     @observable public sessionIdURL = '';
@@ -1424,6 +1430,8 @@ export class ResultsViewPageStore extends AnalysisStore
                                 {
                                     projection:
                                         REQUEST_ARG_ENUM.PROJECTION_DETAILED,
+                                    calculateSampleZScores: this
+                                        .calculateSampleZScores,
                                     molecularDataMultipleStudyFilter,
                                 }
                             )
@@ -1548,6 +1556,7 @@ export class ResultsViewPageStore extends AnalysisStore
                                 ),
                                 sampleMolecularIdentifiers: sampleIdentifiers,
                             } as MolecularDataMultipleStudyFilter,
+                            calculateSampleZScores: this.calculateSampleZScores,
                         }
                     );
                 }
@@ -1614,6 +1623,7 @@ export class ResultsViewPageStore extends AnalysisStore
                                 sampleMolecularIdentifiers,
                             } as MolecularDataMultipleStudyFilter,
                             projection: REQUEST_ARG_ENUM.PROJECTION_META,
+                            calculateSampleZScores: this.calculateSampleZScores,
                         }
                     )
                     .then(function(response: request.Response) {

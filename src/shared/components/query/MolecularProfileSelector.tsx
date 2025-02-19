@@ -84,12 +84,14 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
         label,
         checked,
         isGroupToggle,
+        calculateSampleZScores,
     }: {
         profile: MolecularProfile;
         type: 'radio' | 'checkbox';
         label: string;
         checked: boolean;
         isGroupToggle: boolean;
+        calculateSampleZScores: boolean;
     }) => (
         <label>
             <input
@@ -126,6 +128,26 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
                     />
                 </DefaultTooltip>
             )}
+
+            {!isGroupToggle &&
+                checked &&
+                (profile.datatype == 'CONTINUOUS' ||
+                    profile.datatype == 'LOG2-VALUE') && (
+                    <>
+                        <span> --- </span>
+                        <input
+                            type="checkbox"
+                            checked={calculateSampleZScores}
+                            onChange={event =>
+                                this.store.selectCalculateSampleZscoresForMolecularAlterationType(
+                                    profile.molecularAlterationType,
+                                    (event.target as HTMLInputElement).checked
+                                )
+                            }
+                        />
+                        <span>Calculate z-scores based on sample subset</span>
+                    </>
+                )}
         </label>
     );
 
@@ -164,6 +186,9 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
                     label={`${groupLabel}. Select one of the profiles below:`}
                     checked={isGroupSelected}
                     isGroupToggle={true}
+                    calculateSampleZScores={this.store.isMolecularAlterationTypeSelectedForSampleZscoresCalculation(
+                        molecularAlterationType
+                    )}
                 />
             );
 
@@ -185,6 +210,9 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
                     getSuffixOfMolecularProfile(profile)
                 )}
                 isGroupToggle={false}
+                calculateSampleZScores={this.store.isMolecularAlterationTypeSelectedForSampleZscoresCalculation(
+                    profile.molecularAlterationType
+                )}
             />
         ));
 

@@ -110,6 +110,7 @@ export enum ResultsViewURLQueryEnum {
     mutations_transcript_id = 'mutations_transcript_id',
 
     pathways_source = 'pathways_source',
+    calculate_sample_zscores = 'calculate_sample_zscores',
 }
 
 type StringValuedParams = Exclude<
@@ -175,6 +176,7 @@ const shouldForceRemount: { [prop in keyof ResultsViewURLQuery]: boolean } = {
     genetic_profile_ids_GENERIC_ASSAY: true,
     genetic_profile_ids: true,
     comparison_createdGroupsSessionId: false,
+    calculate_sample_zscores: false,
 };
 
 const propertiesMap = _.mapValues(
@@ -270,6 +272,9 @@ const propertiesMap = _.mapValues(
         },
         genetic_profile_ids: { isSessionProp: true },
         comparison_createdGroupsSessionId: {
+            isSessionProp: true,
+        },
+        calculate_sample_zscores: {
             isSessionProp: true,
         },
     } as PropertiesMap<ResultsViewURLQuery>,
