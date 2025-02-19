@@ -1,6 +1,9 @@
 import * as React from 'react';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
-import { getProteinPositionFromProteinChange } from 'cbioportal-utils';
+import {
+    calcProteinChangeSortValue,
+    getProteinPositionFromProteinChange,
+} from 'cbioportal-utils';
 import _ from 'lodash';
 import { Mutation } from 'cbioportal-ts-api-client';
 import { CosmicMutation } from 'cbioportal-ts-api-client';
@@ -9,6 +12,7 @@ import styles from './cosmic.module.scss';
 import { ICosmicData } from 'shared/model/Cosmic';
 import generalStyles from './styles.module.scss';
 import memoize from 'memoize-weak-decorator';
+import { Column } from 'shared/components/lazyMobXTable/LazyMobXTable';
 
 export function placeArrow(tooltipEl: any) {
     const arrowEl = tooltipEl.querySelector('.rc-tooltip-arrow');
@@ -107,13 +111,66 @@ export default class CosmicColumnFormatter {
         }
     }
 
-    public static renderFunction(data: Mutation[], cosmicData?: ICosmicData) {
+    public static renderFunction(
+        data: Mutation[],
+        cosmicData?: ICosmicData,
+        lastUpdatedCosmicText?: string
+    ) {
         const cosmic: CosmicMutation[] | null = CosmicColumnFormatter.getData(
             data,
             cosmicData
         );
 
+        const columns: Column<CosmicMutation>[] = [
+            {
+                name: 'COSMIC ID',
+                render: (d: CosmicMutation) =>
+                    d.proteinChange === data[0].proteinChange ? (
+                        <b>
+                            <a
+                                href={`http://cancer.sanger.ac.uk/cosmic/mutation/overview?id=${d.cosmicMutationId}`}
+                                target="_blank"
+                            >
+                                {d.cosmicMutationId}
+                            </a>
+                        </b>
+                    ) : (
+                        <span>
+                            <a
+                                href={`http://cancer.sanger.ac.uk/cosmic/mutation/overview?id=${d.cosmicMutationId}`}
+                                target="_blank"
+                            >
+                                {d.cosmicMutationId}
+                            </a>
+                        </span>
+                    ),
+                sortBy: (d: CosmicMutation) => d.cosmicMutationId,
+            },
+            {
+                name: 'Protein Change',
+                render: (d: CosmicMutation) =>
+                    d.proteinChange === data[0].proteinChange ? (
+                        <b>{d.proteinChange}</b>
+                    ) : (
+                        <span>{d.proteinChange}</span>
+                    ),
+                sortBy: (d: CosmicMutation) =>
+                    calcProteinChangeSortValue(d.proteinChange),
+            },
+            {
+                name: 'Occurrence',
+                render: (d: CosmicMutation) =>
+                    d.proteinChange === data[0].proteinChange ? (
+                        <b>{d.count}</b>
+                    ) : (
+                        <span>{d.count}</span>
+                    ),
+                sortBy: (d: CosmicMutation) => d.count,
+            },
+        ];
+
         let value: number = -1;
+        let exactProteinChangeValue: number;
         let display: string = '';
         let overlay: (() => JSX.Element) | null = null;
         let content: JSX.Element;
@@ -128,11 +185,34 @@ export default class CosmicColumnFormatter {
                 0
             );
 
+            exactProteinChangeValue = _.reduce(
+                cosmic,
+                (sum: number, cosmicMutation: CosmicMutation) => {
+                    if (
+                        cosmicMutation.proteinChange === data[0].proteinChange
+                    ) {
+                        return sum + cosmicMutation.count;
+                    } else {
+                        return sum;
+                    }
+                },
+                0
+            );
+
             overlay = () => (
                 <span className={styles['cosmic-table']}>
-                    <b>{value}</b> occurrences of <b>{cosmic[0].keyword}</b>{' '}
-                    mutations in COSMIC
-                    <CosmicMutationTable data={cosmic} />
+                    There are{' '}
+                    <b>
+                        {exactProteinChangeValue} {data[0].gene.hugoGeneSymbol}{' '}
+                        {data[0].proteinChange}
+                    </b>{' '}
+                    and{' '}
+                    <b>
+                        {value} {cosmic[0].keyword} mutations
+                    </b>{' '}
+                    in <b>COSMIC</b>
+                    <CosmicMutationTable data={cosmic} columns={columns} />
+                    <b>{lastUpdatedCosmicText}</b>
                 </span>
             );
 
