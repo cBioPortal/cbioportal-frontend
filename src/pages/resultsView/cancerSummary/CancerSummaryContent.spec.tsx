@@ -2,6 +2,7 @@ import {
     calculatePercentage,
     CancerSummaryContent,
     IAlterationData,
+    IPatientAlterationData,
     OrderedAlterationLabelMap,
 } from './CancerSummaryContent';
 import { assert } from 'chai';
@@ -12,7 +13,7 @@ import sinon from 'sinon';
 
 describe('CancerSummaryContent', () => {
     let groupedAlterationData: {
-        [groupType: string]: IAlterationData;
+        [groupType: string]: IAlterationData & IPatientAlterationData;
     };
 
     beforeEach(() => {
@@ -43,6 +44,36 @@ describe('CancerSummaryContent', () => {
                     structuralVariant: 0,
                 },
                 notProfiledSamplesCounts: {
+                    mutation: 0,
+                    cna: 0,
+                    expression: 0,
+                    protein: 0,
+                    structuralVariant: 0,
+                },
+                profiledPatientTotal: 94,
+                patientAlterationTotal: 10,
+                patientAlterationTypeCounts: {
+                    mutated: 10,
+                    amp: 0,
+                    homdel: 0,
+                    hetloss: 0,
+                    gain: 0,
+                    structuralVariant: 0,
+                    mrnaExpressionHigh: 0,
+                    mrnaExpressionLow: 0,
+                    protExpressionHigh: 0,
+                    protExpressionLow: 0,
+                    multiple: 0,
+                },
+                alteredPatientCount: 10,
+                profiledPatientsCounts: {
+                    mutation: 10,
+                    cna: 0,
+                    expression: 0,
+                    protein: 0,
+                    structuralVariant: 0,
+                },
+                notProfiledPatientsCounts: {
                     mutation: 0,
                     cna: 0,
                     expression: 0,
@@ -82,6 +113,36 @@ describe('CancerSummaryContent', () => {
                     protein: 0,
                     structuralVariant: 0,
                 },
+                profiledPatientTotal: 23,
+                patientAlterationTotal: 1,
+                patientAlterationTypeCounts: {
+                    mutated: 1,
+                    amp: 0,
+                    homdel: 0,
+                    hetloss: 0,
+                    gain: 0,
+                    structuralVariant: 0,
+                    mrnaExpressionHigh: 0,
+                    mrnaExpressionLow: 0,
+                    protExpressionHigh: 0,
+                    protExpressionLow: 0,
+                    multiple: 0,
+                },
+                alteredPatientCount: 1,
+                profiledPatientsCounts: {
+                    mutation: 1,
+                    cna: 0,
+                    expression: 0,
+                    protein: 0,
+                    structuralVariant: 0,
+                },
+                notProfiledPatientsCounts: {
+                    mutation: 0,
+                    cna: 0,
+                    expression: 0,
+                    protein: 0,
+                    structuralVariant: 0,
+                },
             },
             'Rectal Adenocarcinoma': {
                 profiledSampleTotal: 48,
@@ -109,6 +170,36 @@ describe('CancerSummaryContent', () => {
                     structuralVariant: 0,
                 },
                 notProfiledSamplesCounts: {
+                    mutation: 0,
+                    cna: 0,
+                    expression: 0,
+                    protein: 0,
+                    structuralVariant: 0,
+                },
+                profiledPatientTotal: 48,
+                patientAlterationTotal: 5,
+                patientAlterationTypeCounts: {
+                    mutated: 4,
+                    amp: 1,
+                    homdel: 0,
+                    hetloss: 0,
+                    gain: 0,
+                    structuralVariant: 0,
+                    mrnaExpressionHigh: 0,
+                    mrnaExpressionLow: 0,
+                    protExpressionHigh: 0,
+                    protExpressionLow: 0,
+                    multiple: 0,
+                },
+                alteredPatientCount: 5,
+                profiledPatientsCounts: {
+                    mutation: 5,
+                    cna: 1,
+                    expression: 0,
+                    protein: 0,
+                    structuralVariant: 0,
+                },
+                notProfiledPatientsCounts: {
                     mutation: 0,
                     cna: 0,
                     expression: 0,
@@ -150,9 +241,11 @@ describe('CancerSummaryContent', () => {
             <CancerSummaryContent
                 groupedAlterationData={groupedAlterationData}
                 groupAlterationsBy={'cancerTypeDetailed'}
+                countAlterationsBy={'sampleCounts'}
                 gene={'NRAS'}
                 width={500}
                 handlePivotChange={() => {}}
+                handlePivotCountChange={() => {}}
             />
         );
 
@@ -223,9 +316,11 @@ describe('CancerSummaryContent', () => {
                 <CancerSummaryContent
                     groupedAlterationData={groupedAlterationData}
                     groupAlterationsBy={'cancerTypeDetailed'}
+                    countAlterationsBy={'sampleCounts'}
                     gene={'NRAS'}
                     width={500}
                     handlePivotChange={() => {}}
+                    handlePivotCountChange={() => {}}
                 />
             );
 
@@ -252,9 +347,11 @@ describe('CancerSummaryContent', () => {
                 <CancerSummaryContent
                     groupedAlterationData={groupedAlterationData}
                     groupAlterationsBy={'cancerTypeDetailed'}
+                    countAlterationsBy={'sampleCounts'}
                     gene={'NRAS'}
                     width={500}
                     handlePivotChange={() => {}}
+                    handlePivotCountChange={() => {}}
                 />
             );
 
@@ -289,9 +386,11 @@ describe('CancerSummaryContent', () => {
                 <CancerSummaryContent
                     groupedAlterationData={groupedAlterationData}
                     groupAlterationsBy={'cancerTypeDetailed'}
+                    countAlterationsBy={'sampleCounts'}
                     gene={'NRAS'}
                     width={500}
                     handlePivotChange={() => {}}
+                    handlePivotCountChange={() => {}}
                 />
             );
 
@@ -332,9 +431,11 @@ describe('CancerSummaryContent', () => {
                 <CancerSummaryContent
                     groupedAlterationData={groupedAlterationData}
                     groupAlterationsBy={'cancerTypeDetailed'}
+                    countAlterationsBy={'sampleCounts'}
                     gene={'NRAS'}
                     width={500}
                     handlePivotChange={() => {}}
+                    handlePivotCountChange={() => {}}
                 />
             );
 
@@ -369,10 +470,12 @@ describe('CancerSummaryContent', () => {
                 <CancerSummaryContent
                     groupedAlterationData={groupedAlterationData}
                     groupAlterationsBy={'cancerTypeDetailed'}
+                    countAlterationsBy={'sampleCounts'}
                     gene={'NRAS'}
                     labelTransformer={(t: string) => `|${t.toUpperCase()}|`}
                     width={500}
                     handlePivotChange={() => {}}
+                    handlePivotCountChange={() => {}}
                 />
             );
 
