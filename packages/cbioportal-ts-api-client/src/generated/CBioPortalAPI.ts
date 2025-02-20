@@ -3526,7 +3526,6 @@ export default class CBioPortalAPI {
     }): string {
         let queryParameters: any = {};
         let path = '/api/molecular-profiles/{molecularProfileId}/molecular-data/fetch';
-
         path = path.replace('{molecularProfileId}', parameters['molecularProfileId'] + '');
         if (parameters['projection'] !== undefined) {
             queryParameters['projection'] = parameters['projection'];

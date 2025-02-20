@@ -3942,6 +3942,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             );
         }
 
+        console.log(this.props.molecularProfileIdToMolecularProfile.result);
+        console.log(axisSelection);
+
         return (
             <form className="main-form">
                 <h4 className="tab-title">
@@ -4035,11 +4038,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                 </div>
                             </div>
                         )}
-                    {logScalePossible(
-                        axisSelection,
-                        axisDataPromise.result
-                    ) && (
-                        <div className="checkbox">
+                    <div className="checkbox">
+                        {logScalePossible(
+                            axisSelection,
+                            axisDataPromise.result
+                        ) && (
                             <label>
                                 <input
                                     data-test={`${dataTestWhichAxis}LogCheckbox`}
@@ -4067,8 +4070,39 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                 />
                                 Log Scale
                             </label>
-                        </div>
-                    )}
+                        )}
+                        {(axisSelection.genericAssayDataType == 'CONTINUOUS' ||
+                            axisSelection.genericAssayDataType ==
+                                'LOG2-VALUE') && (
+                            <label>
+                                <input
+                                    data-test={`${dataTestWhichAxis}LogCheckbox`}
+                                    type="checkbox"
+                                    name={
+                                        vertical
+                                            ? 'vert_logScale'
+                                            : 'horz_logScale'
+                                    }
+                                    value={
+                                        vertical
+                                            ? EventKey.vert_logScale
+                                            : EventKey.horz_logScale
+                                    }
+                                    checked={
+                                        axisSelection.logScale &&
+                                        !this.isDisabledAxisLogCheckbox(
+                                            vertical
+                                        )
+                                    }
+                                    disabled={this.isDisabledAxisLogCheckbox(
+                                        vertical
+                                    )}
+                                    onClick={this.onInputClick}
+                                />
+                                Z-Score
+                            </label>
+                        )}
+                    </div>
                     {((vertical && this.vertLimitValuesCanBeShown) ||
                         (!vertical && this.horzLimitValuesCanBeShown)) && (
                         <div className="checkbox color-samples-toolbar-elt">
