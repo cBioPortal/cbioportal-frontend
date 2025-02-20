@@ -93,8 +93,6 @@ export type CancerStudyQueryUrlParams = {
     case_ids: string;
     gene_list: string;
     geneset_list?: string;
-    tab_index: 'tab_download' | 'tab_visualize';
-    transpose_matrix?: 'on';
     Action: 'Submit';
     patient_enrichments?: string;
     show_samples?: string;
@@ -291,10 +289,6 @@ export class QueryStore {
     // QUERY PARAMETERS
     ////////////////////////////////////////////////////////////////////////////////
 
-    @observable forDownloadTab: boolean = false;
-
-    @observable transposeDataMatrix = false;
-
     @observable.ref searchClauses: SearchClause[] = [];
 
     @observable.ref dataTypeFilters: string[] = [];
@@ -326,7 +320,7 @@ export class QueryStore {
             return obj;
         }, []);
         ids = _.uniq(ids);
-        return this.forDownloadTab ? ids.slice(-1) : ids;
+        return ids;
     }
 
     set selectableSelectedStudyIds(val: string[]) {
@@ -338,19 +332,10 @@ export class QueryStore {
 
     @action
     public setStudyIdSelected(studyId: string, selected: boolean) {
-        if (this.forDownloadTab) {
-            // only one can be selected at a time
-            let newMap: { [studyId: string]: boolean } = {};
-            if (selected) {
-                newMap[studyId] = selected;
-            }
-            this._allSelectedStudyIds = observable.map(newMap);
+        if (selected) {
+            this._allSelectedStudyIds.set(studyId, true);
         } else {
-            if (selected) {
-                this._allSelectedStudyIds.set(studyId, true);
-            } else {
-                this._allSelectedStudyIds.delete(studyId);
-            }
+            this._allSelectedStudyIds.delete(studyId);
         }
     }
 
@@ -607,9 +592,7 @@ export class QueryStore {
         10
     );
     @computed get maxTreeDepth() {
-        return this.forDownloadTab && this._maxTreeDepth > 0
-            ? 1
-            : this._maxTreeDepth;
+        return this._maxTreeDepth;
     }
 
     set maxTreeDepth(value) {
@@ -1542,12 +1525,8 @@ export class QueryStore {
             studies: this.cancerStudies.result,
             allStudyTags: this.cancerStudyTags.result,
             priorityStudies: this.priorityStudies,
-            virtualStudies: this.forDownloadTab
-                ? []
-                : this.userVirtualStudies.result,
-            publicVirtualStudies: this.forDownloadTab
-                ? []
-                : this.publicVirtualStudies.result,
+            virtualStudies: this.userVirtualStudies.result,
+            publicVirtualStudies: this.publicVirtualStudies.result,
             maxTreeDepth: this.maxTreeDepth,
         });
     }
@@ -1683,7 +1662,7 @@ export class QueryStore {
                 if (profile.molecularAlterationType != molecularAlterationType)
                     return false;
 
-                return profile.showProfileInAnalysisTab || this.forDownloadTab;
+                return profile.showProfileInAnalysisTab;
             }
         );
 
@@ -2240,7 +2219,6 @@ export class QueryStore {
                 params[ResultsViewURLQueryEnum.geneset_list] || ''
             )
         );
-        this.forDownloadTab = params.tab_index === 'tab_download';
         this.initiallySelected.profileIds = true;
         this.initiallySelected.sampleListId = true;
     }

@@ -696,7 +696,6 @@ export default class ResultsViewPage extends React.Component<
                     <QueryAndDownloadTabs
                         forkedMode={false}
                         showQuickSearchTab={false}
-                        showDownloadTab={false}
                         showAlerts={true}
                         getQueryStore={() =>
                             createQueryStore(

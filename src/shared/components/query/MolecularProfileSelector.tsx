@@ -134,6 +134,7 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
         groupLabel: string
     ) {
         let profiles = this.store.getFilteredProfiles(molecularAlterationType);
+        //TODO add more profiles
 
         const groupedProfiles = _.groupBy(profiles, profile => {
             const profileType = profile.molecularProfileId.replace(
@@ -155,7 +156,7 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
 
         let output: JSX.Element[] = [];
 
-        if (profiles.length > 1 && !this.store.forDownloadTab)
+        if (profiles.length > 1)
             output.push(
                 <this.ProfileToggle
                     key={'altTypeCheckbox:' + molecularAlterationType}
@@ -171,11 +172,7 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
             <this.ProfileToggle
                 key={'profile:' + profile.molecularProfileId}
                 profile={profile}
-                type={
-                    this.store.forDownloadTab || profiles.length > 1
-                        ? 'radio'
-                        : 'checkbox'
-                }
+                type={profiles.length > 1 ? 'radio' : 'checkbox'}
                 label={
                     profile.molecularAlterationType === 'STRUCTURAL_VARIANT'
                         ? groupLabel
@@ -188,8 +185,7 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
             />
         ));
 
-        if (this.store.forDownloadTab || profiles.length == 1)
-            output.push(...profileToggles);
+        if (profiles.length == 1) output.push(...profileToggles);
         else
             output.push(
                 <div
@@ -199,8 +195,6 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
                     {profileToggles}
                 </div>
             );
-
-        if (this.store.forDownloadTab) return output;
 
         if (isGroupSelected && molecularAlterationType == 'MRNA_EXPRESSION') {
             output.push(

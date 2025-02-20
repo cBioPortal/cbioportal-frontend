@@ -12,7 +12,6 @@ describe('QueryAndDownloadTabs', () => {
         //     <QueryAndDownloadTabs
         //         getQueryStore={() => ({} as QueryStore)}
         //         showQuickSearchTab={true}
-        //         showDownloadTab={true}
         //     />
         // );
         // assert.equal(comp.find(Tab).length, 3);

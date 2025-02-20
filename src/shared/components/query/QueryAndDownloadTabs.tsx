@@ -6,17 +6,13 @@ import { QueryStore } from './QueryStore';
 import { observable, action, makeObservable, computed } from 'mobx';
 import { MSKTab, MSKTabs } from '../MSKTabs/MSKTabs';
 import QuickSearch from './quickSearch/QuickSearch';
-import {
-    DownloadControlOption,
-    getBrowserWindow,
-} from 'cbioportal-frontend-commons';
+import { getBrowserWindow } from 'cbioportal-frontend-commons';
 import autobind from 'autobind-decorator';
 import { trackEvent } from 'shared/lib/tracking';
 import { If } from 'react-if';
 import { getServerConfig } from 'config/config';
 import { ModifyQueryParams } from 'pages/resultsView/ResultsViewPageStore';
 
-const DOWNLOAD = 'download';
 const ADVANCED = 'advanced';
 const QUICK_SEARCH_TAB_ID = 'quickSearch';
 const QUICK_SEARCH_LS_KEY = 'defaultHomePageTab';
@@ -24,7 +20,6 @@ const QUICK_SEARCH_LS_KEY = 'defaultHomePageTab';
 interface IQueryAndDownloadTabsProps {
     onSubmit?: () => void;
     showQuickSearchTab: boolean;
-    showDownloadTab: boolean;
     getQueryStore: () => QueryStore;
     showAlerts?: boolean;
     forkedMode?: boolean;
@@ -89,17 +84,7 @@ export default class QueryAndDownloadTabs extends React.Component<
 
     @action.bound
     onSelectTab(tabId: string) {
-        this.store.forDownloadTab = tabId === DOWNLOAD;
         this.activeTabId = tabId;
-    }
-
-    @computed
-    get hideDownloadTab() {
-        return (
-            !this.props.showDownloadTab ||
-            getServerConfig().skin_hide_download_controls ===
-                DownloadControlOption.HIDE_ALL
-        );
     }
 
     render() {
@@ -153,20 +138,6 @@ export default class QueryAndDownloadTabs extends React.Component<
                                 />
                             )}
                         </div>
-                    </MSKTab>
-                    <MSKTab
-                        id={DOWNLOAD}
-                        linkText={'Download'}
-                        hide={this.hideDownloadTab}
-                        onTabDidMount={() => this.setDefaultTab(undefined)}
-                    >
-                        {/*forked experience is always false for download tab*/}
-                        <QueryContainer
-                            forkedMode={false}
-                            onSubmit={this.props.onSubmit}
-                            store={this.store}
-                            showAlerts={this.props.showAlerts}
-                        />
                     </MSKTab>
                 </MSKTabs>
             </div>
