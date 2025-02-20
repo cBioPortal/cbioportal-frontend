@@ -89,6 +89,28 @@ export interface IAlterationData {
     };
 }
 
+export interface IPatientAlterationData {
+    patientAlterationTotal: number;
+    profiledPatientTotal: number;
+    patientAlterationTypeCounts: IAlterationCountMap;
+    alteredPatientCount: number;
+    parentCancerType: string;
+    profiledPatientsCounts: {
+        mutation: number;
+        cna: number;
+        expression: number;
+        protein: number;
+        structuralVariant: number;
+    };
+    notProfiledPatientsCounts: {
+        mutation: number;
+        cna: number;
+        expression: number;
+        protein: number;
+        structuralVariant: number;
+    };
+}
+
 export interface ICancerSummaryChartData {
     representedAlterations: { [alterationType: string]: boolean };
     data: {
@@ -112,14 +134,21 @@ export interface ICancerSummaryChartData {
 export interface ICancerSummaryContentProps {
     labelTransformer?: (key: string) => string;
     groupedAlterationData: {
-        [groupType: string]: IAlterationData;
+        [groupType: string]: IAlterationData & IPatientAlterationData;
     };
     groupAlterationsBy: string;
+    countAlterationsBy: string;
     gene: string;
     width: number;
     handlePivotChange: (e: any) => void;
+    handlePivotCountChange: (e: any) => void;
     handleStudyLinkout?: (studyId: string, hugoGeneSymbol?: string) => void;
 }
+
+const CountsOptions = [
+    { value: 'sampleCounts', label: 'Sample Counts' },
+    { value: 'patientCounts', label: 'Patient Counts' },
+];
 
 const GroupByOptions = [
     { value: 'studyId', label: 'Cancer Study' },
@@ -216,14 +245,16 @@ export class CancerSummaryContent extends React.Component<
         dir: 'asc' | 'desc';
     } {
         const sortByPercentage = (key: string) => {
-            const alterationCountsData: IAlterationData = this.countsData[key];
+            const alterationCountsData: IAlterationData &
+                IPatientAlterationData = this.countsData[key];
             return (
                 alterationCountsData.alteredSampleCount /
                 alterationCountsData.profiledSampleTotal
             );
         };
         const sortByAbsoluteCount = (key: string) => {
-            const alterationCountsData: IAlterationData = this.countsData[key];
+            const alterationCountsData: IAlterationData &
+                IPatientAlterationData = this.countsData[key];
             return alterationCountsData.alteredSampleCount;
         };
         const sortByLabel = (key: string) => {
@@ -461,7 +492,10 @@ export class CancerSummaryContent extends React.Component<
         return (
             _.reduce(
                 this.countsData,
-                (count, alterationData: IAlterationData) => {
+                (
+                    count,
+                    alterationData: IAlterationData & IPatientAlterationData
+                ) => {
                     return count + alterationData.alterationTotal;
                 },
                 0
@@ -720,6 +754,32 @@ export class CancerSummaryContent extends React.Component<
                                 onKeyPress={this.handleAltInputKeyPress}
                             />
                         </td>
+                        <td>
+                            <ButtonGroup>
+                                {CountsOptions.map((option, i) => {
+                                    return (
+                                        <Radio
+                                            checked={
+                                                option.value ===
+                                                this.props.countAlterationsBy
+                                            }
+                                            onChange={e => {
+                                                this.initializeSliderValue();
+                                                this.props.handlePivotCountChange(
+                                                    $(e.target).attr(
+                                                        'data-value'
+                                                    )
+                                                );
+                                            }}
+                                            inline
+                                            data-value={option.value}
+                                        >
+                                            {option.label}
+                                        </Radio>
+                                    );
+                                })}
+                            </ButtonGroup>
+                        </td>
                     </tr>
                 </table>
             </div>
@@ -823,6 +883,9 @@ export class CancerSummaryContent extends React.Component<
                                                 this.props.groupAlterationsBy
                                         ) || {}
                                     ).label || 'Cancer'
+                                }
+                                countAlterationsBy={
+                                    this.props.countAlterationsBy
                                 }
                                 handleStudyLinkout={
                                     this.props.handleStudyLinkout!

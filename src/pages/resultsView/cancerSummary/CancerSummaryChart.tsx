@@ -14,6 +14,7 @@ import {
     IAlterationCountMap,
     IAlterationData,
     ICancerSummaryChartData,
+    IPatientAlterationData,
 } from './CancerSummaryContent';
 import { observable, computed, action, makeObservable } from 'mobx';
 import { observer, Observer } from 'mobx-react';
@@ -62,6 +63,7 @@ interface CancerSummaryChartProps {
     countsByGroup: { [groupName: string]: IAlterationData };
     xLabels: string[];
     xAxisString: string;
+    countAlterationsBy: string;
     representedAlterations: { [alterationType: string]: boolean };
     isPercentage: boolean;
     showLinks: boolean;
@@ -78,7 +80,7 @@ export function percentageRounder(num: number) {
 interface ITooltipModel {
     x: number;
     y: number;
-    alterationData: IAlterationData;
+    alterationData: IAlterationData & IPatientAlterationData;
     groupName: string;
     studyId: string;
 }
@@ -249,6 +251,7 @@ export class CancerSummaryChart extends React.Component<
             return null;
         } else {
             const tooltipModel = this.barPlotTooltipModel;
+            console.log(tooltipModel.alterationData);
             const maxWidth = 400;
             let tooltipPlacement =
                 this.mousePosition.x > WindowStore.size.width - maxWidth
@@ -305,12 +308,22 @@ export class CancerSummaryChart extends React.Component<
                         <p>
                             Gene altered in{' '}
                             {percentageRounder(
-                                tooltipModel.alterationData.alteredSampleCount /
-                                    tooltipModel.alterationData
-                                        .profiledSampleTotal
+                                this.props.countAlterationsBy === 'sampleCounts'
+                                    ? tooltipModel.alterationData
+                                          .alteredSampleCount /
+                                          tooltipModel.alterationData
+                                              .profiledSampleTotal
+                                    : tooltipModel.alterationData
+                                          .alteredPatientCount /
+                                          tooltipModel.alterationData
+                                              .profiledPatientTotal
                             )}
                             % of{' '}
-                            {tooltipModel.alterationData.profiledSampleTotal}{' '}
+                            {this.props.countAlterationsBy === 'sampleCounts'
+                                ? tooltipModel.alterationData
+                                      .profiledSampleTotal
+                                : tooltipModel.alterationData
+                                      .profiledPatientTotal}{' '}
                             cases
                         </p>
                         <table className="table table-striped">
@@ -338,21 +351,42 @@ export class CancerSummaryChart extends React.Component<
                                                 .alterationTypeCounts as any)[
                                                 key
                                             ];
+                                            const patientAlterationCount = (tooltipModel!
+                                                .alterationData
+                                                .patientAlterationTypeCounts as any)[
+                                                key
+                                            ];
                                             memo.push(
                                                 <tr>
                                                     <td>{name}</td>
                                                     <td>
                                                         {percentageRounder(
-                                                            (tooltipModel!
-                                                                .alterationData
-                                                                .alterationTypeCounts as any)[
-                                                                key
-                                                            ] /
-                                                                tooltipModel!
-                                                                    .alterationData
-                                                                    .profiledSampleTotal
+                                                            this.props
+                                                                .countAlterationsBy ===
+                                                                'sampleCounts'
+                                                                ? (tooltipModel!
+                                                                      .alterationData
+                                                                      .alterationTypeCounts as any)[
+                                                                      key
+                                                                  ] /
+                                                                      tooltipModel!
+                                                                          .alterationData
+                                                                          .profiledSampleTotal
+                                                                : (tooltipModel!
+                                                                      .alterationData
+                                                                      .patientAlterationTypeCounts as any)[
+                                                                      key
+                                                                  ] /
+                                                                      tooltipModel!
+                                                                          .alterationData
+                                                                          .profiledPatientTotal
                                                         )}
-                                                        % ({alterationCount}{' '}
+                                                        % (
+                                                        {this.props
+                                                            .countAlterationsBy ===
+                                                        'sampleCounts'
+                                                            ? alterationCount
+                                                            : patientAlterationCount}{' '}
                                                         {pluralize(
                                                             'case',
                                                             alterationCount

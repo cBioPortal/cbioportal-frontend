@@ -2,6 +2,7 @@ import { AlterationTypeConstants } from 'shared/constants';
 import {
     IAlterationCountMap,
     IAlterationData,
+    IPatientAlterationData,
 } from '../../pages/resultsView/cancerSummary/CancerSummaryContent';
 import { Sample, MolecularProfile } from 'cbioportal-ts-api-client';
 import _ from 'lodash';
@@ -33,12 +34,38 @@ export function getAlterationCountsForCancerTypesByGene(
                     return sample[groupByProperty];
                 }
             );
-            return countAlterationOccurences(
+
+            let sampleAlterationCounts = countAlterationOccurences(
                 samplesByCancerType,
                 alterationsBySampleId,
                 molecularProfileIdsByAlterationType,
                 coverageInformation,
                 gene
+            );
+            let patientAlterationCounts = countPatientAlterationOccurences(
+                samplesByCancerType,
+                alterationsBySampleId,
+                molecularProfileIdsByAlterationType,
+                coverageInformation,
+                gene
+            );
+
+            return _.reduce(
+                sampleAlterationCounts,
+                (
+                    acc: {
+                        [x: string]: IAlterationData & IPatientAlterationData;
+                    },
+                    val,
+                    key
+                ) => {
+                    acc[key] = {
+                        ...val,
+                        ...patientAlterationCounts[key],
+                    };
+                    return acc;
+                },
+                {}
             );
         }
     );
@@ -74,11 +101,34 @@ export function getAlterationCountsForCancerTypesForAllGenes(
     } = _.mergeWith({}, ...flattened, customizer) as {
         [uniqueSampleKey: string]: ExtendedAlteration[];
     };
-    return countAlterationOccurences(
+
+    const sampleAlterationCounts = countAlterationOccurences(
         samplesByCancerType,
         merged,
         molecularProfileIdsByAlterationType,
         coverageInformation
+    );
+    const patientAlterationCounts = countPatientAlterationOccurences(
+        samplesByCancerType,
+        merged,
+        molecularProfileIdsByAlterationType,
+        coverageInformation
+    );
+
+    return _.reduce(
+        sampleAlterationCounts,
+        (
+            acc: { [x: string]: IAlterationData & IPatientAlterationData },
+            val,
+            key
+        ) => {
+            acc[key] = {
+                ...val,
+                ...patientAlterationCounts[key],
+            };
+            return acc;
+        },
+        {}
     );
 }
 
@@ -94,7 +144,7 @@ export function countAlterationOccurences(
     },
     coverageInformation: CoverageInformation,
     hugoGeneSymbol?: string
-) {
+): { [x: string]: IAlterationData } {
     return _.mapValues(
         groupedSamples,
         (samples: ExtendedSample[], cancerType: string) => {
@@ -212,7 +262,6 @@ export function countAlterationOccurences(
                     // if the sample has at least one alteration, it's altered so
                     // increment alteredSampleTotal
                     if (uniqueAlterations.length > 0) {
-                        //
                         ret.alteredSampleCount += 1;
                     }
 
@@ -268,6 +317,220 @@ export function countAlterationOccurences(
                     }
                 }
             });
+            return ret;
+        }
+    );
+}
+
+export function countPatientAlterationOccurences(
+    groupedSamples: { [groupingProperty: string]: ExtendedSample[] },
+    alterationsBySampleId: { [id: string]: ExtendedAlteration[] },
+    molecularProfileIdsByAlterationType: {
+        [alterationType: string]: MolecularProfile[];
+    },
+    coverageInformation: CoverageInformation,
+    hugoGeneSymbol?: string
+): { [x: string]: IPatientAlterationData } {
+    return _.mapValues(
+        groupedSamples,
+        (samples: ExtendedSample[], cancerType: string) => {
+            const counts: IAlterationCountMap = {
+                mutated: 0,
+                amp: 0, // 2
+                homdel: 0, // -2
+                hetloss: 0, // -1
+                gain: 0, // 1
+                structuralVariant: 0,
+                mrnaExpressionHigh: 0,
+                mrnaExpressionLow: 0,
+                protExpressionHigh: 0,
+                protExpressionLow: 0,
+                multiple: 0,
+            };
+
+            const profiledPatientTypeCounts = {
+                mutation: 0,
+                cna: 0,
+                expression: 0,
+                protein: 0,
+                structuralVariant: 0,
+            };
+
+            const notProfiledPatientsCounts = {
+                mutation: 0,
+                cna: 0,
+                expression: 0,
+                protein: 0,
+                structuralVariant: 0,
+            };
+
+            const ret: IPatientAlterationData = {
+                profiledPatientTotal: 0,
+                patientAlterationTotal: 0,
+                patientAlterationTypeCounts: counts,
+                alteredPatientCount: 0,
+                parentCancerType: samples[0].cancerType,
+                profiledPatientsCounts: profiledPatientTypeCounts,
+                notProfiledPatientsCounts: notProfiledPatientsCounts,
+            };
+
+            const samplesByPatientKey = _.groupBy(samples, 'uniquePatientKey');
+
+            _.forEach(
+                samplesByPatientKey,
+                (samples: Sample[], patientKey: string) => {
+                    let isPatientProfiled = false;
+                    const profiledAlterationTypes = new Set<string>();
+
+                    // alterations corresponding to a particular patient
+                    const patientAlterations: ExtendedAlteration[] = [];
+
+                    _.forEach(samples, (sample: Sample) => {
+                        _.forEach(
+                            molecularProfileIdsByAlterationType,
+                            (molecularProfiles, alterationType) => {
+                                const profiled = _.some(
+                                    isSampleProfiledInMultiple(
+                                        sample.uniqueSampleKey,
+                                        _.map(
+                                            molecularProfiles,
+                                            molecularProfile =>
+                                                molecularProfile.molecularProfileId
+                                        ),
+                                        coverageInformation,
+                                        hugoGeneSymbol
+                                    )
+                                );
+                                isPatientProfiled =
+                                    isPatientProfiled || profiled;
+
+                                if (
+                                    profiled &&
+                                    !profiledAlterationTypes.has(alterationType)
+                                ) {
+                                    profiledAlterationTypes.add(alterationType);
+
+                                    switch (alterationType) {
+                                        case AlterationTypeConstants.COPY_NUMBER_ALTERATION: {
+                                            profiledPatientTypeCounts.cna++;
+                                            break;
+                                        }
+                                        case AlterationTypeConstants.MRNA_EXPRESSION: {
+                                            profiledPatientTypeCounts.expression++;
+                                            break;
+                                        }
+                                        case AlterationTypeConstants.PROTEIN_LEVEL: {
+                                            profiledPatientTypeCounts.protein++;
+                                            break;
+                                        }
+                                        case AlterationTypeConstants.MUTATION_EXTENDED: {
+                                            profiledPatientTypeCounts.mutation++;
+                                            break;
+                                        }
+                                        case AlterationTypeConstants.STRUCTURAL_VARIANT: {
+                                            profiledPatientTypeCounts.structuralVariant++;
+                                            break;
+                                        }
+                                    }
+                                } else if (!profiled) {
+                                    switch (alterationType) {
+                                        case AlterationTypeConstants.COPY_NUMBER_ALTERATION: {
+                                            notProfiledPatientsCounts.cna++;
+                                            break;
+                                        }
+                                        case AlterationTypeConstants.MRNA_EXPRESSION: {
+                                            notProfiledPatientsCounts.expression++;
+                                            break;
+                                        }
+                                        case AlterationTypeConstants.PROTEIN_LEVEL: {
+                                            notProfiledPatientsCounts.protein++;
+                                            break;
+                                        }
+                                        case AlterationTypeConstants.MUTATION_EXTENDED: {
+                                            notProfiledPatientsCounts.mutation++;
+                                            break;
+                                        }
+                                        case AlterationTypeConstants.STRUCTURAL_VARIANT: {
+                                            notProfiledPatientsCounts.structuralVariant++;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        );
+
+                        if (sample.uniqueSampleKey in alterationsBySampleId) {
+                            const alterations =
+                                alterationsBySampleId[sample.uniqueSampleKey];
+                            patientAlterations.push(...alterations);
+                        }
+                    });
+
+                    if (isPatientProfiled) {
+                        ret.profiledPatientTotal += 1;
+                    }
+
+                    // a patient could have multiple mutations. we only want to count one
+                    const uniqueAlterations = _.uniqBy(
+                        patientAlterations,
+                        alteration => alteration.alterationType
+                    );
+                    ret.patientAlterationTotal += uniqueAlterations.length;
+
+                    // if patient has any alteration, increment alteredSampleCount
+                    if (uniqueAlterations.length > 0) {
+                        ret.alteredPatientCount += 1;
+                    }
+
+                    // if patient has multiple alterations, count them as "multiple"
+                    if (uniqueAlterations.length > 1) {
+                        counts.multiple++;
+                    } else {
+                        _.forEach(
+                            uniqueAlterations,
+                            (alteration: ExtendedAlteration) => {
+                                switch (alteration.alterationType) {
+                                    case AlterationTypeConstants.COPY_NUMBER_ALTERATION:
+                                        counts[
+                                            alteration.alterationSubType as keyof IAlterationCountMap
+                                        ]++;
+                                        break;
+                                    case AlterationTypeConstants.MRNA_EXPRESSION:
+                                        if (
+                                            alteration.alterationSubType ===
+                                            'high'
+                                        )
+                                            counts.mrnaExpressionHigh++;
+                                        if (
+                                            alteration.alterationSubType ===
+                                            'low'
+                                        )
+                                            counts.mrnaExpressionLow++;
+                                        break;
+                                    case AlterationTypeConstants.PROTEIN_LEVEL:
+                                        if (
+                                            alteration.alterationSubType ===
+                                            'high'
+                                        )
+                                            counts.protExpressionHigh++;
+                                        if (
+                                            alteration.alterationSubType ===
+                                            'low'
+                                        )
+                                            counts.protExpressionLow++;
+                                        break;
+                                    case AlterationTypeConstants.MUTATION_EXTENDED:
+                                        counts.mutated++;
+                                        break;
+                                    case AlterationTypeConstants.STRUCTURAL_VARIANT:
+                                        counts.structuralVariant++;
+                                        break;
+                                }
+                            }
+                        );
+                    }
+                }
+            );
             return ret;
         }
     );
