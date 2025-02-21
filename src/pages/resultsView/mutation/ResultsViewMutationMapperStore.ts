@@ -48,6 +48,8 @@ import CategoricalNamespaceColumnFormatter from 'shared/components/namespaceColu
 import { createNamespaceColumnName } from 'shared/components/namespaceColumns/namespaceColumnsUtils';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
 
+const COSMIC_COUNTS_KEYWORD_FOR_UPDATE_CHECK = 'KRAS G12 missense';
+
 export default class ResultsViewMutationMapperStore extends MutationMapperStore {
     constructor(
         protected mutationMapperServerConfig: IServerConfig,
@@ -145,7 +147,7 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
     readonly cosmicCountsForUpdateCheck = remoteData({
         invoke: async () =>
             await internalClient.fetchCosmicCountsUsingPOST({
-                keywords: ['KRAS G12 missense'],
+                keywords: [COSMIC_COUNTS_KEYWORD_FOR_UPDATE_CHECK],
             }),
     });
 
