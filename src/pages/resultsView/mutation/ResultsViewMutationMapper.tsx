@@ -60,6 +60,8 @@ export interface IResultsViewMutationMapperProps extends IMutationMapperProps {
     enableCustomDriver: boolean;
 }
 
+const COSMIC_COUNTS_PUBLIC = 25876;
+
 @observer
 export default class ResultsViewMutationMapper extends MutationMapper<
     IResultsViewMutationMapperProps
@@ -203,7 +205,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                 'count'
             );
             // if counts are less than or equal to 25876 (the count currently in public portal), this means that cosmic was last updated before 2017
-            if (cosmicCountsForUpdateCheck <= 25876) {
+            if (cosmicCountsForUpdateCheck <= COSMIC_COUNTS_PUBLIC) {
                 return 'Last Updated: Before 2017';
             } else {
                 return '';

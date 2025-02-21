@@ -211,7 +211,10 @@ export default class CosmicColumnFormatter {
                         {value} {cosmic[0].keyword} mutations
                     </b>{' '}
                     in <b>COSMIC</b>
-                    <CosmicMutationTable data={cosmic} columns={columns} />
+                    <CosmicMutationTable
+                        data={cosmic}
+                        proteinChange={data[0].proteinChange}
+                    />
                     <b>{lastUpdatedCosmicText}</b>
                 </span>
             );
