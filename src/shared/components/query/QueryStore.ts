@@ -73,6 +73,10 @@ import { QueryParser } from 'shared/lib/query/QueryParser';
 import { AppStore } from 'AppStore';
 import { ResultsViewTab } from 'pages/resultsView/ResultsViewPageHelpers';
 import { CaseSetId } from 'shared/components/query/CaseSetSelectorUtils';
+import {
+    isZScoreCalculatableProfile,
+    isZScoreProfile,
+} from 'shared/model/MolecularProfileUtils';
 
 // interface for communicating
 export type CancerStudyQueryUrlParams = {
@@ -356,6 +360,7 @@ export class QueryStore {
     profileIdsFromUrl?: string[];
     profileFilterSetFromUrl?: string[];
 
+    //TODO simplify!!!
     @computed get selectedProfileIdSet() {
         let selectedIdSet: { [is: string]: boolean } = {};
         if (this.validProfileIdSetForSelectedStudies.isComplete) {
@@ -383,7 +388,7 @@ export class QueryStore {
                                         AlterationTypeConstants.MUTATION_EXTENDED
                                     ) {
                                         acc = acc.concat(
-                                            this.getFilteredProfiles(
+                                            this.getZScoreProfiles(
                                                 'STRUCTURAL_VARIANT'
                                             )
                                         );
@@ -416,7 +421,7 @@ export class QueryStore {
                         }
 
                         let profiles = _.flatMap(altTypes, altType =>
-                            this.getFilteredProfiles(altType)
+                            this.getZScoreProfiles(altType)
                         );
 
                         profiles.forEach(profile => {
@@ -432,7 +437,7 @@ export class QueryStore {
                         'COPY_NUMBER_ALTERATION',
                     ];
                     altTypes.forEach(altType => {
-                        _(this.getFilteredProfiles(altType))
+                        _(this.getZScoreProfiles(altType))
                             .groupBy(profile => profile.studyId)
                             .forEach(profiles => {
                                 selectedIdSet[
@@ -453,8 +458,9 @@ export class QueryStore {
         profile: MolecularProfile,
         checked: boolean
     ) {
-        let groupProfiles = this.getFilteredProfiles(
-            profile.molecularAlterationType
+        let groupProfiles = this.getZScoreProfiles(
+            profile.molecularAlterationType,
+            true
         );
 
         if (this.profileFilterSet === undefined) {
@@ -1654,19 +1660,18 @@ export class QueryStore {
         );
     }
 
-    getFilteredProfiles(
-        molecularAlterationType: MolecularProfile['molecularAlterationType']
+    getZScoreProfiles(
+        molecularAlterationType: MolecularProfile['molecularAlterationType'],
+        includeCalculableZScoreProfiles: boolean = false
     ) {
-        const ret = this.molecularProfilesInSelectedStudies.result.filter(
-            profile => {
-                if (profile.molecularAlterationType != molecularAlterationType)
-                    return false;
-
-                return profile.showProfileInAnalysisTab;
-            }
+        //TODO we might need to consider profile.showProfileInAnalysisTab as well if we want to play safe
+        return this.molecularProfilesInSelectedStudies.result.filter(
+            profile =>
+                profile.molecularAlterationType == molecularAlterationType &&
+                (isZScoreProfile(profile) ||
+                    (includeCalculableZScoreProfiles &&
+                        isZScoreCalculatableProfile(profile)))
         );
-
-        return ret;
     }
 
     isProfileTypeSelected(profileType: string) {
@@ -1676,13 +1681,13 @@ export class QueryStore {
     getSelectedProfileTypeFromMolecularAlterationType(
         molecularAlterationType: MolecularProfile['molecularAlterationType']
     ) {
-        return this.getFilteredProfiles(molecularAlterationType)
+        return this.getZScoreProfiles(molecularAlterationType, true)
             .map(profile => getSuffixOfMolecularProfile(profile))
             .find(profile => this.isProfileTypeSelected(profile));
     }
 
     get isGenesetProfileSelected() {
-        const genesetProfiles = this.getFilteredProfiles('GENESET_SCORE');
+        const genesetProfiles = this.getZScoreProfiles('GENESET_SCORE');
         if (genesetProfiles.length > 0) {
             const profileType = getSuffixOfMolecularProfile(genesetProfiles[0]);
             return this.isProfileTypeSelected(profileType) || false;
@@ -1897,7 +1902,7 @@ export class QueryStore {
     readonly hierarchyData = remoteData<any[]>({
         invoke: async () => {
             const hierarchyData = await getHierarchyData(
-                this.getFilteredProfiles('GENESET_SCORE')[0].molecularProfileId,
+                this.getZScoreProfiles('GENESET_SCORE')[0].molecularProfileId,
                 Number(this.volcanoPlotSelectedPercentile.value),
                 0,
                 1,

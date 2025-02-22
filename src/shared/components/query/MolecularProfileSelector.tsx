@@ -11,6 +11,7 @@ import SectionHeader from '../sectionHeader/SectionHeader';
 import { getServerConfig } from 'config/config';
 import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
 import { allowExpressionCrossStudy } from 'shared/lib/allowExpressionCrossStudy';
+import { isZScoreCalculatableProfile } from 'shared/model/MolecularProfileUtils';
 
 @observer
 export default class MolecularProfileSelector extends QueryStoreComponent<
@@ -56,7 +57,11 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
                         this.renderGroup('GENESET_SCORE', 'GSVA scores')}
 
                     {allowExpression &&
-                        this.renderGroup('MRNA_EXPRESSION', 'mRNA Expression')}
+                        this.renderGroup(
+                            'MRNA_EXPRESSION',
+                            'mRNA Expression',
+                            true
+                        )}
 
                     {this.renderGroup('METHYLATION', 'DNA Methylation')}
                     {this.renderGroup('METHYLATION_BINARY', 'DNA Methylation')}
@@ -64,7 +69,8 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
                     {allowProteinLevel &&
                         this.renderGroup(
                             'PROTEIN_LEVEL',
-                            'Protein/phosphoprotein level'
+                            'Protein/phosphoprotein level',
+                            true
                         )}
 
                     {!!(
@@ -131,10 +137,13 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
 
     renderGroup(
         molecularAlterationType: MolecularProfile['molecularAlterationType'],
-        groupLabel: string
+        groupLabel: string,
+        includeCalculableZScoreProfiles: boolean = false
     ) {
-        let profiles = this.store.getFilteredProfiles(molecularAlterationType);
-        //TODO add more profiles
+        let profiles = this.store.getZScoreProfiles(
+            molecularAlterationType,
+            includeCalculableZScoreProfiles
+        );
 
         const groupedProfiles = _.groupBy(profiles, profile => {
             const profileType = profile.molecularProfileId.replace(
@@ -168,22 +177,28 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
                 />
             );
 
-        let profileToggles = profiles.map(profile => (
-            <this.ProfileToggle
-                key={'profile:' + profile.molecularProfileId}
-                profile={profile}
-                type={profiles.length > 1 ? 'radio' : 'checkbox'}
-                label={
-                    profile.molecularAlterationType === 'STRUCTURAL_VARIANT'
-                        ? groupLabel
-                        : profile.name
-                }
-                checked={this.store.isProfileTypeSelected(
-                    getSuffixOfMolecularProfile(profile)
-                )}
-                isGroupToggle={false}
-            />
-        ));
+        let profileToggles = profiles.map(profile => {
+            let profileToggleLabel =
+                profile.molecularAlterationType === 'STRUCTURAL_VARIANT'
+                    ? groupLabel
+                    : profile.name;
+            if (isZScoreCalculatableProfile(profile)) {
+                profileToggleLabel +=
+                    ' [z-scores will be calculated on the fly]';
+            }
+            return (
+                <this.ProfileToggle
+                    key={'profile:' + profile.molecularProfileId}
+                    profile={profile}
+                    type={profiles.length > 1 ? 'radio' : 'checkbox'}
+                    label={profileToggleLabel}
+                    checked={this.store.isProfileTypeSelected(
+                        getSuffixOfMolecularProfile(profile)
+                    )}
+                    isGroupToggle={false}
+                />
+            );
+        });
 
         if (profiles.length == 1) output.push(...profileToggles);
         else
