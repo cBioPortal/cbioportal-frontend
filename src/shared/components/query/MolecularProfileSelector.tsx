@@ -12,6 +12,7 @@ import { getServerConfig } from 'config/config';
 import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
 import { allowExpressionCrossStudy } from 'shared/lib/allowExpressionCrossStudy';
 import { isZScoreCalculatableProfile } from 'shared/model/MolecularProfileUtils';
+import { groupHeader } from './quickSearch/styles.module.scss';
 
 @observer
 export default class MolecularProfileSelector extends QueryStoreComponent<
@@ -211,6 +212,36 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
                 </div>
             );
 
+        const populationGroupOptions = () =>
+            this.store.groups.result
+                .map(group => {
+                    const numberOfSamples = group.data.studies.reduce(
+                        (sampleCount, entry) =>
+                            sampleCount + entry.samples.length,
+                        0
+                    );
+                    return { numberOfSamples, group };
+                })
+                .filter(groupHolder => {
+                    return groupHolder.numberOfSamples > 2;
+                })
+                .map(groupHolder => {
+                    return (
+                        <option value={groupHolder.group.id}>
+                            using '{groupHolder.group.data.name}' group (
+                            {groupHolder.numberOfSamples} samples)
+                        </option>
+                    );
+                });
+
+        const zScoreCalculatableProfileIsSelected = () =>
+            profiles.find(
+                profile =>
+                    isZScoreCalculatableProfile(profile) &&
+                    this.store.isProfileTypeSelected(
+                        getSuffixOfMolecularProfile(profile)
+                    )
+            );
         if (isGroupSelected && molecularAlterationType == 'MRNA_EXPRESSION') {
             output.push(
                 <div key={output.length} className={styles.zScore}>
@@ -229,6 +260,25 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
                     />
                 </div>
             );
+
+            if (zScoreCalculatableProfileIsSelected()) {
+                output.push(
+                    <div key={output.length} className={styles.group}>
+                        Calculate the population standard deviation using
+                        <select
+                            onChange={(
+                                event: React.SyntheticEvent<HTMLSelectElement>
+                            ) =>
+                                (this.store.mrnaPopulationGroup =
+                                    event.currentTarget.value)
+                            }
+                        >
+                            <option>the selected samples</option>
+                            {populationGroupOptions()}
+                        </select>
+                    </div>
+                );
+            }
         }
 
         if (isGroupSelected && molecularAlterationType == 'PROTEIN_LEVEL') {
@@ -249,6 +299,24 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
                     />
                 </div>
             );
+            if (zScoreCalculatableProfileIsSelected()) {
+                output.push(
+                    <div key={output.length} className={styles.group}>
+                        Calculate the population standard deviation using
+                        <select
+                            onChange={(
+                                event: React.SyntheticEvent<HTMLSelectElement>
+                            ) =>
+                                (this.store.rppaPopulationGroup =
+                                    event.currentTarget.value)
+                            }
+                        >
+                            <option>the selected samples</option>
+                            {populationGroupOptions()}
+                        </select>
+                    </div>
+                );
+            }
         }
 
         return output;

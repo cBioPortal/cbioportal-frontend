@@ -77,6 +77,7 @@ import {
     isZScoreCalculatableProfile,
     isZScoreProfile,
 } from 'shared/model/MolecularProfileUtils';
+import comparisonClient from 'shared/api/comparisonGroupClientInstance';
 
 // interface for communicating
 export type CancerStudyQueryUrlParams = {
@@ -123,6 +124,8 @@ export function normalizeQuery(geneQuery: string) {
 type GenesetId = string;
 
 export class QueryStore {
+    mrnaPopulationGroup: string;
+    rppaPopulationGroup: string;
     constructor(urlWithInitialParams?: string) {
         getBrowserWindow().activeQueryStore = this;
 
@@ -1208,6 +1211,14 @@ export class QueryStore {
         invoke: () => this.invokeGenesLater(this.geneIds),
         default: { found: [], suggestions: [] },
     });
+
+    readonly groups = remoteData(
+        () =>
+            this.allSelectedStudyIds.length > 0 && this.appStore.isLoggedIn
+                ? comparisonClient.getGroupsForStudies(this.allSelectedStudyIds)
+                : Promise.resolve([]),
+        []
+    );
 
     readonly genesets = remoteData({
         invoke: () => this.invokeGenesetsLater(this.genesetIds),
