@@ -11,6 +11,7 @@ import {
     VictoryScatter,
     VictoryLegend,
     VictoryLabel,
+    LineSegment,
 } from 'victory';
 import { IBaseScatterPlotData } from './ScatterPlot';
 import {
@@ -101,6 +102,7 @@ export type BoxModel = {
     q3: number;
     x?: number;
     y?: number;
+    sortedVector: number[];
 };
 
 const RIGHT_GUTTER = 130; // room for legend
@@ -114,6 +116,42 @@ const BOTTOM_LEGEND_PADDING = 15;
 const HORIZONTAL_OFFSET = 8;
 const VERTICAL_OFFSET = 17;
 const UTILITIES_MENU_HEIGHT = 20;
+
+/*
+    This component exists to provide a mouseover target for tooltips
+    when the box plot is vertically compressed
+ */
+const CustomMedianComponent = (props: any) => {
+    const { x1, x2, y1, y2 } = props;
+
+    // we want the target for tooltips to extend from the max value to min value
+    // irrespective of boxplot outlier status.
+    // i.e. whatever is that ACTUAL max and min
+    const end = props.scale.y(props.datum.sortedVector[0]);
+    const start = props.scale.y(
+        props.datum.sortedVector[props.datum.sortedVector.length - 1]
+    );
+    const height = end - start;
+
+    return (
+        <g>
+            <LineSegment {...props} />
+            <rect
+                x={Math.min(x1, x2)}
+                y={start}
+                width={Math.abs(x2 - x1)}
+                height={height}
+                fill={'transparent'}
+                onMouseEnter={() => {
+                    props.onMouseEnter(props);
+                }}
+                onMouseLeave={() => {
+                    props.onMouseLeave(props);
+                }}
+            />
+        </g>
+    );
+};
 
 const BOX_STYLES = {
     min: { stroke: '#999999' },
@@ -783,6 +821,8 @@ export default class BoxScatterPlot<
 
     @autobind
     private getChart() {
+        const self = this;
+
         return (
             <div
                 ref={this.containerRef}
@@ -833,6 +873,16 @@ export default class BoxScatterPlot<
                                 data={this.boxPlotData}
                                 horizontal={this.props.horizontal}
                                 events={this.boxPlotEvents}
+                                medianComponent={
+                                    <CustomMedianComponent
+                                        onMouseEnter={(model: any) => {
+                                            self.boxPlotTooltipModel = model;
+                                        }}
+                                        onMouseLeave={(model: any) => {
+                                            self.boxPlotTooltipModel = null;
+                                        }}
+                                    />
+                                }
                             />
                             {this.scatterPlotData.map(dataWithAppearance => (
                                 <VictoryScatter
@@ -964,6 +1014,7 @@ export function toBoxPlotData<D extends IBaseBoxScatterPlotPoint>(
     // when limit values are shown in the legend, exclude
     // these points from influencing the shape of the box plots
     let boxData = _.clone(data);
+
     if (excludeLimitValuesFromBoxPlot) {
         _.each(boxData, (o: IBoxScatterPlotData<D>) => {
             o.data = _.filter(
@@ -1002,6 +1053,7 @@ export function toBoxPlotData<D extends IBaseBoxScatterPlotPoint>(
                 median: model.median,
                 q1: model.q1,
                 q3: model.q3,
+                sortedVector: model.sortedVector,
             };
             calcBoxSizes && calcBoxSizes(box, i);
             return box;
