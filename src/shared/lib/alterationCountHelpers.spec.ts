@@ -397,7 +397,7 @@ describe('alterationCountHelpers', () => {
             assert.deepEqual(ret, expectedResult);
         });
 
-        it('samples with multiple mutations are only counted as "multiple"; alteration total reflects ALL alterations; does not double count multiple alterations to same sample in alteredSampleCount', () => {
+        it('samples with multiple mutations are only counted as "multiple"; alteration total reflects ALL alterations; does not double count multiple alterations to same sample in alteredCount', () => {
             alterationsBySampleId['VTA0NDpjaG9sX251c18yMDEy'] = [
                 {
                     uniqueSampleKey: 'VTA0NDpjaG9sX251c18yMDEy',
