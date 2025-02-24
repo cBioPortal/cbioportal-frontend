@@ -116,7 +116,8 @@ export default class CancerSummaryContainer extends React.Component<
             this.groupAlterationsBy,
             this.props.store.selectedMolecularProfileIdsByAlterationType
                 .result!,
-            this.props.store.coverageInformation.result!
+            this.props.store.coverageInformation.result!,
+            this.countAlterationsBy
         );
 
         const geneTabs = _.map(this.props.store.genes.result!, (gene: Gene) => {
@@ -173,7 +174,8 @@ export default class CancerSummaryContainer extends React.Component<
                 this.groupAlterationsBy,
                 this.props.store.selectedMolecularProfileIdsByAlterationType
                     .result!,
-                this.props.store.coverageInformation.result!
+                this.props.store.coverageInformation.result!,
+                this.countAlterationsBy
             );
             geneTabs.unshift(
                 <MSKTab

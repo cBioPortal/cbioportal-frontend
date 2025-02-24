@@ -2,7 +2,6 @@ import {
     calculatePercentage,
     CancerSummaryContent,
     IAlterationData,
-    IPatientAlterationData,
     OrderedAlterationLabelMap,
 } from './CancerSummaryContent';
 import { assert } from 'chai';
@@ -13,13 +12,13 @@ import sinon from 'sinon';
 
 describe('CancerSummaryContent', () => {
     let groupedAlterationData: {
-        [groupType: string]: IAlterationData & IPatientAlterationData;
+        [groupType: string]: IAlterationData;
     };
 
     beforeEach(() => {
         groupedAlterationData = {
             'Colon Adenocarcinoma': {
-                profiledSampleTotal: 94,
+                profiledTotal: 94,
                 alterationTotal: 10,
                 alterationTypeCounts: {
                     mutated: 10,
@@ -34,46 +33,16 @@ describe('CancerSummaryContent', () => {
                     protExpressionLow: 0,
                     multiple: 0,
                 },
-                alteredSampleCount: 10,
+                alteredCount: 10,
                 parentCancerType: 'Colorectal Cancer',
-                profiledSamplesCounts: {
+                profiledCounts: {
                     mutation: 10,
                     cna: 0,
                     expression: 0,
                     protein: 0,
                     structuralVariant: 0,
                 },
-                notProfiledSamplesCounts: {
-                    mutation: 0,
-                    cna: 0,
-                    expression: 0,
-                    protein: 0,
-                    structuralVariant: 0,
-                },
-                profiledPatientTotal: 94,
-                patientAlterationTotal: 10,
-                patientAlterationTypeCounts: {
-                    mutated: 10,
-                    amp: 0,
-                    homdel: 0,
-                    hetloss: 0,
-                    gain: 0,
-                    structuralVariant: 0,
-                    mrnaExpressionHigh: 0,
-                    mrnaExpressionLow: 0,
-                    protExpressionHigh: 0,
-                    protExpressionLow: 0,
-                    multiple: 0,
-                },
-                alteredPatientCount: 10,
-                profiledPatientsCounts: {
-                    mutation: 10,
-                    cna: 0,
-                    expression: 0,
-                    protein: 0,
-                    structuralVariant: 0,
-                },
-                notProfiledPatientsCounts: {
+                notProfiledCounts: {
                     mutation: 0,
                     cna: 0,
                     expression: 0,
@@ -82,7 +51,7 @@ describe('CancerSummaryContent', () => {
                 },
             },
             'Colorectal Adenocarcinoma': {
-                profiledSampleTotal: 23,
+                profiledTotal: 23,
                 alterationTotal: 1,
                 alterationTypeCounts: {
                     mutated: 1,
@@ -97,46 +66,16 @@ describe('CancerSummaryContent', () => {
                     protExpressionLow: 0,
                     multiple: 0,
                 },
-                alteredSampleCount: 1,
+                alteredCount: 1,
                 parentCancerType: 'Colorectal Cancer',
-                profiledSamplesCounts: {
+                profiledCounts: {
                     mutation: 1,
                     cna: 0,
                     expression: 0,
                     protein: 0,
                     structuralVariant: 0,
                 },
-                notProfiledSamplesCounts: {
-                    mutation: 0,
-                    cna: 0,
-                    expression: 0,
-                    protein: 0,
-                    structuralVariant: 0,
-                },
-                profiledPatientTotal: 23,
-                patientAlterationTotal: 1,
-                patientAlterationTypeCounts: {
-                    mutated: 1,
-                    amp: 0,
-                    homdel: 0,
-                    hetloss: 0,
-                    gain: 0,
-                    structuralVariant: 0,
-                    mrnaExpressionHigh: 0,
-                    mrnaExpressionLow: 0,
-                    protExpressionHigh: 0,
-                    protExpressionLow: 0,
-                    multiple: 0,
-                },
-                alteredPatientCount: 1,
-                profiledPatientsCounts: {
-                    mutation: 1,
-                    cna: 0,
-                    expression: 0,
-                    protein: 0,
-                    structuralVariant: 0,
-                },
-                notProfiledPatientsCounts: {
+                notProfiledCounts: {
                     mutation: 0,
                     cna: 0,
                     expression: 0,
@@ -145,7 +84,7 @@ describe('CancerSummaryContent', () => {
                 },
             },
             'Rectal Adenocarcinoma': {
-                profiledSampleTotal: 48,
+                profiledTotal: 48,
                 alterationTotal: 5,
                 alterationTypeCounts: {
                     mutated: 4,
@@ -160,46 +99,16 @@ describe('CancerSummaryContent', () => {
                     protExpressionLow: 0,
                     multiple: 0,
                 },
-                alteredSampleCount: 5,
+                alteredCount: 5,
                 parentCancerType: 'Colorectal Cancer',
-                profiledSamplesCounts: {
+                profiledCounts: {
                     mutation: 5,
                     cna: 1,
                     expression: 0,
                     protein: 0,
                     structuralVariant: 0,
                 },
-                notProfiledSamplesCounts: {
-                    mutation: 0,
-                    cna: 0,
-                    expression: 0,
-                    protein: 0,
-                    structuralVariant: 0,
-                },
-                profiledPatientTotal: 48,
-                patientAlterationTotal: 5,
-                patientAlterationTypeCounts: {
-                    mutated: 4,
-                    amp: 1,
-                    homdel: 0,
-                    hetloss: 0,
-                    gain: 0,
-                    structuralVariant: 0,
-                    mrnaExpressionHigh: 0,
-                    mrnaExpressionLow: 0,
-                    protExpressionHigh: 0,
-                    protExpressionLow: 0,
-                    multiple: 0,
-                },
-                alteredPatientCount: 5,
-                profiledPatientsCounts: {
-                    mutation: 5,
-                    cna: 1,
-                    expression: 0,
-                    protein: 0,
-                    structuralVariant: 0,
-                },
-                notProfiledPatientsCounts: {
+                notProfiledCounts: {
                     mutation: 0,
                     cna: 0,
                     expression: 0,
