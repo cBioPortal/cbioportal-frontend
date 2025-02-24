@@ -428,8 +428,8 @@ describe('CancerSummaryContent', () => {
                 yAxis: 'abs-count',
                 countsData: {
                     test: {
-                        alteredSampleCount: 12,
-                        profiledSampleTotal: 50,
+                        alteredCount: 12,
+                        profiledTotal: 50,
                     },
                 },
             };
