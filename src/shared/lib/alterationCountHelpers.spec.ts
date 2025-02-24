@@ -289,7 +289,7 @@ describe('alterationCountHelpers', () => {
 
             const expectedResult = {
                 'Hepatobiliary Cancer': {
-                    profiledSampleTotal: 3,
+                    profiledTotal: 3,
                     alterationTotal: 2,
                     alterationTypeCounts: {
                         mutated: 2,
@@ -304,16 +304,16 @@ describe('alterationCountHelpers', () => {
                         protExpressionLow: 0,
                         multiple: 0,
                     },
-                    alteredSampleCount: 2,
+                    alteredCount: 2,
                     parentCancerType: 'Hepatobiliary Cancer',
-                    profiledSamplesCounts: {
+                    profiledCounts: {
                         mutation: 3,
                         cna: 0,
                         expression: 0,
                         protein: 0,
                         structuralVariant: 0,
                     },
-                    notProfiledSamplesCounts: {
+                    notProfiledCounts: {
                         mutation: 5,
                         cna: 0,
                         expression: 0,
@@ -360,7 +360,7 @@ describe('alterationCountHelpers', () => {
 
             const expectedResult = {
                 'Hepatobiliary Cancer': {
-                    profiledSampleTotal: 3,
+                    profiledTotal: 3,
                     alterationTotal: 5,
                     alterationTypeCounts: {
                         mutated: 2,
@@ -375,16 +375,16 @@ describe('alterationCountHelpers', () => {
                         protExpressionLow: 0,
                         multiple: 0,
                     },
-                    alteredSampleCount: 5,
+                    alteredCount: 5,
                     parentCancerType: 'Hepatobiliary Cancer',
-                    profiledSamplesCounts: {
+                    profiledCounts: {
                         mutation: 3,
                         cna: 0,
                         expression: 0,
                         protein: 0,
                         structuralVariant: 0,
                     },
-                    notProfiledSamplesCounts: {
+                    notProfiledCounts: {
                         mutation: 5,
                         cna: 0,
                         expression: 0,
@@ -418,7 +418,7 @@ describe('alterationCountHelpers', () => {
 
             const expectedResult = {
                 'Hepatobiliary Cancer': {
-                    profiledSampleTotal: 3,
+                    profiledTotal: 3,
                     alterationTotal: 4,
                     alterationTypeCounts: {
                         mutated: 2,
@@ -433,16 +433,16 @@ describe('alterationCountHelpers', () => {
                         protExpressionLow: 0,
                         multiple: 1,
                     },
-                    alteredSampleCount: 3,
+                    alteredCount: 3,
                     parentCancerType: 'Hepatobiliary Cancer',
-                    profiledSamplesCounts: {
+                    profiledCounts: {
                         mutation: 3,
                         cna: 0,
                         expression: 0,
                         protein: 0,
                         structuralVariant: 0,
                     },
-                    notProfiledSamplesCounts: {
+                    notProfiledCounts: {
                         mutation: 5,
                         cna: 0,
                         expression: 0,

@@ -2,7 +2,6 @@ import { AlterationTypeConstants } from 'shared/constants';
 import {
     IAlterationCountMap,
     IAlterationData,
-    IPatientAlterationData,
 } from '../../pages/resultsView/cancerSummary/CancerSummaryContent';
 import { Sample, MolecularProfile } from 'cbioportal-ts-api-client';
 import _ from 'lodash';
@@ -20,7 +19,8 @@ export function getAlterationCountsForCancerTypesByGene(
     molecularProfileIdsByAlterationType: {
         [alterationType: string]: MolecularProfile[];
     },
-    coverageInformation: CoverageInformation
+    coverageInformation: CoverageInformation,
+    countByProperty: string
 ) {
     const ret = _.mapValues(
         alterationsByGeneBySampleKey,
@@ -35,38 +35,24 @@ export function getAlterationCountsForCancerTypesByGene(
                 }
             );
 
-            let sampleAlterationCounts = countAlterationOccurences(
-                samplesByCancerType,
-                alterationsBySampleId,
-                molecularProfileIdsByAlterationType,
-                coverageInformation,
-                gene
-            );
-            let patientAlterationCounts = countPatientAlterationOccurences(
-                samplesByCancerType,
-                alterationsBySampleId,
-                molecularProfileIdsByAlterationType,
-                coverageInformation,
-                gene
-            );
+            let alterationCounts =
+                countByProperty === 'sampleCounts'
+                    ? countAlterationOccurences(
+                          samplesByCancerType,
+                          alterationsBySampleId,
+                          molecularProfileIdsByAlterationType,
+                          coverageInformation,
+                          gene
+                      )
+                    : countPatientAlterationOccurences(
+                          samplesByCancerType,
+                          alterationsBySampleId,
+                          molecularProfileIdsByAlterationType,
+                          coverageInformation,
+                          gene
+                      );
 
-            return _.reduce(
-                sampleAlterationCounts,
-                (
-                    acc: {
-                        [x: string]: IAlterationData & IPatientAlterationData;
-                    },
-                    val,
-                    key
-                ) => {
-                    acc[key] = {
-                        ...val,
-                        ...patientAlterationCounts[key],
-                    };
-                    return acc;
-                },
-                {}
-            );
+            return alterationCounts;
         }
     );
     return ret;
@@ -81,7 +67,8 @@ export function getAlterationCountsForCancerTypesForAllGenes(
     molecularProfileIdsByAlterationType: {
         [alterationType: string]: MolecularProfile[];
     },
-    coverageInformation: CoverageInformation
+    coverageInformation: CoverageInformation,
+    countByProperty: string
 ) {
     const samplesByCancerType = _.groupBy(
         samplesExtendedWithClinicalData,
@@ -102,34 +89,21 @@ export function getAlterationCountsForCancerTypesForAllGenes(
         [uniqueSampleKey: string]: ExtendedAlteration[];
     };
 
-    const sampleAlterationCounts = countAlterationOccurences(
-        samplesByCancerType,
-        merged,
-        molecularProfileIdsByAlterationType,
-        coverageInformation
-    );
-    const patientAlterationCounts = countPatientAlterationOccurences(
-        samplesByCancerType,
-        merged,
-        molecularProfileIdsByAlterationType,
-        coverageInformation
-    );
+    const alterationCounts = countByProperty
+        ? countAlterationOccurences(
+              samplesByCancerType,
+              merged,
+              molecularProfileIdsByAlterationType,
+              coverageInformation
+          )
+        : countPatientAlterationOccurences(
+              samplesByCancerType,
+              merged,
+              molecularProfileIdsByAlterationType,
+              coverageInformation
+          );
 
-    return _.reduce(
-        sampleAlterationCounts,
-        (
-            acc: { [x: string]: IAlterationData & IPatientAlterationData },
-            val,
-            key
-        ) => {
-            acc[key] = {
-                ...val,
-                ...patientAlterationCounts[key],
-            };
-            return acc;
-        },
-        {}
-    );
+    return alterationCounts;
 }
 
 /*
@@ -179,13 +153,13 @@ export function countAlterationOccurences(
             };
 
             const ret: IAlterationData = {
-                profiledSampleTotal: 0,
+                profiledTotal: 0,
                 alterationTotal: 0,
                 alterationTypeCounts: counts,
-                alteredSampleCount: 0,
+                alteredCount: 0,
                 parentCancerType: samples[0].cancerType,
-                profiledSamplesCounts: profiledTypeCounts,
-                notProfiledSamplesCounts: notProfiledSamplesCounts,
+                profiledCounts: profiledTypeCounts,
+                notProfiledCounts: notProfiledSamplesCounts,
             };
 
             // for each sample in cancer type
@@ -244,7 +218,7 @@ export function countAlterationOccurences(
                 );
 
                 if (isSampleProfiled) {
-                    ret.profiledSampleTotal += 1;
+                    ret.profiledTotal += 1;
                 }
                 // there are alterations corresponding to that sample
                 if (sample.uniqueSampleKey in alterationsBySampleId) {
@@ -260,9 +234,9 @@ export function countAlterationOccurences(
                     ret.alterationTotal += uniqueAlterations.length;
 
                     // if the sample has at least one alteration, it's altered so
-                    // increment alteredSampleTotal
+                    // increment alteredCount
                     if (uniqueAlterations.length > 0) {
-                        ret.alteredSampleCount += 1;
+                        ret.alteredCount += 1;
                     }
 
                     // if we have multiple alterations, we just register this as "multiple" and do NOT add
@@ -330,7 +304,7 @@ export function countPatientAlterationOccurences(
     },
     coverageInformation: CoverageInformation,
     hugoGeneSymbol?: string
-): { [x: string]: IPatientAlterationData } {
+): { [x: string]: IAlterationData } {
     return _.mapValues(
         groupedSamples,
         (samples: ExtendedSample[], cancerType: string) => {
@@ -364,14 +338,14 @@ export function countPatientAlterationOccurences(
                 structuralVariant: 0,
             };
 
-            const ret: IPatientAlterationData = {
-                profiledPatientTotal: 0,
-                patientAlterationTotal: 0,
-                patientAlterationTypeCounts: counts,
-                alteredPatientCount: 0,
+            const ret: IAlterationData = {
+                profiledTotal: 0,
+                alterationTotal: 0,
+                alterationTypeCounts: counts,
+                alteredCount: 0,
                 parentCancerType: samples[0].cancerType,
-                profiledPatientsCounts: profiledPatientTypeCounts,
-                notProfiledPatientsCounts: notProfiledPatientsCounts,
+                profiledCounts: profiledPatientTypeCounts,
+                notProfiledCounts: notProfiledPatientsCounts,
             };
 
             const samplesByPatientKey = _.groupBy(samples, 'uniquePatientKey');
@@ -467,7 +441,7 @@ export function countPatientAlterationOccurences(
                     });
 
                     if (isPatientProfiled) {
-                        ret.profiledPatientTotal += 1;
+                        ret.profiledTotal += 1;
                     }
 
                     // a patient could have multiple mutations. we only want to count one
@@ -475,11 +449,11 @@ export function countPatientAlterationOccurences(
                         patientAlterations,
                         alteration => alteration.alterationType
                     );
-                    ret.patientAlterationTotal += uniqueAlterations.length;
+                    ret.alterationTotal += uniqueAlterations.length;
 
-                    // if patient has any alteration, increment alteredSampleCount
+                    // if patient has any alteration, increment alteredCount
                     if (uniqueAlterations.length > 0) {
-                        ret.alteredPatientCount += 1;
+                        ret.alteredCount += 1;
                     }
 
                     // if patient has multiple alterations, count them as "multiple"
