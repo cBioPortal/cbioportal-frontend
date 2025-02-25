@@ -62,6 +62,7 @@ interface CancerSummaryChartProps {
     countsByGroup: { [groupName: string]: IAlterationData };
     xLabels: string[];
     xAxisString: string;
+    countAlterationsBy: string;
     representedAlterations: { [alterationType: string]: boolean };
     isPercentage: boolean;
     showLinks: boolean;
@@ -109,6 +110,43 @@ export function mergeAlterationDataAcrossAlterationTypes(
             alterationType: 'whatever',
         };
     });
+}
+
+export function formatGeneAlteredText(
+    useSampleCounts: boolean,
+    tooltipModel: ITooltipModel
+) {
+    const alteredPercentage = percentageRounder(
+        tooltipModel.alterationData.alteredCount /
+            tooltipModel.alterationData.profiledTotal
+    );
+
+    const profiledTotal = tooltipModel.alterationData.profiledTotal;
+
+    const casesOrSamples = useSampleCounts ? 'samples' : 'cases';
+
+    return `Gene altered in ${alteredPercentage}% of ${profiledTotal} ${casesOrSamples}`;
+}
+
+export function formatFrequencyText(
+    useSampleCounts: boolean,
+    tooltipModel: ITooltipModel,
+    alterationType: string
+) {
+    const alterationCount = (tooltipModel!.alterationData
+        .alterationTypeCounts as any)[alterationType];
+    const profiledTotal = tooltipModel!.alterationData.profiledTotal;
+
+    const alteredPercentage = percentageRounder(
+        alterationCount / profiledTotal
+    );
+
+    const casesOrSamples = useSampleCounts ? 'sample' : 'case';
+
+    return `${alteredPercentage}% (${alterationCount} ${pluralize(
+        casesOrSamples,
+        alterationCount
+    )})`;
 }
 
 @observer
@@ -248,6 +286,8 @@ export class CancerSummaryChart extends React.Component<
         if (!this.barPlotTooltipModel) {
             return null;
         } else {
+            const useSampleCounts =
+                this.props.countAlterationsBy === 'sampleCounts';
             const tooltipModel = this.barPlotTooltipModel;
             const maxWidth = 400;
             let tooltipPlacement =
@@ -303,15 +343,10 @@ export class CancerSummaryChart extends React.Component<
                             </Else>
                         </If>
                         <p>
-                            Gene altered in{' '}
-                            {percentageRounder(
-                                tooltipModel.alterationData.alteredSampleCount /
-                                    tooltipModel.alterationData
-                                        .profiledSampleTotal
+                            {formatGeneAlteredText(
+                                useSampleCounts,
+                                tooltipModel
                             )}
-                            % of{' '}
-                            {tooltipModel.alterationData.profiledSampleTotal}{' '}
-                            cases
                         </p>
                         <table className="table table-striped">
                             <thead>
@@ -333,31 +368,15 @@ export class CancerSummaryChart extends React.Component<
                                                 key
                                             ] > 0
                                         ) {
-                                            const alterationCount = (tooltipModel!
-                                                .alterationData
-                                                .alterationTypeCounts as any)[
-                                                key
-                                            ];
                                             memo.push(
                                                 <tr>
                                                     <td>{name}</td>
                                                     <td>
-                                                        {percentageRounder(
-                                                            (tooltipModel!
-                                                                .alterationData
-                                                                .alterationTypeCounts as any)[
-                                                                key
-                                                            ] /
-                                                                tooltipModel!
-                                                                    .alterationData
-                                                                    .profiledSampleTotal
+                                                        {formatFrequencyText(
+                                                            useSampleCounts,
+                                                            tooltipModel,
+                                                            key
                                                         )}
-                                                        % ({alterationCount}{' '}
-                                                        {pluralize(
-                                                            'case',
-                                                            alterationCount
-                                                        )}
-                                                        )
                                                     </td>
                                                 </tr>
                                             );

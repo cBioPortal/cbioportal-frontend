@@ -165,7 +165,7 @@ describe('CancerSummaryChart', () => {
             ],
             countsByGroup: {
                 'Lung Adenocarcinoma': {
-                    profiledSampleTotal: 660,
+                    profiledTotal: 660,
                     alterationTotal: 547,
                     alterationTypeCounts: {
                         mutated: 280,
@@ -180,11 +180,11 @@ describe('CancerSummaryChart', () => {
                         protExpressionLow: 0,
                         multiple: 87,
                     },
-                    alteredSampleCount: 460,
+                    alteredCount: 460,
                     parentCancerType: 'Non-Small Cell Lung Cancer',
                 },
                 'Lung Squamous Cell Carcinoma': {
-                    profiledSampleTotal: 484,
+                    profiledTotal: 484,
                     alterationTotal: 574,
                     alterationTypeCounts: {
                         mutated: 292,
@@ -199,7 +199,7 @@ describe('CancerSummaryChart', () => {
                         protExpressionLow: 0,
                         multiple: 131,
                     },
-                    alteredSampleCount: 443,
+                    alteredCount: 443,
                     parentCancerType: 'Non-Small Cell Lung Cancer',
                 },
             },
