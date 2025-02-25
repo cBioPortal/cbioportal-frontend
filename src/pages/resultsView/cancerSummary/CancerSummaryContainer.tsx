@@ -88,7 +88,7 @@ export default class CancerSummaryContainer extends React.Component<
     }
 
     public get countAlterationsBy(): string {
-        return this.countAlterationsBy_userSelection ?? 'sampleCounts';
+        return this.countAlterationsBy_userSelection ?? 'patientCounts';
     }
 
     // this is used to map study id to study name
