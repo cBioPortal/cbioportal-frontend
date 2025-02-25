@@ -121,54 +121,6 @@ export default class CosmicColumnFormatter {
             cosmicData
         );
 
-        const columns: Column<CosmicMutation>[] = [
-            {
-                name: 'COSMIC ID',
-                render: (d: CosmicMutation) =>
-                    d.proteinChange === data[0].proteinChange ? (
-                        <b>
-                            <a
-                                href={`http://cancer.sanger.ac.uk/cosmic/mutation/overview?id=${d.cosmicMutationId}`}
-                                target="_blank"
-                            >
-                                {d.cosmicMutationId}
-                            </a>
-                        </b>
-                    ) : (
-                        <span>
-                            <a
-                                href={`http://cancer.sanger.ac.uk/cosmic/mutation/overview?id=${d.cosmicMutationId}`}
-                                target="_blank"
-                            >
-                                {d.cosmicMutationId}
-                            </a>
-                        </span>
-                    ),
-                sortBy: (d: CosmicMutation) => d.cosmicMutationId,
-            },
-            {
-                name: 'Protein Change',
-                render: (d: CosmicMutation) =>
-                    d.proteinChange === data[0].proteinChange ? (
-                        <b>{d.proteinChange}</b>
-                    ) : (
-                        <span>{d.proteinChange}</span>
-                    ),
-                sortBy: (d: CosmicMutation) =>
-                    calcProteinChangeSortValue(d.proteinChange),
-            },
-            {
-                name: 'Occurrence',
-                render: (d: CosmicMutation) =>
-                    d.proteinChange === data[0].proteinChange ? (
-                        <b>{d.count}</b>
-                    ) : (
-                        <span>{d.count}</span>
-                    ),
-                sortBy: (d: CosmicMutation) => d.count,
-            },
-        ];
-
         let value: number = -1;
         let exactProteinChangeValue: number;
         let display: string = '';
