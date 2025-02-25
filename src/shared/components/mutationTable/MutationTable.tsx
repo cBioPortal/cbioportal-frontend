@@ -123,6 +123,7 @@ export interface IMutationTableProps {
         IMyVariantInfoIndex | undefined
     >;
     cosmicData?: ICosmicData;
+    lastUpdatedCosmicText?: string;
     oncoKbData?: RemoteData<IOncoKbData | Error | undefined>;
     oncoKbDataForCancerType?: RemoteData<IOncoKbData | Error | undefined>;
     oncoKbDataForUnknownPrimary?: RemoteData<IOncoKbData | Error | undefined>;
@@ -924,7 +925,11 @@ export default class MutationTable<
         this._columns[MutationTableColumnType.COSMIC] = {
             name: MutationTableColumnType.COSMIC,
             render: (d: Mutation[]) =>
-                CosmicColumnFormatter.renderFunction(d, this.props.cosmicData),
+                CosmicColumnFormatter.renderFunction(
+                    d,
+                    this.props.cosmicData,
+                    this.props.lastUpdatedCosmicText
+                ),
             sortBy: (d: Mutation[]) =>
                 CosmicColumnFormatter.getSortValue(d, this.props.cosmicData),
             download: (d: Mutation[]) =>

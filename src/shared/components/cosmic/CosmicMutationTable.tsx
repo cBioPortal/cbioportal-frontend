@@ -10,6 +10,7 @@ import {
 // To avoid duplication, it would be nice here to have an extendable interface for LazyMobXTableProps
 export interface ICosmicTableProps {
     data: CosmicMutation[];
+    proteinChange: string;
     columns?: Array<Column<CosmicMutation>>;
     initialSortColumn?: string;
     initialSortDirection?: 'asc' | 'desc';
@@ -28,36 +29,6 @@ export default class CosmicMutationTable extends React.Component<
 > {
     public static defaultProps = {
         data: [],
-        columns: [
-            {
-                name: 'COSMIC ID',
-                order: 1.0,
-                render: (d: CosmicMutation) => (
-                    <span>
-                        <a
-                            href={`http://cancer.sanger.ac.uk/cosmic/mutation/overview?id=${d.cosmicMutationId}`}
-                            target="_blank"
-                        >
-                            {d.cosmicMutationId}
-                        </a>
-                    </span>
-                ),
-                sortBy: (d: CosmicMutation) => d.cosmicMutationId,
-            },
-            {
-                name: 'Protein Change',
-                order: 2.0,
-                render: (d: CosmicMutation) => <span>{d.proteinChange}</span>,
-                sortBy: (d: CosmicMutation) =>
-                    calcProteinChangeSortValue(d.proteinChange),
-            },
-            {
-                name: 'Occurrence',
-                order: 3.0,
-                render: (d: CosmicMutation) => <span>{d.count}</span>,
-                sortBy: (d: CosmicMutation) => d.count,
-            },
-        ],
         initialSortColumn: 'Occurrence',
         initialSortDirection: 'desc',
         initialItemsPerPage: 10,
@@ -68,10 +39,61 @@ export default class CosmicMutationTable extends React.Component<
         this.state = {};
     }
 
+    get columns() {
+        return (
+            this.props.columns || [
+                {
+                    name: 'COSMIC ID',
+                    render: (d: CosmicMutation) =>
+                        d.proteinChange === this.props.proteinChange ? (
+                            <b>
+                                <a
+                                    href={`http://cancer.sanger.ac.uk/cosmic/mutation/overview?id=${d.cosmicMutationId}`}
+                                    target="_blank"
+                                >
+                                    {d.cosmicMutationId}
+                                </a>
+                            </b>
+                        ) : (
+                            <span>
+                                <a
+                                    href={`http://cancer.sanger.ac.uk/cosmic/mutation/overview?id=${d.cosmicMutationId}`}
+                                    target="_blank"
+                                >
+                                    {d.cosmicMutationId}
+                                </a>
+                            </span>
+                        ),
+                    sortBy: (d: CosmicMutation) => d.cosmicMutationId,
+                },
+                {
+                    name: 'Protein Change',
+                    render: (d: CosmicMutation) =>
+                        d.proteinChange === this.props.proteinChange ? (
+                            <b>{d.proteinChange}</b>
+                        ) : (
+                            <span>{d.proteinChange}</span>
+                        ),
+                    sortBy: (d: CosmicMutation) =>
+                        calcProteinChangeSortValue(d.proteinChange),
+                },
+                {
+                    name: 'Occurrence',
+                    render: (d: CosmicMutation) =>
+                        d.proteinChange === this.props.proteinChange ? (
+                            <b>{d.count}</b>
+                        ) : (
+                            <span>{d.count}</span>
+                        ),
+                    sortBy: (d: CosmicMutation) => d.count,
+                },
+            ]
+        );
+    }
+
     public render() {
         const {
             data,
-            columns,
             initialSortColumn,
             initialSortDirection,
             initialItemsPerPage,
@@ -86,9 +108,7 @@ export default class CosmicMutationTable extends React.Component<
             <div className="cbioportal-frontend">
                 <CosmicTable
                     data={data}
-                    columns={
-                        columns || CosmicMutationTable.defaultProps.columns
-                    }
+                    columns={this.columns}
                     initialSortColumn={initialSortColumn}
                     initialSortDirection={initialSortDirection}
                     initialItemsPerPage={initialItemsPerPage}
