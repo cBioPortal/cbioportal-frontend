@@ -1675,11 +1675,10 @@ export class QueryStore {
         molecularAlterationType: MolecularProfile['molecularAlterationType'],
         includeCalculableZScoreProfiles: boolean = false
     ) {
-        //TODO we might need to consider profile.showProfileInAnalysisTab as well if we want to play safe
         return this.molecularProfilesInSelectedStudies.result.filter(
             profile =>
                 profile.molecularAlterationType == molecularAlterationType &&
-                (isZScoreProfile(profile) ||
+                (profile.showProfileInAnalysisTab ||
                     (includeCalculableZScoreProfiles &&
                         isZScoreCalculatableProfile(profile)))
         );
