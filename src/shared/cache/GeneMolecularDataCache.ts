@@ -55,6 +55,7 @@ async function fetch(
         };
     }
     for (const queryResult of results) {
+        //TODO convert to z-scores here?
         for (const datum of queryResult) {
             ret[queryToKey(datum)].data[0].push(datum);
         }

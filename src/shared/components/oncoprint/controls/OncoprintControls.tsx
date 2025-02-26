@@ -43,6 +43,9 @@ import {
     ClinicalTrackConfigMap,
 } from 'shared/components/oncoprint/Oncoprint';
 import { getServerConfig } from 'config/config';
+import { is } from 'raphael';
+import { isZScoreCalculatableProfile } from 'shared/model/MolecularProfileUtils';
+import { Group } from 'shared/api/session-service/sessionServiceModels';
 
 export interface IOncoprintControlsHandlers
     extends IDriverAnnotationControlsHandlers {
@@ -92,6 +95,7 @@ export interface IOncoprintControlsHandlers
     onSetHorzZoom: (z: number) => void;
     onClickZoomIn: () => void;
     onClickZoomOut: () => void;
+    onTrackPopulationGroupChange?: (value: string) => void;
 }
 export interface IOncoprintControlsState
     extends IDriverAnnotationControlsState {
@@ -135,6 +139,8 @@ export interface IOncoprintControlsState
     columnMode?: OncoprintAnalysisCaseType;
 
     horzZoom: number;
+    groups?: Group[];
+    zScoreCalculatableProfileIsSelected: boolean;
 }
 
 export interface IOncoprintControlsProps {
@@ -475,7 +481,15 @@ export default class OncoprintControls extends React.Component<
             return _.map(
                 this.props.state.heatmapProfilesPromise.result,
                 profile => ({
-                    label: profile.name,
+                    label:
+                        profile.name +
+                        ((profile.molecularAlterationType ==
+                            'MRNA_EXPRESSION' ||
+                            profile.molecularAlterationType ==
+                                'PROTEIN_LEVEL') &&
+                        isZScoreCalculatableProfile(profile)
+                            ? ' [z-scores will be calculated on the fly]'
+                            : ''),
                     value: profile.molecularProfileId,
                     type: profile.molecularAlterationType,
                 })
@@ -520,6 +534,27 @@ export default class OncoprintControls extends React.Component<
         ) {
             return null;
         }
+        const populationGroupOptions = () =>
+            this.props.state.groups
+                ?.map(group => {
+                    const numberOfSamples = group.data.studies.reduce(
+                        (sampleCount, entry) =>
+                            sampleCount + entry.samples.length,
+                        0
+                    );
+                    return { numberOfSamples, group };
+                })
+                .filter(groupHolder => {
+                    return groupHolder.numberOfSamples > 2;
+                })
+                .map(groupHolder => {
+                    return (
+                        <option value={groupHolder.group.id}>
+                            using '{groupHolder.group.data.name}' group (
+                            {groupHolder.numberOfSamples} samples)
+                        </option>
+                    );
+                });
         let menu = <LoadingIndicator isLoading={true} />;
         if (this.props.state.heatmapProfilesPromise.isComplete) {
             if (!this.props.state.heatmapProfilesPromise.result!.length) {
@@ -538,6 +573,29 @@ export default class OncoprintControls extends React.Component<
                             value={this.props.state.selectedHeatmapProfileId}
                             options={this.heatmapProfileOptions}
                         />
+                        {this.props.state
+                            .zScoreCalculatableProfileIsSelected && (
+                            <div>
+                                Calculate the population standard deviation
+                                using
+                                <select
+                                    onChange={(
+                                        event: React.SyntheticEvent<
+                                            HTMLSelectElement
+                                        >
+                                    ) =>
+                                        this.props.handlers
+                                            .onTrackPopulationGroupChange &&
+                                        this.props.handlers.onTrackPopulationGroupChange(
+                                            event.currentTarget.value
+                                        )
+                                    }
+                                >
+                                    <option>the selected samples</option>
+                                    {populationGroupOptions()}
+                                </select>
+                            </div>
+                        )}
                         {showGenesTextArea && [
                             <OQLTextArea
                                 inputGeneQuery={

@@ -181,6 +181,9 @@ export default class Oncoprinter extends React.Component<
                 // do nothing in oncoprinter mode:
                 return false;
             },
+            get zScoreCalculatableProfileIsSelected() {
+                return false;
+            },
         });
     }
 

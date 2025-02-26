@@ -298,6 +298,11 @@ import {
     USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB,
 } from 'react-mutation-mapper';
 import { RGBAColor } from 'oncoprintjs';
+import {
+    isZScoreCalculatableProfile,
+    isZScoreProfile,
+} from 'shared/model/MolecularProfileUtils';
+import { calculateStats } from 'shared/lib/calculation/StatsUtils';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -1358,14 +1363,47 @@ export class ResultsViewPageStore extends AnalysisStore
             this.genes,
             this.selectedMolecularProfiles,
             this.samples,
+            this.molecularProfileIdToMolecularProfile,
         ],
         invoke: () => {
             const sampleKeys = this.sampleKeyToSample.result!;
-            return Promise.resolve(
-                this.molecularData_preload.result.filter(
-                    m => m.uniqueSampleKey in sampleKeys
-                )
+            //TODO is it correct that I filter before calculating the statistics?
+            const filteredMolecularData = this.molecularData_preload.result.filter(
+                m => m.uniqueSampleKey in sampleKeys
             );
+            const zScoreCalculateableData = filteredMolecularData.filter(
+                molecularData =>
+                    isZScoreCalculatableProfile(
+                        this.molecularProfileIdToMolecularProfile.result[
+                            molecularData.molecularProfileId
+                        ]
+                    )
+            );
+            //TODO if the population group is selected we have to pull NumericGeneMolecularData[] for all molecular profiles of that group and caluculate stats for them insead
+            const stats = calculateStats(zScoreCalculateableData);
+            const zscoresMolecularData = filteredMolecularData.map(
+                molecularData => {
+                    if (
+                        isZScoreCalculatableProfile(
+                            this.molecularProfileIdToMolecularProfile.result[
+                                molecularData.molecularProfileId
+                            ]
+                        )
+                    ) {
+                        const statForEntry =
+                            stats[molecularData.molecularProfileId][
+                                molecularData.gene.entrezGeneId
+                            ];
+                        let value =
+                            (molecularData.value - statForEntry.mean) /
+                            statForEntry.stdDev;
+                        value = parseFloat(value.toFixed(2)); //keep 2 digits in the fractional part
+                        return { ...molecularData, value };
+                    }
+                    return molecularData;
+                }
+            );
+            return Promise.resolve(zscoresMolecularData);
         },
     });
 
@@ -4473,7 +4511,8 @@ export class ResultsViewPageStore extends AnalysisStore
                         ((profile.molecularAlterationType === MRNA_EXPRESSION ||
                             profile.molecularAlterationType ===
                                 PROTEIN_LEVEL) &&
-                            profile.showProfileInAnalysisTab) ||
+                            isZScoreProfile(profile)) ||
+                        isZScoreCalculatableProfile(profile) ||
                         profile.molecularAlterationType === METHYLATION
                     );
                 }),
@@ -5434,6 +5473,15 @@ export class ResultsViewPageStore extends AnalysisStore
             this.isHotspotForOncoprint.result instanceof Error
         );
     }
+
+    //FIXME copy-paseted from QueryStore. Deduplicate!
+    readonly groups = remoteData(
+        () =>
+            this.studyIds.result.length > 0 && this.appStore.isLoggedIn
+                ? comparisonClient.getGroupsForStudies(this.studyIds.result)
+                : Promise.resolve([]),
+        []
+    );
 
     readonly oncoKbStructuralVariantAnnotationForOncoprint = remoteData<
         | Error
