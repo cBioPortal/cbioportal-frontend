@@ -38,6 +38,7 @@ export default class AlterationEnrichments extends React.Component<
 
     readonly enrichmentsUI = MakeMobxView({
         await: () => [
+            this.props.store.alterationEnrichmentRowData,
             this.props.store.alterationsEnrichmentData,
             this.props.store.alterationsEnrichmentAnalysisGroups,
             this.props.store.selectedStudyMutationEnrichmentProfileMap,
