@@ -256,17 +256,15 @@ export interface IWaterfallPlotData
         IValue1D,
         IThreshold1D {}
 
-export interface IAxisLogScaleParams {
+export interface IAxisScaleTransformParams {
     label: string;
 
-    // Function for transforming `number` into its log-scale representation
-    // `offset` is a constant added to the value before transformation (used
-    // for transformation of data sets with negative numbers)
-    fLogScale: (x: number, offset?: number) => number;
+    // Function for transforming `number` into different scale (e.g. log scale, z-scores)
+    transform: (x: number) => number;
 
-    // Function for back-transforming `number` transformed with fLogScale
-    // function into its linear-scale representation
-    fInvLogScale: (x: number, offset?: number) => number;
+    // Function for back-transforming `number` transformed with `transform`
+    // function into its original representation if applicable
+    inverseTransform?: (x: number) => number;
 }
 
 export function isStringData(d: IAxisData): d is IStringAxisData {
@@ -1577,7 +1575,7 @@ export function getAxisLabel(
     customAttributeIdToClinicalAttribute: {
         [clinicalAttributeId: string]: ClinicalAttribute;
     },
-    logScaleFunc: IAxisLogScaleParams | undefined
+    logScaleFunc: IAxisScaleTransformParams | undefined
 ) {
     let label = '';
     const profile = molecularProfileIdSuffixToMolecularProfiles[
@@ -2523,15 +2521,15 @@ function generalWaterfallPlotTooltip<D extends IWaterfallPlotData>(
 export function scatterPlotTooltip(
     d: IScatterPlotData,
     studyIdToStudy: { [studyId: string]: CancerStudy },
-    logX?: IAxisLogScaleParams | undefined,
-    logY?: IAxisLogScaleParams | undefined,
+    logX?: IAxisScaleTransformParams | undefined,
+    logY?: IAxisScaleTransformParams | undefined,
     coloringClinicalAttribute?: ClinicalAttribute
 ) {
     return generalScatterPlotTooltip(
         d,
         studyIdToStudy,
-        logX ? d => logX.fLogScale(d.x) : d => d.x,
-        logY ? d => logY.fLogScale(d.y) : d => d.y,
+        logX ? d => logX.transform(d.x) : d => d.x,
+        logY ? d => logY.transform(d.y) : d => d.y,
         'xThresholdType',
         'yThresholdType',
         coloringClinicalAttribute
@@ -2542,7 +2540,7 @@ export function boxPlotTooltip(
     d: IBoxScatterPlotPoint,
     studyIdToStudy: { [studyId: string]: CancerStudy },
     horizontal: boolean,
-    log?: IAxisLogScaleParams | undefined,
+    log?: IAxisScaleTransformParams | undefined,
     coloringClinicalAttribute?: ClinicalAttribute
 ) {
     let horzAxisKey: keyof IBoxScatterPlotPoint = horizontal
@@ -2560,8 +2558,8 @@ export function boxPlotTooltip(
     return generalScatterPlotTooltip(
         d,
         studyIdToStudy,
-        log && horizontal ? d => log.fLogScale(d.value) : d => d[horzAxisKey],
-        log && !horizontal ? d => log.fLogScale(d.value) : d => d[vertAxisKey],
+        log && horizontal ? d => log.transform(d.value) : d => d[horzAxisKey],
+        log && !horizontal ? d => log.transform(d.value) : d => d[vertAxisKey],
         horzThresholdTypeKey,
         vertThresholdTypeKey,
         coloringClinicalAttribute
@@ -3522,7 +3520,7 @@ export function makeClinicalAttributeOptions(
 
 export function makeAxisLogScaleFunction(
     axisSelection: AxisMenuSelection
-): IAxisLogScaleParams | undefined {
+): IAxisScaleTransformParams | undefined {
     if (!axisSelection.logScale) {
         return undefined;
     }
@@ -3564,7 +3562,7 @@ export function makeAxisLogScaleFunction(
         };
     }
 
-    return { label, fLogScale, fInvLogScale };
+    return { label, transform: fLogScale, inverseTransform: fInvLogScale };
 }
 
 export function axisHasNegativeNumbers(axisData: IAxisData): boolean {

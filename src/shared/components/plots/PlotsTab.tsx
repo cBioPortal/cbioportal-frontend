@@ -29,7 +29,7 @@ import {
     getLimitValues,
     getScatterPlotDownloadData,
     getWaterfallPlotDownloadData,
-    IAxisLogScaleParams,
+    IAxisScaleTransformParams,
     IBoxScatterPlotPoint,
     INumberAxisData,
     IPlotSampleData,
@@ -5259,11 +5259,15 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         }
     }
 
-    @computed get horzLogScaleFunction(): IAxisLogScaleParams | undefined {
+    @computed get horzLogScaleFunction():
+        | IAxisScaleTransformParams
+        | undefined {
         return makeAxisLogScaleFunction(this.horzSelection);
     }
 
-    @computed get vertLogScaleFunction(): IAxisLogScaleParams | undefined {
+    @computed get vertLogScaleFunction():
+        | IAxisScaleTransformParams
+        | undefined {
         return makeAxisLogScaleFunction(this.vertSelection);
     }
 

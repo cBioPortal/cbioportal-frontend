@@ -734,10 +734,10 @@ describe('PlotsTabUtils', () => {
                 logScale: true,
             } as any) as AxisMenuSelection;
             const funcs = makeAxisLogScaleFunction(axisMenuSelection);
-            assert.equal(funcs!.fLogScale(2), Math.log2(3));
-            assert.equal(funcs!.fInvLogScale(1), 1);
-            assert.equal(funcs!.fLogScale(8), Math.log2(9));
-            assert.equal(funcs!.fInvLogScale(3), 7);
+            assert.equal(funcs!.transform(2), Math.log2(3));
+            assert.equal(funcs!.inverseTransform!(1), 1);
+            assert.equal(funcs!.transform(8), Math.log2(9));
+            assert.equal(funcs!.inverseTransform!(3), 7);
         });
 
         it('should return log10-transformation function for treatment data', () => {
@@ -747,10 +747,10 @@ describe('PlotsTabUtils', () => {
                 genericAssayDataType: DataTypeConstants.LIMITVALUE,
             } as any) as AxisMenuSelection;
             const funcs = makeAxisLogScaleFunction(axisMenuSelection);
-            assert.equal(funcs!.fLogScale(10), 1);
-            assert.equal(funcs!.fInvLogScale(1), 10);
-            assert.equal(funcs!.fLogScale(100), 2);
-            assert.equal(funcs!.fInvLogScale(2), 100);
+            assert.equal(funcs!.transform(10), 1);
+            assert.equal(funcs!.inverseTransform!(1), 10);
+            assert.equal(funcs!.transform(100), 2);
+            assert.equal(funcs!.inverseTransform!(2), 100);
         });
 
         it('should apply offset before log10-transformation for treatment data', () => {
@@ -760,9 +760,9 @@ describe('PlotsTabUtils', () => {
                 genericAssayDataType: DataTypeConstants.LIMITVALUE,
             } as any) as AxisMenuSelection;
             const funcs = makeAxisLogScaleFunction(axisMenuSelection);
-            assert.equal(funcs!.fLogScale(0, 10), 1);
-            assert.equal(funcs!.fLogScale(90, 10), 2);
-            assert.equal(funcs!.fInvLogScale(11, 10), 10);
+            assert.equal(funcs!.transform(10), 1);
+            assert.equal(funcs!.transform(100), 2);
+            assert.equal(funcs!.inverseTransform!(1), 10);
         });
     });
 
