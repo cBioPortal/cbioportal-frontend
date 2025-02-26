@@ -32,7 +32,7 @@ import {
 } from 'cbioportal-frontend-commons';
 import MobxPromiseCache from '../../../shared/lib/MobxPromiseCache';
 import { getSampleViewUrl, getStudySummaryUrl } from '../../../shared/api/urls';
-import _ from 'lodash';
+import _, { transform } from 'lodash';
 import * as React from 'react';
 import {
     getOncoprintMutationType,
@@ -83,6 +83,8 @@ import { getCategoryOrderByGenericAssayType } from 'shared/lib/GenericAssayUtils
 import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
 import { AnnotatedNumericGeneMolecularData } from 'shared/model/AnnotatedNumericGeneMolecularData';
 import { CustomDriverNumericGeneMolecularData } from 'shared/model/CustomDriverNumericGeneMolecularData';
+import { isZScoreCalculatableProfile } from 'shared/model/MolecularProfileUtils';
+import { calculateStats } from 'shared/lib/calculation/StatsUtils';
 
 export const CLIN_ATTR_DATA_TYPE = 'clinical_attribute';
 export const CUSTOM_ATTR_DATA_TYPE = 'custom_attribute';
@@ -2596,6 +2598,19 @@ export function logScalePossible(
     }
 }
 
+export function zScorePossible(axisSelection: AxisMenuSelection) {
+    //TODO get mol. profile > get datatype > to calculate if zscore calculation is possible
+    console.log(axisSelection);
+    //isZScoreCalculatableProfile(axisSelection.dataType)
+    return (
+        !!axisSelection.dataSourceId &&
+        !/zscore/i.test(axisSelection.dataSourceId) &&
+        (/^m?i?rna.*/i.test(axisSelection.dataSourceId) ||
+            /^protein.*/i.test(axisSelection.dataSourceId) ||
+            /^rppa.*/i.test(axisSelection.dataSourceId))
+    );
+}
+
 export function makeBoxScatterPlotData(
     horzData: IStringAxisData,
     vertData: INumberAxisData,
@@ -3520,11 +3535,7 @@ export function makeClinicalAttributeOptions(
 
 export function makeAxisLogScaleFunction(
     axisSelection: AxisMenuSelection
-): IAxisScaleTransformParams | undefined {
-    if (!axisSelection.logScale) {
-        return undefined;
-    }
-
+): IAxisScaleTransformParams {
     let label; // suffix that will appear in the axis label
     let fLogScale; // function for (log-)transforming a value
     let fInvLogScale; // function for back-transforming a value transformed with fLogScale
@@ -3542,27 +3553,54 @@ export function makeAxisLogScaleFunction(
         // log-transformation parameters for generic assay profile
         // data. Note: log10-transformation is used for generic assays
         label = 'log10';
-        fLogScale = (x: number, offset?: number) => {
-            // for log transformation one should be able to handle negative values;
-            // this is done by pre-application of a externally provided offset.
-            if (!offset) {
-                offset = 0;
-            }
-            if (x + offset === 0) {
+        fLogScale = (x: number) => {
+            if (x === 0) {
                 // 0 cannot be log-transformed, return 0 when input is 0
                 return 0;
             }
-            return Math.log10(x + offset);
+            return Math.log10(x);
         };
-        fInvLogScale = (x: number, offset?: number) => {
-            if (!offset) {
-                offset = 0;
-            }
-            return Math.pow(10, x - offset);
+        fInvLogScale = (x: number) => {
+            return Math.pow(10, x);
         };
     }
 
     return { label, transform: fLogScale, inverseTransform: fInvLogScale };
+}
+
+export function makeAxisZScoreFunction(
+    axisSelection: AxisMenuSelection
+): IAxisScaleTransformParams {
+    return {
+        label: 'z-score',
+        transform: (x: number) =>
+            axisSelection.stats
+                ? (x - axisSelection.stats.mean) / axisSelection.stats.stdDev
+                : NaN,
+    };
+}
+
+export function makeAxisScaleTransformParams(
+    axisSelection: AxisMenuSelection
+): IAxisScaleTransformParams | undefined {
+    let logScaleResult: IAxisScaleTransformParams | undefined;
+    if (axisSelection.logScale) {
+        logScaleResult = makeAxisLogScaleFunction(axisSelection);
+    }
+    if (axisSelection.zScore && axisSelection.stats) {
+        const zScoreResult = makeAxisZScoreFunction(axisSelection);
+        if (logScaleResult === undefined) {
+            return zScoreResult;
+        }
+        return {
+            label: 'z-score(' + logScaleResult.label + ')',
+            transform: (x: number) =>
+                logScaleResult
+                    ? zScoreResult.transform(logScaleResult.transform(x))
+                    : zScoreResult.transform(x),
+        };
+    }
+    return logScaleResult;
 }
 
 export function axisHasNegativeNumbers(axisData: IAxisData): boolean {

@@ -29,7 +29,7 @@ import {
     CoverageInformationForCase,
 } from 'shared/lib/GenePanelUtils';
 import {
-    makeAxisLogScaleFunction,
+    makeAxisScaleTransformParams,
     IAxisData,
     axisHasNegativeNumbers,
 } from './PlotsTabUtils';
@@ -727,13 +727,13 @@ describe('PlotsTabUtils', () => {
         });
     });
 
-    describe('makeAxisLogScaleFunction', () => {
+    describe('makeAxisScaleTransformParams', () => {
         it('should return log2(val+1)-transformation function for non treatment data', () => {
             const axisMenuSelection = ({
                 dataType: AlterationTypeConstants.MRNA_EXPRESSION,
                 logScale: true,
             } as any) as AxisMenuSelection;
-            const funcs = makeAxisLogScaleFunction(axisMenuSelection);
+            const funcs = makeAxisScaleTransformParams(axisMenuSelection);
             assert.equal(funcs!.transform(2), Math.log2(3));
             assert.equal(funcs!.inverseTransform!(1), 1);
             assert.equal(funcs!.transform(8), Math.log2(9));
@@ -746,7 +746,7 @@ describe('PlotsTabUtils', () => {
                 logScale: true,
                 genericAssayDataType: DataTypeConstants.LIMITVALUE,
             } as any) as AxisMenuSelection;
-            const funcs = makeAxisLogScaleFunction(axisMenuSelection);
+            const funcs = makeAxisScaleTransformParams(axisMenuSelection);
             assert.equal(funcs!.transform(10), 1);
             assert.equal(funcs!.inverseTransform!(1), 10);
             assert.equal(funcs!.transform(100), 2);
@@ -759,7 +759,7 @@ describe('PlotsTabUtils', () => {
                 logScale: true,
                 genericAssayDataType: DataTypeConstants.LIMITVALUE,
             } as any) as AxisMenuSelection;
-            const funcs = makeAxisLogScaleFunction(axisMenuSelection);
+            const funcs = makeAxisScaleTransformParams(axisMenuSelection);
             assert.equal(funcs!.transform(10), 1);
             assert.equal(funcs!.transform(100), 2);
             assert.equal(funcs!.inverseTransform!(1), 10);
