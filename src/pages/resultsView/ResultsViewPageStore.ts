@@ -1392,7 +1392,7 @@ export class ResultsViewPageStore extends AnalysisStore
                     ) {
                         const statForEntry =
                             stats[molecularData.molecularProfileId][
-                                molecularData.gene.entrezGeneId
+                                molecularData.entrezGeneId
                             ];
                         let value =
                             (molecularData.value - statForEntry.mean) /
@@ -5618,7 +5618,8 @@ export class ResultsViewPageStore extends AnalysisStore
         invoke: () => {
             return Promise.resolve(
                 new GeneMolecularDataCache(
-                    this.molecularProfileIdToDataQueryFilter.result
+                    this.molecularProfileIdToDataQueryFilter.result,
+                    this.molecularProfileIdToMolecularProfile.result
                 )
             );
         },

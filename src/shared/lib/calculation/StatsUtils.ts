@@ -4,16 +4,15 @@ export function calculateStats(
     data: NumericGeneMolecularData[]
 ): Record<string, Record<number, { mean: number; stdDev: number }>> {
     const result: Record<string, Record<string, number[]>> = {};
-
     // Group values by molecularProfileId and gene
-    data.forEach(({ molecularProfileId, gene, value }) => {
+    data.forEach(({ molecularProfileId, entrezGeneId, value }) => {
         if (!result[molecularProfileId]) {
             result[molecularProfileId] = {};
         }
-        if (!result[molecularProfileId][gene.entrezGeneId]) {
-            result[molecularProfileId][gene.entrezGeneId] = [];
+        if (!result[molecularProfileId][entrezGeneId]) {
+            result[molecularProfileId][entrezGeneId] = [];
         }
-        result[molecularProfileId][gene.entrezGeneId].push(value);
+        result[molecularProfileId][entrezGeneId].push(value);
     });
 
     // Compute mean and standard deviation for each group
