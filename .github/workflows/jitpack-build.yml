@@ -12,7 +12,7 @@ jobs:
   trigger_build:
     runs-on: ubuntu-latest
     env:
-      ORG: cbioportal
+      ORG: cBioPortal
       REPO: cbioportal-frontend
     steps:
       - name: Check out the code
