@@ -37,7 +37,7 @@ export function getAlterationCountsForCancerTypesByGene(
 
             let alterationCounts =
                 countByProperty === 'sampleCounts'
-                    ? countAlterationOccurences(
+                    ? countSampleAlterationOccurences(
                           samplesByCancerType,
                           alterationsBySampleId,
                           molecularProfileIdsByAlterationType,
@@ -89,19 +89,20 @@ export function getAlterationCountsForCancerTypesForAllGenes(
         [uniqueSampleKey: string]: ExtendedAlteration[];
     };
 
-    const alterationCounts = countByProperty
-        ? countAlterationOccurences(
-              samplesByCancerType,
-              merged,
-              molecularProfileIdsByAlterationType,
-              coverageInformation
-          )
-        : countPatientAlterationOccurences(
-              samplesByCancerType,
-              merged,
-              molecularProfileIdsByAlterationType,
-              coverageInformation
-          );
+    const alterationCounts =
+        countByProperty === 'sampleCounts'
+            ? countSampleAlterationOccurences(
+                  samplesByCancerType,
+                  merged,
+                  molecularProfileIdsByAlterationType,
+                  coverageInformation
+              )
+            : countPatientAlterationOccurences(
+                  samplesByCancerType,
+                  merged,
+                  molecularProfileIdsByAlterationType,
+                  coverageInformation
+              );
 
     return alterationCounts;
 }
@@ -110,7 +111,7 @@ export function getAlterationCountsForCancerTypesForAllGenes(
  * accepts samples and alterations to those samples and produces counts keyed by grouping type
  * (e.g. cancerType, cancerTypeDetailed, cancerStudy)
  */
-export function countAlterationOccurences(
+export function countSampleAlterationOccurences(
     groupedSamples: { [groupingProperty: string]: ExtendedSample[] },
     alterationsBySampleId: { [id: string]: ExtendedAlteration[] },
     molecularProfileIdsByAlterationType: {

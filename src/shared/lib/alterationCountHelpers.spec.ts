@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import { countAlterationOccurences } from './alterationCountHelpers';
+import { countSampleAlterationOccurences } from './alterationCountHelpers';
 
 describe('alterationCountHelpers', () => {
     describe('#countAlterationOccurences', () => {
@@ -280,7 +280,7 @@ describe('alterationCountHelpers', () => {
         });
 
         it('count total samples and alteration totals', () => {
-            const ret = countAlterationOccurences(
+            const ret = countSampleAlterationOccurences(
                 groupedSamples,
                 alterationsBySampleId,
                 molecularProfileIdsByAlterationType,
@@ -351,7 +351,7 @@ describe('alterationCountHelpers', () => {
                 },
             ];
 
-            const ret = countAlterationOccurences(
+            const ret = countSampleAlterationOccurences(
                 groupedSamples,
                 alterationsBySampleId,
                 molecularProfileIdsByAlterationType,
@@ -409,7 +409,7 @@ describe('alterationCountHelpers', () => {
                 },
             ];
 
-            const ret = countAlterationOccurences(
+            const ret = countSampleAlterationOccurences(
                 groupedSamples,
                 alterationsBySampleId,
                 molecularProfileIdsByAlterationType,
@@ -473,7 +473,7 @@ describe('alterationCountHelpers', () => {
                 },
             ];
 
-            const ret = countAlterationOccurences(
+            const ret = countSampleAlterationOccurences(
                 groupedSamples,
                 alterationsBySampleId,
                 molecularProfileIdsByAlterationType,
@@ -510,7 +510,7 @@ describe('alterationCountHelpers', () => {
                 },
             ];
 
-            const ret = countAlterationOccurences(
+            const ret = countSampleAlterationOccurences(
                 groupedSamples,
                 alterationsBySampleId,
                 molecularProfileIdsByAlterationType,
