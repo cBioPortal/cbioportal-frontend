@@ -246,7 +246,9 @@ export class CancerSummaryChart extends React.Component<
             let tooltipMessage = 'Not profiled';
             if (profiledCount > 0) {
                 tooltipMessage = `${profiledCount} ${pluralize(
-                    'sample',
+                    this.props.countAlterationsBy === 'sampleCounts'
+                        ? 'sample'
+                        : 'patient',
                     profiledCount
                 )}  profiled`;
             }
