@@ -621,6 +621,9 @@ export default class ResultsViewOncoprint extends React.Component<
             get sortByDrivers() {
                 return self.sortByDrivers;
             },
+            get groups() {
+                return self.props.store.groups.result;
+            },
             get heatmapProfilesPromise() {
                 return self.props.store.heatmapMolecularProfiles;
             },
@@ -630,6 +633,10 @@ export default class ResultsViewOncoprint extends React.Component<
             },
             get selectedHeatmapProfileId() {
                 return self.selectedHeatmapProfileId;
+            },
+            get zScoreCalculatableProfileIsSelected() {
+                //TOOD check if selectedHeatmapProfileId mrna/proteomics and zscorable
+                return true;
             },
             get heatmapIsDynamicallyQueried() {
                 return self.heatmapIsDynamicallyQueried;
