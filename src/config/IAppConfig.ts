@@ -180,6 +180,7 @@ export interface IServerConfig {
     oncoprint_clinical_tracks_config_json: string;
     oncoprint_clustered_default: boolean; // this has a default
     enable_cross_study_expression: string;
+    oncoprint_defaultview: string; // this has a default
     studyview_max_samples_selected: number;
     study_download_url: string;
     studyview_clinical_attribute_chart_count: number;

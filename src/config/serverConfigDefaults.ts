@@ -40,7 +40,7 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
     oncoprint_hide_vus_default: false,
     oncokb_public_api_url: 'oncokb.org/api/v1',
     oncokb_merge_icons_by_default: true,
-
+    oncoprint_defaultview: 'patient',
     pubmed_url: 'https://www.ncbi.nlm.nih.gov/pubmed/<%=pmid%>',
 
     show_hotspot: true,
