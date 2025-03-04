@@ -28,7 +28,7 @@ import {
     getRegressionComputations,
     makeMultilineAxisLabel,
 } from './ScatterPlotUtils';
-import { IAxisLogScaleParams, IPlotSampleData } from './PlotsTabUtils';
+import { IAxisScaleTransformParams, IPlotSampleData } from './PlotsTabUtils';
 import ifNotDefined from '../../lib/ifNotDefined';
 import {
     CBIOPORTAL_VICTORY_THEME,
@@ -71,8 +71,8 @@ export interface IScatterPlotProps<D extends IBaseScatterPlotData> {
         spearman: number;
     };
     showRegressionLine?: boolean;
-    logX?: IAxisLogScaleParams | undefined;
-    logY?: IAxisLogScaleParams | undefined;
+    logX?: IAxisScaleTransformParams | undefined;
+    logY?: IAxisScaleTransformParams | undefined;
     excludeLimitValuesFromCorrelation?: boolean; // if true, data points that are beyond threshold (e.g., '>8', have a `xThresholdType` or `yThresholdType` attribute) are not included in caluculation of the corr. efficient
     useLogSpaceTicks?: boolean; // if log scale for an axis, then this prop determines whether the ticks are shown in post-log coordinate, or original data coordinate space
     axisLabelX?: string;
@@ -443,12 +443,12 @@ export default class ScatterPlot<
             min.y = Math.min(d.y, min.y);
         }
         if (this.props.logX) {
-            min.x = this.props.logX.fLogScale(min.x, 0);
-            max.x = this.props.logX.fLogScale(max.x, 0);
+            min.x = this.props.logX.transform(min.x);
+            max.x = this.props.logX.transform(max.x);
         }
         if (this.props.logY) {
-            min.y = this.props.logY.fLogScale(min.y, 0);
-            max.y = this.props.logY.fLogScale(max.y, 0);
+            min.y = this.props.logY.transform(min.y);
+            max.y = this.props.logY.transform(max.y);
         }
         return {
             x: [min.x, max.x],
@@ -463,10 +463,10 @@ export default class ScatterPlot<
             let x = this.splitData.x;
             let y = this.splitData.y;
             if (this.props.logX) {
-                x = x.map(d => this.props.logX!.fLogScale(d, 0));
+                x = x.map(d => this.props.logX!.transform(d));
             }
             if (this.props.logY) {
-                y = y.map(d => this.props.logY!.fLogScale(d, 0));
+                y = y.map(d => this.props.logY!.transform(d));
             }
             return jStat.corrcoeff(x, y);
         }
@@ -551,7 +551,7 @@ export default class ScatterPlot<
     @autobind
     private x(d: D) {
         if (this.props.logX) {
-            return this.props.logX!.fLogScale(d.x, 0);
+            return this.props.logX!.transform(d.x);
         } else {
             return d.x;
         }
@@ -560,7 +560,7 @@ export default class ScatterPlot<
     @autobind
     private y(d: D) {
         if (this.props.logY) {
-            return this.props.logY!.fLogScale(d.y, 0);
+            return this.props.logY!.transform(d.y);
         } else {
             return d.y;
         }
@@ -576,11 +576,15 @@ export default class ScatterPlot<
     private tickFormat(
         t: number,
         ticks: number[],
-        logScaleFunc: IAxisLogScaleParams | undefined
+        logScaleFunc: IAxisScaleTransformParams | undefined
     ) {
-        if (logScaleFunc && !this.props.useLogSpaceTicks) {
-            t = logScaleFunc.fInvLogScale(t);
-            ticks = ticks.map(x => logScaleFunc.fInvLogScale(x));
+        if (
+            logScaleFunc &&
+            logScaleFunc.inverseTransform &&
+            !this.props.useLogSpaceTicks
+        ) {
+            t = logScaleFunc.inverseTransform(t);
+            ticks = ticks.map(logScaleFunc.inverseTransform);
         }
         return tickFormatNumeral(t, ticks);
     }
