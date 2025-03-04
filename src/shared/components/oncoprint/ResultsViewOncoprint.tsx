@@ -496,7 +496,6 @@ export default class ResultsViewOncoprint extends React.Component<
         (window as any).resultsViewOncoprint = this;
 
         const self = this;
-
         this.setSessionClinicalTracks = this.setSessionClinicalTracks.bind(
             this
         );
@@ -1711,9 +1710,15 @@ export default class ResultsViewOncoprint extends React.Component<
 
     // @computed
     public get oncoprintAnalysisCaseType() {
-        return this.urlWrapper.query.show_samples === 'true'
-            ? OncoprintAnalysisCaseType.SAMPLE
-            : OncoprintAnalysisCaseType.PATIENT;
+        if (this.urlWrapper.query.show_samples == undefined) {
+            return getServerConfig().oncoprint_defaultview === 'patient'
+                ? OncoprintAnalysisCaseType.PATIENT
+                : OncoprintAnalysisCaseType.SAMPLE;
+        } else {
+            return this.urlWrapper.query.show_samples === 'true'
+                ? OncoprintAnalysisCaseType.SAMPLE
+                : OncoprintAnalysisCaseType.PATIENT;
+        }
     }
 
     @computed get sortOrder() {
