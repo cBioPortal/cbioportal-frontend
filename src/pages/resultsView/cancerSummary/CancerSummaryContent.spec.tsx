@@ -18,7 +18,7 @@ describe('CancerSummaryContent', () => {
     beforeEach(() => {
         groupedAlterationData = {
             'Colon Adenocarcinoma': {
-                profiledSampleTotal: 94,
+                profiledTotal: 94,
                 alterationTotal: 10,
                 alterationTypeCounts: {
                     mutated: 10,
@@ -33,16 +33,16 @@ describe('CancerSummaryContent', () => {
                     protExpressionLow: 0,
                     multiple: 0,
                 },
-                alteredSampleCount: 10,
+                alteredCount: 10,
                 parentCancerType: 'Colorectal Cancer',
-                profiledSamplesCounts: {
+                profiledCounts: {
                     mutation: 10,
                     cna: 0,
                     expression: 0,
                     protein: 0,
                     structuralVariant: 0,
                 },
-                notProfiledSamplesCounts: {
+                notProfiledCounts: {
                     mutation: 0,
                     cna: 0,
                     expression: 0,
@@ -51,7 +51,7 @@ describe('CancerSummaryContent', () => {
                 },
             },
             'Colorectal Adenocarcinoma': {
-                profiledSampleTotal: 23,
+                profiledTotal: 23,
                 alterationTotal: 1,
                 alterationTypeCounts: {
                     mutated: 1,
@@ -66,16 +66,16 @@ describe('CancerSummaryContent', () => {
                     protExpressionLow: 0,
                     multiple: 0,
                 },
-                alteredSampleCount: 1,
+                alteredCount: 1,
                 parentCancerType: 'Colorectal Cancer',
-                profiledSamplesCounts: {
+                profiledCounts: {
                     mutation: 1,
                     cna: 0,
                     expression: 0,
                     protein: 0,
                     structuralVariant: 0,
                 },
-                notProfiledSamplesCounts: {
+                notProfiledCounts: {
                     mutation: 0,
                     cna: 0,
                     expression: 0,
@@ -84,7 +84,7 @@ describe('CancerSummaryContent', () => {
                 },
             },
             'Rectal Adenocarcinoma': {
-                profiledSampleTotal: 48,
+                profiledTotal: 48,
                 alterationTotal: 5,
                 alterationTypeCounts: {
                     mutated: 4,
@@ -99,16 +99,16 @@ describe('CancerSummaryContent', () => {
                     protExpressionLow: 0,
                     multiple: 0,
                 },
-                alteredSampleCount: 5,
+                alteredCount: 5,
                 parentCancerType: 'Colorectal Cancer',
-                profiledSamplesCounts: {
+                profiledCounts: {
                     mutation: 5,
                     cna: 1,
                     expression: 0,
                     protein: 0,
                     structuralVariant: 0,
                 },
-                notProfiledSamplesCounts: {
+                notProfiledCounts: {
                     mutation: 0,
                     cna: 0,
                     expression: 0,
@@ -150,9 +150,11 @@ describe('CancerSummaryContent', () => {
             <CancerSummaryContent
                 groupedAlterationData={groupedAlterationData}
                 groupAlterationsBy={'cancerTypeDetailed'}
+                countAlterationsBy={'sampleCounts'}
                 gene={'NRAS'}
                 width={500}
                 handlePivotChange={() => {}}
+                handlePivotCountChange={() => {}}
             />
         );
 
@@ -223,9 +225,11 @@ describe('CancerSummaryContent', () => {
                 <CancerSummaryContent
                     groupedAlterationData={groupedAlterationData}
                     groupAlterationsBy={'cancerTypeDetailed'}
+                    countAlterationsBy={'sampleCounts'}
                     gene={'NRAS'}
                     width={500}
                     handlePivotChange={() => {}}
+                    handlePivotCountChange={() => {}}
                 />
             );
 
@@ -252,9 +256,11 @@ describe('CancerSummaryContent', () => {
                 <CancerSummaryContent
                     groupedAlterationData={groupedAlterationData}
                     groupAlterationsBy={'cancerTypeDetailed'}
+                    countAlterationsBy={'sampleCounts'}
                     gene={'NRAS'}
                     width={500}
                     handlePivotChange={() => {}}
+                    handlePivotCountChange={() => {}}
                 />
             );
 
@@ -289,9 +295,11 @@ describe('CancerSummaryContent', () => {
                 <CancerSummaryContent
                     groupedAlterationData={groupedAlterationData}
                     groupAlterationsBy={'cancerTypeDetailed'}
+                    countAlterationsBy={'sampleCounts'}
                     gene={'NRAS'}
                     width={500}
                     handlePivotChange={() => {}}
+                    handlePivotCountChange={() => {}}
                 />
             );
 
@@ -332,9 +340,11 @@ describe('CancerSummaryContent', () => {
                 <CancerSummaryContent
                     groupedAlterationData={groupedAlterationData}
                     groupAlterationsBy={'cancerTypeDetailed'}
+                    countAlterationsBy={'sampleCounts'}
                     gene={'NRAS'}
                     width={500}
                     handlePivotChange={() => {}}
+                    handlePivotCountChange={() => {}}
                 />
             );
 
@@ -369,10 +379,12 @@ describe('CancerSummaryContent', () => {
                 <CancerSummaryContent
                     groupedAlterationData={groupedAlterationData}
                     groupAlterationsBy={'cancerTypeDetailed'}
+                    countAlterationsBy={'sampleCounts'}
                     gene={'NRAS'}
                     labelTransformer={(t: string) => `|${t.toUpperCase()}|`}
                     width={500}
                     handlePivotChange={() => {}}
+                    handlePivotCountChange={() => {}}
                 />
             );
 
@@ -416,8 +428,8 @@ describe('CancerSummaryContent', () => {
                 yAxis: 'abs-count',
                 countsData: {
                     test: {
-                        alteredSampleCount: 12,
-                        profiledSampleTotal: 50,
+                        alteredCount: 12,
+                        profiledTotal: 50,
                     },
                 },
             };

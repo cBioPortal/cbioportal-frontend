@@ -69,18 +69,18 @@ export interface IAlterationCountMap {
 
 export interface IAlterationData {
     alterationTotal: number;
-    profiledSampleTotal: number;
+    profiledTotal: number;
     alterationTypeCounts: IAlterationCountMap;
-    alteredSampleCount: number;
+    alteredCount: number;
     parentCancerType: string;
-    profiledSamplesCounts: {
+    profiledCounts: {
         mutation: number;
         cna: number;
         expression: number;
         protein: number;
         structuralVariant: number;
     };
-    notProfiledSamplesCounts: {
+    notProfiledCounts: {
         mutation: number;
         cna: number;
         expression: number;
@@ -106,7 +106,7 @@ export interface ICancerSummaryChartData {
     labels: string[];
     maxPercentage: number;
     maxAbsoluteCount: number;
-    maxSampleCount: number;
+    maxTotalCount: number;
 }
 
 export interface ICancerSummaryContentProps {
@@ -115,11 +115,18 @@ export interface ICancerSummaryContentProps {
         [groupType: string]: IAlterationData;
     };
     groupAlterationsBy: string;
+    countAlterationsBy: string;
     gene: string;
     width: number;
     handlePivotChange: (e: any) => void;
+    handlePivotCountChange: (e: any) => void;
     handleStudyLinkout?: (studyId: string, hugoGeneSymbol?: string) => void;
 }
+
+const CountsOptions = [
+    { value: 'sampleCounts', label: 'Sample Counts' },
+    { value: 'patientCounts', label: 'Patient Counts' },
+];
 
 const GroupByOptions = [
     { value: 'studyId', label: 'Cancer Study' },
@@ -218,13 +225,13 @@ export class CancerSummaryContent extends React.Component<
         const sortByPercentage = (key: string) => {
             const alterationCountsData: IAlterationData = this.countsData[key];
             return (
-                alterationCountsData.alteredSampleCount /
-                alterationCountsData.profiledSampleTotal
+                alterationCountsData.alteredCount /
+                alterationCountsData.profiledTotal
             );
         };
         const sortByAbsoluteCount = (key: string) => {
             const alterationCountsData: IAlterationData = this.countsData[key];
-            return alterationCountsData.alteredSampleCount;
+            return alterationCountsData.alteredCount;
         };
         const sortByLabel = (key: string) => {
             return key;
@@ -253,43 +260,43 @@ export class CancerSummaryContent extends React.Component<
         }[] = [];
         _.forEach(this.groupKeysSorted, groupKey => {
             const alterationData = this.countsData[groupKey];
-            const totalProfiledSamplesCount = _.chain(
-                alterationData.profiledSamplesCounts as any
+            const totalProfiledCount = _.chain(
+                alterationData.profiledCounts as any
             )
                 .values()
                 .sum()
                 .value();
             const alterationPercentage = calculatePercentage(
-                alterationData.alteredSampleCount,
-                alterationData.profiledSampleTotal
+                alterationData.alteredCount,
+                alterationData.profiledTotal
             );
 
             let meetsAlterationThreshold;
             if (this.yAxis === 'abs-count') {
                 meetsAlterationThreshold =
-                    alterationData.alteredSampleCount >= this.tempAltCasesValue;
+                    alterationData.alteredCount >= this.tempAltCasesValue;
             } else {
                 meetsAlterationThreshold =
                     alterationPercentage >= this.tempAltCasesValue;
             }
 
             const meetsSampleTotalThreshold =
-                alterationData.profiledSampleTotal >= this.totalCasesValue;
+                alterationData.profiledTotal >= this.totalCasesValue;
 
             // if we don't meet the threshold set by the user in the custom controls, don't put data in (default 0)
             //hide scatter point if there are no profiled samples in the group
             if (
-                totalProfiledSamplesCount > 0 &&
+                totalProfiledCount > 0 &&
                 meetsAlterationThreshold &&
                 meetsSampleTotalThreshold
             ) {
                 _.forEach(
                     _.keys(AlterationTypeToDataTypeLabel),
                     alterationType => {
-                        const profiledCount = (alterationData.profiledSamplesCounts as any)[
+                        const profiledCount = (alterationData.profiledCounts as any)[
                             alterationType
                         ];
-                        const notProfiledCount = (alterationData.notProfiledSamplesCounts as any)[
+                        const notProfiledCount = (alterationData.notProfiledCounts as any)[
                             alterationType
                         ];
                         if (profiledCount + notProfiledCount > 0) {
@@ -320,7 +327,7 @@ export class CancerSummaryContent extends React.Component<
 
         let maxPercentage = 0;
         let maxAbsoluteCount = 0;
-        let maxSampleCount = 0;
+        let maxTotalCount = 0;
 
         const labels: string[] = [];
 
@@ -333,38 +340,38 @@ export class CancerSummaryContent extends React.Component<
                     (memo, groupKey) => {
                         // each of these represents a bucket along x-axis (e.g. cancer type or cancer study)
                         const alterationData = this.countsData[groupKey];
-                        const totalProfiledSamplesCount = _.chain(
-                            alterationData.profiledSamplesCounts as any
+                        const totalProfiledCount = _.chain(
+                            alterationData.profiledCounts as any
                         )
                             .values()
                             .sum()
                             .value();
 
                         const alterationPercentage = calculatePercentage(
-                            alterationData.alteredSampleCount,
-                            alterationData.profiledSampleTotal
+                            alterationData.alteredCount,
+                            alterationData.profiledTotal
                         );
 
                         let meetsAlterationThreshold;
 
                         if (this.yAxis === 'abs-count') {
                             meetsAlterationThreshold =
-                                alterationData.alteredSampleCount >=
+                                alterationData.alteredCount >=
                                 this.tempAltCasesValue;
                         } else {
                             meetsAlterationThreshold =
                                 alterationPercentage >= this.tempAltCasesValue;
                         }
 
-                        const meetsSampleTotalThreshold =
-                            alterationData.profiledSampleTotal >=
+                        const meetsTotalThreshold =
+                            alterationData.profiledTotal >=
                             this.totalCasesValue;
 
                         //hide bar if there are no profiled samples in the group
                         if (
-                            totalProfiledSamplesCount > 0 &&
+                            totalProfiledCount > 0 &&
                             meetsAlterationThreshold &&
-                            meetsSampleTotalThreshold
+                            meetsTotalThreshold
                         ) {
                             // if we don't meet the threshold set by the user in the custom controls, don't put data in (default 0)
                             // now we push label into collection
@@ -379,15 +386,13 @@ export class CancerSummaryContent extends React.Component<
                                     ? alterationPercentage
                                     : maxPercentage;
                             maxAbsoluteCount =
-                                alterationData.alteredSampleCount >
-                                maxAbsoluteCount
-                                    ? alterationData.alteredSampleCount
+                                alterationData.alteredCount > maxAbsoluteCount
+                                    ? alterationData.alteredCount
                                     : maxAbsoluteCount;
-                            maxSampleCount =
-                                alterationData.profiledSampleTotal >
-                                maxSampleCount
-                                    ? alterationData.profiledSampleTotal
-                                    : maxSampleCount;
+                            maxTotalCount =
+                                alterationData.profiledTotal > maxTotalCount
+                                    ? alterationData.profiledTotal
+                                    : maxTotalCount;
 
                             const alterationCount = (alterationData.alterationTypeCounts as any)[
                                 alterationKey
@@ -406,7 +411,7 @@ export class CancerSummaryContent extends React.Component<
                                 xKey: groupKey,
                                 y: this.getYValue(
                                     alterationCount,
-                                    alterationData.profiledSampleTotal
+                                    alterationData.profiledTotal
                                 ),
                             });
                         }
@@ -431,7 +436,7 @@ export class CancerSummaryContent extends React.Component<
             representedAlterations,
             maxPercentage,
             maxAbsoluteCount,
-            maxSampleCount,
+            maxTotalCount,
         };
     }
 
@@ -444,7 +449,7 @@ export class CancerSummaryContent extends React.Component<
 
     @computed
     private get totalCasesMax() {
-        return this.chartData.maxSampleCount;
+        return this.chartData.maxTotalCount;
     }
 
     @computed
@@ -617,7 +622,11 @@ export class CancerSummaryContent extends React.Component<
                             </FormControl>
                         </td>
                         <td>
-                            <ControlLabel>Min. # Total Cases:</ControlLabel>
+                            <ControlLabel>{`Min. # Total ${
+                                this.props.countAlterationsBy === 'sampleCounts'
+                                    ? 'Samples'
+                                    : 'Cases'
+                            }`}</ControlLabel>
                         </td>
                         <td>
                             <div className="slider-holder">
@@ -681,7 +690,11 @@ export class CancerSummaryContent extends React.Component<
                         <td>
                             <ControlLabel>{`Min. ${
                                 this.yAxis === 'alt-freq' ? '%' : '#'
-                            } Altered Cases:`}</ControlLabel>
+                            } Altered ${
+                                this.props.countAlterationsBy === 'sampleCounts'
+                                    ? 'Samples'
+                                    : 'Cases'
+                            }:`}</ControlLabel>
                         </td>
                         <td>
                             <div className="slider-holder">
@@ -719,6 +732,32 @@ export class CancerSummaryContent extends React.Component<
                                 data-test="alterationThresholdInput"
                                 onKeyPress={this.handleAltInputKeyPress}
                             />
+                        </td>
+                        <td>
+                            <ButtonGroup>
+                                {CountsOptions.map((option, i) => {
+                                    return (
+                                        <Radio
+                                            checked={
+                                                option.value ===
+                                                this.props.countAlterationsBy
+                                            }
+                                            onChange={e => {
+                                                this.initializeSliderValue();
+                                                this.props.handlePivotCountChange(
+                                                    $(e.target).attr(
+                                                        'data-value'
+                                                    )
+                                                );
+                                            }}
+                                            inline
+                                            data-value={option.value}
+                                        >
+                                            {option.label}
+                                        </Radio>
+                                    );
+                                })}
+                            </ButtonGroup>
                         </td>
                     </tr>
                 </table>
@@ -823,6 +862,9 @@ export class CancerSummaryContent extends React.Component<
                                                 this.props.groupAlterationsBy
                                         ) || {}
                                     ).label || 'Cancer'
+                                }
+                                countAlterationsBy={
+                                    this.props.countAlterationsBy
                                 }
                                 handleStudyLinkout={
                                     this.props.handleStudyLinkout!
