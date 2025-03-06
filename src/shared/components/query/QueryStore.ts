@@ -1,6 +1,6 @@
 /* tslint:disable: indent linebreak-style */
 import _ from 'lodash';
-import client from '../../api/cbioportalClientInstance';
+import { getClient } from '../../api/cbioportalClientInstance';
 import {
     action,
     computed,
@@ -73,6 +73,8 @@ import { QueryParser } from 'shared/lib/query/QueryParser';
 import { AppStore } from 'AppStore';
 import { ResultsViewTab } from 'pages/resultsView/ResultsViewPageHelpers';
 import { CaseSetId } from 'shared/components/query/CaseSetSelectorUtils';
+
+const client = getClient();
 
 // interface for communicating
 export type CancerStudyQueryUrlParams = {

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import Select, { components } from 'react-select';
-import client from 'shared/api/cbioportalClientInstance';
+import { getClient } from 'shared/api/cbioportalClientInstance';
 import { OptionType } from './OptionType';
 import autobind from 'autobind-decorator';
 import './styles.scss';
@@ -16,8 +16,9 @@ import { ServerConfigHelpers } from 'config/config';
 import sessionServiceClient from 'shared/api/sessionServiceInstance';
 import { trackEvent } from 'shared/lib/tracking';
 import { PagePath } from 'shared/enums/PagePaths';
-import { QueryStore } from '../QueryStore';
 import { CancerStudy } from 'cbioportal-ts-api-client';
+
+const client = getClient();
 
 export const SHOW_MORE_SIZE: number = 20;
 const DEFAULT_PAGE_SIZE: number = 3;
