@@ -78,6 +78,7 @@ export interface IUserSelectionsProps {
         values: DataFilterValue[]
     ) => void;
     removeMutationDataFilter: (uniqueKey: string, value: string) => void;
+    removeNamespaceDataFilter: (uniqueKey: string, value: string) => void;
     updateGenericAssayDataFilter: (
         uniqueKey: string,
         values: DataFilterValue[]
@@ -347,6 +348,61 @@ export default class UserSelections extends React.Component<
             components
         );
 
+        // Namespace chart filters
+        let namespaceFilterComponents: JSX.Element[] = [];
+        if (this.props.filter.namespaceDataFilters) {
+            _.forEach(
+                this.props.filter.namespaceDataFilters,
+                namespaceDataFilter => {
+                    const uniqueKey = namespaceDataFilter.outerKey.concat(
+                        '_',
+                        namespaceDataFilter.innerKey
+                    );
+                    const chartMeta = this.props.attributesMetaSet[uniqueKey];
+                    if (chartMeta) {
+                        namespaceFilterComponents.push(
+                            <div className={styles.parentGroupLogic}>
+                                <GroupLogic
+                                    components={[
+                                        <span
+                                            className={
+                                                styles.filterClinicalAttrName
+                                            }
+                                        >
+                                            {chartMeta.displayName}
+                                        </span>,
+                                        <GroupLogic
+                                            components={namespaceDataFilter.values.map(
+                                                annotations => {
+                                                    return (
+                                                        <GroupLogic
+                                                            components={this.groupedNamespaceDataFilters(
+                                                                annotations,
+                                                                chartMeta
+                                                            )}
+                                                            operation="or"
+                                                            group={
+                                                                annotations.length >
+                                                                1
+                                                            }
+                                                        />
+                                                    );
+                                                }
+                                            )}
+                                            operation={'and'}
+                                            group={false}
+                                        />,
+                                    ]}
+                                    operation={':'}
+                                    group={false}
+                                />
+                            </div>
+                        );
+                    }
+                }
+            );
+        }
+
         // Generic Assay chart filters
         let genericAssayFilterComponents: JSX.Element[] = [];
         if (this.props.filter.genericAssayDataFilters) {
@@ -554,6 +610,10 @@ export default class UserSelections extends React.Component<
         // push to components
         if (genericAssayFilterComponents) {
             components.push(...genericAssayFilterComponents);
+        }
+
+        if (namespaceFilterComponents) {
+            components.push(...namespaceFilterComponents);
         }
 
         if (
@@ -1054,6 +1114,29 @@ export default class UserSelections extends React.Component<
                 group={false}
             />
         );
+    }
+
+    private groupedNamespaceDataFilters(
+        dataFilterValues: DataFilterValue[],
+        chartMeta: ChartMeta & { chartType: ChartType }
+    ): JSX.Element[] {
+        return dataFilterValues.map(dataFilterValue => {
+            return (
+                <PillTag
+                    content={dataFilterValue.value.split('_').join(' ')}
+                    backgroundColor={
+                        STUDY_VIEW_CONFIG.colors.theme.clinicalFilterContent
+                    }
+                    onDelete={() =>
+                        this.props.removeNamespaceDataFilter(
+                            chartMeta.uniqueKey,
+                            dataFilterValue.value
+                        )
+                    }
+                    store={this.props.store}
+                />
+            );
+        });
     }
 
     submitHesitantFilters() {
