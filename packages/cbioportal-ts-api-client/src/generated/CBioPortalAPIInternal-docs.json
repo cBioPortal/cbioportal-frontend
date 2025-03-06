@@ -628,7 +628,7 @@
         "operationId": "fetchCNAGenesUsingPOST"
       }
     },
-    "/api/column-store/treatments/patient-counts/fetch": {
+    "/api/v2/treatments/patient-counts/fetch": {
       "post": {
         "consumes": [
           "application/json"
@@ -666,13 +666,13 @@
           }
         },
         "tags": [
-          "study-view-column-store-controller"
+          "study-view-v2-controller"
         ],
         "description": "Get all patient level treatments",
         "operationId": "fetchPatientTreatmentCountsUsingPOST"
       }
     },
-    "/api/column-store/treatments/sample-counts/fetch": {
+    "/api/v2/treatments/sample-counts/fetch": {
       "post": {
         "consumes": [
           "application/json"
@@ -710,7 +710,7 @@
           }
         },
         "tags": [
-          "study-view-column-store-controller"
+          "study-view-v2-controller"
         ],
         "operationId": "fetchSampleTreatmentCountsUsingPOST"
       }

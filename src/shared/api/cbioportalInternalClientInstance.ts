@@ -57,8 +57,8 @@ function proxyColumnStore(client: any, endpoint: string) {
                 arguments[7] = function(response: any) {
                     const url =
                         origArgs[1].replace(
-                            /column-store\/api/,
-                            'column-store'
+                            /v2\/api/,
+                            'v2'
                         ) +
                         '?' +
                         _.map(origArgs[4], (v, k) => `${k}=${v}&`).join('');
@@ -94,7 +94,7 @@ function proxyColumnStore(client: any, endpoint: string) {
             new RegExp('PatientTreatmentCounts|SampleTreatmentCounts')
         )
             ? `//${host}`
-            : `//${host}/api/column-store`;
+            : `//${host}/api/v2`;
         const url = old.apply(this, [params]);
 
         this.request = oldRequest;
@@ -109,7 +109,7 @@ const internalClientColumnStore = new CBioPortalAPIInternal();
 
 const oldRequest = (internalClientColumnStore as any).request;
 (internalClientColumnStore as any).request = function(...args: any) {
-    args[1] = args[1].replace(/column-store\/api/, 'column-store');
+    args[1] = args[1].replace(/v2\/api/, 'v2');
     // Compress request body if enabled
     if (getServerConfig().enable_request_body_gzip_compression) {
         if (args[0] === 'POST' && !_.isEmpty(args[2])) {

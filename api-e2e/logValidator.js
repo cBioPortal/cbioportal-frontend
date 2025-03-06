@@ -110,7 +110,7 @@ async function main() {
                     const url = d['@url']
                         .replace(/^"|"$/g, '')
                         .replace(/^\/\/[^\/]*/, '')
-                        .replace(/\/api\//, '/api/column-store/');
+                        .replace(/\/api\//, '/api/v2/');
 
                     const label = d['@url']
                         .match(/\/api\/[^\/]*/i)[0]

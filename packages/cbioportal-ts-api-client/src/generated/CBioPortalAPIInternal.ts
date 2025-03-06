@@ -2545,7 +2545,7 @@ export default class CBioPortalAPIInternal {
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/api/column-store/treatments/patient-counts/fetch';
+        let path = '/api/v2/treatments/patient-counts/fetch';
         if (parameters['tier'] !== undefined) {
             queryParameters['tier'] = parameters['tier'];
         }
@@ -2576,7 +2576,7 @@ export default class CBioPortalAPIInternal {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
         const request = this.request;
-        let path = '/api/column-store/treatments/patient-counts/fetch';
+        let path = '/api/v2/treatments/patient-counts/fetch';
         let body: any;
         let queryParameters: any = {};
         let headers: any = {};
@@ -2628,7 +2628,7 @@ export default class CBioPortalAPIInternal {
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/api/column-store/treatments/sample-counts/fetch';
+        let path = '/api/v2/treatments/sample-counts/fetch';
         if (parameters['tier'] !== undefined) {
             queryParameters['tier'] = parameters['tier'];
         }
@@ -2659,7 +2659,7 @@ export default class CBioPortalAPIInternal {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
         const request = this.request;
-        let path = '/api/column-store/treatments/sample-counts/fetch';
+        let path = '/api/v2/treatments/sample-counts/fetch';
         let body: any;
         let queryParameters: any = {};
         let headers: any = {};
