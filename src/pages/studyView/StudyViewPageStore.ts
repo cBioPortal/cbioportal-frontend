@@ -1,6 +1,5 @@
 import _ from 'lodash';
-import defaultClient from 'shared/api/cbioportalClientInstance';
-import client from 'shared/api/cbioportalClientInstance';
+import { getClient } from 'shared/api/cbioportalClientInstance';
 import oncoKBClient from 'shared/api/oncokbClientInstance';
 import {
     action,
@@ -380,6 +379,7 @@ import {
     PlotsSelectionParam,
 } from 'pages/resultsView/ResultsViewURLWrapper';
 
+const defaultClient = getClient();
 export const STUDY_VIEW_FILTER_AUTOSUBMIT = 'study_view_filter_autosubmit';
 
 type ChartUniqueKey = string;
@@ -8975,11 +8975,13 @@ export class StudyViewPageStore
                 this.isGeniebpcStudy &&
                 this.isLeftTruncationFeatureFlagEnabled
             ) {
-                const data = await client.getAllClinicalDataInStudyUsingGET({
-                    attributeId: 'TT_CPT_REPORT_MOS',
-                    clinicalDataType: 'PATIENT',
-                    studyId: studyIds[0],
-                });
+                const data = await defaultClient.getAllClinicalDataInStudyUsingGET(
+                    {
+                        attributeId: 'TT_CPT_REPORT_MOS',
+                        clinicalDataType: 'PATIENT',
+                        studyId: studyIds[0],
+                    }
+                );
                 return data.reduce(
                     (map: { [patientKey: string]: number }, next) => {
                         map[next.uniquePatientKey] = parseFloat(next.value);
@@ -10943,7 +10945,7 @@ export class StudyViewPageStore
                 entrezIds.push(selectedColoringGene);
             }
             if (entrezIds.length > 0) {
-                return client.fetchGenesUsingPOST({
+                return defaultClient.fetchGenesUsingPOST({
                     geneIdType: 'ENTREZ_GENE_ID',
                     geneIds: entrezIds,
                 });
@@ -11028,11 +11030,13 @@ export class StudyViewPageStore
         {
             await: () => [this.queriedPhysicalStudyIds],
             invoke: async () => {
-                let profiles = await client.fetchMolecularProfilesUsingPOST({
-                    molecularProfileFilter: {
-                        studyIds: this.queriedPhysicalStudyIds.result,
-                    } as MolecularProfileFilter,
-                });
+                let profiles = await defaultClient.fetchMolecularProfilesUsingPOST(
+                    {
+                        molecularProfileFilter: {
+                            studyIds: this.queriedPhysicalStudyIds.result,
+                        } as MolecularProfileFilter,
+                    }
+                );
 
                 // expression profiles are not allowed
                 // under some circumstances
@@ -11227,13 +11231,15 @@ export class StudyViewPageStore
         //      putting more response waiting time in parallel
         await: () => [this.molecularProfilesInStudies],
         invoke: () =>
-            client.fetchGenePanelDataInMultipleMolecularProfilesUsingPOST({
-                genePanelDataMultipleStudyFilter: {
-                    molecularProfileIds: this.molecularProfilesInStudies.result.map(
-                        p => p.molecularProfileId
-                    ),
-                } as GenePanelDataMultipleStudyFilter,
-            }),
+            defaultClient.fetchGenePanelDataInMultipleMolecularProfilesUsingPOST(
+                {
+                    genePanelDataMultipleStudyFilter: {
+                        molecularProfileIds: this.molecularProfilesInStudies.result.map(
+                            p => p.molecularProfileId
+                        ),
+                    } as GenePanelDataMultipleStudyFilter,
+                }
+            ),
     });
 
     readonly mutations_preload = remoteData<Mutation[]>({
@@ -11253,17 +11259,19 @@ export class StudyViewPageStore
                 return Promise.resolve([]);
             }
 
-            return client.fetchMutationsInMultipleMolecularProfilesUsingPOST({
-                projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
-                mutationMultipleStudyFilter: {
-                    entrezGeneIds: this.plotsSelectedGenes.result!.map(
-                        g => g.entrezGeneId
-                    ),
-                    molecularProfileIds: this.mutationProfiles.result!.map(
-                        p => p.molecularProfileId
-                    ),
-                } as MutationMultipleStudyFilter,
-            });
+            return defaultClient.fetchMutationsInMultipleMolecularProfilesUsingPOST(
+                {
+                    projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
+                    mutationMultipleStudyFilter: {
+                        entrezGeneIds: this.plotsSelectedGenes.result!.map(
+                            g => g.entrezGeneId
+                        ),
+                        molecularProfileIds: this.mutationProfiles.result!.map(
+                            p => p.molecularProfileId
+                        ),
+                    } as MutationMultipleStudyFilter,
+                }
+            );
         },
     });
 
@@ -11430,7 +11438,7 @@ export class StudyViewPageStore
                     .value();
                 const allSampleLists = await Promise.all(
                     uniqueStudyIds.map(studyId => {
-                        return client.getAllSampleListsInStudyUsingGET({
+                        return defaultClient.getAllSampleListsInStudyUsingGET({
                             studyId: studyId,
                             projection: REQUEST_ARG_ENUM.PROJECTION_SUMMARY,
                         });
@@ -11624,13 +11632,15 @@ export class StudyViewPageStore
                 dqf &&
                 ((dqf.sampleIds && dqf.sampleIds.length) || dqf.sampleListId);
             if (hasSampleSpec) {
-                return client.fetchAllMolecularDataInMolecularProfileUsingPOST({
-                    molecularProfileId: q.molecularProfileId,
-                    molecularDataFilter: {
-                        entrezGeneIds: [q.entrezGeneId],
-                        ...dqf,
-                    } as MolecularDataFilter,
-                });
+                return defaultClient.fetchAllMolecularDataInMolecularProfileUsingPOST(
+                    {
+                        molecularProfileId: q.molecularProfileId,
+                        molecularDataFilter: {
+                            entrezGeneIds: [q.entrezGeneId],
+                            ...dqf,
+                        } as MolecularDataFilter,
+                    }
+                );
             } else {
                 return Promise.resolve([]);
             }
@@ -11873,7 +11883,7 @@ export class StudyViewPageStore
             const promises = _.map(
                 this.studyToMolecularProfileDiscreteCna.result,
                 (cnaMolecularProfile, studyId) => {
-                    return client.fetchDiscreteCopyNumbersInMolecularProfileUsingPOST(
+                    return defaultClient.fetchDiscreteCopyNumbersInMolecularProfileUsingPOST(
                         {
                             discreteCopyNumberEventType: 'HOMDEL_AND_AMP',
                             discreteCopyNumberFilter: {
@@ -11984,7 +11994,7 @@ export class StudyViewPageStore
                         } as MolecularDataMultipleStudyFilter;
 
                         dataPromises.push(
-                            client.fetchMolecularDataInMultipleMolecularProfilesUsingPOST(
+                            defaultClient.fetchMolecularDataInMultipleMolecularProfilesUsingPOST(
                                 {
                                     projection:
                                         REQUEST_ARG_ENUM.PROJECTION_DETAILED,
@@ -12063,7 +12073,7 @@ export class StudyViewPageStore
                         }
 
                         if (molecularProfileId) {
-                            return client.fetchMutationsInMolecularProfileUsingPOST(
+                            return defaultClient.fetchMutationsInMolecularProfileUsingPOST(
                                 {
                                     molecularProfileId,
                                     mutationFilter: {

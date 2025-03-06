@@ -18,7 +18,7 @@ import {
     MutationCountByPosition,
 } from 'cbioportal-ts-api-client';
 import { action, observable, makeObservable, computed } from 'mobx';
-import client from '../../shared/api/cbioportalClientInstance';
+import { getClient } from '../../shared/api/cbioportalClientInstance';
 import comparisonClient from '../../shared/api/comparisonGroupClientInstance';
 import _ from 'lodash';
 import autobind from 'autobind-decorator';
@@ -49,6 +49,8 @@ import { fetchPatients } from 'pages/resultsView/ResultsViewPageStoreUtils';
 import { isSampleProfiled } from 'shared/lib/isSampleProfiled';
 import { getSampleMolecularIdentifiers } from 'pages/studyView/StudyViewComparisonUtils';
 import { FeatureFlagEnum } from 'shared/featureFlags';
+
+const client = getClient();
 
 export default class GroupComparisonStore extends ComparisonStore {
     @observable private sessionId: string;
