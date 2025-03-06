@@ -21,7 +21,7 @@ import {
     GenericAssayDataMultipleStudyFilter,
     GenericAssayMetaFilter,
 } from 'cbioportal-ts-api-client';
-import client from '../../../shared/api/cbioportalClientInstance';
+import { getClient } from '../../../shared/api/cbioportalClientInstance';
 import internalClient from '../../../shared/api/cbioportalInternalClientInstance';
 import oncokbClient from '../../../shared/api/oncokbClientInstance';
 import { computed, observable, action, makeObservable } from 'mobx';
@@ -204,6 +204,8 @@ import { buildNamespaceColumnConfig } from 'shared/components/namespaceColumns/n
 import { SiteError } from 'shared/model/appMisc';
 import { AnnotatedExtendedAlteration } from 'shared/model/AnnotatedExtendedAlteration';
 import { CustomDriverNumericGeneMolecularData } from 'shared/model/CustomDriverNumericGeneMolecularData';
+
+const client = getClient();
 
 type PageMode = 'patient' | 'sample';
 type ResourceId = string;

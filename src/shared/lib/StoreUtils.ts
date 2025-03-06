@@ -33,8 +33,7 @@ import {
     SampleFilter,
     StructuralVariant,
 } from 'cbioportal-ts-api-client';
-import defaultClient from 'shared/api/cbioportalClientInstance';
-import client from 'shared/api/cbioportalClientInstance';
+import { getClient } from 'shared/api/cbioportalClientInstance';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
 import g2sClient from 'shared/api/g2sClientInstance';
 import { MobxPromise, stringListToIndexSet } from 'cbioportal-frontend-commons';
@@ -112,6 +111,8 @@ import {
 } from 'shared/model/CustomDriverAnnotationInfo';
 import { AnnotatedNumericGeneMolecularData } from 'shared/model/AnnotatedNumericGeneMolecularData';
 import { EnsemblFilter } from 'genome-nexus-ts-api-client';
+
+const defaultClient = getClient();
 
 export const MolecularAlterationType_filenameSuffix: {
     [K in MolecularProfile['molecularAlterationType']]?: string;
@@ -222,12 +223,12 @@ export function getAllGenes(client: CBioPortalAPI = defaultClient) {
 export async function fetchReferenceGenomeGenes(
     genomeName: string,
     hugoGeneSymbols?: string[],
-    client: CBioPortalAPI = defaultClient
+    client: CBioPortalAPIInternal = internalClient
 ) {
     if (hugoGeneSymbols && hugoGeneSymbols.length) {
         const order = stringListToIndexSet(hugoGeneSymbols);
         return _.sortBy(
-            await internalClient.fetchReferenceGenomeGenesUsingPOST({
+            await client.fetchReferenceGenomeGenesUsingPOST({
                 genomeName: genomeName,
                 geneIds: hugoGeneSymbols.slice(),
             }),
@@ -240,7 +241,7 @@ export async function fetchReferenceGenomeGenes(
 
 export async function fetchAllReferenceGenomeGenes(
     genomeName: string,
-    client: CBioPortalAPI = defaultClient
+    client: CBioPortalAPIInternal = internalClient
 ) {
     const doCaching = /\.cbioportal\.org|netlify\.app/.test(
         window.location.hostname
@@ -260,7 +261,7 @@ export async function fetchAllReferenceGenomeGenes(
             console.info('using locally cached reference genome data');
             return hg19cached as ReferenceGenomeGene[];
         } else {
-            return await internalClient
+            return await client
                 .getAllReferenceGenomeGenesUsingGET({
                     genomeName: genomeName,
                 })
@@ -272,7 +273,7 @@ export async function fetchAllReferenceGenomeGenes(
         }
     } else {
         if (genomeName) {
-            return await internalClient.getAllReferenceGenomeGenesUsingGET({
+            return await client.getAllReferenceGenomeGenesUsingGET({
                 genomeName: genomeName,
             });
         } else {
@@ -718,7 +719,7 @@ export async function fetchGisticData(
 export async function fetchCopyNumberData(
     discreteCNAData: MobxPromise<DiscreteCopyNumberData[]>,
     molecularProfileIdDiscrete: MobxPromise<string>,
-    client: CBioPortalAPI = defaultClient
+    client: CBioPortalAPIInternal = internalClient
 ) {
     const copyNumberCountIdentifiers: CopyNumberCountIdentifier[] = discreteCNAData.result
         ? discreteCNAData.result.map((cnData: DiscreteCopyNumberData) => {
@@ -733,7 +734,7 @@ export async function fetchCopyNumberData(
         molecularProfileIdDiscrete.result &&
         copyNumberCountIdentifiers.length > 0
     ) {
-        return await internalClient.fetchCopyNumberCountsUsingPOST({
+        return await client.fetchCopyNumberCountsUsingPOST({
             molecularProfileId: molecularProfileIdDiscrete.result,
             copyNumberCountIdentifiers,
         });
@@ -754,7 +755,7 @@ export async function fetchGenePanelData(
     if (sampleListId.length > 0) {
         filter.sampleListId = sampleListId;
     }
-    const remoteData = await client.getGenePanelDataUsingPOST({
+    const remoteData = await defaultClient.getGenePanelDataUsingPOST({
         molecularProfileId,
         genePanelDataFilter: filter as GenePanelDataFilter,
     });
@@ -770,7 +771,7 @@ export async function fetchGenePanel(
         _.map(
             uniquePanelIds,
             async genePanelId =>
-                await client.getGenePanelUsingGET({ genePanelId })
+                await defaultClient.getGenePanelUsingGET({ genePanelId })
         )
     );
     return _.keyBy(remoteData, genePanel => genePanel.genePanelId);
@@ -1548,7 +1549,7 @@ export async function fetchSurvivalDataExists(
             studyId: s.studyId,
         })),
     };
-    const count = await client
+    const count = await defaultClient
         .fetchClinicalDataUsingPOSTWithHttpInfo({
             clinicalDataType: 'PATIENT',
             clinicalDataMultiStudyFilter: filter,

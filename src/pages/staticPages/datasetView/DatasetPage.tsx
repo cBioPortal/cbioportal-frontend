@@ -2,7 +2,7 @@ import * as React from 'react';
 import _ from 'lodash';
 import DatasetList from './DatasetList';
 import { inject, observer } from 'mobx-react';
-import client from 'shared/api/cbioportalClientInstance';
+import { getClient } from 'shared/api/cbioportalClientInstance';
 import { remoteData } from 'cbioportal-frontend-commons';
 import { getServerConfig } from 'config/config';
 import styles from './styles.module.scss';
@@ -15,7 +15,9 @@ import { getStudyDownloadListUrl } from 'shared/api/urls';
 export class DatasetPageStore {
     readonly data = remoteData({
         invoke: () => {
-            return client.getAllStudiesUsingGET({ projection: 'DETAILED' });
+            return getClient().getAllStudiesUsingGET({
+                projection: 'DETAILED',
+            });
         },
     });
 

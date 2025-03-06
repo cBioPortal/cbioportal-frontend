@@ -34,7 +34,7 @@ import {
     StructuralVariantFilter,
 } from 'cbioportal-ts-api-client';
 
-import client from 'shared/api/cbioportalClientInstance';
+import { getClient } from 'shared/api/cbioportalClientInstance';
 import {
     cached,
     CanonicalMutationType,
@@ -298,6 +298,8 @@ import {
     USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB,
 } from 'react-mutation-mapper';
 import { RGBAColor } from 'oncoprintjs';
+
+const client = getClient();
 
 type Optional<T> =
     | { isApplicable: true; value: T }
