@@ -19,7 +19,7 @@ import genomeNexusClient from '../shared/api/genomeNexusClientInstance';
 import internalGenomeNexusClient from '../shared/api/genomeNexusInternalClientInstance';
 import oncoKBClient from '../shared/api/oncokbClientInstance';
 import genome2StructureClient from '../shared/api/g2sClientInstance';
-import client from '../shared/api/cbioportalClientInstance';
+import client, { getClient } from '../shared/api/cbioportalClientInstance';
 import internalClient, {
     getInternalClient,
 } from '../shared/api/cbioportalInternalClientInstance';
@@ -195,6 +195,7 @@ export function pairMatchesPath(
 export function initializeAPIClients() {
     // we need to set the domain of our api clients
     (client as any).domain = getCbioPortalApiUrl();
+    (getClient() as any).domain = getCbioPortalApiUrl();
     (internalClient as any).domain = getCbioPortalApiUrl();
     (getInternalClient() as any).domain = getCbioPortalApiUrl();
     (genomeNexusClient as any).domain = getGenomeNexusApiUrl();
