@@ -37,6 +37,7 @@ export default class CancerSummaryContainer extends React.Component<
     @observable private activeTab: string = CANCER_SUMMARY_ALL_GENES;
     @observable private resultsViewPageWidth: number = 1150;
     @observable private groupAlterationsBy_userSelection: keyof ExtendedSample;
+    @observable private countAlterationsBy_userSelection: string;
 
     private resultsViewPageContent: HTMLElement;
 
@@ -45,6 +46,7 @@ export default class CancerSummaryContainer extends React.Component<
         makeObservable(this);
         this.handleTabClick = this.handleTabClick.bind(this);
         this.pivotData = this.pivotData.bind(this);
+        this.pivotCountData = this.pivotCountData.bind(this);
         this.mapStudyIdToName = this.mapStudyIdToName.bind(this);
     }
 
@@ -58,6 +60,10 @@ export default class CancerSummaryContainer extends React.Component<
 
     public pivotData(str: keyof ExtendedSample) {
         this.groupAlterationsBy_userSelection = str;
+    }
+
+    public pivotCountData(str: string) {
+        this.countAlterationsBy_userSelection = str;
     }
 
     public get groupAlterationsBy(): keyof ExtendedSample {
@@ -79,6 +85,10 @@ export default class CancerSummaryContainer extends React.Component<
         } else {
             return this.groupAlterationsBy_userSelection;
         }
+    }
+
+    public get countAlterationsBy(): string {
+        return this.countAlterationsBy_userSelection ?? 'patientCounts';
     }
 
     // this is used to map study id to study name
@@ -106,7 +116,8 @@ export default class CancerSummaryContainer extends React.Component<
             this.groupAlterationsBy,
             this.props.store.selectedMolecularProfileIdsByAlterationType
                 .result!,
-            this.props.store.coverageInformation.result!
+            this.props.store.coverageInformation.result!,
+            this.countAlterationsBy
         );
 
         const geneTabs = _.map(this.props.store.genes.result!, (gene: Gene) => {
@@ -142,9 +153,11 @@ export default class CancerSummaryContainer extends React.Component<
                         }
                         handleStudyLinkout={this.handleStudyLinkout}
                         groupAlterationsBy={this.groupAlterationsBy}
+                        countAlterationsBy={this.countAlterationsBy}
                         gene={gene.hugoGeneSymbol}
                         labelTransformer={labelTransformer}
                         handlePivotChange={this.pivotData}
+                        handlePivotCountChange={this.pivotCountData}
                         width={this.resultsViewPageWidth}
                     />
                 </MSKTab>
@@ -161,7 +174,8 @@ export default class CancerSummaryContainer extends React.Component<
                 this.groupAlterationsBy,
                 this.props.store.selectedMolecularProfileIdsByAlterationType
                     .result!,
-                this.props.store.coverageInformation.result!
+                this.props.store.coverageInformation.result!,
+                this.countAlterationsBy
             );
             geneTabs.unshift(
                 <MSKTab
@@ -174,8 +188,10 @@ export default class CancerSummaryContainer extends React.Component<
                         width={this.resultsViewPageWidth}
                         groupedAlterationData={groupedAlterationDataForAllGenes}
                         handlePivotChange={this.pivotData}
+                        handlePivotCountChange={this.pivotCountData}
                         labelTransformer={labelTransformer}
                         groupAlterationsBy={this.groupAlterationsBy}
+                        countAlterationsBy={this.countAlterationsBy}
                         handleStudyLinkout={this.handleStudyLinkout}
                     />
                 </MSKTab>
