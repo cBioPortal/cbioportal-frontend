@@ -431,7 +431,7 @@ describe('hide download controls feature', function() {
             describe('tissue image tab', () => {
                 it('global check for icon and occurrence of "Download" as a word', () => {
                     $('.tabAnchor_tissueImage').click();
-                    $('iframe').waitForExist();
+                    $('.minervaContainer').waitForExist();
                     globalCheck();
                 });
             });

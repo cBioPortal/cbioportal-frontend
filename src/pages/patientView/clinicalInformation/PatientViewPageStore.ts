@@ -1580,7 +1580,7 @@ export class PatientViewPageStore {
         },
     });
 
-    readonly hasTissueImageIFrameUrl = remoteData(
+    readonly hasTissueImageUrl = remoteData(
         {
             await: () => [this.derivedPatientId],
             invoke: async () => {

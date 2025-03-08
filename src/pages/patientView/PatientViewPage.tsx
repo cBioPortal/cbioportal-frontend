@@ -303,10 +303,10 @@ export class PatientViewPageInner extends React.Component<
     @computed
     get hideTissueImageTab() {
         return (
-            this.pageStore.hasTissueImageIFrameUrl.isPending ||
-            this.pageStore.hasTissueImageIFrameUrl.isError ||
-            (this.pageStore.hasTissueImageIFrameUrl.isComplete &&
-                !this.pageStore.hasTissueImageIFrameUrl.result)
+            this.pageStore.hasTissueImageUrl.isPending ||
+            this.pageStore.hasTissueImageUrl.isError ||
+            (this.pageStore.hasTissueImageUrl.isComplete &&
+                !this.pageStore.hasTissueImageUrl.result)
         );
     }
 
