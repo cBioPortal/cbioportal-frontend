@@ -973,45 +973,52 @@ describe('URLWrapper', () => {
         assert.equal(wrapper.query.cancer_study_list, '789');
     });
 
-    it('handles new session before old session finished saving', done => {
+    it('handles new session before old session finished saving', async () => {
+        // Ensure the test doesn't fail due to timeout issues
+        jest.setTimeout(10000);
+
         wrapper.urlCharThresholdForSession = 0;
         wrapper.sessionEnabled = true;
 
+        // Stub saveRemoteSession
         let saveSessionStub = sinon.stub(wrapper, 'saveRemoteSession');
 
-        saveSessionStub.callsFake(function(sessionData) {
+        saveSessionStub.callsFake(sessionData => {
             return new Promise(resolve => {
-                setTimeout(() => {
-                    return resolve({ id: 'sessionId1' });
-                }, 10);
+                setTimeout(
+                    () => {
+                        resolve({
+                            id:
+                                sessionData.gene_list === '12345'
+                                    ? 'sessionId1'
+                                    : 'sessionId2',
+                        });
+                    },
+                    sessionData.gene_list === '12345' ? 10 : 5
+                ); // Simulates session order
             });
         });
 
+        // First update - should be canceled by the second one
         wrapper.updateURL({ gene_list: '12345' });
+        assert.isTrue(saveSessionStub.calledOnce);
 
-        assert.isTrue(saveSessionStub.called);
-
-        saveSessionStub.callsFake(function(sessionData) {
-            return new Promise(resolve => {
-                setTimeout(() => {
-                    return resolve({ id: 'sessionId2' });
-                }, 5);
-            });
-        });
-
+        // Second update - should take effect
         wrapper.updateURL({ gene_list: '54321' });
-
         assert.isTrue(saveSessionStub.calledTwice);
 
-        // should reflect sequence of sessions, not response
-        // i.e. first session should have been cancelled by second
-        // even though second response sooner
-        setTimeout(() => {
-            assert.equal(wrapper.sessionId, 'sessionId2');
-            assert.equal(wrapper.query.gene_list, '54321');
-            assert.equal(routingStore.query.session_id, 'sessionId2');
-            done();
-        }, 1000);
+        // Wait for async execution
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        console.log(wrapper.sessionId); // Debugging session value
+
+        // Validate session handling
+        assert.equal(wrapper.sessionId, 'sessionId2');
+        assert.equal(wrapper.query.gene_list, '54321');
+        assert.equal(routingStore.query.session_id, 'sessionId2');
+
+        // Cleanup the stub
+        saveSessionStub.restore();
     });
 
     it('#needToLoadSession obeys rules', () => {
