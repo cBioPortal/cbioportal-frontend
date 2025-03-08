@@ -1,4 +1,4 @@
-import { observable } from 'mobx';
+import { observable, reaction } from 'mobx';
 import { getServerConfig } from 'config/config';
 import { default as OncoprinterStore } from './OncoprinterStore';
 import _ from 'lodash';
@@ -26,6 +26,7 @@ import {
     getProteinPositionFromProteinChange,
     EvidenceType,
     IOncoKbData,
+    annotateMutations,
 } from 'cbioportal-utils';
 import {
     generateQueryVariantId,
@@ -43,15 +44,25 @@ import {
     queryOncoKbData,
 } from '../../../../shared/lib/StoreUtils';
 import { default as oncokbClient } from '../../../../shared/api/oncokbClientInstance';
-import { MobxPromise } from 'cbioportal-frontend-commons';
+import { MobxPromise, remoteData } from 'cbioportal-frontend-commons';
 import { mutationCountByPositionKey } from '../../../resultsView/mutationCountHelpers';
 import { getAlterationString } from '../../../../shared/lib/CopyNumberUtils';
 import { GERMLINE_REGEXP } from '../../../../shared/lib/MutationUtils';
 import { parseOQLQuery } from '../../../../shared/lib/oql/oqlfilter';
 import { Alteration, MUTCommand } from '../../../../shared/lib/oql/oql-parser';
-import { MUTATION_STATUS_GERMLINE } from '../../../../shared/constants';
+import {
+    MUTATION_STATUS_GERMLINE,
+    GENOME_NEXUS_ARG_FIELD_ENUM,
+} from '../../../../shared/constants';
 import { OncoprintModel } from 'oncoprintjs';
-
+import {
+    parseInput,
+    mutationInputToMutation,
+} from '../../../../shared/lib/MutationInputParser';
+import { fetchVariantAnnotationsIndexedByGenomicLocation } from '../../../../shared/lib/StoreUtils';
+import { VariantAnnotation } from 'genome-nexus-ts-api-client';
+import { normalizeMutations } from 'shared/components/mutationMapper/MutationMapperUtils';
+import { rawListeners } from 'superagent';
 export type OncoprinterGeneticTrackDatum = Pick<
     GeneticTrackDatum,
     | 'trackLabel'
@@ -821,6 +832,17 @@ export function parseGeneticInput(
                 ])
             ) {
                 return null; // skip header line
+            } else if (
+                lineIndex === 0 &&
+                _.isEqual(lines[0].map(s => s.toLowerCase()).slice(0, 5), [
+                    'chromosome',
+                    'start_position',
+                    'end_position',
+                    'reference_allele',
+                    'variant_allele',
+                ])
+            ) {
+                return null; // skip header line
             }
             const errorPrefix = `Genetic data input error on line ${lineIndex +
                 1}: \n${line.join('\t')}\n\n`;
@@ -828,131 +850,228 @@ export function parseGeneticInput(
                 // Type 1 line
                 return { sampleId: line[0] };
             } else if (line.length === 4 || line.length === 5) {
-                // Type 2 line
-                const sampleId = line[0];
-                const hugoGeneSymbol = line[1];
-                const alteration = line[2];
-                const lcAlteration = alteration.toLowerCase();
-                const type = line[3];
-                const lcType = type.toLowerCase();
-                const trackName = line.length === 5 ? line[4] : undefined;
-                let ret: Partial<OncoprinterGeneticInputLineType2> = {
-                    sampleId,
-                    hugoGeneSymbol,
-                    trackName,
-                };
-
-                switch (lcType) {
-                    case 'cna':
-                        if (
-                            ['amp', 'gain', 'hetloss', 'homdel'].indexOf(
-                                lcAlteration
-                            ) === -1
-                        ) {
-                            throw new Error(
-                                `${errorPrefix}Alteration "${alteration}" is not valid - it must be "AMP", "GAIN" ,"HETLOSS", or "HOMDEL" since Type is "CNA"`
-                            );
-                        }
-                        ret.alteration = lcAlteration as
-                            | 'amp'
-                            | 'gain'
-                            | 'hetloss'
-                            | 'homdel';
-                        break;
-                    case 'exp':
-                        if (lcAlteration === 'high') {
-                            ret.alteration = 'mrnaHigh';
-                        } else if (lcAlteration === 'low') {
-                            ret.alteration = 'mrnaLow';
-                        } else {
-                            throw new Error(
-                                `${errorPrefix}Alteration "${alteration}" is not valid - it must be "HIGH" or "LOW" if Type is "EXP"`
-                            );
-                        }
-                        break;
-                    case 'prot':
-                        if (lcAlteration === 'high') {
-                            ret.alteration = 'protHigh';
-                        } else if (lcAlteration === 'low') {
-                            ret.alteration = 'protLow';
-                        } else {
-                            throw new Error(
-                                `${errorPrefix}Alteration "${alteration}" is not valid - it must be "HIGH" or "LOW" if Type is "PROT"`
-                            );
-                        }
-                        break;
-                    case 'fusion':
-                        if (lcType !== 'fusion') {
-                            throw new Error(
-                                `${errorPrefix}Type "${type}" is not valid - it must be "FUSION" if Alteration is "FUSION"`
-                            );
-                        } else {
-                            ret.alteration = 'structuralVariant';
-                            ret.eventInfo = alteration;
-                        }
-                        break;
-                    default:
-                        // everything else is a mutation
-                        // use OQL parsing for handling mutation modifiers
-                        let parsedMutation: MUTCommand<any>;
-                        try {
-                            parsedMutation = (parseOQLQuery(
-                                `GENE: ${lcType}`
-                            )[0].alterations as Alteration[])[0] as MUTCommand<
-                                any
-                            >;
-                        } catch (e) {
-                            throw new Error(
-                                `${errorPrefix}Mutation type ${type} is not valid.`
-                            );
-                        }
-
-                        for (const modifier of parsedMutation.modifiers) {
-                            switch (modifier.type) {
-                                case 'GERMLINE':
-                                    ret.isGermline = true;
-                                    break;
-                                case 'DRIVER':
-                                    ret.isCustomDriver = true;
-                                    break;
-                                default:
-                                    throw new Error(
-                                        `${errorPrefix}Only allowed mutation modifiers are GERMLINE and DRIVER`
+                // Type 3 line
+                if (
+                    line.length === 5 &&
+                    line.slice(0, 3).every(it => /^\d+$/.test(it)) &&
+                    line.slice(3, 5).every(it => /^[A-Z\- ]+$/.test(it))
+                ) {
+                    const mutationInput = [
+                        'Sample_ID	Cancer_Type	Chromosome	Start_Position	End_Position	Reference_Allele	Variant_Allele',
+                    ];
+                    mutationInput.push(
+                        'dummy_sample_id\t' + 'dummy_type\t' + line.join('\t')
+                    );
+                    const mutationData = parseInput(mutationInput.join('\n'));
+                    let proteinChange: string | undefined;
+                    let hugoGeneSymbol: string | undefined;
+                    let sampleId: string | undefined;
+                    let mutationType: string | undefined;
+                    const trackName = undefined;
+                    if (mutationData.length === 1) {
+                        const rawMutations = mutationInputToMutation(
+                            mutationData
+                        ) as Mutation[];
+                        const variantAnnotations = remoteData<{
+                            [genomicLocation: string]: VariantAnnotation;
+                        }>({
+                            invoke: async () =>
+                                await fetchVariantAnnotationsIndexedByGenomicLocation(
+                                    rawMutations,
+                                    [
+                                        GENOME_NEXUS_ARG_FIELD_ENUM.ANNOTATION_SUMMARY,
+                                    ].filter(f => f)
+                                ),
+                            onError: (error: Error) => {
+                                console.error(error);
+                            },
+                        });
+                        reaction(
+                            () => variantAnnotations.result,
+                            result => {
+                                if (result) {
+                                    const annotatedMutation = annotateMutations(
+                                        normalizeMutations(rawMutations),
+                                        result
                                     );
+                                    if (annotatedMutation.length === 1) {
+                                        const gene =
+                                            annotatedMutation[0]['gene'];
+                                        switch (
+                                            annotatedMutation[0]['mutationType']
+                                                ?.split('_')
+                                                .slice(0, 2)
+                                                .join('_')
+                                        ) {
+                                            case 'Missense_Mutation':
+                                                mutationType = 'missense';
+                                                break;
+                                            case 'In_Frame':
+                                                mutationType = 'inframe';
+                                                break;
+                                            case 'Splice_Region':
+                                            case 'Splice_Site':
+                                                mutationType = 'splice';
+                                                break;
+                                            default:
+                                                mutationType = 'other';
+                                                break;
+                                        }
+                                        proteinChange =
+                                            annotatedMutation[0][
+                                                'proteinChange'
+                                            ];
+                                        sampleId = `DUMMY-SAMPLE-${lineIndex}`;
+                                        hugoGeneSymbol = gene
+                                            ? gene['hugoGeneSymbol']
+                                            : '';
+                                        let ret: Partial<OncoprinterGeneticInputLineType2> = {
+                                            sampleId,
+                                            hugoGeneSymbol,
+                                            trackName,
+                                        };
+
+                                        ret.alteration = mutationType as OncoprintMutationType;
+                                        ret.proteinChange = proteinChange;
+                                        return ret as OncoprinterGeneticInputLineType2;
+                                    }
+                                }
                             }
-                        }
+                        );
+                    }
+                } else {
+                    // Type 2 line
+                    const sampleId = line[0];
+                    const hugoGeneSymbol = line[1];
+                    const alteration = line[2];
+                    const lcAlteration = alteration.toLowerCase();
+                    const type = line[3];
+                    const lcType = type.toLowerCase();
+                    const trackName = line.length === 5 ? line[4] : undefined;
 
-                        const lcMutationType = parsedMutation.constr_val!.toLowerCase();
+                    let ret: Partial<OncoprinterGeneticInputLineType2> = {
+                        sampleId,
+                        hugoGeneSymbol,
+                        trackName,
+                    };
 
-                        if (
-                            [
-                                'missense',
-                                'inframe',
-                                'promoter',
-                                'trunc',
-                                'splice',
-                                'other',
-                            ].indexOf(lcMutationType) === -1
-                        ) {
-                            throw new Error(
-                                `${errorPrefix}Type "${type}" is not valid - it must be "MISSENSE", "INFRAME", "TRUNC", "SPLICE", "PROMOTER", or "OTHER" for a mutation alteration.`
-                            );
-                        }
-                        ret.alteration = lcMutationType as OncoprintMutationType;
-                        ret.proteinChange = alteration;
+                    switch (lcType) {
+                        case 'cna':
+                            if (
+                                ['amp', 'gain', 'hetloss', 'homdel'].indexOf(
+                                    lcAlteration
+                                ) === -1
+                            ) {
+                                throw new Error(
+                                    `${errorPrefix}Alteration "${alteration}" is not valid - it must be "AMP", "GAIN" ,"HETLOSS", or "HOMDEL" since Type is "CNA"`
+                                );
+                            }
+                            ret.alteration = lcAlteration as
+                                | 'amp'
+                                | 'gain'
+                                | 'hetloss'
+                                | 'homdel';
+                            break;
+                        case 'exp':
+                            if (lcAlteration === 'high') {
+                                ret.alteration = 'mrnaHigh';
+                            } else if (lcAlteration === 'low') {
+                                ret.alteration = 'mrnaLow';
+                            } else {
+                                throw new Error(
+                                    `${errorPrefix}Alteration "${alteration}" is not valid - it must be "HIGH" or "LOW" if Type is "EXP"`
+                                );
+                            }
+                            break;
+                        case 'prot':
+                            if (lcAlteration === 'high') {
+                                ret.alteration = 'protHigh';
+                            } else if (lcAlteration === 'low') {
+                                ret.alteration = 'protLow';
+                            } else {
+                                throw new Error(
+                                    `${errorPrefix}Alteration "${alteration}" is not valid - it must be "HIGH" or "LOW" if Type is "PROT"`
+                                );
+                            }
+                            break;
+                        case 'fusion':
+                            if (lcType !== 'fusion') {
+                                throw new Error(
+                                    `${errorPrefix}Type "${type}" is not valid - it must be "FUSION" if Alteration is "FUSION"`
+                                );
+                            } else {
+                                ret.alteration = 'structuralVariant';
+                                ret.eventInfo = alteration;
+                            }
+                            break;
+                        default:
+                            // everything else is a mutation
+                            // use OQL parsing for handling mutation modifiers
+                            let parsedMutation: MUTCommand<any>;
+                            try {
+                                parsedMutation = (parseOQLQuery(
+                                    `GENE: ${lcType}`
+                                )[0]
+                                    .alterations as Alteration[])[0] as MUTCommand<
+                                    any
+                                >;
+                            } catch (e) {
+                                throw new Error(
+                                    `${errorPrefix}Mutation type ${type} is not valid.`
+                                );
+                            }
 
-                        break;
+                            for (const modifier of parsedMutation.modifiers) {
+                                switch (modifier.type) {
+                                    case 'GERMLINE':
+                                        ret.isGermline = true;
+                                        break;
+                                    case 'DRIVER':
+                                        ret.isCustomDriver = true;
+                                        break;
+                                    default:
+                                        throw new Error(
+                                            `${errorPrefix}Only allowed mutation modifiers are GERMLINE and DRIVER`
+                                        );
+                                }
+                            }
+
+                            const lcMutationType = parsedMutation.constr_val!.toLowerCase();
+
+                            if (
+                                [
+                                    'missense',
+                                    'inframe',
+                                    'promoter',
+                                    'trunc',
+                                    'splice',
+                                    'other',
+                                ].indexOf(lcMutationType) === -1
+                            ) {
+                                throw new Error(
+                                    `${errorPrefix}Type "${type}" is not valid - it must be "MISSENSE", "INFRAME", "TRUNC", "SPLICE", "PROMOTER", or "OTHER" for a mutation alteration.`
+                                );
+                            }
+                            ret.alteration = lcMutationType as OncoprintMutationType;
+                            ret.proteinChange = alteration;
+
+                            break;
+                    }
+                    return ret as OncoprinterGeneticInputLineType2;
                 }
-                return ret as OncoprinterGeneticInputLineType2;
             } else {
                 throw new Error(
                     `${errorPrefix}input lines must have either 1 or 4 columns.`
                 );
             }
         });
+        const returnResult = result.filter(
+            x => !!x
+        ) as OncoprinterGeneticInputLine[];
+        console.log('Result: ', returnResult[0]);
         return {
             parseSuccess: true,
-            result: result.filter(x => !!x) as OncoprinterGeneticInputLine[],
+            result: returnResult,
             error: undefined,
         };
     } catch (e) {
