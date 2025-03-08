@@ -81,9 +81,9 @@
     > span {
         margin-left: 5px;
         i {
-            color: $brand-primary;
+            color: #3786c2;
             &:hover {
-                color: darken($brand-primary, 10%);
+                color: darken(#3786c2, 10%);
             }
         }
     }
@@ -118,7 +118,7 @@
                 margin-right: 6px !important;
             }
             &:global(.active) a {
-                background: $brand-primary !important;
+                background: #3786c2 !important;
                 border-top: none !important;
                 border-bottom: 0px !important;
                 &:hover {

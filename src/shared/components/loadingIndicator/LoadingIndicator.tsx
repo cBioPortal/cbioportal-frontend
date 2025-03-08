@@ -77,7 +77,7 @@ export default class LoadingIndicator extends React.Component<ILoader, {}> {
                         data-test={'LoadingIndicator'}
                     >
                         <Spinner
-                            fadeIn="none"
+                            noFadeIn={true}
                             className={classNames(styles.color, spinnerStyles)}
                             style={{ display: 'inline-block' }}
                             name="line-scale-pulse-out"
@@ -102,7 +102,7 @@ export class GlobalLoader extends React.Component<ILoader, {}> {
                         styles.centered,
                         styles.big
                     )}
-                    fadeIn="none"
+                    noFadeIn={true}
                     name="line-scale-pulse-out"
                 />
             </Portal>

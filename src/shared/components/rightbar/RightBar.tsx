@@ -14,6 +14,7 @@ import { mockOrder } from 'pages/patientView/vafPlot/mockData';
 import { remoteData } from 'cbioportal-frontend-commons';
 import { sleep } from 'shared/lib/TimeUtils';
 import parseNews from 'shared/lib/parseNews';
+import MinervaViewer from '../minerva/MinervaViewer';
 
 interface IRightBarProps {
     queryStore: QueryStore;
@@ -190,14 +191,14 @@ export default class RightBar extends React.Component<
                     target={'_blank'}
                     style={{ display: 'block' }}
                 >
-                    <iframe
-                        frameBorder="0"
-                        height={200}
-                        width={300}
-                        scrolling="no"
-                        src={`${installations_url}?small=1`}
-                        style={{ pointerEvents: 'none' }}
-                    />
+                    <div style={{ width: 300, pointerEvents: 'none' }}>
+                        <MinervaViewer
+                            url={`${installations_url}?small=1`}
+                            containerHeight={200}
+                            showControls={false}
+                            enableAnnotations={false}
+                        />
+                    </div>
                 </a>
 
                 <p>
