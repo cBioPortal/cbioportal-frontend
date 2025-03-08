@@ -1,10 +1,10 @@
 import * as React from 'react';
 import { useState, useEffect, useRef } from 'react';
-import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
+import LoadingIndicator from '../../../shared/components/loadingIndicator/LoadingIndicator';
 import {
     getDigitalSlideArchiveIFrameUrl,
     getDigitalSlideArchiveMetaUrl,
-} from 'shared/api/urls';
+} from '../../../shared/api/urls';
 import './styles.module.scss';
 
 interface IMinervaViewerProps {
@@ -59,7 +59,6 @@ const MinervaViewer: React.FC<IMinervaViewerProps> = props => {
     // Get metadata about available slides
     useEffect(() => {
         if (patientId) {
-            // Fetch metadata about the slides if needed
             fetch(getDigitalSlideArchiveMetaUrl(patientId))
                 .then(response => response.json())
                 .then(data => {
@@ -78,28 +77,18 @@ const MinervaViewer: React.FC<IMinervaViewerProps> = props => {
             try {
                 setIsLoading(true);
 
-                // This would be where you'd initialize the Minerva client library
-                // Instead of using an iframe, you'd directly use their JavaScript API
-                // Example (replace with actual Minerva API):
-                // const minerva = new MinervaClient(containerRef.current);
-                // await minerva.loadImage(getMinervaUrl());
-
-                // For now, simulate initialization with a timeout
                 await new Promise(resolve => setTimeout(resolve, 1000));
 
                 // Create a placeholder Minerva instance
                 const minervaInstance = {
                     zoomTo: (level: number) => {
                         console.log(`Zooming to level ${level}`);
-                        // Actual implementation would call Minerva API
                     },
                     panTo: (x: number, y: number) => {
                         console.log(`Panning to ${x}, ${y}`);
-                        // Actual implementation would call Minerva API
                     },
                     enableAnnotations: (enable: boolean) => {
                         console.log(`Setting annotations to ${enable}`);
-                        // Actual implementation would call Minerva API
                     },
                     getViewportDetails: () => {
                         return {
@@ -129,9 +118,7 @@ const MinervaViewer: React.FC<IMinervaViewerProps> = props => {
 
         return () => {
             mounted = false;
-            // Clean up Minerva instance if needed
             if (minervaInstance) {
-                // Example: minervaInstance.dispose();
                 console.log('Cleaning up Minerva instance');
             }
         };
@@ -140,7 +127,6 @@ const MinervaViewer: React.FC<IMinervaViewerProps> = props => {
     // Apply control settings
     useEffect(() => {
         if (minervaInstance) {
-            // Example of direct state changes instead of URL parameters
             if (initialZoom) {
                 minervaInstance.zoomTo(initialZoom);
             }
@@ -183,7 +169,6 @@ const MinervaViewer: React.FC<IMinervaViewerProps> = props => {
 
             {!isLoading && !error && (
                 <div className="minervaViewport">
-                    {/* This would be replaced by the actual Minerva viewer rendering */}
                     <div style={{ padding: 20, textAlign: 'center' }}>
                         <h3>Minerva Viewer</h3>
                         <p>Connected to: {displayUrl}</p>
@@ -195,7 +180,6 @@ const MinervaViewer: React.FC<IMinervaViewerProps> = props => {
                         {slideMetadata && (
                             <div>
                                 <p>Available Slides: {slideMetadata.length}</p>
-                                {/* Display slide information if needed */}
                             </div>
                         )}
 

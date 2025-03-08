@@ -218,7 +218,7 @@ th.reactable-header-sort-asc:after {
         }
 
         &.active a {
-            border-bottom: 2px solid $brand-primary !important;
+            border-bottom: 2px solid #3786c2 !important;
         }
     }
 
@@ -241,7 +241,7 @@ th.reactable-header-sort-asc:after {
             }
 
             &.active a {
-                background: $brand-primary;
+                background: #3786c2;
                 border-top: none !important;
                 &:hover {
                     color: #fff !important;
@@ -291,7 +291,7 @@ th.reactable-header-sort-asc:after {
 
         .active {
             a {
-                border-top: 3px solid $brand-primary !important;
+                border-top: 3px solid #3786c2 !important;
                 padding-top: 9px;
                 text-decoration: none !important;
             }
@@ -484,7 +484,7 @@ h3 {
             border-bottom: 1px solid #ddd;
             margin: 0 0 4px 0;
             padding-bottom: 4px;
-            color: $brand-primary;
+            color: $;
         }
         padding: 0 $gutterWidth 10px $gutterWidth;
     }
