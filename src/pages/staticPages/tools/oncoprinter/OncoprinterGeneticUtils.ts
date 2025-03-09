@@ -1,4 +1,4 @@
-import { observable, reaction } from 'mobx';
+import { observable, reaction, when } from 'mobx';
 import { getServerConfig } from 'config/config';
 import { default as OncoprinterStore } from './OncoprinterStore';
 import _ from 'lodash';
@@ -807,139 +807,134 @@ export function annotateGeneticTrackData(
     });
 }
 
-export function parseGeneticInput(
+export async function fetchGeneticMutationAnnotation(
+    input: string[],
+    sampleId: string
+): Promise<Partial<OncoprinterGeneticInputLineType2>> {
+    const mutationData = parseInput(input.join('\n'));
+    let mutationType: string | undefined;
+    let proteinChange: string | undefined;
+    let hugoGeneSymbol: string | undefined;
+    const trackName = undefined;
+    if (mutationData.length === 1) {
+        try {
+            const rawMutations = mutationInputToMutation(
+                mutationData
+            ) as Mutation[];
+            const variantAnnotations = remoteData<{
+                [genomicLocation: string]: VariantAnnotation;
+            }>({
+                invoke: async () =>
+                    await fetchVariantAnnotationsIndexedByGenomicLocation(
+                        rawMutations,
+                        [GENOME_NEXUS_ARG_FIELD_ENUM.ANNOTATION_SUMMARY].filter(
+                            f => f
+                        )
+                    ),
+                onError: (error: Error) => {
+                    console.error(error);
+                },
+            });
+            await when(() => variantAnnotations.result !== undefined);
+            const result = variantAnnotations.result;
+            if (result) {
+                const annotatedMutation = annotateMutations(
+                    normalizeMutations(rawMutations),
+                    result
+                );
+                if (annotatedMutation.length === 1) {
+                    const gene = annotatedMutation[0]['gene'];
+                    const annotatedMutationType = annotatedMutation[0][
+                        'mutationType'
+                    ]
+                        ?.replace(/[^a-zA-Z0-9]/g, '')
+                        .toLowerCase();
+                    const validMutationTypes = [
+                        'missense',
+                        'inframe',
+                        'promoter',
+                        'trunc',
+                        'splice',
+                    ];
+                    if (
+                        annotatedMutationType &&
+                        validMutationTypes.some(type =>
+                            annotatedMutationType.includes(type)
+                        )
+                    ) {
+                        mutationType =
+                            validMutationTypes.find(type =>
+                                annotatedMutationType.includes(type)
+                            ) || 'other';
+                    } else {
+                        mutationType = 'other';
+                    }
+                    proteinChange = annotatedMutation[0]['proteinChange'];
+                    hugoGeneSymbol = gene ? gene['hugoGeneSymbol'] : '';
+                    return {
+                        sampleId,
+                        hugoGeneSymbol,
+                        trackName,
+                        alteration: mutationType as OncoprintMutationType,
+                        proteinChange,
+                    };
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching annotation:', error);
+        }
+    }
+
+    return {};
+}
+
+export async function parseGeneticInput(
     input: string
-):
+): Promise<
     | {
           parseSuccess: true;
           result: OncoprinterGeneticInputLine[];
           error: undefined;
       }
-    | { parseSuccess: false; result: undefined; error: string } {
+    | { parseSuccess: false; result: undefined; error: string }
+> {
     const lines = input
         .trim()
         .split('\n')
-        .map(line => line.trim().split(/\s+/));
+        .map(line => line.trim().split(/\t/));
     try {
-        const result = lines.map((line, lineIndex) => {
-            if (
-                lineIndex === 0 &&
-                _.isEqual(lines[0].map(s => s.toLowerCase()).slice(0, 4), [
-                    'sample',
-                    'gene',
-                    'alteration',
-                    'type',
-                ])
-            ) {
-                return null; // skip header line
-            } else if (
-                lineIndex === 0 &&
-                _.isEqual(lines[0].map(s => s.toLowerCase()).slice(0, 5), [
-                    'chromosome',
-                    'start_position',
-                    'end_position',
-                    'reference_allele',
-                    'variant_allele',
-                ])
-            ) {
-                return null; // skip header line
-            }
-            const errorPrefix = `Genetic data input error on line ${lineIndex +
-                1}: \n${line.join('\t')}\n\n`;
-            if (line.length === 1) {
-                // Type 1 line
-                return { sampleId: line[0] };
-            } else if (line.length === 4 || line.length === 5) {
-                // Type 3 line
+        const result = await Promise.all(
+            lines.map(async (line, lineIndex) => {
                 if (
-                    line.length === 5 &&
-                    line.slice(0, 3).every(it => /^\d+$/.test(it)) &&
-                    line.slice(3, 5).every(it => /^[A-Z\- ]+$/.test(it))
+                    lineIndex === 0 &&
+                    _.isEqual(lines[0].map(s => s.toLowerCase()).slice(0, 4), [
+                        'sample',
+                        'gene',
+                        'alteration',
+                        'type',
+                    ])
                 ) {
-                    const mutationInput = [
-                        'Sample_ID	Cancer_Type	Chromosome	Start_Position	End_Position	Reference_Allele	Variant_Allele',
-                    ];
-                    mutationInput.push(
-                        'dummy_sample_id\t' + 'dummy_type\t' + line.join('\t')
-                    );
-                    const mutationData = parseInput(mutationInput.join('\n'));
-                    let proteinChange: string | undefined;
-                    let hugoGeneSymbol: string | undefined;
-                    let sampleId: string | undefined;
-                    let mutationType: string | undefined;
-                    const trackName = undefined;
-                    if (mutationData.length === 1) {
-                        const rawMutations = mutationInputToMutation(
-                            mutationData
-                        ) as Mutation[];
-                        const variantAnnotations = remoteData<{
-                            [genomicLocation: string]: VariantAnnotation;
-                        }>({
-                            invoke: async () =>
-                                await fetchVariantAnnotationsIndexedByGenomicLocation(
-                                    rawMutations,
-                                    [
-                                        GENOME_NEXUS_ARG_FIELD_ENUM.ANNOTATION_SUMMARY,
-                                    ].filter(f => f)
-                                ),
-                            onError: (error: Error) => {
-                                console.error(error);
-                            },
-                        });
-                        reaction(
-                            () => variantAnnotations.result,
-                            result => {
-                                if (result) {
-                                    const annotatedMutation = annotateMutations(
-                                        normalizeMutations(rawMutations),
-                                        result
-                                    );
-                                    if (annotatedMutation.length === 1) {
-                                        const gene =
-                                            annotatedMutation[0]['gene'];
-                                        switch (
-                                            annotatedMutation[0]['mutationType']
-                                                ?.split('_')
-                                                .slice(0, 2)
-                                                .join('_')
-                                        ) {
-                                            case 'Missense_Mutation':
-                                                mutationType = 'missense';
-                                                break;
-                                            case 'In_Frame':
-                                                mutationType = 'inframe';
-                                                break;
-                                            case 'Splice_Region':
-                                            case 'Splice_Site':
-                                                mutationType = 'splice';
-                                                break;
-                                            default:
-                                                mutationType = 'other';
-                                                break;
-                                        }
-                                        proteinChange =
-                                            annotatedMutation[0][
-                                                'proteinChange'
-                                            ];
-                                        sampleId = `DUMMY-SAMPLE-${lineIndex}`;
-                                        hugoGeneSymbol = gene
-                                            ? gene['hugoGeneSymbol']
-                                            : '';
-                                        let ret: Partial<OncoprinterGeneticInputLineType2> = {
-                                            sampleId,
-                                            hugoGeneSymbol,
-                                            trackName,
-                                        };
-
-                                        ret.alteration = mutationType as OncoprintMutationType;
-                                        ret.proteinChange = proteinChange;
-                                        return ret as OncoprinterGeneticInputLineType2;
-                                    }
-                                }
-                            }
-                        );
-                    }
-                } else {
+                    return null; // skip header line
+                } else if (
+                    lineIndex === 0 &&
+                    _.isEqual(lines[0].map(s => s.toLowerCase()).slice(0, 7), [
+                        'sample_id',
+                        'cancer_type',
+                        'chromosome',
+                        'start_position',
+                        'end_position',
+                        'reference_allele',
+                        'variant_allele',
+                    ])
+                ) {
+                    return null; // skip header line
+                }
+                const errorPrefix = `Genetic data input error on line ${lineIndex +
+                    1}: \n${line.join('\t')}\n\n`;
+                if (line.length === 1) {
+                    // Type 1 line
+                    return { sampleId: line[0] };
+                } else if (line.length === 4 || line.length === 5) {
                     // Type 2 line
                     const sampleId = line[0];
                     const hugoGeneSymbol = line[1];
@@ -1058,17 +1053,38 @@ export function parseGeneticInput(
                             break;
                     }
                     return ret as OncoprinterGeneticInputLineType2;
+                } else if (
+                    // Type 3 line
+                    line.length === 7 &&
+                    line.slice(2, 5).every(it => /^\d+$/.test(it)) &&
+                    line.slice(5, 7).every(it => /^[A-Z\- ]+$/.test(it))
+                ) {
+                    const sampleId = line[0];
+                    const cancerType = line[1];
+                    const mutationInput = [
+                        'Sample_ID	Cancer_Type	Chromosome	Start_Position	End_Position	Reference_Allele	Variant_Allele',
+                    ];
+                    mutationInput.push(
+                        sampleId +
+                            '\t' +
+                            cancerType +
+                            '\t' +
+                            line.slice(2, 7).join('\t')
+                    );
+                    return await fetchGeneticMutationAnnotation(
+                        mutationInput,
+                        sampleId
+                    );
+                } else {
+                    throw new Error(
+                        `${errorPrefix}input lines must have either 1 or 4 columns.`
+                    );
                 }
-            } else {
-                throw new Error(
-                    `${errorPrefix}input lines must have either 1 or 4 columns.`
-                );
-            }
-        });
+            })
+        );
         const returnResult = result.filter(
-            x => !!x
+            x => x !== null
         ) as OncoprinterGeneticInputLine[];
-        console.log('Result: ', returnResult[0]);
         return {
             parseSuccess: true,
             result: returnResult,
