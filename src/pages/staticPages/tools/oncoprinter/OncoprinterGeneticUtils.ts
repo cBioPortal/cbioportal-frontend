@@ -898,10 +898,11 @@ export async function parseGeneticInput(
       }
     | { parseSuccess: false; result: undefined; error: string }
 > {
+    const separator = input.indexOf('\t') > 0 ? /\t/ : /\s+/;
     const lines = input
         .trim()
         .split('\n')
-        .map(line => line.trim().split(/\t/));
+        .map(line => line.trim().split(separator));
     try {
         const result = await Promise.all(
             lines.map(async (line, lineIndex) => {

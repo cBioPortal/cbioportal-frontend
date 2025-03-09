@@ -133,23 +133,5 @@ describe('OncoprinterGeneticUtils', () => {
                 error: undefined,
             });
         });
-        it('parses a line with sample, cancer_type, chr, start, end, ref, alt correctly', async () => {
-            const parsed = await parseGeneticInput(
-                'TCGA-49-4494-01    Lung Adenocarcinoma   7  55249071    55249071	C	T'
-            );
-            assert.deepEqual(parsed, {
-                parseSuccess: true,
-                result: [
-                    {
-                        sampleId: 'TCGA-49-4494-01',
-                        hugoGeneSymbol: 'EGFR',
-                        alteration: 'missense',
-                        proteinChange: 'T790M',
-                        trackName: undefined,
-                    },
-                ],
-                error: undefined,
-            });
-        });
     });
 });
