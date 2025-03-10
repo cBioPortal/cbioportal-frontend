@@ -101,6 +101,7 @@ export type BoxModel = {
     q3: number;
     x?: number;
     y?: number;
+    eventkey?: number;
 };
 
 const RIGHT_GUTTER = 130; // room for legend
@@ -130,6 +131,7 @@ export default class BoxScatterPlot<
     @observable.ref private container: HTMLDivElement;
     @observable.ref private boxPlotTooltipModel: any | null;
     @observable private mousePosition = { x: 0, y: 0 };
+    @observable.ref private axisLabelTooltipModel: any | null;
 
     private scatterPlotTooltipHelper: ScatterPlotTooltipHelper = new ScatterPlotTooltipHelper();
 
@@ -179,6 +181,41 @@ export default class BoxScatterPlot<
                                     },
                                 },
                             ];
+                        },
+                    },
+                },
+            ];
+        }
+        return [];
+    }
+    private get axisLabelEvents() {
+        if (this.props.boxPlotTooltip) {
+            const self = this;
+            return [
+                {
+                    target: 'tickLabels',
+                    eventHandlers: {
+                        onMouseEnter: (event: any, props: any) => {
+                            const groupIndex = props.index;
+                            if (
+                                groupIndex !== undefined &&
+                                self.boxPlotData[groupIndex]
+                            ) {
+                                self.axisLabelTooltipModel = {
+                                    datum: self.boxPlotData[groupIndex],
+                                    eventkey: groupIndex,
+                                };
+                                self.mousePosition = {
+                                    x: event.pageX, // Changed from clientX
+                                    y: event.pageY, // Changed from clientY
+                                };
+                            }
+                            return [];
+                        },
+
+                        onMouseLeave: () => {
+                            self.axisLabelTooltipModel = null;
+                            return [];
                         },
                     },
                 },
@@ -602,6 +639,7 @@ export default class BoxScatterPlot<
                         }
                     />
                 }
+                events={this.axisLabelEvents}
             />
         );
     }
@@ -647,6 +685,7 @@ export default class BoxScatterPlot<
                 axisLabelComponent={
                     <VictoryLabel dy={this.yAxisLabelVertOffset} />
                 }
+                events={this.axisLabelEvents}
             />
         );
     }
@@ -760,6 +799,7 @@ export default class BoxScatterPlot<
             } else {
                 box.x = this.categoryCoord(i);
             }
+            box.eventkey = i;
         };
 
         return toBoxPlotData(
@@ -939,6 +979,57 @@ export default class BoxScatterPlot<
         }
     }
 
+    @autobind
+    private getAxisLabelTooltipComponent() {
+        if (
+            this.container &&
+            this.axisLabelTooltipModel &&
+            this.props.boxPlotTooltip
+        ) {
+            const maxWidth = 400;
+            let tooltipPlacement =
+                this.mousePosition.x > WindowStore.size.width - maxWidth
+                    ? 'left'
+                    : 'right';
+
+            return (ReactDOM as any).createPortal(
+                <Popover
+                    arrowOffsetTop={VERTICAL_OFFSET}
+                    className={classnames('cbioportal-frontend', 'cbioTooltip')}
+                    positionLeft={
+                        this.mousePosition.x +
+                        (tooltipPlacement === 'left'
+                            ? -HORIZONTAL_OFFSET
+                            : HORIZONTAL_OFFSET)
+                    }
+                    positionTop={this.mousePosition.y + VERTICAL_OFFSET}
+                    style={{
+                        transform:
+                            tooltipPlacement === 'left'
+                                ? 'translate(-100%,0%)'
+                                : undefined,
+                        maxWidth,
+                    }}
+                    placement={tooltipPlacement}
+                >
+                    <div>
+                        {this.props.boxPlotTooltip(
+                            [this.axisLabelTooltipModel.datum],
+                            [
+                                this.props.data[
+                                    this.axisLabelTooltipModel.datum.eventkey
+                                ].label,
+                            ]
+                        )}
+                    </div>
+                </Popover>,
+                document.body
+            );
+        } else {
+            return <></>;
+        }
+    }
+
     render() {
         if (!this.props.data.length) {
             return <div className={'alert alert-info'}>No data to plot.</div>;
@@ -948,6 +1039,7 @@ export default class BoxScatterPlot<
                 <Observer>{this.getChart}</Observer>
                 <Observer>{this.getScatterPlotTooltip}</Observer>
                 <Observer>{this.getBoxPlotTooltipComponent}</Observer>
+                <Observer>{this.getAxisLabelTooltipComponent}</Observer>
             </div>
         );
     }
