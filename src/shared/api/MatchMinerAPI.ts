@@ -11,7 +11,7 @@ export async function fetchTrialMatches(query: {
 }): Promise<Array<ITrialMatch>> {
     const cbioportalUrl = buildCBioPortalAPIUrl('api/matchminer');
     return request
-        .get(cbioportalUrl + '/api/trial_match')
+        .get(cbioportalUrl + '/api/ctims_trial_match')
         .query('where=%7B"patient_id"%3A"' + query.mrn + '"%7D')
         .set('Content-Type', 'application/json')
         .send(query)
@@ -21,19 +21,36 @@ export async function fetchTrialMatches(query: {
             let ret: Array<ITrialMatch> = [];
             response.forEach((record: any) => {
                 let curRecord: ITrialMatch = {
-                    id: record.nct_id?record.nct_id:'' + '+' + record.protocol_no,
-                    nctId: record.nct_id?record.nct_id:'',
+                    id: record.nct_id
+                        ? record.nct_id
+                        : '' + '+' + record.protocol_no,
+                    nctId: record.trial_id ? record.trial_id : '',
                     protocolNo: record.protocol_no,
                     gender: record.gender ? record.gender : '',
                     matchType: record.match_type ? record.match_type : '',
-                    arm_internal_id: record.internal_id ? record.internal_id: '',
-                    arm_code: record.code ? record.code: '',
+                    patient_match_values: record.patient_match_values
+                        ? record.patient_match_values
+                        : '',
+                    queries_used: record.queries_used
+                        ? record.queries_used
+                        : '',
+                    trial_arm_number: record.trial_arm_number
+                        ? Number(record.trial_arm_number)
+                        : -1,
+                    trial_step_number: record.trial_step_number
+                        ? Number(record.trial_step_number)
+                        : -1,
+                    trial_match_date: record._updated ? record._updated : '',
+                    arm_internal_id: record.internal_id
+                        ? record.internal_id
+                        : '',
+                    arm_code: record.code ? record.code : '',
                     armDescription: record.arm_description
                         ? record.arm_description
                         : '',
                     armType: record.arm_type ? record.arm_type : '',
                     sampleId: record.sample_id,
-                    mrn: record.mrn? record.mrn : '',
+                    mrn: record.mrn ? record.mrn : '',
                     vitalStatus: record.vital_status ? record.vital_status : '',
                     genomicAlteration: record.genomic_alteration
                         ? record.genomic_alteration
@@ -47,9 +64,7 @@ export async function fetchTrialMatches(query: {
                     oncotreePrimaryDiagnosisName: record.oncotree_primary_diagnosis_name
                         ? record.oncotree_primary_diagnosis_name
                         : '',
-                    trialAgeNumerical: record.age
-                        ? record.age
-                        : '',
+                    trialAgeNumerical: record.age ? record.age : '',
                     trialOncotreePrimaryDiagnosis: record.trial_oncotree_primary_diagnosis
                         ? record.trial_oncotree_primary_diagnosis
                         : '',

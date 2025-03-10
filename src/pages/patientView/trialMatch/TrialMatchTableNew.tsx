@@ -21,11 +21,14 @@ export type ISelectedTrialFeedbackFormData = {
 
 enum ColumnKey {
     TITLE = 'Trial',
+    SAMPLES = 'Samples',
     ARM = 'Arm',
-    GENE = 'Gene',
-    PATIENT_MATCHDATA = 'Patient Matching Data',
-    TRIAL_MATCHING_CRITERIA = 'Trial Matching Criteria',
-    STATUS = 'Trial Status',
+    MATCHING_FIELDS = 'Matching Fields',
+    PATIENT_MATCHDATA = 'Patient Match',
+    MATCHDATE = 'Match Date',
+    TRIALDETAILS = 'Trial Details',
+    TRIAL_MATCHING_CRITERIA = 'Trial Matching Criteria JSON',
+    PMV = 'Patient Match Values JSON',
 }
 
 enum ColumnWidth {
@@ -51,19 +54,34 @@ export default class TrialMatchTableNew extends React.Component<
     }
 
     @computed
+    get sortedTrialMatches() {
+        return _.orderBy(
+            this.props.trialMatches,
+            ['nctId', 'trial_arm_number'],
+            ['asc']
+        );
+    }
+
+    @computed
     get columnWidths() {
         return {
-            [ColumnKey.STATUS]: ColumnWidth.STATUS,
             [ColumnKey.TITLE]:
-                0.2 * (this.props.containerWidth - ColumnWidth.STATUS),
+                0.05 * (this.props.containerWidth - ColumnWidth.STATUS),
+            [ColumnKey.SAMPLES]:
+                0.05 * (this.props.containerWidth - ColumnWidth.STATUS),
             [ColumnKey.ARM]:
                 0.2 * (this.props.containerWidth - ColumnWidth.STATUS),
-            [ColumnKey.GENE]:
-                0.05 * (this.props.containerWidth - ColumnWidth.STATUS),
+            [ColumnKey.MATCHING_FIELDS]:
+                0.2 * (this.props.containerWidth - ColumnWidth.STATUS),
             [ColumnKey.PATIENT_MATCHDATA]:
                 0.25 * (this.props.containerWidth - ColumnWidth.STATUS),
+            [ColumnKey.MATCHDATE]:
+                0.05 * (this.props.containerWidth - ColumnWidth.STATUS),
+            [ColumnKey.TRIALDETAILS]:
+                0.05 * (this.props.containerWidth - ColumnWidth.STATUS),
             [ColumnKey.TRIAL_MATCHING_CRITERIA]:
-                0.3 * (this.props.containerWidth - ColumnWidth.STATUS),
+                0.25 * (this.props.containerWidth - ColumnWidth.STATUS),
+            [ColumnKey.PMV]: ColumnWidth.STATUS,
         };
     }
 
@@ -73,12 +91,12 @@ export default class TrialMatchTableNew extends React.Component<
             render: (trialmatch: ITrialMatch) => (
                 <div>
                     <If condition={trialmatch.protocolNo.length > 0}>
-                        <div>Trial protocol Number:&nbsp;{trialmatch.protocolNo}</div>
+                        <div>{trialmatch.protocolNo}</div>
                     </If>
 
                     <If condition={trialmatch.nctId.length > 0}>
                         <div>
-                            Trial NCTid:&nbsp; 
+                            {/* Trial NCTid:&nbsp; */}
                             <a
                                 target="_blank"
                                 href={
@@ -88,26 +106,39 @@ export default class TrialMatchTableNew extends React.Component<
                             >
                                 {trialmatch.nctId}
                             </a>
+                            <br />
+                            {trialmatch.shortTitle}
                         </div>
                     </If>
-                    <div>Trial Short Title:&nbsp;{trialmatch.shortTitle}</div>
                 </div>
             ),
             sortBy: (trialmatch: ITrialMatch) => trialmatch.nctId,
             width: this.columnWidths[ColumnKey.TITLE],
         },
         {
+            name: ColumnKey.SAMPLES,
+            render: (trialmatch: ITrialMatch) => (
+                <div>
+                    <div>Sample ID:&nbsp;{trialmatch.sampleId}</div>
+                </div>
+            ),
+            sortBy: (trialmatch: ITrialMatch) => trialmatch.sampleId,
+            width: this.columnWidths[ColumnKey.SAMPLES],
+        },
+        {
             name: ColumnKey.ARM,
             render: (trialmatch: ITrialMatch) => (
                 <div>
-                    <div>Arm Id:&nbsp;{trialmatch.arm_internal_id}</div>
                     <div>Arm Code:&nbsp;{trialmatch.arm_code}</div>
-                    <div>Arm Description:&nbsp;{trialmatch.armDescription}</div>
+                    <div>Arm Number:&nbsp;{trialmatch.trial_arm_number}</div>
+                    <div>Step Number:&nbsp;{trialmatch.trial_step_number}</div>
+                    {/*<div>Arm Description:&nbsp;{trialmatch.armDescription}</div>*/}
                 </div>
             ),
-            sortBy: (trialmatch: ITrialMatch) => trialmatch.arm_code,
+            sortBy: (trialmatch: ITrialMatch) => trialmatch.trial_arm_number,
             width: this.columnWidths[ColumnKey.ARM],
         },
+        /*
         {
             name: ColumnKey.GENE,
             render: (trialmatch: ITrialMatch) => (
@@ -134,47 +165,122 @@ export default class TrialMatchTableNew extends React.Component<
             sortBy: (trialmatch: ITrialMatch) => trialmatch.matchType,
             width: this.columnWidths[ColumnKey.PATIENT_MATCHDATA],
         },
+        */
+        {
+            name: ColumnKey.MATCHING_FIELDS,
+            render: (trialmatch: ITrialMatch) => (
+                <div>
+                    {Object.keys(
+                        JSON.parse(
+                            trialmatch.patient_match_values.replace(/'/g, '"')
+                        )
+                    ).map(key => (
+                        <p>{key as React.ReactNode}</p>
+                    ))}
+                </div>
+            ),
+            sortBy: (trialmatch: ITrialMatch) =>
+                trialmatch.oncotreePrimaryDiagnosisName,
+            width: this.columnWidths[ColumnKey.MATCHING_FIELDS],
+        },
+        {
+            name: ColumnKey.PATIENT_MATCHDATA,
+            render: (trialmatch: ITrialMatch) => (
+                <div>
+                    {Object.values(
+                        JSON.parse(
+                            trialmatch.patient_match_values.replace(/'/g, '"')
+                        )
+                    ).map(key => (
+                        <p>{key as React.ReactNode}</p>
+                    ))}
+                </div>
+            ),
+            sortBy: (trialmatch: ITrialMatch) => trialmatch.matchType,
+            width: this.columnWidths[ColumnKey.PATIENT_MATCHDATA],
+        },
+        {
+            name: ColumnKey.MATCHDATE,
+            render: (trialmatch: ITrialMatch) => (
+                <div>
+                    <div>{trialmatch.trial_match_date}</div>
+                </div>
+            ),
+            sortBy: (trialmatch: ITrialMatch) => trialmatch.trial_match_date,
+            width: this.columnWidths[ColumnKey.MATCHDATE],
+        },
+        {
+            name: ColumnKey.TRIALDETAILS,
+            render: (trialmatch: ITrialMatch) => (
+                <div>
+                    <div>Trial Details Links TBD</div>
+                </div>
+            ),
+            //sortBy: (trialmatch: ITrialMatch) => trialmatch.arm_code,
+            width: this.columnWidths[ColumnKey.TRIALDETAILS],
+        },
         {
             name: ColumnKey.TRIAL_MATCHING_CRITERIA,
             render: (trialmatch: ITrialMatch) => (
                 <div>
-                    Trial Oncotree Primary Diagnosis Name:&nbsp;
-                    <div>&nbsp;{trialmatch.trialOncotreePrimaryDiagnosis}</div>
+                    {JSON.stringify(
+                        JSON.parse(trialmatch.queries_used.replace(/'/g, '"')),
+                        null,
+                        2
+                    )}
                 </div>
             ),
-            sortBy: (trialmatch: ITrialMatch) => trialmatch.trialOncotreePrimaryDiagnosis,
+            sortBy: (trialmatch: ITrialMatch) =>
+                trialmatch.oncotreePrimaryDiagnosisName,
             width: this.columnWidths[ColumnKey.TRIAL_MATCHING_CRITERIA],
         },
         {
-            name: ColumnKey.STATUS,
+            name: ColumnKey.PMV,
+            render: (
+                trialmatch: ITrialMatch /*
+                <div>
+                     {
+                     JSON.stringify(
+                        JSON.parse(
+                        trialmatch.patient_match_values.replace(/'/g, '"'))
+                        , null, 2)
+                     }
+                </div>
+                */
+            ) => <p></p>,
+            sortBy: (trialmatch: ITrialMatch) =>
+                trialmatch.oncotreePrimaryDiagnosisName,
+            width: this.columnWidths[ColumnKey.PMV],
+        },
+        /*{
+            name: ColumnKey.PMV,
             render: (trialmatch: ITrialMatch) => (
-                <div className={styles.statusContainer}>
-                    <span className={styles.statusBackground}>
-                        {trialmatch.status}
-                    </span>
+                <div>
+                        {trialmatch.patient_match_values}
                 </div>
             ),
-            sortBy: (trialmatch: ITrialMatch) => trialmatch.status,
-            width: this.columnWidths[ColumnKey.STATUS],
-        },
+            sortBy: (trialmatch: ITrialMatch) => trialmatch.oncotreePrimaryDiagnosisName,
+            width: this.columnWidths[ColumnKey.PMV],
+        },*/
     ];
 
     render() {
         return (
             <div>
+                {}
                 <TrialMatchNewTableComponent
-                    data={this.props.trialMatches}
+                    data={this.sortedTrialMatches}
                     columns={this._columns}
                     showCopyDownload={false}
                 />
                 <div className={styles.powered}>
                     Powered by{' '}
-                    <a href="https://oncokb.org/" target="_blank">
-                        OncoKB
-                    </a>{' '}
-                    &{' '}
                     <a href="https://matchminer.org/" target="_blank">
                         MatchMiner
+                    </a>{' '}
+                    &{' '}
+                    <a href="https://ctims.ca/" target="_blank">
+                        CTIMS
                     </a>
                 </div>
             </div>
