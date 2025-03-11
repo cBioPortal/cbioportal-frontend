@@ -244,8 +244,8 @@ export default class BoxScatterPlot<
                                     eventkey: groupIndex,
                                 };
                                 self.mousePosition = {
-                                    x: event.pageX, // Changed from clientX
-                                    y: event.pageY, // Changed from clientY
+                                    x: event.pageX,
+                                    y: event.pageY,
                                 };
                             }
                             return [];
@@ -981,13 +981,14 @@ export default class BoxScatterPlot<
     }
 
     @autobind
-    private getBoxPlotTooltipComponent() {
-        if (
-            this.container &&
-            this.boxPlotTooltipModel &&
-            this.props.boxPlotTooltip
-        ) {
+    private getTooltipComponent(
+        tooltipModel: any,
+        verticalOffsetAdjustment: number
+    ) {
+        if (this.container && tooltipModel && this.props.boxPlotTooltip) {
             const maxWidth = 400;
+            const eventKey =
+                tooltipModel.datum.eventKey ?? tooltipModel.datum.eventkey;
             let tooltipPlacement =
                 this.mousePosition.x > WindowStore.size.width - maxWidth
                     ? 'left'
@@ -1002,7 +1003,9 @@ export default class BoxScatterPlot<
                             ? -HORIZONTAL_OFFSET
                             : HORIZONTAL_OFFSET)
                     }
-                    positionTop={this.mousePosition.y - VERTICAL_OFFSET}
+                    positionTop={
+                        this.mousePosition.y + verticalOffsetAdjustment
+                    }
                     style={{
                         transform:
                             tooltipPlacement === 'left'
@@ -1014,12 +1017,8 @@ export default class BoxScatterPlot<
                 >
                     <div>
                         {this.props.boxPlotTooltip(
-                            [this.boxPlotTooltipModel.datum],
-                            [
-                                this.props.data[
-                                    this.boxPlotTooltipModel.datum.eventKey
-                                ].label,
-                            ]
+                            [tooltipModel.datum],
+                            [this.props.data[eventKey]?.label]
                         )}
                     </div>
                 </Popover>,
@@ -1031,54 +1030,19 @@ export default class BoxScatterPlot<
     }
 
     @autobind
-    private getAxisLabelTooltipComponent() {
-        if (
-            this.container &&
-            this.axisLabelTooltipModel &&
-            this.props.boxPlotTooltip
-        ) {
-            const maxWidth = 400;
-            let tooltipPlacement =
-                this.mousePosition.x > WindowStore.size.width - maxWidth
-                    ? 'left'
-                    : 'right';
+    private getBoxPlotTooltipComponent() {
+        return this.getTooltipComponent(
+            this.boxPlotTooltipModel,
+            -VERTICAL_OFFSET
+        );
+    }
 
-            return (ReactDOM as any).createPortal(
-                <Popover
-                    arrowOffsetTop={VERTICAL_OFFSET}
-                    className={classnames('cbioportal-frontend', 'cbioTooltip')}
-                    positionLeft={
-                        this.mousePosition.x +
-                        (tooltipPlacement === 'left'
-                            ? -HORIZONTAL_OFFSET
-                            : HORIZONTAL_OFFSET)
-                    }
-                    positionTop={this.mousePosition.y + VERTICAL_OFFSET}
-                    style={{
-                        transform:
-                            tooltipPlacement === 'left'
-                                ? 'translate(-100%,0%)'
-                                : undefined,
-                        maxWidth,
-                    }}
-                    placement={tooltipPlacement}
-                >
-                    <div>
-                        {this.props.boxPlotTooltip(
-                            [this.axisLabelTooltipModel.datum],
-                            [
-                                this.props.data[
-                                    this.axisLabelTooltipModel.datum.eventkey
-                                ].label,
-                            ]
-                        )}
-                    </div>
-                </Popover>,
-                document.body
-            );
-        } else {
-            return <></>;
-        }
+    @autobind
+    private getAxisLabelTooltipComponent() {
+        return this.getTooltipComponent(
+            this.axisLabelTooltipModel,
+            VERTICAL_OFFSET
+        );
     }
 
     render() {
