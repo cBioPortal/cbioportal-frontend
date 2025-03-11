@@ -278,18 +278,21 @@ export default class BarChart extends React.Component<IBarChartProps, {}>
             const labelNA = this.barDataWithNA
                 .map((element: BarDatum) => element.dataBin.count)
                 .join(', ');
-            return (
-                <VictoryLabel
-                    text={`NA: ${labelNA}`}
-                    textAnchor="end"
-                    datum={{ x: this.maximumX, y: this.maximumY }}
-                    style={{
-                        fontFamily:
-                            VICTORY_THEME.axis.style.tickLabels.fontFamily,
-                        fontSize: VICTORY_THEME.axis.style.tickLabels.fontSize,
-                    }}
-                />
-            );
+            if (labelNA !== '0') {
+                return (
+                    <VictoryLabel
+                        text={`NA: ${labelNA}`}
+                        textAnchor="end"
+                        datum={{ x: this.maximumX, y: this.maximumY }}
+                        style={{
+                            fontFamily:
+                                VICTORY_THEME.axis.style.tickLabels.fontFamily,
+                            fontSize:
+                                VICTORY_THEME.axis.style.tickLabels.fontSize,
+                        }}
+                    />
+                );
+            }
         }
         return null;
     }
