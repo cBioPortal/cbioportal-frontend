@@ -1,6 +1,0 @@
-cancer_study_identifier: ascn_test_study
-data_filename: ascn_test_study_data_cna_hg19.seg
-datatype: SEG
-description: Segmented Data
-genetic_alteration_type: COPY_NUMBER_ALTERATION
-reference_genome_id: hg19

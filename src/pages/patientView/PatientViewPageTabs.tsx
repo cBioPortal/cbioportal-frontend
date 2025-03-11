@@ -553,24 +553,25 @@ export function tabs(
         </MSKTab>
     );
 
-    tabs.push(
-        <MSKTab
-            key={4}
-            id={PatientViewPageTabs.FilesAndLinks}
-            linkText={RESOURCES_TAB_NAME}
-            hide={!pageComponent.shouldShowResources}
-        >
-            <div>
-                <ResourcesTab
-                    store={pageComponent.patientViewPageStore}
-                    sampleManager={
-                        pageComponent.patientViewPageStore.sampleManager.result!
-                    }
-                    openResource={pageComponent.openResource}
-                />
-            </div>
-        </MSKTab>
-    );
+    if (pageComponent.shouldShowResources)
+        tabs.push(
+            <MSKTab
+                key={4}
+                id={PatientViewPageTabs.FilesAndLinks}
+                linkText={RESOURCES_TAB_NAME}
+            >
+                <div>
+                    <ResourcesTab
+                        store={pageComponent.patientViewPageStore}
+                        sampleManager={
+                            pageComponent.patientViewPageStore.sampleManager
+                                .result!
+                        }
+                        openResource={pageComponent.openResource}
+                    />
+                </div>
+            </MSKTab>
+        );
 
     tabs.push(
         <MSKTab
@@ -602,7 +603,9 @@ export function tabs(
                 <IFrameLoader
                     height={WindowStore.size.height - 220}
                     url={getDigitalSlideArchiveIFrameUrl(
-                        pageComponent.patientViewPageStore.patientId
+                        pageComponent.patientViewPageStore.patientId,
+                        pageComponent.patientViewPageStore.studyMetaData.result
+                            ?.cancerTypeId!
                     )}
                 />
             </div>

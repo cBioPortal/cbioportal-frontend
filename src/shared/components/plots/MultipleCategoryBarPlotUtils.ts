@@ -1,7 +1,12 @@
 import { IStringAxisData } from './PlotsTabUtils';
+import { SortByOptions } from './PlotsTab';
 import _ from 'lodash';
-import { IMultipleCategoryBarPlotData } from '../../../pages/groupComparison/MultipleCategoryBarPlot';
-
+import { IMultipleCategoryBarPlotData } from 'shared/components/plots/MultipleCategoryBarPlot';
+interface CountItem {
+    majorCategory: string;
+    count: number;
+    percentage: number;
+}
 export function makePlotData(
     horzData: IStringAxisData['data'],
     vertData: IStringAxisData['data'],
@@ -98,6 +103,89 @@ export function sortDataByCategory<D>(
         }
     });
 }
+export function getSortedMajorCategories(
+    data: IMultipleCategoryBarPlotData[],
+    sortByOption: string,
+    sortByPercentage: boolean
+): string[] {
+    if (sortByOption === 'SortByTotalSum') {
+        const majorCategoryCounts: { [key: string]: number } = {};
+
+        data.forEach(item => {
+            item.counts.forEach(countItem => {
+                const { majorCategory, percentage, count } = countItem;
+                if (!majorCategoryCounts[majorCategory]) {
+                    majorCategoryCounts[majorCategory] = 0;
+                }
+                majorCategoryCounts[majorCategory] += count;
+            });
+        });
+        return Object.keys(majorCategoryCounts).sort(
+            (a, b) => majorCategoryCounts[b] - majorCategoryCounts[a]
+        );
+    } else if (
+        sortByOption !== '' &&
+        sortByOption !== SortByOptions.Alphabetically
+    ) {
+        const sortedEntityData = data.find(
+            item => item.minorCategory === sortByOption
+        );
+        if (sortedEntityData) {
+            if (sortByPercentage) {
+                sortedEntityData.counts.sort(
+                    (a, b) => b.percentage - a.percentage
+                );
+            } else {
+                sortedEntityData.counts.sort((a, b) => b.count - a.count);
+            }
+            return sortedEntityData.counts.map(item => item.majorCategory);
+        }
+    }
+
+    return [];
+}
+export function sortDataByOption(
+    data: IMultipleCategoryBarPlotData[],
+    sortByOption: string,
+    sortByPercentage: boolean
+): IMultipleCategoryBarPlotData[] {
+    const sortedMajorCategories = getSortedMajorCategories(
+        data,
+        sortByOption,
+        sortByPercentage
+    );
+
+    if (sortByOption === 'SortByTotalSum' || sortedMajorCategories.length > 0) {
+        const reorderCounts = (counts: CountItem[]): CountItem[] => {
+            return sortedMajorCategories
+                .map(category =>
+                    counts.find(
+                        (countItem: CountItem) =>
+                            countItem.majorCategory === category
+                    )
+                )
+                .filter((item): item is CountItem => item !== undefined); // Filter out undefined values
+        };
+
+        data.forEach((item: IMultipleCategoryBarPlotData) => {
+            item.counts = reorderCounts(item.counts);
+        });
+
+        if (sortByOption !== 'SortByTotalSum') {
+            const sortedEntityData = data.find(
+                item => item.minorCategory === sortByOption
+            );
+            if (sortedEntityData) {
+                data = data.filter(item => item.minorCategory !== sortByOption);
+                data.unshift(sortedEntityData);
+            } else {
+                return data; // Early return if no sorted entity found
+            }
+        }
+    }
+
+    return data; // Return the sorted data
+}
 
 export function makeBarSpecs(
     data: IMultipleCategoryBarPlotData[],
@@ -107,7 +195,8 @@ export function makeBarSpecs(
     categoryCoord: (categoryIndex: number) => number,
     horizontalBars: boolean,
     stacked: boolean,
-    percentage: boolean
+    percentage: boolean,
+    sortByOption: string | undefined
 ): {
     fill: string;
     data: {
@@ -119,11 +208,23 @@ export function makeBarSpecs(
         percentage: number;
     }[]; // one data per major category, in correct order - either specified, or alphabetical
 }[] {
-    // one bar spec per minor category, in correct order - either specified, or alphabetical
-    data = sortDataByCategory(data, d => d.minorCategory, minorCategoryOrder);
-    // reverse the order of stacked or horizontal bars
-    if ((!horizontalBars && stacked) || (horizontalBars && !stacked)) {
-        data = _.reverse(data);
+    if (
+        sortByOption &&
+        sortByOption !== '' &&
+        sortByOption !== SortByOptions.Alphabetically
+    ) {
+        data = sortDataByOption(data, sortByOption, percentage);
+    } else {
+        // one bar spec per minor category, in correct order - either specified, or alphabetical
+        data = sortDataByCategory(
+            data,
+            d => d.minorCategory,
+            minorCategoryOrder
+        );
+        // reverse the order of stacked or horizontal bars
+        if ((!horizontalBars && stacked) || (horizontalBars && !stacked)) {
+            data = _.reverse(data);
+        }
     }
     return data.map(({ minorCategory, counts }) => {
         const fill = getColor(minorCategory);
@@ -134,7 +235,12 @@ export function makeBarSpecs(
         );
         return {
             fill,
-            data: sortedCounts.map((obj, index) => ({
+            data: (sortByOption &&
+            sortByOption != '' &&
+            sortByOption != SortByOptions.Alphabetically
+                ? counts
+                : sortedCounts
+            ).map((obj, index) => ({
                 x: categoryCoord(index),
                 y: percentage ? obj.percentage : obj.count,
                 majorCategory: obj.majorCategory,

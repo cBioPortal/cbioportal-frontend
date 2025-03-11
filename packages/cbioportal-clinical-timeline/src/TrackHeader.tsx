@@ -4,12 +4,9 @@ import { TICK_AXIS_HEIGHT } from './TickAxis';
 import { CustomTrackSpecification } from './CustomTrack';
 import { TimelineStore } from './TimelineStore';
 import { useObserver } from 'mobx-react-lite';
-import { TruncatedText } from 'cbioportal-frontend-commons';
+import { EllipsisTextTooltip } from 'cbioportal-frontend-commons';
 import { isTrackVisible } from './lib/helpers';
-import LineChartAxis, {
-    LINE_CHART_AXIS_SVG_WIDTH,
-    LINE_CHART_AXIS_TICK_WIDTH,
-} from './LineChartAxis';
+import LineChartAxis, { LINE_CHART_AXIS_SVG_WIDTH } from './LineChartAxis';
 import ReactDOM from 'react-dom';
 
 interface ITrackHeaderProps {
@@ -50,7 +47,7 @@ const TrackHeader: React.FunctionComponent<ITrackHeaderProps> = function({
                 onMouseLeave={handleTrackHover}
             >
                 <span>
-                    <TruncatedText text={getTrackLabel(track)} maxLength={20} />
+                    <EllipsisTextTooltip text={getTrackLabel(track)} />
                 </span>
                 {isLineChartTrack && (
                     <div

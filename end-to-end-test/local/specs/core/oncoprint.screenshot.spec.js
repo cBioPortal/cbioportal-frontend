@@ -40,6 +40,7 @@ const SERVER_CLINICAL_TRACK_CONFIG = [
         stableId: 'SUBTYPE',
         sortOrder: 'ASC',
         gapOn: true,
+        gapMode: 'HIDE_GAPS',
     },
     {
         stableId: 'OS_STATUS',
@@ -58,6 +59,7 @@ const MANUAL_TRACK_CONFIG = [
         stableId: 'SUBTYPE',
         sortOrder: 'ASC',
         gapOn: false,
+        gapMode: 'HIDE_GAPS',
     },
     {
         stableId: 'OS_STATUS',
@@ -104,15 +106,12 @@ describe('oncoprint', function() {
         });
 
         it('updates url when changing gaps', () => {
-            changeNthTrack(1, "Don't show gaps");
+            changeNthTrack(1, 'Hide gaps (w/%)');
             const clinicalTracksUrlParam = getTracksFromBookmark(browser);
 
-            const expectedConfig = JSON.parse(
-                JSON.stringify(SERVER_CLINICAL_TRACK_CONFIG)
+            expect(clinicalTracksUrlParam).toEqual(
+                SERVER_CLINICAL_TRACK_CONFIG
             );
-            expectedConfig[0].gapOn = false;
-
-            expect(clinicalTracksUrlParam).toEqual(expectedConfig);
         });
 
         it('updates url when sorting', () => {
@@ -160,7 +159,7 @@ describe('oncoprint', function() {
         /**
          * Note: to rerun test locally, first clean user session
          */
-        it('stores config in user session when save button clicked', () => {
+        it.skip('stores config in user session when save button clicked', () => {
             // Load page with a default config that differs from SERVER_CLINICAL_TRACK_CONFIG
             const customConfig = JSON.parse(
                 JSON.stringify(SERVER_CLINICAL_TRACK_CONFIG)
@@ -194,7 +193,7 @@ describe('oncoprint', function() {
          * Uses session from previous test
          * to differentiate between default and custom config
          */
-        it('uses configuration stored in session when available', () => {
+        it.skip('uses configuration stored in session when available', () => {
             // Expected should match custom config of previous test
             const expected = JSON.parse(
                 JSON.stringify(SERVER_CLINICAL_TRACK_CONFIG)

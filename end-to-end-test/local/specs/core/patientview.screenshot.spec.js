@@ -115,6 +115,7 @@ describe('patient view page', function() {
 
         it('show stacked bar chart for patient who has significant ID signatures', () => {
             selectMutationalSignaturesVersionID();
+
             $('div.patientSamples').waitForDisplayed({ timeout: 20000 });
             // bar chart does an animation we have to wait for
             browser.pause(5000);
@@ -123,6 +124,8 @@ describe('patient view page', function() {
         });
 
         it('show tooltip for patient who has significant ID signatures', () => {
+            //browser.debug();
+
             selectMutationalSignaturesVersionID();
             $('div.progress').waitForDisplayed({ timeout: 20000 });
             $('div.progress').moveTo({ xOffset: 0, yOffset: 0 });

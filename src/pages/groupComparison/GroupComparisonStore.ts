@@ -430,14 +430,12 @@ export default class GroupComparisonStore extends ComparisonStore {
             this.sampleKeyToSample,
             this.patients,
         ],
-        invoke: () => {
-            return Promise.resolve(
-                getCoverageInformation(
-                    this.genePanelDataForMutationProfiles.result!,
-                    this.sampleKeyToSample.result!,
-                    this.patients.result!,
-                    [this.activeMutationMapperGene!]
-                )
+        invoke: async () => {
+            return getCoverageInformation(
+                this.genePanelDataForMutationProfiles.result!,
+                this.sampleKeyToSample.result!,
+                this.patients.result!,
+                [this.activeMutationMapperGene!]
             );
         },
     });

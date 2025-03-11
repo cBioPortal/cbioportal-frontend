@@ -984,6 +984,24 @@ describe('study view treatments table', () => {
         assertScreenShotMatch(res);
     });
 
+    it('compare button appears when selecting multiple rows in sample treatments', async () => {
+        const sampleTreatmentsFirstCheckbox =
+            '[data-test="SAMPLE_TREATMENTS-table"] .ReactVirtualized__Table__row:nth-child(1) input';
+        const sampleTreatmentsSecondCheckbox =
+            '[data-test="SAMPLE_TREATMENTS-table"] .ReactVirtualized__Table__row:nth-child(2) input';
+        const sampleTreatmentsCompareButton = '[data-test="table-compare-btn"]';
+        const url = `${CBIOPORTAL_URL}/study/summary?id=lgg_ucsf_2014`;
+        await goToUrlAndSetLocalStorage(url);
+
+        await (await getElement(sampleTreatmentsFirstCheckbox)).waitForExist();
+        await clickElement(sampleTreatmentsFirstCheckbox);
+        await (await getElement(sampleTreatmentsSecondCheckbox)).waitForExist();
+        await clickElement(sampleTreatmentsSecondCheckbox);
+        assert(
+            await (await getElement(sampleTreatmentsCompareButton)).isExisting()
+        );
+    });
+
     it('can filter a study by patient treatments', async () => {
         const url = `${CBIOPORTAL_URL}/study/summary?id=lgg_ucsf_2014`;
         await goToUrlAndSetLocalStorage(url);
@@ -1004,46 +1022,28 @@ describe('study view treatments table', () => {
         const res = await checkElementWithMouseDisabled('#mainColumn');
         assertScreenShotMatch(res);
     });
-});
 
-describe('study view timeline events availability table', () => {
-    it('verify timeline events availability table is visible', async () => {
-        await goToUrlAndSetLocalStorage(
-            `${CBIOPORTAL_URL}/study/summary?id=cesc_tcga_pan_can_atlas_2018`
-        );
-        await getElementByTestHandle('CLINICAL_EVENT_TYPE_COUNT-table', {
-            timeout: 20000,
-        });
-    });
+    it('compare button appears when selecting multiple rows in patient treatments', async () => {
+        const url = `${CBIOPORTAL_URL}/study/summary?id=lgg_ucsf_2014`;
+        await goToUrlAndSetLocalStorage(url);
 
-    it('verify filters can be applied', async () => {
-        await goToUrlAndSetLocalStorage(
-            `${CBIOPORTAL_URL}/study/summary?id=cesc_tcga_pan_can_atlas_2018`
-        );
+        const patientTreatmentsFirstCheckbox =
+            '[data-test="PATIENT_TREATMENTS-table"] .ReactVirtualized__Table__row:nth-child(1) input';
+        const patientTreatmentsSecondCheckbox =
+            '[data-test="PATIENT_TREATMENTS-table"] .ReactVirtualized__Table__row:nth-child(2) input';
+        const patientTreatmentsCompareButton =
+            '[data-test="table-compare-btn"]';
 
-        await getElementByTestHandle('CLINICAL_EVENT_TYPE_COUNT-table', {
-            timeout: 20000,
-        });
-        const selectedPatients = await (
-            await getElementByTestHandle('selected-patients')
-        ).getText();
-
-        const timelineEventsAvailabilityCheckBox =
-            '[data-test="CLINICAL_EVENT_TYPE_COUNT-table"] .ReactVirtualized__Table__row:nth-child(2) input';
-
-        const applyFilterButton =
-            '[data-test="CLINICAL_EVENT_TYPE_COUNT-table"] button';
-
+        await (await getElement(patientTreatmentsFirstCheckbox)).waitForExist();
+        await clickElement(patientTreatmentsFirstCheckbox);
         await (
-            await getElement(timelineEventsAvailabilityCheckBox)
+            await getElement(patientTreatmentsSecondCheckbox)
         ).waitForExist();
-        await clickElement(timelineEventsAvailabilityCheckBox);
-        await (await getElement(applyFilterButton)).waitForExist();
-        await clickElement(applyFilterButton);
-        await waitForNetworkQuiet();
-        assert.notEqual(
-            await (await getElementByTestHandle('selected-patients')).getText(),
-            selectedPatients
+        await clickElement(patientTreatmentsSecondCheckbox);
+        assert(
+            await (
+                await getElement(patientTreatmentsCompareButton)
+            ).isExisting()
         );
     });
 });

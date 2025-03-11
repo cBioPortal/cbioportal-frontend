@@ -1,83 +1,83 @@
-#!/usr/bin/env bash
+#!/bin/sh
+set -e
+set -o allexport
 
-MY_PATH="`dirname \"$0\"`"              # relative
-MY_PATH="`( cd \"$MY_PATH\" && pwd )`"  # absolutized and normalized
-if [ -z "$MY_PATH" ] ; then
-  # error; for some reason, the path is not accessible
-  # to the script (e.g. permissions re-evaled after suid)
-  exit 1  # fail
+TEST_REPO_URL="https://github.com/cBioPortal/cbioportal-test.git"
+DOCKER_COMPOSE_REPO_URL="https://github.com/cBioPortal/cbioportal-docker-compose.git"
+STUDIES='ascn_test_study study_hg38 teststudy_genepanels study_es_0 lgg_ucsf_2014_test_generic_assay'
+APPLICATION_PROPERTIES_PATH=$(cd -- "$(dirname -- "$0")" && cd .. && pwd)/end-to-end-test/local/runtime-config/portal.properties
+KEYCLOAK="true"
+RUN_FRONTEND="false" # Set to "true" if you want to build and run frontend at localhost:3000
+RUN_TESTS="false" # Set to "true" if you want to run all e2e:local tests
+
+# Use database image with preloaded studies
+export DOCKER_IMAGE_MYSQL=cbioportal/mysql:8.0-database-test
+
+# Use custom application properties
+export APPLICATION_PROPERTIES_PATH=$APPLICATION_PROPERTIES_PATH
+
+# Backend image
+export DOCKER_IMAGE_CBIOPORTAL=cbioportal/cbioportal:master
+
+# Create a temp dir and clone test repo
+ROOT_DIR=$(pwd)
+TEMP_DIR=$(mktemp -d)
+git clone "$TEST_REPO_URL" "$TEMP_DIR/cbioportal-test" || exit 1
+git clone "$DOCKER_COMPOSE_REPO_URL" "$TEMP_DIR/cbioportal-docker-compose" || exit 1
+cd "$TEMP_DIR/cbioportal-test" || exit 1
+
+# Generate keycloak config
+if [ "$KEYCLOAK" = "true" ]; then
+  ./utils/gen-keycloak-config.sh --studies="$STUDIES" --template='$TEMP_DIR/cbioportal-docker-compose/dev/keycloak/keycloak-config.json' --out='keycloak-config-generated.json'
+  export KEYCLOAK_CONFIG_PATH="$TEMP_DIR/cbioportal-test/keycloak-config-generated.json"
 fi
 
+# Start backend
+if [ "$KEYCLOAK" = "true" ]; then
+  ./scripts/docker-compose.sh --portal_type='keycloak' --docker_args='-d'
 
-# check for docker
-DOCKER_RESP=$(docker version)
-if grep -q "Is the docker daemon running?" <<< "$DOCKER_RESP"; then
-  echo "You need to start the docker daemon"
-  exit 1 #fail
-fi
-
-# check for jq
-JQ_RESP=$(which jq)
-if [ ${#JQ_RESP} -eq 0 ]; then
-  echo "You need to install the jq package (brew install jq)"
-  exit 1 #fail
-fi
-
-
-SPIN_UP=false
-
-while true; do
-    read -p "Do you wish to build containers? (default=no) " yn
-    case $yn in
-        [Yy]* ) SPIN_UP=true;break;;
-        [Nn]* ) break;;
-        * ) break;;
-    esac
-done
-
-echo $SPIN_UP;
-
-
-export PORTAL_SOURCE_DIR=$PWD;
-
-export TEST_HOME=$PORTAL_SOURCE_DIR/end-to-end-test/local
-export E2E_WORKSPACE=$PORTAL_SOURCE_DIR/e2e-localdb-workspace
-export DB_DATA_DIR=$E2E_WORKSPACE/cbio_db_data
-
-cd $PORTAL_SOURCE_DIR
-
-export BACKEND=cbioportal:master
-export BRANCH_ENV="http://localhost:8080"
-export GENOME_NEXUS_URL="https://www.genomenexus.org"
-
-echo "$TEST_HOME"
-
-cat <<< $($TEST_HOME/runtime-config/setup_environment.sh)
-$($TEST_HOME/runtime-config/setup_environment.sh)
-
-if [[ "$(uname -s)" == "Darwin" ]] && [[ "$(sysctl -n machdep.cpu.brand_string)" =~ ^Apple\ M.*$ ]]; then
-  # if macOS and M-series chip, use images for ARM architecture
-  export DOCKER_IMAGE_MYSQL=biarms/mysql:5.7
+  # Check keycloak connection at localhost:8081
+  ./utils/check-connection.sh --url=localhost:8081 --max_retries=50
 else
-  # else use images for x86_64 architecture
-  export DOCKER_IMAGE_MYSQL=mysql:5.7
+  ./scripts/docker-compose.sh --portal_type='web-and-data' --docker_args='-d'
 fi
 
-if [ "$SPIN_UP" = "true" ]
-then
-  #cleanup
-  rm -rf $E2E_WORKSPACE/kc_db_data
-  rm -rf $E2E_WORKSPACE/cbioportal-docker-compose
-  rm -rf $E2E_WORKSPACE/cbio_db_data
+# Check backend connection at localhost:8080
+./utils/check-connection.sh --url=localhost:8080/api/health --max_retries=50
 
-  $TEST_HOME/docker_compose/setup.sh
-  [ $CUSTOM_BACKEND -eq 1 ] && $TEST_HOME/docker_compose/build.sh
-  mkdir -p $E2E_WORKSPACE/cbio_db_data
-  $TEST_HOME/docker_compose/initdb.sh
+if [ "$RUN_FRONTEND" = "true" ]; then
+  # Build frontend
+  printf "\nBuilding frontend ...\n\n"
+  cd "$ROOT_DIR" || exit 1
+  export BRANCH_ENV=master
+  yarn install --frozen-lockfile
+  yarn run buildAll
+
+  # Start frontend http server, delete if previous server exists
+  if [ -e "/var/tmp/cbioportal-pid" ]; then
+    pkill -F /var/tmp/cbioportal-pid
+  fi
+  openssl \
+    req -newkey rsa:2048 -new -nodes -x509 -days 1 -keyout key.pem -out cert.pem -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=localhost" && \
+    nohup ./node_modules/http-server/bin/http-server --cors dist/ -p 3000 > /dev/null 2>&1 &
+  echo $! > /var/tmp/cbioportal-pid
+
+  # Wait for frontend at localhost:3000
+  printf "\nVerifying frontend connection ...\n\n"
+  cd "$TEMP_DIR/cbioportal-test" || exit 1
+  ./utils/check-connection.sh --url=localhost:3000
 fi
 
-$TEST_HOME/docker_compose/start.sh
+if [ "$RUN_TESTS" = "true" ]; then
+  # Build e2e localdb tests
+  cd "$ROOT_DIR/end-to-end-test" || exit 1
+  yarn --ignore-engines
 
-export CBIOPORTAL_URL=http://localhost:8080
+  # Run e2e localdb tests
+  cd "$ROOT_DIR" || exit 1
+  yarn run e2e:local
+fi
 
-cd end-to-end-test
+# Cleanup
+cd "$ROOT_DIR" || exit 1
+rm -rf "$TEMP_DIR"

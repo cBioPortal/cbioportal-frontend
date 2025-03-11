@@ -24,7 +24,7 @@ docker run -it --rm \
 status=$?
 
 if [[ "$status" -eq 0 ]]; then
-    echo Succes!!!!! E2e-test test completed without errors.
+    echo Success!!!!! E2e-test test completed without errors.
 else
     echo Error!!!!! E2e-test test completed with errors.
 fi

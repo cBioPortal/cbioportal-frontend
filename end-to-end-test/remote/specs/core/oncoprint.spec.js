@@ -609,9 +609,9 @@ describe('oncoprint', function() {
             });
             await setInputText('textarea[data-test="geneSet"]', 'TP53');
             await browser.pause(100); // let things trigger
-            await waitForElementDisplayed('button[data-test="queryButton"]', {
-                timeout: 10000,
-            });
+            await (
+                await getElement('[data-test="queryButton"]')
+            ).waitForEnabled({ timeout: 30000 });
             await clickElement('button[data-test="queryButton"]');
             await browser.pause(100); // wait for query to submit
             // go to oncoprint tab

@@ -9,6 +9,7 @@ var {
     jsApiHover,
     setDropdownOpen,
     strIsNumeric,
+    jq,
 } = require('../../../shared/specUtils');
 
 var _ = require('lodash');
@@ -387,22 +388,46 @@ describe('patient view page', function() {
         const n = 'na-icon';
 
         it('shows correct clonal icons, subclonal icons, NA/indeterminate icons, and invisible icons', () => {
-            const clonalIcon = {
-                PIK3R1: [c, s, n, c, c, n],
-            };
-
-            const sampleVisibility = {
-                PIK3R1: [true, true, false, true, true, false],
-            };
-            const genes = _.keys(clonalIcon);
-            genes.forEach(gene => {
-                testClonalIcon(
-                    gene,
-                    'patientview-mutation-table',
-                    clonalIcon[gene],
-                    sampleVisibility[gene]
-                );
+            // make sure the gene of the first row is PIK3R1
+            const gene = browser.execute(function() {
+                return $('[data-test=patientview-mutation-table] tbody tr')
+                    .first()
+                    .find(
+                        '[data-test=mutation-table-gene-column]'
+                    )[0].innerText;
             });
+
+            assert.equal(gene, 'PIK3R1');
+
+            const clonalCells = browser.execute(function() {
+                return $('[data-test=patientview-mutation-table] tbody tr')
+                    .first()
+                    .find('[data-test=clonal-cell] svg[data-test]')
+                    .toArray()
+                    .map(e => e.getAttribute('data-test'));
+            });
+
+            assert.equal(
+                clonalCells.join(','),
+                'clonal-icon,subclonal-icon,na-icon,clonal-icon,clonal-icon,na-icon'
+            );
+
+            const sampleVisiblity = browser.execute(function() {
+                return $('[data-test=patientview-mutation-table] tbody tr')
+                    .first()
+                    .find('td:first-child li')
+                    .toArray()
+                    .map(e => e.className);
+            });
+
+            assert.deepStrictEqual(sampleVisiblity, [
+                '',
+                '',
+                'invisible',
+                '',
+                '',
+                'invisible',
+            ]);
         });
 
         it('displays clonal column tooltip on mouseover element', () => {
@@ -501,58 +526,6 @@ function testSampleIcon(
                 i +
                 ' is not `' +
                 desiredVisibility +
-                '`, but is `' +
-                actualVisibility +
-                '`'
-        );
-    });
-}
-
-function testClonalIcon(
-    geneSymbol,
-    tableTag,
-    clonalIconTypes,
-    sampleVisibilities
-) {
-    const geneCell = $('div[data-test=' + tableTag + '] table').$(
-        'span=' + geneSymbol
-    );
-    const clonalCell = geneCell
-        .$('..')
-        .$('..')
-        .$('span[data-test=clonal-cell]');
-
-    //if span span - getting a whole list where each index is a list
-    //if span span span - each index seems to be one item
-    const icons = clonalCell.$$('span span span');
-    clonalIconTypes.forEach((desiredDataType, i) => {
-        const svg = icons[i].$('svg');
-
-        const actualDataType = svg.getAttribute('data-test');
-        assert.equal(
-            actualDataType,
-            desiredDataType,
-            'Gene ' +
-                geneSymbol +
-                ': clonal icon type at position ' +
-                i +
-                ' is not `' +
-                desiredDataType +
-                '`, but is `' +
-                actualDataType +
-                '`'
-        );
-
-        const actualVisibility = svg.$('circle').getAttribute('opacity') > 0;
-        assert.equal(
-            actualVisibility,
-            sampleVisibilities[i],
-            'Gene ' +
-                geneSymbol +
-                ': clonal icon visibility at position ' +
-                i +
-                ' is not `' +
-                sampleVisibilities[i] +
                 '`, but is `' +
                 actualVisibility +
                 '`'

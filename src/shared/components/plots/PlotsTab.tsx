@@ -108,7 +108,7 @@ import {
     scatterPlotSize,
 } from '../../../shared/components/plots/PlotUtils';
 import { getTablePlotDownloadData } from '../../../shared/components/plots/TablePlotUtils';
-import MultipleCategoryBarPlot from 'pages/groupComparison/MultipleCategoryBarPlot';
+import MultipleCategoryBarPlot from 'shared/components/plots/MultipleCategoryBarPlot';
 import { RESERVED_CLINICAL_VALUE_COLORS } from 'shared/lib/Colors';
 import {
     DownloadControlOption,
@@ -208,6 +208,11 @@ export enum DiscreteVsDiscretePlotType {
     StackedBar = 'StackedBar',
     PercentageStackedBar = 'PercentageStackedBar',
     Table = 'Table',
+}
+
+export enum SortByOptions {
+    Alphabetically = 'alphabetically',
+    SortByTotalSum = 'SortByTotalSum',
 }
 
 export enum MutationCountBy {
@@ -442,7 +447,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     private dummyScrollPane: HTMLDivElement;
     private scrollingDummyPane = false;
     @observable plotElementWidth = 0;
-
+    @observable sortByDropDownOptions: { value: string; label: string }[] = [];
+    @observable sortByOption: string = SortByOptions.Alphabetically;
     @observable boxPlotSortByMedian = false;
     @observable.ref searchCaseInput: string;
     @observable.ref searchMutationInput: string;
@@ -464,6 +470,16 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     >({}, { deep: false });
     @observable _horzGenericAssaySearchText: string = '';
     @observable _vertGenericAssaySearchText: string = '';
+
+    private defaultOptions = [
+        { value: SortByOptions.Alphabetically, label: 'Alphabetically' },
+        { value: SortByOptions.SortByTotalSum, label: 'Number of samples' },
+    ];
+
+    @action.bound
+    private updateDropDownOptions(option: { value: string; label: string }[]) {
+        this.sortByDropDownOptions = [...this.defaultOptions, ...option];
+    }
 
     @action.bound
     private onClickLegendItem(ld: LegendDataWithId<any>) {
@@ -1766,6 +1782,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 break;
             case EventKey.utilities_horizontalBars:
                 this.horizontalBars = !this.horizontalBars;
+                this.handleSortByChange({
+                    value: SortByOptions.Alphabetically,
+                    label: 'Alphabetically',
+                });
                 break;
             case EventKey.utilities_viewLimitValues:
                 this.viewLimitValues = !this.viewLimitValues;
@@ -2885,6 +2905,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     @action.bound
     private onDiscreteVsDiscretePlotTypeSelect(option: any) {
         this.discreteVsDiscretePlotType = option.value;
+    }
+
+    @action.bound
+    private handleSortByChange(option: any) {
+        this.sortByOption = option.value;
     }
 
     @action.bound
@@ -4581,19 +4606,37 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                         </div>
                     )}
                     {showStackedBarHorizontalOption && (
-                        <div className="checkbox">
-                            <label>
-                                <input
-                                    data-test="horizontalBars"
-                                    type="checkbox"
-                                    name="utilities_horizontalBars"
-                                    value={EventKey.utilities_horizontalBars}
-                                    checked={this.horizontalBars}
-                                    onClick={this.onInputClick}
-                                />{' '}
-                                Horizontal Bars
-                            </label>
-                        </div>
+                        <>
+                            <div className="form-group">
+                                <label>Sort By</label>
+                                <div style={{ display: 'flex' }}>
+                                    <ReactSelect
+                                        name="Sort By"
+                                        value={this.sortByOption}
+                                        onChange={this.handleSortByChange}
+                                        options={this.sortByDropDownOptions}
+                                        clearable={false}
+                                        searchable={true}
+                                        placeholder="Sort by..."
+                                    />
+                                </div>
+                            </div>
+                            <div className="checkbox">
+                                <label>
+                                    <input
+                                        data-test="horizontalBars"
+                                        type="checkbox"
+                                        name="utilities_horizontalBars"
+                                        value={
+                                            EventKey.utilities_horizontalBars
+                                        }
+                                        checked={this.horizontalBars}
+                                        onClick={this.onInputClick}
+                                    />{' '}
+                                    Horizontal Bars
+                                </label>
+                            </div>
+                        </>
                     )}
                     {showRegression && (
                         <div className="checkbox" style={{ marginTop: 14 }}>
@@ -5547,6 +5590,18 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                     horizontalBars={this.horizontalBars}
                                     percentage={isPercentage}
                                     stacked={isStacked}
+                                    sortByDropDownOptions={
+                                        this.sortByDropDownOptions
+                                    }
+                                    updateDropDownOptions={
+                                        this.updateDropDownOptions
+                                    }
+                                    sortByOption={this.sortByOption}
+                                    key={`categoryPlot-${
+                                        this.horizontalBars
+                                            ? 'horizontal'
+                                            : 'vertical'
+                                    }`}
                                 />
                             );
                         }

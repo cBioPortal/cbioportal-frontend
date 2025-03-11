@@ -7,7 +7,7 @@ import {
     DownloadControlOption,
 } from 'cbioportal-frontend-commons';
 import autobind from 'autobind-decorator';
-import MultipleCategoryBarPlot from 'pages/groupComparison/MultipleCategoryBarPlot';
+import MultipleCategoryBarPlot from 'shared/components/plots/MultipleCategoryBarPlot';
 import ReactSelect from 'react-select';
 import _ from 'lodash';
 import {
