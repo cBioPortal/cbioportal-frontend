@@ -1,18 +1,12 @@
-name: Publish cBioPortal frontend to GitHub Packages
+name: Build & Publish to GitHub Packages
 
 on:
-  push:
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: "Tag"
-        required: true
   release:
     types:
       - published
 
 jobs:
-  publish:
+  build-publish:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -26,9 +20,35 @@ jobs:
           distribution: 'temurin'
 
       - name: Set maven version from release tag
-        run: mvn versions:set -DnewVersion='v6.0.28-test' -DgenerateBackupPoms=false
+        run: mvn versions:set -DnewVersion=${{ github.event.release.tag_name }} -DgenerateBackupPoms=false
 
       - name: Publish package
         run: mvn --batch-mode deploy
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.BACKEND_REPO_TOKEN }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+      - name: Set up git
+        run: |
+          git config --global user.name 'github-actions'
+          git config --global user.email 'github-actions@github.com'
+
+      - name: Checkout cbioportal/cbioportal
+        run: |
+          git clone git@github.com:cBioPortal/cbioportal.git
+
+      - name: Update backend to use latest frontend commit
+        run: |
+          TAG=${{ github.event.release.tag_name }}
+          cd cbioportal
+          sed -i "s|<version>\(.*\)-SNAPSHOT</version>|<version>\1</version>|" pom.xml
+          sed -i "s|<frontend.version>.*</frontend.version>|<frontend.version>$TAG</frontend.version>|" pom.xml
+          git add pom.xml
+          git commit -m "Frontend $TAG"
+          git push
