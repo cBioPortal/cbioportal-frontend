@@ -98,6 +98,7 @@ export enum FreqColumnTypeEnum {
     STRUCTURAL_VARIANT = 'structural variants',
     STRUCTURAL_VARIANT_PAIR = 'structural variant pairs',
     CNA = 'copy number alterations',
+    VA = 'variant annotations',
     DATA = 'data',
 }
 
@@ -116,8 +117,10 @@ export function getFreqColumnRender(
     className?: string
 ) {
     let tooltipContent = '# of samples profiled';
-    if (type !== 'data') {
+    if (type !== 'data' && type !== 'variant annotations') {
         tooltipContent += ` for ${type} in this gene: ${numberOfProfiledCases.toLocaleString()}`;
+    } else if (type === 'variant annotations') {
+        tooltipContent = ` % of samples annotated`;
     }
     const addTotalProfiledOverlay = () => (
         <span
