@@ -643,9 +643,14 @@ export class StudySummaryTab extends React.Component<
                     }),
                     axisLabelX: chartInfo.categoricalAttr.displayName,
                     axisLabelY: chartInfo.numericalAttr.displayName,
-                    showLogScaleToggle: logScalePossible(
-                        chartInfo.numericalAttr.clinicalAttributeId
-                    ),
+                    showLogScaleToggle: this.props.store
+                        .clinicalAttributeIdToClinicalAttribute.isComplete
+                        ? logScalePossible(
+                              chartInfo.numericalAttr.clinicalAttributeId,
+                              this.props.store
+                                  .clinicalAttributeIdToClinicalAttribute.result
+                          )
+                        : false,
                     logScaleChecked: settings.violinLogScale,
                     onToggleLogScale: () => {
                         const settings = this.store.getXvsYChartSettings(
@@ -726,12 +731,22 @@ export class StudySummaryTab extends React.Component<
                         xAxisLogScale: !!settings.xLogScale,
                         yAxisLogScale: !!settings.yLogScale,
                     }),
-                    showLogScaleXToggle: logScalePossible(
-                        chartInfo.xAttr.clinicalAttributeId
-                    ),
-                    showLogScaleYToggle: logScalePossible(
-                        chartInfo.yAttr.clinicalAttributeId
-                    ),
+                    showLogScaleXToggle: this.props.store
+                        .clinicalAttributeIdToClinicalAttribute.isComplete
+                        ? logScalePossible(
+                              chartInfo.xAttr.clinicalAttributeId,
+                              this.props.store
+                                  .clinicalAttributeIdToClinicalAttribute.result
+                          )
+                        : false,
+                    showLogScaleYToggle: this.props.store
+                        .clinicalAttributeIdToClinicalAttribute.isComplete
+                        ? logScalePossible(
+                              chartInfo.yAttr.clinicalAttributeId,
+                              this.props.store
+                                  .clinicalAttributeIdToClinicalAttribute.result
+                          )
+                        : false,
                     logScaleXChecked: settings.xLogScale,
                     logScaleYChecked: settings.yLogScale,
                     onToggleLogScaleX: () => {
