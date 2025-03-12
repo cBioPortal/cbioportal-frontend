@@ -3,6 +3,13 @@ name: Publish cBioPortal frontend to GitHub Packages
 on:
   push:
   workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag"
+        required: true
+  release:
+    types:
+      - published
 
 jobs:
   publish:
@@ -12,10 +19,15 @@ jobs:
       packages: write
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
+
+      - name: Set maven version fromm release tag
+        run: mvn versions:set -DnewVersion=${{ inputs.tag }} -DgenerateBackupPoms=false
+
       - name: Publish package
         run: mvn --batch-mode deploy
         env:
