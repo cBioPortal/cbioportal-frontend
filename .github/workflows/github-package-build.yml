@@ -1,6 +1,8 @@
 name: Publish cBioPortal frontend to GitHub Packages
 
-on: workflow_dispatch
+on: 
+  workflow_dispatch
+  push:
 
 jobs:
   publish:
