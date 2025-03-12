@@ -25,8 +25,8 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Set maven version fromm release tag
-        run: mvn versions:set -DnewVersion=${{ inputs.tag }} -DgenerateBackupPoms=false
+      - name: Set maven version from release tag
+        run: mvn versions:set -DnewVersion='v6.0.28-test' -DgenerateBackupPoms=false
 
       - name: Publish package
         run: mvn --batch-mode deploy
