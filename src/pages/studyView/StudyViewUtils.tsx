@@ -830,17 +830,14 @@ function getNamespaceChartDisplayName(
     attribute: NamespaceAttribute,
     namespaceAttributes: NamespaceAttribute[]
 ): string {
-    var count = 0;
-    namespaceAttributes.forEach(item => {
-        if (item.innerKey === attribute.innerKey) {
-            count++;
-        }
-    });
-
-    if (count > 1) {
-        return attribute.innerKey + ' (' + attribute.outerKey + ')';
+    const innerKey = attribute.innerKey.split('_').join(' ');
+    if (
+        namespaceAttributes.filter(item => attribute.innerKey === item.innerKey)
+            .length > 1
+    ) {
+        return `${innerKey} (${attribute.outerKey})`;
     } else {
-        return attribute.innerKey.split('_').join(' ');
+        return innerKey;
     }
 }
 
@@ -4300,9 +4297,6 @@ export async function invokeNamespaceDataCount(
     let counts: MultiSelectionTableRow[] = [];
     if (data !== undefined) {
         counts = data.counts.map(c => {
-            if (c.totalCount == undefined) {
-                c.totalCount = c.count;
-            }
             return {
                 uniqueKey: c.value,
                 label: c.value,

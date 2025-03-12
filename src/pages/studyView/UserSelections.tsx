@@ -292,6 +292,59 @@ export default class UserSelections extends React.Component<
             components
         );
 
+        // Namespace chart filters
+        _.reduce(
+            this.props.filter.namespaceDataFilters || [],
+            (acc, namespaceDataFilter) => {
+                const uniqueKey = namespaceDataFilter.outerKey.concat(
+                    '_',
+                    namespaceDataFilter.innerKey
+                );
+                const chartMeta = this.props.attributesMetaSet[uniqueKey];
+                if (chartMeta) {
+                    const filters = namespaceDataFilter.values.map(
+                        dataFilterValues => {
+                            return (
+                                <GroupLogic
+                                    components={this.groupedNamespaceDataFilters(
+                                        dataFilterValues,
+                                        chartMeta
+                                    )}
+                                    operation="or"
+                                    group={dataFilterValues.length > 1}
+                                />
+                            );
+                        }
+                    );
+
+                    acc.push(
+                        <div className={styles.parentGroupLogic}>
+                            <GroupLogic
+                                components={[
+                                    <span
+                                        className={
+                                            styles.filterClinicalAttrName
+                                        }
+                                    >
+                                        {chartMeta.displayName}
+                                    </span>,
+                                    <GroupLogic
+                                        components={filters}
+                                        operation={'and'}
+                                        group={filters.length > 1}
+                                    />,
+                                ]}
+                                operation={':'}
+                                group={false}
+                            />
+                        </div>
+                    );
+                }
+                return acc;
+            },
+            components
+        );
+
         // Mutation chart filters
         _.reduce(
             this.props.filter.mutationDataFilters || [],
@@ -347,61 +400,6 @@ export default class UserSelections extends React.Component<
             },
             components
         );
-
-        // Namespace chart filters
-        let namespaceFilterComponents: JSX.Element[] = [];
-        if (this.props.filter.namespaceDataFilters) {
-            _.forEach(
-                this.props.filter.namespaceDataFilters,
-                namespaceDataFilter => {
-                    const uniqueKey = namespaceDataFilter.outerKey.concat(
-                        '_',
-                        namespaceDataFilter.innerKey
-                    );
-                    const chartMeta = this.props.attributesMetaSet[uniqueKey];
-                    if (chartMeta) {
-                        namespaceFilterComponents.push(
-                            <div className={styles.parentGroupLogic}>
-                                <GroupLogic
-                                    components={[
-                                        <span
-                                            className={
-                                                styles.filterClinicalAttrName
-                                            }
-                                        >
-                                            {chartMeta.displayName}
-                                        </span>,
-                                        <GroupLogic
-                                            components={namespaceDataFilter.values.map(
-                                                annotations => {
-                                                    return (
-                                                        <GroupLogic
-                                                            components={this.groupedNamespaceDataFilters(
-                                                                annotations,
-                                                                chartMeta
-                                                            )}
-                                                            operation="or"
-                                                            group={
-                                                                annotations.length >
-                                                                1
-                                                            }
-                                                        />
-                                                    );
-                                                }
-                                            )}
-                                            operation={'and'}
-                                            group={false}
-                                        />,
-                                    ]}
-                                    operation={':'}
-                                    group={false}
-                                />
-                            </div>
-                        );
-                    }
-                }
-            );
-        }
 
         // Generic Assay chart filters
         let genericAssayFilterComponents: JSX.Element[] = [];
@@ -610,10 +608,6 @@ export default class UserSelections extends React.Component<
         // push to components
         if (genericAssayFilterComponents) {
             components.push(...genericAssayFilterComponents);
-        }
-
-        if (namespaceFilterComponents) {
-            components.push(...namespaceFilterComponents);
         }
 
         if (
