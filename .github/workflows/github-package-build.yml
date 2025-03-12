@@ -1,7 +1,6 @@
 name: Build & Publish to GitHub Packages
 
 on:
-  push:
   release:
     types:
       - published
@@ -21,7 +20,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Set maven version from release tag
-        run: mvn versions:set -DnewVersion='v6.0.28' -DgenerateBackupPoms=false
+        run: mvn versions:set -DnewVersion=${{ github.event.release.tag_name }} -DgenerateBackupPoms=false
 
       - name: Publish package
         run: mvn --batch-mode deploy
