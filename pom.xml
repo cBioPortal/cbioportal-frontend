@@ -8,6 +8,16 @@
     <version>0.3.0</version>
     <packaging>jar</packaging>
 
+    <distributionManagement>
+    <repository>
+        <id>github</id>
+        <url>https://maven.pkg.github.com/cBioPortal/cbioportal-frontend</url>
+        <snapshots>
+            <enabled>true</enabled>
+        </snapshots>
+    </repository>
+    </distributionManagement>
+
     <build>
         <plugins>
             <plugin>
