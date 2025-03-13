@@ -19,7 +19,13 @@ jobs:
           registry-url: 'https://npm.pkg.github.com'
           scope: '@cbioportal'
       
-      - run: npm ci
-      - run: npm publish
+      - name: Install yarn
+        run: npm install -g yarn@1.22.5
+
+      - name: Verify yarn
+        run: yarn --version
+
+      - run: yarn
+      - run: yarn publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
