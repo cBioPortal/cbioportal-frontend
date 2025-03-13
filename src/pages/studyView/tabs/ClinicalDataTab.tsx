@@ -157,7 +157,7 @@ export class ClinicalDataTab extends React.Component<
         switch (this.clinicalDataSortCriteria?.field) {
             // these first two are special cases where we are not filtering
             // by an attribute
-            case 'Patient ID':
+            case 'Patient':
                 return 'patientId';
             case 'Sample ID':
                 return 'sampleId';
@@ -218,15 +218,14 @@ export class ClinicalDataTab extends React.Component<
                                 )}
                                 target="_blank"
                             >
-                                {this.format(
-                                    data.PATIENT_DISPLAY_NAME &&
-                                        data.PATIENT_DISPLAY_NAME !== 'Unknown'
-                                        ? data.PATIENT_DISPLAY_NAME +
-                                              ' (' +
-                                              data.patientId +
-                                              ')'
-                                        : data.patientId
-                                )}
+                                {data.PATIENT_DISPLAY_NAME &&
+                                    data.PATIENT_DISPLAY_NAME !== 'Unknown'
+                                    ? this.format(data.PATIENT_DISPLAY_NAME) +
+                                        ' (' +
+                                        data.patientId +
+                                        ')'
+                                    : data.patientId
+                                }
                             </a>
                         );
                     },
