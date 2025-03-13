@@ -416,16 +416,35 @@ export function scatterPlotLegendData(
     onClickLegendItem?: (ld: LegendDataWithId) => void
 ): LegendDataWithId[] {
     let legend: any[] = [];
+    const uniqueVisibleValues = new Set<string>();
+    if (ColoringType.ClinicalData in viewType && data && data.length > 0) {
+        data.forEach(point => {
+            if (point.dispClinicalValue) {
+                uniqueVisibleValues.add(String(point.dispClinicalValue));
+            }
+        });
+    }
+
     if (ColoringType.ClinicalData in viewType) {
         if (
             coloringClinicalDataCacheEntry &&
             coloringClinicalDataCacheEntry.categoryToColor
         ) {
-            legend = scatterPlotStringClinicalLegendData(
+            const allLegendEntries = scatterPlotStringClinicalLegendData(
                 coloringClinicalDataCacheEntry,
                 plotType,
                 onClickLegendItem
             );
+            const hasNoDataPoints = data.some(d => !d.dispClinicalValue);
+
+            legend = allLegendEntries.filter(item => {
+                const itemName = String(item.name);
+                return (
+                    uniqueVisibleValues.has(itemName) ||
+                    (itemName === NO_DATA_CLINICAL_LEGEND_LABEL &&
+                        hasNoDataPoints)
+                );
+            });
         } else if (
             coloringClinicalDataCacheEntry &&
             coloringClinicalDataCacheEntry.numericalValueToColor
@@ -448,6 +467,7 @@ export function scatterPlotLegendData(
                 )
             );
         }
+
         if (
             ColoringType.CopyNumber in viewType ||
             ColoringType.StructuralVariant in viewType
@@ -480,7 +500,6 @@ export function scatterPlotLegendData(
         legend = legend.concat(searchIndicatorLegendData);
     }
 
-    // add highlighting styles
     if (highlightedLegendItems) {
         legend.forEach(datum => {
             const labels: any = {};
