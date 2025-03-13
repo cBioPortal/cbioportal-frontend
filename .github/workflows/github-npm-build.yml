@@ -26,6 +26,6 @@ jobs:
         run: yarn --version
 
       - run: yarn
-      - run: yarn publish --access public
+      - run: yarn publish --access public --new-version 'v6.0.28'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
