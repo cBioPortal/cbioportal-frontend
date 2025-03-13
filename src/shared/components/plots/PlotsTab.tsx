@@ -4646,7 +4646,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                     checked={this.compareSamples}
                                     onClick={this.onInputClick}
                                 />{' '}
-                                Compare samples from the same patient
+                                Connect samples from the same patient
                             </label>
                         </div>
                     )}
