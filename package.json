@@ -1,6 +1,5 @@
 {
   "name": "cbioportal-frontend",
-  "private": true,
   "version": "3.3.294",
   "workspaces": {
     "packages": [
