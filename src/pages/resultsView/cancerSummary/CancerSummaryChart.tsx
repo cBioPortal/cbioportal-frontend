@@ -123,9 +123,9 @@ export function formatGeneAlteredText(
 
     const profiledTotal = tooltipModel.alterationData.profiledTotal;
 
-    const casesOrSamples = useSampleCounts ? 'samples' : 'cases';
+    const patientsOrSamples = useSampleCounts ? 'samples' : 'patients';
 
-    return `Gene altered in ${alteredPercentage}% of ${profiledTotal} ${casesOrSamples}`;
+    return `Gene altered in ${alteredPercentage}% of ${profiledTotal} ${patientsOrSamples}`;
 }
 
 export function formatFrequencyText(
@@ -141,10 +141,10 @@ export function formatFrequencyText(
         alterationCount / profiledTotal
     );
 
-    const casesOrSamples = useSampleCounts ? 'sample' : 'case';
+    const patientsOrSamples = useSampleCounts ? 'sample' : 'patient';
 
     return `${alteredPercentage}% (${alterationCount} ${pluralize(
-        casesOrSamples,
+        patientsOrSamples,
         alterationCount
     )})`;
 }

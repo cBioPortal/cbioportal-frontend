@@ -124,8 +124,8 @@ export interface ICancerSummaryContentProps {
 }
 
 const CountsOptions = [
-    { value: 'sampleCounts', label: 'Sample Counts' },
-    { value: 'patientCounts', label: 'Patient Counts' },
+    { value: 'sampleCounts', label: 'Samples' },
+    { value: 'patientCounts', label: 'Patients' },
 ];
 
 const GroupByOptions = [
@@ -600,37 +600,46 @@ export class CancerSummaryContent extends React.Component<
         const symbol = this.yAxis === 'alt-freq' ? '%' : '';
 
         return (
-            <div className="cancer-summary--form-controls">
-                <table>
-                    <tr>
-                        <td>
-                            <ControlLabel>Y-Axis Value:</ControlLabel>
-                        </td>
-                        <td className="dashed-border-right">
-                            <FormControl
-                                componentClass="select"
-                                data-test="cancerSummaryYAxisSelect"
-                                onChange={this.handleYAxisChange}
-                                ref={(el: any) => (this.inputYAxisEl = el)}
-                            >
-                                <option value="alt-freq">
-                                    Alteration Frequency
-                                </option>
-                                <option value="abs-count">
-                                    Absolute Counts
-                                </option>
-                            </FormControl>
-                        </td>
-                        <td>
-                            <ControlLabel>{`Min. # Total ${
+            <div className="cancer-summary-chart-controls">
+                <div className="axis-block">
+                    <h4 className="axis-title">Horizontal Axis</h4>
+                    <div>
+                        <div className={'cancer-summary-chart-control-group'}>
+                            <ControlLabel>Category</ControlLabel>
+                            <ButtonGroup>
+                                {GroupByOptions.map((option, i) => {
+                                    return (
+                                        <Radio
+                                            checked={
+                                                option.value ===
+                                                this.props.groupAlterationsBy
+                                            }
+                                            onChange={e => {
+                                                this.initializeSliderValue();
+                                                this.props.handlePivotChange(
+                                                    $(e.target).attr(
+                                                        'data-value'
+                                                    )
+                                                );
+                                            }}
+                                            style={{ width: '100%', margin: 0 }}
+                                            data-value={option.value}
+                                        >
+                                            {option.label}
+                                        </Radio>
+                                    );
+                                })}
+                            </ButtonGroup>
+                        </div>
+                        <div className="cancer-summary-chart-control-group">
+                            <ControlLabel>Filter Categories</ControlLabel>
+                            {`Min. # Total ${
                                 this.props.countAlterationsBy === 'sampleCounts'
                                     ? 'Samples'
-                                    : 'Cases'
-                            }`}</ControlLabel>
-                        </td>
-                        <td>
+                                    : 'Patients'
+                            }`}
                             <div className="slider-holder">
-                                <div className="slider custom-labels">
+                                <div className="slider">
                                     <Slider
                                         min={0}
                                         max={this.totalCasesMax}
@@ -646,59 +655,34 @@ export class CancerSummaryContent extends React.Component<
                                         }
                                     />
                                 </div>
+                                <div
+                                    className={classnames(
+                                        this.totalCaseChanged
+                                            ? 'highlightInput'
+                                            : '',
+                                        'slider-input'
+                                    )}
+                                >
+                                    <FormControl
+                                        type="text"
+                                        value={this.tempTotalCasesInputValue}
+                                        data-test="sampleTotalThresholdInput"
+                                        onChange={this.handleTotalInputChange}
+                                        onKeyPress={
+                                            this.handleTotalInputKeyPress
+                                        }
+                                    />
+                                </div>
                             </div>
-                        </td>
-                        <td
-                            className={classnames(
-                                this.totalCaseChanged ? 'highlightInput' : '',
-                                'dashed-border-right',
-                                'slider-input'
-                            )}
-                        >
-                            <FormControl
-                                type="text"
-                                value={this.tempTotalCasesInputValue}
-                                data-test="sampleTotalThresholdInput"
-                                onChange={this.handleTotalInputChange}
-                                onKeyPress={this.handleTotalInputKeyPress}
-                            />
-                        </td>
-                        <td>
-                            <Checkbox
-                                checked={!this.hideGenomicAlterations}
-                                onChange={this.handleGenomicCheckboxChange}
-                            >
-                                Show Genomic Alteration Types
-                            </Checkbox>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <ControlLabel>Sort X-Axis By:</ControlLabel>
-                        </td>
-                        <td className="dashed-border-right">
-                            <FormControl
-                                componentClass="select"
-                                data-test="cancerSummaryXAxisSelect"
-                                onChange={this.handleXAxisChange}
-                                ref={(el: any) => (this.inputXAxisEl = el)}
-                            >
-                                <option value="y-axis">Y-Axis Values</option>
-                                <option value="x-axis">Alphabetically</option>
-                            </FormControl>
-                        </td>
-                        <td>
-                            <ControlLabel>{`Min. ${
+                            {`Min. ${
                                 this.yAxis === 'alt-freq' ? '%' : '#'
                             } Altered ${
                                 this.props.countAlterationsBy === 'sampleCounts'
                                     ? 'Samples'
-                                    : 'Cases'
-                            }:`}</ControlLabel>
-                        </td>
-                        <td>
+                                    : 'Patients'
+                            }`}
                             <div className="slider-holder">
-                                <div className="slider custom-labels">
+                                <div className="slider">
                                     <Slider
                                         min={0}
                                         max={this.altCasesMax}
@@ -716,24 +700,46 @@ export class CancerSummaryContent extends React.Component<
                                         }
                                     />
                                 </div>
+                                <div
+                                    className={classnames(
+                                        this.altCaseChanged
+                                            ? 'highlightInput'
+                                            : '',
+                                        'slider-input'
+                                    )}
+                                >
+                                    <FormControl
+                                        type="text"
+                                        value={
+                                            this.tempAltCasesInputValue + symbol
+                                        }
+                                        onChange={this.handleAltInputChange}
+                                        data-test="alterationThresholdInput"
+                                        onKeyPress={this.handleAltInputKeyPress}
+                                    />
+                                </div>
                             </div>
-                        </td>
-                        <td
-                            className={classnames(
-                                this.altCaseChanged ? 'highlightInput' : '',
-                                'dashed-border-right',
-                                'slider-input'
-                            )}
-                        >
+                        </div>
+                        <div className={'cancer-summary-chart-control-group'}>
+                            <ControlLabel>Sort X-Axis By</ControlLabel>
                             <FormControl
-                                type="text"
-                                value={this.tempAltCasesInputValue + symbol}
-                                onChange={this.handleAltInputChange}
-                                data-test="alterationThresholdInput"
-                                onKeyPress={this.handleAltInputKeyPress}
-                            />
-                        </td>
-                        <td>
+                                componentClass="select"
+                                data-test="cancerSummaryXAxisSelect"
+                                onChange={this.handleXAxisChange}
+                                ref={(el: any) => (this.inputXAxisEl = el)}
+                                style={{ width: 'auto' }}
+                            >
+                                <option value="y-axis">Y-Axis Values</option>
+                                <option value="x-axis">Alphabetically</option>
+                            </FormControl>
+                        </div>
+                    </div>
+                </div>
+                <div className="axis-block">
+                    <h4 className="axis-title">Vertical Axis</h4>
+                    <div>
+                        <div className={'cancer-summary-chart-control-group'}>
+                            <ControlLabel>Count By</ControlLabel>
                             <ButtonGroup>
                                 {CountsOptions.map((option, i) => {
                                     return (
@@ -750,7 +756,7 @@ export class CancerSummaryContent extends React.Component<
                                                     )
                                                 );
                                             }}
-                                            inline
+                                            style={{ width: '100%', margin: 0 }}
                                             data-value={option.value}
                                         >
                                             {option.label}
@@ -758,9 +764,34 @@ export class CancerSummaryContent extends React.Component<
                                     );
                                 })}
                             </ButtonGroup>
-                        </td>
-                    </tr>
-                </table>
+                        </div>
+                        <div className={'cancer-summary-chart-control-group'}>
+                            <ControlLabel>Y-Axis Value</ControlLabel>
+                            <FormControl
+                                componentClass="select"
+                                data-test="cancerSummaryYAxisSelect"
+                                onChange={this.handleYAxisChange}
+                                ref={(el: any) => (this.inputYAxisEl = el)}
+                                style={{ width: 'auto' }}
+                            >
+                                <option value="alt-freq">
+                                    Alteration Frequency
+                                </option>
+                                <option value="abs-count">
+                                    Absolute Counts
+                                </option>
+                            </FormControl>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <Checkbox
+                        checked={!this.hideGenomicAlterations}
+                        onChange={this.handleGenomicCheckboxChange}
+                    >
+                        Show Genomic Alteration Types
+                    </Checkbox>
+                </div>
             </div>
         );
     }
@@ -773,103 +804,82 @@ export class CancerSummaryContent extends React.Component<
             <WindowWidthBox offset={60}>
                 <If condition={this.hasAlterations}>
                     <Then>
-                        <div data-test="cancerTypesSummaryDiv">
-                            <div className={'cancer-summary--main-options'}>
-                                <ButtonGroup>
-                                    {GroupByOptions.map((option, i) => {
-                                        return (
-                                            <Radio
-                                                checked={
-                                                    option.value ===
-                                                    this.props
-                                                        .groupAlterationsBy
-                                                }
-                                                onChange={e => {
-                                                    this.initializeSliderValue();
-                                                    this.props.handlePivotChange(
-                                                        $(e.target).attr(
-                                                            'data-value'
-                                                        )
-                                                    );
-                                                }}
-                                                inline
-                                                data-value={option.value}
-                                            >
-                                                {option.label}
-                                            </Radio>
-                                        );
-                                    })}
-                                </ButtonGroup>
-                            </div>
-
+                        <div
+                            style={{ display: 'flex' }}
+                            data-test="cancerTypesSummaryDiv"
+                        >
                             <div
-                                className={classnames(
-                                    'inlineBlock',
-                                    { hidden: !this.showControls },
-                                    'cancer-summary-secondary-options'
-                                )}
+                                className={classnames({
+                                    hidden: !this.showControls,
+                                })}
                             >
                                 {/*<button type="button" onClick={this.toggleShowControls} className="close">×</button>*/}
                                 {this.controls}
                             </div>
 
-                            <div
-                                className={classnames(
-                                    'alert',
-                                    'alert-success',
-                                    {
-                                        hidden:
-                                            !this.totalCaseChanged &&
-                                            !this.altCaseChanged,
-                                    }
-                                )}
-                            >
-                                <span style={{ verticalAlign: 'middle' }}>
-                                    {`${this.chartData.labels.length} of ${
-                                        this.groupKeysSorted.length
-                                    } categories (${
-                                        _.keyBy(GroupByOptions, 'value')[
-                                            this.props.groupAlterationsBy
-                                        ].label
-                                    }) are shown based on filtering.`}
-                                </span>
-                            </div>
-                            <CancerSummaryChart
-                                gene={this.props.gene}
-                                key={Date.now()}
-                                data={this.chartData.data}
-                                alterationTypeDataCounts={
-                                    this.chartData.alterationTypeDataCounts
-                                }
-                                ref={(el: any) => (this.chartComponent = el)}
-                                countsByGroup={this.countsData}
-                                representedAlterations={
-                                    this.chartData.representedAlterations
-                                }
-                                alterationTypes={OrderedAlterationLabelMap}
-                                isPercentage={this.yAxis === 'alt-freq'}
-                                showLinks={this.showStudyTooltipLinks}
-                                colors={alterationToColor}
-                                hideGenomicAlterations={
-                                    this.hideGenomicAlterations
-                                }
-                                xLabels={this.chartData.labels}
-                                xAxisString={
-                                    (
-                                        GroupByOptions.find(
-                                            o =>
-                                                o.value ==
+                            <div>
+                                <div
+                                    className={classnames(
+                                        'alert',
+                                        'alert-info',
+                                        'category-filtering-alert',
+                                        {
+                                            hidden:
+                                                !this.totalCaseChanged &&
+                                                !this.altCaseChanged,
+                                        }
+                                    )}
+                                >
+                                    <span style={{ verticalAlign: 'middle' }}>
+                                        {`${this.chartData.labels.length} of ${
+                                            this.groupKeysSorted.length
+                                        } categories (${
+                                            _.keyBy(GroupByOptions, 'value')[
                                                 this.props.groupAlterationsBy
-                                        ) || {}
-                                    ).label || 'Cancer'
-                                }
-                                countAlterationsBy={
-                                    this.props.countAlterationsBy
-                                }
-                                handleStudyLinkout={
-                                    this.props.handleStudyLinkout!
-                                }
-                            />
+                                            ].label
+                                        }) are shown based on filtering.`}
+                                    </span>
+                                </div>
+                                <CancerSummaryChart
+                                    gene={this.props.gene}
+                                    key={Date.now()}
+                                    data={this.chartData.data}
+                                    alterationTypeDataCounts={
+                                        this.chartData.alterationTypeDataCounts
+                                    }
+                                    ref={(el: any) =>
+                                        (this.chartComponent = el)
+                                    }
+                                    countsByGroup={this.countsData}
+                                    representedAlterations={
+                                        this.chartData.representedAlterations
+                                    }
+                                    alterationTypes={OrderedAlterationLabelMap}
+                                    isPercentage={this.yAxis === 'alt-freq'}
+                                    showLinks={this.showStudyTooltipLinks}
+                                    colors={alterationToColor}
+                                    hideGenomicAlterations={
+                                        this.hideGenomicAlterations
+                                    }
+                                    xLabels={this.chartData.labels}
+                                    xAxisString={
+                                        (
+                                            GroupByOptions.find(
+                                                o =>
+                                                    o.value ==
+                                                    this.props
+                                                        .groupAlterationsBy
+                                            ) || {}
+                                        ).label || 'Cancer'
+                                    }
+                                    countAlterationsBy={
+                                        this.props.countAlterationsBy
+                                    }
+                                    handleStudyLinkout={
+                                        this.props.handleStudyLinkout!
+                                    }
+                                />
+                            </div>
                         </div>
                     </Then>
                     <Else>
