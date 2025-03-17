@@ -2,10 +2,6 @@
   "name": "cbioportal-frontend",
   "private": true,
   "version": "3.3.294",
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com/",
-    "access": "public"
-  },
   "workspaces": {
     "packages": [
       ".",
