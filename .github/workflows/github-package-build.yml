@@ -3,8 +3,7 @@ name: Build & Publish to GitHub Packages
 on:
   release:
     types:
-      - created
-      - prereleased
+      - published
 
 jobs:
   build-publish:
