@@ -602,10 +602,10 @@ export class CancerSummaryContent extends React.Component<
         return (
             <div className="cancer-summary-chart-controls">
                 <div className="axis-block">
-                    <h4 className="axis-title">Horizontal Axis</h4>
+                    <h4 className="axis-title">Category</h4>
                     <div>
                         <div className={'cancer-summary-chart-control-group'}>
-                            <ControlLabel>Category</ControlLabel>
+                            <ControlLabel>Category Type</ControlLabel>
                             <ButtonGroup>
                                 {GroupByOptions.map((option, i) => {
                                     return (
@@ -736,7 +736,7 @@ export class CancerSummaryContent extends React.Component<
                     </div>
                 </div>
                 <div className="axis-block">
-                    <h4 className="axis-title">Vertical Axis</h4>
+                    <h4 className="axis-title">Occurrence</h4>
                     <div>
                         <div className={'cancer-summary-chart-control-group'}>
                             <ControlLabel>Count By</ControlLabel>
@@ -818,28 +818,37 @@ export class CancerSummaryContent extends React.Component<
                             </div>
 
                             <div>
-                                <div
-                                    className={classnames(
-                                        'alert',
-                                        'alert-info',
-                                        'category-filtering-alert',
-                                        {
-                                            hidden:
-                                                !this.totalCaseChanged &&
-                                                !this.altCaseChanged,
-                                        }
-                                    )}
-                                >
-                                    <span style={{ verticalAlign: 'middle' }}>
-                                        {`${this.chartData.labels.length} of ${
-                                            this.groupKeysSorted.length
-                                        } categories (${
-                                            _.keyBy(GroupByOptions, 'value')[
-                                                this.props.groupAlterationsBy
-                                            ].label
-                                        }) are shown based on filtering.`}
-                                    </span>
-                                </div>
+                                {this.chartData.labels.length <
+                                    this.groupKeysSorted.length && (
+                                    <div
+                                        className={classnames(
+                                            'alert',
+                                            'alert-info',
+                                            'category-filtering-alert',
+                                            {
+                                                hidden:
+                                                    !this.totalCaseChanged &&
+                                                    !this.altCaseChanged,
+                                            }
+                                        )}
+                                    >
+                                        <span
+                                            style={{ verticalAlign: 'middle' }}
+                                        >
+                                            {`${
+                                                this.chartData.labels.length
+                                            } of ${
+                                                this.groupKeysSorted.length
+                                            } categories (${
+                                                _.keyBy(
+                                                    GroupByOptions,
+                                                    'value'
+                                                )[this.props.groupAlterationsBy]
+                                                    .label
+                                            }) are shown based on filtering.`}
+                                        </span>
+                                    </div>
+                                )}
                                 <CancerSummaryChart
                                     gene={this.props.gene}
                                     key={Date.now()}
