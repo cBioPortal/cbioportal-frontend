@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { ButtonGroup, Radio } from 'react-bootstrap';
 import { If, Then, Else } from 'react-if';
 import { observer } from 'mobx-react';
 import _ from 'lodash';
@@ -48,6 +49,8 @@ class TrialMatchNewTableComponent extends LazyMobXTable<ITrialMatch> {}
 export default class TrialMatchTableNew extends React.Component<
     ITrialMatchNewProps
 > {
+    @observable selectedView: string = 'Detailed view';
+
     constructor(props: ITrialMatchNewProps) {
         super(props);
         makeObservable(this);
@@ -61,6 +64,94 @@ export default class TrialMatchTableNew extends React.Component<
             ['asc']
         );
     }
+
+    @computed
+    get groupedByTrial() {
+        return _.groupBy(this.sortedTrialMatches, 'nctId');
+    }
+
+    @computed
+    get groupedByTrialArm() {
+        return _.groupBy(
+            this.sortedTrialMatches,
+            trialmatch => `${trialmatch.nctId}-${trialmatch.trial_arm_number}`
+        );
+    }
+
+    @computed
+    get formattedByTrialArm() {
+        return _.map(this.groupedByTrialArm, (group, key) => {
+            const [nctId, trial_arm_number] = key.split('-');
+            const combined = group.reduce((acc: ITrialMatch, trialmatch) => {
+                acc.nctId = nctId;
+                acc.trial_arm_number = parseInt(trial_arm_number, 10);
+                acc.protocolNo = trialmatch.protocolNo;
+                acc.shortTitle = trialmatch.shortTitle;
+                acc.sampleId = acc.sampleId
+                    ? acc.sampleId.indexOf(trialmatch.sampleId) > -1
+                        ? acc.sampleId
+                        : acc.sampleId.concat(', ').concat(trialmatch.sampleId)
+                    : trialmatch.sampleId;
+                acc.arm_code = trialmatch.arm_code;
+                acc.trial_match_date = acc.trial_match_date
+                    ? acc.trial_match_date
+                    : trialmatch.trial_match_date;
+                acc.patient_match_values =
+                    '{"Expand for Details":"Expand for Details"}';
+                acc.queries_used =
+                    '[{"Expand for Details":"Expand for Details"}]';
+                // trial links to be added
+                return acc;
+            }, {} as ITrialMatch);
+            return combined;
+        });
+    }
+
+    @computed
+    get formattedByTrial() {
+        return _.map(this.groupedByTrial, (group, nctId) => {
+            const combined = group.reduce((acc: ITrialMatch, trialmatch) => {
+                acc.nctId = nctId;
+                acc.protocolNo = trialmatch.protocolNo;
+                acc.shortTitle = trialmatch.shortTitle;
+                acc.sampleId = acc.sampleId
+                    ? acc.sampleId.indexOf(trialmatch.sampleId) > -1
+                        ? acc.sampleId
+                        : acc.sampleId.concat(', ').concat(trialmatch.sampleId)
+                    : trialmatch.sampleId;
+                acc.arm_code = acc.arm_code
+                    ? acc.arm_code.indexOf(trialmatch.arm_code) > -1
+                        ? acc.arm_code
+                        : acc.arm_code.concat(
+                              ', #' +
+                                  trialmatch.trial_arm_number.toString() +
+                                  ' - ' +
+                                  trialmatch.arm_code
+                          )
+                    : '#' +
+                      trialmatch.trial_arm_number.toString() +
+                      ' - ' +
+                      trialmatch.arm_code;
+                //acc.arm_code = acc.arm_code ? acc.arm_code.concat(', ').concat(trialmatch.arm_code) : trialmatch.arm_code;
+                //acc.arm_code.concat(trialmatch.arm_code).concat(',');
+                acc.trial_match_date = acc.trial_match_date
+                    ? acc.trial_match_date
+                    : trialmatch.trial_match_date;
+                acc.patient_match_values =
+                    '{"Expand for Details":"Expand for Details"}';
+                acc.queries_used =
+                    '[{"Expand for Details":"Expand for Details"}]';
+                //trial links to be added
+                return acc;
+            }, {} as ITrialMatch);
+            return combined;
+        });
+    }
+
+    @action
+    handleViewChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        this.selectedView = event.target.value;
+    };
 
     @computed
     get columnWidths() {
@@ -213,7 +304,16 @@ export default class TrialMatchTableNew extends React.Component<
             name: ColumnKey.TRIALDETAILS,
             render: (trialmatch: ITrialMatch) => (
                 <div>
-                    <div>Trial Details Links TBD</div>
+                    <div>
+                        <a href="https://beta-app.ctims.ca/" target="_blank">
+                            CTIMS Editor
+                        </a>
+                    </div>
+                    <div>
+                        <a href="https://beta-app.ctims.ca/" target="_blank">
+                            CTIMS Viewer
+                        </a>
+                    </div>
                 </div>
             ),
             //sortBy: (trialmatch: ITrialMatch) => trialmatch.arm_code,
@@ -223,8 +323,20 @@ export default class TrialMatchTableNew extends React.Component<
             name: ColumnKey.TRIAL_MATCHING_CRITERIA,
             render: (trialmatch: ITrialMatch) => (
                 <div>
-                    {JSON.stringify(
-                        JSON.parse(trialmatch.queries_used.replace(/'/g, '"')),
+                    {/*JSON.stringify(
+                        JSON.parse(trialmatch.queries_used.replace(/\{/g, '').replace(/\}/g, '').replace(/'/g, '"')),
+                        null,
+                        2
+                    )*/
+                    JSON.stringify(
+                        JSON.parse(
+                            trialmatch.queries_used
+                                .replace(/\{/g, '')
+                                .replace(/\}/g, '')
+                                .replace(/'/g, '"')
+                                .replace(/\[/g, '{ ')
+                                .replace(/\]/g, ' }') //.replace(/,/g, ', ' )
+                        ),
                         null,
                         2
                     )}
@@ -236,18 +348,17 @@ export default class TrialMatchTableNew extends React.Component<
         },
         {
             name: ColumnKey.PMV,
-            render: (
-                trialmatch: ITrialMatch /*
+            render: (trialmatch: ITrialMatch) => (
                 <div>
-                     {
-                     JSON.stringify(
+                    {JSON.stringify(
                         JSON.parse(
-                        trialmatch.patient_match_values.replace(/'/g, '"'))
-                        , null, 2)
-                     }
+                            trialmatch.patient_match_values.replace(/'/g, '"')
+                        ),
+                        null,
+                        2
+                    )}
                 </div>
-                */
-            ) => <p></p>,
+            ),
             sortBy: (trialmatch: ITrialMatch) =>
                 trialmatch.oncotreePrimaryDiagnosisName,
             width: this.columnWidths[ColumnKey.PMV],
@@ -265,11 +376,66 @@ export default class TrialMatchTableNew extends React.Component<
     ];
 
     render() {
+        const viewdata =
+            this.selectedView === 'Trial view'
+                ? this.formattedByTrial
+                : this.selectedView === 'Arm view'
+                ? this.formattedByTrialArm
+                : this.sortedTrialMatches;
+
         return (
             <div>
-                {}
+                <div>
+                    <div>
+                        <div className={'cancer-summary--main-options'}>
+                            <ButtonGroup>
+                                <Radio
+                                    checked={this.selectedView === 'Trial view'}
+                                    inline
+                                    onChange={() =>
+                                        this.handleViewChange({
+                                            target: { value: 'Trial view' },
+                                        } as React.ChangeEvent<
+                                            HTMLSelectElement
+                                        >)
+                                    }
+                                >
+                                    Trial view
+                                </Radio>
+                                <Radio
+                                    checked={this.selectedView === 'Arm view'}
+                                    inline
+                                    onChange={() =>
+                                        this.handleViewChange({
+                                            target: { value: 'Arm view' },
+                                        } as React.ChangeEvent<
+                                            HTMLSelectElement
+                                        >)
+                                    }
+                                >
+                                    Arm view
+                                </Radio>
+                                <Radio
+                                    checked={
+                                        this.selectedView === 'Detailed view'
+                                    }
+                                    inline
+                                    onChange={() =>
+                                        this.handleViewChange({
+                                            target: { value: 'Detailed view' },
+                                        } as React.ChangeEvent<
+                                            HTMLSelectElement
+                                        >)
+                                    }
+                                >
+                                    Detailed view
+                                </Radio>
+                            </ButtonGroup>
+                        </div>
+                    </div>
+                </div>
                 <TrialMatchNewTableComponent
-                    data={this.sortedTrialMatches}
+                    data={viewdata}
                     columns={this._columns}
                     showCopyDownload={false}
                 />
