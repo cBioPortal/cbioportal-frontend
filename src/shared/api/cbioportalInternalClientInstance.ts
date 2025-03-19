@@ -32,6 +32,7 @@ proxyColumnStore(internalClientColumnStore, 'fetchGenomicDataBinCounts');
 proxyColumnStore(internalClientColumnStore, 'fetchGenericAssayDataBinCounts');
 proxyColumnStore(internalClientColumnStore, 'fetchGenericAssayDataCounts');
 proxyColumnStore(internalClientColumnStore, 'fetchClinicalDataViolinPlots');
+proxyColumnStore(internalClientColumnStore, 'fetchAlterationEnrichments');
 
 export default internalClient;
 
