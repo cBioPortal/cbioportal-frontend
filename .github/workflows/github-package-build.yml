@@ -1,0 +1,77 @@
+name: Build & Publish to GitHub Packages
+
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+    inputs:
+      source_ref:
+        description: "Branch, release tag, or commit hash to build"
+        required: true
+        type: string
+
+jobs:
+  build-publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository (manual trigger)
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_ref }}
+
+      - name: Checkout repository (automatic trigger)
+        if: github.event_name == 'release'
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Set maven version from source ref (manual trigger)
+        if: github.event_name == 'workflow_dispatch'
+        run: mvn versions:set -DnewVersion=${{ inputs.source_ref }} -DgenerateBackupPoms=false
+
+      - name: Set maven version from release tag (automatic trigger)
+        if: github.event_name == 'release'
+        run: mvn versions:set -DnewVersion=${{ github.event.release.tag_name }} -DgenerateBackupPoms=false
+
+      - name: Publish package
+        run: mvn --batch-mode deploy
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up SSH
+        if: github.event_name == 'release'
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.BACKEND_REPO_TOKEN }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+      - name: Set up git
+        if: github.event_name == 'release'
+        run: |
+          git config --global user.name 'github-actions'
+          git config --global user.email 'github-actions@github.com'
+
+      - name: Checkout cbioportal/cbioportal
+        if: github.event_name == 'release'
+        run: |
+          git clone git@github.com:cBioPortal/cbioportal.git
+
+      - name: Update backend to use latest frontend commit
+        if: github.event_name == 'release'
+        run: |
+          TAG=${{ github.event.release.tag_name }}
+          cd cbioportal
+          sed -i "s|<version>\(.*\)-SNAPSHOT</version>|<version>\1</version>|" pom.xml
+          sed -i "s|<frontend.version>.*</frontend.version>|<frontend.version>$TAG</frontend.version>|" pom.xml
+          git add pom.xml
+          git commit -m "Frontend $TAG"
+          git push
