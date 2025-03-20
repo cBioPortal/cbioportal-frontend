@@ -82,6 +82,11 @@ const StudyFilterOptionsFormatted = [
         name: 'Treatment',
         checked: false,
     },
+    {
+        id: 'imagingSampleCount',
+        name: 'Imaging',
+        checked: false,
+    },
 ];
 
 @observer
