@@ -1,10 +1,9 @@
 import * as React from 'react';
-import RightBar from '../rightbar/RightBar';
-import { Component } from 'react';
 import classNames from 'classnames';
 import { inject } from 'mobx-react';
 import { AppStore } from '../../../AppStore';
 import PortalFooter from '../../../appShell/App/PortalFooter';
+import { RFC80Test } from 'shared/components/rfc80Tester';
 
 interface IPageLayout {
     rightBar?: any;
@@ -39,6 +38,8 @@ export class PageLayout extends React.Component<IPageLayout, {}> {
                 {!this.props.hideFooter && (
                     <PortalFooter appStore={this.props.appStore!} />
                 )}
+
+                {localStorage.rfc80 && <RFC80Test />}
             </div>
         );
     }
