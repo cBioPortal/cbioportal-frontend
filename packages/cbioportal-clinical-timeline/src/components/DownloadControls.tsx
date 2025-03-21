@@ -4,7 +4,7 @@ import { saveAsSvg, saveAsPng, saveAsPdf } from '../lib/downloadUtils';
 interface IDownloadControlsProps {
     buttons: Array<'PDF' | 'PNG' | 'SVG'>;
     filename?: string;
-    getSvg: () => SVGElement;
+    getSvg: () => SVGElement | null;
     additionalRightButtons?: Array<{
         key: string;
         content: React.ReactNode;
@@ -27,6 +27,11 @@ export const DownloadControls: React.FC<IDownloadControlsProps> = ({
     // Implementation to handle download in various formats
     const handleDownload = (format: 'SVG' | 'PNG' | 'PDF') => {
         const svg = getSvg();
+
+        if (!svg) {
+            console.error('SVG element not found');
+            return;
+        }
 
         switch (format) {
             case 'SVG':

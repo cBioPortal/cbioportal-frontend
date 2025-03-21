@@ -24,7 +24,7 @@ import TrackHeader, {
 import TickAxis, { TICK_AXIS_COLOR, TICK_AXIS_HEIGHT } from './TickAxis';
 import { EventPosition, TickIntervalEnum, ZoomBounds } from './types';
 import './timeline.scss';
-import { DownloadControls } from 'cbioportal-frontend-commons';
+import { DownloadControls } from './components/DownloadControls';
 import CustomTrack, { CustomTrackSpecification } from './CustomTrack';
 import CustomTrackHeader from './CustomTrackHeader';
 
