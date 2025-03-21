@@ -92,11 +92,8 @@ export {
     MutationDataFilter,
     GenericAssayDataFilter,
     AlterationFilter,
-    default as CBioPortalAPIInternal,
-} from './generated/CBioPortalAPIInternal';
-
-export {
     SampleTreatmentReport,
     PatientTreatmentReport,
     PatientTreatment,
-} from './CBioPortalAPIInternal_clickhouse';
+    default as CBioPortalAPIInternal,
+} from './generated/CBioPortalAPIInternal';
