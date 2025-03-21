@@ -8,8 +8,13 @@ on:
     inputs:
       source_ref:
         description: "Branch, release tag, or commit hash to build"
-        required: true
         type: string
+        required: true
+      update_backend:
+        description: "Update backend pom.xml with the above tag"
+        type: boolean
+        required: false
+        default: 'false'
 
 jobs:
   build-publish:
@@ -47,7 +52,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up SSH
-        if: github.event_name == 'release'
+        if: github.event_name == 'release' || inputs.update_backend == 'true'
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.BACKEND_REPO_TOKEN }}" > ~/.ssh/id_ed25519
@@ -55,18 +60,18 @@ jobs:
           ssh-keyscan github.com >> ~/.ssh/known_hosts
 
       - name: Set up git
-        if: github.event_name == 'release'
+        if: github.event_name == 'release' || inputs.update_backend == 'true'
         run: |
           git config --global user.name 'github-actions'
           git config --global user.email 'github-actions@github.com'
 
       - name: Checkout cbioportal/cbioportal
-        if: github.event_name == 'release'
+        if: github.event_name == 'release' || inputs.update_backend == 'true'
         run: |
           git clone git@github.com:cBioPortal/cbioportal.git
 
-      - name: Update backend to use latest frontend commit
-        if: github.event_name == 'release'
+      - name: Update backend pom with new frontend version
+        if: github.event_name == 'release' || inputs.update_backend == 'true'
         run: |
           TAG=${{ github.event.release.tag_name }}
           cd cbioportal
