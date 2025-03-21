@@ -19,9 +19,11 @@ import {
 } from 'cbioportal-frontend-commons';
 import { Omit } from '../../../../shared/lib/TypeScriptUtils';
 import ifNotDefined from '../../../../shared/lib/ifNotDefined';
+import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
 
 export type AddChartOption = Omit<ChartOption, 'chartType'>;
 export interface IAddChartByTypeProps {
+    store?: StudyViewPageStore;
     options: Omit<AddChartOption, 'freq'>[];
     freqPromise?: MobxPromise<ChartDataCountSet>;
     onAddAll: (keys: string[]) => void;
@@ -372,6 +374,8 @@ export default class AddChartByType extends React.Component<
                         removeAll={this.removeAll}
                         showSelectableNumber={true}
                         showAddRemoveAllButton={true}
+                        showSaveAllChartsButton={true}
+                        store={this.props.store}
                         autoFocusSearchAfterRendering={true}
                         numberOfSelectedRows={
                             this.getCurrentSelectedRows().length
