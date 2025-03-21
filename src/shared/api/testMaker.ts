@@ -58,9 +58,9 @@ export async function makeTest(data: any, url: string, label: string) {
         data,
         url,
         label,
-        studies: toJS(getBrowserWindow().studyViewPageStore.studyIds),
+        studies: toJS(getBrowserWindow()?.studyViewPageStore?.studyIds),
         filterUrl: urlChopper(
-            getBrowserWindow().studyPage.studyViewFullUrlWithFilter
+            getBrowserWindow()?.studyPage?.studyViewFullUrlWithFilter
         ),
     };
 
