@@ -123,10 +123,6 @@ export function currentQueryParams(store: QueryStore) {
         case_ids,
         gene_list: normalizeQuery(store.geneQuery) || ' ', // empty string won't work
         geneset_list: normalizeQuery(store.genesetQuery) || ' ', //empty string won't work
-        tab_index: store.forDownloadTab
-            ? 'tab_download'
-            : ('tab_visualize' as any),
-        transpose_matrix: store.transposeDataMatrix ? 'on' : undefined,
         Action: 'Submit',
     };
 
