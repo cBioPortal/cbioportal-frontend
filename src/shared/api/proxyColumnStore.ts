@@ -24,6 +24,7 @@ const endpoints = [
     'GenericAssay',
     'ViolinPlots',
     'ClinicalEventTypeCounts',
+    'AlterationEnrichments',
     // public client endpoints
     'Samples',
     'SamplesByKeyword',
