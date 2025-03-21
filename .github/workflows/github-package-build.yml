@@ -70,7 +70,7 @@ jobs:
         run: |
           TAG=${{ github.event.release.tag_name }}
           cd cbioportal
-          sed -i "s|<version>\(.*\)-SNAPSHOT</version>|<version>\1</version>|" pom.xml
+          sed -i "s|<version>\(.*\)-SNAPSHOT</version>|<version>$TAG</version>|" pom.xml
           sed -i "s|<frontend.version>.*</frontend.version>|<frontend.version>$TAG</frontend.version>|" pom.xml
           git add pom.xml
           git commit -m "Frontend $TAG"
