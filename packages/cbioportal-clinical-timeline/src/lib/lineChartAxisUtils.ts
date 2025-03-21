@@ -1,6 +1,7 @@
 import { TimelineEvent, TimelineTrackSpecification } from '../types';
 import { getTrackHeight } from './helpers';
-import { tickFormatNumeral } from 'cbioportal-frontend-commons';
+import { tickFormatNumeral } from '../lib/formatting';
+
 import _ from 'lodash';
 
 export function getTicksForLineChartAxis(track: TimelineTrackSpecification) {
