@@ -334,7 +334,8 @@ jobs:
             TEST_HOME: /tmp/repo/cbioportal-frontend/end-to-end-test/local
           name: Make sure all screenshots are tracked (otherwise the test will always be successful)
           command: |
-            for f in $TEST_HOME/screenshots/reference/*.png; do
+            cd cbioportal-frontend
+            for f in end-to-end-test/local/screenshots/reference/*.png; do
               git ls-files --error-unmatch $f > /dev/null 2> /dev/null ||
               (echo -e "\033[0;31m $f not tracked \033[0m" && touch screenshots_not_tracked);
             done;
