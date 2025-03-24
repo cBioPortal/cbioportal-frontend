@@ -44,7 +44,7 @@ describe('Screenshot test for extend survival chart (feature flag)', function() 
         var res = browser.checkElement('div[data-test=survivalTabView]');
         assertScreenShotMatch(res);
     });
-    it('Survival chart with hazard ratio table and landmark line test', function() {
+    it('Survival chart with hazard ratio table and landmark line', function() {
         setCheckboxChecked(true, 'input[data-test=landmarkLines]');
         setInputText('input[data-test=landmarkValues]', '20');
         setCheckboxChecked(true, 'input[data-test=hazardRatioCheckbox]');
