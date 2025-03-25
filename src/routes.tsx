@@ -168,6 +168,24 @@ function LocationValidationWrapper(
 function ResultsViewQueryParamsAdjuster(oldParams: ResultsViewURLQuery) {
     let changeMade = false;
     const newParams = _.cloneDeep(oldParams);
+    if (
+        newParams.comparison_subtab ===
+        LegacyResultsViewComparisonSubTab.MUTATIONS
+    ) {
+        newParams.comparison_subtab = ResultsViewComparisonSubTab.ALTERATIONS;
+        newParams.comparison_selectedEnrichmentEventTypes = JSON.stringify([
+            ...mutationGroup,
+        ]);
+        changeMade = true;
+    } else if (
+        newParams.comparison_subtab === LegacyResultsViewComparisonSubTab.CNA
+    ) {
+        newParams.comparison_subtab = ResultsViewComparisonSubTab.ALTERATIONS;
+        newParams.comparison_selectedEnrichmentEventTypes = JSON.stringify([
+            ...cnaGroup,
+        ]);
+        changeMade = true;
+    }
     // we used to call the structural variant alteration class "fusions"
     // we have generalized it to structural variants
     const profileRegex = /fusion/;
