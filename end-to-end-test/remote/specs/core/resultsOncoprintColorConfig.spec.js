@@ -49,6 +49,7 @@ describe('oncoprint colors', () => {
             const trackOptionsElts = await getNthOncoprintTrackOptionsElements(
                 5
             );
+            await (await getElement(trackOptionsElts.button_selector)).moveTo();
             // open menu
             await clickElement(trackOptionsElts.button_selector);
             await (
@@ -141,6 +142,7 @@ describe('oncoprint colors', () => {
             const trackOptionsElts = await getNthOncoprintTrackOptionsElements(
                 5
             );
+            await (await getElement(trackOptionsElts.button_selector)).moveTo();
             await clickElement(trackOptionsElts.button_selector);
             await (
                 await getElement(trackOptionsElts.dropdown_selector)

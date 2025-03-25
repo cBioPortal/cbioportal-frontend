@@ -28,6 +28,7 @@ export type BoxPlotModel = {
     IQR: number;
     outliersUpper: Outliers['upper'];
     outliersLower: Outliers['lower'];
+    sortedVector: number[];
 };
 
 function calculateOutliers(
@@ -113,6 +114,7 @@ export function calculateBoxPlotModel(vector: number[]): BoxPlotModel {
         min,
         outliersUpper: outliers.upper,
         outliersLower: outliers.lower,
+        sortedVector,
     };
 }
 

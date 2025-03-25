@@ -482,7 +482,11 @@ describe('genetic profile selection in front page query form', function() {
         await clickModifyStudySelectionButton();
 
         //deselect other study
-        await clickElement('[data-test="StudySelect"]');
+        await (
+            await getElement('.studyItem_ampca_bcm_2016')
+        ).waitForDisplayed();
+
+        await clickElement('.studyItem_ampca_bcm_2016');
 
         await clickQueryByGeneButton();
 

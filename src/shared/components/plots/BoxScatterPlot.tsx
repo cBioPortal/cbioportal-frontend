@@ -11,6 +11,7 @@ import {
     VictoryScatter,
     VictoryLegend,
     VictoryLabel,
+    LineSegment,
 } from 'victory';
 import { IBaseScatterPlotData } from './ScatterPlot';
 import {
@@ -101,6 +102,8 @@ export type BoxModel = {
     q3: number;
     x?: number;
     y?: number;
+    eventkey?: number;
+    sortedVector: number[];
 };
 
 const RIGHT_GUTTER = 130; // room for legend
@@ -114,6 +117,42 @@ const BOTTOM_LEGEND_PADDING = 15;
 const HORIZONTAL_OFFSET = 8;
 const VERTICAL_OFFSET = 17;
 const UTILITIES_MENU_HEIGHT = 20;
+
+/*
+    This component exists to provide a mouseover target for tooltips
+    when the box plot is vertically compressed
+ */
+const CustomMedianComponent = (props: any) => {
+    const { x1, x2, y1, y2 } = props;
+
+    // we want the target for tooltips to extend from the max value to min value
+    // irrespective of boxplot outlier status.
+    // i.e. whatever is that ACTUAL max and min
+    const end = props.scale.y(props.datum.sortedVector[0]);
+    const start = props.scale.y(
+        props.datum.sortedVector[props.datum.sortedVector.length - 1]
+    );
+    const height = end - start;
+
+    return (
+        <g>
+            <LineSegment {...props} />
+            <rect
+                x={Math.min(x1, x2)}
+                y={start}
+                width={Math.abs(x2 - x1)}
+                height={height}
+                fill={'transparent'}
+                onMouseEnter={() => {
+                    props.onMouseEnter(props);
+                }}
+                onMouseLeave={() => {
+                    props.onMouseLeave(props);
+                }}
+            />
+        </g>
+    );
+};
 
 const BOX_STYLES = {
     min: { stroke: '#999999' },
@@ -130,6 +169,7 @@ export default class BoxScatterPlot<
     @observable.ref private container: HTMLDivElement;
     @observable.ref private boxPlotTooltipModel: any | null;
     @observable private mousePosition = { x: 0, y: 0 };
+    @observable.ref private axisLabelTooltipModel: any | null;
 
     private scatterPlotTooltipHelper: ScatterPlotTooltipHelper = new ScatterPlotTooltipHelper();
 
@@ -179,6 +219,41 @@ export default class BoxScatterPlot<
                                     },
                                 },
                             ];
+                        },
+                    },
+                },
+            ];
+        }
+        return [];
+    }
+    private get axisLabelEvents() {
+        if (this.props.boxPlotTooltip) {
+            const self = this;
+            return [
+                {
+                    target: 'tickLabels',
+                    eventHandlers: {
+                        onMouseEnter: (event: any, props: any) => {
+                            const groupIndex = props.index;
+                            if (
+                                groupIndex !== undefined &&
+                                self.boxPlotData[groupIndex]
+                            ) {
+                                self.axisLabelTooltipModel = {
+                                    datum: self.boxPlotData[groupIndex],
+                                    eventkey: groupIndex,
+                                };
+                                self.mousePosition = {
+                                    x: event.pageX,
+                                    y: event.pageY,
+                                };
+                            }
+                            return [];
+                        },
+
+                        onMouseLeave: () => {
+                            self.axisLabelTooltipModel = null;
+                            return [];
                         },
                     },
                 },
@@ -603,6 +678,7 @@ export default class BoxScatterPlot<
                         }
                     />
                 }
+                events={this.axisLabelEvents}
             />
         );
     }
@@ -649,6 +725,7 @@ export default class BoxScatterPlot<
                 axisLabelComponent={
                     <VictoryLabel dy={this.yAxisLabelVertOffset} />
                 }
+                events={this.axisLabelEvents}
             />
         );
     }
@@ -762,6 +839,7 @@ export default class BoxScatterPlot<
             } else {
                 box.x = this.categoryCoord(i);
             }
+            box.eventkey = i;
         };
 
         return toBoxPlotData(
@@ -783,6 +861,8 @@ export default class BoxScatterPlot<
 
     @autobind
     private getChart() {
+        const self = this;
+
         return (
             <div
                 ref={this.containerRef}
@@ -833,6 +913,16 @@ export default class BoxScatterPlot<
                                 data={this.boxPlotData}
                                 horizontal={this.props.horizontal}
                                 events={this.boxPlotEvents}
+                                medianComponent={
+                                    <CustomMedianComponent
+                                        onMouseEnter={(model: any) => {
+                                            self.boxPlotTooltipModel = model;
+                                        }}
+                                        onMouseLeave={(model: any) => {
+                                            self.boxPlotTooltipModel = null;
+                                        }}
+                                    />
+                                }
                             />
                             {this.scatterPlotData.map(dataWithAppearance => (
                                 <VictoryScatter
@@ -891,13 +981,14 @@ export default class BoxScatterPlot<
     }
 
     @autobind
-    private getBoxPlotTooltipComponent() {
-        if (
-            this.container &&
-            this.boxPlotTooltipModel &&
-            this.props.boxPlotTooltip
-        ) {
+    private getTooltipComponent(
+        tooltipModel: any,
+        verticalOffsetAdjustment: number
+    ) {
+        if (this.container && tooltipModel && this.props.boxPlotTooltip) {
             const maxWidth = 400;
+            const eventKey =
+                tooltipModel.datum.eventKey ?? tooltipModel.datum.eventkey;
             let tooltipPlacement =
                 this.mousePosition.x > WindowStore.size.width - maxWidth
                     ? 'left'
@@ -912,7 +1003,9 @@ export default class BoxScatterPlot<
                             ? -HORIZONTAL_OFFSET
                             : HORIZONTAL_OFFSET)
                     }
-                    positionTop={this.mousePosition.y - VERTICAL_OFFSET}
+                    positionTop={
+                        this.mousePosition.y + verticalOffsetAdjustment
+                    }
                     style={{
                         transform:
                             tooltipPlacement === 'left'
@@ -924,12 +1017,8 @@ export default class BoxScatterPlot<
                 >
                     <div>
                         {this.props.boxPlotTooltip(
-                            [this.boxPlotTooltipModel.datum],
-                            [
-                                this.props.data[
-                                    this.boxPlotTooltipModel.datum.eventKey
-                                ].label,
-                            ]
+                            [tooltipModel.datum],
+                            [this.props.data[eventKey]?.label]
                         )}
                     </div>
                 </Popover>,
@@ -938,6 +1027,22 @@ export default class BoxScatterPlot<
         } else {
             return null;
         }
+    }
+
+    @autobind
+    private getBoxPlotTooltipComponent() {
+        return this.getTooltipComponent(
+            this.boxPlotTooltipModel,
+            -VERTICAL_OFFSET
+        );
+    }
+
+    @autobind
+    private getAxisLabelTooltipComponent() {
+        return this.getTooltipComponent(
+            this.axisLabelTooltipModel,
+            VERTICAL_OFFSET
+        );
     }
 
     render() {
@@ -949,6 +1054,7 @@ export default class BoxScatterPlot<
                 <Observer>{this.getChart}</Observer>
                 <Observer>{this.getScatterPlotTooltip}</Observer>
                 <Observer>{this.getBoxPlotTooltipComponent}</Observer>
+                <Observer>{this.getAxisLabelTooltipComponent}</Observer>
             </div>
         );
     }
@@ -964,6 +1070,7 @@ export function toBoxPlotData<D extends IBaseBoxScatterPlotPoint>(
     // when limit values are shown in the legend, exclude
     // these points from influencing the shape of the box plots
     let boxData = _.clone(data);
+
     if (excludeLimitValuesFromBoxPlot) {
         _.each(boxData, (o: IBoxScatterPlotData<D>) => {
             o.data = _.filter(
@@ -1002,6 +1109,7 @@ export function toBoxPlotData<D extends IBaseBoxScatterPlotPoint>(
                 median: model.median,
                 q1: model.q1,
                 q3: model.q3,
+                sortedVector: model.sortedVector,
             };
             calcBoxSizes && calcBoxSizes(box, i);
             return box;
