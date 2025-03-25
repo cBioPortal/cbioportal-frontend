@@ -175,7 +175,7 @@ enum EventKey {
     utilities_horizontalBars,
     utilities_showRegressionLine,
     utilities_viewLimitValues,
-    utilities_compareSamples, // event key to enable sample comparison
+    utilities_connectSamples, 
     sortByMedian,
 }
 
@@ -387,7 +387,6 @@ export type PlotsTabGeneOption = {
     label: string; // hugo symbol
 };
 
-// Represents the sample IDs for each patient ID
 export type SampleIdsForPatientIds = {
     [patientId: string]: string[];
 };
@@ -460,8 +459,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     @observable percentageBar = false;
     @observable stackedBar = false;
     @observable viewLimitValues: boolean = true;
-    // an observable boolean for comparing samples - initialize to false
-    @observable compareSamples: boolean = false;
+    @observable connectSamples: boolean = false;
     @observable _waterfallPlotSortOrder: string | undefined = undefined;
 
     @observable searchCase: string = '';
@@ -524,7 +522,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         }
     }
 
-    // Return an array of the patient IDs of the data points in the box plot - will use as an identifier for each line
     @computed get patientIdsInBoxPlot(): string[] {
         let patientIds: string[] = [];
 
@@ -551,8 +548,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     @computed get samplesForEachPatient(): SampleIdsForPatientIds[] {
         const samplesForPatients: SampleIdsForPatientIds[] = [];
 
-        // for each patient ID in the box plot, get the sample IDs for that patient
-        // initialize an object with the patient ID as the key and an empty array as the value
         if (this.patientIdsInBoxPlot && this.patientIdsInBoxPlot.length > 0) {
             this.patientIdsInBoxPlot.forEach(patientId => {
                 const sampleIdsForPatient: SampleIdsForPatientIds = {
@@ -1835,8 +1830,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             case EventKey.utilities_viewLimitValues:
                 this.viewLimitValues = !this.viewLimitValues;
                 break;
-            case EventKey.utilities_compareSamples:
-                this.compareSamples = !this.compareSamples;
+            case EventKey.utilities_connectSamples:
+                this.connectSamples = !this.connectSamples;
                 break;
             case EventKey.sortByMedian:
                 this.boxPlotSortByMedian = !this.boxPlotSortByMedian;
@@ -4591,7 +4586,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         const showRegression =
             this.plotType.isComplete &&
             this.plotType.result === PlotType.ScatterPlot;
-        const showCompareSamples =
+        const showConnectSamples =
             this.plotType.isComplete &&
             this.plotType.result == PlotType.BoxPlot &&
             this.samplesForEachPatient.length > 0;
@@ -4636,14 +4631,14 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                             )}
                         </div>
                     )}
-                    {showCompareSamples && (
+                    {showConnectSamples && (
                         <div className="checkbox" style={{ marginTop: 14 }}>
                             <label>
                                 <input
                                     type="checkbox"
                                     name="utilities_compareSamples"
-                                    value={EventKey.utilities_compareSamples}
-                                    checked={this.compareSamples}
+                                    value={EventKey.utilities_connectSamples}
+                                    checked={this.connectSamples}
                                     onClick={this.onInputClick}
                                 />{' '}
                                 Connect samples from the same patient
@@ -5828,7 +5823,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                         LEGEND_TO_BOTTOM_WIDTH_THRESHOLD
                                     }
                                     legendTitle={this.legendTitle}
-                                    renderLinePlot={this.compareSamples} // render line plot if checkbox is checked
+                                    renderLinePlot={this.connectSamples} // render line plot if checkbox is checked
                                     samplesForPatients={
                                         this.samplesForEachPatient
                                     }

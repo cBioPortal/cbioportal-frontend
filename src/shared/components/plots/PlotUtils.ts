@@ -8,7 +8,6 @@ import {
     legendLabelStyles,
 } from 'cbioportal-frontend-commons';
 import { clamp } from '../../lib/NumberUtils';
-import { string } from 'yargs';
 
 export type LegendDataWithId<D = any> = {
     name: string | string[];

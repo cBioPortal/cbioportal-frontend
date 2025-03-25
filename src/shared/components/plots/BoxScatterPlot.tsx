@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer, Observer } from 'mobx-react';
-import { computed, observable, action, makeObservable, toJS } from 'mobx';
+import { computed, observable, action, makeObservable } from 'mobx';
 import { bind } from 'bind-decorator';
 import ifNotDefined from '../../lib/ifNotDefined';
 import { calculateBoxPlotModel } from '../../lib/boxPlotUtils';
@@ -150,7 +150,6 @@ export default class BoxScatterPlot<
     @observable private mousePosition = { x: 0, y: 0 };
     @observable visibleLines = new Map();
     @observable removingLines: boolean = false;
-    @observable _lineHighlight: boolean = false;
     private scatterPlotTooltipHelper: ScatterPlotTooltipHelper = new ScatterPlotTooltipHelper();
 
     constructor(props: any) {
@@ -171,19 +170,18 @@ export default class BoxScatterPlot<
         }
     }
 
-    @computed
-    get lineHovered() {
+    @computed get lineHovered() {
         const lineSamples = this.samplesInLineHover;
         return (d: any) => {
             return _.some(lineSamples, sampleId => sampleId === d.sampleId);
         };
     }
 
-    @computed
-    get scatterPlotSize() {
+    @computed get scatterPlotSize() {
         const highlight = this.props.highlight;
         const size = this.props.size;
         const hovered = this.lineHovered;
+        // need to regenerate this function whenever highlight changes in order to trigger immediate Victory rerender
         return makeScatterPlotSizeFunction(highlight, size, hovered);
     }
 
@@ -706,7 +704,6 @@ export default class BoxScatterPlot<
                     Object.assign({}, d, {
                         [dataAxis]: d.value,
                         [categoryAxis]: categoryCoord,
-                        // lineHovered: false,
                     } as { x: number; y: number })
                 );
             }
