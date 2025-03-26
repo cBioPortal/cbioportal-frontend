@@ -74,8 +74,6 @@ import { AppStore } from 'AppStore';
 import { ResultsViewTab } from 'pages/resultsView/ResultsViewPageHelpers';
 import { CaseSetId } from 'shared/components/query/CaseSetSelectorUtils';
 
-const client = getClient();
-
 // interface for communicating
 export type CancerStudyQueryUrlParams = {
     cancer_study_id: string;
@@ -633,20 +631,22 @@ export class QueryStore {
     readonly cancerTypes = remoteData(
         {
             invoke: async () => {
-                return client.getAllCancerTypesUsingGET({}).then(data => {
-                    // all types should have parent. this is a correction for a data issue
-                    // where there IS a top level (parent=null) item
-                    return data.filter(cancerType => {
-                        return cancerType.parent !== 'null';
+                return getClient()
+                    .getAllCancerTypesUsingGET({})
+                    .then(data => {
+                        // all types should have parent. this is a correction for a data issue
+                        // where there IS a top level (parent=null) item
+                        return data.filter(cancerType => {
+                            return cancerType.parent !== 'null';
+                        });
                     });
-                });
             },
         },
         []
     );
 
     readonly cancerStudies = remoteData(
-        client.getAllStudiesUsingGET({ projection: 'DETAILED' }),
+        getClient().getAllStudiesUsingGET({ projection: 'DETAILED' }),
         []
     );
 
@@ -667,7 +667,9 @@ export class QueryStore {
                 const studyIds = this.cancerStudies.result
                     .filter(s => s.readPermission)
                     .map(s => s.studyId);
-                return client.getTagsForMultipleStudiesUsingPOST({ studyIds });
+                return getClient().getTagsForMultipleStudiesUsingPOST({
+                    studyIds,
+                });
             } else {
                 return [];
             }
@@ -924,7 +926,7 @@ export class QueryStore {
             if (this._allSelectedStudyIds.size !== physicalStudyIds.length) {
                 await Promise.all(
                     _.map(physicalStudyIds, studyId => {
-                        return client
+                        return getClient()
                             .getAllSamplesInStudyUsingGET({
                                 studyId: studyId,
                             })
@@ -1239,7 +1241,7 @@ export class QueryStore {
             let getEntrezResults = async () => {
                 let found: Gene[];
                 if (entrezIds.length)
-                    found = await client.fetchGenesUsingPOST({
+                    found = await getClient().fetchGenesUsingPOST({
                         geneIdType: 'ENTREZ_GENE_ID',
                         geneIds: entrezIds,
                     });
@@ -1263,7 +1265,7 @@ export class QueryStore {
             let getHugoResults = async () => {
                 let found: Gene[];
                 if (hugoIds.length)
-                    found = await client.fetchGenesUsingPOST({
+                    found = await getClient().fetchGenesUsingPOST({
                         geneIdType: 'HUGO_GENE_SYMBOL',
                         geneIds: hugoIds,
                     });
@@ -1320,13 +1322,13 @@ export class QueryStore {
     async getGeneSuggestions(alias: string): Promise<GeneReplacement> {
         return {
             alias,
-            genes: await client.getAllGenesUsingGET({ alias }),
+            genes: await getClient().getAllGenesUsingGET({ alias }),
         };
     }
 
     @memoize
     getSamplesForStudyAndPatient(studyId: string, patientId: string) {
-        return client
+        return getClient()
             .getAllSamplesOfPatientInStudyUsingGET({ studyId, patientId })
             .then(
                 samples => ({ studyId, patientId, samples, error: undefined }),
@@ -1424,7 +1426,7 @@ export class QueryStore {
                     let sampleObjs = await chunkMapReduce(
                         sampleIdentifiers,
                         chunk =>
-                            client.fetchSamplesUsingPOST({
+                            getClient().fetchSamplesUsingPOST({
                                 sampleFilter: {
                                     sampleIdentifiers: chunk,
                                 } as SampleFilter,

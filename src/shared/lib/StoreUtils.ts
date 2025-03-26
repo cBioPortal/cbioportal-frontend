@@ -112,8 +112,6 @@ import {
 import { AnnotatedNumericGeneMolecularData } from 'shared/model/AnnotatedNumericGeneMolecularData';
 import { EnsemblFilter } from 'genome-nexus-ts-api-client';
 
-const defaultClient = getClient();
-
 export const MolecularAlterationType_filenameSuffix: {
     [K in MolecularProfile['molecularAlterationType']]?: string;
 } = {
@@ -154,7 +152,7 @@ export interface IDataQueryFilter {
 export async function fetchMutationData(
     mutationFilter: MutationFilter,
     molecularProfileId?: string,
-    client: CBioPortalAPI = defaultClient
+    client: CBioPortalAPI = getClient()
 ) {
     if (molecularProfileId) {
         return await client.fetchMutationsInMolecularProfileUsingPOST({
@@ -197,7 +195,7 @@ export async function fetchVariantAnnotationsIndexedByGenomicLocation(
 
 export async function fetchGenes(
     hugoGeneSymbols?: string[],
-    client: CBioPortalAPI = defaultClient
+    client: CBioPortalAPI = getClient()
 ) {
     if (hugoGeneSymbols && hugoGeneSymbols.length) {
         const order = stringListToIndexSet(hugoGeneSymbols);
@@ -214,7 +212,7 @@ export async function fetchGenes(
     }
 }
 
-export function getAllGenes(client: CBioPortalAPI = defaultClient) {
+export function getAllGenes(client: CBioPortalAPI = getClient()) {
     return client.getAllGenesUsingGET({
         projection: 'SUMMARY',
     });
@@ -351,7 +349,7 @@ export async function fetchCanonicalEnsemblGeneIds(
 
 export async function fetchClinicalData(
     clinicalDataMultiStudyFilter: ClinicalDataMultiStudyFilter,
-    client: CBioPortalAPI = defaultClient
+    client: CBioPortalAPI = getClient()
 ) {
     if (clinicalDataMultiStudyFilter) {
         return await client.fetchClinicalDataUsingPOST({
@@ -368,7 +366,7 @@ export async function fetchClinicalDataInStudy(
     studyId: string,
     clinicalDataSingleStudyFilter: ClinicalDataSingleStudyFilter,
     clinicalDataType: 'SAMPLE' | 'PATIENT',
-    client: CBioPortalAPI = defaultClient
+    client: CBioPortalAPI = getClient()
 ) {
     if (clinicalDataSingleStudyFilter) {
         return await client.fetchAllClinicalDataInStudyUsingPOST({
@@ -385,7 +383,7 @@ export async function fetchClinicalDataInStudy(
 export async function fetchClinicalDataForPatient(
     studyId: string,
     patientId: string,
-    client: CBioPortalAPI = defaultClient
+    client: CBioPortalAPI = getClient()
 ) {
     if (studyId && patientId) {
         return await client.getAllClinicalDataOfPatientInStudyUsingGET({
@@ -401,7 +399,7 @@ export async function fetchClinicalDataForPatient(
 export async function fetchCopyNumberSegments(
     studyId: string,
     sampleIds: string[],
-    client: CBioPortalAPI = defaultClient
+    client: CBioPortalAPI = getClient()
 ) {
     if (studyId && sampleIds.length > 0) {
         return await client.fetchCopyNumberSegmentsUsingPOST({
@@ -419,7 +417,7 @@ export async function fetchCopyNumberSegments(
 export function fetchCopyNumberSegmentsForSamples(
     samples: Sample[],
     chromosome?: string,
-    client: CBioPortalAPI = defaultClient
+    client: CBioPortalAPI = getClient()
 ): Promise<CopyNumberSeg[]> {
     if (samples.length > 0) {
         return client.fetchCopyNumberSegmentsUsingPOST({
@@ -439,7 +437,7 @@ export async function fetchSamplesForPatient(
     studyId: string,
     patientId?: string,
     sampleId?: string,
-    client: CBioPortalAPI = defaultClient
+    client: CBioPortalAPI = getClient()
 ) {
     if (studyId && patientId) {
         return await client.getAllSamplesOfPatientInStudyUsingGET({
@@ -462,7 +460,7 @@ export async function fetchSamplesForPatient(
 export async function fetchSamples(
     sampleIds: MobxPromise<string[]>,
     studyId: string,
-    client: CBioPortalAPI = defaultClient
+    client: CBioPortalAPI = getClient()
 ) {
     if (sampleIds.result && sampleIds.result.length > 0 && studyId) {
         const sampleIdentifiers = sampleIds.result.map((sampleId: string) => ({
@@ -483,7 +481,7 @@ export async function fetchSamples(
 export async function fetchGermlineConsentedSamples(
     studyIds: MobxPromise<string[]>,
     studiesWithGermlineConsentedSamples?: string[],
-    client: CBioPortalAPI = defaultClient
+    client: CBioPortalAPI = getClient()
 ) {
     // no valid config param => feature disabled
     if (!studiesWithGermlineConsentedSamples || !studyIds.result) {
@@ -567,7 +565,7 @@ export async function fetchSamplesWithoutCancerTypeClinicalData(
     sampleIds: MobxPromise<string[]>,
     studyId: string,
     clinicalDataForSamples: MobxPromise<ClinicalData[]>,
-    client: CBioPortalAPI = defaultClient
+    client: CBioPortalAPI = getClient()
 ) {
     let samples: Sample[] = [];
 
@@ -605,7 +603,7 @@ export async function fetchSamplesWithoutCancerTypeClinicalData(
 
 export async function fetchStudiesForSamplesWithoutCancerTypeClinicalData(
     samplesWithoutClinicalData: MobxPromise<Sample[]>,
-    client: CBioPortalAPI = defaultClient
+    client: CBioPortalAPI = getClient()
 ) {
     let studies: CancerStudy[] = [];
 
@@ -755,7 +753,7 @@ export async function fetchGenePanelData(
     if (sampleListId.length > 0) {
         filter.sampleListId = sampleListId;
     }
-    const remoteData = await defaultClient.getGenePanelDataUsingPOST({
+    const remoteData = await getClient().getGenePanelDataUsingPOST({
         molecularProfileId,
         genePanelDataFilter: filter as GenePanelDataFilter,
     });
@@ -771,7 +769,7 @@ export async function fetchGenePanel(
         _.map(
             uniquePanelIds,
             async genePanelId =>
-                await defaultClient.getGenePanelUsingGET({ genePanelId })
+                await getClient().getGenePanelUsingGET({ genePanelId })
         )
     );
     return _.keyBy(remoteData, genePanel => genePanel.genePanelId);
@@ -1032,7 +1030,7 @@ function toOncoKbData(indicatorQueryResps: IndicatorQueryResp[]): IOncoKbData {
 export async function fetchDiscreteCNAData(
     discreteCopyNumberFilter: DiscreteCopyNumberFilter,
     molecularProfileIdDiscrete: MobxPromise<string>,
-    client: CBioPortalAPI = defaultClient
+    client: CBioPortalAPI = getClient()
 ) {
     if (
         molecularProfileIdDiscrete.isComplete &&
@@ -1549,7 +1547,7 @@ export async function fetchSurvivalDataExists(
             studyId: s.studyId,
         })),
     };
-    const count = await defaultClient
+    const count = await getClient()
         .fetchClinicalDataUsingPOSTWithHttpInfo({
             clinicalDataType: 'PATIENT',
             clinicalDataMultiStudyFilter: filter,
