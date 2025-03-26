@@ -75,7 +75,7 @@ export interface IBoxScatterPlotProps<D extends IBaseBoxScatterPlotPoint> {
     highlight?: (d: D) => boolean;
     size?:
         | number
-        | ((d: D, active: boolean, isHighlighted?: boolean) => number);
+        | ((d: D, active: boolean, isHighlighted?: boolean, isHovered?: boolean) => number);
     fill?: string | ((d: D) => string);
     stroke?: string | ((d: D) => string);
     fillOpacity?: number | ((d: D) => number);
@@ -182,6 +182,9 @@ export default class BoxScatterPlot<
     @observable.ref private axisLabelTooltipModel: any | null;
     @observable visibleLines = new Map();
     @observable removingLines: boolean = false;
+    // observable marks a class property as observable state, which means that Mobx will automatically track changes to it and re-render the components that depend on it when it changes.
+    // initiates it as an empty array of strings
+    @observable samplesInLineHover: string[] = [];
 
     private scatterPlotTooltipHelper: ScatterPlotTooltipHelper = new ScatterPlotTooltipHelper();
 
@@ -189,7 +192,7 @@ export default class BoxScatterPlot<
         super(props);
         makeObservable(this);
     }
-
+    
     @bind
     private containerRef(container: HTMLDivElement) {
         this.container = container;
@@ -601,12 +604,32 @@ export default class BoxScatterPlot<
             return d.y + jitter;
         }
     }
+    
+    @action.bound
+    setSamplesInLineHover(data: any, hovered: boolean) { 
+        if (hovered) {
+            this.samplesInLineHover = data.map(
+                (dataEntries: any) => dataEntries.sampleId 
+            );
+        } else {
+            this.samplesInLineHover = []; 
+        }
+        console.log(this.samplesInLineHover);
+    }
+
+    @computed get lineHovered() {
+        const lineSamples = this.samplesInLineHover; 
+        return (d: any) => { 
+            return _.some(lineSamples, sampleId => sampleId === d.sampleId); 
+        };
+    }
 
     @computed get scatterPlotSize() {
         const highlight = this.props.highlight;
         const size = this.props.size;
+        const hovered = this.lineHovered;
         // need to regenerate this function whenever highlight changes in order to trigger immediate Victory rerender
-        return makeScatterPlotSizeFunction(highlight, size);
+        return makeScatterPlotSizeFunction(highlight, size, hovered);
     }
 
     @computed get labels() {
@@ -1015,7 +1038,7 @@ export default class BoxScatterPlot<
                                                                 return [{
                                                                     target: 'data',
                                                                     mutation: () => {
-                                                                        // this.setSamplesInLineHover(this.patientLinePlotData![patientId], true);
+                                                                        this.setSamplesInLineHover(this.patientLinePlotData![patientId], true);
                                                                         return {
                                                                             style: {
                                                                                 stroke: 'black',
@@ -1029,7 +1052,7 @@ export default class BoxScatterPlot<
                                                                 return [{
                                                                     target: 'data',
                                                                     mutation: () => {
-                                                                        // this.setSamplesInLineHover(this.patientLinePlotData![patientId], false);
+                                                                        this.setSamplesInLineHover(this.patientLinePlotData![patientId], false);
                                                                         return {
                                                                             style: {
                                                                                 stroke: 'grey',
