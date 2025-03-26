@@ -18,8 +18,6 @@ import { trackEvent } from 'shared/lib/tracking';
 import { PagePath } from 'shared/enums/PagePaths';
 import { CancerStudy } from 'cbioportal-ts-api-client';
 
-const client = getClient();
-
 export const SHOW_MORE_SIZE: number = 20;
 const DEFAULT_PAGE_SIZE: number = 3;
 
@@ -179,44 +177,44 @@ export default class QuickSearch extends React.Component<QuickSearchProps, {}> {
 
             if (input.length > 0) {
                 return Promise.all([
-                    client.getAllStudiesUsingGETWithHttpInfo({
+                    getClient().getAllStudiesUsingGETWithHttpInfo({
                         keyword: input,
                         pageSize:
                             DEFAULT_PAGE_SIZE +
                             SHOW_MORE_SIZE * this.studyPageMultiplier,
                     }),
-                    client.getAllStudiesUsingGETWithHttpInfo({
+                    getClient().getAllStudiesUsingGETWithHttpInfo({
                         keyword: input,
                         projection: 'META',
                     }),
-                    client.getAllGenesUsingGETWithHttpInfo({
+                    getClient().getAllGenesUsingGETWithHttpInfo({
                         keyword: input,
                         pageSize:
                             DEFAULT_PAGE_SIZE +
                             SHOW_MORE_SIZE * this.genePageMultiplier,
                     }),
-                    client.getAllGenesUsingGETWithHttpInfo({
+                    getClient().getAllGenesUsingGETWithHttpInfo({
                         keyword: input,
                         projection: 'META',
                     }),
-                    client.getAllPatientsUsingGETWithHttpInfo({
+                    getClient().getAllPatientsUsingGETWithHttpInfo({
                         keyword: input,
                         pageSize:
                             DEFAULT_PAGE_SIZE +
                             SHOW_MORE_SIZE * this.patientPageMultiplier,
                         projection: 'DETAILED',
                     }),
-                    client.getAllPatientsUsingGETWithHttpInfo({
+                    getClient().getAllPatientsUsingGETWithHttpInfo({
                         keyword: input,
                         projection: 'META',
                     }),
-                    client.getSamplesByKeywordUsingGETWithHttpInfo({
+                    getClient().getSamplesByKeywordUsingGETWithHttpInfo({
                         keyword: input,
                         pageSize:
                             DEFAULT_PAGE_SIZE +
                             SHOW_MORE_SIZE * this.samplePageMultiplier,
                     }),
-                    client.getSamplesByKeywordUsingGETWithHttpInfo({
+                    getClient().getSamplesByKeywordUsingGETWithHttpInfo({
                         keyword: input,
                         projection: 'META',
                     }),
@@ -269,7 +267,7 @@ export default class QuickSearch extends React.Component<QuickSearchProps, {}> {
                         const spillover =
                             2 * DEFAULT_PAGE_SIZE -
                             (geneOptions.length + patientOptions.length);
-                        await client
+                        await getClient()
                             .getAllStudiesUsingGETWithHttpInfo({
                                 keyword: input,
                                 pageSize:
