@@ -9,6 +9,8 @@ import {
     TimelineTrackType,
 } from './types';
 import React, { useCallback, useState } from 'react';
+import ReactDOM from 'react-dom';
+import MinervaViewer from '../../../src/shared/components/minerva/MinervaViewer';
 import _ from 'lodash';
 import {
     colorGetterFactory,
@@ -418,28 +420,47 @@ export const OurPopup: React.FunctionComponent<any> = observer(function(
     }));
 
     const showModal = useCallback(() => {
-        const $modal = $(`
-            <div class="myoverlay">
-                <div class="myclose"><button class="btn btn-xs">Open in New Window</button> <button class="btn btn-xs"><i class="fa fa-close"></i> Close</button> </div>
-                <iframe class="modal-iframe"></iframe>
-            </div>,
-        `)
-            .appendTo('body')
-            .on('keydown', function(event) {
-                if (event.key == 'Escape') {
-                    $modal.remove();
-                }
-            })
-            .on('click', function(e) {
-                if (/Open in New Window/.test(e.target.innerText)) {
-                    getBrowserWindow().open(props[0].href);
-                }
-                $modal.remove();
-            });
+        const isDigitalSlide =
+            props[0].href &&
+            (props[0].href.includes('digitalSlideArchive') ||
+                props[0].href.includes('slideViewer'));
 
-        setTimeout(() => {
-            $modal.find('iframe').attr('src', props[0].href);
-        }, 500);
+        if (isDigitalSlide) {
+            const $modal = $(`
+                <div class="myoverlay">
+                    <div class="myclose">
+                        <button class="btn btn-xs">Open in New Window</button>
+                        <button class="btn btn-xs"><i class="fa fa-close"></i> Close</button>
+                    </div>
+                    <div id="minerva-container" style="width: 100%; height: calc(100% - 40px);"></div>
+                </div>
+            `)
+                .appendTo('body')
+                .on('keydown', function(event) {
+                    if (event.key == 'Escape') {
+                        $modal.remove();
+                    }
+                })
+                .on('click', function(e) {
+                    if (/Open in New Window/.test(e.target.innerText)) {
+                        getBrowserWindow().open(props[0].href);
+                    }
+                    $modal.remove();
+                });
+
+            setTimeout(() => {
+                const container = document.getElementById('minerva-container');
+                if (container) {
+                    ReactDOM.render(
+                        <MinervaViewer
+                            url={props[0].href}
+                            containerHeight={container.clientHeight}
+                        />,
+                        container
+                    );
+                }
+            }, 100);
+        }
     }, []);
 
     return (
@@ -459,8 +480,6 @@ export const EventTooltipContent: React.FunctionComponent<{
         );
     });
 
-    // if we have an attribute order configuration, we need to
-    // update attribute list accordingly
     if (trackConfig?.attributeOrder) {
         attributes = segmentAndSortAttributesForTooltip(
             attributes,

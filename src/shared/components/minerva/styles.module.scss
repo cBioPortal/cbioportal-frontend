@@ -1,0 +1,22 @@
+.minervaContainer {
+    width: 100%;
+    position: relative;
+}
+
+.minervaError {
+    padding: 20px;
+    text-align: center;
+    color: #e74c3c;
+}
+
+.minervaViewport {
+    width: 100%;
+    height: 100%;
+}
+
+.minervaControls {
+    margin-top: 15px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}

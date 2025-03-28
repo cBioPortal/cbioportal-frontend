@@ -9,7 +9,7 @@
                 color: #ffffff;
             }
             i:first-child {
-                color: $brand-primary;
+                color: #3786c2;
             }
             i:last-child {
                 font-size: 0.8em;
@@ -18,7 +18,7 @@
 
         &:hover {
             i:first-child {
-                color: darken($brand-primary, 10%);
+                color: darken(#3786c2, 10%);
             }
         }
     }
