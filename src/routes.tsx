@@ -186,7 +186,6 @@ function ResultsViewQueryParamsAdjuster(oldParams: ResultsViewURLQuery) {
         ]);
         changeMade = true;
     }
-
     // we used to call the structural variant alteration class "fusions"
     // we have generalized it to structural variants
     const profileRegex = /fusion/;
@@ -340,10 +339,7 @@ export const makeRoutes = () => {
                 <Route
                     path={`/results/${ResultsViewTab.SURVIVAL_REDIRECT}`}
                     component={getBlankPage(() => {
-                        redirectTo(
-                            { comparison_subtab: 'survival' },
-                            '/results/comparison'
-                        );
+                        redirectTo({}, '/results/comparison/survival');
                     })}
                 />
                 {/* Redirect legacy expression route directly to plots tab with mrna vs study */}
@@ -376,6 +372,33 @@ export const makeRoutes = () => {
                             { comparison_subtab: 'mutations' },
                             '/results/comparison'
                         );
+                    })}
+                />
+                <Route
+                    path="/results/comparison/:subtab"
+                    component={LocationValidationWrapper(
+                        ResultsViewPage,
+                        tabParamValidator(ResultsViewComparisonSubTab),
+                        ResultsViewQueryParamsAdjuster
+                    )}
+                />
+                <Route
+                    path="/results/comparison"
+                    component={getBlankPage(() => {
+                        const query = parse(
+                            getBrowserWindow().location.search,
+                            {
+                                ignoreQueryPrefix: true,
+                            }
+                        );
+                        if (query.comparison_subtab) {
+                            redirectTo(
+                                {},
+                                `/results/comparison/${query.comparison_subtab}`
+                            );
+                        } else {
+                            redirectTo({}, '/results/comparison/overlap');
+                        }
                     })}
                 />
                 <Route

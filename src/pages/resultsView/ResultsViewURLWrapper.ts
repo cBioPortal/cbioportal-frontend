@@ -330,6 +330,12 @@ export default class ResultsViewURLWrapper
     pathContext = '/results';
 
     @computed public get tabId() {
+        const pathParts = this.pathName.split('/');
+
+        // Handle paths like "/results/comparison/survival"
+        if (pathParts[1] === 'results' && pathParts[2] === 'comparison') {
+            return ResultsViewTab.COMPARISON;
+        }
         const tabInPath = this.pathName.split('/').pop();
         if (tabInPath && tabInPath in oldTabToNewTabRoute) {
             // map legacy tab ids
@@ -390,6 +396,15 @@ export default class ResultsViewURLWrapper
     }
 
     @computed public get comparisonSubTabId() {
+        const pathParts = this.pathName.split('/');
+        if (
+            pathParts.length >= 4 &&
+            pathParts[1] === 'results' &&
+            pathParts[2] === 'comparison' &&
+            pathParts[3]
+        ) {
+            return pathParts[3];
+        }
         return this.query.comparison_subtab || GroupComparisonTab.OVERLAP;
     }
 
@@ -400,7 +415,7 @@ export default class ResultsViewURLWrapper
 
     @autobind
     public setComparisonSubTabId(tabId: GroupComparisonTab) {
-        this.updateURL({ comparison_subtab: tabId });
+        this.updateURL({}, `results/comparison/${tabId}`);
     }
 
     @computed public get selectedEnrichmentEventTypes() {
