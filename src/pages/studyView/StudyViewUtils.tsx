@@ -2674,8 +2674,18 @@ export function clinicalAttributeSortingComparator(
     a: ClinicalAttributeSorting,
     b: ClinicalAttributeSorting
 ): number {
+    const specialOrder: Record<string, number> = {
+        'Cancer Type': 2,
+        'Cancer Type Detailed': 1,
+    };
+
+    const aSpecial = specialOrder[a.displayName] ?? 0;
+    const bSpecial = specialOrder[b.displayName] ?? 0;
+
     return (
-        b.priority - a.priority || a.displayName.localeCompare(b.displayName)
+        bSpecial - aSpecial ||
+        b.priority - a.priority ||
+        a.displayName.localeCompare(b.displayName)
     );
 }
 
