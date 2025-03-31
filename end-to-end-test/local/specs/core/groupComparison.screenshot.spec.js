@@ -21,7 +21,7 @@ describe('group comparison page screenshot tests', function() {
             await openGroupComparison(
                 `${CBIOPORTAL_URL}/study/summary?id=lgg_ucsf_2014_test_generic_assay`,
                 'chart-container-ONCOTREE_CODE',
-                20000
+                10000
             );
             await clickElement('.tabAnchor_alterations');
             await getElement(
@@ -96,7 +96,7 @@ describe('group comparison page screenshot tests', function() {
                     label: 'Genes with highest average frequency',
                 });
             });
-            await waitForNetworkQuiet(20000);
+            await waitForNetworkQuiet();
             await (
                 await getElement('[data-test="addGenestoBarPlot"]')
             ).waitForEnabled({
@@ -208,7 +208,7 @@ describe('group comparison page screenshot tests', function() {
             await openGroupComparison(
                 `${CBIOPORTAL_URL}/study/summary?id=lgg_ucsf_2014_test_generic_assay`,
                 'chart-container-ONCOTREE_CODE',
-                20000
+                10000
             );
             await clickElement('.tabAnchor_clinical');
             await getElement('[data-test="ComparisonPageClinicalTabDiv"]', {

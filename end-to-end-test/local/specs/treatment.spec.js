@@ -223,7 +223,6 @@ describe('treatment feature', function() {
             const url = await browser.getUrl();
 
             const regex = /generic_assay_groups=study_es_0_treatment_ec50%2C17-AAG/;
-            console.log(url);
             assert(url.match(regex));
         });
     });

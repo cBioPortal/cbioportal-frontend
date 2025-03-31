@@ -10,9 +10,9 @@ describe('Backend version', function() {
     it('Retrieves backend info', async () => {
         await goToUrlAndSetLocalStorage(CBIOPORTAL_URL, true);
         await browser.setTimeout({ script: 5000 });
-        const d = await browser.executeAsync(async done => {
+        const d = await browser.executeAsync(done => {
             // browser context - you may not access client or console
-            await fetch('/api/info').then(d => {
+            fetch('/api/info').then(d => {
                 d.json().then(t => {
                     done(JSON.stringify(t));
                 });

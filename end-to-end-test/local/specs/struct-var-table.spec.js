@@ -154,7 +154,7 @@ async function showSvPane() {
     await $chartsGenomicTab.waitForClickable();
     await $chartsGenomicTab.click();
     const $svChartCheckbox = await getNestedElement([
-        '[data-test="add-chart-option-structural-variant-genes"]',
+        '[data-test="add-chart-option-structural-variants"]',
         '[data-test="labeledCheckbox"]',
     ]);
     await $svChartCheckbox.waitForExist();
