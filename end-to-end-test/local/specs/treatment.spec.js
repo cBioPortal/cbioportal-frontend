@@ -95,7 +95,7 @@ describe('treatment feature', function() {
 
         it('select one treatment in generic assay selector', async () => {
             await goToTreatmentTab();
-            clickElement(GENERIC_ASSAY_ENTITY_SELECTOR);
+            await clickElement(GENERIC_ASSAY_ENTITY_SELECTOR);
             await setInputText(
                 '[data-test="GenericAssayEntitySelection"] input',
                 '17-AAG'
@@ -119,7 +119,7 @@ describe('treatment feature', function() {
         it('show multiple filtered treatments', async () => {
             await goToTreatmentTab();
             await clickElement(GENERIC_ASSAY_ENTITY_SELECTOR);
-            setInputText(
+            await setInputText(
                 '[data-test="GenericAssayEntitySelection"] input',
                 'AZD'
             );
@@ -150,7 +150,7 @@ describe('treatment feature', function() {
         it('keeps the filtered treatments list open after selecting an option', async () => {
             await goToTreatmentTab();
             await clickElement(GENERIC_ASSAY_ENTITY_SELECTOR);
-            const options = await (
+            var options = await (
                 await getElement(GENERIC_ASSAY_ENTITY_SELECTOR)
             ).$$('div[class$="option"]');
             assert.equal(options.length, 10);
@@ -194,7 +194,9 @@ describe('treatment feature', function() {
             await (
                 await selectElementByText(TREATMENT_EC50_PROFILE_NAME)
             ).waitForExist();
-            await selectElementByText(TREATMENT_EC50_PROFILE_NAME);
+            await (
+                await selectElementByText(TREATMENT_EC50_PROFILE_NAME)
+            ).click();
 
             // Select treatments
             await clickElement(GENERIC_ASSAY_ENTITY_SELECTOR);
@@ -221,6 +223,7 @@ describe('treatment feature', function() {
             const url = await browser.getUrl();
 
             const regex = /generic_assay_groups=study_es_0_treatment_ec50%2C17-AAG/;
+            console.log(url);
             assert(url.match(regex));
         });
     });
@@ -248,7 +251,7 @@ describe('treatment feature', function() {
         });
 
         it('horizontal axis menu shows treatments in profile menu', async () => {
-            const horzDataSelect = getNestedElement([
+            const horzDataSelect = await getNestedElement([
                 '[name=h-profile-type-selector]',
                 '..',
             ]);
@@ -298,7 +301,7 @@ describe('treatment feature', function() {
         });
 
         it('horizontal axis menu shows treatment entry in entity menu', async () => {
-            const horzDataSelect = await getElement([
+            const horzDataSelect = await getNestedElement([
                 '[name=h-profile-type-selector]',
                 '..',
             ]);
@@ -334,7 +337,7 @@ describe('treatment feature', function() {
         });
 
         it('vertical axis menu shows treatment entry in entity menu', async () => {
-            const vertDataSelect = await getElement([
+            const vertDataSelect = await getNestedElement([
                 '[name=v-profile-type-selector]',
                 '..',
             ]);
@@ -370,85 +373,105 @@ describe('treatment feature', function() {
         });
 
         it('has Ordered samples entry in vert. menu when treatment selected on horz. axis', async () => {
-            const vertDataSelect = $('[name=v-profile-type-selector]').$('..');
-            selectReactSelectOption(vertDataSelect, 'Treatment Response');
+            const vertDataSelect = await (
+                await $('[name=v-profile-type-selector]')
+            ).$('..');
+            await selectReactSelectOption(vertDataSelect, 'Treatment Response');
 
-            const vertProfileSelect = $('[name=v-profile-name-selector]').$(
-                '..'
-            );
-            selectReactSelectOption(
+            const vertProfileSelect = await (
+                await $('[name=v-profile-name-selector]')
+            ).$('..');
+            await selectReactSelectOption(
                 vertProfileSelect,
                 'IC50 values of compounds on cellular phenotype readout'
             );
 
-            $('[data-test=generic-assay-info-icon]').waitForExist();
+            await (
+                await $('[data-test=generic-assay-info-icon]')
+            ).waitForExist();
 
-            browser.execute(function() {
+            await browser.execute(function() {
                 resultsViewPlotsTab.onVerticalAxisGenericAssaySelect({
                     value: 'AEW541',
                     label: 'Name of AEW541',
                 });
             });
 
-            const horzDataSelect = $('[name=h-profile-type-selector]').$('..');
-            assert(reactSelectOption(horzDataSelect, 'Ordered samples'));
+            const horzDataSelect = await (
+                await $('[name=h-profile-type-selector]')
+            ).$('..');
+            assert(await reactSelectOption(horzDataSelect, 'Ordered samples'));
         });
 
         it('has `Ordered samples` entry in horz. menu when treatment selected on vert. axis', async () => {
-            const horzDataSelect = $('[name=h-profile-type-selector]').$('..');
-            selectReactSelectOption(horzDataSelect, 'Treatment Response');
+            const horzDataSelect = await (
+                await $('[name=h-profile-type-selector]')
+            ).$('..');
+            await selectReactSelectOption(horzDataSelect, 'Treatment Response');
 
-            const horzProfileSelect = $('[name=h-profile-name-selector]').$(
-                '..'
-            );
-            selectReactSelectOption(
+            const horzProfileSelect = await (
+                await $('[name=h-profile-name-selector]')
+            ).$('..');
+            await selectReactSelectOption(
                 horzProfileSelect,
                 'IC50 values of compounds on cellular phenotype readout'
             );
 
-            $('[data-test=generic-assay-info-icon]').waitForExist();
+            await (
+                await $('[data-test=generic-assay-info-icon]')
+            ).waitForExist();
 
-            browser.execute(function() {
+            await browser.execute(function() {
                 resultsViewPlotsTab.onHorizontalAxisGenericAssaySelect({
                     value: 'AEW541',
                     label: 'Name of AEW541',
                 });
             });
 
-            const vertDataSelect = $('[name=v-profile-type-selector]').$('..');
-            assert(reactSelectOption(vertDataSelect, 'Ordered samples'));
+            const vertDataSelect = await (
+                await $('[name=v-profile-type-selector]')
+            ).$('..');
+            assert(await reactSelectOption(vertDataSelect, 'Ordered samples'));
         });
 
         it('shows `Log Scale` checkbox when treatment selected on vert. axis', async () => {
-            const horzDataSelect = $('[name=h-profile-type-selector]').$('..');
-            selectReactSelectOption(horzDataSelect, 'Treatment Response');
-            assert($('[data-test=HorizontalLogCheckbox]'));
+            const horzDataSelect = await (
+                await $('[name=h-profile-type-selector]')
+            ).$('..');
+            await selectReactSelectOption(horzDataSelect, 'Treatment Response');
+            assert(await $('[data-test=HorizontalLogCheckbox]'));
         });
 
         it('shows `Log Scale` checkbox when treatment selected on horz. axis', async () => {
-            const vertDataSelect = $('[name=v-profile-type-selector]').$('..');
-            selectReactSelectOption(vertDataSelect, 'Treatment Response');
-            assert($('[data-test=VerticalLogCheckbox]'));
+            const vertDataSelect = await (
+                await $('[name=v-profile-type-selector]')
+            ).$('..');
+            await selectReactSelectOption(vertDataSelect, 'Treatment Response');
+            assert(await $('[data-test=VerticalLogCheckbox]'));
         });
 
         it('shows checkbox for limit values (e.g., larger_than_8.00) checkbox when such profile selected on horz. axis', async () => {
-            const horzDataSelect = $('[name=h-profile-type-selector]').$('..');
-            selectReactSelectOption(horzDataSelect, 'Treatment Response');
+            const horzDataSelect = await (
+                await $('[name=h-profile-type-selector]')
+            ).$('..');
+            await selectReactSelectOption(horzDataSelect, 'Treatment Response');
 
-            const horzProfileSelect = $('[name=h-profile-name-selector]').$(
-                '..'
-            );
-            selectReactSelectOption(
+            const horzProfileSelect = await (
+                await $('[name=h-profile-name-selector]')
+            ).$('..');
+            await selectReactSelectOption(
                 horzProfileSelect,
                 'EC50 values of compounds on cellular phenotype readout'
             );
 
-            $('[data-test=generic-assay-info-icon]').waitForExist({
-                timeout: 10000,
-            });
+            await (await $('[data-test=generic-assay-info-icon]')).waitForExist(
+                {
+                    timeout: 10000,
+                }
+            );
 
             // WHY WAS ASSERT BEING CALLED ON THIS?
-            browser.execute(function() {
+            await browser.execute(function() {
                 resultsViewPlotsTab.onHorizontalAxisGenericAssaySelect({
                     value: 'AEW541',
                     label: 'Name of AEW541',
@@ -456,82 +479,100 @@ describe('treatment feature', function() {
             });
             // browser.pause(1000);
 
-            $('[data-test=ViewLimitValues]').waitForExist();
-            assert($('[data-test=ViewLimitValues]').isDisplayed());
+            await (await $('[data-test=ViewLimitValues]')).waitForExist();
+            assert(
+                await (await $('[data-test=ViewLimitValues]')).isDisplayed()
+            );
         });
 
         it('shows checkbox for limit values (e.g., larger_than_8.00) checkbox when such profile selected on vert. axis', async () => {
-            const vertDataSelect = $('[name=v-profile-type-selector]').$('..');
-            selectReactSelectOption(vertDataSelect, 'Treatment Response');
+            const vertDataSelect = await (
+                await $('[name=v-profile-type-selector]')
+            ).$('..');
+            await selectReactSelectOption(vertDataSelect, 'Treatment Response');
 
-            const vertProfileSelect = $('[name=v-profile-name-selector]').$(
-                '..'
-            );
-            selectReactSelectOption(
+            const vertProfileSelect = await (
+                await $('[name=v-profile-name-selector]')
+            ).$('..');
+            await selectReactSelectOption(
                 vertProfileSelect,
                 'EC50 values of compounds on cellular phenotype readout'
             );
-            $('[data-test=generic-assay-info-icon]').waitForExist({
-                timeout: 10000,
-            });
+            await (await $('[data-test=generic-assay-info-icon]')).waitForExist(
+                {
+                    timeout: 10000,
+                }
+            );
 
-            browser.execute(function() {
+            await browser.execute(function() {
                 resultsViewPlotsTab.onVerticalAxisGenericAssaySelect({
                     value: 'AEW541',
                     label: 'Name of AEW541',
                 });
             });
 
-            $('[data-test=ViewLimitValues]').waitForExist();
-            assert($('[data-test=ViewLimitValues]').isDisplayed());
+            await (await $('[data-test=ViewLimitValues]')).waitForExist();
+            assert(
+                await (await $('[data-test=ViewLimitValues]')).isDisplayed()
+            );
         });
 
         it('shows hint for handling of threshold values for treatment data in scatter plot', async () => {
-            assert($('label=Value >8.00 Labels **'));
-            assert($('div*=** '));
+            assert(await $('label=Value >8.00 Labels **'));
+            assert(await $('div*=** '));
         });
 
         it('shows gene selection box in utilities menu for waterfall plot', async () => {
-            selectTreamentsBothAxes();
+            await selectTreamentsBothAxes();
 
-            const horzDataSelect = $('[name=h-profile-type-selector]').$('..');
-            selectReactSelectOption(horzDataSelect, 'Ordered samples');
-            assert($('.gene-select-container'));
-            assert($('.gene-select-container'));
+            const horzDataSelect = await (
+                await $('[name=h-profile-type-selector]')
+            ).$('..');
+            await selectReactSelectOption(horzDataSelect, 'Ordered samples');
+            assert(await $('.gene-select-container'));
+            assert(await $('.gene-select-container'));
         });
 
         it('shows selected genes in gene selection box in utilities menu for waterfall plot', async () => {
-            selectTreamentsBothAxes();
+            await selectTreamentsBothAxes();
 
-            const horzDataSelect = $('[name=h-profile-type-selector]').$('..');
-            selectReactSelectOption(horzDataSelect, 'Ordered samples');
+            const horzDataSelect = await (
+                await $('[name=h-profile-type-selector]')
+            ).$('..');
+            await selectReactSelectOption(horzDataSelect, 'Ordered samples');
 
-            $('.gene-select-container').waitForExist();
-            const geneSelect = $('.gene-select-container');
+            await (await $('.gene-select-container')).waitForExist();
+            const geneSelect = await $('.gene-select-container');
 
-            geneSelect.click();
-            $('[data-test=GeneColoringMenu]')
-                .$('div=Genes')
-                .waitForDisplayed();
+            await geneSelect.click();
+            await (
+                await (await $('[data-test=GeneColoringMenu]')).$('div=Genes')
+            ).waitForDisplayed();
 
             // select gene menu entries
-            const geneMenuEntries = $('[data-test=GeneColoringMenu]')
-                .$('div=Genes')
-                .$('..')
-                .$$('div')[1]
-                .$$('div');
+            const geneMenuEntries = await (
+                await (
+                    await (
+                        await (await $('[data-test=GeneColoringMenu]')).$(
+                            'div=Genes'
+                        )
+                    ).$('..')
+                ).$$('div')
+            )[1].$$('div');
 
-            assert.strictEqual(geneMenuEntries[0].getText(), 'CDKN2A');
-            assert.strictEqual(geneMenuEntries[1].getText(), 'MDM2');
-            assert.strictEqual(geneMenuEntries[2].getText(), 'MDM4');
-            assert.strictEqual(geneMenuEntries[3].getText(), 'TP53');
+            assert.strictEqual(await geneMenuEntries[0].getText(), 'CDKN2A');
+            assert.strictEqual(await geneMenuEntries[1].getText(), 'MDM2');
+            assert.strictEqual(await geneMenuEntries[2].getText(), 'MDM4');
+            assert.strictEqual(await geneMenuEntries[3].getText(), 'TP53');
         });
 
         it('shows sort order button for waterfall plot when `Ordered samples` selected', async () => {
-            selectTreamentsBothAxes();
-            const horzDataSelect = $('[name=h-profile-type-selector]').$('..');
-            selectReactSelectOption(horzDataSelect, 'Ordered samples');
-            assert($('[data-test=changeSortOrderButton'));
+            await selectTreamentsBothAxes();
+            const horzDataSelect = await (
+                await $('[name=h-profile-type-selector]')
+            ).$('..');
+            await selectReactSelectOption(horzDataSelect, 'Ordered samples');
+            assert(await $('[data-test=changeSortOrderButton'));
         });
     });
 });
@@ -544,49 +585,57 @@ const goToTreatmentTab = async () => {
     await clickElement(ADD_TRACKS_TREATMENT_TAB);
 };
 
-const selectTreamentsBothAxes = () => {
-    const horzDataSelect = $('[name=h-profile-type-selector]').$('..');
-    selectReactSelectOption(horzDataSelect, 'Treatment Response');
-    const horzProfileSelect = $('[name=h-profile-name-selector]').$('..');
-    selectReactSelectOption(
+const selectTreamentsBothAxes = async () => {
+    const horzDataSelect = await (await $('[name=h-profile-type-selector]')).$(
+        '..'
+    );
+    await selectReactSelectOption(horzDataSelect, 'Treatment Response');
+    const horzProfileSelect = await (
+        await $('[name=h-profile-name-selector]')
+    ).$('..');
+    await selectReactSelectOption(
         horzProfileSelect,
         'IC50 values of compounds on cellular phenotype readout'
     );
 
-    const vertDataSelect = $('[name=v-profile-type-selector]').$('..');
-    selectReactSelectOption(vertDataSelect, 'Treatment Response');
-    const vertProfileSelect = $('[name=v-profile-name-selector]').$('..');
-    selectReactSelectOption(
+    const vertDataSelect = await (await $('[name=v-profile-type-selector]')).$(
+        '..'
+    );
+    await selectReactSelectOption(vertDataSelect, 'Treatment Response');
+    const vertProfileSelect = await (
+        await $('[name=v-profile-name-selector]')
+    ).$('..');
+    await selectReactSelectOption(
         vertProfileSelect,
         'IC50 values of compounds on cellular phenotype readout'
     );
 
-    $('[data-test=generic-assay-info-icon]').waitForExist();
-    browser.execute(function() {
+    await (await $('[data-test=generic-assay-info-icon]')).waitForExist();
+    await browser.execute(function() {
         resultsViewPlotsTab.onHorizontalAxisGenericAssaySelect({
             value: 'AEW541',
             label: 'Name of AEW541',
         });
     });
 
-    browser.execute(function() {
+    await browser.execute(function() {
         resultsViewPlotsTab.onVerticalAxisGenericAssaySelect({
             value: 'AEW541',
             label: 'Name of AEW541',
         });
     });
 
-    $('[data-test=ViewLimitValues]').waitForExist();
-    if (!$('[data-test=ViewLimitValues]').isSelected()) {
-        $('[data-test=ViewLimitValues]').click();
+    await (await $('[data-test=ViewLimitValues]')).waitForExist();
+    if (!(await (await $('[data-test=ViewLimitValues]')).isSelected())) {
+        await (await $('[data-test=ViewLimitValues]')).click();
     }
 
-    if ($('[data-test=HorizontalLogCheckbox]').isSelected()) {
-        $('[data-test=HorizontalLogCheckbox]').click();
+    if (await (await $('[data-test=HorizontalLogCheckbox]')).isSelected()) {
+        await (await $('[data-test=HorizontalLogCheckbox]')).click();
     }
 
-    if ($('[data-test=VerticalLogCheckbox]').isSelected()) {
-        $('[data-test=VerticalLogCheckbox]').click();
+    if (await (await $('[data-test=VerticalLogCheckbox]')).isSelected()) {
+        await (await $('[data-test=VerticalLogCheckbox]')).click();
     }
 };
 

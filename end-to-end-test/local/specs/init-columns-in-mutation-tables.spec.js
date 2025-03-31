@@ -241,15 +241,15 @@ const namespaceColumnsAreNotDisplayed = async () => {
 };
 
 async function columnIsDisplayed(column) {
-    return (
+    return await (
         await getElement("//span[text() = '" + column + "']")
     ).isDisplayed();
 }
 
 async function columnIsNotDisplayed(column) {
-    return !(
+    return !(await (
         await getElement("//span[text() = '" + column + "']")
-    ).isDisplayed();
+    ).isDisplayed());
 }
 
 const waitForMutationTable = async () => {

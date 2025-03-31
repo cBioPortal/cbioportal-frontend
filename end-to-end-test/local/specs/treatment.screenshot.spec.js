@@ -47,10 +47,9 @@ describe('treatment feature', () => {
                 '[data-test="GenericAssayEntitySelection"] input',
                 '17-AAG'
             );
-            const options = await getNestedElement([
-                GENERIC_ASSAY_ENTITY_SELECTOR,
-                'div[class$="option"]',
-            ]);
+            const options = await (
+                await getElement(GENERIC_ASSAY_ENTITY_SELECTOR)
+            ).$$('div[class$="option"]');
             await options[0].click();
             const indicators = await (
                 await getElement(GENERIC_ASSAY_ENTITY_SELECTOR)
@@ -172,8 +171,8 @@ describe('treatment feature', () => {
                         'div=Genes',
                         '..',
                     ])
-                ).$$('div')[1]
-            ).$$('div');
+                ).$$('div')
+            )[1].$$('div');
 
             await geneMenuEntries[3].click();
 
@@ -220,7 +219,7 @@ describe('treatment feature', () => {
         });
 
         it('shows a search indicator when sample search term is entered', async () => {
-            const horzDataSelect = await getElement([
+            const horzDataSelect = await getNestedElement([
                 '[name=h-profile-type-selector]',
                 '..',
             ]);

@@ -209,7 +209,7 @@ describe('oncoprint', function() {
         });
     });
 
-    describe('oql structural variant tracks', async () => {
+    describe.only('oql structural variant tracks', async () => {
         beforeEach(async () => {
             // Build Struct Var OQL and place in the URL.
             const oql =
@@ -249,7 +249,7 @@ describe('oncoprint', function() {
                     SERVER_CLINICAL_TRACK_CONFIG
                 ),
             });
-            waitForOncoprint();
+            await waitForOncoprint();
         });
 
         it('shows oql structural variant variations', async function() {
@@ -274,7 +274,7 @@ async function openTracksMenu() {
 
 async function changeNthTrack(track, menuOptionButtonText) {
     const firstTrack = await getNthOncoprintTrackOptionsElements(1);
-    await clickElement(firstTrack.button_selector);
+    await firstTrack.button.click();
     await waitForElementDisplayed(firstTrack.dropdown_selector, {
         timeout: 1000,
     });

@@ -62,7 +62,7 @@ describe('Custom Bins menu in study view chart header', function() {
         await getElement(CUSTOM_BINS_TEXTAREA, {
             waitForExist: true,
         });
-        await dsetInputText(CUSTOM_BINS_TEXTAREA, '0,10,20,30,40');
+        await setInputText(CUSTOM_BINS_TEXTAREA, '0,10,20,30,40');
         await clickUpdate();
         await (await getElement('body')).moveTo();
         const res = await checkElementWithMouseDisabled(MUTATION_COUNT_CHART);

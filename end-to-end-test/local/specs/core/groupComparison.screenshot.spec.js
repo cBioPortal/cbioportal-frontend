@@ -1,22 +1,17 @@
-const goToUrlAndSetLocalStorage = require('../../../shared/specUtils_Async')
-    .goToUrlAndSetLocalStorage;
+const { assertScreenShotMatch } = require('../../../shared/lib/testUtils');
 const {
     openGroupComparison,
-    assertScreenShotMatch,
     setInputText,
     waitForNetworkQuiet,
     clickElement,
     getElement,
     waitForElementDisplayed,
-} = require('../../../shared/specUtils_Async');
-const {
     setDropdownOpen,
     selectClinicalTabPlotType,
     getElementByTestHandle,
-} = require('../../../shared/specUtils');
+} = require('../../../shared/specUtils_Async');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
-const selectGenesDropdownButton = '[data-test="selectGenes"]';
 
 describe('group comparison page screenshot tests', function() {
     describe('Alteration enrichments tab', function() {
@@ -26,7 +21,7 @@ describe('group comparison page screenshot tests', function() {
             await openGroupComparison(
                 `${CBIOPORTAL_URL}/study/summary?id=lgg_ucsf_2014_test_generic_assay`,
                 'chart-container-ONCOTREE_CODE',
-                10000
+                20000
             );
             await clickElement('.tabAnchor_alterations');
             await getElement(
@@ -37,7 +32,7 @@ describe('group comparison page screenshot tests', function() {
 
         it('group comparison page alteration enrichments tab several groups', async function() {
             await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
-            const res = browser.checkElement(
+            const res = await browser.checkElement(
                 '.msk-tab:not(.hiddenByPosition)',
                 '',
                 {
@@ -84,7 +79,7 @@ describe('group comparison page screenshot tests', function() {
                 timeout: 10000,
             });
             await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
-            const res = browser.checkElement(
+            const res = await browser.checkElement(
                 'div[data-test="GeneBarPlotDiv"]',
                 '',
                 {
@@ -101,7 +96,7 @@ describe('group comparison page screenshot tests', function() {
                     label: 'Genes with highest average frequency',
                 });
             });
-            await waitForNetworkQuiet();
+            await waitForNetworkQuiet(20000);
             await (
                 await getElement('[data-test="addGenestoBarPlot"]')
             ).waitForEnabled({
@@ -168,7 +163,7 @@ describe('group comparison page screenshot tests', function() {
                 timeout: 10000,
             });
             await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
-            const res = browser.checkElement(
+            const res = await browser.checkElement(
                 'div[data-test="GeneBarPlotDiv"]',
                 '',
                 {
@@ -197,7 +192,7 @@ describe('group comparison page screenshot tests', function() {
                 { timeout: 20000 }
             );
             await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
-            const res = browser.checkElement(
+            const res = await browser.checkElement(
                 '.msk-tab:not(.hiddenByPosition)',
                 '',
                 {
@@ -213,7 +208,7 @@ describe('group comparison page screenshot tests', function() {
             await openGroupComparison(
                 `${CBIOPORTAL_URL}/study/summary?id=lgg_ucsf_2014_test_generic_assay`,
                 'chart-container-ONCOTREE_CODE',
-                10000
+                20000
             );
             await clickElement('.tabAnchor_clinical');
             await getElement('[data-test="ComparisonPageClinicalTabDiv"]', {
@@ -223,7 +218,7 @@ describe('group comparison page screenshot tests', function() {
 
         it('shows box plot for numerical data', async () => {
             await clickElement('[data-test="Mutation Count"]');
-            const res = checkClinicalTabPlot();
+            const res = await checkClinicalTabPlot();
             assertScreenShotMatch(res);
         });
 

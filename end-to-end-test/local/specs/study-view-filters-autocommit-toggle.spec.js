@@ -128,7 +128,9 @@ describe('Toggling of study view filters autosubmit', function() {
 
 async function selectMutationProfile(index = 0) {
     await (
-        await getNestedElement([GENOMIC_PROFILES_SAMPLE_COUNT_TABLE, 'input'])
+        await (await getElement(GENOMIC_PROFILES_SAMPLE_COUNT_TABLE)).$$(
+            'input'
+        )
     )[index].click();
 }
 
