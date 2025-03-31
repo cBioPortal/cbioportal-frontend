@@ -126,7 +126,7 @@ async function getColorByTestHandle(testHandle, type = 'color') {
 
 async function getCSSProperty(selector, property) {
     const element = await getElement(selector);
-    const { value } = await element.getCSSProperty(property);
+    const value = await element.getCSSProperty(property);
     return value;
 }
 /**
@@ -171,12 +171,13 @@ async function setOncoprintMutationsMenuOpen(open) {
     );
 }
 
-function setCheckboxChecked(checked, selector, failure_message) {
-    browser.waitUntil(
-        () => {
-            if ($(selector).isDisplayed()) {
-                $(selector).click();
-                return checked === $(selector).isSelected();
+async function setCheckboxChecked(checked, selector, failure_message) {
+    const checkbox_elt = await $(selector);
+    await browser.waitUntil(
+        async () => {
+            if (await checkbox_elt.isDisplayed()) {
+                await checkbox_elt.click();
+                return checked === (await checkbox_elt.isSelected());
             } else {
                 return false;
             }
@@ -293,16 +294,6 @@ async function setServerConfiguration(props) {
         },
         { serverConfig: props }
     );
-}
-
-async function waitForElementDisplayed(selector, options = {}) {
-    const element = await getElement(selector, options);
-    await element.waitForDisplayed({
-        timeout: options.timeout || 10000,
-        ...options,
-    });
-
-    return element;
 }
 
 function setServerConfiguration(props) {
@@ -474,15 +465,15 @@ async function selectReactSelectOption(parent, optionText) {
 async function reactSelectOption(parent, optionText, loose = false) {
     await setDropdownOpen(
         true,
-        parent.$('.Select-control'),
+        await parent.$('.Select-control'),
         loose
-            ? parent.$('.Select-option*=' + optionText)
-            : parent.$('.Select-option=' + optionText)
+            ? await parent.$('.Select-option*=' + optionText)
+            : await parent.$('.Select-option=' + optionText)
     );
     if (loose) {
-        return parent.$('.Select-option*=' + optionText);
+        return await parent.$('.Select-option*=' + optionText);
     }
-    return parent.$('.Select-option=' + optionText);
+    return await parent.$('.Select-option=' + optionText);
 }
 
 function selectCheckedOption(parent, optionText, loose = false) {
@@ -731,7 +722,7 @@ async function closeOtherTabs() {
 async function openGroupComparison(studyViewUrl, chartDataTest, timeout) {
     await goToUrlAndSetLocalStorage(studyViewUrl, true);
     await waitForElementDisplayed('[data-test=summary-tab-content]');
-    await waitForNetworkQuiet();
+    await waitForNetworkQuiet(20000);
 
     // needed to switch to group comparison tab later on:
     await closeOtherTabs();
@@ -759,9 +750,7 @@ async function openGroupComparison(studyViewUrl, chartDataTest, timeout) {
     const studyViewTabId = await browser.getWindowHandle();
 
     const chartHamburgerIcon = await getNestedElement([chart, hamburgerIcon]);
-    await waitForElementDisplayed(chartHamburgerIcon, {
-        timeout: timeout || 10000,
-    });
+    await chartHamburgerIcon.waitForDisplayed();
 
     await (await (await getElement(chartHamburgerIcon)).$$('li'))[1].click();
 
@@ -778,7 +767,7 @@ async function openGroupComparison(studyViewUrl, chartDataTest, timeout) {
 }
 
 async function selectElementByText(text) {
-    return $(`//*[text()="${text}"]`);
+    return await $(`//*[text()="${text}"]`);
 }
 
 async function jq(selector) {
@@ -788,8 +777,8 @@ async function jq(selector) {
 }
 
 const openAlterationTypeSelectionMenu = async () => {
-    await $(
-        '[data-test=AlterationEnrichmentTypeSelectorButton]'
+    await (
+        await getElement('[data-test=AlterationEnrichmentTypeSelectorButton]')
     ).waitForExist();
     await clickElement('[data-test=AlterationEnrichmentTypeSelectorButton]');
     await (

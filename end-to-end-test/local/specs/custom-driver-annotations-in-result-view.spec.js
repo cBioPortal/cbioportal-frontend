@@ -23,7 +23,7 @@ const oncoprintTabUrlStructVar =
     '/results/oncoprint?Action=Submit&cancer_study_list=study_es_0&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&profileFilter=mutations%2Cstructural_variants%2Cgistic&case_set_id=study_es_0_cnaseq&gene_list=TMPRSS2&geneset_list=%20&tab_index=tab_visualize';
 
 describe('custom driver annotations feature in result view', () => {
-    describe.only('oncoprint tab - mutations', async () => {
+    describe('oncoprint tab - mutations', async () => {
         beforeEach(async () => {
             await goToUrlAndSetLocalStorage(oncoprintTabUrl, true);
             await waitForOncoprint();
@@ -46,15 +46,15 @@ describe('custom driver annotations feature in result view', () => {
             ]);
             await class1Checkbox.click();
             await waitForOncoprint();
-            assert(await !class1Checkbox.isSelected());
+            assert(!(await class1Checkbox.isSelected()));
 
-            const class2Checkbox = getNestedElement([
+            const class2Checkbox = await getNestedElement([
                 'label*=Class 2',
                 'input',
             ]);
             await class2Checkbox.click();
             await waitForOncoprint();
-            assert(await !class2Checkbox.isSelected());
+            assert(!(await class2Checkbox.isSelected()));
         });
 
         it('updates selected samples when VUS alterations are excluded', async () => {
@@ -193,7 +193,7 @@ describe('custom driver annotations feature in result view', () => {
                 ).isExisting()
             );
 
-            await getNestedElement(['label*=Class 1', 'input']).click();
+            await (await getNestedElement(['label*=Class 1', 'input'])).click();
             await waitForOncoprint();
             assert(
                 await (

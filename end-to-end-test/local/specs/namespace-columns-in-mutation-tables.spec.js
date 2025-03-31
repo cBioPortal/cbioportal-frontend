@@ -39,9 +39,11 @@ describe('namespace columns in mutation tables', function() {
                 ])
             ).waitForDisplayed();
             // Click namespace column checkboxes.
-            await (await getElement('[data-test=add-by-type]'))
-                .$$('div*=Zygosity')
-                .forEach(async checkbox => await checkbox.click());
+            await (
+                await (await getElement('[data-test=add-by-type]')).$$(
+                    'div*=Zygosity'
+                )
+            ).forEach(async checkbox => await checkbox.click());
             await clickElement('button*=Columns');
             assert(await namespaceColumnsAreDisplayed());
         });
@@ -89,21 +91,29 @@ describe('namespace columns in mutation tables', function() {
                 async () => (await numberOfTableRows()) === numberOfRowsBefore
             );
         });
-        it('filters rows when using categorical filter menu', () => {
-            filterIconOfHeader("//span[text() = 'Zygosity Name']").click();
+        it('filters rows when using categorical filter menu', async () => {
+            await (
+                await filterIconOfHeader("//span[text() = 'Zygosity Name']")
+            ).click();
             // Empty rows
-            var numberOfRowsBefore = numberOfTableRows();
-            $('[data-test=categorical-filter-menu-search-input]').setValue(
-                'Homozygous'
+            var numberOfRowsBefore = await numberOfTableRows();
+            await (
+                await $('[data-test=categorical-filter-menu-search-input]')
+            ).setValue('Homozygous');
+            await browser.waitUntil(
+                async () => (await numberOfTableRows()) < numberOfRowsBefore
             );
-            browser.waitUntil(() => numberOfTableRows() < numberOfRowsBefore);
         });
     });
     describe('patient view', () => {
-        it('hides namespace columns when no property set', () => {
-            goToUrlAndSetLocalStorageWithProperty(patientViewUrl, true, {});
-            waitForPatientViewMutationTable();
-            assert(namespaceColumnsAreNotDisplayed());
+        it('hides namespace columns when no property set', async () => {
+            await goToUrlAndSetLocalStorageWithProperty(
+                patientViewUrl,
+                true,
+                {}
+            );
+            await waitForPatientViewMutationTable();
+            assert(await namespaceColumnsAreNotDisplayed());
         });
         it('shows columns when column menu is used', async () => {
             // Click on column button.

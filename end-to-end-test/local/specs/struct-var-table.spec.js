@@ -145,16 +145,16 @@ describe('study view structural variant table', function() {
 });
 
 async function showSvPane() {
-    const $chartsBtn = getElement('[data-test=add-charts-button]');
+    const $chartsBtn = await getElement('[data-test=add-charts-button]');
     await $chartsBtn.waitForExist();
     await $chartsBtn.waitForClickable();
     await $chartsBtn.click();
-    const $chartsGenomicTab = getElement('.tabAnchor_Genomic');
+    const $chartsGenomicTab = await getElement('.tabAnchor_Genomic');
     await $chartsGenomicTab.waitForExist();
     await $chartsGenomicTab.waitForClickable();
     await $chartsGenomicTab.click();
     const $svChartCheckbox = await getNestedElement([
-        '[data-test="add-chart-option-structural-variants"]',
+        '[data-test="add-chart-option-structural-variant-genes"]',
         '[data-test="labeledCheckbox"]',
     ]);
     await $svChartCheckbox.waitForExist();

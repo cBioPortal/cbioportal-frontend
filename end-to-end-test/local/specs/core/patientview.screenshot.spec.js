@@ -62,143 +62,167 @@ describe('patient view page', function() {
             assertScreenShotMatch(res);
         });
 
-        it('filters mutation tracks based on gene filter setting', () => {
-            switchGeneFilter('allSamples');
-            var res = browser.checkElement(
+        it('filters mutation tracks based on gene filter setting', async () => {
+            await switchGeneFilter('allSamples');
+            var res = await browser.checkElement(
                 'div.genomicOverviewTracksContainer'
             );
             assertScreenShotMatch(res);
         });
 
-        it('filters VAF plot based on gene filter setting when switching to _all samples_', () => {
-            switchGeneFilter('allSamples');
-            doVafPlotScreenshotTest();
+        it('filters VAF plot based on gene filter setting when switching to _all samples_', async () => {
+            await switchGeneFilter('allSamples');
+            await doVafPlotScreenshotTest();
         });
 
-        it('filters VAF plot based on gene filter setting when switching to _any sample_', () => {
-            switchGeneFilter('anySample');
-            doVafPlotScreenshotTest();
+        it('filters VAF plot based on gene filter setting when switching to _any sample_', async () => {
+            await switchGeneFilter('anySample');
+            await doVafPlotScreenshotTest();
         });
     });
 
     describe('patient view mutational signatures', () => {
-        beforeEach(() => {
-            goToUrlAndSetLocalStorage(genericAssayPatientViewUrl, true);
+        beforeEach(async () => {
+            await goToUrlAndSetLocalStorage(genericAssayPatientViewUrl, true);
             //waitForPatientView();
-            $('a.tabAnchor_mutationalSignatures').waitForDisplayed({
+            await (
+                await $('a.tabAnchor_mutationalSignatures')
+            ).waitForDisplayed({
                 timeout: 20000,
             });
-            $('a.tabAnchor_mutationalSignatures').click();
-            $(
-                'div[data-test="MutationalSignaturesContainer"]'
+            await (await $('a.tabAnchor_mutationalSignatures')).click();
+            await (
+                await $('div[data-test="MutationalSignaturesContainer"]')
             ).waitForDisplayed({
                 timeout: 20000,
             });
         });
 
-        it('show stacked bar chart for patient who has significant SBS signatures', () => {
-            $('div.patientSamples').waitForDisplayed({ timeout: 20000 });
-            var res = browser.checkElement('div.patientSamples');
+        it('show stacked bar chart for patient who has significant SBS signatures', async () => {
+            await (await $('div.patientSamples')).waitForDisplayed({
+                timeout: 20000,
+            });
+            var res = await browser.checkElement('div.patientSamples');
             assertScreenShotMatch(res);
         });
 
-        it('show tooltip for patient who has significant SBS signatures', () => {
-            $('div.progress').waitForDisplayed({ timeout: 20000 });
-            $('div.progress').moveTo({ xOffset: 0, yOffset: 0 });
-            assertScreenShotMatch(browser.checkElement('div.patientViewPage'));
+        it('show tooltip for patient who has significant SBS signatures', async () => {
+            await (await $('div.progress')).waitForDisplayed({
+                timeout: 20000,
+            });
+            await (await $('div.progress')).moveTo({ xOffset: 0, yOffset: 0 });
+            assertScreenShotMatch(
+                await browser.checkElement('div.patientViewPage')
+            );
         });
 
-        it('show mutational signatures table for patient who has significant SBS signatures', () => {
-            var res = browser.checkElement(
+        it('show mutational signatures table for patient who has significant SBS signatures', async () => {
+            var res = await browser.checkElement(
                 'div[data-test="MutationalSignaturesContainer"]'
             );
             assertScreenShotMatch(res);
         });
 
-        it('show stacked bar chart for patient who has significant ID signatures', () => {
-            selectMutationalSignaturesVersionID();
+        it('show stacked bar chart for patient who has significant ID signatures', async () => {
+            await selectMutationalSignaturesVersionID();
 
-            $('div.patientSamples').waitForDisplayed({ timeout: 20000 });
+            await (await $('div.patientSamples')).waitForDisplayed({
+                timeout: 20000,
+            });
             // bar chart does an animation we have to wait for
-            browser.pause(5000);
-            var res = browser.checkElement('div.patientSamples');
+            await browser.pause(5000);
+            var res = await browser.checkElement('div.patientSamples');
             assertScreenShotMatch(res);
         });
 
-        it('show tooltip for patient who has significant ID signatures', () => {
+        it('show tooltip for patient who has significant ID signatures', async () => {
             //browser.debug();
 
-            selectMutationalSignaturesVersionID();
-            $('div.progress').waitForDisplayed({ timeout: 20000 });
-            $('div.progress').moveTo({ xOffset: 0, yOffset: 0 });
+            await selectMutationalSignaturesVersionID();
+            await (await $('div.progress')).waitForDisplayed({
+                timeout: 20000,
+            });
+            await (await $('div.progress')).moveTo({ xOffset: 0, yOffset: 0 });
 
-            $(
-                'div[data-test="SignificantMutationalSignaturesTooltip"]'
+            await (
+                await $(
+                    'div[data-test="SignificantMutationalSignaturesTooltip"]'
+                )
             ).waitForDisplayed();
 
-            assertScreenShotMatch(browser.checkElement('div.patientViewPage'));
+            assertScreenShotMatch(
+                await browser.checkElement('div.patientViewPage')
+            );
         });
 
-        it('show stacked bar chart for patient who has significant DBS signatures', () => {
-            selectMutationalSignaturesVersionDBS();
-            $('div.patientSamples').waitForDisplayed({ timeout: 20000 });
+        it('show stacked bar chart for patient who has significant DBS signatures', async () => {
+            await selectMutationalSignaturesVersionDBS();
+            await (await $('div.patientSamples')).waitForDisplayed({
+                timeout: 20000,
+            });
             // bar chart does an animation we have to wait for
-            browser.pause(5000);
-            var res = browser.checkElement('div.patientSamples');
+            await browser.pause(5000);
+            var res = await browser.checkElement('div.patientSamples');
             assertScreenShotMatch(res);
         });
 
-        it('show tooltip for patient who has significant DBS signatures', () => {
-            selectMutationalSignaturesVersionDBS();
-            $('div.progress').waitForDisplayed({ timeout: 20000 });
-            $('div.progress').moveTo({ xOffset: 0, yOffset: 0 });
+        it('show tooltip for patient who has significant DBS signatures', async () => {
+            await selectMutationalSignaturesVersionDBS();
+            await (await $('div.progress')).waitForDisplayed({
+                timeout: 20000,
+            });
+            await (await $('div.progress')).moveTo({ xOffset: 0, yOffset: 0 });
 
-            $(
-                'div[data-test="SignificantMutationalSignaturesTooltip"]'
+            await (
+                await $(
+                    'div[data-test="SignificantMutationalSignaturesTooltip"]'
+                )
             ).waitForDisplayed();
 
-            assertScreenShotMatch(browser.checkElement('div.patientViewPage'));
+            assertScreenShotMatch(
+                await browser.checkElement('div.patientViewPage')
+            );
         });
 
-        it('show mutational signatures table for patient who has significant ID signatures', () => {
-            selectMutationalSignaturesVersionID();
-            var res = browser.checkElement(
+        it('show mutational signatures table for patient who has significant ID signatures', async () => {
+            await selectMutationalSignaturesVersionID();
+            var res = await browser.checkElement(
                 'div[data-test="MutationalSignaturesContainer"]'
             );
             assertScreenShotMatch(res);
         });
     });
     describe('test the mutational bar chart', () => {
-        it('show mutational bar chart sbs', () => {
-            var res = browser.checkElement(
+        it('show mutational bar chart sbs', async () => {
+            var res = await browser.checkElement(
                 'div[data-test=MutationalSignaturesContainer]'
             );
             assertScreenShotMatch(res);
         });
-        it('show mutational bar chart id', () => {
-            selectMutationalSignaturesVersionID();
-            var res = browser.checkElement(
+        it('show mutational bar chart id', async () => {
+            await selectMutationalSignaturesVersionID();
+            var res = await browser.checkElement(
                 'div[data-test=MutationalSignaturesContainer]'
             );
             assertScreenShotMatch(res);
         });
-        it('show mutational bar chart dbs', () => {
-            selectMutationalSignaturesVersionDBS();
-            var res = browser.checkElement(
+        it('show mutational bar chart dbs', async () => {
+            await selectMutationalSignaturesVersionDBS();
+            var res = await browser.checkElement(
                 'div[data-test=MutationalSignaturesContainer]'
             );
             assertScreenShotMatch(res);
         });
-        it('show the bar chart with percentage on y axis', () => {
-            selectPercentageYAxis();
-            var res = browser.checkElement(
+        it('show the bar chart with percentage on y axis', async () => {
+            await selectPercentageYAxis();
+            var res = await browser.checkElement(
                 'div[data-test=MutationalSignaturesContainer]'
             );
             assertScreenShotMatch(res);
         });
-        it('switch between samples to update mutational bar chart', () => {
-            selectSampleMutationalSignature();
-            var res = browser.checkElement(
+        it('switch between samples to update mutational bar chart', async () => {
+            await selectSampleMutationalSignature();
+            var res = await browser.checkElement(
                 'div[data-test=MutationalSignaturesContainer]'
             );
             assertScreenShotMatch(res);
@@ -219,43 +243,57 @@ const switchGeneFilter = async selectedOption => {
     await setDropdownOpen(false, filterIcon, selectMenu);
 };
 
-const doVafPlotScreenshotTest = () => {
+const doVafPlotScreenshotTest = async () => {
     // we need to hide annotation column in mutations table first
     // because annotation column header icons will add extra height, the extra height will sometimes make scroll bar showing up on the right
     // browser.checkElement() doesn't work correctly on tooltip when there is a scroll bar
     // because scroll bar also takes some space and makes the total width shorter than tooltip, then tooltip will move to the right but browser.checkElement() still grabs the "old" position
 
     // open columns dropdown
-    $('button*=Columns').click();
+    await (await $('button*=Columns')).click();
     // click "Annotation" to hide annotation column
-    $('//*[text()="Annotation"]').click();
+    await (await $('//*[text()="Annotation"]')).click();
     // close on columns dropdown
-    $('button*=Columns').click();
-    $('.vafPlotThumbnail').moveTo(); // moves pointer to plot thumbnail
-    $('div[role=tooltip] [data-test=vaf-plot]').waitForExist();
-    const res = browser.checkElement('div[role=tooltip] [data-test=vaf-plot]'); // grabs the full plot
+    await (await $('button*=Columns')).click();
+    await (await $('.vafPlotThumbnail')).moveTo(); // moves pointer to plot thumbnail
+    await (await $('div[role=tooltip] [data-test=vaf-plot]')).waitForExist();
+    const res = await browser.checkElement(
+        'div[role=tooltip] [data-test=vaf-plot]'
+    ); // grabs the full plot
     assertScreenShotMatch(res);
 };
 
-const selectMutationalSignaturesVersionID = () => {
-    $('div.mutationalSignaturesVersionSelector__indicators').waitForDisplayed({
+const selectMutationalSignaturesVersionID = async () => {
+    await (
+        await $('div.mutationalSignaturesVersionSelector__indicators')
+    ).waitForDisplayed({
         timeout: 10000,
     });
-    $('div.mutationalSignaturesVersionSelector__indicators').click();
-    $('div=Mutational Signature ID').waitForDisplayed({ timeout: 10000 });
-    $('div=Mutational Signature ID').click();
+    await (
+        await $('div.mutationalSignaturesVersionSelector__indicators')
+    ).click();
+    await (await $('div=Mutational Signature ID')).waitForDisplayed({
+        timeout: 10000,
+    });
+    await (await $('div=Mutational Signature ID')).click();
 };
 
-const selectMutationalSignaturesVersionDBS = () => {
-    $('div.mutationalSignaturesVersionSelector__indicators').waitForDisplayed({
+const selectMutationalSignaturesVersionDBS = async () => {
+    await (
+        await $('div.mutationalSignaturesVersionSelector__indicators')
+    ).waitForDisplayed({
         timeout: 10000,
     });
-    $('div.mutationalSignaturesVersionSelector__indicators').click();
-    $('div=Mutational Signature DBS').waitForDisplayed({ timeout: 10000 });
-    $('div=Mutational Signature DBS').click();
+    await (
+        await $('div.mutationalSignaturesVersionSelector__indicators')
+    ).click();
+    await (await $('div=Mutational Signature DBS')).waitForDisplayed({
+        timeout: 10000,
+    });
+    await (await $('div=Mutational Signature DBS')).click();
 };
-const selectPercentageYAxis = () => {
-    getElementByTestHandle('AxisScaleSwitch%').click();
+const selectPercentageYAxis = async () => {
+    await (await getElementByTestHandle('AxisScaleSwitch%')).click();
 };
 
 const selectSampleMutationalSignature = async () => {

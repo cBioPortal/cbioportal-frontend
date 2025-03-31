@@ -32,7 +32,7 @@ const namespaceColumnsAreDisplayed = async columns => {
 };
 
 const namespaceColumnsAreNotDisplayed = async columns => {
-    return !namespaceColumnsAreDisplayed(columns);
+    return !(await namespaceColumnsAreDisplayed(columns));
 };
 
 const getRowByGene = async (tableName, gene) => {

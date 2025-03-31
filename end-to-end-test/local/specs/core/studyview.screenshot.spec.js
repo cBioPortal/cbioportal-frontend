@@ -28,73 +28,79 @@ const CANCER_GENE_FILTER_ICON = "[data-test='header-filter-icon']";
 const ADD_CUSTOM_CHART_TAB = '.addChartTabs a.tabAnchor.tabAnchor_Custom_Data';
 
 describe('study view generic assay categorical/binary features', function() {
-    it.skip('generic assay pie chart should be added in the summary tab', function() {
+    it.skip('generic assay pie chart should be added in the summary tab', async function() {
         this.retries(0);
 
         const url = `${CBIOPORTAL_URL}/study?id=lgg_ucsf_2014_test_generic_assay`;
-        goToUrlAndSetLocalStorage(url, true);
+        await goToUrlAndSetLocalStorage(url, true);
 
-        $(ADD_CHART_BUTTON).waitForDisplayed({
+        await (await $(ADD_CHART_BUTTON)).waitForDisplayed({
             timeout: WAIT_FOR_VISIBLE_TIMEOUT,
         });
-        $(ADD_CHART_BUTTON).click();
+        await (await $(ADD_CHART_BUTTON)).click();
 
         // Change to GENERIC ASSAY tab
-        $(ADD_CHART_GENERIC_ASSAY_TAB).waitForDisplayed({
+        await (await $(ADD_CHART_GENERIC_ASSAY_TAB)).waitForDisplayed({
             timeout: WAIT_FOR_VISIBLE_TIMEOUT,
         });
         //browser.debug();
-        $(ADD_CHART_GENERIC_ASSAY_TAB).click();
+        await (await $(ADD_CHART_GENERIC_ASSAY_TAB)).click();
 
         // Select category mutational signature profile
-        $(GENERIC_ASSAY_PROFILE_SELECTION).waitForDisplayed({
+        await (await $(GENERIC_ASSAY_PROFILE_SELECTION)).waitForDisplayed({
             timeout: WAIT_FOR_VISIBLE_TIMEOUT,
         });
-        $(GENERIC_ASSAY_PROFILE_SELECTION).click();
+        await (await $(GENERIC_ASSAY_PROFILE_SELECTION)).click();
 
-        $(GENERIC_ASSAY_PROFILE_SELECTION)
-            .$(CATEGORY_MUTATIONAL_SIGNATURE_PROFILE_TEXT)
-            .waitForDisplayed({
-                timeout: WAIT_FOR_VISIBLE_TIMEOUT,
-            });
-        $(GENERIC_ASSAY_PROFILE_SELECTION)
-            .$(CATEGORY_MUTATIONAL_SIGNATURE_PROFILE_TEXT)
-            .click();
+        await (
+            await (await $(GENERIC_ASSAY_PROFILE_SELECTION)).$(
+                CATEGORY_MUTATIONAL_SIGNATURE_PROFILE_TEXT
+            )
+        ).waitForDisplayed({
+            timeout: WAIT_FOR_VISIBLE_TIMEOUT,
+        });
+        await (
+            await (await $(GENERIC_ASSAY_PROFILE_SELECTION)).$(
+                CATEGORY_MUTATIONAL_SIGNATURE_PROFILE_TEXT
+            )
+        ).click();
 
         // wait for generic assay data loading complete
         // and select a option
-        $('div[data-test="GenericAssayEntitySelection"]').waitForExist();
-        $('div[data-test="GenericAssayEntitySelection"] input').setValue(
-            'mutational_signature_category_10'
-        );
+        await (
+            await $('div[data-test="GenericAssayEntitySelection"]')
+        ).waitForExist();
+        await (
+            await $('div[data-test="GenericAssayEntitySelection"] input')
+        ).setValue('mutational_signature_category_10');
 
-        $('div=Select all filtered options (1)').waitForExist();
-        $('div=Select all filtered options (1)').click();
+        await (await $('div=Select all filtered options (1)')).waitForExist();
+        await (await $('div=Select all filtered options (1)')).click();
         // close the dropdown
-        var indicators = $$('div[class$="indicatorContainer"]');
-        indicators[0].click();
-        var selectedOptions = $$('div[class$="multiValue"]');
+        var indicators = await $$('div[class$="indicatorContainer"]');
+        await indicators[0].click();
+        var selectedOptions = await $$('div[class$="multiValue"]');
         assert.equal(selectedOptions.length, 1);
 
         // this needs to be done twice for some reason on circleci
-        $('button=Add Chart').click();
-        $('button=Add Chart').click();
+        await (await $('button=Add Chart')).click();
+        await (await $('button=Add Chart')).click();
         //$('button=Add Chart').click();
         // Wait for chart to be added
-        waitForNetworkQuiet();
+        await waitForNetworkQuiet();
 
         // allow time to render
-        browser.pause(1000);
+        await browser.pause(1000);
 
-        const el = jq(
+        const el = await jq(
             "[data-test*='chart-container-mutational_signature_category_10_mutational']"
         );
-        const att = $(el[0]).getAttribute('data-test');
+        const att = await (await $(el[0])).getAttribute('data-test');
 
-        console.log('AARON');
-        console.log(att);
+        // console.log('AARON');
+        // console.log(att);
 
-        const res = checkElementWithMouseDisabled(`[data-test='${att}']`);
+        const res = await checkElementWithMouseDisabled(`[data-test='${att}']`);
 
         assertScreenShotMatch(res);
     });
@@ -315,9 +321,12 @@ describe('cancer gene filter', function() {
             true
         );
         assert.equal(
-            $(
-                `${MUTATIONS_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`
-            ).getCSSProperty('color').parsed.hex,
+            (
+                await getCSSProperty(
+                    `${MUTATIONS_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`,
+                    'color'
+                )
+            ).parsed.hex,
             '#bebebe'
         );
     });
@@ -327,14 +336,16 @@ describe('cancer gene filter', function() {
             `${MUTATIONS_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`
         );
         assert.equal(
-            await getCSSProperty(
-                `${MUTATIONS_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`,
-                'color'
+            (
+                await getCSSProperty(
+                    `${MUTATIONS_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`,
+                    'color'
+                )
             ).parsed.hex,
             '#000000'
         );
         assertScreenShotMatch(
-            checkElementWithMouseDisabled(MUTATIONS_GENES_TABLE)
+            await checkElementWithMouseDisabled(MUTATIONS_GENES_TABLE)
         );
     });
 
@@ -365,17 +376,18 @@ describe('cancer gene filter', function() {
         );
 
         await clickElement('button=Reset charts');
-        await await getNestedElement([
-            '.modal-content',
-            'button=Confirm',
-        ]).waitForDisplayed();
+        await (
+            await getNestedElement(['.modal-content', 'button=Confirm'])
+        ).waitForDisplayed();
         await (
             await getNestedElement(['.modal-content', 'button=Confirm'])
         ).click();
         assert.equal(
-            await getCSSProperty(
-                `${MUTATIONS_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`,
-                'color'
+            (
+                await getCSSProperty(
+                    `${MUTATIONS_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`,
+                    'color'
+                )
             ).parsed.hex,
             '#bebebe'
         );

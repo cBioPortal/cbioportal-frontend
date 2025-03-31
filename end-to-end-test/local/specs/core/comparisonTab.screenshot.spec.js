@@ -1,7 +1,7 @@
+const { assertScreenShotMatch } = require('../../../shared/lib/testUtils');
 const {
     goToUrlAndSetLocalStorage,
     waitForNetworkQuiet,
-    assertScreenShotMatch,
     setInputText,
     setDropdownOpen,
     getElement,
@@ -102,7 +102,7 @@ describe('results view comparison tab screenshot tests', function() {
                 timeout: 30000,
             });
             await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
-            const res = browser.checkElement(
+            const res = await browser.checkElement(
                 'div[data-test="GeneBarPlotDiv"]',
                 '',
                 {
@@ -120,7 +120,9 @@ describe('results view comparison tab screenshot tests', function() {
                 });
             });
             await waitForNetworkQuiet();
-            await getElement('[data-test="addGenestoBarPlot"]').waitForEnabled({
+            await (
+                await getElement('[data-test="addGenestoBarPlot"]')
+            ).waitForEnabled({
                 timeout: 30000,
             });
             await clickElement('[data-test="addGenestoBarPlot"]');
@@ -128,7 +130,7 @@ describe('results view comparison tab screenshot tests', function() {
                 timeout: 30000,
             });
             await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
-            const res = browser.checkElement(
+            const res = await browser.checkElement(
                 'div[data-test="GeneBarPlotDiv"]',
                 '',
                 {
@@ -152,7 +154,7 @@ describe('results view comparison tab screenshot tests', function() {
                 timeout: 30000,
             });
             await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
-            const res = browser.checkElement(
+            const res = await browser.checkElement(
                 'div[data-test="GeneBarPlotDiv"]',
                 '',
                 {
@@ -174,7 +176,7 @@ describe('results view comparison tab screenshot tests', function() {
                 }
             );
             await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
-            const res = browser.checkElement(
+            const res = await browser.checkElement(
                 '.msk-tab:not(.hiddenByPosition)',
                 '',
                 {

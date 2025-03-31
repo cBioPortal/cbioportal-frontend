@@ -33,18 +33,18 @@ describe('Virtual Study life cycle', function() {
             '[data-tour="virtual-study-summary-save-btn"]'
         );
         await saveBtn.click();
-        await modalDialog.$('.text-success').waitForDisplayed();
+        await (await modalDialog.$('.text-success')).waitForDisplayed();
         const linkInput = await modalDialog.$('input[type="text"]');
         const link = await linkInput.getValue();
         assert.ok(
-            link.startsWith('http'),
+            await link.startsWith('http'),
             'The value should be link, but was ' + link
         );
-        vsId = link
-            .split('?')[1]
-            .split('&')
-            .map(paramEqValue => paramEqValue.split('='))
-            .find(([key, value]) => key === 'id')[1];
+        vsId = await (
+            await (
+                await (await link.split('?')[1]).split('&')
+            ).map(paramEqValue => paramEqValue.split('='))
+        ).find(([key, value]) => key === 'id')[1];
         assert.ok(vsId, 'Virtual Study ID has not to be empty');
     });
     it('See the VS in My Virtual Studies section on the landing page', async function() {
@@ -132,7 +132,7 @@ describe('Virtual Study life cycle', function() {
         const sectionTitle = await vsSection.$('li label span');
         assert.equal(await sectionTitle.getText(), 'Adrenocortical Adenoma');
         //has PubMed link
-        assert.ok(await vsRow.$('.fa-book').isExisting());
+        assert.ok(await (await vsRow.$('.fa-book')).isExisting());
     });
     it('Un-publish the VS', async function() {
         const result = await browser.executeAsync(

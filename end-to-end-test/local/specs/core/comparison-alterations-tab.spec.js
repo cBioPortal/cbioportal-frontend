@@ -1,9 +1,6 @@
 const assert = require('assert');
 const {
     goToUrlAndSetLocalStorage,
-    selectReactSelectOption,
-    waitForNetworkQuiet,
-    useExternalFrontend,
     openAlterationTypeSelectionMenu,
     getNestedElement,
     clickElement,
@@ -23,7 +20,7 @@ describe('comparison alterations tab', () => {
 
     it('shows basic counts', async () => {
         const alteredCount = await selectAlteredCount('ABLIM1');
-        assert.strictEqual(selectAlteredCount('ABLIM1'), '1 (8.33%)');
+        assert.strictEqual(alteredCount, '1 (8.33%)');
     });
 
     it('shows banner when no results retrieved', async () => {
@@ -42,7 +39,7 @@ describe('comparison alterations tab', () => {
         await clickAlterationTypeCheckBox('Structural Variants / Fusions');
         await submitEnrichmentRequest();
         await waitForElementDisplayed('[data-test=LazyMobXTable]');
-        const rows = await $$('[data-test=LazyMobXTable] tbody tr');
+        var rows = await $$('[data-test=LazyMobXTable] tbody tr');
         assert.strictEqual(rows.length, 8, 'table has 8 rows');
         await clickAlterationTypeCheckBox('Mutations');
         await clickAlterationTypeCheckBox('Frameshift Deletion');
@@ -87,7 +84,7 @@ const loadAlterationsTab = async () => {
 const selectAlteredCount = async genename => {
     const row = await getNestedElement([`span=${genename}`, '..', '..', '..']);
     const alteredCount = await (
-        await await (await row.$$('td')[2]).$('span')
+        await (await row.$$('td'))[2].$('span')
     ).getText();
     return alteredCount;
 };
@@ -95,7 +92,7 @@ const selectAlteredCount = async genename => {
 const selectUnalteredCount = async genename => {
     const row = await getNestedElement([`span=${genename}`, '..', '..', '..']);
     const alteredCount = await (
-        await await (await row.$$('td')[3]).$('span')
+        await (await row.$$('td'))[3].$('span')
     ).getText();
     return alteredCount;
 };
