@@ -262,7 +262,7 @@ describe('hide download controls feature', function() {
                         'Treatment Response',
                     ];
 
-                    const tabElements = $$(
+                    const tabElements = await $$(
                         '[data-test=ComparisonTabDiv] .tabAnchor'
                     );
                     const displayedTabs = await Promise.all(

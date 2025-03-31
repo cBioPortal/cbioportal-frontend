@@ -273,10 +273,15 @@ describe('study view editable breadcrumbs', () => {
         await waitForElementDisplayed('.userSelections');
 
         const element = await getNestedElement(['.userSelections', 'span=15']);
-        element.click();
-        element.keys(['ArrowRight', 'ArrowRight', 'Backspace', 'Backspace']);
-        element.setValue(13);
-        element.keys(['Enter']);
+        await element.click();
+        await element.keys([
+            'ArrowRight',
+            'ArrowRight',
+            'Backspace',
+            'Backspace',
+        ]);
+        await element.setValue(13);
+        await element.keys(['Enter']);
 
         // Wait for everything to settle
         await waitForNetworkQuiet();

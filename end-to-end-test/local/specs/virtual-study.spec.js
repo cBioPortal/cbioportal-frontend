@@ -58,11 +58,11 @@ describe('Virtual Study life cycle', function() {
     });
     it('Publish the VS', async function() {
         const result = await browser.executeAsync(
-            async function(cbioUrl, vsId, key, done) {
+            function(cbioUrl, vsId, key, done) {
                 const url = cbioUrl + '/api/public_virtual_studies/' + vsId;
                 const headers = new Headers();
                 headers.append('X-PUBLISHER-API-KEY', key);
-                await fetch(url, {
+                fetch(url, {
                     method: 'POST',
                     headers: headers,
                 })
