@@ -93,10 +93,10 @@ describe('Virtual Study life cycle', function() {
     });
     it('Re-publish the VS specifying PubMed ID and type of cancer', async function() {
         const result = await browser.executeAsync(
-            async function(cbioUrl, vsId, key, done) {
+            function(cbioUrl, vsId, key, done) {
                 const headers = new Headers();
                 headers.append('X-PUBLISHER-API-KEY', key);
-                await fetch(
+                fetch(
                     cbioUrl +
                         '/api/public_virtual_studies/' +
                         vsId +
@@ -136,10 +136,10 @@ describe('Virtual Study life cycle', function() {
     });
     it('Un-publish the VS', async function() {
         const result = await browser.executeAsync(
-            async function(cbioUrl, vsId, key, done) {
+            function(cbioUrl, vsId, key, done) {
                 const headers = new Headers();
                 headers.append('X-PUBLISHER-API-KEY', key);
-                await fetch(cbioUrl + '/api/public_virtual_studies/' + vsId, {
+                fetch(cbioUrl + '/api/public_virtual_studies/' + vsId, {
                     method: 'DELETE',
                     headers: headers,
                 })

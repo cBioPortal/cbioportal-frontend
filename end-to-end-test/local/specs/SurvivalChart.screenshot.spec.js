@@ -30,6 +30,7 @@ describe('Screenshot test for extend survival chart (feature flag)', function() 
     it('Survival chart with landmark event at time point 20', async () => {
         await setCheckboxChecked(true, 'input[data-test=landmarkLines]');
         await setInputText('input[data-test=landmarkValues]', '20');
+        await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
         const res = await browser.checkElement('div[data-test=SurvivalChart]');
         assertScreenShotMatch(res);
     });
