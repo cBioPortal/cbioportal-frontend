@@ -11,11 +11,11 @@ async function waitForStudyQueryPage(timeout) {
 
 async function waitForGeneQueryPage(timeout) {
     // wait until fade effect on studyList has finished (if running in forkedMode)
-    await $('[data-test=studyList]').waitForExist({
+    await (await $('[data-test=studyList]')).waitForExist({
         timeout: timeout,
         reverse: true,
     });
-    await $('div[data-test="molecularProfileSelector"]').waitForExist({
+    await (await $('div[data-test="molecularProfileSelector"]')).waitForExist({
         timeout: timeout || 10000,
     });
 }
@@ -174,12 +174,11 @@ async function setOncoprintMutationsMenuOpen(open) {
 }
 
 async function setCheckboxChecked(checked, selector, failure_message) {
-    const checkbox_elt = await $(selector);
     await browser.waitUntil(
         async () => {
-            if (await checkbox_elt.isDisplayed()) {
-                await checkbox_elt.click();
-                return checked === (await checkbox_elt.isSelected());
+            if (await $(selector).isDisplayed()) {
+                await $(selector).click();
+                return checked === (await $(selector).isSelected());
             } else {
                 return false;
             }
