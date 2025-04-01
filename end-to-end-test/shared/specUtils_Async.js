@@ -9,13 +9,13 @@ async function waitForStudyQueryPage(timeout) {
     });
 }
 
-function waitForGeneQueryPage(timeout) {
+async function waitForGeneQueryPage(timeout) {
     // wait until fade effect on studyList has finished (if running in forkedMode)
-    $('[data-test=studyList]').waitForExist({
+    await $('[data-test=studyList]').waitForExist({
         timeout: timeout,
         reverse: true,
     });
-    $('div[data-test="molecularProfileSelector"]').waitForExist({
+    await $('div[data-test="molecularProfileSelector"]').waitForExist({
         timeout: timeout || 10000,
     });
 }
@@ -68,8 +68,10 @@ async function waitForOncoprint(timeout = 100000) {
     await browser.pause(500);
 }
 
-function waitForComparisonTab() {
-    $('[data-test=GroupComparisonAlterationEnrichments]').waitForDisplayed();
+async function waitForComparisonTab() {
+    await $(
+        '[data-test=GroupComparisonAlterationEnrichments]'
+    ).waitForDisplayed();
 }
 
 async function getTextInOncoprintLegend() {
@@ -296,18 +298,6 @@ async function setServerConfiguration(props) {
     );
 }
 
-function setServerConfiguration(props) {
-    browser.execute(
-        function(frontendConf) {
-            this.localStorage.setItem(
-                'frontendConfig',
-                JSON.stringify(frontendConf)
-            );
-        },
-        { serverConfig: props }
-    );
-}
-
 async function waitForElementDisplayed(selector, options = {}) {
     const element = await getElement(selector, options);
     await element.waitForDisplayed({
@@ -318,8 +308,8 @@ async function waitForElementDisplayed(selector, options = {}) {
     return element;
 }
 
-function sessionServiceIsEnabled() {
-    return browser.execute(function() {
+async function sessionServiceIsEnabled() {
+    return await browser.execute(function() {
         return window.getServerConfig().sessionServiceEnabled;
     }).value;
 }
@@ -527,8 +517,8 @@ async function jsApiClick(selector) {
     }, selector);
 }
 
-function executeInBrowser(callback) {
-    return browser.execute(callback);
+async function executeInBrowser(callback) {
+    return await browser.execute(callback);
 }
 
 async function checkElementWithTemporaryClass(

@@ -43,7 +43,10 @@ describe('namespace columns in mutation tables', function() {
                 await (await getElement('[data-test=add-by-type]')).$$(
                     'div*=Zygosity'
                 )
-            ).forEach(checkbox => checkbox.click());
+            ).forEach(async checkbox => {
+                await checkbox.waitForDisplayed();
+                await checkbox.click();
+            });
             await clickElement('button*=Columns');
             assert(await namespaceColumnsAreDisplayed());
         });

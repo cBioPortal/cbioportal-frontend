@@ -317,7 +317,8 @@ describe('gsva feature', function() {
             await setInputText('input.tableSearchInput', 'GO_ACYL');
 
             await browser.waitUntil(
-                async () => (await jq('td span:contains("GO_")')).length < lengthBefore,
+                async () =>
+                    (await jq('td span:contains("GO_")')).length < lengthBefore,
                 {
                     timeout: 10000,
                 }
@@ -666,7 +667,7 @@ describe('gsva feature', function() {
             assert.equal(await jq('td span:contains("GO_")').length, 7);
         });
 
-        it('shows `Enter gene set.` placeholder in table search box when GSVA scores selected in first select box', () => {
+        it('shows `Enter gene set.` placeholder in table search box when GSVA scores selected in first select box', async () => {
             await selectReactSelectOption(
                 await getElement('.coexpression-select-query-profile'),
                 'GSVA scores on oncogenic signatures gene sets (5 samples)'
@@ -693,7 +694,7 @@ const checkTestStudy = async () => {
     ]);
     await checkbox.click();
     await clickQueryByGeneButton();
-    waitForGeneQueryPage();
+    await waitForGeneQueryPage();
 };
 
 const checkGSVAprofile = async () => {
