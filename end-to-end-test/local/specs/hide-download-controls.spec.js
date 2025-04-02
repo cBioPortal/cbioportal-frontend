@@ -392,11 +392,9 @@ describe('hide download controls feature', function() {
                 });
                 describe('mutational signature tab', () => {
                     it('global check for icon and occurrence of "Download" as a word', async () => {
-                        await (
-                            await clickElement(
-                                '.tabAnchor_generic_assay_mutational_signature'
-                            )
-                        ).click();
+                        await clickElement(
+                            '.tabAnchor_generic_assay_mutational_signature'
+                        );
                         await (
                             await getElement(
                                 '[data-test=GroupComparisonGenericAssayEnrichments] tbody tr b'

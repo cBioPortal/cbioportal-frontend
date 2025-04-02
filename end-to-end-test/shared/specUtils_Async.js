@@ -69,8 +69,8 @@ async function waitForOncoprint(timeout = 100000) {
 }
 
 async function waitForComparisonTab() {
-    await $(
-        '[data-test=GroupComparisonAlterationEnrichments]'
+    await (
+        await $('[data-test=GroupComparisonAlterationEnrichments]')
     ).waitForDisplayed();
 }
 
