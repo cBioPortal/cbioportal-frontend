@@ -39,16 +39,13 @@ describe('namespace columns in mutation tables', function() {
                 ])
             ).waitForDisplayed();
             // Click namespace column checkboxes.
-            await Promise.all(
-                (
-                    await (await getElement('[data-test=add-by-type]')).$$(
-                        'div*=Zygosity'
-                    )
-                ).map(async checkbox => {
-                    await checkbox.waitForDisplayed();
-                    await checkbox.click();
-                })
-            );
+            const checkboxes = await (
+                await getElement('[data-test=add-by-type]')
+            ).$$('div*=Zygosity');
+            for (const checkbox of checkboxes) {
+                await checkbox.waitForDisplayed();
+                await checkbox.click();
+            }
             await clickElement('button*=Columns');
             assert(await namespaceColumnsAreDisplayed());
         });
