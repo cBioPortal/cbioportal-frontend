@@ -177,7 +177,7 @@ describe('gsva feature', function() {
             await (await modal.$('[id=filterButton]')).click();
             await waitForModalUpdate();
 
-            assert.equal(await $$('*=GO_').length, 2);
+            assert.equal((await $$('*=GO_')).length, 2);
 
             // reset state
             await (await modal.$('.Select-value-label')).click();
@@ -664,7 +664,7 @@ describe('gsva feature', function() {
                 await getElement('//*[@id="coexpressionTabGeneTabs"]')
             ).waitForExist();
 
-            assert.equal(await jq('td span:contains("GO_")').length, 7);
+            assert.equal((await jq('td span:contains("GO_")')).length, 7);
         });
 
         it('shows `Enter gene set.` placeholder in table search box when GSVA scores selected in first select box', async () => {
