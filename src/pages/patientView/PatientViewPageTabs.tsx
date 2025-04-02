@@ -16,8 +16,6 @@ import ResourcesTab, {
     RESOURCES_TAB_NAME,
 } from 'pages/patientView/resources/ResourcesTab';
 import PathologyReport from 'pages/patientView/pathologyReport/PathologyReport';
-import IFrameLoader from 'shared/components/iframeLoader/IFrameLoader';
-import { getDigitalSlideArchiveIFrameUrl } from 'shared/api/urls';
 import TrialMatchTable from 'pages/patientView/trialMatch/TrialMatchTable';
 import _ from 'lodash';
 import MutationalSignaturesContainer from 'pages/patientView/mutationalSignatures/MutationalSignaturesContainer';
@@ -37,6 +35,7 @@ import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
 import MutationTableWrapper from './mutation/MutationTableWrapper';
 import { PatientViewPageInner } from 'pages/patientView/PatientViewPage';
 import { Else, If } from 'react-if';
+import MinervaViewer from 'shared/components/minerva/MinervaViewer';
 
 export enum PatientViewPageTabs {
     Summary = 'summary',
@@ -600,13 +599,13 @@ export function tabs(
             hide={pageComponent.hideTissueImageTab}
         >
             <div>
-                <IFrameLoader
-                    height={WindowStore.size.height - 220}
-                    url={getDigitalSlideArchiveIFrameUrl(
-                        pageComponent.patientViewPageStore.patientId,
+                <MinervaViewer
+                    patientId={pageComponent.patientViewPageStore.patientId}
+                    cancerTypeId={
                         pageComponent.patientViewPageStore.studyMetaData.result
                             ?.cancerTypeId!
-                    )}
+                    }
+                    containerHeight={WindowStore.size.height - 220}
                 />
             </div>
         </MSKTab>
@@ -622,9 +621,9 @@ export function tabs(
                 unmountOnHide={false}
             >
                 <div>
-                    <IFrameLoader
-                        height={WindowStore.size.height - 220}
+                    <MinervaViewer
                         url={pageComponent.wholeSlideViewerUrl.result!}
+                        containerHeight={WindowStore.size.height - 220}
                     />
                 </div>
             </MSKTab>
