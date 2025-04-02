@@ -15,7 +15,7 @@ describe('Quick Search', () => {
     beforeEach(async () => {
         const url = `${CBIOPORTAL_URL}`;
         await goToUrlAndSetLocalStorage(url);
-        await clickElement('strong=Beta!');
+        await clickElement('a.tabAnchor_quickSearch');
         await (
             await getElement('div=e.g. Lung, EGFR, TCGA-OR-A5J2')
         ).waitForExist();
