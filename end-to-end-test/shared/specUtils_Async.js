@@ -174,11 +174,12 @@ async function setOncoprintMutationsMenuOpen(open) {
 }
 
 async function setCheckboxChecked(checked, selector, failure_message) {
+    const checkbox_elt = await $(selector);
     await browser.waitUntil(
         async () => {
-            if (await $(selector).isDisplayed()) {
-                await $(selector).click();
-                return checked === (await $(selector).isSelected());
+            if (await checkbox_elt.isDisplayed()) {
+                await checkbox_elt.click();
+                return checked === (await checkbox_elt.isSelected());
             } else {
                 return false;
             }
