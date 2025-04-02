@@ -4,7 +4,7 @@ import { TICK_AXIS_HEIGHT } from './TickAxis';
 import { CustomTrackSpecification } from './CustomTrack';
 import { TimelineStore } from './TimelineStore';
 import { useObserver } from 'mobx-react-lite';
-import { EllipsisTextTooltip } from 'cbioportal-frontend-commons';
+import { EllipsisTextTooltip } from './components/EllipsisTextTooltip';
 import { isTrackVisible } from './lib/helpers';
 import LineChartAxis, { LINE_CHART_AXIS_SVG_WIDTH } from './LineChartAxis';
 import ReactDOM from 'react-dom';
