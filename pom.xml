@@ -8,7 +8,7 @@
     <version>0.3.0</version>
     <packaging>jar</packaging>
 
-    <!-- Maven Central Repository -->
+    <!-- Maven Central Requirements -->
     <name>${project.groupId}:${project.artifactId}</name>
     <description>React Frontend of cBioPortal</description>
     <url>https://www.cbioportal.org</url>
@@ -31,19 +31,48 @@
         <developerConnection>scm:git:ssh://github.com:cBioPortal/cbioportal-frontend.git</developerConnection>
         <url>https://github.com/cBioPortal/cbioportal-frontend/tree/master</url>
     </scm>
-    <distributionManagement>
-        <snapshotRepository>
-            <id>ossrh</id>
-            <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
-        </snapshotRepository>
-        <repository>
-            <id>ossrh</id>
-            <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-        </repository>
-    </distributionManagement>
 
-    <!-- GitHub Package Repository -->
+    <!-- Package Repository Settings -->
     <profiles>
+        <!-- Maven Central -->
+        <profile>
+            <id>maven-central</id>
+            <distributionManagement>
+                <snapshotRepository>
+                    <id>ossrh</id>
+                    <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+                </snapshotRepository>
+                <repository>
+                    <id>ossrh</id>
+                    <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+                </repository>
+            </distributionManagement>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>3.1.0</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <gpgArguments>
+                                <arg>--pinentry-mode</arg>
+                                <arg>loopback</arg>
+                            </gpgArguments>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <!-- GitHub Packages -->
         <profile>
             <id>github</id>
             <distributionManagement>
@@ -60,26 +89,6 @@
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-gpg-plugin</artifactId>
-                <version>3.1.0</version>
-                <executions>
-                    <execution>
-                        <id>sign-artifacts</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>sign</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <gpgArguments>
-                        <arg>--pinentry-mode</arg>
-                        <arg>loopback</arg>
-                    </gpgArguments>
-                </configuration>
-            </plugin>
             <plugin>
                 <groupId>com.github.eirslett</groupId>
                 <artifactId>frontend-maven-plugin</artifactId>
