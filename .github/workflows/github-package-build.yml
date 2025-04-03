@@ -37,11 +37,15 @@ jobs:
         if: github.event_name == 'release'
         uses: actions/checkout@v4
 
+      - name: Zip repo
+        run: |
+          tar -czf repo.tar.gz
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: repo
-          path: .
+          name: repo.tar.gz
+          path: repo.tar.gz
 
   github-packages:
     runs-on: ubuntu-latest
@@ -52,7 +56,11 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          name: repo
+          name: repo.tar.gz
+
+      - name: Unzip repo
+        run: |
+          tar -xzf repo.tar.gz
 
       - name: Setup java for GitHub Packages
         uses: actions/setup-java@v4
@@ -80,7 +88,11 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          name: repo
+          name: repo.tar.gz
+
+      - name: Unzip repo
+        run: |
+          tar -xzf repo.tar.gz
 
       - name: Setup java for Maven Central
         uses: actions/setup-java@v4
