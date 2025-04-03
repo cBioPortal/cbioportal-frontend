@@ -8,19 +8,78 @@
     <version>0.3.0</version>
     <packaging>jar</packaging>
 
-    <!-- Github Package Repository -->
+    <!-- Maven Central Repository -->
+    <name>${project.groupId}:${project.artifactId}</name>
+    <description>React Frontend of cBioPortal</description>
+    <url>https://www.cbioportal.org</url>
+    <licenses>
+        <license>
+            <name>GNU AFFERO GENERAL PUBLIC LICENSE v3.0</name>
+            <url>https://www.gnu.org/licenses/agpl-3.0.html</url>
+        </license>
+    </licenses>
+    <developers>
+        <developer>
+            <name>Ino de Brujin</name>
+            <email>debruiji@mskcc.org</email>
+            <organization>Memorial Sloan Kettering Cancer Center</organization>
+            <organizationUrl>https://www.mskcc.org/</organizationUrl>
+        </developer>
+    </developers>
+    <scm>
+        <connection>scm:git:git://github.com/cBioPortal/cbioportal-frontend.git</connection>
+        <developerConnection>scm:git:ssh://github.com:cBioPortal/cbioportal-frontend.git</developerConnection>
+        <url>https://github.com/cBioPortal/cbioportal-frontend/tree/master</url>
+    </scm>
     <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
         <repository>
-            <id>github</id>
-            <url>https://maven.pkg.github.com/cBioPortal/cbioportal-frontend</url>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
+            <id>ossrh</id>
+            <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
         </repository>
     </distributionManagement>
 
+    <!-- GitHub Package Repository -->
+    <profiles>
+        <profile>
+            <id>github</id>
+            <distributionManagement>
+                <repository>
+                    <id>github</id>
+                    <url>https://maven.pkg.github.com/cBioPortal/cbioportal-frontend</url>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
+                </repository>
+            </distributionManagement>
+        </profile>
+    </profiles>
+
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <gpgArguments>
+                        <arg>--pinentry-mode</arg>
+                        <arg>loopback</arg>
+                    </gpgArguments>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>com.github.eirslett</groupId>
                 <artifactId>frontend-maven-plugin</artifactId>
