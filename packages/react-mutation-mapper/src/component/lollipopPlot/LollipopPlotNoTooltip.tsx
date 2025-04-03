@@ -1,3 +1,5 @@
+'use client';
+
 import * as React from 'react';
 import { SyntheticEvent } from 'react';
 import $ from 'jquery';
@@ -38,6 +40,7 @@ export type LollipopPlotNoTooltipProps = LollipopPlotProps & {
     ) => void;
     onMouseLeave?: () => void;
     onBackgroundMouseMove?: () => void;
+    onZoomOrMove?: () => void; // Add this prop for zoom/move events
 };
 
 const DELETE_FOR_DOWNLOAD_CLASS = 'delete-for-download';
@@ -55,7 +58,8 @@ export default class LollipopPlotNoTooltip extends React.Component<
     private sequenceComponents: Sequence[] = [];
 
     private svg: SVGElement | undefined;
-    private shiftPressed: boolean = false;
+    private shiftPressed = false;
+    private zoomBehavior: any; // Store zoom behavior
 
     private lollipopLabelPadding = 20;
     private domainPadding = 5;
@@ -82,6 +86,20 @@ export default class LollipopPlotNoTooltip extends React.Component<
         showYAxis: true,
     };
 
+    public getLollipopComponent(index: string): Lollipop | undefined {
+        return this.lollipopComponents[index];
+    }
+
+    public getAllLollipopComponents(): { [key: string]: Lollipop } {
+        return this.lollipopComponents;
+    }
+
+    public findMirrorLollipop(codon: number): Lollipop | undefined {
+        return Object.values(this.lollipopComponents).find(
+            l => l.props.spec.codon === codon
+        );
+    }
+
     constructor(props: any) {
         super(props);
         makeObservable(this);
@@ -90,6 +108,47 @@ export default class LollipopPlotNoTooltip extends React.Component<
     @autobind
     protected ref(svg: SVGElement) {
         this.svg = svg;
+
+        // Set up zoom behavior after the SVG is rendered
+        if (svg) {
+            this.setupZoom();
+        }
+    }
+
+    // Set up D3 zoom behavior
+    private setupZoom() {
+        if (this.svg) {
+            const d3 = require('d3');
+
+            // Create zoom behavior
+            this.zoomBehavior = d3
+                .zoom()
+                .scaleExtent([0.5, 8]) // Allow zooming from 0.5x to 8x
+                .on('zoom', this.onZoom);
+
+            // Apply zoom behavior to SVG
+            d3.select(this.svg).call(this.zoomBehavior);
+        }
+    }
+
+    @action.bound
+    private onZoom(event: any) {
+        // Apply the zoom transform to the content group
+        if (this.svg) {
+            const d3 = require('d3');
+            const contentGroup = d3
+                .select(this.svg)
+                .select('g.lollipop-content-group');
+
+            if (!contentGroup.empty()) {
+                contentGroup.attr('transform', event.transform);
+
+                // Notify parent component about zoom/move
+                if (this.props.onZoomOrMove) {
+                    this.props.onZoomOrMove();
+                }
+            }
+        }
     }
 
     @action.bound
@@ -118,14 +177,14 @@ export default class LollipopPlotNoTooltip extends React.Component<
     }
 
     @action.bound
-    protected onKeyDown(e: JQueryKeyEventObject) {
+    protected onKeyDown(e: JQuery.KeyDownEvent) {
         if (e.which === 16) {
             this.shiftPressed = true;
         }
     }
 
     @action.bound
-    protected onKeyUp(e: JQueryKeyEventObject) {
+    protected onKeyUp(e: JQuery.KeyUpEvent) {
         if (e.which === 16) {
             this.shiftPressed = false;
         }
@@ -266,7 +325,7 @@ export default class LollipopPlotNoTooltip extends React.Component<
         return (codon / this.props.xMax) * this.props.vizWidth;
     }
 
-    private countToHeight(count: number, yMax: number, zeroHeight: number = 0) {
+    private countToHeight(count: number, yMax: number, zeroHeight = 0) {
         return zeroHeight + Math.min(1, count / yMax) * this.yAxisHeight;
     }
 
@@ -554,7 +613,7 @@ export default class LollipopPlotNoTooltip extends React.Component<
 
         let start = 0;
 
-        let segments = _.map(this.props.domains, (domain: DomainSpec) => {
+        const segments = _.map(this.props.domains, (domain: DomainSpec) => {
             const segment = {
                 start,
                 end: this.codonToX(domain.startCodon), // segment ends at the start of the current domain
@@ -710,7 +769,7 @@ export default class LollipopPlotNoTooltip extends React.Component<
         ticks: Tick[],
         placement?: LollipopPlacement,
         groupName?: string,
-        symbol: string = '#'
+        symbol = '#'
     ) {
         let label;
         if (this.props.yAxisLabelFormatter) {
@@ -862,47 +921,52 @@ export default class LollipopPlotNoTooltip extends React.Component<
                         onClick={this.onBackgroundClick}
                         onMouseMove={this.onBackgroundMouseMove}
                     />
-                    {
-                        // Originally this had tooltips by having separate segments
-                        // with hit zones. We disabled those separate segments with
-                        // tooltips (this.sequenceSegments) and instead just draw
-                        // one rectangle
-                        // this.sequenceSegments
-                    }
-                    <rect
-                        fill="#BABDB6"
-                        x={this.geneX}
-                        y={this.geneY}
-                        height={this.geneHeight}
-                        width={
-                            // the x-axis start from 0, so the rectangle size should be (width + 1)
-                            this.props.vizWidth + 1
+
+                    {/* Wrap all content in a group for zooming */}
+                    <g className="lollipop-content-group">
+                        {
+                            // Originally this had tooltips by having separate segments
+                            // with hit zones. We disabled those separate segments with
+                            // tooltips (this.sequenceSegments) and instead just draw
+                            // one rectangle
+                            // this.sequenceSegments
                         }
-                    />
-                    {this.lollipops}
-                    {this.domains}
-                    {this.xAxisOnTop && this.xAxis(0, LollipopPlacement.TOP)}
-                    {this.xAxisOnBottom &&
-                        this.xAxis(this.xAxisY, LollipopPlacement.BOTTOM)}
-                    {this.props.showYAxis &&
-                        this.yAxis(
-                            this.yAxisY,
-                            this.yMax,
-                            this.yTicks,
-                            LollipopPlacement.TOP,
-                            this.topGroupName,
-                            this.topGroupSymbol
-                        )}
-                    {this.props.showYAxis &&
-                        this.needBottomPlacement &&
-                        this.yAxis(
-                            this.bottomYAxisY,
-                            this.bottomYMax,
-                            this.bottomYTicks,
-                            LollipopPlacement.BOTTOM,
-                            this.bottomGroupName,
-                            this.bottomGroupSymbol
-                        )}
+                        <rect
+                            fill="#BABDB6"
+                            x={this.geneX}
+                            y={this.geneY}
+                            height={this.geneHeight}
+                            width={
+                                // the x-axis start from 0, so the rectangle size should be (width + 1)
+                                this.props.vizWidth + 1
+                            }
+                        />
+                        {this.lollipops}
+                        {this.domains}
+                        {this.xAxisOnTop &&
+                            this.xAxis(0, LollipopPlacement.TOP)}
+                        {this.xAxisOnBottom &&
+                            this.xAxis(this.xAxisY, LollipopPlacement.BOTTOM)}
+                        {this.props.showYAxis &&
+                            this.yAxis(
+                                this.yAxisY,
+                                this.yMax,
+                                this.yTicks,
+                                LollipopPlacement.TOP,
+                                this.topGroupName,
+                                this.topGroupSymbol
+                            )}
+                        {this.props.showYAxis &&
+                            this.needBottomPlacement &&
+                            this.yAxis(
+                                this.bottomYAxisY,
+                                this.bottomYMax,
+                                this.bottomYTicks,
+                                LollipopPlacement.BOTTOM,
+                                this.bottomGroupName,
+                                this.bottomGroupSymbol
+                            )}
+                    </g>
                 </svg>
             </div>
         );

@@ -1,3 +1,5 @@
+'use client';
+
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import { observable, computed, makeObservable, action } from 'mobx';
@@ -45,7 +47,8 @@ export default class LollipopPlot extends React.Component<
     {}
 > {
     @observable private hitZoneConfig: HitZoneConfig = defaultHitzoneConfig();
-    @observable private mirrorVisible: boolean = false; // lollipop and mirror lollipop share tooltip visibility
+    @observable private mirrorVisible = false; // lollipop and mirror lollipop share tooltip visibility
+    @observable private tooltipUpdating = false; // flag to prevent tooltip flicker during updates
 
     private plot: LollipopPlotNoTooltip | undefined;
     private handlers: any;
@@ -59,7 +62,12 @@ export default class LollipopPlot extends React.Component<
 
         makeObservable<
             LollipopPlot,
-            'hitZoneConfig' | 'tooltipVisible' | 'hitZone' | 'mirrorHitZone'
+            | 'hitZoneConfig'
+            | 'tooltipVisible'
+            | 'hitZone'
+            | 'mirrorHitZone'
+            | 'mirrorVisible'
+            | 'tooltipUpdating'
         >(this);
 
         this.handlers = {
@@ -84,8 +92,8 @@ export default class LollipopPlot extends React.Component<
                 onMouseOver?: () => void,
                 onClick?: () => void,
                 onMouseOut?: () => void,
-                cursor: string = 'pointer',
-                tooltipPlacement: string = 'top'
+                cursor = 'pointer',
+                tooltipPlacement = 'top'
             ) => {
                 this.hitZoneConfig = {
                     hitRect,
@@ -110,11 +118,12 @@ export default class LollipopPlot extends React.Component<
                 this.hitZoneConfig.onMouseOut &&
                     this.hitZoneConfig.onMouseOut();
             },
+            onZoomOrMove: this.handleZoomOrMove,
         };
     }
 
     @computed private get tooltipVisible() {
-        return !!this.hitZoneConfig.content;
+        return !!this.hitZoneConfig.content && !this.tooltipUpdating;
     }
 
     @computed private get hitZone() {
@@ -135,6 +144,49 @@ export default class LollipopPlot extends React.Component<
     @action.bound
     private onTooltipVisibleChange(visible: boolean) {
         this.mirrorVisible = visible;
+
+        // When manually hiding the tooltip, also reset hit zone config
+        if (!visible && this.hitZoneConfig.content) {
+            this.hitZoneConfig = defaultHitzoneConfig();
+        }
+    }
+
+    @action.bound
+    private handleZoomOrMove() {
+        if (this.hitZoneConfig.content && this.plot) {
+            this.tooltipUpdating = true;
+
+            setTimeout(() => {
+                // Use the new public methods
+                const lollipopComponent = Object.values(
+                    this.plot!.getAllLollipopComponents()
+                ).find(
+                    component =>
+                        component &&
+                        component.props.spec.tooltip ===
+                            this.hitZoneConfig.content
+                );
+
+                if (lollipopComponent) {
+                    const mirrorLollipopComponent = this.plot!.findMirrorLollipop(
+                        lollipopComponent.props.spec.codon
+                    );
+
+                    this.hitZoneConfig = {
+                        ...this.hitZoneConfig,
+                        hitRect: lollipopComponent.circleHitRect,
+                        mirrorHitRect: mirrorLollipopComponent?.circleHitRect,
+                        tooltipPlacement:
+                            lollipopComponent.circleHitRect.y >
+                            lollipopComponent.props.stickBaseY
+                                ? 'bottom'
+                                : 'top',
+                    };
+                }
+
+                this.tooltipUpdating = false;
+            }, 50);
+        }
     }
 
     public toSVGDOMNode(): Element {
@@ -191,6 +243,7 @@ export default class LollipopPlot extends React.Component<
                     setHitZone={this.handlers.setHitZone}
                     onMouseLeave={this.handlers.onMouseLeave}
                     onBackgroundMouseMove={this.handlers.onBackgroundMouseMove}
+                    onZoomOrMove={this.handlers.onZoomOrMove}
                     {...this.props}
                 />
             </div>

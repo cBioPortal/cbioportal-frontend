@@ -3,4 +3,3 @@ declare const styles: {
   readonly "removeFilterButton": string;
 };
 export = styles;
-
