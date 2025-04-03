@@ -22,10 +22,11 @@ env:
   MAVEN_SERVER: 'ossrh'
 
 jobs:
-  checkout:
+  github-packages:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      packages: write
     steps:
       - name: Checkout repository (manual trigger)
         if: github.event_name == 'workflow_dispatch'
@@ -36,31 +37,6 @@ jobs:
       - name: Checkout repository (automatic trigger)
         if: github.event_name == 'release'
         uses: actions/checkout@v4
-
-      - name: Zip repo
-        run: |
-          tar -czf repo.tar.gz .
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: repo
-          path: repo.tar.gz
-
-  github-packages:
-    runs-on: ubuntu-latest
-    needs: checkout
-    permissions:
-      packages: write
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: repo
-
-      - name: Unzip repo
-        run: |
-          tar -xzf repo.tar.gz
 
       - name: Setup java for GitHub Packages
         uses: actions/setup-java@v4
@@ -83,16 +59,18 @@ jobs:
 
   maven-central:
     runs-on: ubuntu-latest
-    needs: checkout
+    permissions:
+      contents: read
     steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
+      - name: Checkout repository (manual trigger)
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/checkout@v4
         with:
-          name: repo
+          ref: ${{ inputs.source_ref }}
 
-      - name: Unzip repo
-        run: |
-          tar -xzf repo.tar.gz
+      - name: Checkout repository (automatic trigger)
+        if: github.event_name == 'release'
+        uses: actions/checkout@v4
 
       - name: Setup java for Maven Central
         uses: actions/setup-java@v4
