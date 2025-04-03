@@ -254,9 +254,13 @@ async function openGeneSelectorMenu() {
 }
 
 async function checkClinicalTabPlot() {
-    return browser.checkElement('div[data-test="ClinicalTabPlotDiv"]', '', {
-        hide: ['.qtip'],
-    });
+    return await browser.checkElement(
+        'div[data-test="ClinicalTabPlotDiv"]',
+        '',
+        {
+            hide: ['.qtip'],
+        }
+    );
 }
 
 async function selectClinicalTabNumericalDisplayType(type) {
@@ -269,10 +273,4 @@ async function selectClinicalTabNumericalDisplayType(type) {
     await clickElement(
         `[data-test="numericalVisualisationTypeSelector"] .Select-option[aria-label="${type}"]`
     );
-}
-
-async function checkClinicalTabPlot() {
-    return browser.checkElement('div[data-test="ClinicalTabPlotDiv"]', '', {
-        hide: ['.qtip'],
-    });
 }

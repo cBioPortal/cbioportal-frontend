@@ -74,6 +74,7 @@ describe('Patient View Genomic Evolution tab screenshot tests', () => {
 
     it('pvge switch to sequential mode', async () => {
         await setCheckboxChecked(true, 'input[data-test="VAFSequentialMode"]');
+        await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
         const res = await browser.checkElement('[data-test=VAFChartWrapper]');
         assertScreenShotMatch(res);
     });
