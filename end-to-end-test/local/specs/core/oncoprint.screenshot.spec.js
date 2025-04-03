@@ -209,7 +209,7 @@ describe('oncoprint', function() {
         });
     });
 
-    describe.only('oql structural variant tracks', async () => {
+    describe('oql structural variant tracks', async () => {
         beforeEach(async () => {
             // Build Struct Var OQL and place in the URL.
             const oql =

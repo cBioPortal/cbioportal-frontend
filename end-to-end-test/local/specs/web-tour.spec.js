@@ -1,6 +1,6 @@
-const { goToUrlAndSetLocalStorage } = require('../../shared/specUtils');
 const assert = require('assert');
 const {
+    goToUrlAndSetLocalStorage,
     getElement,
     waitForElementDisplayed,
     clickElement,
