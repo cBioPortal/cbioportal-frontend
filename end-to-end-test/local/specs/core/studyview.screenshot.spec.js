@@ -159,12 +159,17 @@ describe('study view x vs y charts', function() {
         // remove mutation count vs diagnosis age chart if it exists
         if (await (await getElement(X_VS_Y_CHART)).isExisting()) {
             await jsApiHover(X_VS_Y_CHART);
-            await await getNestedElement([
-                X_VS_Y_CHART,
-                '[data-test="deleteChart"]',
-            ]).waitForDisplayed();
             await (
-                await getElement([X_VS_Y_CHART, '[data-test="deleteChart"]'])
+                await getNestedElement([
+                    X_VS_Y_CHART,
+                    '[data-test="deleteChart"]',
+                ])
+            ).waitForDisplayed();
+            await (
+                await getNestedElement([
+                    X_VS_Y_CHART,
+                    '[data-test="deleteChart"]',
+                ])
             ).click();
             await browser.waitUntil(async () => {
                 return !(await (await getElement(X_VS_Y_CHART)).isExisting());
@@ -256,6 +261,20 @@ describe('study view x vs y charts', function() {
         await (await getElement('body')).moveTo();
         const res = await checkElementWithMouseDisabled(X_VS_Y_CHART);
         assertScreenShotMatch(res);
+    });
+    after(async () => {
+        // reset charts to reset layout and remove mutation count vs diagnosis age chart
+        await setDropdownOpen(true, ADD_CHART_BUTTON, 'button=Reset charts');
+        await clickElement('button=Reset charts');
+        await (
+            await getNestedElement(['.modal-content', 'button=Confirm'])
+        ).waitForDisplayed();
+        await (
+            await getNestedElement(['.modal-content', 'button=Confirm'])
+        ).click();
+        // wait for session to save
+        await browser.pause(4000);
+        await waitForNetworkQuiet();
     });
 });
 
