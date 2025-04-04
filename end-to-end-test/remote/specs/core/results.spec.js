@@ -4,8 +4,6 @@ const assert = require('assert');
 const {
     waitForOncoprint,
     goToUrlAndSetLocalStorage,
-} = require('../../../shared/specUtils');
-const {
     isSelected,
     clickElement,
     getElement,

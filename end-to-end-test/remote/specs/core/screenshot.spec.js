@@ -368,7 +368,7 @@ describe('enrichments tab screenshot tests', function() {
 describe('result page tabs, loading from session id', function() {
     before(async function() {
         // only run these tests if session service is enabled
-        if (sessionServiceIsEnabled() === false) {
+        if ((await sessionServiceIsEnabled()) === false) {
             this.skip();
         }
 

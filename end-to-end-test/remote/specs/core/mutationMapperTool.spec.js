@@ -230,7 +230,7 @@ describe('Mutation Mapper Tool', function() {
                 await getElement('.//*[text()[contains(.,"NM_005228")]]')
             ).waitForExist();
             // click on dropbox
-            await await clickElement('.//*[text()[contains(.,"NM_005228")]]');
+            await clickElement('.//*[text()[contains(.,"NM_005228")]]');
 
             // check if all 8 transcripts are listed (already know the one above
             // is listed, since we clicked on it)
