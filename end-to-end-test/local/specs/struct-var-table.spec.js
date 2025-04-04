@@ -64,7 +64,7 @@ describe('study view structural variant table', function() {
         await getElement(structVarNameCell, {
             waitForExist: true,
         });
-        const gene1Cell = getNestedElement(structVarNameCell, 1);
+        const gene1Cell = getNthElements(structVarNameCell, 1);
         await movePointerWithRetry(
             gene1Cell,
             async () => await waitForElementDisplayed(uncheckedSvIcon)
