@@ -603,9 +603,7 @@ export function tabs(
                 <IFrameLoader
                     height={WindowStore.size.height - 220}
                     url={getDigitalSlideArchiveIFrameUrl(
-                        pageComponent.patientViewPageStore.patientId,
-                        pageComponent.patientViewPageStore.studyMetaData.result
-                            ?.cancerTypeId!
+                        pageComponent.patientViewPageStore.patientId
                     )}
                 />
             </div>

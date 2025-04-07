@@ -310,13 +310,12 @@ export function getG2SApiUrl() {
 export function getDigitalSlideArchiveMetaUrl(patientId: string) {
     return getServerConfig().digital_slide_archive_meta_url + patientId;
 }
-export function getDigitalSlideArchiveIFrameUrl(
-    patientId: string,
-    cancerTypeId: string
-) {
+export function getDigitalSlideArchiveIFrameUrl(patientId: string) {
+    //format:
+    //https://cancer.digitalslidearchive.org/#!/CDSA/caseName/TCGA-02-0006
     return (
         getServerConfig().digital_slide_archive_iframe_url +
-        `#!/CDSA/${cancerTypeId}/${patientId}`
+        `#!/CDSA/byPatientID/${patientId}`
     );
 }
 
