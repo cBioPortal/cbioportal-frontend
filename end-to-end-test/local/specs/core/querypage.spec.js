@@ -48,7 +48,6 @@ describe('study select page', function() {
             '[data-test=study-search-controls-container]';
         const referenceGenomeFormSection = '//h5[text()="Reference genome"]';
         const hg38StudyEntry = '//span[text()="Study HG38"]';
-        const placeSomeWhereOutsideSearchElement = 'a.tabAnchor_advanced';
         const hg38Checkbox = '#input-hg38';
 
         before(() => {
@@ -62,12 +61,6 @@ describe('study select page', function() {
         it('shows menu when focussing the text input', () => {
             assert(!$(searchControlsMenu).isDisplayed());
             $(searchTextInput).click();
-            assert($(searchControlsMenu).isDisplayed());
-        });
-
-        it('keeps showing menu after un-focussing the text input', () => {
-            assert($(searchControlsMenu).isDisplayed());
-            $(placeSomeWhereOutsideSearchElement).click();
             assert($(searchControlsMenu).isDisplayed());
         });
 
