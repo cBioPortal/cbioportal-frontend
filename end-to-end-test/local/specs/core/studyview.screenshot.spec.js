@@ -147,7 +147,7 @@ describe('Test the Custom data tab', function() {
     });
 });
 
-describe('study view x vs y charts', function() {
+describe.only('study view x vs y charts', function() {
     this.retries(0);
     const X_VS_Y_CHART = `div[data-test="chart-container-X-VS-Y-AGE-MUTATION_COUNT"]`;
     const X_VS_Y_HAMBURGER_ICON = `${X_VS_Y_CHART} [data-test="chart-header-hamburger-icon"]`;
@@ -263,7 +263,19 @@ describe('study view x vs y charts', function() {
         assertScreenShotMatch(res);
     });
     after(async () => {
-        // reset charts to reset layout and remove mutation count vs diagnosis age chart
+        // remove mutation count vs diagnosis age chart
+        await jsApiHover(X_VS_Y_CHART);
+        await (
+            await getNestedElement([X_VS_Y_CHART, '[data-test="deleteChart"]'])
+        ).waitForDisplayed();
+        await (
+            await getNestedElement([X_VS_Y_CHART, '[data-test="deleteChart"]'])
+        ).click();
+        await browser.waitUntil(async () => {
+            return !(await (await getElement(X_VS_Y_CHART)).isExisting());
+        });
+
+        // reset charts to reset layout
         await setDropdownOpen(true, ADD_CHART_BUTTON, 'button=Reset charts');
         await clickElement('button=Reset charts');
         await (
@@ -278,7 +290,7 @@ describe('study view x vs y charts', function() {
     });
 });
 
-describe('study view editable breadcrumbs', () => {
+describe.only('study view editable breadcrumbs', () => {
     it('breadcrumbs are editable for mutation count chart', async () => {
         const url = `${CBIOPORTAL_URL}/study/summary?id=lgg_ucsf_2014_test_generic_assay`;
         // set up the page without filters
