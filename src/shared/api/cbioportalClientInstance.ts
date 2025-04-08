@@ -14,10 +14,11 @@ export function getClient() {
 
 overrideApiRequestForColumnStore(clientColumnStore);
 
-proxyColumnStore(clientColumnStore, 'fetchSamples');
-proxyColumnStore(clientColumnStore, 'getSamplesByKeyword');
-proxyColumnStore(clientColumnStore, 'getSampleInStudy');
-proxyColumnStore(clientColumnStore, 'getAllSamplesInStudy');
-proxyColumnStore(clientColumnStore, 'getAllSamplesOfPatientInStudy');
+// TODO uncomment below after merging https://github.com/cBioPortal/cbioportal/pull/11393
+// proxyColumnStore(clientColumnStore, 'fetchSamples');
+// proxyColumnStore(clientColumnStore, 'getSamplesByKeyword');
+// proxyColumnStore(clientColumnStore, 'getSampleInStudy');
+// proxyColumnStore(clientColumnStore, 'getAllSamplesInStudy');
+// proxyColumnStore(clientColumnStore, 'getAllSamplesOfPatientInStudy');
 
 export default client;
