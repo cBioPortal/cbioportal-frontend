@@ -192,7 +192,6 @@ export default class RightBar extends React.Component<
                 >
                     <iframe
                         frameBorder="0"
-                        height={200}
                         width={300}
                         scrolling="no"
                         src={`${installations_url}?small=1`}
