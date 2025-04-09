@@ -71,11 +71,19 @@ describe('custom driver annotations feature in study view', function() {
                 (await (await getElement(SV_TABLE)).$$(ANY_ROW)).length
             ).toBe(10);
             const alterations = await (
-                await getNestedElement([SV_TABLE, BRAF_ROW_EXCLUDE_UNKNOWN, ALTERATIONS_TOTAL])
+                await getNestedElement([
+                    SV_TABLE,
+                    BRAF_ROW_EXCLUDE_UNKNOWN,
+                    ALTERATIONS_TOTAL,
+                ])
             ).getText();
             expect(alterations).toBe('1');
             const brafCases = await (
-                await getNestedElement([SV_TABLE, BRAF_ROW_EXCLUDE_UNKNOWN, ALTERATION_CASES])
+                await getNestedElement([
+                    SV_TABLE,
+                    BRAF_ROW_EXCLUDE_UNKNOWN,
+                    ALTERATION_CASES,
+                ])
             ).getText();
             expect(brafCases).toBe('1');
         });
