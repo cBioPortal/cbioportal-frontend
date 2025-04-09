@@ -147,7 +147,7 @@ describe('Test the Custom data tab', function() {
     });
 });
 
-describe.only('study view x vs y charts', function() {
+describe('study view x vs y charts', function() {
     this.retries(0);
     const X_VS_Y_CHART = `div[data-test="chart-container-X-VS-Y-AGE-MUTATION_COUNT"]`;
     const X_VS_Y_HAMBURGER_ICON = `${X_VS_Y_CHART} [data-test="chart-header-hamburger-icon"]`;
@@ -290,7 +290,7 @@ describe.only('study view x vs y charts', function() {
     });
 });
 
-describe.only('study view editable breadcrumbs', () => {
+describe('study view editable breadcrumbs', () => {
     it('breadcrumbs are editable for mutation count chart', async () => {
         const url = `${CBIOPORTAL_URL}/study/summary?id=lgg_ucsf_2014_test_generic_assay`;
         // set up the page without filters
