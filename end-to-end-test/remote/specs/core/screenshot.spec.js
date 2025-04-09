@@ -8,7 +8,6 @@ const {
     getElement,
     COEXPRESSION_TIMEOUT,
     clickElement,
-    getElementByTestHandle,
     waitForElementDisplayed,
 } = require('../../../shared/specUtils_Async');
 
@@ -23,7 +22,7 @@ async function waitForAndCheckPlotsTab() {
     const res = await browser.checkElement(
         'div[data-test="PlotsTabEntireDiv"]'
     );
-    await assertScreenShotMatch(res);
+    assertScreenShotMatch(res);
 }
 
 function runResultsTestSuite(prefix, options = {}) {
