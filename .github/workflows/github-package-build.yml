@@ -14,7 +14,7 @@ on:
         description: "Update backend pom.xml with the above tag"
         type: boolean
         required: false
-        default: 'false'
+        default: false
 
 env:
   JAVA_VERSION: '21'
@@ -48,9 +48,6 @@ jobs:
           gpg-private-key: ${{ secrets.MAVEN_CENTRAL_GPG_KEY }}
           gpg-passphrase: MAVEN_GPG_PASSPHRASE
 
-      - name: Test settings file
-        run: |
-          cat /home/runner/.m2/settings.xml
       - name: Set maven version from source ref (manual trigger)
         if: github.event_name == 'workflow_dispatch'
         run: mvn versions:set -DnewVersion=${{ inputs.source_ref }} -DgenerateBackupPoms=false
@@ -69,10 +66,9 @@ jobs:
   update-backend:
     runs-on: ubuntu-latest
     needs: [maven-central]
-    if: inputs.update_backend == 'true'
+    if: inputs.update_backend == 'true' || github.event_name == 'release'
     steps:
       - name: Set up SSH
-        if: github.event_name == 'release'
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.BACKEND_REPO_TOKEN }}" > ~/.ssh/id_ed25519
@@ -80,20 +76,24 @@ jobs:
           ssh-keyscan github.com >> ~/.ssh/known_hosts
 
       - name: Set up git
-        if: github.event_name == 'release'
         run: |
           git config --global user.name 'github-actions'
           git config --global user.email 'github-actions@github.com'
 
       - name: Checkout cbioportal/cbioportal
-        if: github.event_name == 'release'
         run: |
           git clone git@github.com:cBioPortal/cbioportal.git
 
       - name: Update backend pom with new frontend version
-        if: github.event_name == 'release'
         run: |
-          TAG=${{ github.event.release.tag_name }}
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            TAG=${{ inputs.source_ref }}
+          elif [ "${{ github.event_name }}" == "release" ]; then
+            TAG=${{ github.event.release.tag_name }}
+          else
+            echo "Action triggered through a invalid event!";
+            exit 1
+          fi
           cd cbioportal
           sed -i "s|<version>\(.*\)-SNAPSHOT</version>|<version>$TAG</version>|" pom.xml
           sed -i "s|<frontend.version>.*</frontend.version>|<frontend.version>$TAG</frontend.version>|" pom.xml
