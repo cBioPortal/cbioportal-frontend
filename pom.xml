@@ -3,21 +3,37 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.github.cbioportal</groupId>
+    <groupId>io.github.cbioportal</groupId>
     <artifactId>frontend-cbioportal</artifactId>
     <version>0.3.0</version>
     <packaging>jar</packaging>
 
-    <!-- Github Package Repository -->
-    <distributionManagement>
-        <repository>
-            <id>github</id>
-            <url>https://maven.pkg.github.com/cBioPortal/cbioportal-frontend</url>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-    </distributionManagement>
+    <!-- Maven Central Requirements -->
+    <name>${project.groupId}:${project.artifactId}</name>
+    <description>React Frontend of cBioPortal</description>
+    <url>https://www.cbioportal.org</url>
+    <properties>
+        <mavenCentralDeploymentName>Deployment</mavenCentralDeploymentName>
+    </properties>
+    <licenses>
+        <license>
+            <name>GNU AFFERO GENERAL PUBLIC LICENSE v3.0</name>
+            <url>https://www.gnu.org/licenses/agpl-3.0.html</url>
+        </license>
+    </licenses>
+    <developers>
+        <developer>
+            <name>Zain Nasir</name>
+            <email>nasirz1@mskcc.org</email>
+            <organization>Memorial Sloan Kettering Cancer Center</organization>
+            <organizationUrl>https://www.mskcc.org/</organizationUrl>
+        </developer>
+    </developers>
+    <scm>
+        <connection>scm:git:git://github.com/cBioPortal/cbioportal-frontend.git</connection>
+        <developerConnection>scm:git:ssh://github.com:cBioPortal/cbioportal-frontend.git</developerConnection>
+        <url>https://github.com/cBioPortal/cbioportal-frontend/tree/master</url>
+    </scm>
 
     <build>
         <plugins>
@@ -64,6 +80,53 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <!-- Maven Central Plugins -->
+            <plugin>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+                <version>0.7.0</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <publishingServerId>central</publishingServerId>
+                    <autoPublish>true</autoPublish>
+                    <waitUntil>published</waitUntil>
+                    <deploymentName>${mavenCentralDeploymentName}</deploymentName>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.3.0</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <gpgArguments>
+                        <arg>--pinentry-mode</arg>
+                        <arg>loopback</arg>
+                    </gpgArguments>
+                </configuration>
             </plugin>
         </plugins>
 		<resources>
