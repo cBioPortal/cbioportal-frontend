@@ -593,19 +593,11 @@ async function checkElementWithElementHidden(
 }
 
 async function clickQueryByGeneButton() {
-    // TODO: does this really happen ? do we need to wait for it to disappear?
-    // const el = await $('.disabled[data-test="queryByGeneButton"]');
-    // await el.waitForExist({
-    //     reverse: true,
-    //     timeout: 5000
-    // });
-    //const el = await getElementByTestHandle('queryByGeneButton');
-    await clickElement('[data-test=queryByGeneButton]');
-
-    const body = await $('body');
-    await body.scrollIntoView();
-
-    await browser.pause(1000);
+    await (await $('.disabled[data-test=queryByGeneButton]')).waitForExist({
+        reverse: true,
+    });
+    await (await getElementByTestHandle('queryByGeneButton')).click();
+    await (await $('body')).scrollIntoView();
 }
 
 async function clickModifyStudySelectionButton() {
