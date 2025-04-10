@@ -178,17 +178,21 @@ describe('oncoprint', function() {
 
             // Confirm that 'Dont cluster' is bolded, reflecting current unclustered state
             assert.equal(
-                await getCSSProperty(
-                    mrnaElements.dropdown_selector + ' li:nth-child(1)',
-                    'font-weight'
-                ),
+                (
+                    await getCSSProperty(
+                        mrnaElements.dropdown_selector + ' li:nth-child(1)',
+                        'font-weight'
+                    )
+                ).value,
                 FONT_WEIGHT_NORMAL
             );
             assert.equal(
-                await getCSSProperty(
-                    mrnaElements.dropdown_selector + ' li:nth-child(2)',
-                    'font-weight'
-                ),
+                (
+                    await getCSSProperty(
+                        mrnaElements.dropdown_selector + ' li:nth-child(2)',
+                        'font-weight'
+                    )
+                ).value,
                 FONT_WEIGHT_BOLD
             );
 
@@ -210,10 +214,12 @@ describe('oncoprint', function() {
 
             // Confirm that 'Cluster' is bolded, reflecting current clustered state
             assert.equal(
-                await getCSSProperty(
-                    mrnaElements.dropdown_selector + ' li:nth-child(1)',
-                    'font-weight'
-                ),
+                (
+                    await getCSSProperty(
+                        mrnaElements.dropdown_selector + ' li:nth-child(1)',
+                        'font-weight'
+                    )
+                ).value,
                 FONT_WEIGHT_BOLD
             );
 
@@ -224,10 +230,12 @@ describe('oncoprint', function() {
             );
 
             assert.equal(
-                await getCSSProperty(
-                    mrnaElements.dropdown_selector + ' li:nth-child(2)',
-                    'font-weight'
-                ),
+                (
+                    await getCSSProperty(
+                        mrnaElements.dropdown_selector + ' li:nth-child(2)',
+                        'font-weight'
+                    )
+                ).value,
                 FONT_WEIGHT_NORMAL
             );
 
@@ -250,10 +258,12 @@ describe('oncoprint', function() {
             );
             // Confirm that 'Don't cluster' is bolded, reflecting current unclustered state
             assert.equal(
-                await getCSSProperty(
-                    mrnaElements.dropdown_selector + ' li:nth-child(1)',
-                    'font-weight'
-                ),
+                (
+                    await getCSSProperty(
+                        mrnaElements.dropdown_selector + ' li:nth-child(1)',
+                        'font-weight'
+                    )
+                ).value,
                 FONT_WEIGHT_NORMAL
             );
 
@@ -264,10 +274,12 @@ describe('oncoprint', function() {
             );
 
             assert.equal(
-                await getCSSProperty(
-                    mrnaElements.dropdown_selector + ' li:nth-child(2)',
-                    'font-weight'
-                ),
+                (
+                    await getCSSProperty(
+                        mrnaElements.dropdown_selector + ' li:nth-child(2)',
+                        'font-weight'
+                    )
+                ).value,
                 FONT_WEIGHT_BOLD
             );
         });

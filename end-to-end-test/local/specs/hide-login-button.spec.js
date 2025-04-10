@@ -1,16 +1,17 @@
-var assert = require('assert');
-var goToUrlAndSetLocalStorageWithProperty = require('../../shared/specUtils')
-    .goToUrlAndSetLocalStorageWithProperty;
-var useExternalFrontend = require('../../shared/specUtils').useExternalFrontend;
+const assert = require('assert');
+const {
+    goToUrlAndSetLocalStorageWithProperty,
+    getElement,
+} = require('../../shared/specUtils_Async');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 const loggedInButton = '#rightHeaderContent .identity';
 
-describe('hide logged-in button feature', function() {
-    it('does not show logged-in button when portal property set', function() {
-        goToUrlAndSetLocalStorageWithProperty(CBIOPORTAL_URL, true, {
+describe('hide logged-in button feature', () => {
+    it('does not show logged-in button when portal property set', async function() {
+        await goToUrlAndSetLocalStorageWithProperty(CBIOPORTAL_URL, true, {
             skin_hide_logout_button: true,
         });
-        assert(!$(loggedInButton).isExisting());
+        assert(!(await (await getElement(loggedInButton)).isExisting()));
     });
 });

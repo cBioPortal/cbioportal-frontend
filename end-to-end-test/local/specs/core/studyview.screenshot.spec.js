@@ -1,15 +1,17 @@
 const assert = require('assert');
-const assertScreenShotMatch = require('../../../shared/lib/testUtils')
-    .assertScreenShotMatch;
+const { assertScreenShotMatch } = require('../../../shared/lib/testUtils');
 const {
     checkElementWithMouseDisabled,
     goToUrlAndSetLocalStorage,
     waitForNetworkQuiet,
     setDropdownOpen,
     jsApiHover,
-    getElementByTestHandle,
-    jq,
-} = require('../../../shared/specUtils');
+    waitForElementDisplayed,
+    clickElement,
+    getElement,
+    getNestedElement,
+    getCSSProperty,
+} = require('../../../shared/specUtils_Async');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 const ADD_CHART_BUTTON = "[data-test='add-charts-button']";
@@ -26,115 +28,121 @@ const CANCER_GENE_FILTER_ICON = "[data-test='header-filter-icon']";
 const ADD_CUSTOM_CHART_TAB = '.addChartTabs a.tabAnchor.tabAnchor_Custom_Data';
 
 describe('study view generic assay categorical/binary features', function() {
-    it.skip('generic assay pie chart should be added in the summary tab', function() {
+    it.skip('generic assay pie chart should be added in the summary tab', async function() {
         this.retries(0);
 
         const url = `${CBIOPORTAL_URL}/study?id=lgg_ucsf_2014_test_generic_assay`;
-        goToUrlAndSetLocalStorage(url, true);
+        await goToUrlAndSetLocalStorage(url, true);
 
-        $(ADD_CHART_BUTTON).waitForDisplayed({
+        await (await $(ADD_CHART_BUTTON)).waitForDisplayed({
             timeout: WAIT_FOR_VISIBLE_TIMEOUT,
         });
-        $(ADD_CHART_BUTTON).click();
+        await (await $(ADD_CHART_BUTTON)).click();
 
         // Change to GENERIC ASSAY tab
-        $(ADD_CHART_GENERIC_ASSAY_TAB).waitForDisplayed({
+        await (await $(ADD_CHART_GENERIC_ASSAY_TAB)).waitForDisplayed({
             timeout: WAIT_FOR_VISIBLE_TIMEOUT,
         });
         //browser.debug();
-        $(ADD_CHART_GENERIC_ASSAY_TAB).click();
+        await (await $(ADD_CHART_GENERIC_ASSAY_TAB)).click();
 
         // Select category mutational signature profile
-        $(GENERIC_ASSAY_PROFILE_SELECTION).waitForDisplayed({
+        await (await $(GENERIC_ASSAY_PROFILE_SELECTION)).waitForDisplayed({
             timeout: WAIT_FOR_VISIBLE_TIMEOUT,
         });
-        $(GENERIC_ASSAY_PROFILE_SELECTION).click();
+        await (await $(GENERIC_ASSAY_PROFILE_SELECTION)).click();
 
-        $(GENERIC_ASSAY_PROFILE_SELECTION)
-            .$(CATEGORY_MUTATIONAL_SIGNATURE_PROFILE_TEXT)
-            .waitForDisplayed({
-                timeout: WAIT_FOR_VISIBLE_TIMEOUT,
-            });
-        $(GENERIC_ASSAY_PROFILE_SELECTION)
-            .$(CATEGORY_MUTATIONAL_SIGNATURE_PROFILE_TEXT)
-            .click();
+        await (
+            await (await $(GENERIC_ASSAY_PROFILE_SELECTION)).$(
+                CATEGORY_MUTATIONAL_SIGNATURE_PROFILE_TEXT
+            )
+        ).waitForDisplayed({
+            timeout: WAIT_FOR_VISIBLE_TIMEOUT,
+        });
+        await (
+            await (await $(GENERIC_ASSAY_PROFILE_SELECTION)).$(
+                CATEGORY_MUTATIONAL_SIGNATURE_PROFILE_TEXT
+            )
+        ).click();
 
         // wait for generic assay data loading complete
         // and select a option
-        $('div[data-test="GenericAssayEntitySelection"]').waitForExist();
-        $('div[data-test="GenericAssayEntitySelection"] input').setValue(
-            'mutational_signature_category_10'
-        );
+        await (
+            await $('div[data-test="GenericAssayEntitySelection"]')
+        ).waitForExist();
+        await (
+            await $('div[data-test="GenericAssayEntitySelection"] input')
+        ).setValue('mutational_signature_category_10');
 
-        $('div=Select all filtered options (1)').waitForExist();
-        $('div=Select all filtered options (1)').click();
+        await (await $('div=Select all filtered options (1)')).waitForExist();
+        await (await $('div=Select all filtered options (1)')).click();
         // close the dropdown
-        var indicators = $$('div[class$="indicatorContainer"]');
-        indicators[0].click();
-        var selectedOptions = $$('div[class$="multiValue"]');
+        var indicators = await $$('div[class$="indicatorContainer"]');
+        await indicators[0].click();
+        var selectedOptions = await $$('div[class$="multiValue"]');
         assert.equal(selectedOptions.length, 1);
 
         // this needs to be done twice for some reason on circleci
-        $('button=Add Chart').click();
-        $('button=Add Chart').click();
+        await (await $('button=Add Chart')).click();
+        await (await $('button=Add Chart')).click();
         //$('button=Add Chart').click();
         // Wait for chart to be added
-        waitForNetworkQuiet();
+        await waitForNetworkQuiet();
 
         // allow time to render
-        browser.pause(1000);
+        await browser.pause(1000);
 
-        const el = jq(
+        const el = await jq(
             "[data-test*='chart-container-mutational_signature_category_10_mutational']"
         );
-        const att = $(el[0]).getAttribute('data-test');
+        const att = await (await $(el[0])).getAttribute('data-test');
 
-        console.log('AARON');
-        console.log(att);
+        // console.log('AARON');
+        // console.log(att);
 
-        const res = checkElementWithMouseDisabled(`[data-test='${att}']`);
+        const res = await checkElementWithMouseDisabled(`[data-test='${att}']`);
 
         assertScreenShotMatch(res);
     });
 });
 
 describe('Test the Custom data tab', function() {
-    it('Add custom data tab should have numerical and categorical selector', () => {
+    it('Add custom data tab should have numerical and categorical selector', async () => {
         const url = `${CBIOPORTAL_URL}/study?id=lgg_ucsf_2014_test_generic_assay`;
-        goToUrlAndSetLocalStorage(url, true);
-        waitForNetworkQuiet();
+        await goToUrlAndSetLocalStorage(url, true);
+        await waitForNetworkQuiet();
 
-        $(ADD_CHART_BUTTON).waitForDisplayed({
+        await waitForElementDisplayed(ADD_CHART_BUTTON, {
             timeout: WAIT_FOR_VISIBLE_TIMEOUT,
         });
-        $(ADD_CHART_BUTTON).click();
+        await clickElement(ADD_CHART_BUTTON);
 
-        waitForNetworkQuiet();
+        await waitForNetworkQuiet();
         // Change to custom tab
-        $(ADD_CUSTOM_CHART_TAB).waitForDisplayed({
+        await waitForElementDisplayed(ADD_CUSTOM_CHART_TAB, {
             timeout: WAIT_FOR_VISIBLE_TIMEOUT,
         });
-        $(ADD_CUSTOM_CHART_TAB).click();
-        const res = browser.checkElement('div.msk-tab.custom');
+        await clickElement(ADD_CUSTOM_CHART_TAB);
+        const res = await browser.checkElement('div.msk-tab.custom');
         assertScreenShotMatch(res);
     });
-    it('Selecting numerical for custom data should return a bar chart', () => {
+    it('Selecting numerical for custom data should return a bar chart', async () => {
         const url = `${CBIOPORTAL_URL}/study?id=lgg_ucsf_2014_test_generic_assay`;
-        goToUrlAndSetLocalStorage(url, true);
-        waitForNetworkQuiet();
+        await goToUrlAndSetLocalStorage(url, true);
+        await waitForNetworkQuiet();
 
-        $(ADD_CHART_BUTTON).waitForDisplayed({
+        await waitForElementDisplayed(ADD_CHART_BUTTON, {
             timeout: WAIT_FOR_VISIBLE_TIMEOUT,
         });
-        $(ADD_CHART_BUTTON).click();
+        await clickElement(ADD_CHART_BUTTON);
 
-        waitForNetworkQuiet();
+        await waitForNetworkQuiet();
         // Change to custom tab
-        $(ADD_CUSTOM_CHART_TAB).waitForDisplayed({
+        await waitForElementDisplayed(ADD_CUSTOM_CHART_TAB, {
             timeout: WAIT_FOR_VISIBLE_TIMEOUT,
         });
-        $(ADD_CUSTOM_CHART_TAB).click();
-        CUSTOM_CHART_TAB = $('div.msk-tab.custom');
+        await clickElement(ADD_CUSTOM_CHART_TAB);
+        CUSTOM_CHART_TAB = await getElement('div.msk-tab.custom');
         // Add values to the input form
     });
 });
@@ -144,191 +152,257 @@ describe('study view x vs y charts', function() {
     const X_VS_Y_CHART = `div[data-test="chart-container-X-VS-Y-AGE-MUTATION_COUNT"]`;
     const X_VS_Y_HAMBURGER_ICON = `${X_VS_Y_CHART} [data-test="chart-header-hamburger-icon"]`;
     const X_VS_Y_MENU = `${X_VS_Y_CHART} [data-test="chart-header-hamburger-icon-menu"]`;
-    before(() => {
+    before(async () => {
         const url = `${CBIOPORTAL_URL}/study?id=lgg_ucsf_2014_test_generic_assay`;
-        goToUrlAndSetLocalStorage(url, true);
+        await goToUrlAndSetLocalStorage(url, true);
 
         // remove mutation count vs diagnosis age chart if it exists
-        if ($(X_VS_Y_CHART).isExisting()) {
-            jsApiHover(X_VS_Y_CHART);
-            $(X_VS_Y_CHART)
-                .$('[data-test="deleteChart"]')
-                .waitForDisplayed();
-            $(X_VS_Y_CHART)
-                .$('[data-test="deleteChart"]')
-                .click();
-            browser.waitUntil(() => {
-                return !$(X_VS_Y_CHART).isExisting();
+        if (await (await getElement(X_VS_Y_CHART)).isExisting()) {
+            await jsApiHover(X_VS_Y_CHART);
+            await (
+                await getNestedElement([
+                    X_VS_Y_CHART,
+                    '[data-test="deleteChart"]',
+                ])
+            ).waitForDisplayed();
+            await (
+                await getNestedElement([
+                    X_VS_Y_CHART,
+                    '[data-test="deleteChart"]',
+                ])
+            ).click();
+            await browser.waitUntil(async () => {
+                return !(await (await getElement(X_VS_Y_CHART)).isExisting());
             });
         }
     });
-    it('adds mutation count vs diagnosis age chart', () => {
-        $(ADD_CHART_BUTTON).waitForDisplayed({
+    it('adds mutation count vs diagnosis age chart', async () => {
+        await waitForElementDisplayed(ADD_CHART_BUTTON, {
             timeout: WAIT_FOR_VISIBLE_TIMEOUT,
         });
-        $(ADD_CHART_BUTTON).click();
+        await clickElement(ADD_CHART_BUTTON);
 
         // Change to X vs Y tab
-        $(ADD_CHART_X_VS_Y_TAB).waitForDisplayed({
+        await waitForElementDisplayed(ADD_CHART_X_VS_Y_TAB, {
             timeout: WAIT_FOR_VISIBLE_TIMEOUT,
         });
-        $(ADD_CHART_X_VS_Y_TAB).click();
+        await clickElement(ADD_CHART_X_VS_Y_TAB);
 
         // Add Mutation Count vs Diagnosis Age chart
         // X-axis: diagnosis age
-        $('.xvsy-x-axis-selector').waitForDisplayed();
-        $('.xvsy-x-axis-selector').click();
-        $('.xvsy-x-axis-selector')
-            .$('div=Diagnosis Age')
-            .waitForDisplayed();
-        $('.xvsy-x-axis-selector')
-            .$('div=Diagnosis Age')
-            .click();
+        await waitForElementDisplayed('.xvsy-x-axis-selector');
+        await clickElement('.xvsy-x-axis-selector');
+        await (
+            await getNestedElement([
+                '.xvsy-x-axis-selector',
+                'div=Diagnosis Age',
+            ])
+        ).waitForDisplayed();
+        await (
+            await getNestedElement([
+                '.xvsy-x-axis-selector',
+                'div=Diagnosis Age',
+            ])
+        ).click();
 
         // Y-axis: mutation count
-        $('.xvsy-y-axis-selector').waitForDisplayed();
-        $('.xvsy-y-axis-selector').click();
-        $('.xvsy-y-axis-selector')
-            .$('div=Mutation Count')
-            .waitForDisplayed();
-        $('.xvsy-y-axis-selector')
-            .$('div=Mutation Count')
-            .click();
+        await waitForElementDisplayed('.xvsy-y-axis-selector');
+        await clickElement('.xvsy-y-axis-selector');
+        await (
+            await getNestedElement([
+                '.xvsy-y-axis-selector',
+                'div=Mutation Count',
+            ])
+        ).waitForDisplayed();
+        await (
+            await getNestedElement([
+                '.xvsy-y-axis-selector',
+                'div=Mutation Count',
+            ])
+        ).click();
 
         // temporarily allow button to not be enabled
         // TODO: issue # 9226
         try {
             // submit
-            $('button[data-test="x-vs-y-submit-btn"]').waitForEnabled();
-            $('button[data-test="x-vs-y-submit-btn"]').click();
+            await (
+                await getElement('button[data-test="x-vs-y-submit-btn"]')
+            ).waitForEnabled();
+            await clickElement('button[data-test="x-vs-y-submit-btn"]');
         } catch (e) {
             // this should only fail because the submit button isnt enabled because the chart already still exists
         }
 
-        $(X_VS_Y_CHART).waitForExist();
+        await getElement(X_VS_Y_CHART, { waitForExist: true });
 
-        const res = checkElementWithMouseDisabled(X_VS_Y_CHART);
+        const res = await checkElementWithMouseDisabled(X_VS_Y_CHART);
         assertScreenShotMatch(res);
     });
-    it('turns on log scale from dropdown menu', () => {
-        jsApiHover(X_VS_Y_CHART);
-        $(X_VS_Y_HAMBURGER_ICON).waitForDisplayed();
-        jsApiHover(X_VS_Y_HAMBURGER_ICON);
-        $(X_VS_Y_MENU).waitForDisplayed();
-        $(X_VS_Y_MENU)
-            .$('a.logScaleCheckbox')
-            .click();
-        $('body').moveTo();
-        const res = checkElementWithMouseDisabled(X_VS_Y_CHART);
+    it('turns on log scale from dropdown menu', async () => {
+        await jsApiHover(X_VS_Y_CHART);
+        await waitForElementDisplayed(X_VS_Y_HAMBURGER_ICON);
+        await jsApiHover(X_VS_Y_HAMBURGER_ICON);
+        await waitForElementDisplayed(X_VS_Y_MENU);
+        await (
+            await getNestedElement([X_VS_Y_MENU, 'a.logScaleCheckbox'])
+        ).click();
+        await (await getElement('body')).moveTo();
+        const res = await checkElementWithMouseDisabled(X_VS_Y_CHART);
         assertScreenShotMatch(res);
     });
-    it('swaps axis from dropdown menu', () => {
-        jsApiHover(X_VS_Y_CHART);
-        $(X_VS_Y_HAMBURGER_ICON).waitForDisplayed();
-        jsApiHover(X_VS_Y_HAMBURGER_ICON);
-        $(X_VS_Y_MENU).waitForDisplayed();
-        $(X_VS_Y_MENU)
-            .$('[data-test="swapAxes"]')
-            .click();
-        $('body').moveTo();
-        const res = checkElementWithMouseDisabled(X_VS_Y_CHART);
+    it('swaps axis from dropdown menu', async () => {
+        await jsApiHover(X_VS_Y_CHART);
+        await waitForElementDisplayed(X_VS_Y_HAMBURGER_ICON);
+        await jsApiHover(X_VS_Y_HAMBURGER_ICON);
+        await waitForElementDisplayed(X_VS_Y_MENU);
+        await (
+            await getNestedElement([X_VS_Y_MENU, '[data-test="swapAxes"]'])
+        ).click();
+        await (await getElement('body')).moveTo();
+        const res = await checkElementWithMouseDisabled(X_VS_Y_CHART);
         assertScreenShotMatch(res);
+    });
+    after(async () => {
+        // remove mutation count vs diagnosis age chart
+        await jsApiHover(X_VS_Y_CHART);
+        await (
+            await getNestedElement([X_VS_Y_CHART, '[data-test="deleteChart"]'])
+        ).waitForDisplayed();
+        await (
+            await getNestedElement([X_VS_Y_CHART, '[data-test="deleteChart"]'])
+        ).click();
+        await browser.waitUntil(async () => {
+            return !(await (await getElement(X_VS_Y_CHART)).isExisting());
+        });
+
+        // reset charts to reset layout
+        await setDropdownOpen(true, ADD_CHART_BUTTON, 'button=Reset charts');
+        await clickElement('button=Reset charts');
+        await (
+            await getNestedElement(['.modal-content', 'button=Confirm'])
+        ).waitForDisplayed();
+        await (
+            await getNestedElement(['.modal-content', 'button=Confirm'])
+        ).click();
+        // wait for session to save
+        await browser.pause(4000);
+        await waitForNetworkQuiet();
     });
 });
 
 describe('study view editable breadcrumbs', () => {
-    it('breadcrumbs are editable for mutation count chart', () => {
+    it('breadcrumbs are editable for mutation count chart', async () => {
         const url = `${CBIOPORTAL_URL}/study/summary?id=lgg_ucsf_2014_test_generic_assay`;
         // set up the page without filters
-        goToUrlAndSetLocalStorage(url, true);
-        waitForNetworkQuiet();
+        await goToUrlAndSetLocalStorage(url, true);
+        await waitForNetworkQuiet();
         // add filters (this is necessary to do separately because goToUrlAndSetLocalStorage doesn't play nice with hash params
-        browser.url(
+        await browser.url(
             `${url}#filterJson={"clinicalDataFilters":[{"attributeId":"MUTATION_COUNT","values":[{"start":15,"end":20},{"start":20,"end":25},{"start":25,"end":30},{"start":30,"end":35},{"start":35,"end":40},{"start":40,"end":45}]}],"studyIds":["lgg_ucsf_2014_test_generic_assay"],"alterationFilter":{"copyNumberAlterationEventTypes":{"AMP":true,"HOMDEL":true},"mutationEventTypes":{"any":true},"structuralVariants":null,"includeDriver":true,"includeVUS":true,"includeUnknownOncogenicity":true,"includeUnknownTier":true,"includeGermline":true,"includeSomatic":true,"includeUnknownStatus":true,"tiersBooleanMap":{}}}`
         );
-        waitForNetworkQuiet();
-        $('.userSelections').waitForDisplayed();
+        await waitForNetworkQuiet();
+        await waitForElementDisplayed('.userSelections');
 
-        const element = $('.userSelections').$('span=15');
-        element.click();
-        element.keys(['ArrowRight', 'ArrowRight', 'Backspace', 'Backspace']);
-        element.setValue(13);
-        element.keys(['Enter']);
+        const element = await getNestedElement(['.userSelections', 'span=15']);
+        await element.click();
+        await element.keys([
+            'ArrowRight',
+            'ArrowRight',
+            'Backspace',
+            'Backspace',
+        ]);
+        await element.setValue(13);
+        await element.keys(['Enter']);
 
         // Wait for everything to settle
-        waitForNetworkQuiet();
-        browser.pause(1000);
+        await waitForNetworkQuiet();
+        await browser.pause(1000);
 
-        const res = checkElementWithMouseDisabled('#mainColumn');
+        const res = await checkElementWithMouseDisabled('#mainColumn');
         assertScreenShotMatch(res);
     });
-    after(() => {
+    after(async () => {
         // reset charts to reset custom bin
-        setDropdownOpen(true, ADD_CHART_BUTTON, 'button=Reset charts');
-        $('button=Reset charts').click();
-        $('.modal-content')
-            .$('button=Confirm')
-            .waitForDisplayed();
-        $('.modal-content')
-            .$('button=Confirm')
-            .click();
+        await setDropdownOpen(true, ADD_CHART_BUTTON, 'button=Reset charts');
+        await clickElement('button=Reset charts');
+        await (
+            await getNestedElement(['.modal-content', 'button=Confirm'])
+        ).waitForDisplayed();
+        await (
+            await getNestedElement(['.modal-content', 'button=Confirm'])
+        ).click();
         // wait for session to save
-        browser.pause(4000);
-        waitForNetworkQuiet();
+        await browser.pause(4000);
+        await waitForNetworkQuiet();
     });
 });
 
 describe('cancer gene filter', function() {
     this.retries(0);
 
-    it('cancer gene filter should by default be disabled', () => {
+    it('cancer gene filter should by default be disabled', async () => {
         const url = `${CBIOPORTAL_URL}/study/summary?id=lgg_ucsf_2014_test_generic_assay`;
         // set up the page without filters
-        goToUrlAndSetLocalStorage(url, true);
-        $(
-            `${MUTATIONS_GENES_TABLE} [data-test='gene-column-header']`
-        ).waitForDisplayed({ timeout: WAIT_FOR_VISIBLE_TIMEOUT });
+        await goToUrlAndSetLocalStorage(url, true);
+        await waitForElementDisplayed(
+            `${MUTATIONS_GENES_TABLE} [data-test='gene-column-header']`,
+            { timeout: WAIT_FOR_VISIBLE_TIMEOUT }
+        );
         assert.equal(
-            $(
-                `${MUTATIONS_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`
+            await (
+                await getElement(
+                    `${MUTATIONS_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`
+                )
             ).isExisting(),
             true
         );
         assert.equal(
-            $(
-                `${MUTATIONS_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`
-            ).getCSSProperty('color').parsed.hex,
+            (
+                await getCSSProperty(
+                    `${MUTATIONS_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`,
+                    'color'
+                )
+            ).parsed.hex,
             '#bebebe'
         );
     });
 
-    it('cancer gene filter should remove non cancer genes', () => {
-        $(`${MUTATIONS_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`).click();
+    it('cancer gene filter should remove non cancer genes', async () => {
+        await clickElement(
+            `${MUTATIONS_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`
+        );
         assert.equal(
-            $(
-                `${MUTATIONS_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`
-            ).getCSSProperty('color').parsed.hex,
+            (
+                await getCSSProperty(
+                    `${MUTATIONS_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`,
+                    'color'
+                )
+            ).parsed.hex,
             '#000000'
         );
         assertScreenShotMatch(
-            checkElementWithMouseDisabled(MUTATIONS_GENES_TABLE)
+            await checkElementWithMouseDisabled(MUTATIONS_GENES_TABLE)
         );
     });
 
-    it('reset charts button should revert and disable cancer gene filter', () => {
-        $(ADD_CHART_BUTTON).waitForDisplayed({
+    it('reset charts button should revert and disable cancer gene filter', async () => {
+        await waitForElementDisplayed(ADD_CHART_BUTTON, {
             timeout: WAIT_FOR_VISIBLE_TIMEOUT,
         });
 
-        browser.waitUntil(
-            () => {
-                const isOpen = $('button=Reset charts').isExisting()
-                    ? $('button=Reset charts').isDisplayedInViewport()
+        await browser.waitUntil(
+            async () => {
+                const isOpen = (await (
+                    await getElement('button=Reset charts')
+                ).isExisting())
+                    ? await (
+                          await getElement('button=Reset charts')
+                      ).isDisplayedInViewport()
                     : false;
                 if (isOpen) {
                     return true;
                 } else {
-                    $(ADD_CHART_BUTTON).click();
+                    await clickElement(ADD_CHART_BUTTON);
                 }
             },
             {
@@ -337,21 +411,24 @@ describe('cancer gene filter', function() {
             }
         );
 
-        $('button=Reset charts').click();
-        $('.modal-content')
-            .$('button=Confirm')
-            .waitForDisplayed();
-        $('.modal-content')
-            .$('button=Confirm')
-            .click();
+        await clickElement('button=Reset charts');
+        await (
+            await getNestedElement(['.modal-content', 'button=Confirm'])
+        ).waitForDisplayed();
+        await (
+            await getNestedElement(['.modal-content', 'button=Confirm'])
+        ).click();
         assert.equal(
-            $(
-                `${MUTATIONS_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`
-            ).getCSSProperty('color').parsed.hex,
+            (
+                await getCSSProperty(
+                    `${MUTATIONS_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`,
+                    'color'
+                )
+            ).parsed.hex,
             '#bebebe'
         );
         assertScreenShotMatch(
-            checkElementWithMouseDisabled(MUTATIONS_GENES_TABLE)
+            await checkElementWithMouseDisabled(MUTATIONS_GENES_TABLE)
         );
     });
 });

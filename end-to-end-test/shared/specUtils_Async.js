@@ -3,19 +3,19 @@ const assertScreenShotMatch = require('./lib/testUtils').assertScreenShotMatch;
 
 const DEFAULT_TIMEOUT = 5000;
 
-function waitForStudyQueryPage(timeout) {
-    $('div[data-test="cancerTypeListContainer"]').waitForExist({
+async function waitForStudyQueryPage(timeout) {
+    await getElement('div[data-test="cancerTypeListContainer"]', {
         timeout: timeout || 10000,
     });
 }
 
-function waitForGeneQueryPage(timeout) {
+async function waitForGeneQueryPage(timeout) {
     // wait until fade effect on studyList has finished (if running in forkedMode)
-    $('[data-test=studyList]').waitForExist({
+    await (await $('[data-test=studyList]')).waitForExist({
         timeout: timeout,
         reverse: true,
     });
-    $('div[data-test="molecularProfileSelector"]').waitForExist({
+    await (await $('div[data-test="molecularProfileSelector"]')).waitForExist({
         timeout: timeout || 10000,
     });
 }
@@ -39,16 +39,16 @@ async function waitForAndCheckPlotsTab() {
     assertScreenShotMatch(res);
 }
 
-function waitForCoExpressionTab(timeout) {
-    $('#coexpressionTabGeneTabs').waitForExist({ timeout: timeout || 20000 });
+async function waitForCoExpressionTab(timeout) {
+    await getElement('#coexpressionTabGeneTabs', { timeout: timeout || 20000 });
 }
 
-function waitForPatientView(timeout) {
-    $('#patientViewPageTabs').waitForExist({ timeout: timeout || 20000 });
-    $('[data-test=patientview-copynumber-table]').waitForDisplayed({
+async function waitForPatientView(timeout) {
+    await getElement('#patientViewPageTabs', { timeout: timeout || 20000 });
+    await waitForElementDisplayed('[data-test=patientview-copynumber-table]', {
         timeout: timeout || 20000,
     });
-    $('[data-test=patientview-mutation-table]').waitForDisplayed({
+    await waitForElementDisplayed('[data-test=patientview-mutation-table]', {
         timeout: timeout || 20000,
     });
 }
@@ -68,8 +68,10 @@ async function waitForOncoprint(timeout = 100000) {
     await browser.pause(500);
 }
 
-function waitForComparisonTab() {
-    $('[data-test=GroupComparisonAlterationEnrichments]').waitForDisplayed();
+async function waitForComparisonTab() {
+    await (
+        await $('[data-test=GroupComparisonAlterationEnrichments]')
+    ).waitForDisplayed();
 }
 
 async function getTextInOncoprintLegend() {
@@ -126,10 +128,9 @@ async function getColorByTestHandle(testHandle, type = 'color') {
 
 async function getCSSProperty(selector, property) {
     const element = await getElement(selector);
-    const { value } = await element.getCSSProperty(property);
+    const value = await element.getCSSProperty(property);
     return value;
 }
-
 /**
  * @param {string} selector
  * @param {number} index
@@ -172,12 +173,13 @@ async function setOncoprintMutationsMenuOpen(open) {
     );
 }
 
-function setCheckboxChecked(checked, selector, failure_message) {
-    browser.waitUntil(
-        () => {
-            if ($(selector).isDisplayed()) {
-                $(selector).click();
-                return checked === $(selector).isSelected();
+async function setCheckboxChecked(checked, selector, failure_message) {
+    const checkbox_elt = await $(selector);
+    await browser.waitUntil(
+        async () => {
+            if (await checkbox_elt.isDisplayed()) {
+                await checkbox_elt.click();
+                return checked === (await checkbox_elt.isSelected());
             } else {
                 return false;
             }
@@ -270,24 +272,31 @@ async function goToUrlAndSetLocalStorage(url, authenticated = false) {
         await browser.url(`${url}${prefix}${urlparam}=true`);
         console.log('Connecting to: ' + `${url}${prefix}${urlparam}=true`);
     }
-    if (needToLogin) keycloakLogin(10000);
+    if (needToLogin) await keycloakLogin(10000);
     await browser.pause(1000);
 }
 
-const setServerConfiguration = serverConfig => {
-    browser.execute(function(_serverConfig) {
-        this.localStorage.setItem(
-            'frontendConfig',
-            JSON.stringify({ serverConfig: _serverConfig })
-        );
-    }, serverConfig);
+const goToUrlAndSetLocalStorageWithProperty = async (
+    url,
+    authenticated,
+    props
+) => {
+    await goToUrlAndSetLocalStorage(url, authenticated);
+    await setServerConfiguration(props);
+    await goToUrlAndSetLocalStorage(url, authenticated);
 };
 
-const goToUrlAndSetLocalStorageWithProperty = (url, authenticated, props) => {
-    goToUrlAndSetLocalStorage(url, authenticated);
-    setServerConfiguration(props);
-    goToUrlAndSetLocalStorage(url, authenticated);
-};
+async function setServerConfiguration(props) {
+    await browser.execute(
+        function(frontendConf) {
+            this.localStorage.setItem(
+                'frontendConfig',
+                JSON.stringify(frontendConf)
+            );
+        },
+        { serverConfig: props }
+    );
+}
 
 async function waitForElementDisplayed(selector, options = {}) {
     const element = await getElement(selector, options);
@@ -299,14 +308,14 @@ async function waitForElementDisplayed(selector, options = {}) {
     return element;
 }
 
-function sessionServiceIsEnabled() {
-    return browser.execute(function() {
+async function sessionServiceIsEnabled() {
+    return await browser.execute(function() {
         return window.getServerConfig().sessionServiceEnabled;
     }).value;
 }
 
-function showGsva() {
-    setServerConfiguration({ skin_show_gsva: true });
+async function showGsva() {
+    await setServerConfiguration({ skin_show_gsva: true });
 }
 
 async function waitForNumberOfStudyCheckboxes(expectedNumber, text) {
@@ -407,8 +416,8 @@ async function waitForStudyView() {
     );
 }
 
-function waitForGroupComparisonTabOpen(timeout) {
-    $('[data-test=ComparisonPageOverlapTabDiv]').waitForDisplayed({
+async function waitForGroupComparisonTabOpen(timeout) {
+    await waitForElementDisplayed('[data-test=ComparisonPageOverlapTabDiv]', {
         timeout: timeout || 10000,
     });
 }
@@ -434,27 +443,27 @@ async function setInputText(selector, text) {
     await (await $(selector)).setValue(text);
 }
 
-function getReactSelectOptions(parent) {
-    parent.$('.Select-control').click();
-    return parent.$$('.Select-option');
+async function getReactSelectOptions(parent) {
+    await (await parent.$('.Select-control')).click();
+    return await parent.$$('.Select-option');
 }
 
-function selectReactSelectOption(parent, optionText) {
-    reactSelectOption(parent, optionText).click();
+async function selectReactSelectOption(parent, optionText) {
+    await (await reactSelectOption(parent, optionText)).click();
 }
 
 async function reactSelectOption(parent, optionText, loose = false) {
     await setDropdownOpen(
         true,
-        parent.$('.Select-control'),
+        await parent.$('.Select-control'),
         loose
-            ? parent.$('.Select-option*=' + optionText)
-            : parent.$('.Select-option=' + optionText)
+            ? await parent.$('.Select-option*=' + optionText)
+            : await parent.$('.Select-option=' + optionText)
     );
     if (loose) {
-        return parent.$('.Select-option*=' + optionText);
+        return await parent.$('.Select-option*=' + optionText);
     }
-    return parent.$('.Select-option=' + optionText);
+    return await parent.$('.Select-option=' + optionText);
 }
 
 function selectCheckedOption(parent, optionText, loose = false) {
@@ -508,8 +517,8 @@ async function jsApiClick(selector) {
     }, selector);
 }
 
-function executeInBrowser(callback) {
-    return browser.execute(callback);
+async function executeInBrowser(callback) {
+    return await browser.execute(callback);
 }
 
 async function checkElementWithTemporaryClass(
@@ -627,13 +636,13 @@ async function getOncoprintGroupHeaderOptionsElements(trackGroupIndex) {
  * @param {any} data
  * @param {boolean} authenticated
  */
-function postDataToUrl(url, data, authenticated = true) {
-    const currentUrl = browser.getUrl();
+async function postDataToUrl(url, data, authenticated = true) {
+    const currentUrl = await browser.getUrl();
     const needToLogin =
         authenticated && (!currentUrl || !currentUrl.includes('http'));
 
     url = getUrl(url);
-    browser.execute(
+    await browser.execute(
         (/** @type {string} */ url, /** @type {any} */ data) => {
             function formSubmit(url, params) {
                 // method="smart" means submit with GET iff the URL wouldn't be too long
@@ -660,85 +669,95 @@ function postDataToUrl(url, data, authenticated = true) {
         url,
         data
     );
-    if (needToLogin) keycloakLogin(10000);
+    if (needToLogin) await keycloakLogin(10000);
 }
 
-function keycloakLogin(timeout) {
-    browser.waitUntil(() => browser.getUrl().includes('/auth/realms/cbio'), {
-        timeout,
-        timeoutMsg: 'No redirect to Keycloak could be detected.',
-    });
-    $('#username').waitForDisplayed(timeout);
-
-    $('#username').setValue('testuser');
-    $('#password').setValue('P@ssword1');
-    $('#kc-login').click();
-
-    browser.waitUntil(() => !browser.getUrl().includes('/auth/realms/cbio'));
-    $('body').waitForDisplayed(timeout);
-}
-
-function closeOtherTabs() {
-    const studyWindow = browser.getWindowHandle();
-    browser.getWindowHandles().forEach(id => {
-        if (id === studyWindow) {
-            return;
+async function keycloakLogin(timeout) {
+    await browser.waitUntil(
+        async () => (await browser.getUrl()).includes('/auth/realms/cbio'),
+        {
+            timeout,
+            timeoutMsg: 'No redirect to Keycloak could be detected.',
         }
-        console.log('close tab:', id);
-        browser.switchToWindow(id);
-        browser.closeWindow();
-    });
-    browser.switchToWindow(studyWindow);
+    );
+    await isDisplayed('#username');
+
+    await setInputText('#username', 'testuser');
+    await setInputText('#password', 'P@ssword1');
+    await clickElement('#kc-login');
+
+    await browser.waitUntil(
+        async () => !(await browser.getUrl()).includes('/auth/realms/cbio')
+    );
+    await isDisplayed('body', timeout);
 }
 
-function openGroupComparison(studyViewUrl, chartDataTest, timeout) {
-    goToUrlAndSetLocalStorage(studyViewUrl, true);
-    $('[data-test=summary-tab-content]').waitForDisplayed();
-    waitForNetworkQuiet();
+async function closeOtherTabs() {
+    const studyWindow = await browser.getWindowHandle();
+    const windowHandles = await browser.getWindowHandles();
+
+    await Promise.all(
+        windowHandles.map(async id => {
+            if (id !== studyWindow) {
+                console.log('close tab:', id);
+                await browser.switchToWindow(id);
+                await browser.closeWindow();
+            }
+        })
+    );
+
+    await browser.switchToWindow(studyWindow);
+}
+
+async function openGroupComparison(studyViewUrl, chartDataTest, timeout) {
+    await goToUrlAndSetLocalStorage(studyViewUrl, true);
+    await waitForElementDisplayed('[data-test=summary-tab-content]');
+    await waitForNetworkQuiet(20000);
 
     // needed to switch to group comparison tab later on:
-    closeOtherTabs();
+    await closeOtherTabs();
 
     const chart = '[data-test=' + chartDataTest + ']';
-    $(chart).waitForDisplayed({ timeout: timeout || 10000 });
-    jsApiHover(chart);
+    await waitForElementDisplayed(chart, { timeout: timeout || 10000 });
+    await jsApiHover(chart);
 
-    browser.waitUntil(
-        () => {
-            return $(chart + ' .controls').isExisting();
+    await browser.waitUntil(
+        async () => {
+            return await getElement(chart + ' .controls', {
+                waitForExist: true,
+            });
         },
         { timeout: timeout || 10000 }
     );
 
     // move to hamburger icon
     const hamburgerIcon = '[data-test=chart-header-hamburger-icon]';
-    jsApiHover(hamburgerIcon);
+    await jsApiHover(hamburgerIcon);
 
     // wait for the menu available
-    $(hamburgerIcon).waitForDisplayed({ timeout: timeout || 10000 });
+    await waitForElementDisplayed(hamburgerIcon, { timeout: timeout || 10000 });
 
-    // open comparison session
-    const studyViewTabId = browser.getWindowHandle();
+    const studyViewTabId = await browser.getWindowHandle();
 
-    const chartHamburgerIcon = $(chart).$(hamburgerIcon);
-    $(chartHamburgerIcon).waitForDisplayed({ timeout: timeout || 10000 });
+    const chartHamburgerIcon = await getNestedElement([chart, hamburgerIcon]);
+    await chartHamburgerIcon.waitForDisplayed();
 
-    $(chartHamburgerIcon)
-        .$$('li')[1]
-        .click();
+    await (await (await getElement(chartHamburgerIcon)).$$('li'))[1].click();
 
-    browser.waitUntil(() => browser.getWindowHandles().length > 1); // wait until new tab opens
+    await browser.waitUntil(
+        async () => (await browser.getWindowHandles()).length > 1
+    ); // wait until new tab opens
 
-    const groupComparisonTabId = browser
-        .getWindowHandles()
-        .find(id => id !== studyViewTabId);
+    const groupComparisonTabId = (await browser.getWindowHandles()).find(
+        id => id !== studyViewTabId
+    );
 
-    browser.switchToWindow(groupComparisonTabId);
-    waitForGroupComparisonTabOpen(timeout);
+    await browser.switchToWindow(groupComparisonTabId);
+    await waitForGroupComparisonTabOpen(timeout);
 }
 
-function selectElementByText(text) {
-    return $(`//*[text()="${text}"]`);
+async function selectElementByText(text) {
+    return await $(`//*[text()="${text}"]`);
 }
 
 async function jq(selector) {
@@ -748,8 +767,8 @@ async function jq(selector) {
 }
 
 const openAlterationTypeSelectionMenu = async () => {
-    await $(
-        '[data-test=AlterationEnrichmentTypeSelectorButton]'
+    await (
+        await getElement('[data-test=AlterationEnrichmentTypeSelectorButton]')
     ).waitForExist();
     await clickElement('[data-test=AlterationEnrichmentTypeSelectorButton]');
     await (
@@ -793,8 +812,26 @@ async function getElement(selector, options = {}) {
     if (options.timeout) {
         await el.waitForExist(options);
     }
+
+    if (options.waitForExist) {
+        await el.waitForExist();
+    }
+
     return el;
 }
+
+const getNestedElement = async function(selector = [], options = {}) {
+    let currentElement;
+    for (const element of selector) {
+        if (!currentElement) {
+            currentElement = await getElement(element, options);
+        } else {
+            currentElement = await currentElement.$(element);
+        }
+    }
+    return currentElement;
+};
+
 /**
  * @param {string} selector  css selector
  * @param {number} index  index of the element
@@ -883,11 +920,13 @@ module.exports = {
     selectReactSelectOption,
     reactSelectOption,
     getReactSelectOptions,
+    waitForElementDisplayed,
     COEXPRESSION_TIMEOUT: 120000,
     getSelectCheckedOptions,
     selectCheckedOption,
     getOncoprintGroupHeaderOptionsElements,
     showGsva,
+    isDisplayed,
     setSettingsMenuOpen,
     setDropdownOpen,
     postDataToUrl,
@@ -901,6 +940,7 @@ module.exports = {
     strIsNumeric,
     getNthElements,
     getColorByTestHandle,
+    getNestedElement,
     getColorOfNthElement,
     jq,
     setServerConfiguration,

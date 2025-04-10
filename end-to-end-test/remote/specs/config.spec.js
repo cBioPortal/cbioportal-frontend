@@ -1,28 +1,24 @@
 var assert = require('assert');
-var expect = require('chai').expect;
-var waitForOncoprint = require('../../shared/specUtils').waitForOncoprint;
-var goToUrlAndSetLocalStorage = require('../../shared/specUtils')
-    .goToUrlAndSetLocalStorage;
-var executeInBrowser = require('../../shared/specUtils').executeInBrowser;
-var useExternalFrontend = require('../../shared/specUtils').useExternalFrontend;
-var setServerConfiguration = require('../../shared/specUtils')
-    .setServerConfiguration;
+const {
+    goToUrlAndSetLocalStorage,
+    setServerConfiguration,
+} = require('../../shared/specUtils_Async');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
 describe('homepage', function() {
     this.retries(0);
 
-    before(() => {
-        goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
+    before(async () => {
+        await goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
-        browser.execute(function() {
+        await browser.execute(function() {
             this.localStorage.setItem('frontendConfig', '{}');
         });
     });
 
-    afterEach(() => {
-        browser.execute(function() {
+    afterEach(async () => {
+        await browser.execute(function() {
             this.localStorage.setItem(
                 'frontendConfig',
                 JSON.stringify({ serverConfig: {} })
@@ -30,14 +26,14 @@ describe('homepage', function() {
         });
     });
 
-    it('login ui observes authenticationMethod', function() {
-        goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
+    it('login ui observes authenticationMethod', async function() {
+        await goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
-        $('#rightHeaderContent').waitForExist();
+        await (await $('#rightHeaderContent')).waitForExist();
 
-        $('button=Login').isExisting();
+        await (await $('button=Login')).isExisting();
 
-        browser.execute(function() {
+        await browser.execute(function() {
             this.localStorage.setItem(
                 'frontendConfig',
                 JSON.stringify({
@@ -46,36 +42,36 @@ describe('homepage', function() {
             );
         });
 
-        goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
+        await goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
-        $('#rightHeaderContent').waitForExist();
+        await (await $('#rightHeaderContent')).waitForExist();
 
-        assert.equal($('button=Login').isExisting(), false);
+        assert.equal(await (await $('button=Login')).isExisting(), false);
     });
 
-    it('dataset nav observes authenticationMethod', function() {
-        goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
+    it('dataset nav observes authenticationMethod', async function() {
+        await goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
-        $('#rightHeaderContent').waitForExist();
+        await (await $('#rightHeaderContent')).waitForExist();
 
-        $('a=Data Sets').isExisting();
+        await (await $('a=Data Sets')).isExisting();
 
-        setServerConfiguration({ skin_show_data_tab: false });
+        await setServerConfiguration({ skin_show_data_tab: false });
 
-        goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
+        await goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
-        $('#rightHeaderContent').waitForExist();
+        await (await $('#rightHeaderContent')).waitForExist();
 
-        assert.equal($('a=Data Sets').isExisting(), false);
+        assert.equal(await (await $('a=Data Sets')).isExisting(), false);
     });
 
-    it('shows right logo in header bar depending on skin_right_logo', function() {
-        goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
+    it('shows right logo in header bar depending on skin_right_logo', async function() {
+        await goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
-        $('#rightHeaderContent').waitForExist();
+        await (await $('#rightHeaderContent')).waitForExist();
 
-        browser.pause(1000);
-        let doesLogoExist = browser.execute(function() {
+        await browser.pause(1000);
+        let doesLogoExist = await browser.execute(function() {
             return (
                 $("img[src='images/msk_logo_transparent_black.png']").length > 0
             );
@@ -83,25 +79,27 @@ describe('homepage', function() {
 
         assert(!doesLogoExist);
 
-        setServerConfiguration({
+        await setServerConfiguration({
             skin_right_logo: 'msk_logo_transparent_black.png',
         });
 
-        goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
+        await goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
-        $('#rightHeaderContent').waitForExist();
+        await (await $('#rightHeaderContent')).waitForExist();
 
         // this logo now exists
-        $("img[src*='images/msk_logo_transparent_black.png']").waitForExist();
+        await (
+            await $("img[src*='images/msk_logo_transparent_black.png']")
+        ).waitForExist();
     });
 
-    it('shows skin_blurb as configured', function() {
-        setServerConfiguration({
+    it('shows skin_blurb as configured', async function() {
+        await setServerConfiguration({
             skin_blurb: "<div id='blurbDiv'>This is the blurb</div>",
         });
 
-        goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
+        await goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
-        $('#blurbDiv').waitForExist();
+        await (await $('#blurbDiv')).waitForExist();
     });
 });

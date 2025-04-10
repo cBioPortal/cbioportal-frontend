@@ -679,7 +679,7 @@ describe('study view tcga pancancer atlas tests', () => {
         await waitForNetworkQuiet(30000);
     });
     it('tcga pancancer atlas page', async () => {
-        await assertScreenShotMatch(
+        assertScreenShotMatch(
             await checkElementWithMouseDisabled('#mainColumn')
         );
     });

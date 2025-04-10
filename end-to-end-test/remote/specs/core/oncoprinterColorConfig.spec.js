@@ -100,7 +100,7 @@ describe('oncoprinter clinical example data, color configuration', () => {
     it('oncoprinter reflects user selected colors', async () => {
         await clickElement('a.tabAnchor_oncoprint');
         const res = await checkOncoprintElement();
-        await assertScreenShotMatch(res);
+        assertScreenShotMatch(res);
     });
 
     it('oncoprinter reset colors button is visible when default colors not used', async () => {
@@ -145,7 +145,7 @@ describe('oncoprinter clinical example data, color configuration', () => {
         // close modal
         await clickElement('.modal button.close');
         const res = await checkOncoprintElement();
-        await assertScreenShotMatch(res);
+        assertScreenShotMatch(res);
     });
 
     it('oncoprinter reset colors button is hidden when default colors are used', async () => {

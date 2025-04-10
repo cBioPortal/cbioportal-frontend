@@ -1,9 +1,13 @@
-var assert = require('assert');
-var goToUrlAndSetLocalStorage = require('../../shared/specUtils')
-    .goToUrlAndSetLocalStorage;
-var waitForOncoprint = require('../../shared/specUtils').waitForOncoprint;
-var useExternalFrontend = require('../../shared/specUtils').useExternalFrontend;
-var setSettingsMenuOpen = require('../../shared/specUtils').setSettingsMenuOpen;
+const assert = require('assert');
+const {
+    goToUrlAndSetLocalStorage,
+    waitForOncoprint,
+    setSettingsMenuOpen,
+    getElement,
+    isSelected,
+    getNestedElement,
+    clickElement,
+} = require('../../shared/specUtils_Async');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 const oncoprintTabUrl =
@@ -18,164 +22,184 @@ const oncoprintTabUrlStructVar =
     CBIOPORTAL_URL +
     '/results/oncoprint?Action=Submit&cancer_study_list=study_es_0&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&profileFilter=mutations%2Cstructural_variants%2Cgistic&case_set_id=study_es_0_cnaseq&gene_list=TMPRSS2&geneset_list=%20&tab_index=tab_visualize';
 
-describe('custom driver annotations feature in result view', function() {
-    describe('oncoprint tab - mutations', () => {
-        beforeEach(() => {
-            goToUrlAndSetLocalStorage(oncoprintTabUrl, true);
-            waitForOncoprint();
-            setSettingsMenuOpen(true, 'GlobalSettingsButton');
+describe('custom driver annotations feature in result view', () => {
+    describe('oncoprint tab - mutations', async () => {
+        beforeEach(async () => {
+            await goToUrlAndSetLocalStorage(oncoprintTabUrl, true);
+            await waitForOncoprint();
+            await setSettingsMenuOpen(true, 'GlobalSettingsButton');
         });
 
-        it('shows custom driver annotation elements in config menu', () => {
-            var topCheckBox = $('input[data-test=annotateCustomBinary]');
-            assert(topCheckBox.isSelected());
-
-            var tiersCheckboxes = $('span[data-test=annotateCustomTiers]').$$(
-                'input'
-            );
-            assert(tiersCheckboxes[0].isSelected());
-            assert(tiersCheckboxes[1].isSelected());
+        it('shows custom driver annotation elements in config menu', async () => {
+            assert(await isSelected('input[data-test=annotateCustomBinary]'));
+            const tiersCheckboxes = await (
+                await getElement('span[data-test=annotateCustomTiers]')
+            ).$$('input');
+            assert(await tiersCheckboxes[0].isSelected());
+            assert(await tiersCheckboxes[1].isSelected());
         });
 
-        it('allows deselection of Tiers checkboxes', () => {
-            var class1Checkbox = $('label*=Class 1').$('input');
-            class1Checkbox.click();
-            waitForOncoprint();
-            assert(!class1Checkbox.isSelected());
+        it('allows deselection of Tiers checkboxes', async () => {
+            const class1Checkbox = await getNestedElement([
+                'label*=Class 1',
+                'input',
+            ]);
+            await class1Checkbox.click();
+            await waitForOncoprint();
+            assert(!(await class1Checkbox.isSelected()));
 
-            var class2Checkbox = $('label*=Class 2').$('input');
-            class2Checkbox.click();
-            waitForOncoprint();
-            assert(!class2Checkbox.isSelected());
+            const class2Checkbox = await getNestedElement([
+                'label*=Class 2',
+                'input',
+            ]);
+            await class2Checkbox.click();
+            await waitForOncoprint();
+            assert(!(await class2Checkbox.isSelected()));
         });
 
-        it('updates selected samples when VUS alterations are excluded', () => {
+        it('updates selected samples when VUS alterations are excluded', async () => {
             // deselected all checkboxes except Custom driver annotation
-            $('input[data-test=annotateHotspots]').click();
-            $('label*=Class 1')
-                .$('input')
-                .click();
-            $('label*=Class 2')
-                .$('input')
-                .click();
+            await clickElement('input[data-test=annotateHotspots]');
+            await (await getNestedElement(['label*=Class 1', 'input'])).click();
+            await (await getNestedElement(['label*=Class 2', 'input'])).click();
 
-            $('input[data-test=HideVUS]').click();
-            waitForOncoprint();
-            assert($('div.alert-info*=1 mutation').isExisting());
-            $('label*=Class 1')
-                .$('input')
-                .click();
-            waitForOncoprint();
-            assert($('div.alert-info*=1 mutation').isExisting());
+            await clickElement('input[data-test=HideVUS]');
+            await waitForOncoprint();
+            assert(
+                await (
+                    await getElement('div.alert-info*=1 mutation')
+                ).isExisting()
+            );
+            await (await getNestedElement(['label*=Class 1', 'input'])).click();
+            await waitForOncoprint();
+            assert(
+                await (
+                    await getElement('div.alert-info*=1 mutation')
+                ).isExisting()
+            );
 
-            $('label*=Class 2')
-                .$('input')
-                .click();
-            waitForOncoprint();
-            assert(!$('div.alert-info').isExisting());
+            await (await getNestedElement(['label*=Class 2', 'input'])).click();
+            await waitForOncoprint();
+            assert(!(await (await getElement('div.alert-info')).isExisting()));
         });
     });
 
     describe('oncoprint tab - discrete CNA', () => {
-        beforeEach(() => {
-            goToUrlAndSetLocalStorage(oncoprintTabUrlCna, true);
-            waitForOncoprint();
-            setSettingsMenuOpen(true, 'GlobalSettingsButton');
+        beforeEach(async () => {
+            await goToUrlAndSetLocalStorage(oncoprintTabUrlCna, true);
+            await waitForOncoprint();
+            await setSettingsMenuOpen(true, 'GlobalSettingsButton');
         });
 
-        it('shows custom driver annotation elements in config menu', () => {
-            var topCheckBox = $('input[data-test=annotateCustomBinary]');
-            assert(topCheckBox.isSelected());
-
-            var tiersCheckboxes = $('span[data-test=annotateCustomTiers]').$$(
-                'input'
-            );
-            assert(tiersCheckboxes[0].isSelected());
-            assert(tiersCheckboxes[1].isSelected());
+        it('shows custom driver annotation elements in config menu', async () => {
+            assert(await isSelected('input[data-test=annotateCustomBinary]'));
+            const tiersCheckboxes = await (
+                await getElement('span[data-test=annotateCustomTiers]')
+            ).$$('input');
+            assert(await tiersCheckboxes[0].isSelected());
+            assert(await tiersCheckboxes[1].isSelected());
         });
 
-        it('allows deselection of Tiers checkboxes', () => {
-            var class1Checkbox = $('label*=Class 1').$('input');
-            class1Checkbox.click();
-            waitForOncoprint();
-            assert(!class1Checkbox.isSelected());
+        it('allows deselection of Tiers checkboxes', async () => {
+            const class1Checkbox = await getNestedElement([
+                'label*=Class 1',
+                'input',
+            ]);
+            await class1Checkbox.click();
+            await waitForOncoprint();
+            assert(!(await class1Checkbox.isSelected()));
 
-            var class2Checkbox = $('label*=Class 2').$('input');
-            class2Checkbox.click();
-            waitForOncoprint();
-            assert(!class2Checkbox.isSelected());
+            const class2Checkbox = await getNestedElement([
+                'label*=Class 2',
+                'input',
+            ]);
+            await class2Checkbox.click();
+            await waitForOncoprint();
+            assert(!(await class2Checkbox.isSelected()));
         });
 
-        it('updates selected samples when VUS alterations are excluded', () => {
+        it('updates selected samples when VUS alterations are excluded', async () => {
             // deselected all checkboxes except Custom driver annotation
-            $('input[data-test=annotateHotspots]').click();
-            $('label*=Class 1')
-                .$('input')
-                .click();
-            $('label*=Class 2')
-                .$('input')
-                .click();
+            await clickElement('input[data-test=annotateHotspots]');
+            await (await getNestedElement(['label*=Class 1', 'input'])).click();
+            await (await getNestedElement(['label*=Class 2', 'input'])).click();
 
-            $('input[data-test=HideVUS]').click();
-            waitForOncoprint();
+            await clickElement('input[data-test=HideVUS]');
+            await waitForOncoprint();
             assert(
-                $('div.alert-info*=17 copy number alterations').isExisting()
+                await (
+                    await getElement(
+                        'div.alert-info*=17 copy number alterations'
+                    )
+                ).isExisting()
             );
 
-            $('label*=Class 1')
-                .$('input')
-                .click();
-            waitForOncoprint();
+            await (await getNestedElement(['label*=Class 1', 'input'])).click();
+            await waitForOncoprint();
             assert(
-                $('div.alert-info*=17 copy number alterations').isExisting()
+                await (
+                    await getElement(
+                        'div.alert-info*=17 copy number alterations'
+                    )
+                ).isExisting()
             );
 
-            $('label*=Class 2')
-                .$('input')
-                .click();
-            waitForOncoprint();
+            await (await getNestedElement(['label*=Class 2', 'input'])).click();
+
+            await waitForOncoprint();
             assert(
-                $('div.alert-info*=16 copy number alterations').isExisting()
+                await (
+                    await getElement(
+                        'div.alert-info*=16 copy number alterations'
+                    )
+                ).isExisting()
             );
         });
     });
 
     describe('oncoprint tab - structural variants', () => {
-        beforeEach(() => {
-            goToUrlAndSetLocalStorage(oncoprintTabUrlStructVar, true);
-            waitForOncoprint();
-            setSettingsMenuOpen(true, 'GlobalSettingsButton');
+        beforeEach(async () => {
+            await goToUrlAndSetLocalStorage(oncoprintTabUrlStructVar, true);
+            await waitForOncoprint();
+            await setSettingsMenuOpen(true, 'GlobalSettingsButton');
         });
 
-        it('shows custom driver annotation elements in config menu', () => {
-            var topCheckBox = $('input[data-test=annotateCustomBinary]');
-            assert(topCheckBox.isSelected());
+        it('shows custom driver annotation elements in config menu', async () => {
+            assert(await isSelected('input[data-test=annotateCustomBinary]'));
+            const tiersCheckboxes = await (
+                await getElement('span[data-test=annotateCustomTiers]')
+            ).$$('input');
+            assert(await tiersCheckboxes[0].isSelected());
+        });
 
-            var tiersCheckboxes = $('span[data-test=annotateCustomTiers]').$$(
-                'input'
+        it('allows deselection of Tiers checkboxes', async () => {
+            const class1Checkbox = await getNestedElement([
+                'label*=Class 1',
+                'input',
+            ]);
+            await class1Checkbox.click();
+            await waitForOncoprint();
+            assert(!(await class1Checkbox.isSelected()));
+        });
+
+        it('updates selected samples when VUS alterations are excluded', async () => {
+            await clickElement('input[data-test=annotateHotspots]');
+            await clickElement('input[data-test=annotateOncoKb]');
+            await clickElement('input[data-test=HideVUS]');
+            await waitForOncoprint();
+            assert(
+                await (
+                    await getElement('div.alert-info*=1 structural variant')
+                ).isExisting()
             );
-            assert(tiersCheckboxes[0].isSelected());
-        });
 
-        it('allows deselection of Tiers checkboxes', () => {
-            var class1Checkbox = $('label*=Class 1').$('input');
-            class1Checkbox.click();
-            waitForOncoprint();
-            assert(!class1Checkbox.isSelected());
-        });
-
-        it('updates selected samples when VUS alterations are excluded', () => {
-            $('input[data-test=annotateHotspots]').click();
-            $('input[data-test=annotateOncoKb]').click();
-            $('input[data-test=HideVUS]').click();
-            waitForOncoprint();
-            assert($('div.alert-info*=1 structural variant').isExisting());
-
-            $('label*=Class 1')
-                .$('input')
-                .click();
-            waitForOncoprint();
-            assert($('div.alert-info*=2 structural variants').isExisting());
+            await (await getNestedElement(['label*=Class 1', 'input'])).click();
+            await waitForOncoprint();
+            assert(
+                await (
+                    await getElement('div.alert-info*=2 structural variants')
+                ).isExisting()
+            );
         });
     });
 });

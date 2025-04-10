@@ -4,7 +4,11 @@ const {
     checkElementWithMouseDisabled,
     goToUrlAndSetLocalStorage,
     jsApiHover,
-} = require('../../shared/specUtils');
+    getElement,
+    waitForElementDisplayed,
+    getNestedElement,
+    setInputText,
+} = require('../../shared/specUtils_Async');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 const studyViewUrl = `${CBIOPORTAL_URL}/study/summary?id=lgg_ucsf_2014_test_generic_assay`;
@@ -18,73 +22,73 @@ const MIN_VALUE_INPUT = '[data-test=anchorvalue-input]';
 const CUSTOM_BINS_TEXTAREA = '[data-test=custom-bins-textarea]';
 
 describe('Custom Bins menu in study view chart header', function() {
-    beforeEach(() => {
-        goToUrlAndSetLocalStorage(studyViewUrl, true);
-        openCustomBinsMenu();
+    beforeEach(async () => {
+        await goToUrlAndSetLocalStorage(studyViewUrl, true);
+        await openCustomBinsMenu();
     });
 
-    it('creates quartiles bins', () => {
-        selectMenuOption('label=Quartiles');
-        clickUpdate();
-        $('body').moveTo();
-        const res = checkElementWithMouseDisabled(MUTATION_COUNT_CHART);
+    it('creates quartiles bins', async () => {
+        await selectMenuOption('label=Quartiles');
+        await clickUpdate();
+        await (await getElement('body')).moveTo();
+        const res = await checkElementWithMouseDisabled(MUTATION_COUNT_CHART);
         assertScreenShotMatch(res);
     });
 
-    it('creates median split bins', () => {
-        selectMenuOption('label=Median split');
-        clickUpdate();
-        $('body').moveTo();
+    it('creates median split bins', async () => {
+        await selectMenuOption('label=Median split');
+        await clickUpdate();
+        await (await getElement('body')).moveTo();
         browser.pause(2000);
-        const res = checkElementWithMouseDisabled(MUTATION_COUNT_CHART);
+        const res = await checkElementWithMouseDisabled(MUTATION_COUNT_CHART);
         assertScreenShotMatch(res);
     });
 
-    it('generates bins using min and bin size input fields', () => {
-        selectMenuOption('label=Generate bins');
-        $(BIN_SIZE_INPUT).waitForExist();
-        $(BIN_SIZE_INPUT).setValue('2');
-        $(MIN_VALUE_INPUT).setValue('2');
-        clickUpdate();
-        $('body').moveTo();
-        const res = checkElementWithMouseDisabled(MUTATION_COUNT_CHART);
+    it('generates bins using min and bin size input fields', async () => {
+        await selectMenuOption('label=Generate bins');
+        await getElement(BIN_SIZE_INPUT, {
+            waitForExist: true,
+        });
+        await setInputText(BIN_SIZE_INPUT, '2');
+        await setInputText(MIN_VALUE_INPUT, '2');
+        await clickUpdate();
+        await (await getElement('body')).moveTo();
+        const res = await checkElementWithMouseDisabled(MUTATION_COUNT_CHART);
         assertScreenShotMatch(res);
     });
 
-    it('creates custom bins using custom bins input field', () => {
-        selectMenuOption('label=Custom bins');
-        $(CUSTOM_BINS_TEXTAREA).waitForExist();
-        $(CUSTOM_BINS_TEXTAREA).setValue('0,10,20,30,40');
-        clickUpdate();
-        $('body').moveTo();
-        const res = checkElementWithMouseDisabled(MUTATION_COUNT_CHART);
+    it('creates custom bins using custom bins input field', async () => {
+        await selectMenuOption('label=Custom bins');
+        await getElement(CUSTOM_BINS_TEXTAREA, {
+            waitForExist: true,
+        });
+        await setInputText(CUSTOM_BINS_TEXTAREA, '0,10,20,30,40');
+        await clickUpdate();
+        await (await getElement('body')).moveTo();
+        const res = await checkElementWithMouseDisabled(MUTATION_COUNT_CHART);
         assertScreenShotMatch(res);
     });
 });
 
-function openCustomBinsMenu() {
-    $(MUTATION_COUNT_CHART).waitForDisplayed();
-    jsApiHover(MUTATION_COUNT_CHART);
+async function openCustomBinsMenu() {
+    await waitForElementDisplayed(MUTATION_COUNT_CHART);
+    await jsApiHover(MUTATION_COUNT_CHART);
 
-    $(MUTATION_COUNT_HAMBURGER_ICON).waitForDisplayed();
-    jsApiHover(MUTATION_COUNT_HAMBURGER_ICON);
+    await waitForElementDisplayed(MUTATION_COUNT_HAMBURGER_ICON);
+    await jsApiHover(MUTATION_COUNT_HAMBURGER_ICON);
 
-    $(MUTATION_COUNT_MENU).waitForDisplayed();
-    $(MUTATION_COUNT_MENU)
-        .$('a.dropdown-item')
-        .click();
+    await waitForElementDisplayed(MUTATION_COUNT_MENU);
+    await (
+        await getNestedElement([MUTATION_COUNT_MENU, 'a.dropdown-item'])
+    ).click();
 
-    $(CUSTOM_BINS_MENU).waitForDisplayed();
+    await waitForElementDisplayed(CUSTOM_BINS_MENU);
 }
 
-function selectMenuOption(identifier) {
-    $(CUSTOM_BINS_MENU)
-        .$(identifier)
-        .click();
+async function selectMenuOption(identifier) {
+    await (await getNestedElement([CUSTOM_BINS_MENU, identifier])).click();
 }
 
-function clickUpdate() {
-    $(CUSTOM_BINS_MENU)
-        .$(UPDATE_BUTTON)
-        .click();
+async function clickUpdate() {
+    await (await getNestedElement([CUSTOM_BINS_MENU, UPDATE_BUTTON])).click();
 }

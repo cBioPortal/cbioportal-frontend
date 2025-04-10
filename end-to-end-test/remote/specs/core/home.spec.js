@@ -162,7 +162,7 @@ describe('select all/deselect all functionality in study selector', () => {
     it('global deselect button clears all selected studies, even during filter', async () => {
         await goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
-        await assert.equal(
+        assert.equal(
             await (
                 await getElementByTestHandle('globalDeselectAllStudiesButton')
             ).isExisting(),
