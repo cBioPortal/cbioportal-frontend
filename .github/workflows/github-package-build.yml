@@ -57,7 +57,17 @@ jobs:
         run: mvn versions:set -DnewVersion=${{ github.event.release.tag_name }} -DgenerateBackupPoms=false
 
       - name: Publish package to Maven Central
-        run: mvn --batch-mode deploy
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+          TAG=${{ inputs.source_ref }}
+          elif [ "${{ github.event_name }}" == "release" ]; then
+          TAG=${{ github.event.release.tag_name }}
+          else
+          echo "Action triggered through a invalid event!";
+          exit 1
+          fi
+          
+          mvn --batch-mode deploy -DmavenCentralDeploymentName="$TAG"
         env:
           MAVEN_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
