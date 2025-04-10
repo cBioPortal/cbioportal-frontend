@@ -12,6 +12,9 @@
     <name>${project.groupId}:${project.artifactId}</name>
     <description>React Frontend of cBioPortal</description>
     <url>https://www.cbioportal.org</url>
+    <properties>
+        <mavenCentralDeploymentName>Deployment</mavenCentralDeploymentName>
+    </properties>
     <licenses>
         <license>
             <name>GNU AFFERO GENERAL PUBLIC LICENSE v3.0</name>
@@ -88,6 +91,7 @@
                     <publishingServerId>central</publishingServerId>
                     <autoPublish>true</autoPublish>
                     <waitUntil>published</waitUntil>
+                    <deploymentName>${mavenCentralDeploymentName}</deploymentName>
                 </configuration>
             </plugin>
             <plugin>
