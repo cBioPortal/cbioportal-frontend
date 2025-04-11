@@ -474,14 +474,14 @@ describe('gsva feature', function() {
                 '[name=v-profile-type-selector]',
                 '..',
             ]);
-            await (await vertDataSelect.$('.Select-arrow-zone')).click();
+            await vertDataSelect.click();
             await (await vertDataSelect.$('.Select-option=Gene Sets')).click();
 
             const vertProfileSelect = await getNestedElement([
                 '[name=v-profile-name-selector]',
                 '..',
             ]);
-            await (await vertProfileSelect.$('.Select-arrow-zone')).click();
+            await vertProfileSelect.click();
             const profileMenuEntry =
                 '.Select-option=Pvalues of GSVA scores on oncogenic signatures gene sets';
             await (await vertProfileSelect.$(profileMenuEntry)).waitForExist();
@@ -491,7 +491,7 @@ describe('gsva feature', function() {
                 '[name=v-geneset-selector]',
                 '..',
             ]);
-            await (await vertEntitySelect.$('.Select-arrow-zone')).click();
+            await vertEntitySelect.click();
             const entityMenuEntry =
                 '.Select-option=GO_ATP_DEPENDENT_CHROMATIN_REMODELING';
             await (await vertEntitySelect.$(entityMenuEntry)).waitForExist();
