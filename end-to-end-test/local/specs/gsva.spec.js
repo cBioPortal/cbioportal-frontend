@@ -454,7 +454,6 @@ describe('gsva feature', function() {
             await (await horzProfileSelect.$('.Select-arrow-zone')).click();
             const profileMenuEntry =
                 '.Select-option=Pvalues of GSVA scores on oncogenic signatures gene sets';
-            await (await horzProfileSelect.$(profileMenuEntry)).waitForExist();
             await (await horzProfileSelect.$(profileMenuEntry)).click();
 
             const horzEntitySelect = await getNestedElement([
@@ -464,7 +463,6 @@ describe('gsva feature', function() {
             await (await horzEntitySelect.$('.Select-arrow-zone')).click();
             const entityMenuEntry =
                 '.Select-option=GO_ATP_DEPENDENT_CHROMATIN_REMODELING';
-            await (await horzEntitySelect.$(entityMenuEntry)).waitForExist();
 
             assert(await horzEntitySelect.$(entityMenuEntry));
         });
@@ -474,27 +472,25 @@ describe('gsva feature', function() {
                 '[name=v-profile-type-selector]',
                 '..',
             ]);
-            await vertDataSelect.click();
+            await (await vertDataSelect.$('.Select-arrow-zone')).click();
             await (await vertDataSelect.$('.Select-option=Gene Sets')).click();
 
             const vertProfileSelect = await getNestedElement([
                 '[name=v-profile-name-selector]',
                 '..',
             ]);
-            await vertProfileSelect.click();
+            await (await vertProfileSelect.$('.Select-arrow-zone')).click();
             const profileMenuEntry =
                 '.Select-option=Pvalues of GSVA scores on oncogenic signatures gene sets';
-            await (await vertProfileSelect.$(profileMenuEntry)).waitForExist();
             await (await vertProfileSelect.$(profileMenuEntry)).click();
 
             const vertEntitySelect = await getNestedElement([
                 '[name=v-geneset-selector]',
                 '..',
             ]);
-            await vertEntitySelect.click();
+            await (await vertEntitySelect.$('.Select-arrow-zone')).click();
             const entityMenuEntry =
                 '.Select-option=GO_ATP_DEPENDENT_CHROMATIN_REMODELING';
-            await (await vertEntitySelect.$(entityMenuEntry)).waitForExist();
 
             assert(await vertEntitySelect.$(entityMenuEntry));
         });
