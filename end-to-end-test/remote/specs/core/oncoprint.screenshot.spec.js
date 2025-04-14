@@ -242,7 +242,7 @@ describe('track group headers', () => {
         );
         await clickElement(mrnaElements.dropdown_selector + ' li:nth-child(2)'); // Click Don't Cluster
         await browser.pause(2000); // give it time to sort
-        await (await getElement('body')).moveTo(); // move mouse out of the way
+        await clickElement('a.tabAnchor_oncoprint'); // close track header menu
         const res = await checkOncoprintElement(undefined, [
             { width: 2000, height: 1000 },
         ]);
