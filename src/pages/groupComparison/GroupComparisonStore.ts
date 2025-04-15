@@ -18,7 +18,7 @@ import {
     MutationCountByPosition,
 } from 'cbioportal-ts-api-client';
 import { action, observable, makeObservable, computed } from 'mobx';
-import client from '../../shared/api/cbioportalClientInstance';
+import { getClient } from '../../shared/api/cbioportalClientInstance';
 import comparisonClient from '../../shared/api/comparisonGroupClientInstance';
 import _ from 'lodash';
 import autobind from 'autobind-decorator';
@@ -372,7 +372,7 @@ export default class GroupComparisonStore extends ComparisonStore {
                 this.samples.result!,
                 this.mutationEnrichmentProfiles.result!
             );
-            const mutations = await client.fetchMutationsInMultipleMolecularProfilesUsingPOST(
+            const mutations = await getClient().fetchMutationsInMultipleMolecularProfilesUsingPOST(
                 {
                     projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
                     mutationMultipleStudyFilter: {
@@ -395,7 +395,7 @@ export default class GroupComparisonStore extends ComparisonStore {
                 .uniq()
                 .value();
             // fetch all samples - faster backend processing time
-            const allSamples = await client.fetchSamplesUsingPOST({
+            const allSamples = await getClient().fetchSamplesUsingPOST({
                 sampleFilter: {
                     sampleListIds: allStudies.map(studyId => `${studyId}_all`),
                 } as SampleFilter,
@@ -413,7 +413,7 @@ export default class GroupComparisonStore extends ComparisonStore {
                 this.samples.result!,
                 this.mutationEnrichmentProfiles.result!
             );
-            const genePanelData = client.fetchGenePanelDataInMultipleMolecularProfilesUsingPOST(
+            const genePanelData = getClient().fetchGenePanelDataInMultipleMolecularProfilesUsingPOST(
                 {
                     genePanelDataMultipleStudyFilter: {
                         sampleMolecularIdentifiers,
@@ -537,7 +537,7 @@ export default class GroupComparisonStore extends ComparisonStore {
     readonly allStudies = remoteData(
         {
             invoke: async () =>
-                await client.getAllStudiesUsingGET({
+                await getClient().getAllStudiesUsingGET({
                     projection: 'SUMMARY',
                 }),
         },

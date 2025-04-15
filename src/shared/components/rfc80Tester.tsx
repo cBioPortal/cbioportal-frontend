@@ -2,15 +2,12 @@ import * as React from 'react';
 import _ from 'lodash';
 import { useCallback, useEffect } from 'react';
 import axios from 'axios';
-import {
-    reportValidationResult,
-    runSpecs,
-    validate,
-} from 'shared/api/validation.ts';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
 import { observer } from 'mobx-react';
 import { useLocalObservable } from 'mobx-react-lite';
-import { SAVE_TEST_KEY } from 'shared/api/testMaker';
+
+import { runSpecs } from '../api/validation';
+import { SAVE_TEST_KEY } from '../api/testMaker';
 
 const CACHE_KEY: string = 'testCache';
 

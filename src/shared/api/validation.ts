@@ -90,6 +90,8 @@ export function getArrays(inp: any, output: Array<any>) {
     return output;
 }
 
+const endpointsWithSingleObjectResponse = ['SampleInStudy'];
+
 const deleteFields: Record<string, string[]> = {
     MolecularProfileSample: ['label'],
     MolecularProfileSampleCounts: ['label'],
@@ -99,6 +101,7 @@ const deleteFields: Record<string, string[]> = {
     MutatedGenes: ['qValue', 'entrezGeneId', 'entrezGeneIds'],
     ClinicalDataViolinPlots: [],
     StructuralVariantGenes: ['entrezGeneId', 'entrezGeneIds'],
+    SampleInStudy: ['uniqueSampleKey', 'uniquePatientKey'],
 };
 
 const sortFields: Record<string, string> = {
@@ -285,6 +288,12 @@ export function compareCounts(clData: any, legacyData: any, label: string) {
     // get trid of duplicates
     //clDataClone = filterDuplicates(clDataClone);
 
+    // convert the single object into an array, otherwise deepSort won't work
+    if (endpointsWithSingleObjectResponse.includes(label)) {
+        clDataClone = [clDataClone];
+        legacyDataClone = [legacyDataClone];
+    }
+
     var clDataSorted = deepSort(clDataClone, label);
     var legacyDataSorted = deepSort(legacyDataClone, label);
 
@@ -350,7 +359,22 @@ export async function validate(
     assertResponse: any[] | undefined = undefined,
     onFail: (...args: any[]) => void = () => {}
 ) {
-    let chXHR: any;
+    function processResponse(response: any) {
+        return {
+            status: response.status,
+            body: response.data,
+            elapsedTime: response.headers['elapsed-time'],
+        };
+    }
+
+    function processError(error: any) {
+        return {
+            body: null,
+            error,
+            elapsedTime: null,
+            status: error.status,
+        };
+    }
 
     let chResult;
     let legacyResult;
@@ -360,21 +384,16 @@ export async function validate(
     } else {
         chResult = await ajax
             .post(url, params)
-            .then(function(response: any) {
-                return {
-                    status: response.status,
-                    body: response.data,
-                    elapsedTime: response.headers['elapsed-time'],
-                };
-            })
-            .catch(function(error: any) {
-                return {
-                    body: null,
-                    error,
-                    elapsedTime: null,
-                    status: error.status,
-                };
-            });
+            .then(processResponse)
+            .catch(processError);
+
+        // try again with GET if POST not allowed
+        if (chResult.status === 405) {
+            chResult = await ajax
+                .get(url, params)
+                .then(processResponse)
+                .catch(processError);
+        }
     }
 
     if (assertResponse) {
@@ -391,21 +410,16 @@ export async function validate(
 
         legacyResult = await ajax
             .post(legacyUrl, params)
-            .then(function(response: any) {
-                return {
-                    status: response.status,
-                    body: response.data,
-                    elapsedTime: response.headers['elapsed-time'],
-                };
-            })
-            .catch(function(error: any) {
-                return {
-                    body: null,
-                    error,
-                    elapsedTime: null,
-                    status: error.status,
-                };
-            });
+            .then(processResponse)
+            .catch(processError);
+
+        // try again with GET if POST not allowed
+        if (legacyResult.status === 405) {
+            legacyResult = await ajax
+                .get(legacyUrl, params)
+                .then(processResponse)
+                .catch(processError);
+        }
     }
 
     const result: any = compareCounts(chResult.body, legacyResult.body, label);
@@ -440,7 +454,7 @@ export function reportValidationResult(
 
     const errorStatus = result.chError ? `(${result.chError.status})` : '';
 
-    const data = result.data || result?.test.data;
+    const data = result.data || result?.test?.data;
 
     const studies = (
         data?.studyIds ||
