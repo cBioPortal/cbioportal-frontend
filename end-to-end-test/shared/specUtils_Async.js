@@ -490,7 +490,7 @@ async function checkOncoprintElement(selector, viewports) {
     await browser.execute(() => {
         frontendOnc.clearMouseOverEffects(); // clear mouse hover effects for uniform screenshot
     });
-    return checkElementWithMouseDisabled(selector || '#oncoprintDiv', 0, {
+    return await checkElementWithMouseDisabled(selector || '#oncoprintDiv', 0, {
         hide: [
             '.qtip',
             '.dropdown-menu',
