@@ -444,23 +444,37 @@ describe('gsva feature', function() {
                 '[name=h-profile-type-selector]',
                 '..',
             ]);
+            await (
+                await horzDataSelect.$('.Select-arrow-zone')
+            ).waitForDisplayed();
             await (await horzDataSelect.$('.Select-arrow-zone')).click();
+            await (
+                await horzDataSelect.$('.Select-option=Gene Sets')
+            ).waitForDisplayed();
             await (await horzDataSelect.$('.Select-option=Gene Sets')).click();
 
             const horzProfileSelect = await getNestedElement([
                 '[name=h-profile-name-selector]',
                 '..',
             ]);
+            await (
+                await horzProfileSelect.$('.Select-arrow-zone')
+            ).waitForDisplayed();
             await (await horzProfileSelect.$('.Select-arrow-zone')).click();
             const profileMenuEntry =
                 '.Select-option=Pvalues of GSVA scores on oncogenic signatures gene sets';
-            await (await horzProfileSelect.$(profileMenuEntry)).waitForExist();
+            await (
+                await horzProfileSelect.$(profileMenuEntry)
+            ).waitForDisplayed();
             await (await horzProfileSelect.$(profileMenuEntry)).click();
 
             const horzEntitySelect = await getNestedElement([
                 '[name=h-geneset-selector]',
                 '..',
             ]);
+            await (
+                await horzEntitySelect.$('.Select-arrow-zone')
+            ).waitForDisplayed();
             await (await horzEntitySelect.$('.Select-arrow-zone')).click();
             const entityMenuEntry =
                 '.Select-option=GO_ATP_DEPENDENT_CHROMATIN_REMODELING';
@@ -474,23 +488,37 @@ describe('gsva feature', function() {
                 '[name=v-profile-type-selector]',
                 '..',
             ]);
+            await (
+                await vertDataSelect.$('.Select-arrow-zone')
+            ).waitForDisplayed();
             await (await vertDataSelect.$('.Select-arrow-zone')).click();
+            await (
+                await vertDataSelect.$('.Select-option=Gene Sets')
+            ).waitForDisplayed();
             await (await vertDataSelect.$('.Select-option=Gene Sets')).click();
 
             const vertProfileSelect = await getNestedElement([
                 '[name=v-profile-name-selector]',
                 '..',
             ]);
+            await (
+                await vertProfileSelect.$('.Select-arrow-zone')
+            ).waitForDisplayed();
             await (await vertProfileSelect.$('.Select-arrow-zone')).click();
             const profileMenuEntry =
                 '.Select-option=Pvalues of GSVA scores on oncogenic signatures gene sets';
-            await (await vertProfileSelect.$(profileMenuEntry)).waitForExist();
+            await (
+                await vertProfileSelect.$(profileMenuEntry)
+            ).waitForDisplayed();
             await (await vertProfileSelect.$(profileMenuEntry)).click();
 
             const vertEntitySelect = await getNestedElement([
                 '[name=v-geneset-selector]',
                 '..',
             ]);
+            await (
+                await vertEntitySelect.$('.Select-arrow-zone')
+            ).waitForDisplayed();
             await (await vertEntitySelect.$('.Select-arrow-zone')).click();
             const entityMenuEntry =
                 '.Select-option=GO_ATP_DEPENDENT_CHROMATIN_REMODELING';
