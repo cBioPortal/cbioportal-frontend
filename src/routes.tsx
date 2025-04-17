@@ -99,6 +99,7 @@ import { PagePath } from 'shared/enums/PagePaths';
 import {
     LegacyResultsViewComparisonSubTab,
     ResultsViewComparisonSubTab,
+    ResultsViewPathwaysSubTab,
     ResultsViewTab,
 } from 'pages/resultsView/ResultsViewPageHelpers';
 import {
@@ -398,6 +399,33 @@ export const makeRoutes = () => {
                             );
                         } else {
                             redirectTo({}, '/results/comparison/overlap');
+                        }
+                    })}
+                />
+                <Route
+                    path="/results/pathways/:subtab"
+                    component={LocationValidationWrapper(
+                        ResultsViewPage,
+                        tabParamValidator(ResultsViewPathwaysSubTab),
+                        ResultsViewQueryParamsAdjuster
+                    )}
+                />
+                <Route
+                    path="/results/pathways"
+                    component={getBlankPage(() => {
+                        const query = parse(
+                            getBrowserWindow().location.search,
+                            {
+                                ignoreQueryPrefix: true,
+                            }
+                        );
+                        if (query.pathways_source) {
+                            redirectTo(
+                                {},
+                                `/results/pathways/${query.pathways_source}`
+                            );
+                        } else {
+                            redirectTo({}, '/results/pathways/PathwayMapper');
                         }
                     })}
                 />

@@ -6,6 +6,7 @@ import {
     LegacyResultsViewComparisonSubTab,
     oldTabToNewTabRoute,
     ResultsViewComparisonSubTab,
+    ResultsViewPathwaysSubTab,
     ResultsViewTab,
 } from 'pages/resultsView/ResultsViewPageHelpers';
 import { getServerConfig } from 'config/config';
@@ -333,6 +334,9 @@ export default class ResultsViewURLWrapper
         if (this.pathName.match(/\/results\/comparison(\/|$)/)) {
             return ResultsViewTab.COMPARISON;
         }
+        if (this.pathName.match(/\/results\/pathways(\/|$)/)) {
+            return ResultsViewTab.PATHWAYS;
+        }
         const tabInPath = this.pathName.split('/').pop();
         if (tabInPath && tabInPath in oldTabToNewTabRoute) {
             // map legacy tab ids
@@ -405,6 +409,18 @@ export default class ResultsViewURLWrapper
     @autobind
     public setComparisonSubTabId(tabId: GroupComparisonTab) {
         this.updateURL({}, `results/comparison/${tabId}`);
+    }
+
+    @computed public get pathwaysSubTabId() {
+        const subtabMatch = this.pathName.match(/\/pathways\/([^\/?#]+)/);
+        return subtabMatch
+            ? subtabMatch[1]
+            : ResultsViewPathwaysSubTab.PATHWAY_MAPPER;
+    }
+
+    @autobind
+    public setPathwaysSubTabId(tabId: ResultsViewPathwaysSubTab) {
+        this.updateURL({}, `results/pathways/${tabId}`);
     }
 
     @computed public get selectedEnrichmentEventTypes() {
