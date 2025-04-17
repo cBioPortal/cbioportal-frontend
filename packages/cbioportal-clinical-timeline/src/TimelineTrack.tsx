@@ -26,7 +26,8 @@ import {
     getTicksForLineChartAxis,
     getTrackValueRange,
 } from './lib/lineChartAxisUtils';
-import { getBrowserWindow, getColor } from 'cbioportal-frontend-commons';
+import { getBrowserWindow } from './lib/browserUtils';
+import { getColor } from './lib/colorUtils';
 import { getTrackLabel } from './TrackHeader';
 import {
     COLOR_ATTRIBUTE_KEY,
