@@ -122,6 +122,22 @@ export default class Visualize extends React.Component<{}, {}> {
                         </a>{' '}
                         for details.
                     </li>
+                    <li>
+                        <a href="https://se4.bio/" target="_blank">
+                            SE4BIO
+                        </a>{' '}
+                        provides software engineering and consultancy services,
+                        covering software architecture, business analysis, and the
+                        design of end-to-end solutions.
+                        SE4BIO also supports organizations in aligning cBioPortal
+                        with their broader data infrastructure, improving interoperability,
+                        streamlining workflows, and implementing custom features to meet
+                        specific research and clinical needs. Please{' '}
+                        <a href="https://se4.bio/contact/" target="_blank">
+                            contact SE4BIO
+                        </a>{' '}
+                        for details.
+                    </li>
                 </ul>
 
                 <hr />
