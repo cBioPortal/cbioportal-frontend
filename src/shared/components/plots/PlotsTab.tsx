@@ -29,7 +29,7 @@ import {
     getLimitValues,
     getScatterPlotDownloadData,
     getWaterfallPlotDownloadData,
-    IAxisLogScaleParams,
+    IAxisScaleTransformParams,
     IBoxScatterPlotPoint,
     INumberAxisData,
     IPlotSampleData,
@@ -40,7 +40,7 @@ import {
     IWaterfallPlotData,
     logScalePossible,
     makeAxisDataPromise,
-    makeAxisLogScaleFunction,
+    makeAxisScaleTransformParams,
     makeBoxScatterPlotData,
     makeClinicalAttributeOptions,
     makeScatterPlotData,
@@ -67,6 +67,7 @@ import {
     isGenericAssaySelected,
     showWaterfallPlot,
     getOption,
+    zScorePossible,
 } from './PlotsTabUtils';
 import {
     ClinicalAttribute,
@@ -168,10 +169,13 @@ import { FilteredAndAnnotatedMutationsReport } from 'shared/lib/comparison/Analy
 import { AnnotatedNumericGeneMolecularData } from 'shared/model/AnnotatedNumericGeneMolecularData';
 import { ExtendedAlteration } from 'shared/model/ExtendedAlteration';
 import CaseFilterWarning from '../banners/CaseFilterWarning';
+import { calculateStats } from 'shared/lib/calculation/StatsUtils';
 
 enum EventKey {
     horz_logScale,
     vert_logScale,
+    horz_zScore,
+    vert_zScore,
     utilities_horizontalBars,
     utilities_showRegressionLine,
     utilities_viewLimitValues,
@@ -242,6 +246,8 @@ export type AxisMenuSelection = {
     mutationCountBy: MutationCountBy;
     structuralVariantCountBy: StructuralVariantCountBy;
     logScale: boolean;
+    zScore: boolean;
+    stats?: { mean: number; stdDev: number };
 };
 
 export type ColoringMenuOmnibarOption = {
@@ -1206,6 +1212,57 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             },
             set logScale(v: boolean) {
                 this._logScale = v;
+            },
+            get zScore() {
+                return this._zScore && zScorePossible(this);
+            },
+            set zScore(v: boolean) {
+                this._zScore = v;
+            },
+            get stats() {
+                if (!this.dataSourceId) {
+                    return;
+                }
+                if (
+                    !self.props.molecularProfileIdSuffixToMolecularProfiles
+                        .isComplete
+                ) {
+                    return;
+                }
+                const molecularProfileIds = self.props.molecularProfileIdSuffixToMolecularProfiles.result[
+                    this.dataSourceId
+                ].map(molecularProfile => molecularProfile.molecularProfileId);
+                //TODO should we calculate statistic across studies???
+                if (molecularProfileIds.length === 0) {
+                    return;
+                }
+                const numericGenomeMolecularData = self.props.numericGeneMolecularDataCache.get(
+                    {
+                        entrezGeneId: this.entrezGeneId,
+                        molecularProfileId: molecularProfileIds[0],
+                    }
+                ).result;
+                if (
+                    !numericGenomeMolecularData ||
+                    numericGenomeMolecularData.length === 0
+                ) {
+                    return;
+                }
+                const statsPerMolecularProfileIdPreEntrezGeneId = calculateStats(
+                    numericGenomeMolecularData
+                );
+                if (
+                    statsPerMolecularProfileIdPreEntrezGeneId[
+                        molecularProfileIds[0]
+                    ] &&
+                    statsPerMolecularProfileIdPreEntrezGeneId[
+                        molecularProfileIds[0]
+                    ][this.entrezGeneId]
+                ) {
+                    return statsPerMolecularProfileIdPreEntrezGeneId[
+                        molecularProfileIds[0]
+                    ][this.entrezGeneId];
+                }
             },
             get genesetId() {
                 if (this.selectedGenesetOption) {
@@ -3367,7 +3424,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     this.props.entrezGeneIdToGene.result!,
                     this.clinicalAttributeIdToClinicalAttribute.result!,
                     this.customAttributeIdToClinicalAttribute.result!,
-                    this.horzLogScaleFunction
+                    this.horzScaleTransformParams
                 )
             );
         },
@@ -3389,7 +3446,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     this.props.entrezGeneIdToGene.result!,
                     this.clinicalAttributeIdToClinicalAttribute.result!,
                     this.customAttributeIdToClinicalAttribute.result!,
-                    this.vertLogScaleFunction
+                    this.vertScaleTransformParams
                 )
             );
         },
@@ -3408,8 +3465,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 ? this.horzSelection
                 : this.vertSelection;
             const logScaleFunc = this.isHorizontalWaterfallPlot
-                ? this.horzLogScaleFunction
-                : this.vertLogScaleFunction;
+                ? this.horzScaleTransformParams
+                : this.vertScaleTransformParams;
 
             return Promise.resolve(
                 getAxisLabel(
@@ -3554,8 +3611,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         return scatterPlotTooltip(
             d,
             this.props.studyIdToStudy || {},
-            this.horzLogScaleFunction,
-            this.vertLogScaleFunction,
+            this.horzScaleTransformParams,
+            this.vertScaleTransformParams,
             this.coloringMenuSelection.selectedOption &&
                 this.coloringMenuSelection.selectedOption.info.clinicalAttribute
         );
@@ -3580,8 +3637,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     this.props.studyIdToStudy || {},
                     this.boxPlotData.result.horizontal,
                     this.boxPlotData.result.horizontal
-                        ? this.horzLogScaleFunction
-                        : this.vertLogScaleFunction,
+                        ? this.horzScaleTransformParams
+                        : this.vertScaleTransformParams,
                     this.coloringMenuSelection.selectedOption &&
                         this.coloringMenuSelection.selectedOption.info
                             .clinicalAttribute
@@ -4117,6 +4174,22 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                     onClick={this.onInputClick}
                                 />
                                 Log Scale
+                            </label>
+                        </div>
+                    )}
+                    {zScorePossible(axisSelection) && (
+                        <div className="checkbox">
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    name={`${dataTestWhichAxis}ZscoreCheckbox`}
+                                    data-test={`${dataTestWhichAxis}ZScoreCheckbox`}
+                                    checked={axisSelection.zScore}
+                                    onClick={event =>
+                                        (axisSelection.zScore = (event.target as HTMLInputElement).checked)
+                                    }
+                                />
+                                Z-score
                             </label>
                         </div>
                     )}
@@ -5328,12 +5401,16 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         }
     }
 
-    @computed get horzLogScaleFunction(): IAxisLogScaleParams | undefined {
-        return makeAxisLogScaleFunction(this.horzSelection);
+    @computed get horzScaleTransformParams():
+        | IAxisScaleTransformParams
+        | undefined {
+        return makeAxisScaleTransformParams(this.horzSelection);
     }
 
-    @computed get vertLogScaleFunction(): IAxisLogScaleParams | undefined {
-        return makeAxisLogScaleFunction(this.vertSelection);
+    @computed get vertScaleTransformParams():
+        | IAxisScaleTransformParams
+        | undefined {
+        return makeAxisScaleTransformParams(this.vertSelection);
     }
 
     @computed get showNoGenericAssaySelectedWarning() {
@@ -5690,8 +5767,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                     tooltip={this.scatterPlotTooltip}
                                     highlight={this.scatterPlotHighlight}
                                     showRegressionLine={this.showRegressionLine}
-                                    logX={this.horzLogScaleFunction}
-                                    logY={this.vertLogScaleFunction}
+                                    logX={this.horzScaleTransformParams}
+                                    logY={this.vertScaleTransformParams}
                                     fill={this.scatterPlotFill}
                                     stroke={this.scatterPlotStroke}
                                     strokeOpacity={
@@ -5752,8 +5829,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                     highlight={this.scatterPlotHighlight}
                                     log={
                                         horizontal
-                                            ? this.horzLogScaleFunction
-                                            : this.vertLogScaleFunction
+                                            ? this.horzScaleTransformParams
+                                            : this.vertScaleTransformParams
                                     }
                                     horizontal={horizontal}
                                     fill={this.waterfallPlotColor}
@@ -5824,8 +5901,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                     horizontal={horizontal}
                                     logScale={
                                         horizontal
-                                            ? this.horzLogScaleFunction
-                                            : this.vertLogScaleFunction
+                                            ? this.horzScaleTransformParams
+                                            : this.vertScaleTransformParams
                                     }
                                     size={scatterPlotSize}
                                     fill={this.scatterPlotFill}
