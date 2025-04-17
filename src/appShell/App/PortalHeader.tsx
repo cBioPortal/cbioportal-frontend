@@ -80,7 +80,7 @@ export default class PortalHeader extends React.Component<
             {
                 id: 'about',
                 text: 'About',
-                address: 'https://docs.cbioportal.org/about-us/',
+                address: 'https://about.cbioportal.org/',
                 internal: false,
                 hide: () => getServerConfig().skin_show_about_tab === false,
             },

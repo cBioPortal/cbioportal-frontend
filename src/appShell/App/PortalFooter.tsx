@@ -154,7 +154,7 @@ export default class PortalFooter extends React.Component<
                                         <li>
                                             <a
                                                 target={'_blank'}
-                                                href="https://docs.cbioportal.org/about-us/"
+                                                href="https://about.cbioportal.org/"
                                             >
                                                 About
                                             </a>
