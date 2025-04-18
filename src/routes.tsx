@@ -375,6 +375,11 @@ export const makeRoutes = () => {
                         );
                     })}
                 />
+                {/* 
+                 This route handles backward compatibility for comparison subtabs:
+                 - Supports both old query parameter format
+                 - And new URL path format (/results/comparison/:subtab)
+                */}
                 <Route
                     path="/results/comparison/:subtab"
                     component={LocationValidationWrapper(
@@ -402,6 +407,11 @@ export const makeRoutes = () => {
                         }
                     })}
                 />
+                {/* 
+                 This route handles backward compatibility for pathways subtabs:
+                 - Supports both old query parameter format 
+                 - And new URL path format (/results/pathways/:subtab)
+                */}
                 <Route
                     path="/results/pathways/:subtab"
                     component={LocationValidationWrapper(
