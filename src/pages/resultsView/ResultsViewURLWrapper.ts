@@ -331,9 +331,13 @@ export default class ResultsViewURLWrapper
     pathContext = '/results';
 
     @computed public get tabId() {
+        // Ensure top-level tab is correctly identified for routes with static subtabs.
+        // This condition checks if the URL matches exactly "/results/comparison"
         if (this.pathName.match(/\/results\/comparison(\/|$)/)) {
             return ResultsViewTab.COMPARISON;
         }
+
+        // Similarly, this checks for the "/results/pathways" route.
         if (this.pathName.match(/\/results\/pathways(\/|$)/)) {
             return ResultsViewTab.PATHWAYS;
         }
@@ -397,6 +401,7 @@ export default class ResultsViewURLWrapper
     }
 
     @computed public get comparisonSubTabId() {
+        // Extract subtab name after "/comparison/" in the URL path.
         const subtabMatch = this.pathName.match(/\/comparison\/([^\/?#]+)/);
         return subtabMatch ? subtabMatch[1] : GroupComparisonTab.OVERLAP;
     }
@@ -412,6 +417,7 @@ export default class ResultsViewURLWrapper
     }
 
     @computed public get pathwaysSubTabId() {
+        // Extract subtab name after "/pathways/" in the URL path.
         const subtabMatch = this.pathName.match(/\/pathways\/([^\/?#]+)/);
         return subtabMatch
             ? subtabMatch[1]
