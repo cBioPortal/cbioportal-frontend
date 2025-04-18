@@ -6,6 +6,7 @@ import {
     LegacyResultsViewComparisonSubTab,
     oldTabToNewTabRoute,
     ResultsViewComparisonSubTab,
+    ResultsViewPathwaysSubTab,
     ResultsViewTab,
 } from 'pages/resultsView/ResultsViewPageHelpers';
 import { getServerConfig } from 'config/config';
@@ -330,6 +331,16 @@ export default class ResultsViewURLWrapper
     pathContext = '/results';
 
     @computed public get tabId() {
+        // Ensure top-level tab is correctly identified for routes with static subtabs.
+        // This condition checks if the URL matches exactly "/results/comparison"
+        if (this.pathName.match(/\/results\/comparison(\/|$)/)) {
+            return ResultsViewTab.COMPARISON;
+        }
+
+        // Similarly, this checks for the "/results/pathways" route.
+        if (this.pathName.match(/\/results\/pathways(\/|$)/)) {
+            return ResultsViewTab.PATHWAYS;
+        }
         const tabInPath = this.pathName.split('/').pop();
         if (tabInPath && tabInPath in oldTabToNewTabRoute) {
             // map legacy tab ids
@@ -390,7 +401,9 @@ export default class ResultsViewURLWrapper
     }
 
     @computed public get comparisonSubTabId() {
-        return this.query.comparison_subtab || GroupComparisonTab.OVERLAP;
+        // Extract subtab name after "/comparison/" in the URL path.
+        const subtabMatch = this.pathName.match(/\/comparison\/([^\/?#]+)/);
+        return subtabMatch ? subtabMatch[1] : GroupComparisonTab.OVERLAP;
     }
 
     @autobind
@@ -400,7 +413,20 @@ export default class ResultsViewURLWrapper
 
     @autobind
     public setComparisonSubTabId(tabId: GroupComparisonTab) {
-        this.updateURL({ comparison_subtab: tabId });
+        this.updateURL({}, `results/comparison/${tabId}`);
+    }
+
+    @computed public get pathwaysSubTabId() {
+        // Extract subtab name after "/pathways/" in the URL path.
+        const subtabMatch = this.pathName.match(/\/pathways\/([^\/?#]+)/);
+        return subtabMatch
+            ? subtabMatch[1]
+            : ResultsViewPathwaysSubTab.PATHWAY_MAPPER;
+    }
+
+    @autobind
+    public setPathwaysSubTabId(tabId: ResultsViewPathwaysSubTab) {
+        this.updateURL({}, `results/pathways/${tabId}`);
     }
 
     @computed public get selectedEnrichmentEventTypes() {
