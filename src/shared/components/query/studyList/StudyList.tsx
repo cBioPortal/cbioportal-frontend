@@ -405,7 +405,7 @@ export default class StudyList extends QueryStoreComponent<
 
                         return content;
                     })}
-                    {study.studyId && (
+                    {study.studyId && study.readPermission === true && (
                         <DefaultTooltip
                             mouseEnterDelay={0}
                             placement="top"
