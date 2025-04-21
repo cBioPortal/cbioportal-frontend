@@ -246,8 +246,7 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
 
     download_custom_buttons_json: '',
 
-    priority_studies:
-        'Federated Studies#Test_cBioPortal_Instance_1,Test_cBioPortal_Instance_2',
+    priority_studies: 'Federated Studies#nci_enclave',
 };
 
 export default ServerConfigDefaults;

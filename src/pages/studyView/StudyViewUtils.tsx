@@ -4878,3 +4878,11 @@ export function getVisibleAttributes(
         []
     );
 }
+
+export function toLocaleString(count: number) {
+    if (count === null || count === undefined) {
+        return 'NA';
+    }
+
+    return count === -1 ? '<10' : count.toLocaleString();
+}

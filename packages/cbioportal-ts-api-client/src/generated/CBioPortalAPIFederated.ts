@@ -1,6 +1,28 @@
 import * as request from "superagent";
 
 type CallbackHandler = (err: any, res ? : request.Response) => void;
+export type AlterationCountByGene = {
+    'entrezGeneId': number
+
+        'entrezGeneIds': Array < number >
+
+        'hugoGeneSymbol': string
+
+        'hugoGeneSymbols': Array < string >
+
+        'matchingGenePanelIds': Array < string >
+
+        'numberOfAlteredCases': number
+
+        'numberOfProfiledCases': number
+
+        'qValue': number
+
+        'totalCount': number
+
+        'uniqueEventKey': string
+
+};
 export type AlterationFilter = {
     'copyNumberAlterationEventTypes': {}
 
@@ -342,15 +364,10 @@ export default class CBioPortalAPIFederated {
     }
 
     fetchClinicalAttributesUsingPOSTURL(parameters: {
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'studyIds': Array < string > ,
-            $queryParameters ? : any
+        $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/api-fed/clinical-attributes/fetch';
-        if (parameters['projection'] !== undefined) {
-            queryParameters['projection'] = parameters['projection'];
-        }
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -366,13 +383,9 @@ export default class CBioPortalAPIFederated {
      * Fetch clinical attributes
      * @method
      * @name CBioPortalAPIFederated#fetchClinicalAttributesUsingPOST
-     * @param {string} projection - Level of detail of the response
-     * @param {} studyIds - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      */
     fetchClinicalAttributesUsingPOSTWithHttpInfo(parameters: {
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'studyIds': Array < string > ,
-            $queryParameters ? : any,
+        $queryParameters ? : any,
             $domain ? : string
     }): Promise < request.Response > {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
@@ -385,20 +398,6 @@ export default class CBioPortalAPIFederated {
         let form: any = {};
         return new Promise(function(resolve, reject) {
             headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters['projection'] !== undefined) {
-                queryParameters['projection'] = parameters['projection'];
-            }
-
-            if (parameters['studyIds'] !== undefined) {
-                body = parameters['studyIds'];
-            }
-
-            if (parameters['studyIds'] === undefined) {
-                reject(new Error('Missing required  parameter: studyIds'));
-                return;
-            }
 
             if (parameters.$queryParameters) {
                 Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -416,13 +415,9 @@ export default class CBioPortalAPIFederated {
      * Fetch clinical attributes
      * @method
      * @name CBioPortalAPIFederated#fetchClinicalAttributesUsingPOST
-     * @param {string} projection - Level of detail of the response
-     * @param {} studyIds - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      */
     fetchClinicalAttributesUsingPOST(parameters: {
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-            'studyIds': Array < string > ,
-                $queryParameters ? : any,
+            $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < ClinicalAttribute >
         > {
@@ -431,15 +426,11 @@ export default class CBioPortalAPIFederated {
             });
         };
     fetchClinicalDataBinCountsUsingPOSTURL(parameters: {
-        'dataBinMethod' ? : "STATIC" | "DYNAMIC",
         'clinicalDataBinCountFilter' ? : ClinicalDataBinCountFilter,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/api-fed/clinical-data-bin-counts/fetch';
-        if (parameters['dataBinMethod'] !== undefined) {
-            queryParameters['dataBinMethod'] = parameters['dataBinMethod'];
-        }
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -455,11 +446,9 @@ export default class CBioPortalAPIFederated {
      * Fetch clinical data bin counts by study view filter
      * @method
      * @name CBioPortalAPIFederated#fetchClinicalDataBinCountsUsingPOST
-     * @param {string} dataBinMethod - Method for data binning
      * @param {} clinicalDataBinCountFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      */
     fetchClinicalDataBinCountsUsingPOSTWithHttpInfo(parameters: {
-        'dataBinMethod' ? : "STATIC" | "DYNAMIC",
         'clinicalDataBinCountFilter' ? : ClinicalDataBinCountFilter,
         $queryParameters ? : any,
             $domain ? : string
@@ -475,10 +464,6 @@ export default class CBioPortalAPIFederated {
         return new Promise(function(resolve, reject) {
             headers['Accept'] = 'application/json';
             headers['Content-Type'] = 'application/json';
-
-            if (parameters['dataBinMethod'] !== undefined) {
-                queryParameters['dataBinMethod'] = parameters['dataBinMethod'];
-            }
 
             if (parameters['clinicalDataBinCountFilter'] !== undefined) {
                 body = parameters['clinicalDataBinCountFilter'];
@@ -500,11 +485,9 @@ export default class CBioPortalAPIFederated {
      * Fetch clinical data bin counts by study view filter
      * @method
      * @name CBioPortalAPIFederated#fetchClinicalDataBinCountsUsingPOST
-     * @param {string} dataBinMethod - Method for data binning
      * @param {} clinicalDataBinCountFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      */
     fetchClinicalDataBinCountsUsingPOST(parameters: {
-            'dataBinMethod' ? : "STATIC" | "DYNAMIC",
             'clinicalDataBinCountFilter' ? : ClinicalDataBinCountFilter,
             $queryParameters ? : any,
                 $domain ? : string
@@ -583,6 +566,78 @@ export default class CBioPortalAPIFederated {
         }): Promise < Array < ClinicalDataCountItem >
         > {
             return this.fetchClinicalDataCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    fetchMutatedGenesUsingPOSTURL(parameters: {
+        'studyViewFilter' ? : StudyViewFilter,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/api-fed/mutated-genes/fetch';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Fetch mutated genes by study view filter
+     * @method
+     * @name CBioPortalAPIFederated#fetchMutatedGenesUsingPOST
+     * @param {} studyViewFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     */
+    fetchMutatedGenesUsingPOSTWithHttpInfo(parameters: {
+        'studyViewFilter' ? : StudyViewFilter,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/api-fed/mutated-genes/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['studyViewFilter'] !== undefined) {
+                body = parameters['studyViewFilter'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Fetch mutated genes by study view filter
+     * @method
+     * @name CBioPortalAPIFederated#fetchMutatedGenesUsingPOST
+     * @param {} studyViewFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     */
+    fetchMutatedGenesUsingPOST(parameters: {
+            'studyViewFilter' ? : StudyViewFilter,
+            $queryParameters ? : any,
+                $domain ? : string
+        }): Promise < Array < AlterationCountByGene >
+        > {
+            return this.fetchMutatedGenesUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };

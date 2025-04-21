@@ -11,6 +11,7 @@ import { action, computed, observable, toJS, makeObservable } from 'mobx';
 import _ from 'lodash';
 import {
     getFrequencyStr,
+    toLocaleString,
     toSvgDomNodeWithLegend,
 } from 'pages/studyView/StudyViewUtils';
 import { AbstractChart } from 'pages/studyView/charts/ChartContainer';
@@ -180,18 +181,18 @@ export default class PieChart extends React.Component<IPieChartProps, {}>
         // If ratio of pie is less than 0.25, do check the max length we can show the text and the text length
         // to decide if we should show the label or not
         return d.count / this.totalCount > 0.25
-            ? d.count.toLocaleString()
+            ? toLocaleString(d.count)
             : this.maxLength(
                   d.count / this.totalCount,
                   this.pieSliceRadius / 3
               ) <
               getTextWidth(
-                  d.count.toLocaleString(),
+                  toLocaleString(d.count),
                   CBIOPORTAL_VICTORY_THEME.axis.style.tickLabels.fontFamily,
                   `${CBIOPORTAL_VICTORY_THEME.axis.style.tickLabels.fontSize}px`
               )
             ? ''
-            : d.count.toLocaleString();
+            : toLocaleString(d.count);
     }
 
     @autobind

@@ -17,44 +17,10 @@
   "paths": {
     "/api-fed/clinical-attributes/fetch": {
       "post": {
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
           "application/json"
         ],
-        "parameters": [
-          {
-            "default": "SUMMARY",
-            "description": "Level of detail of the response",
-            "enum": [
-              "ID",
-              "SUMMARY",
-              "DETAILED",
-              "META"
-            ],
-            "in": "query",
-            "name": "projection",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "in": "body",
-            "name": "studyIds",
-            "required": true,
-            "schema": {
-              "description": "List of Study IDs",
-              "items": {
-                "maxLength": 10000000,
-                "minLength": 1,
-                "type": "string"
-              },
-              "maxItems": 10000000,
-              "minItems": 1,
-              "type": "array"
-            }
-          }
-        ],
+        "parameters": [],
         "responses": {
           "200": {
             "description": "OK",
@@ -82,18 +48,6 @@
           "application/json"
         ],
         "parameters": [
-          {
-            "default": "DYNAMIC",
-            "description": "Method for data binning",
-            "enum": [
-              "STATIC",
-              "DYNAMIC"
-            ],
-            "in": "query",
-            "name": "dataBinMethod",
-            "required": false,
-            "type": "string"
-          },
           {
             "in": "body",
             "name": "clinicalDataBinCountFilter",
@@ -154,9 +108,94 @@
         "description": "Fetch clinical data counts by study view filter",
         "operationId": "fetchClinicalDataCountsUsingPOST"
       }
+    },
+    "/api-fed/mutated-genes/fetch": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "studyViewFilter",
+            "schema": {
+              "$ref": "#/definitions/StudyViewFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/AlterationCountByGene"
+              },
+              "type": "array"
+            }
+          }
+        },
+        "tags": [
+          "Clinical Attributes"
+        ],
+        "description": "Fetch mutated genes by study view filter",
+        "operationId": "fetchMutatedGenesUsingPOST"
+      }
     }
   },
   "definitions": {
+    "AlterationCountByGene": {
+      "properties": {
+        "entrezGeneId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "entrezGeneIds": {
+          "items": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "type": "array"
+        },
+        "hugoGeneSymbol": {
+          "type": "string"
+        },
+        "hugoGeneSymbols": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "matchingGenePanelIds": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "numberOfAlteredCases": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "numberOfProfiledCases": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "qValue": {
+          "type": "number"
+        },
+        "totalCount": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "uniqueEventKey": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
     "AlterationFilter": {
       "properties": {
         "copyNumberAlterationEventTypes": {
@@ -671,6 +710,7 @@
       "type": "object"
     },
     "StudyViewFilter": {
+      "description": "Study view filter",
       "properties": {
         "alterationFilter": {
           "$ref": "#/definitions/AlterationFilter"

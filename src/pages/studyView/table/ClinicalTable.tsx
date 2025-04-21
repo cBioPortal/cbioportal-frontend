@@ -4,7 +4,10 @@ import { action, computed, observable, toJS, makeObservable } from 'mobx';
 import autobind from 'autobind-decorator';
 import _ from 'lodash';
 import LabeledCheckbox from 'shared/components/labeledCheckbox/LabeledCheckbox';
-import { ClinicalDataCountSummary } from 'pages/studyView/StudyViewUtils';
+import {
+    ClinicalDataCountSummary,
+    toLocaleString,
+} from 'pages/studyView/StudyViewUtils';
 import FixedHeaderTable from './FixedHeaderTable';
 import styles from './tables.module.scss';
 import {
@@ -209,7 +212,7 @@ export default class ClinicalTable extends React.Component<
                             className: styles.autoMarginCheckbox,
                         }}
                     >
-                        {data.count.toLocaleString()}
+                        {toLocaleString(data.count)}
                     </LabeledCheckbox>
                 ),
                 tooltip: (

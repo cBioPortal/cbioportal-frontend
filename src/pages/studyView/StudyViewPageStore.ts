@@ -691,14 +691,14 @@ export class StudyViewPageStore
                     this.updateLayout();
 
                     // for now, just hide all of the charts that are having issues
-                    this.hideChart('OS_SURVIVAL');
-                    this.hideChart('DFS_SURVIVAL');
-                    this.hideChart(
-                        'X-VS-Y-FRACTION_GENOME_ALTERED-MUTATION_COUNT'
-                    );
-                    this.hideChart('MUTATION_COUNT');
-                    this.hideChart('FRACTION_GENOME_ALTERED');
-                    this.hideChart('AGE');
+                    // this.hideChart('OS_SURVIVAL');
+                    // this.hideChart('DFS_SURVIVAL');
+                    // this.hideChart(
+                    //     'X-VS-Y-FRACTION_GENOME_ALTERED-MUTATION_COUNT'
+                    // );
+                    // this.hideChart('MUTATION_COUNT');
+                    // this.hideChart('FRACTION_GENOME_ALTERED');
+                    // this.hideChart('AGE');
                 }
             )
         );
@@ -7448,6 +7448,7 @@ export class StudyViewPageStore
                 this.changeChartVisibility(mutatedGeneMeta.uniqueKey, true);
             }
         }
+
         if (!_.isEmpty(this.structuralVariantProfiles.result)) {
             const uniqueKey = getUniqueKeyFromMolecularProfileIds(
                 this.structuralVariantProfiles.result.map(
@@ -7537,6 +7538,8 @@ export class StudyViewPageStore
                 true
             );
         }
+
+        // this.changeChartVisibility(ChartTypeEnum.MUTATED_GENES_TABLE, true);
 
         this.initializeClinicalEventTypeCountChart();
         this.initializeClinicalDataCountCharts();

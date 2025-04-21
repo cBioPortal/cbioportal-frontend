@@ -62,7 +62,7 @@ stubFederated(federatedClient, 'getAllStudies', {
     cancerTypeId: 'mixed',
     referenceGenome: 'hg19',
 });
-stubFederated(federatedClient, 'fetchMolecularProfiles', []);
+// stubFederated(federatedClient, 'fetchMolecularProfiles', []);
 stubFederated(federatedClient, 'fetchClinicalData', []);
 
 export default client;

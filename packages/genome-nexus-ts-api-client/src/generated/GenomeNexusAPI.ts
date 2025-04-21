@@ -192,10 +192,6 @@ export type Drug = {
 
         'ncitCode': string
 
-        'synonyms': Array < string >
-
-        'uuid': string
-
 };
 export type EnsemblFilter = {
     'geneIds': Array < string >
@@ -1185,7 +1181,7 @@ export default class GenomeNexusAPI {
      * @method
      * @name GenomeNexusAPI#fetchVariantAnnotationPOST
      * @param {} variants - List of variants. For example ["X:g.66937331T>A","17:g.41242962_41242963insGA"] (GRCh37) or ["1:g.182712A>C", "2:g.265023C>T", "3:g.319781del", "19:g.110753dup", "1:g.1385015_1387562del"] (GRCh38)
-     * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
+     * @param {string} isoformOverrideSource - Isoform override source. For example mskcc
      * @param {string} token - Map of tokens. For example {"source1":"put-your-token1-here","source2":"put-your-token2-here"}
      * @param {array} fields - Comma separated list of fields to include in the annotation (case-sensitive!). Defaults to "annotation_summary" if no value passed. Valid values: {annotation_summary, clinvar, hotspots, mutation_assessor, my_variant_info, nucleotide_context, oncokb, ptms, signal}
      */
@@ -1247,7 +1243,7 @@ export default class GenomeNexusAPI {
      * @method
      * @name GenomeNexusAPI#fetchVariantAnnotationPOST
      * @param {} variants - List of variants. For example ["X:g.66937331T>A","17:g.41242962_41242963insGA"] (GRCh37) or ["1:g.182712A>C", "2:g.265023C>T", "3:g.319781del", "19:g.110753dup", "1:g.1385015_1387562del"] (GRCh38)
-     * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
+     * @param {string} isoformOverrideSource - Isoform override source. For example mskcc
      * @param {string} token - Map of tokens. For example {"source1":"put-your-token1-here","source2":"put-your-token2-here"}
      * @param {array} fields - Comma separated list of fields to include in the annotation (case-sensitive!). Defaults to "annotation_summary" if no value passed. Valid values: {annotation_summary, clinvar, hotspots, mutation_assessor, my_variant_info, nucleotide_context, oncokb, ptms, signal}
      */
@@ -1301,7 +1297,7 @@ export default class GenomeNexusAPI {
      * @method
      * @name GenomeNexusAPI#fetchVariantAnnotationByIdPOST
      * @param {} variantIds - List of variant IDs. For example ["rs116035550"]
-     * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
+     * @param {string} isoformOverrideSource - Isoform override source. For example mskcc
      * @param {string} token - Map of tokens. For example {"source1":"put-your-token1-here","source2":"put-your-token2-here"}
      * @param {array} fields - Comma separated list of fields to include in the annotation (case-sensitive!). Defaults to "annotation_summary" if no value passed. Valid values: {annotation_summary, clinvar, hotspots, mutation_assessor, my_variant_info, nucleotide_context, oncokb, ptms, signal}
      */
@@ -1363,7 +1359,7 @@ export default class GenomeNexusAPI {
      * @method
      * @name GenomeNexusAPI#fetchVariantAnnotationByIdPOST
      * @param {} variantIds - List of variant IDs. For example ["rs116035550"]
-     * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
+     * @param {string} isoformOverrideSource - Isoform override source. For example mskcc
      * @param {string} token - Map of tokens. For example {"source1":"put-your-token1-here","source2":"put-your-token2-here"}
      * @param {array} fields - Comma separated list of fields to include in the annotation (case-sensitive!). Defaults to "annotation_summary" if no value passed. Valid values: {annotation_summary, clinvar, hotspots, mutation_assessor, my_variant_info, nucleotide_context, oncokb, ptms, signal}
      */
@@ -1418,7 +1414,7 @@ export default class GenomeNexusAPI {
      * @method
      * @name GenomeNexusAPI#fetchVariantAnnotationByIdGET
      * @param {string} variantId - dbSNP id. For example rs116035550.
-     * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
+     * @param {string} isoformOverrideSource - Isoform override source. For example mskcc
      * @param {string} token - Map of tokens. For example {"source1":"put-your-token1-here","source2":"put-your-token2-here"}
      * @param {array} fields - Comma separated list of fields to include in the annotation (case-sensitive!). Defaults to "annotation_summary" if no value passed. Valid values: {annotation_summary, clinvar, hotspots, mutation_assessor, my_variant_info, nucleotide_context, oncokb, ptms, signal}
      */
@@ -1478,7 +1474,7 @@ export default class GenomeNexusAPI {
      * @method
      * @name GenomeNexusAPI#fetchVariantAnnotationByIdGET
      * @param {string} variantId - dbSNP id. For example rs116035550.
-     * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
+     * @param {string} isoformOverrideSource - Isoform override source. For example mskcc
      * @param {string} token - Map of tokens. For example {"source1":"put-your-token1-here","source2":"put-your-token2-here"}
      * @param {array} fields - Comma separated list of fields to include in the annotation (case-sensitive!). Defaults to "annotation_summary" if no value passed. Valid values: {annotation_summary, clinvar, hotspots, mutation_assessor, my_variant_info, nucleotide_context, oncokb, ptms, signal}
      */
@@ -1531,7 +1527,7 @@ export default class GenomeNexusAPI {
      * @method
      * @name GenomeNexusAPI#fetchVariantAnnotationByGenomicLocationPOST
      * @param {} genomicLocations - List of Genomic Locations
-     * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
+     * @param {string} isoformOverrideSource - Isoform override source. For example mskcc
      * @param {string} token - Map of tokens. For example {"source1":"put-your-token1-here","source2":"put-your-token2-here"}
      * @param {array} fields - Comma separated list of fields to include in the annotation (case-sensitive!). Defaults to "annotation_summary" if no value passed. Valid values: {annotation_summary, clinvar, hotspots, mutation_assessor, my_variant_info, nucleotide_context, oncokb, ptms, signal}
      */
@@ -1593,7 +1589,7 @@ export default class GenomeNexusAPI {
      * @method
      * @name GenomeNexusAPI#fetchVariantAnnotationByGenomicLocationPOST
      * @param {} genomicLocations - List of Genomic Locations
-     * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
+     * @param {string} isoformOverrideSource - Isoform override source. For example mskcc
      * @param {string} token - Map of tokens. For example {"source1":"put-your-token1-here","source2":"put-your-token2-here"}
      * @param {array} fields - Comma separated list of fields to include in the annotation (case-sensitive!). Defaults to "annotation_summary" if no value passed. Valid values: {annotation_summary, clinvar, hotspots, mutation_assessor, my_variant_info, nucleotide_context, oncokb, ptms, signal}
      */
@@ -1648,7 +1644,7 @@ export default class GenomeNexusAPI {
      * @method
      * @name GenomeNexusAPI#fetchVariantAnnotationByGenomicLocationGET
      * @param {string} genomicLocation - A genomic location. For example 7,140453136,140453136,A,T
-     * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
+     * @param {string} isoformOverrideSource - Isoform override source. For example mskcc
      * @param {string} token - Map of tokens. For example {"source1":"put-your-token1-here","source2":"put-your-token2-here"}
      * @param {array} fields - Comma separated list of fields to include in the annotation (case-sensitive!). Defaults to "annotation_summary" if no value passed. Valid values: {annotation_summary, clinvar, hotspots, mutation_assessor, my_variant_info, nucleotide_context, oncokb, ptms, signal}
      */
@@ -1708,7 +1704,7 @@ export default class GenomeNexusAPI {
      * @method
      * @name GenomeNexusAPI#fetchVariantAnnotationByGenomicLocationGET
      * @param {string} genomicLocation - A genomic location. For example 7,140453136,140453136,A,T
-     * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
+     * @param {string} isoformOverrideSource - Isoform override source. For example mskcc
      * @param {string} token - Map of tokens. For example {"source1":"put-your-token1-here","source2":"put-your-token2-here"}
      * @param {array} fields - Comma separated list of fields to include in the annotation (case-sensitive!). Defaults to "annotation_summary" if no value passed. Valid values: {annotation_summary, clinvar, hotspots, mutation_assessor, my_variant_info, nucleotide_context, oncokb, ptms, signal}
      */
@@ -1762,7 +1758,7 @@ export default class GenomeNexusAPI {
      * @method
      * @name GenomeNexusAPI#fetchVariantAnnotationGET
      * @param {string} variant - Variant. For example 17:g.41242962_41242963insGA
-     * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
+     * @param {string} isoformOverrideSource - Isoform override source. For example mskcc
      * @param {string} token - Map of tokens. For example {"source1":"put-your-token1-here","source2":"put-your-token2-here"}
      * @param {array} fields - Comma separated list of fields to include in the annotation (case-sensitive!). Defaults to "annotation_summary" if no value passed. Valid values: {annotation_summary, clinvar, hotspots, mutation_assessor, my_variant_info, nucleotide_context, oncokb, ptms, signal}
      */
@@ -1822,7 +1818,7 @@ export default class GenomeNexusAPI {
      * @method
      * @name GenomeNexusAPI#fetchVariantAnnotationGET
      * @param {string} variant - Variant. For example 17:g.41242962_41242963insGA
-     * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
+     * @param {string} isoformOverrideSource - Isoform override source. For example mskcc
      * @param {string} token - Map of tokens. For example {"source1":"put-your-token1-here","source2":"put-your-token2-here"}
      * @param {array} fields - Comma separated list of fields to include in the annotation (case-sensitive!). Defaults to "annotation_summary" if no value passed. Valid values: {annotation_summary, clinvar, hotspots, mutation_assessor, my_variant_info, nucleotide_context, oncokb, ptms, signal}
      */
@@ -2171,7 +2167,7 @@ export default class GenomeNexusAPI {
      * @method
      * @name GenomeNexusAPI#fetchCanonicalEnsemblTranscriptsByHugoSymbolsPOST
      * @param {} hugoSymbols - List of Hugo Symbols. For example ["TP53","PIK3CA","BRCA1"]
-     * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
+     * @param {string} isoformOverrideSource - Isoform override source. For example mskcc
      */
     fetchCanonicalEnsemblTranscriptsByHugoSymbolsPOSTWithHttpInfo(parameters: {
         'hugoSymbols': Array < string > ,
@@ -2221,7 +2217,7 @@ export default class GenomeNexusAPI {
      * @method
      * @name GenomeNexusAPI#fetchCanonicalEnsemblTranscriptsByHugoSymbolsPOST
      * @param {} hugoSymbols - List of Hugo Symbols. For example ["TP53","PIK3CA","BRCA1"]
-     * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
+     * @param {string} isoformOverrideSource - Isoform override source. For example mskcc
      */
     fetchCanonicalEnsemblTranscriptsByHugoSymbolsPOST(parameters: {
             'hugoSymbols': Array < string > ,
@@ -2262,7 +2258,7 @@ export default class GenomeNexusAPI {
      * @method
      * @name GenomeNexusAPI#fetchCanonicalEnsemblTranscriptByHugoSymbolGET
      * @param {string} hugoSymbol - A Hugo Symbol. For example TP53
-     * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
+     * @param {string} isoformOverrideSource - Isoform override source. For example mskcc
      */
     fetchCanonicalEnsemblTranscriptByHugoSymbolGETWithHttpInfo(parameters: {
         'hugoSymbol': string,
@@ -2310,7 +2306,7 @@ export default class GenomeNexusAPI {
      * @method
      * @name GenomeNexusAPI#fetchCanonicalEnsemblTranscriptByHugoSymbolGET
      * @param {string} hugoSymbol - A Hugo Symbol. For example TP53
-     * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
+     * @param {string} isoformOverrideSource - Isoform override source. For example mskcc
      */
     fetchCanonicalEnsemblTranscriptByHugoSymbolGET(parameters: {
         'hugoSymbol': string,

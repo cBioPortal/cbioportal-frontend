@@ -19,6 +19,7 @@ import {
     getFixedHeaderNumberCellMargin,
     getFixedHeaderTableMaxLengthStringPixel,
     getFrequencyStr,
+    toLocaleString,
 } from 'pages/studyView/StudyViewUtils';
 import { OncokbCancerGene } from 'pages/studyView/StudyViewPageStore';
 import {
@@ -404,7 +405,7 @@ export class MultiSelectionTable extends React.Component<
                             marginRight: cellMargin,
                         }}
                     >
-                        {data.totalCount.toLocaleString()}
+                        {toLocaleString(data.totalCount)}
                     </span>
                 ),
                 sortBy: (data: MultiSelectionTableRow) => data.totalCount,
@@ -437,7 +438,7 @@ export class MultiSelectionTable extends React.Component<
                         }}
                         className={`${styles.pullRight}`}
                     >
-                        {data.totalCount.toLocaleString()}
+                        {toLocaleString(data.totalCount)}
                     </span>
                 ),
                 sortBy: (data: MultiSelectionTableRow) => data.totalCount,

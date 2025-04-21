@@ -85,7 +85,7 @@
           {
             "name": "isoformOverrideSource",
             "in": "query",
-            "description": "Isoform override source. For example uniprot",
+            "description": "Isoform override source. For example mskcc",
             "required": false,
             "type": "string"
           },
@@ -139,7 +139,7 @@
           {
             "name": "isoformOverrideSource",
             "in": "query",
-            "description": "Isoform override source. For example uniprot",
+            "description": "Isoform override source. For example mskcc",
             "required": false,
             "type": "string"
           },

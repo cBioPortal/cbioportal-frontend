@@ -649,27 +649,37 @@ export class QueryStore {
     );
 
     mockFederatedStudies(): CancerStudy[] {
-        const source1: any = {
-            name: 'Test cBioPortal Instance 1',
-            description: 'Test cBioPortal Instance 1',
+        // const source1: any = {
+        //     name: 'Test cBioPortal Instance 1',
+        //     description: 'Test cBioPortal Instance 1',
+        //     publicStudy: true,
+        //     groups: 'PUBLIC',
+        //     studyId: 'Test_cBioPortal_Instance_1',
+        //     cancerType: 'mixed',
+        //     referenceGenome: 'hg19',
+        //     allSampleCount: 123,
+        // };
+        // const source2: any = {
+        //     name: 'Test cBioPortal Instance 2',
+        //     description: 'Test cBioPortal Instance 2',
+        //     publicStudy: true,
+        //     groups: 'PUBLIC',
+        //     studyId: 'Test_cBioPortal_Instance_2',
+        //     cancerType: 'mixed',
+        //     referenceGenome: 'hg19',
+        //     allSampleCount: 456,
+        // };
+        const source3: any = {
+            name: 'NCI Enclave',
+            description: 'NCI Enclave',
             publicStudy: true,
             groups: 'PUBLIC',
-            studyId: 'Test_cBioPortal_Instance_1',
+            studyId: 'nci_enclave',
             cancerType: 'mixed',
             referenceGenome: 'hg19',
-            allSampleCount: 123,
+            allSampleCount: 789,
         };
-        const source2: any = {
-            name: 'Test cBioPortal Instance 2',
-            description: 'Test cBioPortal Instance 2',
-            publicStudy: true,
-            groups: 'PUBLIC',
-            studyId: 'Test_cBioPortal_Instance_2',
-            cancerType: 'mixed',
-            referenceGenome: 'hg19',
-            allSampleCount: 456,
-        };
-        return [source1 as CancerStudy, source2 as CancerStudy];
+        return [source3 as CancerStudy];
     }
 
     mockFederatedStudiesIdsSet(): { [studyId: string]: boolean } {
