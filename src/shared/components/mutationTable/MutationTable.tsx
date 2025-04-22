@@ -274,7 +274,13 @@ export function defaultFilter(
         return data.reduce((match: boolean, next: Mutation) => {
             const val = (next as any)[dataField];
             if (val) {
-                return match || val.toUpperCase().includes(filterStringUpper);
+                return (
+                    match ||
+                    val
+                        .toString()
+                        .toUpperCase()
+                        .includes(filterStringUpper)
+                );
             } else {
                 return match;
             }
@@ -715,6 +721,11 @@ export default class MutationTable<
             sortBy: (d: Mutation[]) => d.map(m => m.startPosition),
             visible: false,
             align: 'right',
+            filter: (
+                d: Mutation[],
+                filterString: string,
+                filterStringUpper: string
+            ) => defaultFilter(d, 'startPosition', filterStringUpper),
         };
 
         this._columns[MutationTableColumnType.END_POS] = {
@@ -725,6 +736,11 @@ export default class MutationTable<
             sortBy: (d: Mutation[]) => d.map(m => m.endPosition),
             visible: false,
             align: 'right',
+            filter: (
+                d: Mutation[],
+                filterString: string,
+                filterStringUpper: string
+            ) => defaultFilter(d, 'endPosition', filterStringUpper),
         };
 
         this._columns[MutationTableColumnType.REF_ALLELE] = {
