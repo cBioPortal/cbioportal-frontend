@@ -226,6 +226,7 @@ async function setDropdownOpen(
                         : button_selector_or_elt;
                 await button_elt.waitForExist();
                 await button_elt.click();
+                await browser.pause(100);
                 return false;
             }
         },
