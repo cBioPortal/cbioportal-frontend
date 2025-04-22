@@ -55,22 +55,6 @@ export function getTabId(pathname: string) {
     }
 }
 
-export const PathwaysSlugToEnumMap: Record<
-    string,
-    ResultsViewPathwaysSubTab
-> = {
-    'pathway-mapper': ResultsViewPathwaysSubTab.PATHWAY_MAPPER,
-    ndex: ResultsViewPathwaysSubTab.NDEX,
-};
-
-export const PathwaysEnumToSlugMap: Record<
-    ResultsViewPathwaysSubTab,
-    string
-> = Object.entries(PathwaysSlugToEnumMap).reduce((acc, [slug, enumValue]) => {
-    acc[enumValue] = slug;
-    return acc;
-}, {} as Record<ResultsViewPathwaysSubTab, string>);
-
 export const oldTabToNewTabRoute: { [legacyTabId: string]: ResultsViewTab } = {
     oncoprint: ResultsViewTab.ONCOPRINT,
     cancer_types_summary: ResultsViewTab.CANCER_TYPES_SUMMARY,

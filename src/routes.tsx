@@ -98,7 +98,6 @@ import { seekUrlHash } from 'shared/lib/seekUrlHash';
 import { PagePath } from 'shared/enums/PagePaths';
 import {
     LegacyResultsViewComparisonSubTab,
-    PathwaysEnumToSlugMap,
     ResultsViewComparisonSubTab,
     ResultsViewPathwaysSubTab,
     ResultsViewTab,
@@ -120,7 +119,10 @@ import {
     mutationGroup,
 } from 'shared/lib/comparison/ComparisonStoreUtils';
 import { MapValues } from 'shared/lib/TypeScriptUtils';
-import { ResultsViewURLQuery } from 'pages/resultsView/ResultsViewURLWrapper';
+import {
+    ResultsViewURLQuery,
+    sanitizeForUrl,
+} from 'pages/resultsView/ResultsViewURLWrapper';
 import { EnumDeclaration, EnumType } from 'typescript';
 
 function SuspenseWrapper(Component: any) {
@@ -431,19 +433,15 @@ export const makeRoutes = () => {
                             }
                         );
                         if (query.pathways_source) {
+                            const sanitizedValue = sanitizeForUrl(
+                                query.pathways_source as string
+                            );
                             redirectTo(
                                 {},
-                                `/results/pathways/${query.pathways_source}`
+                                `/results/pathways/${sanitizedValue}`
                             );
                         } else {
-                            redirectTo(
-                                {},
-                                `/results/pathways/${
-                                    PathwaysEnumToSlugMap[
-                                        ResultsViewPathwaysSubTab.PATHWAY_MAPPER
-                                    ]
-                                }`
-                            );
+                            redirectTo({}, '/results/pathways/pathwaymapper');
                         }
                     })}
                 />

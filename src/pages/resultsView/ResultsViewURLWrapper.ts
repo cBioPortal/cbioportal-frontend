@@ -5,8 +5,6 @@ import autobind from 'autobind-decorator';
 import {
     LegacyResultsViewComparisonSubTab,
     oldTabToNewTabRoute,
-    PathwaysEnumToSlugMap,
-    PathwaysSlugToEnumMap,
     ResultsViewComparisonSubTab,
     ResultsViewPathwaysSubTab,
     ResultsViewTab,
@@ -307,6 +305,11 @@ function backwardsCompatibilityMapping(oldParams: any) {
     return newParams;
 }
 
+export function sanitizeForUrl(value: string): string {
+    // Convert to lowercase and replace spaces with hyphens
+    return value.toLowerCase().replace(/\s+/g, '-');
+}
+
 const ALL_TRACKS_DELETED = 'null';
 
 export default class ResultsViewURLWrapper
@@ -419,22 +422,25 @@ export default class ResultsViewURLWrapper
     }
 
     @computed public get pathwaysSubTabId() {
-        // Extract subtab name after "/pathways/" in the URL path.
+        // Extract subtab name after "/pathways/" in the URL path
         const subtabMatch = this.pathName.match(/\/pathways\/([^\/?#]+)/);
-        if (subtabMatch) {
-            const slug = subtabMatch[1].toLowerCase();
-            return (
-                PathwaysSlugToEnumMap[slug] ||
-                ResultsViewPathwaysSubTab.PATHWAY_MAPPER
-            );
+        if (!subtabMatch) {
+            return ResultsViewPathwaysSubTab.PATHWAY_MAPPER;
         }
-        return ResultsViewPathwaysSubTab.PATHWAY_MAPPER;
+
+        const urlValue = subtabMatch[1];
+        // Matching enum by comparing sanitized versions
+        const match = Object.values(ResultsViewPathwaysSubTab).find(
+            enumValue => sanitizeForUrl(enumValue) === urlValue
+        );
+
+        return match || ResultsViewPathwaysSubTab.PATHWAY_MAPPER;
     }
 
     @autobind
     public setPathwaysSubTabId(tabId: ResultsViewPathwaysSubTab) {
-        const slug = PathwaysEnumToSlugMap[tabId] || 'pathway-mapper';
-        this.updateURL({}, `results/pathways/${slug}`);
+        const sanitizedValue = sanitizeForUrl(tabId);
+        this.updateURL({}, `results/pathways/${sanitizedValue}`);
     }
 
     @computed public get selectedEnrichmentEventTypes() {
