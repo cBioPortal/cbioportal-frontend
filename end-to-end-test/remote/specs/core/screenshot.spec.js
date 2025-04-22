@@ -28,6 +28,8 @@ async function waitForAndCheckPlotsTab() {
 function runResultsTestSuite(prefix, options = {}) {
     it(`${prefix} render the oncoprint`, async function() {
         await waitForOncoprint();
+        await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 }); // move mouse out of the way
+        browser.pause(100);
         const res = await checkElementWithMouseDisabled('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
