@@ -372,6 +372,8 @@ workflows:
       - pull_cbioportal_test_codebase
       - checkout
       - prettier:
+          requires:
+            - checkout
           filters:
             branches:
               ignore:
