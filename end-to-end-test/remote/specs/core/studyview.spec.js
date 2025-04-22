@@ -1065,7 +1065,7 @@ describe('study view mutations table', () => {
     });
 });
 
-describe.only('custom data chart addition', () => {
+describe('custom data chart addition', () => {
     // this guards against server-side regression
     // in which frequencies are miscalculated for
     // with mutations which are called but not profile
@@ -1076,7 +1076,7 @@ msk_impact_2017:P-0009925-T01-IM5 2
 msk_impact_2017:P-0010568-T01-IM5 2
 msk_impact_2017:P-0010590-T01-IM5 2`;
 
-    it('shows mutation frequencies correctly for called but unprofiled mutations', async () => {
+    it('properly handles parsing of custom data list - distinct from custom sample list', async () => {
         const url = `${CBIOPORTAL_URL}/study/summary?id=msk_impact_2017`;
         await goToUrlAndSetLocalStorage(url);
 
