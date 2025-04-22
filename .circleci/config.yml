@@ -194,6 +194,7 @@ jobs:
           name: 'Check code style with Prettier'
           command: |
             cd cbioportal-frontend
+            yarn add -W prettier
             yarn run prettierCheckCircleCI
 
   pull_cbioportal_test_codebase:
@@ -371,6 +372,14 @@ workflows:
     jobs:
       - pull_cbioportal_test_codebase
       - checkout
+      - prettier:
+          requires:
+            - checkout
+          filters:
+            branches:
+              ignore:
+                - master
+                - release-*
       - check_forgotten_spec_only_statements:
           requires:
             - checkout
@@ -380,14 +389,6 @@ workflows:
       - build_frontend:
           requires:
             - checkout
-      - prettier:
-          requires:
-            - build_frontend
-          filters:
-            branches:
-              ignore:
-                - master
-                - release-*
       - e2e_localdb_tests:
           requires:
             - pull_cbioportal_test_codebase
