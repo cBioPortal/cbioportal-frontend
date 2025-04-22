@@ -15,10 +15,12 @@ const {
     getElementByTestHandle,
     checkElementWithMouseDisabled,
     setInputText,
+    elementExists,
     clickElement,
     getElement,
     getColorOfNthElement,
     getNthElements,
+    waitForElementDisplayed,
 } = require('../../../shared/specUtils_Async');
 const { assertScreenShotMatch } = require('../../../shared/lib/testUtils');
 
@@ -1060,5 +1062,46 @@ describe('study view mutations table', () => {
             "[data-test='chart-container-msk_impact_2017_mutations']"
         );
         assertScreenShotMatch(res);
+    });
+});
+
+describe('custom data chart addition', () => {
+    // this guards against server-side regression
+    // in which frequencies are miscalculated for
+    // with mutations which are called but not profile
+
+    const customSamples = `msk_impact_2017:P-0007153-T01-IM5 1
+msk_impact_2017:P-0008475-T01-IM5 1
+msk_impact_2017:P-0009925-T01-IM5 2
+msk_impact_2017:P-0010568-T01-IM5 2
+msk_impact_2017:P-0010590-T01-IM5 2`;
+
+    it('properly handles parsing of custom data list - distinct from custom sample list', async () => {
+        const url = `${CBIOPORTAL_URL}/study/summary?id=msk_impact_2017`;
+        await goToUrlAndSetLocalStorage(url);
+
+        await clickElement('[data-test=add-charts-button]', { timeout: 10000 });
+
+        await clickElement('.tabAnchor_Custom_Data', { timeout: 10000 });
+
+        await setInputText('.custom textarea', customSamples);
+
+        assert.equal(
+            await elementExists('[data-test=ValidationResultWarning]'),
+            false
+        );
+
+        // but now when we set an invalid sample id, we trigger validation error
+        await setInputText(
+            '.custom textarea',
+            customSamples.replace('P-0008475-T01-IM5', 'P-XXXXX-T01-IM5')
+        );
+
+        await browser.pause(500);
+
+        assert.equal(
+            await elementExists('[data-test=ValidationResultWarning]'),
+            true
+        );
     });
 });

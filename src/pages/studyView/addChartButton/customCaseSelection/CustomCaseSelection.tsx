@@ -32,6 +32,7 @@ export interface ICustomCaseSelectionProps {
     disableGrouping?: boolean;
     getDefaultChartName?: () => string;
     isChartNameValid?: (chartName: string) => boolean;
+    contentNormalizer?: (content: string) => string;
 }
 
 // This is the selection tool that is used to switch between bar and pie charts for categorical and numerical data.
@@ -159,14 +160,10 @@ export default class CustomCaseSelection extends React.Component<
     @action.bound
     onChange(newContent: string) {
         // Preprocess content to allow spaces, tabs, and commas as valid delimiters
-        const normalizedContent = newContent
-            .split(/[, ]+/) // Split the content by either commas or spaces
-            .map(line => line.trim()) // Remove extra spaces around each line
-            .filter(line => line.length > 0) // Remove empty lines
-            .join('\n'); // Use newline as the final delimiter
-
         // Assign normalized content and trigger validation
-        this.validContent = normalizedContent;
+        this.validContent = this.props.contentNormalizer
+            ? this.props.contentNormalizer(newContent)
+            : newContent;
         this.validateContent = true;
     }
 

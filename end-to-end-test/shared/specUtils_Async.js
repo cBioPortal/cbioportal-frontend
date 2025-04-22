@@ -115,6 +115,10 @@ async function getElementByTestHandle(handle, options) {
     return await getElement(`[data-test="${handle}"]`);
 }
 
+async function elementExists(selector) {
+    return await (await $(selector)).isExisting();
+}
+
 /**
  * @param {string} testHandle  the data-test handle of the element
  * @param {string} type  the type of color to get background-color, border-color , default is 'color'
@@ -945,4 +949,5 @@ module.exports = {
     isDisplayed,
     waitForElementDisplayed,
     getCSSProperty,
+    elementExists,
 };

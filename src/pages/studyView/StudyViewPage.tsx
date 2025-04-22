@@ -860,6 +860,24 @@ export default class StudyViewPage extends React.Component<
                                                                         .samples
                                                                         .result
                                                                 }
+                                                                contentNormalizer={content => {
+                                                                    return content
+                                                                        .split(
+                                                                            /[, ]+/
+                                                                        ) // Split the content by either commas or spaces
+                                                                        .map(
+                                                                            line =>
+                                                                                line.trim()
+                                                                        ) // Remove extra spaces around each line
+                                                                        .filter(
+                                                                            line =>
+                                                                                line.length >
+                                                                                0
+                                                                        ) // Remove empty lines
+                                                                        .join(
+                                                                            '\n'
+                                                                        ); // Use newline as the final delimiter
+                                                                }}
                                                                 selectedSamples={
                                                                     this.store
                                                                         .selectedSamples
