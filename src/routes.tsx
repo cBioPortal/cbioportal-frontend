@@ -98,6 +98,7 @@ import { seekUrlHash } from 'shared/lib/seekUrlHash';
 import { PagePath } from 'shared/enums/PagePaths';
 import {
     LegacyResultsViewComparisonSubTab,
+    PathwaysEnumToSlugMap,
     ResultsViewComparisonSubTab,
     ResultsViewPathwaysSubTab,
     ResultsViewTab,
@@ -435,7 +436,14 @@ export const makeRoutes = () => {
                                 `/results/pathways/${query.pathways_source}`
                             );
                         } else {
-                            redirectTo({}, '/results/pathways/PathwayMapper');
+                            redirectTo(
+                                {},
+                                `/results/pathways/${
+                                    PathwaysEnumToSlugMap[
+                                        ResultsViewPathwaysSubTab.PATHWAY_MAPPER
+                                    ]
+                                }`
+                            );
                         }
                     })}
                 />
