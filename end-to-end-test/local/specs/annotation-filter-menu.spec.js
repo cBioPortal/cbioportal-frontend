@@ -642,7 +642,7 @@ describe('alteration filter menu', function() {
                 BRCA1: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                 OR11H1: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                 TMEM247: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
-                BRCA2: { alt: '0 (0.00%)', unalt: '6 (27.27%)' },
+                BRCA2: { alt: '0 (0.00%)', unalt: '6 (30.00%)' },
                 ACP3: { alt: '0 (0.00%)', unalt: '5 (22.73%)' },
             });
             await clickCheckBoxResultsView('Germline');
@@ -653,7 +653,7 @@ describe('alteration filter menu', function() {
             assert.deepStrictEqual(await enrichmentTableCounts(), {
                 ATM: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                 BRCA1: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
-                BRCA2: { alt: '1 (100.00%)', unalt: '5 (22.73%)' },
+                BRCA2: { alt: '1 (100.00%)', unalt: '5 (25.00%)' },
             });
             await clickCheckBoxResultsView('Somatic');
         });
@@ -668,7 +668,7 @@ describe('alteration filter menu', function() {
                 BRCA1: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                 OR11H1: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                 TMEM247: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
-                BRCA2: { alt: '1 (100.00%)', unalt: '11 (50.00%)' },
+                BRCA2: { alt: '1 (100.00%)', unalt: '11 (55.00%)' },
                 ACP3: { alt: '0 (0.00%)', unalt: '5 (22.73%)' },
             });
             await clickElement('[data-test=ShowUnknown]');
@@ -683,7 +683,7 @@ describe('alteration filter menu', function() {
                 ATM: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                 BRCA1: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                 TMEM247: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
-                BRCA2: { alt: '1 (100.00%)', unalt: '11 (50.00%)' },
+                BRCA2: { alt: '1 (100.00%)', unalt: '11 (55.00%)' },
                 ACP3: { alt: '0 (0.00%)', unalt: '5 (22.73%)' },
             });
             await clickCheckBoxResultsView('Putative drivers');
@@ -696,7 +696,7 @@ describe('alteration filter menu', function() {
                 ATM: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                 BRCA1: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                 OR11H1: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
-                BRCA2: { alt: '1 (100.00%)', unalt: '11 (50.00%)' },
+                BRCA2: { alt: '1 (100.00%)', unalt: '11 (55.00%)' },
                 ACP3: { alt: '0 (0.00%)', unalt: '5 (22.73%)' },
             });
             await clickCheckBoxResultsView('Putative passengers');
@@ -722,7 +722,7 @@ describe('alteration filter menu', function() {
                 BRCA1: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                 OR11H1: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                 TMEM247: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
-                BRCA2: { alt: '1 (100.00%)', unalt: '11 (50.00%)' },
+                BRCA2: { alt: '1 (100.00%)', unalt: '11 (55.00%)' },
                 ACP3: { alt: '0 (0.00%)', unalt: '5 (22.73%)' },
             });
         });
@@ -744,7 +744,7 @@ describe('alteration filter menu', function() {
                 ATM: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                 BRCA1: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                 OR11H1: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
-                BRCA2: { alt: '1 (100.00%)', unalt: '11 (50.00%)' },
+                BRCA2: { alt: '1 (100.00%)', unalt: '11 (55.00%)' },
                 ACP3: { alt: '0 (0.00%)', unalt: '5 (22.73%)' },
             });
             clickElement('[data-test=ShowUnknownTier]');
