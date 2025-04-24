@@ -194,7 +194,7 @@ jobs:
           name: 'Check code style with Prettier'
           command: |
             cd cbioportal-frontend
-            yarn add -W prettier
+            yarn add -W prettier@1.19.1
             yarn run prettierCheckCircleCI
 
   pull_cbioportal_test_codebase:
