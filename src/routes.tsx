@@ -401,9 +401,12 @@ export const makeRoutes = () => {
                             }
                         );
                         if (query.comparison_subtab) {
+                            const sanitizedValue = sanitizeForUrl(
+                                query.comparison_subtab as string
+                            );
                             redirectTo(
                                 {},
-                                `/results/comparison/${query.comparison_subtab}`
+                                `/results/comparison/${sanitizedValue}`
                             );
                         } else {
                             redirectTo({}, '/results/comparison/overlap');

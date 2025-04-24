@@ -336,15 +336,11 @@ export default class ResultsViewURLWrapper
     pathContext = '/results';
 
     @computed public get tabId() {
-        // Ensure top-level tab is correctly identified for routes with static subtabs.
-        // This condition checks if the URL matches exactly "/results/comparison"
-        if (this.pathName.match(/\/results\/comparison(\/|$)/)) {
-            return ResultsViewTab.COMPARISON;
-        }
-
-        // Similarly, this checks for the "/results/pathways" route.
-        if (this.pathName.match(/\/results\/pathways(\/|$)/)) {
-            return ResultsViewTab.PATHWAYS;
+        const tabSegment = this.getCurrentTabSegment();
+        if (tabSegment) {
+            return ResultsViewTab[
+                tabSegment.toUpperCase() as keyof typeof ResultsViewTab
+            ];
         }
         const tabInPath = this.pathName.split('/').pop();
         if (tabInPath && tabInPath in oldTabToNewTabRoute) {
@@ -405,42 +401,37 @@ export default class ResultsViewURLWrapper
         );
     }
 
-    @computed public get comparisonSubTabId() {
-        // Extract subtab name after "/comparison/" in the URL path.
-        const subtabMatch = this.pathName.match(/\/comparison\/([^\/?#]+)/);
-        return subtabMatch ? subtabMatch[1] : GroupComparisonTab.OVERLAP;
-    }
-
     @autobind
     public setTabId(tabId: ResultsViewTab, replace?: boolean) {
         this.updateURL({}, `results/${tabId}`, false, replace);
     }
 
-    @autobind
-    public setComparisonSubTabId(tabId: GroupComparisonTab) {
-        this.updateURL({}, `results/comparison/${tabId}`);
-    }
+    public get getSubTab() {
+        const tabSegment = this.getCurrentTabSegment();
+        if (!tabSegment) return '';
 
-    @computed public get pathwaysSubTabId() {
-        // Extract subtab name after "/pathways/" in the URL path
-        const subtabMatch = this.pathName.match(/\/pathways\/([^\/?#]+)/);
-        if (!subtabMatch) {
-            return ResultsViewPathwaysSubTab.PATHWAY_MAPPER;
-        }
-
-        const urlValue = subtabMatch[1];
-        // Matching enum by comparing sanitized versions
-        const match = Object.values(ResultsViewPathwaysSubTab).find(
-            enumValue => sanitizeForUrl(enumValue) === urlValue
+        // Extract subtab name after "results/tabSegment/" in the URL path
+        const subtabMatch = this.pathName.match(
+            new RegExp(`\/results\/${tabSegment}\/([^\/?#]+)`)
         );
-
-        return match || ResultsViewPathwaysSubTab.PATHWAY_MAPPER;
+        return subtabMatch?.[1] || '';
     }
 
     @autobind
-    public setPathwaysSubTabId(tabId: ResultsViewPathwaysSubTab) {
-        const sanitizedValue = sanitizeForUrl(tabId);
-        this.updateURL({}, `results/pathways/${sanitizedValue}`);
+    public setSubTab(
+        subtab: ResultsViewComparisonSubTab | ResultsViewPathwaysSubTab
+    ) {
+        const tabSegment = this.getCurrentTabSegment();
+        if (tabSegment) {
+            const sanitized = sanitizeForUrl(subtab);
+            this.updateURL({}, `results/${tabSegment}/${sanitized}`);
+        }
+    }
+
+    private getCurrentTabSegment(): string | undefined {
+        // Extract tab name after "/results/" in the URL path
+        const match = this.pathName.match(/\/results\/([^\/]+)/);
+        return match?.[1];
     }
 
     @computed public get selectedEnrichmentEventTypes() {
