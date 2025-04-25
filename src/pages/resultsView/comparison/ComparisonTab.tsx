@@ -82,6 +82,7 @@ export default class ComparisonTab extends React.Component<
                 return (
                     <div style={{ minWidth: 355, width: 355, zIndex: 20 }}>
                         <ReactSelect
+                            aria-label="Overlap Strategy Selection"
                             name="select overlap strategy"
                             onChange={(option: any | null) => {
                                 if (option) {
