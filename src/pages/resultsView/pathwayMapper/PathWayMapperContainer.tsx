@@ -128,7 +128,7 @@ const PathWayMapperContainer: React.FunctionComponent<IPathwayMapperContainerPro
         urlWrapper,
     }: IPathwayMapperContainerProps) {
         const store = useLocalObservable(() => ({
-            activeTab: urlWrapper.getSubTab,
+            activeTab: urlWrapper.subTab,
         }));
 
         return (

@@ -406,9 +406,11 @@ export default class ResultsViewURLWrapper
         this.updateURL({}, `results/${tabId}`, false, replace);
     }
 
-    public get getSubTab() {
+    public get subTab() {
         const tabSegment = this.getCurrentTabSegment();
-        if (!tabSegment) return '';
+        if (!tabSegment) {
+            return '';
+        }
 
         // Extract subtab name after "results/tabSegment/" in the URL path
         const subtabMatch = this.pathName.match(
