@@ -542,12 +542,20 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         let patientIds: string[] = [];
 
         if (this.boxPlotData.isComplete && this.boxPlotData.result) {
-            const uniqueSampleKeys = _.flatten(_.map(this.boxPlotData.result.data, dataPoint =>
-                _.map(dataPoint.data, point => point.uniqueSampleKey)
-            ));
+            const uniqueSampleKeys = _.flatten(
+                _.map(this.boxPlotData.result.data, dataPoint =>
+                    _.map(dataPoint.data, point => point.uniqueSampleKey)
+                )
+            );
 
-            patientIds = _.uniq(uniqueSampleKeys.map(sampleKey => 
-                this.props.sampleKeyToSample.result![sampleKey]?.patientId).filter(Boolean)
+            patientIds = _.uniq(
+                uniqueSampleKeys
+                    .map(
+                        sampleKey =>
+                            this.props.sampleKeyToSample.result![sampleKey]
+                                ?.patientId
+                    )
+                    .filter(Boolean)
             );
         }
         return patientIds;
@@ -562,19 +570,24 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     [patientId]: [],
                 };
 
-        this.boxPlotData.result?.data.forEach(dataPoint => {
-            dataPoint.data.forEach(point => {
-                const sample = this.props.sampleKeyToSample.result![point.uniqueSampleKey];
-                if (sample && sample.patientId === patientId) {
-                    sampleIdsForPatient[patientId].push(point.sampleId);
-                }});
+                this.boxPlotData.result?.data.forEach(dataPoint => {
+                    dataPoint.data.forEach(point => {
+                        const sample = this.props.sampleKeyToSample.result![
+                            point.uniqueSampleKey
+                        ];
+                        if (sample && sample.patientId === patientId) {
+                            sampleIdsForPatient[patientId].push(point.sampleId);
+                        }
+                    });
+                });
+                samplesForPatients.push(sampleIdsForPatient);
             });
-        samplesForPatients.push(sampleIdsForPatient);
-        })};
-        
+        }
+
         // if atleast one patient has multiple samples, return the array of sample IDs for each patient, otherwise []
-        const hasPatientWithMultipleSamples = samplesForPatients.some(patientObject =>
-            patientObject[Object.keys(patientObject)[0]].length > 1
+        const hasPatientWithMultipleSamples = samplesForPatients.some(
+            patientObject =>
+                patientObject[Object.keys(patientObject)[0]].length > 1
         );
 
         return hasPatientWithMultipleSamples ? samplesForPatients : [];
@@ -4598,7 +4611,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         const showRegression =
             this.plotType.isComplete &&
             this.plotType.result === PlotType.ScatterPlot;
-        const showConnectSamples = 
+        const showConnectSamples =
             this.plotType.isComplete &&
             this.plotType.result === PlotType.BoxPlot &&
             this.samplesForEachPatient.length > 0;
@@ -5866,7 +5879,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                     }
                                     legendTitle={this.legendTitle}
                                     renderLinePlot={this.connectSamples}
-                                    samplesForPatients={this.samplesForEachPatient}
+                                    samplesForPatients={
+                                        this.samplesForEachPatient
+                                    }
                                 />
                             );
                             break;
@@ -6206,6 +6221,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                             }}
                                             className="hideScrollbar"
                                             ref={this.assignScrollPaneRef}
+                                            tabIndex={0}
                                         >
                                             {plotElt}
                                         </div>
