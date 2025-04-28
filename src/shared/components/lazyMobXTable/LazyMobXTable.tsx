@@ -1212,7 +1212,11 @@ export default class LazyMobXTable<T> extends React.Component<
                                 onInput={this.handlers.onFilterTextChange}
                                 className="form-control tableSearchInput"
                                 style={{ width: this.props.filterBoxWidth }}
-                                aria-label={`${this.store.itemsLabel} Table Search Input`}
+                                aria-label={`${
+                                    this.store.itemsLabel
+                                        ? `${this.store.itemsLabel} `
+                                        : ''
+                                }Table Search Input`}
                                 data-test="table-search-input"
                             />
                             {this.props.showFilterClearButton &&

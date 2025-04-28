@@ -156,6 +156,7 @@ export default class CheckedSelect extends React.Component<
         return (
             <div className="default-checked-select">
                 <ReactSelect
+                    aria-label={this.props.name}
                     styles={{
                         control: (provided: any) => ({
                             ...provided,
