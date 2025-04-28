@@ -665,6 +665,7 @@ export class CancerSummaryContent extends React.Component<
                                 >
                                     <FormControl
                                         type="text"
+                                        aria-label="sampleTotalThresholdInput"
                                         value={this.tempTotalCasesInputValue}
                                         data-test="sampleTotalThresholdInput"
                                         onChange={this.handleTotalInputChange}
@@ -710,6 +711,7 @@ export class CancerSummaryContent extends React.Component<
                                 >
                                     <FormControl
                                         type="text"
+                                        aria-label="alterationThresholdInput"
                                         value={
                                             this.tempAltCasesInputValue + symbol
                                         }

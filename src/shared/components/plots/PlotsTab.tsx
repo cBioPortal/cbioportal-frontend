@@ -4075,6 +4075,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                     }}
                                 >
                                     <ReactSelect
+                                        aria-label={`${dataSourceLabel} Dropdown`}
                                         className="data-source-id"
                                         name={`${
                                             vertical ? 'v' : 'h'
@@ -4181,6 +4182,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                     >
                                         <Then>
                                             <AsyncSelect
+                                                aria-label="Gene Search Dropdown"
                                                 name={`${
                                                     vertical ? 'v' : 'h'
                                                 }-gene-selector`}
@@ -4435,6 +4437,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                     Filter categories
                                 </label>
                                 <Select
+                                    aria-label="Categories Filter Dropdown"
                                     className="Select"
                                     isClearable={true}
                                     isSearchable={true}
@@ -5951,6 +5954,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                                 >
                                                     <Then>
                                                         <AsyncSelect
+                                                            aria-label="Gene or Clinical Attribute Search Dropdown"
                                                             className={
                                                                 'color-samples-toolbar-elt gene-select'
                                                             }
