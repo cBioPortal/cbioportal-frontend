@@ -10117,17 +10117,19 @@ export class StudyViewPageStore
     public readonly shouldDisplayClinicalEventTypeCounts = remoteData({
         await: () => [this.queriedPhysicalStudyIds],
         invoke: async () => {
-            const filters: Partial<StudyViewFilter> = {};
-            filters.studyIds = this.queriedPhysicalStudyIds.result;
-            return Promise.resolve(
-                (
-                    await this.internalClient.getClinicalEventTypeCountsUsingPOST(
-                        {
-                            studyViewFilter: filters as StudyViewFilter,
-                        }
-                    )
-                ).length > 0
-            );
+            if (this.unknownQueriedIds.result.length === 0) {
+                const filters: Partial<StudyViewFilter> = {};
+                filters.studyIds = this.queriedPhysicalStudyIds.result;
+                return Promise.resolve(
+                    (
+                        await this.internalClient.getClinicalEventTypeCountsUsingPOST(
+                            {
+                                studyViewFilter: filters as StudyViewFilter,
+                            }
+                        )
+                    ).length > 0
+                );
+            }
         },
     });
 
@@ -10452,7 +10454,7 @@ export class StudyViewPageStore
     >({
         await: () => [this.shouldDisplaySampleTreatments],
         invoke: async () => {
-            if (this.shouldDisplaySampleTreatments.result) {
+            if (this.shouldDisplaySampleTreatments.result != false) {
                 if (isClickhouseMode()) {
                     // @ts-ignore (will be available when go live with Clickhouse for all portals)
                     return await this.internalClient.fetchSampleTreatmentCountsUsingPOST(
@@ -10477,18 +10479,28 @@ export class StudyViewPageStore
     public readonly shouldDisplayPatientTreatments = remoteData({
         await: () => [this.queriedPhysicalStudyIds],
         invoke: () => {
-            return this.internalClient.getContainsTreatmentDataUsingPOST({
-                studyIds: toJS(this.queriedPhysicalStudyIds.result),
-            });
+            if (this.unknownQueriedIds.result.length === 0) {
+                return this.internalClient.getContainsTreatmentDataUsingPOST({
+                    studyIds: toJS(this.queriedPhysicalStudyIds.result),
+                });
+            } else {
+                return Promise.resolve(false);
+            }
         },
     });
 
     public readonly shouldDisplaySampleTreatments = remoteData({
         await: () => [this.queriedPhysicalStudyIds],
         invoke: () => {
-            return this.internalClient.getContainsSampleTreatmentDataUsingPOST({
-                studyIds: toJS(this.queriedPhysicalStudyIds.result),
-            });
+            if (this.unknownQueriedIds.result.length === 0) {
+                return this.internalClient.getContainsSampleTreatmentDataUsingPOST(
+                    {
+                        studyIds: toJS(this.queriedPhysicalStudyIds.result),
+                    }
+                );
+            } else {
+                return Promise.resolve(false);
+            }
         },
     });
 
@@ -10499,7 +10511,7 @@ export class StudyViewPageStore
     >({
         await: () => [this.shouldDisplayPatientTreatments],
         invoke: async () => {
-            if (this.shouldDisplayPatientTreatments.result) {
+            if (this.shouldDisplayPatientTreatments.result != false) {
                 if (isClickhouseMode()) {
                     // @ts-ignore (will be available when go live with Clickhouse for all portals)
                     return await this.internalClient.fetchPatientTreatmentCountsUsingPOST(
