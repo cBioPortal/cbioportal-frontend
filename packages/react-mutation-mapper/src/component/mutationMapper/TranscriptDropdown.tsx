@@ -125,7 +125,7 @@ export default class TranscriptDropdown extends React.Component<
                         value: activeTranscript,
                     }}
                     clearable={false}
-                    // need to explicitly set deleteRemoves for cleable
+                    // need to explicitly set deleteRemoves for clearable
                     // https://github.com/JedWatson/react-select/issues/1560
                     deleteRemoves={false}
                     options={this.sortTranscripts(allTranscripts).map(
