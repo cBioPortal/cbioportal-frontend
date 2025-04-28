@@ -32,8 +32,7 @@ proxyColumnStore(internalClientColumnStore, 'fetchGenomicDataBinCounts');
 proxyColumnStore(internalClientColumnStore, 'fetchGenericAssayDataBinCounts');
 proxyColumnStore(internalClientColumnStore, 'fetchGenericAssayDataCounts');
 proxyColumnStore(internalClientColumnStore, 'fetchClinicalDataViolinPlots');
-// TODO uncomment below after merging https://github.com/cBioPortal/cbioportal/pull/11454
-// proxyColumnStore(internalClientColumnStore, 'fetchAlterationEnrichments');
+proxyColumnStore(internalClientColumnStore, 'fetchAlterationEnrichments');
 
 export default internalClient;
 
