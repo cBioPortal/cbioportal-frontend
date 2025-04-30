@@ -984,6 +984,17 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         (window as any).resultsViewPlotsTab = this;
     }
 
+    // Fix aria-required-parent 508 issue
+    componentDidMount(): void {
+        setTimeout(() => {
+            const treeGridWrapper = document.querySelectorAll('.Select-value');
+            treeGridWrapper.forEach(wrapper => {
+                wrapper.setAttribute('role', 'listbox');
+                wrapper.setAttribute('aria-label', 'Select Value');
+            });
+        }, 5000);
+    }
+
     @autobind
     private getSvg() {
         return this.plotSvg;

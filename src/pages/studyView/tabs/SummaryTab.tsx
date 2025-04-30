@@ -902,6 +902,18 @@ export class StudySummaryTab extends React.Component<
         );
     };
 
+    // Fix aria-required-parent 508 issue
+    componentDidMount(): void {
+        setTimeout(() => {
+            const treeGridWrapper = document.querySelectorAll(
+                '.ReactVirtualized__Grid.ReactVirtualized__Table__Grid'
+            );
+            treeGridWrapper.forEach(wrapper => {
+                wrapper.setAttribute('role', 'treegrid');
+            });
+        }, 5000);
+    }
+
     @autobind
     onResize(newLayout: Layout[]) {
         newLayout
