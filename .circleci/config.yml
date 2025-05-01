@@ -363,7 +363,7 @@ jobs:
           path: /tmp/repo/cbioportal-frontend/end-to-end-test/local/junit/completeResults.json
           destination: /completeResults.json
       - store_artifacts:
-          path: /tmp/repo/cbioportal-frontend/end-to-end-test/local/juniterrors
+          path: /tmp/repo/cbioportal-frontend/end-to-end-test/local/junit/errors
           destination: /errors
             
 
