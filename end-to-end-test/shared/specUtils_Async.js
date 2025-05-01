@@ -258,6 +258,8 @@ async function goToUrlAndSetLocalStorage(url, authenticated = false) {
     const currentUrl = await browser.getUrl();
     const needToLogin =
         authenticated && (!currentUrl || !currentUrl.includes('http'));
+    // navigate to blank page first to prevent issues with url hash params
+    await browser.url('about:blank');
     if (!useExternalFrontend) {
         await browser.url(url);
         console.log('Connecting to: ' + url);
