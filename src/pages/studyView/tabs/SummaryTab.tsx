@@ -905,11 +905,24 @@ export class StudySummaryTab extends React.Component<
     // Fix aria-required-parent 508 issue
     componentDidMount(): void {
         setTimeout(() => {
-            const treeGridWrapper = document.querySelectorAll(
+            const virtualizedTableWrappers = document.querySelectorAll(
+                '.ReactVirtualized__Table'
+            );
+            virtualizedTableWrappers?.forEach(tableWrapper => {
+                tableWrapper.setAttribute('role', 'table');
+            });
+            const tableGridWrapper = document.querySelectorAll(
                 '.ReactVirtualized__Grid.ReactVirtualized__Table__Grid'
             );
-            treeGridWrapper.forEach(wrapper => {
-                wrapper.setAttribute('role', 'treegrid');
+            tableGridWrapper?.forEach(wrapper => {
+                wrapper.setAttribute('role', 'rowgroup');
+                wrapper.removeAttribute('aria-readonly');
+            });
+            const innerScrollWrapper = document.querySelectorAll(
+                '.ReactVirtualized__Grid__innerScrollContainer'
+            );
+            innerScrollWrapper?.forEach(wrapper => {
+                wrapper.removeAttribute('role');
             });
         }, 5000);
     }
