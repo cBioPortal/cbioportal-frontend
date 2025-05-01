@@ -543,7 +543,10 @@ export class LazyMobXTableStore<T> {
             }
 
             thContents = (
-                <span {...headerProps}>
+                <span
+                    {...headerProps}
+                    aria-label={column.name ? undefined : 'No Column Name'}
+                >
                     {thContents}
                     {sortIcon}
                 </span>

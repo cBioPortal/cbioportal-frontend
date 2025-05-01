@@ -902,7 +902,7 @@ export class StudySummaryTab extends React.Component<
         );
     };
 
-    // Fix aria-required-parent 508 issue
+    // Fix aria-required-parent and aria-required-children 508 issues
     componentDidMount(): void {
         setTimeout(() => {
             const virtualizedTableWrappers = document.querySelectorAll(
