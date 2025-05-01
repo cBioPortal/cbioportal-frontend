@@ -90,7 +90,6 @@
                 <configuration>
                     <publishingServerId>central</publishingServerId>
                     <autoPublish>true</autoPublish>
-                    <waitUntil>published</waitUntil>
                     <deploymentName>${mavenCentralDeploymentName}</deploymentName>
                 </configuration>
             </plugin>
