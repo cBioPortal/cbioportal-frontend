@@ -338,10 +338,16 @@ export default class ResultsViewURLWrapper
     @computed public get tabId() {
         const tabSegment = this.getCurrentTabSegment();
         if (tabSegment) {
-            return ResultsViewTab[
-                tabSegment.toUpperCase() as keyof typeof ResultsViewTab
-            ];
+            // Match enum VALUE (right side) to URL segment
+            const matchedTab = Object.values(ResultsViewTab).find(
+                tabValue => tabValue.toLowerCase() === tabSegment.toLowerCase()
+            );
+
+            if (matchedTab) {
+                return matchedTab;
+            }
         }
+
         const tabInPath = this.pathName.split('/').pop();
         if (tabInPath && tabInPath in oldTabToNewTabRoute) {
             // map legacy tab ids
