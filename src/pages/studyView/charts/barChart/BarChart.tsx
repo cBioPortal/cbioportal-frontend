@@ -77,6 +77,21 @@ export default class BarChart extends React.Component<IBarChartProps, {}>
         makeObservable(this);
     }
 
+    // Fix svg-img-alt 508 issue
+    componentDidMount(): void {
+        setTimeout(() => {
+            const wrappers = document.querySelectorAll(
+                `#bar-chart-${this.props.data.length} .VictoryContainer > svg`
+            );
+            wrappers?.forEach(wrapper => {
+                wrapper.setAttribute(
+                    'aria-label',
+                    `Bar Chart ${this.props.data.length}`
+                );
+            });
+        }, 5000);
+    }
+
     @autobind
     private onSelection(bars: { data: BarDatum[] }[]): void {
         const dataBins = _.flatten(
@@ -299,7 +314,10 @@ export default class BarChart extends React.Component<IBarChartProps, {}>
 
     public render() {
         return (
-            <div onMouseMove={this.onMouseMove}>
+            <div
+                id={`bar-chart-${this.props.data.length}`}
+                onMouseMove={this.onMouseMove}
+            >
                 {this.barData.length > 0 && (
                     <VictoryChart
                         containerComponent={

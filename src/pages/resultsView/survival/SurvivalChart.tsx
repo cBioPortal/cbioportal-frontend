@@ -409,6 +409,18 @@ export default class SurvivalChartExtended
         this.changeControlGroup = this.changeControlGroup.bind(this);
     }
 
+    // Fix svg-img-alt 508 issue
+    componentDidMount(): void {
+        setTimeout(() => {
+            const wrappers = document.querySelectorAll(
+                `#${CSS.escape(this.props.title)} .VictoryContainer > svg`
+            );
+            wrappers?.forEach(wrapper => {
+                wrapper.setAttribute('aria-label', this.props.title);
+            });
+        }, 5000);
+    }
+
     @observable landmarkBelowMaxDate: boolean = false;
 
     @computed get analysisGroupsMap() {
@@ -1301,7 +1313,11 @@ export default class SurvivalChartExtended
     @computed
     get chart() {
         return (
-            <div className={this.props.className} data-test={'SurvivalChart'}>
+            <div
+                id={this.props.title}
+                className={this.props.className}
+                data-test={'SurvivalChart'}
+            >
                 {this.props.showLeftTruncationCheckbox && (
                     <LeftTruncationCheckbox
                         className={styles.paddingLeftTruncationCheckbox}
