@@ -79,6 +79,31 @@ export default class LollipopMutationPlotControls extends React.Component<
         yMaxSliderWidth: 110,
     };
 
+    // Fix aria-allowed-attr 508 issue
+    componentDidMount(): void {
+        setTimeout(() => {
+            const sliderWrappers = document.querySelectorAll('.rangeslider');
+            sliderWrappers?.forEach(wrapper => {
+                const ariaValueMin =
+                    wrapper.getAttribute('aria-valuemin') || '';
+                wrapper.setAttribute('min', ariaValueMin);
+                const ariaValueMax =
+                    wrapper.getAttribute('aria-valuemax') || '';
+                wrapper.setAttribute('max', ariaValueMax);
+                const ariaValueNow =
+                    wrapper.getAttribute('aria-valuenow') || '';
+                wrapper.setAttribute('now', ariaValueNow);
+                const ariaOrientation =
+                    wrapper.getAttribute('aria-orientation') || '';
+                wrapper.setAttribute('orientation', ariaOrientation);
+                wrapper.removeAttribute('aria-valuemin');
+                wrapper.removeAttribute('aria-valuemax');
+                wrapper.removeAttribute('aria-valuenow');
+                wrapper.removeAttribute('aria-orientation');
+            });
+        }, 5000);
+    }
+
     @computed
     get showBottomYAxisSlider() {
         return (
