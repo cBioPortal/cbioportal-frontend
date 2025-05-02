@@ -373,7 +373,10 @@ export default class CancerStudySelector extends React.Component<
                     <FlexRow className={styles.cancerStudySelectorBody}>
                         <If condition={this.store.maxTreeDepth > 0}>
                             <Then>
-                                <div className={styles.cancerTypeListContainer}>
+                                <div
+                                    className={styles.cancerTypeListContainer}
+                                    tabIndex={0}
+                                >
                                     <this.CancerTypeList />
                                 </div>
                             </Then>
