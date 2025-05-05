@@ -247,6 +247,8 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
     clickhouse_mode: false,
 
     download_custom_buttons_json: '',
+
+    dynamic_study_export_mode: false,
 };
 
 export default ServerConfigDefaults;

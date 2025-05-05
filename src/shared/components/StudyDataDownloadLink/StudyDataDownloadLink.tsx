@@ -11,7 +11,7 @@ export class StudyDataDownloadLink extends React.Component<
             <a
                 className="dataset-table-download-link"
                 style={{ display: 'block' }}
-                href={getStudyDownloadUrl() + this.props.studyId + '.tar.gz'}
+                href={getStudyDownloadUrl(this.props.studyId)}
                 download
                 onClick={() =>
                     trackEvent({

@@ -190,4 +190,5 @@ export interface IServerConfig {
     enable_study_tags: boolean;
     clickhouse_mode: boolean;
     download_custom_buttons_json: string;
+    dynamic_study_export_mode: boolean;
 }
