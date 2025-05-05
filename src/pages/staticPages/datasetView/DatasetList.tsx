@@ -59,7 +59,13 @@ class CancerStudyCell extends React.Component<ICancerStudyCellProps, {}> {
 class ReferenceCell extends React.Component<IReferenceCellProps, {}> {
     render() {
         return (
-            <a target="_blank" href={getNCBIlink(`/pubmed/${this.props.pmid}`)}>
+            <a
+                target="_blank"
+                href={getNCBIlink(`/pubmed/${this.props.pmid}`)}
+                aria-label={
+                    this.props.citation ? undefined : 'No Reference Link'
+                }
+            >
                 {' '}
                 {this.props.citation}{' '}
             </a>
