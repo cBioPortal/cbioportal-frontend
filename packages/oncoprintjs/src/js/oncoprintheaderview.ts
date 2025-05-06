@@ -225,6 +225,7 @@ export default class OncoprintHeaderView {
                         .appendTo($headerDiv)
                         .attr({
                             src: menuDotsIcon,
+                            alt: 'Menu Dots Icon',
                             width: MENU_DOTS_SIZE,
                             height: MENU_DOTS_SIZE,
                         })
