@@ -10,6 +10,7 @@ export class StudyDataDownloadLink extends React.Component<
         return (
             <a
                 className="dataset-table-download-link"
+                aria-label={`Download Study ${this.props.studyId}`}
                 style={{ display: 'block' }}
                 href={getStudyDownloadUrl() + this.props.studyId + '.tar.gz'}
                 download
