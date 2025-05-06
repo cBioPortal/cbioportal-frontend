@@ -3,6 +3,7 @@ import ExtendedRouterStore from '../../shared/lib/ExtendedRouterStore';
 import { computed, makeObservable, observable } from 'mobx';
 import autobind from 'autobind-decorator';
 import {
+    getSubTabId,
     getTabId,
     LegacyResultsViewComparisonSubTab,
     oldTabToNewTabRoute,
@@ -414,16 +415,7 @@ export default class ResultsViewURLWrapper
     }
 
     public get subTab() {
-        const tabSegment = this.currentTabSegment;
-        if (!tabSegment) {
-            return '';
-        }
-
-        // Extract subtab name after "results/tabSegment/" in the URL path
-        const subtabMatch = this.pathName.match(
-            new RegExp(`\/results\/${tabSegment}\/([^\/?#]+)`)
-        );
-        return subtabMatch?.[1] || '';
+        return getSubTabId(this.pathName);
     }
 
     @autobind
