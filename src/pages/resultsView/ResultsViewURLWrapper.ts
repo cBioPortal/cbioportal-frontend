@@ -3,6 +3,7 @@ import ExtendedRouterStore from '../../shared/lib/ExtendedRouterStore';
 import { computed, makeObservable, observable } from 'mobx';
 import autobind from 'autobind-decorator';
 import {
+    getTabId,
     LegacyResultsViewComparisonSubTab,
     oldTabToNewTabRoute,
     ResultsViewComparisonSubTab,
@@ -336,7 +337,7 @@ export default class ResultsViewURLWrapper
     pathContext = '/results';
 
     @computed public get tabId() {
-        const tabSegment = this.getCurrentTabSegment();
+        const tabSegment = this.currentTabSegment;
         if (tabSegment) {
             // Match enum VALUE (right side) to URL segment
             const matchedTab = Object.values(ResultsViewTab).find(
@@ -413,7 +414,7 @@ export default class ResultsViewURLWrapper
     }
 
     public get subTab() {
-        const tabSegment = this.getCurrentTabSegment();
+        const tabSegment = this.currentTabSegment;
         if (!tabSegment) {
             return '';
         }
@@ -429,17 +430,15 @@ export default class ResultsViewURLWrapper
     public setSubTab(
         subtab: ResultsViewComparisonSubTab | ResultsViewPathwaysSubTab
     ) {
-        const tabSegment = this.getCurrentTabSegment();
+        const tabSegment = this.currentTabSegment;
         if (tabSegment) {
             const sanitized = sanitizeForUrl(subtab);
             this.updateURL({}, `results/${tabSegment}/${sanitized}`);
         }
     }
 
-    private getCurrentTabSegment(): string | undefined {
-        // Extract tab name after "/results/" in the URL path
-        const match = this.pathName.match(/\/results\/([^\/]+)/);
-        return match?.[1];
+    private get currentTabSegment(): string | undefined {
+        return getTabId(this.pathName);
     }
 
     @computed public get selectedEnrichmentEventTypes() {
