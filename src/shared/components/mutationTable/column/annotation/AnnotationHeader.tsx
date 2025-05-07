@@ -120,6 +120,7 @@ export const civicData: LegendDescription[] = [
         legend: (
             <img
                 src={require('../../../../../../src/rootImages/civic-logo.png')}
+                alt="Civic Logo"
                 style={{ height: 14, width: 14, marginLeft: 6 }}
             />
         ),
@@ -131,6 +132,7 @@ export const civicData: LegendDescription[] = [
         legend: (
             <img
                 src={require('../../../../../../src/rootImages/civic-logo-no-variants.png')}
+                alt="Civic Logo with No Variants"
                 style={{ height: 14, width: 14, marginLeft: 6 }}
             />
         ),
@@ -149,6 +151,7 @@ export const myCancerGenomeData: LegendDescription[] = [
         legend: (
             <img
                 src={require('../../../../../../src/rootImages/mcg_logo.png')}
+                alt="MCG (My Cancer Genome) Logo"
                 style={{ height: 14, width: 14, marginLeft: 8 }}
             />
         ),
@@ -165,6 +168,7 @@ export const cancerHotspotsData: LegendDescription[] = [
         legend: (
             <img
                 src={require('../../../../../../src/rootImages/cancer-hotspots.svg')}
+                alt="Cancer Hotspots SVG"
                 style={{ height: 14, width: 14, marginLeft: 8 }}
             />
         ),
@@ -174,6 +178,7 @@ export const cancerHotspotsData: LegendDescription[] = [
         legend: (
             <img
                 src={require('../../../annotation/images/3d-hotspots.svg')}
+                alt="3D Clustered Hotspot"
                 style={{ height: 14, width: 14, marginLeft: 8 }}
             />
         ),
@@ -397,6 +402,7 @@ const AnnotationHeader: React.FunctionComponent<{
                 >
                     <img
                         src={require('oncokb-styles/images/oncogenic.svg')}
+                        alt="OncoGenic SVG"
                         style={{
                             height: 16,
                             width: 16,
@@ -422,6 +428,7 @@ const AnnotationHeader: React.FunctionComponent<{
                 >
                     <img
                         src={require('../../../../../../src/rootImages/vue_logo.png')}
+                        alt="VUE Logo"
                         style={{
                             height: 14,
                             width: 14,
@@ -445,6 +452,7 @@ const AnnotationHeader: React.FunctionComponent<{
                 >
                     <img
                         src={require('../../../../../../src/rootImages/civic-logo.png')}
+                        alt="Civic Logo"
                         style={{
                             height: 14,
                             width: 14,
@@ -470,6 +478,7 @@ const AnnotationHeader: React.FunctionComponent<{
                 >
                     <img
                         src={require('../../../../../../src/rootImages/mcg_logo.png')}
+                        alt="MCG (My Cancer Genome) Logo"
                         style={{
                             height: 14,
                             width: 14,
@@ -495,6 +504,7 @@ const AnnotationHeader: React.FunctionComponent<{
                 >
                     <img
                         src={require('../../../../../../src/rootImages/cancer-hotspots.svg')}
+                        alt="Cancer Hotspots SVG"
                         style={{ height: 14, width: 14, marginLeft: 7 }}
                     />
                 </DefaultTooltip>

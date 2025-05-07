@@ -166,7 +166,11 @@ export class CustomButton extends React.Component<ICustomButtonProps, {}> {
                     className="btn-sm"
                     onClick={this.handleClick.bind(this)}
                 >
-                    <img className="customButtonImage" src={tool.image_src} />
+                    <img
+                        className="customButtonImage"
+                        src={tool.image_src}
+                        alt={`${tool.name} Icon`}
+                    />
                 </Button>
             </DefaultTooltip>
         );

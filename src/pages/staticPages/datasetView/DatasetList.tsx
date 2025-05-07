@@ -58,11 +58,13 @@ class CancerStudyCell extends React.Component<ICancerStudyCellProps, {}> {
 
 class ReferenceCell extends React.Component<IReferenceCellProps, {}> {
     render() {
-        return (
+        return this.props.citation ? (
             <a target="_blank" href={getNCBIlink(`/pubmed/${this.props.pmid}`)}>
                 {' '}
                 {this.props.citation}{' '}
             </a>
+        ) : (
+            <></>
         );
     }
 }

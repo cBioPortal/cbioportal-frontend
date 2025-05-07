@@ -248,6 +248,7 @@ export default class OncoprintTrackOptionsView {
             .appendTo($div)
             .attr({
                 src: menuDotsIcon,
+                alt: 'Menu Dots Icon',
                 width: this.img_size,
                 height: this.img_size,
             })

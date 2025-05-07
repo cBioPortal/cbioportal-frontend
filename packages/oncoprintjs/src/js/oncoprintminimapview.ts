@@ -262,7 +262,7 @@ export default class OncoprintMinimapView {
                 })
                 .addClass('oncoprint-zoomtofit-btn')
                 .appendTo($div);
-            $(`<img src="${zoomToFitIcon}" />`)
+            $(`<img src="${zoomToFitIcon}" alt="Zoom to Fit Icon" />`)
                 .css({
                     height: btn_height - 4,
                     width: btn_width - 4,
