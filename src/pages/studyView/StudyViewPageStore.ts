@@ -10115,7 +10115,7 @@ export class StudyViewPageStore
 
     // Poll ClinicalEventTypeCounts API  with no filter to determine if table should be added to StudyView Page
     public readonly shouldDisplayClinicalEventTypeCounts = remoteData({
-        await: () => [this.queriedPhysicalStudyIds],
+        await: () => [this.queriedPhysicalStudyIds, this.unknownQueriedIds],
         invoke: async () => {
             if (this.unknownQueriedIds.result.length === 0) {
                 const filters: Partial<StudyViewFilter> = {};
@@ -10129,6 +10129,8 @@ export class StudyViewPageStore
                         )
                     ).length > 0
                 );
+            } else {
+                return Promise.resolve(false);
             }
         },
     });
@@ -10477,7 +10479,7 @@ export class StudyViewPageStore
     });
 
     public readonly shouldDisplayPatientTreatments = remoteData({
-        await: () => [this.queriedPhysicalStudyIds],
+        await: () => [this.queriedPhysicalStudyIds, this.unknownQueriedIds],
         invoke: () => {
             if (this.unknownQueriedIds.result.length === 0) {
                 return this.internalClient.getContainsTreatmentDataUsingPOST({
@@ -10490,7 +10492,7 @@ export class StudyViewPageStore
     });
 
     public readonly shouldDisplaySampleTreatments = remoteData({
-        await: () => [this.queriedPhysicalStudyIds],
+        await: () => [this.queriedPhysicalStudyIds, this.unknownQueriedIds],
         invoke: () => {
             if (this.unknownQueriedIds.result.length === 0) {
                 return this.internalClient.getContainsSampleTreatmentDataUsingPOST(
@@ -10511,7 +10513,7 @@ export class StudyViewPageStore
     >({
         await: () => [this.shouldDisplayPatientTreatments],
         invoke: async () => {
-            if (this.shouldDisplayPatientTreatments.result != false) {
+            if (this.shouldDisplayPatientTreatments.result) {
                 if (isClickhouseMode()) {
                     // @ts-ignore (will be available when go live with Clickhouse for all portals)
                     return await this.internalClient.fetchPatientTreatmentCountsUsingPOST(
