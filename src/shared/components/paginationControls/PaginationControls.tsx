@@ -225,7 +225,7 @@ export class PaginationControls extends React.Component<
                     bsStyle={this.props.bsStyle}
                     aria-label={
                         typeof this.props.firstButtonContent === 'string' &&
-                        this.props.firstButtonContent
+                        !!this.props.firstButtonContent
                             ? undefined
                             : 'View First Page'
                     }
@@ -247,7 +247,7 @@ export class PaginationControls extends React.Component<
                 bsStyle={this.props.bsStyle}
                 aria-label={
                     typeof this.props.previousButtonContent === 'string' &&
-                    this.props.previousButtonContent
+                    !!this.props.previousButtonContent
                         ? undefined
                         : 'View Previous Page'
                 }
@@ -269,7 +269,7 @@ export class PaginationControls extends React.Component<
                 bsStyle={this.props.bsStyle}
                 aria-label={
                     typeof this.props.nextButtonContent === 'string' &&
-                    this.props.nextButtonContent
+                    !!this.props.nextButtonContent
                         ? undefined
                         : 'View Next Page'
                 }
@@ -290,7 +290,7 @@ export class PaginationControls extends React.Component<
                     bsStyle={this.props.bsStyle}
                     aria-label={
                         typeof this.props.lastButtonContent === 'string' &&
-                        this.props.lastButtonContent
+                        !!this.props.lastButtonContent
                             ? undefined
                             : 'View Last Page'
                     }
