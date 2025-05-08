@@ -176,6 +176,7 @@ export default class ActionButtons extends React.Component<
                             label: this.props.store.queriedPhysicalStudyIds
                                 .result,
                         })}
+                        aria-label="View selected cases"
                     >
                         <i className="fa fa-user-circle-o"></i>
                     </button>
@@ -197,6 +198,7 @@ export default class ActionButtons extends React.Component<
                                 .isPending ||
                             this.props.store.caseListNameSet.isPending
                         }
+                        aria-label={this.virtualStudyButtonTooltip}
                     >
                         <i className="fa fa-bookmark"></i>
                     </button>
@@ -219,6 +221,7 @@ export default class ActionButtons extends React.Component<
                                 label: this.props.store.queriedPhysicalStudyIds
                                     .result,
                             })}
+                            aria-label={this.downloadButtonTooltip}
                         >
                             <If condition={this.downloadingData}>
                                 <Then>
