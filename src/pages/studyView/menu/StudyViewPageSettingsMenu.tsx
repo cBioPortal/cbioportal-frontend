@@ -70,6 +70,7 @@ export default class StudyViewPageSettingsMenu extends React.Component<
                             active: this.visible,
                         })}
                         data-test="study-view-settings-menu"
+                        aria-label="Show Settings Menu"
                     >
                         <i className="fa fa-cog" />
                     </button>
