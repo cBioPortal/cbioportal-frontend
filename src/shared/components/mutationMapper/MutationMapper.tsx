@@ -42,7 +42,7 @@ import MutationMapperDataStore, {
 import WindowStore from '../window/WindowStore';
 
 import styles from './mutationMapper.module.scss';
-import { ProteinImpactType } from 'cbioportal-frontend-commons';
+import { DefaultTooltip, ProteinImpactType } from 'cbioportal-frontend-commons';
 import DriverAnnotationProteinImpactTypeBadgeSelector from './DriverAnnotationProteinImpactTypeBadgeSelector';
 import { Mutation, PtmSource } from 'cbioportal-utils';
 import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
@@ -456,7 +456,8 @@ export default class MutationMapper<
         }
         tracks.push(TrackName.Exon);
         tracks.push(TrackName.UniprotTopology);
-        tracks.push(TrackName.PDB);
+        // TODO temporarily unavailable (uncomment after fixing the related 3D viewer issue)
+        // tracks.push(TrackName.PDB);
 
         return tracks;
     }
@@ -475,16 +476,23 @@ export default class MutationMapper<
 
     protected get view3dButton(): JSX.Element | null {
         return (
-            <button
-                className="btn btn-default btn-sm"
-                disabled={
-                    this.props.store.pdbChainDataStore.allData.length === 0
-                }
-                onClick={this.toggle3dPanel}
-                data-test="view3DStructure"
+            <DefaultTooltip
+                placement="top"
+                overlay={<>3D Structure viewer is temporarily unavailable</>}
+                destroyTooltipOnHide={true}
             >
-                View 3D Structure
-            </button>
+                <button
+                    className="btn btn-default btn-sm"
+                    disabled={
+                        this.props.store.pdbChainDataStore.allData.length === 0
+                    }
+                    // TODO temporarily unavailable (uncomment after fixing the related 3D viewer issue)
+                    // onClick={this.toggle3dPanel}
+                    data-test="view3DStructure"
+                >
+                    View 3D Structure
+                </button>
+            </DefaultTooltip>
         );
     }
 
