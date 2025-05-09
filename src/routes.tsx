@@ -99,6 +99,7 @@ import { PagePath } from 'shared/enums/PagePaths';
 import {
     LegacyResultsViewComparisonSubTab,
     ResultsViewComparisonSubTab,
+    ResultsViewPathwaysSubTab,
     ResultsViewTab,
 } from 'pages/resultsView/ResultsViewPageHelpers';
 import {
@@ -118,7 +119,10 @@ import {
     mutationGroup,
 } from 'shared/lib/comparison/ComparisonStoreUtils';
 import { MapValues } from 'shared/lib/TypeScriptUtils';
-import { ResultsViewURLQuery } from 'pages/resultsView/ResultsViewURLWrapper';
+import {
+    ResultsViewURLQuery,
+    sanitizeForUrl,
+} from 'pages/resultsView/ResultsViewURLWrapper';
 import { EnumDeclaration, EnumType } from 'typescript';
 
 function SuspenseWrapper(Component: any) {
@@ -186,7 +190,6 @@ function ResultsViewQueryParamsAdjuster(oldParams: ResultsViewURLQuery) {
         ]);
         changeMade = true;
     }
-
     // we used to call the structural variant alteration class "fusions"
     // we have generalized it to structural variants
     const profileRegex = /fusion/;
@@ -340,10 +343,7 @@ export const makeRoutes = () => {
                 <Route
                     path={`/results/${ResultsViewTab.SURVIVAL_REDIRECT}`}
                     component={getBlankPage(() => {
-                        redirectTo(
-                            { comparison_subtab: 'survival' },
-                            '/results/comparison'
-                        );
+                        redirectTo({}, '/results/comparison/survival');
                     })}
                 />
                 {/* Redirect legacy expression route directly to plots tab with mrna vs study */}
@@ -376,6 +376,76 @@ export const makeRoutes = () => {
                             { comparison_subtab: 'mutations' },
                             '/results/comparison'
                         );
+                    })}
+                />
+                {/* 
+                 This route handles backward compatibility for comparison subtabs:
+                 - Supports both old query parameter format
+                 - And new URL path format (/results/comparison/:subtab)
+                */}
+                <Route
+                    path="/results/comparison/:subtab"
+                    component={LocationValidationWrapper(
+                        ResultsViewPage,
+                        tabParamValidator(ResultsViewComparisonSubTab),
+                        ResultsViewQueryParamsAdjuster
+                    )}
+                />
+                <Route
+                    path="/results/comparison"
+                    component={getBlankPage(() => {
+                        const query = parse(
+                            getBrowserWindow().location.search,
+                            {
+                                ignoreQueryPrefix: true,
+                            }
+                        );
+                        if (query.comparison_subtab) {
+                            const sanitizedValue = sanitizeForUrl(
+                                query.comparison_subtab as string
+                            );
+                            redirectTo(
+                                {},
+                                `/results/comparison/${sanitizedValue}`
+                            );
+                        } else {
+                            redirectTo({}, '/results/comparison/overlap');
+                        }
+                    })}
+                />
+                {/* 
+                 This route handles backward compatibility for pathways subtabs:
+                 - Supports both old query parameter format 
+                 - And new URL path format (/results/pathways/:subtab)
+                */}
+                <Route
+                    path="/results/pathways/:subtab"
+                    component={LocationValidationWrapper(
+                        ResultsViewPage,
+                        tabParamValidator(ResultsViewPathwaysSubTab),
+                        ResultsViewQueryParamsAdjuster
+                    )}
+                />
+                <Route
+                    path="/results/pathways"
+                    component={getBlankPage(() => {
+                        const query = parse(
+                            getBrowserWindow().location.search,
+                            {
+                                ignoreQueryPrefix: true,
+                            }
+                        );
+                        if (query.pathways_source) {
+                            const sanitizedValue = sanitizeForUrl(
+                                query.pathways_source as string
+                            );
+                            redirectTo(
+                                {},
+                                `/results/pathways/${sanitizedValue}`
+                            );
+                        } else {
+                            redirectTo({}, '/results/pathways/pathwaymapper');
+                        }
                     })}
                 />
                 <Route
