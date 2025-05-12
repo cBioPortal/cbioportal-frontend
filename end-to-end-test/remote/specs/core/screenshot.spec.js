@@ -149,6 +149,7 @@ function runResultsTestSuite(prefix, options = {}) {
             await getElement('div[data-test="GroupComparisonMRNAEnrichments"]')
         ).waitForDisplayed();
         await clickElement(options.mrnaEnrichmentsRowSelector || 'b=ETV5');
+        await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
         await waitForElementDisplayed('div[data-test="MiniBoxPlot"]');
         const res = await browser.checkElement(
             'div[data-test="ComparisonTabDiv"]'
