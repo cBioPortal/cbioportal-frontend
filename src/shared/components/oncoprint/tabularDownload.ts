@@ -106,7 +106,7 @@ export function getTabularDownloadData(
                     : geneticTrackDatum.patient!;
 
             // Only initialize each alteration for sample/patient if it doesn't exist
-            // That can happen when we have multiple OncoPrint tracks of the same gene (using OQL)
+            // It may already exist if there are multiple OncoPrint tracks of the same gene
             if (oncoprintData.CNA[currentGeneName][id] == undefined) {
                 oncoprintData.CNA[currentGeneName][id] = '';
             }
@@ -154,7 +154,8 @@ export function getTabularDownloadData(
                 if (
                     oncoprintData.STRUCTURAL_VARIANT[currentGeneName][id] ==
                         '' ||
-                    oncoprintData.CNA[currentGeneName][id] == current_value
+                    oncoprintData.STRUCTURAL_VARIANT[currentGeneName][id] ==
+                        current_value
                 ) {
                     oncoprintData.STRUCTURAL_VARIANT[currentGeneName][
                         id
@@ -162,10 +163,9 @@ export function getTabularDownloadData(
                 } else {
                     oncoprintData.STRUCTURAL_VARIANT[currentGeneName][
                         id
-                    ] = oncoprintData.CNA[currentGeneName][id].concat(
-                        ', ',
-                        current_value
-                    );
+                    ] = oncoprintData.STRUCTURAL_VARIANT[currentGeneName][
+                        id
+                    ].concat(', ', current_value);
                 }
             }
             if (geneticTrackDatum.disp_mrna !== undefined) {
@@ -174,13 +174,16 @@ export function getTabularDownloadData(
                     : geneticTrackDatum.disp_mrna;
                 if (
                     oncoprintData.MRNA[currentGeneName][id] == '' ||
-                    oncoprintData.CNA[currentGeneName][id] == current_value
+                    oncoprintData.MRNA[currentGeneName][id] == current_value
                 ) {
                     oncoprintData.MRNA[currentGeneName][id] = current_value;
                 } else {
-                    oncoprintData.MRNA[currentGeneName][id] = oncoprintData.CNA[
-                        currentGeneName
-                    ][id].concat(', ', current_value);
+                    oncoprintData.MRNA[currentGeneName][
+                        id
+                    ] = oncoprintData.MRNA[currentGeneName][id].concat(
+                        ', ',
+                        current_value
+                    );
                 }
             }
             if (geneticTrackDatum.disp_prot !== undefined) {
@@ -189,13 +192,13 @@ export function getTabularDownloadData(
                     : geneticTrackDatum.disp_prot;
                 if (
                     oncoprintData.PROTEIN[currentGeneName][id] == '' ||
-                    oncoprintData.CNA[currentGeneName][id] == current_value
+                    oncoprintData.PROTEIN[currentGeneName][id] == current_value
                 ) {
                     oncoprintData.PROTEIN[currentGeneName][id] = current_value;
                 } else {
                     oncoprintData.PROTEIN[currentGeneName][
                         id
-                    ] = oncoprintData.CNA[currentGeneName][id].concat(
+                    ] = oncoprintData.PROTEIN[currentGeneName][id].concat(
                         ', ',
                         current_value
                     );
@@ -207,7 +210,8 @@ export function getTabularDownloadData(
                     : geneticTrackDatum.disp_mut;
                 if (
                     oncoprintData.MUTATIONS[currentGeneName][id] == '' ||
-                    oncoprintData.CNA[currentGeneName][id] == current_value
+                    oncoprintData.MUTATIONS[currentGeneName][id] ==
+                        current_value
                 ) {
                     oncoprintData.MUTATIONS[currentGeneName][
                         id
@@ -215,7 +219,7 @@ export function getTabularDownloadData(
                 } else {
                     oncoprintData.MUTATIONS[currentGeneName][
                         id
-                    ] = oncoprintData.CNA[currentGeneName][id].concat(
+                    ] = oncoprintData.MUTATIONS[currentGeneName][id].concat(
                         ', ',
                         current_value
                     );
