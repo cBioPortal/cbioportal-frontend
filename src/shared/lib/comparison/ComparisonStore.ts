@@ -1335,6 +1335,7 @@ export default abstract class ComparisonStore extends AnalysisStore
                     }
                 );
 
+                // this is a temporary cludge till these are filtered out server side
                 const onlyWithSomeAlterations = data.filter(d => {
                     return _.some(d.counts, count => count.alteredCount > 0);
                 });
