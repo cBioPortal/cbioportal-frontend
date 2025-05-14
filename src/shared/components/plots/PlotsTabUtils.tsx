@@ -436,7 +436,9 @@ export function scatterPlotLegendData(
                 onClickLegendItem
             );
             const hasNoDataPoints = data.some(d => !d.dispClinicalValue);
-
+            // Filter legend entries to only show:
+            // 1. Categories that exist in the current visible data (uniqueVisibleValues)
+            // 2. The "No Data" entry ONLY if there are points with missing clinical values (hasNoDataPoints)
             legend = allLegendEntries.filter(item => {
                 const itemName = String(item.name);
                 return (
@@ -500,6 +502,7 @@ export function scatterPlotLegendData(
         legend = legend.concat(searchIndicatorLegendData);
     }
 
+    // add highlighting styles
     if (highlightedLegendItems) {
         legend.forEach(datum => {
             const labels: any = {};
