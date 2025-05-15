@@ -147,6 +147,36 @@ const StudyFilterOptionsFormatted = [
         name: 'CyCIF',
         checked: false,
     },
+    {
+        id: 'mpifSampleCount',
+        name: 'mpIF',
+        checked: false,
+    },
+    {
+        id: 'mpif1SampleCount',
+        name: 'mpIF1',
+        checked: false,
+    },
+    {
+        id: 'mpif2SampleCount',
+        name: 'mpIF2',
+        checked: false,
+    },
+    {
+        id: 'mpif3SampleCount',
+        name: 'mpIF3',
+        checked: false,
+    },
+    {
+        id: 'mpif4SampleCount',
+        name: 'mpIF4',
+        checked: false,
+    },
+    {
+        id: 'ctSampleCount',
+        name: 'CT Scan',
+        checked: false,
+    },
 ];
 
 @observer
