@@ -435,7 +435,10 @@ export class MSKTabs extends React.Component<IMSKTabsProps> {
                                     )}
                                     onClick={this.tabClickHandlers(tab.props)}
                                     href={href}
-                                    style={tab.props.anchorStyle}
+                                    style={{
+                                        ...tab.props.anchorStyle,
+                                        color: activeClass ? '' : '#2e70a3',
+                                    }}
                                 >
                                     {tab.props.linkText}
                                     {closeButton}
