@@ -19,7 +19,7 @@ export default class CnaColumnFormatter {
                 color = '#0000FF';
                 break;
             case 2:
-                color = '#FF0000';
+                color = '#e00000';
                 break;
         }
         if (!color) {
