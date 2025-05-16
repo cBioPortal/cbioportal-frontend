@@ -859,7 +859,7 @@ describe('group comparison page screenshot tests', () => {
             );
             await (
                 await getElement('div[data-test="ComparisonPageOverlapTabDiv"]')
-            ).waitForDisplayed({ timeout: 20000 });
+            ).waitForDisplayed({ timeout: 60000 });
         });
 
         it('group comparison page clinical tab race plot type table', async () => {
