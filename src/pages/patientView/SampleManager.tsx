@@ -125,6 +125,17 @@ export function getSpecimenCollectionDayMap(
     return collectionDayMap;
 }
 
+export function sampleIdsForSamples(samples: Array<ClinicalDataBySampleId>) {
+    let output: { id: string; value: string }[] = [];
+    samples.forEach((sample, sampleIndex) => {
+        output.push({
+            id: sample.id,
+            value: sample.id,
+        });
+    });
+    return output;
+}
+
 export function clinicalAttributeListForSamples(
     samples: Array<ClinicalDataBySampleId>
 ) {
