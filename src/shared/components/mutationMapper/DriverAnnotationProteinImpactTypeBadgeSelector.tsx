@@ -279,6 +279,9 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
                 : undefined,
             badgeStyleOverride: {
                 backgroundColor: this.proteinImpactTypeColors[value],
+                color: value.includes('unknown_significance')
+                    ? '#000000'
+                    : undefined,
             },
         }));
     }
