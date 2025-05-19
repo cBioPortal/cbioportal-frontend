@@ -29,14 +29,11 @@ import { AppStore } from '../../AppStore';
 import ClinicalData from './ClinicalData';
 import ReactSelect from 'react-select';
 import { trackEvent } from 'shared/lib/tracking';
-import URL from 'url';
 import GroupComparisonURLWrapper from './GroupComparisonURLWrapper';
-import classnames from 'classnames';
 import styles from './styles.module.scss';
 import { OverlapStrategy } from '../../shared/lib/comparison/ComparisonStore';
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
 import MethylationEnrichments from './MethylationEnrichments';
-import _ from 'lodash';
 import AlterationEnrichments from './AlterationEnrichments';
 import AlterationEnrichmentTypeSelector from '../../shared/lib/comparison/AlterationEnrichmentTypeSelector';
 import { AlterationFilterMenuSection } from 'pages/groupComparison/GroupComparisonUtils';
@@ -125,22 +122,22 @@ export default class GroupComparisonPage extends React.Component<
 
     readonly tabs = MakeMobxView({
         await: () => [
-            this.store._activeGroupsNotOverlapRemoved,
-            this.store.activeGroups,
-            this.store.mutationEnrichmentProfiles,
-            this.store.structuralVariantEnrichmentProfiles,
-            this.store.copyNumberEnrichmentProfiles,
-            this.store.mRNAEnrichmentProfiles,
-            this.store.proteinEnrichmentProfiles,
-            this.store.methylationEnrichmentProfiles,
-            this.store.survivalClinicalDataExists,
-            this.store.genericAssayEnrichmentProfilesGroupedByGenericAssayType,
-            this.store
-                .genericAssayBinaryEnrichmentProfilesGroupedByGenericAssayType,
-            this.store.alterationsEnrichmentData,
-            this.store.alterationsEnrichmentAnalysisGroups,
-            this.store.genesSortedByMutationFrequency,
-            this.store.genesSortedByAlterationFrequency,
+            // this.store._activeGroupsNotOverlapRemoved,
+            // this.store.activeGroups,
+            // this.store.mutationEnrichmentProfiles,
+            // this.store.structuralVariantEnrichmentProfiles,
+            // this.store.copyNumberEnrichmentProfiles,
+            // this.store.mRNAEnrichmentProfiles,
+            // this.store.proteinEnrichmentProfiles,
+            // this.store.methylationEnrichmentProfiles,
+            // this.store.survivalClinicalDataExists,
+            // this.store.genericAssayEnrichmentProfilesGroupedByGenericAssayType,
+            // this.store
+            //     .genericAssayBinaryEnrichmentProfilesGroupedByGenericAssayType,
+            // this.store.alterationsEnrichmentData,
+            // this.store.alterationsEnrichmentAnalysisGroups,
+            // this.store.genesSortedByMutationFrequency,
+            // this.store.genesSortedByAlterationFrequency,
         ],
         render: () => {
             return (
@@ -265,17 +262,29 @@ export default class GroupComparisonPage extends React.Component<
                             id={GroupComparisonTab.PATHWAYS}
                             linkText={'Pathways'}
                         >
-                            <GroupComparisonPathwayMapper
-                                genomicData={
-                                    this.store.alterationEnrichmentRowData
-                                        .result || []
-                                }
-                                activeGroups={this.store.activeGroups.result}
-                                groupComparisonStore={this.store}
-                                userSelectionStore={
-                                    this.pathwayMapperUserSelectionStore
-                                }
-                            />
+                            {this.store.activeGroups.isComplete &&
+                            this.store.genesSortedByAlterationFrequency
+                                .isComplete ? (
+                                <GroupComparisonPathwayMapper
+                                    genomicData={
+                                        this.store.alterationEnrichmentRowData
+                                            .result || []
+                                    }
+                                    activeGroups={
+                                        this.store.activeGroups.result
+                                    }
+                                    groupComparisonStore={this.store}
+                                    userSelectionStore={
+                                        this.pathwayMapperUserSelectionStore
+                                    }
+                                />
+                            ) : (
+                                <LoadingIndicator
+                                    center={true}
+                                    isLoading={true}
+                                    size={'big'}
+                                />
+                            )}
                         </MSKTab>
                     )}
                     {this.store.showMRNATab && (
