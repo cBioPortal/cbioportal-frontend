@@ -51,6 +51,7 @@ interface IDownloadControlsProps {
     className?: any;
     dataExtension?: string;
     showDownload?: boolean;
+    toggleRenderSvgForDownload?: () => void;
 }
 
 function makeButton(spec: ButtonSpec) {
@@ -222,7 +223,16 @@ export default class DownloadControls extends React.Component<
                         />
                     </span>
                 ),
-                onClick: this.downloadSvg,
+                onClick: () => {
+                    this.props.toggleRenderSvgForDownload &&
+                        this.props.toggleRenderSvgForDownload();
+                    // wait for svg to render before download
+                    requestAnimationFrame(() => {
+                        this.downloadSvg();
+                        this.props.toggleRenderSvgForDownload &&
+                            this.props.toggleRenderSvgForDownload();
+                    });
+                },
                 disabled: !this.props.getSvg,
             },
             PNG: {
@@ -250,7 +260,16 @@ export default class DownloadControls extends React.Component<
                         />
                     </span>
                 ),
-                onClick: this.downloadPdf,
+                onClick: () => {
+                    this.props.toggleRenderSvgForDownload &&
+                        this.props.toggleRenderSvgForDownload();
+                    // wait for svg to render before download
+                    requestAnimationFrame(() => {
+                        this.downloadPdf();
+                        this.props.toggleRenderSvgForDownload &&
+                            this.props.toggleRenderSvgForDownload();
+                    });
+                },
                 disabled: !this.props.getSvg,
             },
             Data: {

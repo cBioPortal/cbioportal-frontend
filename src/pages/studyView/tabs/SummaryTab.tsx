@@ -355,9 +355,12 @@ export class StudySummaryTab extends React.Component<
             [ChartTypeEnum.TABLE]: () => ({
                 commonProps: {
                     onChangeChartType: this.handlers.onChangeChartType,
-                    getData: () =>
-                        this.store.getChartDownloadableData(chartMeta),
-                    downloadTypes: ['Data'],
+                    getData: (dataType?: DataType) =>
+                        this.store.getChartDownloadableData(
+                            chartMeta,
+                            dataType
+                        ),
+                    downloadTypes: ['Summary Data', 'Full Data', 'SVG', 'PDF'],
                 },
                 [ChartMetaDataTypeEnum.CUSTOM_DATA]: () => ({
                     filters: this.store
