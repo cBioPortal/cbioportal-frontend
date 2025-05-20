@@ -676,8 +676,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     {plots.map(pill => (
                         <li
                             className={
-                                'plots-tab-pills ' +
-                                (pill.selected ? 'active' : '')
+                                'plots-tab-pills' +
+                                (pill.selected ? ' active' : '')
                             }
                             onClick={action(() => {
                                 if (pill.plotModel.horizontal.dataType) {
@@ -707,7 +707,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                 }
                             })}
                         >
-                            <a>{pill.display}</a>
+                            <a
+                                style={{
+                                    color: pill.selected ? '' : '#2e70a3',
+                                }}
+                            >
+                                {pill.display}
+                            </a>
                         </li>
                     ))}
                 </ul>
@@ -4449,6 +4455,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                     onChange={(options: any[] | null) => {
                                         axisSelection.selectedCategories =
                                             options || [];
+                                    }}
+                                    styles={{
+                                        placeholder: (styles: any) => ({
+                                            ...styles,
+                                            color: '#757575',
+                                        }),
                                     }}
                                 />
                             </div>
