@@ -285,7 +285,7 @@ const studyViewFrontEnd = {
         theme: {
             primary: '#2986E2',
             secondary: '#DC3912',
-            tertiary: '#f88508',
+            tertiary: '#d87407',
             quaternary: '#109618',
 
             unselectedGroup: '#2986E2',
