@@ -75,7 +75,7 @@ export const DataTypeFilter: FunctionComponent<IDataTypeFilterProps> = props => 
                         </label>
                         <label
                             style={{
-                                color: '#3786C2',
+                                color: '#2f73a7',
                                 paddingTop: 5,
                                 float: 'left',
                                 width: 220,
@@ -87,7 +87,7 @@ export const DataTypeFilter: FunctionComponent<IDataTypeFilterProps> = props => 
                             style={{
                                 paddingTop: 6,
                                 paddingRight: 15,
-                                color: '#999',
+                                color: '#6b6b6b',
                                 textAlign: 'right',
                                 float: 'left',
                                 width: 55,
@@ -99,7 +99,7 @@ export const DataTypeFilter: FunctionComponent<IDataTypeFilterProps> = props => 
                         <label
                             style={{
                                 paddingTop: 6,
-                                color: '#999',
+                                color: '#6b6b6b',
                                 marginRight: 2,
                                 textAlign: 'right',
                                 float: 'left',
@@ -138,7 +138,7 @@ export const DataTypeFilter: FunctionComponent<IDataTypeFilterProps> = props => 
                                     <label
                                         style={{
                                             paddingTop: 5,
-                                            color: '#999',
+                                            color: '#6b6b6b',
                                             paddingRight: 10,
                                             textAlign: 'right',
                                             float: 'left',
@@ -153,7 +153,7 @@ export const DataTypeFilter: FunctionComponent<IDataTypeFilterProps> = props => 
                                             paddingTop: 5,
                                             float: 'left',
                                             width: 55,
-                                            color: '#999',
+                                            color: '#6b6b6b',
                                             marginRight: 2,
                                             textAlign: 'right',
                                             display: 'inline-block',

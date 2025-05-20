@@ -124,7 +124,7 @@ ul.StudyList {
             opacity: 0;
             font: normal normal 500 10px/18px 'Helvetica Neue', Helvetica, Arial,
                 sans-serif;
-            color: #999;
+            color: #6b6b6b;
             text-transform: uppercase;
             margin: 0 10px;
             transition: opacity 0.1s ease-in-out;
@@ -246,7 +246,7 @@ li.Study {
     }
 
     .StudyMeta {
-        color: #999;
+        color: #6b6b6b;
         font-size: 12px;
 
         .StudyLinks {
