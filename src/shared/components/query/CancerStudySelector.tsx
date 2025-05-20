@@ -41,49 +41,6 @@ export interface ICancerStudySelectorProps {
     aboveStudyListBlurb?: JSX.Element;
 }
 
-const StudyFilterOptionsFormatted = [
-    {
-        id: 'sequencedSampleCount',
-        name: 'Mutations',
-        checked: false,
-    },
-    {
-        id: 'cnaSampleCount',
-        name: 'CNA',
-        checked: false,
-    },
-    {
-        id: 'mrnaRnaSeqV2SampleCount',
-        name: 'RNA-Seq',
-        checked: false,
-    },
-    {
-        id: 'mrnaMicroarraySampleCount',
-        name: 'RNA (microarray)',
-        checked: false,
-    },
-    {
-        id: 'miRnaSampleCount',
-        name: 'miRNA',
-        checked: false,
-    },
-    {
-        id: 'rppaSampleCount',
-        name: 'RPPA',
-        checked: false,
-    },
-    {
-        id: 'massSpectrometrySampleCount',
-        name: 'Protein Mass-Spectrometry',
-        checked: false,
-    },
-    {
-        id: 'treatmentCount',
-        name: 'Treatment',
-        checked: false,
-    },
-];
-
 @observer
 export default class CancerStudySelector extends React.Component<
     ICancerStudySelectorProps,
@@ -205,6 +162,16 @@ export default class CancerStudySelector extends React.Component<
         }
     }
 
+    @action.bound
+    toggleFilter(id: string) {
+        let option = this.store.studyFilterOptionsFormatted.find(
+            o => o.id === id
+        );
+        if (option) {
+            option.checked = !option.checked;
+        }
+    }
+
     @computed get showSamplesPerFilterType() {
         const shownStudies = this.logic.mainView.getSelectionReport()
             .shownStudies;
@@ -212,11 +179,11 @@ export default class CancerStudySelector extends React.Component<
             shownStudies.length < this.store.cancerStudies.result.length
                 ? shownStudies
                 : this.store.cancerStudies.result;
-        const filterAttributes = StudyFilterOptionsFormatted.filter(
+        const filterAttributes = this.store.studyFilterOptionsFormatted.filter(
             item => item.name
         );
         const sampleCountsPerFilter = getSampleCountsPerFilter(
-            StudyFilterOptionsFormatted,
+            this.store.studyFilterOptionsFormatted,
             studyForCalculation
         );
         return sampleCountsPerFilter;
@@ -229,11 +196,11 @@ export default class CancerStudySelector extends React.Component<
             shownStudies.length < this.store.cancerStudies.result.length
                 ? shownStudies
                 : this.store.cancerStudies.result;
-        const filterAttributes = StudyFilterOptionsFormatted.filter(
+        const filterAttributes = this.store.studyFilterOptionsFormatted.filter(
             item => item.name
         );
         const studyCount = getStudyCountPerFilter(
-            StudyFilterOptionsFormatted,
+            this.store.studyFilterOptionsFormatted,
             studyForCalculation
         );
         return studyCount;
@@ -335,7 +302,8 @@ export default class CancerStudySelector extends React.Component<
                                             isChecked={false}
                                             buttonText={'Data type'}
                                             dataFilterActive={
-                                                StudyFilterOptionsFormatted
+                                                this.store
+                                                    .studyFilterOptionsFormatted
                                             }
                                             store={this.store}
                                             samplePerFilter={
@@ -344,6 +312,7 @@ export default class CancerStudySelector extends React.Component<
                                             studyPerFilter={
                                                 this.showStudiesPerFilterType
                                             }
+                                            toggleFilter={this.toggleFilter}
                                         />
                                     </div>
                                     <div
