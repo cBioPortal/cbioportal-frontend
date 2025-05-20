@@ -178,7 +178,10 @@ export default class GroupComparisonPage extends React.Component<
                             this.store.clinicalTabUnavailable ? 'greyedOut' : ''
                         }
                     >
-                        <ClinicalData store={this.store} />
+                        <ClinicalData
+                            store={this.store}
+                            key={`gc-clinical-data-${this.store.overlapStrategy}`}
+                        />
                     </MSKTab>
                     <MSKTab
                         id={GroupComparisonTab.ALTERATIONS}
