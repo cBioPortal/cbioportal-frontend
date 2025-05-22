@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { IAxisLogScaleParams } from 'shared/components/plots/PlotsTabUtils';
+import { IAxisScaleTransformParams } from 'shared/components/plots/PlotsTabUtils';
 import { CoExpressionPlotData } from 'pages/resultsView/coExpression/CoExpressionPlot';
 import { MolecularProfile } from 'cbioportal-ts-api-client';
 import { GeneticEntity } from 'shared/model/GeneticEntity';
@@ -28,7 +28,7 @@ export function getUniquePrecision(
 
 export function axisLabel(
     geneticEntity: { geneticEntityName: string; cytoband?: string },
-    logScale: IAxisLogScaleParams | undefined,
+    logScale: IAxisScaleTransformParams | undefined,
     profileName: string
 ) {
     return `${profileName}: ${geneticEntity.geneticEntityName} ${
