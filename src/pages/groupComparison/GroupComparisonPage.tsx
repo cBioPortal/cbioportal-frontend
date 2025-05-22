@@ -169,7 +169,10 @@ export default class GroupComparisonPage extends React.Component<
                                 : ''
                         }
                     >
-                        <Survival store={this.store} />
+                        <Survival
+                            store={this.store}
+                            key={`gc-survival-${this.store.overlapStrategy}`}
+                        />
                     </MSKTab>
                     <MSKTab
                         id={GroupComparisonTab.CLINICAL}
