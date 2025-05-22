@@ -276,6 +276,11 @@ function removeElement(nums: any[], val: any) {
     }
 }
 
+function arrayIntersection(arr1: any[], arr2: any[]) {
+    const set1 = new Set(arr1);
+    return arr2.filter(item => set1.has(item));
+}
+
 export function compareCounts(clData: any, legacyData: any, label: string) {
     // @ts-ignore
     let clDataClone = win.structuredClone ? structuredClone(clData) : clData;
@@ -284,6 +289,45 @@ export function compareCounts(clData: any, legacyData: any, label: string) {
         ? // @ts-ignore
           structuredClone(legacyData)
         : legacyData;
+
+    if (/StructuralVariantGenes|MutatedGenes|CNAGenes/.test(label)) {
+        const intersectingGenes = arrayIntersection(
+            clDataClone.map((m: any) => m.hugoGeneSymbol),
+            legacyDataClone.map((m: any) => m.hugoGeneSymbol)
+        ).filter(g => {
+            return ![
+                'BRD4',
+                'EML4',
+                'TMPRSS2',
+                'FGA',
+                'SS18',
+                'BIRC3',
+                'BCAS1',
+                'TERT',
+                'BFSP2',
+                'CALR',
+                'ABL1',
+                'EWSR1',
+                'ERG',
+                'FSBP',
+                'TERC',
+                'INSRR',
+                'FIP1L1',
+            ].includes(g);
+        });
+
+        clDataClone = clDataClone.filter((n: any) => {
+            return (
+                intersectingGenes.includes(n.hugoGeneSymbol) &&
+                !['SS18'].includes(n.hugoGeneSymbol)
+            );
+        });
+        legacyDataClone = legacyDataClone.filter((n: any) => {
+            return intersectingGenes.includes(n.hugoGeneSymbol);
+        });
+    }
+
+    //console.log(clDataClone.length)
 
     // get trid of duplicates
     //clDataClone = filterDuplicates(clDataClone);
