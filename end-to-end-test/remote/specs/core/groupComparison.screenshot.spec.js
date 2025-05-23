@@ -510,7 +510,11 @@ describe('group comparison page screenshot tests', () => {
             ).waitForDisplayed({
                 timeout: 20000,
             });
-            await jsApiHover(await getElementByTestHandle('infoIcon'));
+            await jsApiHover(
+                await getElementByTestHandle('infoIcon', {
+                    timeout: 20000,
+                })
+            );
 
             await (
                 await getElementByTestHandle('patientMultipleMutationsMessage')
