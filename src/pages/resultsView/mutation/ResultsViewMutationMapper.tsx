@@ -238,7 +238,6 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                 }
                 itemsLabelPlural={this.itemsLabelPlural}
                 downloadDataFetcher={this.props.store.downloadDataFetcher}
-                myCancerGenomeData={this.props.store.myCancerGenomeData}
                 hotspotData={this.props.store.indexedHotspotData}
                 indexedVariantAnnotations={
                     this.props.store.indexedVariantAnnotations
@@ -261,7 +260,6 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                 enableOncoKb={this.props.enableOncoKb}
                 enableFunctionalImpact={this.props.enableGenomeNexus}
                 enableHotspot={this.props.enableHotspot}
-                enableMyCancerGenome={this.props.enableMyCancerGenome}
                 enableCivic={this.props.enableCivic}
                 enableRevue={this.props.enableRevue}
                 enableCustomDriver={this.props.enableCustomDriver}

@@ -36,11 +36,6 @@ export {
 } from './component/column/Gnomad';
 export { default as DbsnpId } from './component/dbsnp/DbsnpId';
 export {
-    default as MyCancerGenome,
-    download as myCancerGenomeDownload,
-    sortValue as myCancerGenomeSortValue,
-} from './component/myCancerGenome/MyCancerGenome';
-export {
     default as Hgvsc,
     download as hgvscDownload,
     sortValue as hgvscSortValue,

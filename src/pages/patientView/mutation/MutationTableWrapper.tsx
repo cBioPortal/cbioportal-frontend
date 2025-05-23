@@ -237,9 +237,6 @@ export default class MutationTableWrapper extends React.Component<
                                     this.pageStore.downloadDataFetcher
                                 }
                                 mutSigData={this.pageStore.mutSigData.result}
-                                myCancerGenomeData={
-                                    this.pageStore.myCancerGenomeData
-                                }
                                 hotspotData={this.pageStore.indexedHotspotData}
                                 cosmicData={this.pageStore.cosmicData.result}
                                 oncoKbData={this.pageStore.oncoKbData}
@@ -261,9 +258,6 @@ export default class MutationTableWrapper extends React.Component<
                                     getServerConfig().show_genomenexus
                                 }
                                 enableHotspot={getServerConfig().show_hotspot}
-                                enableMyCancerGenome={
-                                    getServerConfig().mycancergenome_show
-                                }
                                 enableCivic={getServerConfig().show_civic}
                                 enableRevue={getServerConfig().show_revue}
                                 columnVisibility={this.props.columnVisibility}
