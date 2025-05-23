@@ -151,12 +151,10 @@ import { createVariantAnnotationsByMutationFetcher } from 'shared/components/mut
 import SampleManager from '../SampleManager';
 import { getFilteredMolecularProfilesByAlterationType } from 'pages/studyView/StudyViewUtils';
 import {
-    getMyCancerGenomeData,
     getMyVariantInfoAnnotationsFromIndexedVariantAnnotations,
     ICivicGeneIndex,
     ICivicVariantIndex,
     IHotspotIndex,
-    IMyCancerGenomeData,
     IMyVariantInfoIndex,
     indexHotspotsData,
     IOncoKbData,
@@ -486,8 +484,6 @@ export class PatientViewPageStore {
     //     // return memoryCachedIds ? memoryCachedIds :
     //     return this._patientIdsInCohort;
     // }
-
-    readonly myCancerGenomeData: IMyCancerGenomeData = getMyCancerGenomeData();
 
     // get mutational signature molecular profile Ids (contribution and confidence)
     readonly mutationalSignatureMolecularProfiles = remoteData<

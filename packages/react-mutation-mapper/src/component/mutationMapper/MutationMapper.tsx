@@ -303,7 +303,6 @@ export default class MutationMapper<
                         this.store.usingPublicOncoKbInstance
                     }
                     oncoKbCancerGenes={this.store.oncoKbCancerGenes}
-                    myCancerGenomeData={this.store.myCancerGenomeData}
                     enableCivic={this.props.enableCivic}
                     enableRevue={this.props.enableRevue}
                     civicGenes={this.store.civicGenes}

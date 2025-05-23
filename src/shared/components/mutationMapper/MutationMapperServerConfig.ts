@@ -10,7 +10,6 @@ export interface IMutationMapperServerConfig {
     show_oncokb?: boolean;
     show_genomenexus?: boolean;
     show_hotspot?: boolean;
-    mycancergenome_show?: boolean;
     show_civic?: boolean;
     show_revue?: boolean;
     ptmSources?: string[];
@@ -35,7 +34,6 @@ export function convertToMutationMapperProps(
         enableOncoKb: config.show_oncokb,
         enableGenomeNexus: config.show_genomenexus,
         enableHotspot: config.show_hotspot,
-        enableMyCancerGenome: config.mycancergenome_show,
         enableCivic: config.show_civic,
         enableRevue: config.show_revue,
         showDownload:

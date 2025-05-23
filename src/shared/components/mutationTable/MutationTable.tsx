@@ -54,7 +54,6 @@ import {
     ICivicGeneIndex,
     ICivicVariantIndex,
     IHotspotIndex,
-    IMyCancerGenomeData,
     RemoteData,
     IMyVariantInfoIndex,
     extractGenomicLocation,
@@ -108,13 +107,11 @@ export interface IMutationTableProps {
     genomeNexusMutationAssessorCache?: GenomeNexusMutationAssessorCache;
     mutSigData?: IMutSigData;
     enableOncoKb?: boolean;
-    enableMyCancerGenome?: boolean;
     enableHotspot?: boolean;
     enableCivic?: boolean;
     enableRevue?: boolean;
     enableCustomDriver?: boolean;
     enableFunctionalImpact?: boolean;
-    myCancerGenomeData?: IMyCancerGenomeData;
     hotspotData?: RemoteData<IHotspotIndex | undefined>;
     indexedVariantAnnotations?: RemoteData<
         { [genomicLocation: string]: VariantAnnotation } | undefined
@@ -313,7 +310,6 @@ export default class MutationTable<
         itemsLabel: 'Mutation',
         itemsLabelPlural: 'Mutations',
         enableOncoKb: true,
-        enableMyCancerGenome: true,
         enableHotspot: true,
         enableCivic: false,
         enableRevue: true,
@@ -972,7 +968,6 @@ export default class MutationTable<
                 <span id="mutation-annotation">
                     {AnnotationColumnFormatter.renderFunction(d, {
                         hotspotData: this.props.hotspotData,
-                        myCancerGenomeData: this.props.myCancerGenomeData,
                         oncoKbData: this.props.oncoKbData,
                         oncoKbCancerGenes: this.props.oncoKbCancerGenes,
                         usingPublicOncoKbInstance: this.props
@@ -986,8 +981,6 @@ export default class MutationTable<
                         civicVariants: this.props.civicVariants,
                         enableCivic: this.props.enableCivic as boolean,
                         enableOncoKb: this.props.enableOncoKb as boolean,
-                        enableMyCancerGenome: this.props
-                            .enableMyCancerGenome as boolean,
                         enableHotspot: this.props.enableHotspot as boolean,
                         enableRevue:
                             !!this.props.enableRevue && this.shouldShowRevue,
@@ -1010,7 +1003,6 @@ export default class MutationTable<
                             d ? d[0] : undefined,
                             this.props.oncoKbCancerGenes,
                             this.props.hotspotData,
-                            this.props.myCancerGenomeData,
                             this.props.oncoKbData,
                             this.props.usingPublicOncoKbInstance,
                             this.props.civicGenes,
@@ -1052,7 +1044,6 @@ export default class MutationTable<
                     d,
                     this.props.oncoKbCancerGenes,
                     this.props.hotspotData,
-                    this.props.myCancerGenomeData,
                     this.props.oncoKbData,
                     this.props.usingPublicOncoKbInstance,
                     this.props.civicGenes,
@@ -1067,7 +1058,6 @@ export default class MutationTable<
                     d,
                     this.props.oncoKbCancerGenes,
                     this.props.hotspotData,
-                    this.props.myCancerGenomeData,
                     this.props.oncoKbData,
                     this.props.usingPublicOncoKbInstance,
                     this.props.civicGenes,

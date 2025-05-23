@@ -310,7 +310,6 @@ export default class GroupComparisonMutationTable extends MutationTable<
                         d,
                         {
                             hotspotData: this.props.hotspotData,
-                            myCancerGenomeData: this.props.myCancerGenomeData,
                             oncoKbData: this.getOncoKbData(d),
                             oncoKbCancerGenes: this.props.oncoKbCancerGenes,
                             usingPublicOncoKbInstance: this.props
@@ -324,8 +323,6 @@ export default class GroupComparisonMutationTable extends MutationTable<
                             civicVariants: this.props.civicVariants,
                             enableCivic: this.props.enableCivic as boolean,
                             enableOncoKb: this.props.enableOncoKb as boolean,
-                            enableMyCancerGenome: this.props
-                                .enableMyCancerGenome as boolean,
                             enableHotspot: this.props.enableHotspot as boolean,
                             enableRevue:
                                 !!this.props.enableRevue &&

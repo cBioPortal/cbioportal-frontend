@@ -53,7 +53,6 @@ export type LegendDescription = {
 export enum AnnotationSources {
     ONCOKB = 'oncokb',
     CIVIC = 'civic',
-    MY_CANCER_GENOME = 'myCancerGenome',
     CANCER_HOTSPOTS = 'cancerHotspots',
     REVUE = 'reVue',
 }
@@ -77,14 +76,6 @@ export const sourceTooltipInfo = {
                 'a community knowledgebase for expert crowdsourcing the clinical interpretation of variants in cancer',
             reference: 'Griffith et al 2017',
             referenceUrl: 'https://pubmed.ncbi.nlm.nih.gov/28138153/',
-        },
-    ],
-    [AnnotationSources.MY_CANCER_GENOME]: [
-        {
-            sourceUrl: 'https://www.mycancergenome.org/',
-            sourceName: 'My Cancer Genome',
-            sourceDescription:
-                'a precision cancer medicine knowledge resource (data version Mar 2016)',
         },
     ],
     [AnnotationSources.CANCER_HOTSPOTS]: [
@@ -143,23 +134,6 @@ export const civicData: LegendDescription[] = [
     {
         legend: <span />,
         description: <span>Not in CIViC</span>,
-    },
-];
-
-export const myCancerGenomeData: LegendDescription[] = [
-    {
-        legend: (
-            <img
-                src={require('../../../../../../src/rootImages/mcg_logo.png')}
-                alt="MCG (My Cancer Genome) Logo"
-                style={{ height: 14, width: 14, marginLeft: 8 }}
-            />
-        ),
-        description: <span>Is in My Cancer Genome</span>,
-    },
-    {
-        legend: <span />,
-        description: <span>Not in My Cancer Genome</span>,
     },
 ];
 
@@ -453,32 +427,6 @@ const AnnotationHeader: React.FunctionComponent<{
                     <img
                         src={require('../../../../../../src/rootImages/civic-logo.png')}
                         alt="Civic Logo"
-                        style={{
-                            height: 14,
-                            width: 14,
-                            marginLeft: 7,
-                            marginRight: 1,
-                        }}
-                    />
-                </DefaultTooltip>
-            )}
-            {getServerConfig().mycancergenome_show && (
-                <DefaultTooltip
-                    placement="top"
-                    overlay={
-                        <AnnotationHeaderTooltipCard
-                            infoProps={
-                                sourceTooltipInfo[
-                                    AnnotationSources.MY_CANCER_GENOME
-                                ]
-                            }
-                            legendDescriptions={myCancerGenomeData}
-                        />
-                    }
-                >
-                    <img
-                        src={require('../../../../../../src/rootImages/mcg_logo.png')}
-                        alt="MCG (My Cancer Genome) Logo"
                         style={{
                             height: 14,
                             width: 14,

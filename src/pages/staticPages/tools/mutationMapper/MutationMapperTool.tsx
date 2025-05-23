@@ -38,7 +38,6 @@ interface IMutationMapperToolProps {
 const ONCOKB_URL = 'https://www.oncokb.org/';
 const CIVIC_URL = 'https://civicdb.org/';
 const CANCER_HOTSPOTS_URL = 'https://www.cancerhotspots.org/';
-const MY_CANCER_GENOME_URL = 'https://www.mycancergenome.org/';
 
 @inject('routing')
 @observer
@@ -711,7 +710,6 @@ export default class MutationMapperTool extends React.Component<
                 <a href={ONCOKB_URL}>OncoKB™</a>,&nbsp;
                 <a href={CIVIC_URL}>CIViC</a>,&nbsp;
                 <a href={CANCER_HOTSPOTS_URL}>Cancer Hotspots</a>,&nbsp;
-                <a href={MY_CANCER_GENOME_URL}>My Cancer Genome</a> and&nbsp;
                 <a href={getServerConfig().g2s_url!}>3D structures</a>. Although
                 most of the time the canonical transcript for a gene will be the
                 same between GRCh37 and GRCh38 be sure to look at the results

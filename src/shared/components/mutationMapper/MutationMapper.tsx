@@ -101,7 +101,6 @@ export interface IMutationMapperProps {
     enableOncoKb?: boolean;
     enableGenomeNexus?: boolean;
     enableHotspot?: boolean;
-    enableMyCancerGenome?: boolean;
     enableCivic?: boolean;
     enableRevue?: boolean;
     ptmSources?: string[];
