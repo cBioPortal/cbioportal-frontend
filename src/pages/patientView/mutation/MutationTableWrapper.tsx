@@ -24,7 +24,6 @@ import DiscreteCNACache from 'shared/cache/DiscreteCNACache';
 import GenomeNexusCache from 'shared/cache/GenomeNexusCache';
 import GenomeNexusMutationAssessorCache from 'shared/cache/GenomeNexusMutationAssessorCache';
 import { IMutSigData } from 'shared/model/MutSig';
-import { ICosmicData } from 'shared/model/Cosmic';
 
 import FeatureInstruction from 'shared/FeatureInstruction/FeatureInstruction';
 import { getSamplesProfiledStatus } from 'pages/patientView/PatientViewPageUtils';
@@ -34,8 +33,6 @@ import ErrorMessage from 'shared/components/ErrorMessage';
 import { PatientViewPageStore } from 'pages/patientView/clinicalInformation/PatientViewPageStore';
 import SampleNotProfiledAlert from 'shared/components/SampleNotProfiledAlert';
 import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
-import AnnotationColumnFormatter from 'shared/components/mutationTable/column/AnnotationColumnFormatter';
-import { MutationTableColumnType } from 'shared/components/mutationTable/MutationTable';
 
 export const TABLE_FEATURE_INSTRUCTION =
     'Click on an mutation to zoom in on the gene in the IGV browser above';
@@ -54,7 +51,6 @@ type IMutationTableWrapperProps = {
     discreteCNAMolecularProfileId?: string;
     mutSigData?: IMutSigData;
     hotspotData?: RemoteData<IHotspotIndex | undefined>;
-    cosmicData?: ICosmicData;
     oncoKbData?: RemoteData<IOncoKbData | Error>;
     oncoKbCancerGenes?: RemoteData<CancerGene[] | Error | undefined>;
     mergeOncoKbIcons?: boolean;
@@ -136,7 +132,6 @@ export default class MutationTableWrapper extends React.Component<
             this.pageStore.mrnaRankMolecularProfileId,
             this.pageStore.molecularProfileIdDiscrete,
             this.pageStore.mutSigData,
-            this.pageStore.cosmicData,
             this.pageStore.mutationTableShowGeneFilterMenu,
         ],
 
@@ -238,7 +233,6 @@ export default class MutationTableWrapper extends React.Component<
                                 }
                                 mutSigData={this.pageStore.mutSigData.result}
                                 hotspotData={this.pageStore.indexedHotspotData}
-                                cosmicData={this.pageStore.cosmicData.result}
                                 oncoKbData={this.pageStore.oncoKbData}
                                 oncoKbCancerGenes={
                                     this.pageStore.oncoKbCancerGenes

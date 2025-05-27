@@ -26,13 +26,11 @@ import ProteinChangeColumnFormatter from './column/ProteinChangeColumnFormatter'
 import MutationTypeColumnFormatter from './column/MutationTypeColumnFormatter';
 import VariantTypeColumnFormatter from './column/VariantTypeColumnFormatter';
 import FunctionalImpactColumnFormatter from './column/FunctionalImpactColumnFormatter';
-import CosmicColumnFormatter from './column/CosmicColumnFormatter';
 import MutationCountColumnFormatter from './column/MutationCountColumnFormatter';
 import CancerTypeColumnFormatter from './column/CancerTypeColumnFormatter';
 import MutationStatusColumnFormatter from './column/MutationStatusColumnFormatter';
 import ValidationStatusColumnFormatter from './column/ValidationStatusColumnFormatter';
 import StudyColumnFormatter from './column/StudyColumnFormatter';
-import { ICosmicData } from 'shared/model/Cosmic';
 import AnnotationColumnFormatter from './column/AnnotationColumnFormatter';
 import ExonColumnFormatter from './column/ExonColumnFormatter';
 import { IMutSigData } from 'shared/model/MutSig';
@@ -119,8 +117,6 @@ export interface IMutationTableProps {
     indexedMyVariantInfoAnnotations?: RemoteData<
         IMyVariantInfoIndex | undefined
     >;
-    cosmicData?: ICosmicData;
-    lastUpdatedCosmicText?: string;
     oncoKbData?: RemoteData<IOncoKbData | Error | undefined>;
     oncoKbDataForCancerType?: RemoteData<IOncoKbData | Error | undefined>;
     oncoKbDataForUnknownPrimary?: RemoteData<IOncoKbData | Error | undefined>;
@@ -199,7 +195,6 @@ export enum MutationTableColumnType {
     CUSTOM_DRIVER = 'Custom Driver',
     CUSTOM_DRIVER_TIER = 'Custom Driver Tier',
     HGVSG = 'HGVSg',
-    COSMIC = 'COSMIC',
     COPY_NUM = 'Copy #',
     ASCN_COPY_NUM = 'Total Integer Copy #',
     ASCN_METHOD = 'ASCN Method',
@@ -932,26 +927,6 @@ export default class MutationTable<
             headerRender: FunctionalImpactColumnFormatter.headerRender,
             visible: false,
             shouldExclude: () => !this.props.enableFunctionalImpact,
-        };
-
-        this._columns[MutationTableColumnType.COSMIC] = {
-            name: MutationTableColumnType.COSMIC,
-            render: (d: Mutation[]) =>
-                CosmicColumnFormatter.renderFunction(
-                    d,
-                    this.props.cosmicData,
-                    this.props.lastUpdatedCosmicText
-                ),
-            sortBy: (d: Mutation[]) =>
-                CosmicColumnFormatter.getSortValue(d, this.props.cosmicData),
-            download: (d: Mutation[]) =>
-                CosmicColumnFormatter.getDownloadValue(
-                    d,
-                    this.props.cosmicData
-                ),
-            tooltip: <span>COSMIC occurrences</span>,
-            defaultSortDirection: 'desc',
-            align: 'right',
         };
 
         this._columns[MutationTableColumnType.ANNOTATION] = {

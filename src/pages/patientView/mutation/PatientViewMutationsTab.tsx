@@ -313,9 +313,6 @@ export default class PatientViewMutationsTab extends React.Component<
                     hotspotData={
                         this.props.patientViewPageStore.indexedHotspotData
                     }
-                    cosmicData={
-                        this.props.patientViewPageStore.cosmicData.result
-                    }
                     oncoKbData={this.props.patientViewPageStore.oncoKbData}
                     oncoKbCancerGenes={
                         this.props.patientViewPageStore.oncoKbCancerGenes

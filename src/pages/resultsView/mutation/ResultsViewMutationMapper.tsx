@@ -39,14 +39,10 @@ import MutationRateSummary from 'pages/resultsView/mutation/MutationRateSummary'
 import ResultsViewMutationMapperStore from 'pages/resultsView/mutation/ResultsViewMutationMapperStore';
 import ResultsViewMutationTable from 'pages/resultsView/mutation/ResultsViewMutationTable';
 import { submitToStudyViewPage } from '../querySummary/QuerySummaryUtils';
-import {
-    ExtendedMutationTableColumnType,
-    MutationTableColumnType,
-} from 'shared/components/mutationTable/MutationTable';
+import { ExtendedMutationTableColumnType } from 'shared/components/mutationTable/MutationTable';
 import { extractColumnNames } from 'shared/components/mutationMapper/MutationMapperUtils';
 import { PatientSampleSummary } from '../querySummary/PatientSampleSummary';
 import { getServerConfig } from 'config/config';
-import AnnotationColumnFormatter from 'shared/components/mutationTable/column/AnnotationColumnFormatter';
 
 export interface IResultsViewMutationMapperProps extends IMutationMapperProps {
     store: ResultsViewMutationMapperStore;
@@ -59,8 +55,6 @@ export interface IResultsViewMutationMapperProps extends IMutationMapperProps {
     onClickSettingMenu?: (visible: boolean) => void;
     enableCustomDriver: boolean;
 }
-
-const COSMIC_COUNTS_PUBLIC = 25876;
 
 @observer
 export default class ResultsViewMutationMapper extends MutationMapper<
@@ -198,22 +192,6 @@ export default class ResultsViewMutationMapper extends MutationMapper<
             : 'None';
     }
 
-    @computed get lastUpdatedCosmicText() {
-        if (this.props.store.cosmicCountsForUpdateCheck.isComplete) {
-            const cosmicCountsForUpdateCheck = _.sumBy(
-                this.props.store.cosmicCountsForUpdateCheck.result,
-                'count'
-            );
-            // if counts are less than or equal to 25876 (the count currently in public portal), this means that cosmic was last updated before 2017
-            if (cosmicCountsForUpdateCheck <= COSMIC_COUNTS_PUBLIC) {
-                return 'Last Updated: Before 2017';
-            } else {
-                return '';
-            }
-        }
-        return '';
-    }
-
     protected get mutationTableComponent(): JSX.Element | null {
         return (
             <ResultsViewMutationTable
@@ -245,8 +223,6 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                 indexedMyVariantInfoAnnotations={
                     this.props.store.indexedMyVariantInfoAnnotations
                 }
-                cosmicData={this.props.store.cosmicData.result}
-                lastUpdatedCosmicText={this.lastUpdatedCosmicText}
                 oncoKbData={this.props.store.oncoKbData}
                 usingPublicOncoKbInstance={
                     getServerConfig().show_oncokb &&

@@ -65,7 +65,6 @@ import {
     fetchCnaOncoKbDataForOncoprint,
     fetchCopyNumberData,
     fetchCopyNumberSegments,
-    fetchCosmicData,
     fetchDiscreteCNAData,
     fetchGisticData,
     fetchMutationData,
@@ -1141,12 +1140,6 @@ export class PatientViewPageStore {
         },
         []
     );
-
-    readonly cosmicData = remoteData({
-        await: () => [this.mutationData, this.uncalledMutationData],
-        invoke: () =>
-            fetchCosmicData(this.mutationData, this.uncalledMutationData),
-    });
 
     readonly mutSigData = remoteData({
         invoke: async () => fetchMutSigData(this.studyId),
@@ -2628,7 +2621,7 @@ export class PatientViewPageStore {
 
                 // Note:
                 // - custom driver annotations are part of the incoming datum
-                // - cbio counts, cosmic and custom driver annnotations are
+                // - cbio counts, and custom driver annotations are
                 //   not used for driver evaluation
                 return evaluatePutativeDriverInfoWithHotspots(
                     mutation,
