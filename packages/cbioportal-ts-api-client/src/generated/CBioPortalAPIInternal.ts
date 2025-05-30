@@ -133,6 +133,9 @@ export type ClinicalAttributeCountFilter = {
         'sampleListId': string
 
 };
+export type SupportMessage = {
+        'message': string
+};
 export type ClinicalData = {
     'clinicalAttribute': ClinicalAttribute
 
@@ -8477,6 +8480,57 @@ export default class CBioPortalAPIInternal {
         }): Promise < Array < SampleTreatmentRow >
         > {
             return this.getAllSampleTreatmentsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+
+    /**
+     * Send a support message to the AI support endpoint.
+     * @method
+     * @name CBioPortalAPIInternal#getSupportUsingPOST
+     * @param {Object} parameters - Parameters for the request.
+     * @param {SupportMessage} [parameters.supportMessage] - The message to send to the AI support system. This can contain user queries, questions, or other requests.
+     * @param {string} [parameters.$domain] - Optional override for the API domain. Defaults to the instance's domain if not provided.
+     */
+    getSupportUsingPOSTWithHttpInfo(parameters: {
+        'supportMessage' ? : SupportMessage,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/support';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['supportMessage'] !== undefined) {
+                body = parameters['supportMessage'];
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Send a support message to the AI support endpoint and return only the response body.
+     * @method
+     * @name CBioPortalAPIInternal#getSupprtUsingPOST
+     * @param {Object} parameters - Parameters for the request.
+     * @param {SupportMessage} [parameters.supportMessage] - The message to send to the AI support system.
+     * @param {string} [parameters.$domain] - Optional override for the API domain.
+     */
+    getSupportUsingPOST(parameters: {
+        'supportMessage' ? : SupportMessage,
+                $domain ? : string
+        }): Promise<{ answer: string }>
+        {
+            return this.getSupportUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };

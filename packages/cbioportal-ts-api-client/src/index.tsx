@@ -82,6 +82,7 @@ export {
     CustomDriverAnnotationReport,
     StructuralVariant,
     StructuralVariantFilter,
+    SupportMessage,
     StructuralVariantQuery,
     StructuralVariantGeneSubQuery,
     StructuralVariantFilterQuery,
