@@ -82,101 +82,6 @@ const StudyFilterOptionsFormatted = [
         name: 'Treatment',
         checked: false,
     },
-    {
-        id: 'pathologySlideSampleCount',
-        name: 'Pathology Slide',
-        checked: false,
-    },
-    {
-        id: 'heSampleCount',
-        name: 'H&E Slide',
-        checked: false,
-    },
-    {
-        id: 'mxifSampleCount',
-        name: 'MxIF Image',
-        checked: false,
-    },
-    {
-        id: 'mxif2SampleCount',
-        name: 'MxIF Image 2',
-        checked: false,
-    },
-    {
-        id: 'mxif3SampleCount',
-        name: 'MxIF Image 3',
-        checked: false,
-    },
-    {
-        id: 'mxif4SampleCount',
-        name: 'MxIF Image 4',
-        checked: false,
-    },
-    {
-        id: 'mxif5SampleCount',
-        name: 'MxIF Image 5',
-        checked: false,
-    },
-    {
-        id: 'mxif6SampleCount',
-        name: 'MxIF Image 6',
-        checked: false,
-    },
-    {
-        id: 'mxif7SampleCount',
-        name: 'MxIF Image 7',
-        checked: false,
-    },
-    {
-        id: 'mxif8SampleCount',
-        name: 'MxIF Image 8',
-        checked: false,
-    },
-    {
-        id: 'mxif9SampleCount',
-        name: 'MxIF Image 9',
-        checked: false,
-    },
-    {
-        id: 'minervaStorySampleCount',
-        name: 'Minerva Story',
-        checked: false,
-    },
-    {
-        id: 'cycifSampleCount',
-        name: 'CyCIF',
-        checked: false,
-    },
-    {
-        id: 'mpifSampleCount',
-        name: 'mpIF',
-        checked: false,
-    },
-    {
-        id: 'mpif1SampleCount',
-        name: 'mpIF1',
-        checked: false,
-    },
-    {
-        id: 'mpif2SampleCount',
-        name: 'mpIF2',
-        checked: false,
-    },
-    {
-        id: 'mpif3SampleCount',
-        name: 'mpIF3',
-        checked: false,
-    },
-    {
-        id: 'mpif4SampleCount',
-        name: 'mpIF4',
-        checked: false,
-    },
-    {
-        id: 'ctSampleCount',
-        name: 'CT Scan',
-        checked: false,
-    },
 ];
 
 @observer
@@ -310,8 +215,9 @@ export default class CancerStudySelector extends React.Component<
         const filterAttributes = StudyFilterOptionsFormatted.filter(
             item => item.name
         );
+        const resourceFilters = this.store.resourceFilterOptionsFormatted;
         const sampleCountsPerFilter = getSampleCountsPerFilter(
-            StudyFilterOptionsFormatted,
+            [...StudyFilterOptionsFormatted, ...resourceFilters],
             studyForCalculation
         );
         return sampleCountsPerFilter;
@@ -327,8 +233,9 @@ export default class CancerStudySelector extends React.Component<
         const filterAttributes = StudyFilterOptionsFormatted.filter(
             item => item.name
         );
+        const resourceFilters = this.store.resourceFilterOptionsFormatted;
         const studyCount = getStudyCountPerFilter(
-            StudyFilterOptionsFormatted,
+            [...StudyFilterOptionsFormatted, ...resourceFilters],
             studyForCalculation
         );
         return studyCount;
@@ -368,6 +275,8 @@ export default class CancerStudySelector extends React.Component<
             shownStudies,
             shownAndSelectedStudies,
         } = this.logic.mainView.getSelectionReport();
+
+        const resourceFilters = this.store.resourceFilterOptionsFormatted;
 
         // TO DO shownStudies can be filtered based on the DataTypeFIlter
         const quickSetButtons = this.logic.mainView.quickSelectButtons(
@@ -429,9 +338,10 @@ export default class CancerStudySelector extends React.Component<
                                             }
                                             isChecked={false}
                                             buttonText={'Data type'}
-                                            dataFilterActive={
-                                                StudyFilterOptionsFormatted
-                                            }
+                                            dataFilterActive={[
+                                                ...StudyFilterOptionsFormatted,
+                                                ...resourceFilters,
+                                            ]}
                                             store={this.store}
                                             samplePerFilter={
                                                 this.showSamplesPerFilterType
