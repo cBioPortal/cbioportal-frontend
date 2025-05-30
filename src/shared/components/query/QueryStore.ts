@@ -30,7 +30,9 @@ import {
     stringListToIndexSet,
     stringListToSet,
 } from 'cbioportal-frontend-commons';
-import internalClient from '../../api/cbioportalInternalClientInstance';
+import internalClient, {
+    getInternalClient,
+} from '../../api/cbioportalInternalClientInstance';
 import { SingleGeneQuery, SyntaxError } from '../../lib/oql/oql-parser';
 import { parseOQLQuery } from '../../lib/oql/oqlfilter';
 import memoize from 'memoize-weak-decorator';
@@ -1594,6 +1596,45 @@ export class QueryStore {
 
     @computed get selectableStudies() {
         return Array.from(this.treeData.map_studyId_cancerStudy.values());
+    }
+
+    readonly resourceDefinitions = remoteData({
+        await: () => [
+            this.cancerTypes,
+            this.cancerStudies,
+            this.cancerStudyTags,
+            this.userVirtualStudies,
+            this.publicVirtualStudies,
+        ],
+        invoke: () => {
+            return getInternalClient().fetchResourceDefinitionsUsingPOST({
+                studyIds: this.selectableStudies.map(study => study.studyId),
+            });
+        },
+        default: [],
+    });
+
+    @computed get resourceFilterOptionsFormatted(): {
+        checked: boolean;
+        id: string;
+        name: string;
+    }[] {
+        const resourceIds = new Set<string>();
+        return _.reduce(
+            this.resourceDefinitions.result,
+            (acc: { checked: boolean; id: string; name: string }[], rd) => {
+                if (!resourceIds.has(rd.resourceId)) {
+                    resourceIds.add(rd.resourceId);
+                    acc.push({
+                        id: rd.resourceId,
+                        name: rd.displayName,
+                        checked: false,
+                    });
+                }
+                return acc;
+            },
+            []
+        );
     }
 
     public isVirtualStudy(studyId: string): boolean {
