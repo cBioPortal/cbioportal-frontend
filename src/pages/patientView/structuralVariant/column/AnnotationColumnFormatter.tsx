@@ -135,7 +135,6 @@ export default class AnnotationColumnFormatter {
                 civicEntry: undefined,
                 civicStatus: 'complete',
                 hasCivicVariants: false,
-                myCancerGenomeLinks: [],
                 hotspotStatus: 'complete',
                 isHotspot: false,
                 is3dHotspot: false,

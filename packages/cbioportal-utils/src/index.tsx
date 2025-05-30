@@ -18,7 +18,6 @@ export * from './model/Exon';
 export * from './model/Gene';
 export * from './model/MobxCache';
 export * from './model/Mutation';
-export * from './model/MyCancerGenome';
 export * from './model/MyVariantInfo';
 export * from './model/OncoKB';
 export * from './model/PostTranslationalModification';
@@ -31,8 +30,6 @@ export * from './model/Uniprot';
 export * from './mutation/MutationAnnotator';
 export * from './mutation/MutationUtils';
 export * from './mutation/ProteinChangeUtils';
-
-export * from './myCancerGenome/MyCancerGenomeUtils';
 
 export * from './promise/PromiseUtils';
 
