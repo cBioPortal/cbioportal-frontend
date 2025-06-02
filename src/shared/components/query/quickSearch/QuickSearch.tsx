@@ -491,7 +491,7 @@ export default class QuickSearch extends React.Component<QuickSearchProps, {}> {
                 />
                 <p
                     style={{
-                        fontSize: 'x-small',
+                        fontSize: 'small',
                         textAlign: 'center',
                         paddingTop: 15,
                     }}

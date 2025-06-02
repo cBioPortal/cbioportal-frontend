@@ -186,7 +186,7 @@ export default class DiscreteCNAColumnFormatter {
                         style={{
                             color: 'black',
                             textAlign: 'center',
-                            fontSize: 'xx-small',
+                            fontSize: 'small',
                         }}
                     >
                         Diploid

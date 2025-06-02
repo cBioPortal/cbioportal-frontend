@@ -293,6 +293,7 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
                     styles.driverAnnotationSettingsButton,
                     'btn btn-primary'
                 )}
+                aria-label="Change drive filtering in Sliders button"
                 onClick={this.onSettingMenuClick}
             >
                 <i

@@ -1921,7 +1921,7 @@ export function getCNAColorByAlteration(alteration: string): string {
         case 'GAIN':
             return CNA_COLOR_GAIN;
         case 'AMP':
-            return CNA_COLOR_AMP;
+            return '#e00000'; // CNA_COLOR_AMP
         default:
             return CNA_COLOR_DEFAULT;
     }

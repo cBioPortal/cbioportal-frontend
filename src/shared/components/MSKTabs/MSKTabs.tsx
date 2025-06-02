@@ -437,7 +437,11 @@ export class MSKTabs extends React.Component<IMSKTabsProps> {
                                     href={href}
                                     style={{
                                         ...tab.props.anchorStyle,
-                                        color: activeClass ? '' : '#2e70a3',
+                                        color: activeClass
+                                            ? ''
+                                            : tab.props.id.includes('Tab')
+                                            ? '#2e70a3'
+                                            : '#2f73a7',
                                     }}
                                 >
                                     {tab.props.linkText}

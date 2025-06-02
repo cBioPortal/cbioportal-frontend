@@ -52,6 +52,10 @@
                 transform: rotate(180deg);
                 position: relative;
                 left: -8px;
+
+                &.tab-title {
+                    color: #2e70a3 !important;
+                }
             }
         }
 

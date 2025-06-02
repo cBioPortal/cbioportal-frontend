@@ -842,6 +842,7 @@ export default class OncoprintControls extends React.Component<
                                 padding: '1px 5px 1px 5px',
                             }}
                             className="btn btn-primary"
+                            aria-label="Sliders button"
                             onClick={() => {
                                 store.isSettingsMenuVisible = !store.isSettingsMenuVisible;
                             }}

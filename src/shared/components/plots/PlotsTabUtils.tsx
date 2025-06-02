@@ -1924,7 +1924,7 @@ export const mutationRenderPriority = stringListToIndexSet([
 
 export const noMutationAppearance = {
     symbol: 'circle',
-    fill: '#c4e5f5',
+    fill: '#cbe8f6',
     stroke: '#000000',
     strokeOpacity: 0.3,
     legendLabel: 'Not mutated',
@@ -1938,7 +1938,7 @@ const cnaToAppearance = {
     },
     '-1': {
         legendLabel: 'Shallow Deletion',
-        stroke: '#2aced4',
+        stroke: '#0b8e69',
         strokeOpacity: 1,
     },
     '0': {
@@ -1948,7 +1948,7 @@ const cnaToAppearance = {
     },
     '1': {
         legendLabel: 'Gain',
-        stroke: '#ff8c9f',
+        stroke: '#d64f00',
         strokeOpacity: 1,
     },
     '2': {

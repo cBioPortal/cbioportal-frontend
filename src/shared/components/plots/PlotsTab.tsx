@@ -4645,8 +4645,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     {showSearchOptions && (
                         <div>
                             <div className="form-group">
-                                <label>Search Case(s)</label>
+                                <label htmlFor="plotsTabSearchCases">
+                                    Search Case(s)
+                                </label>
                                 <FormControl
+                                    id="plotsTabSearchCases"
                                     type="text"
                                     value={this.searchCaseInput}
                                     onChange={this.setSearchCaseInput}
@@ -4655,8 +4658,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                             </div>
                             {this.canColorByMutationData && (
                                 <div className="form-group">
-                                    <label>Search Mutation(s)</label>
+                                    <label htmlFor="plotsTabSearchMutations">
+                                        Search Mutation(s)
+                                    </label>
                                     <FormControl
+                                        id="plotsTabSearchMutations"
                                         type="text"
                                         value={this.searchMutationInput}
                                         onChange={this.setSearchMutationInput}
