@@ -3,7 +3,6 @@ import {
     ICivicGeneIndex,
     ICivicVariantIndex,
     IHotspotIndex,
-    IMyCancerGenomeData,
     IOncoKbData,
     Mutation,
     PostTranslationalModification,
@@ -67,7 +66,6 @@ export interface MutationMapperStore<T extends Mutation> {
     usingPublicOncoKbInstance: boolean;
     civicGenes?: RemoteData<ICivicGeneIndex | undefined>;
     civicVariants?: RemoteData<ICivicVariantIndex | undefined>;
-    myCancerGenomeData?: IMyCancerGenomeData;
     indexedVariantAnnotations: RemoteData<
         { [genomicLocation: string]: VariantAnnotation } | undefined
     >;

@@ -59,7 +59,6 @@ export interface IServerConfig {
     google_analytics_profile_id: string | null;
     ptmSources: string[] | undefined;
     oncoprint_hide_vus_default: boolean;
-    mycancergenome_show: boolean | undefined;
     oncokb_public_api_url: string | null;
     digital_slide_archive_iframe_url: string | null;
     digital_slide_archive_meta_url: string | null;
