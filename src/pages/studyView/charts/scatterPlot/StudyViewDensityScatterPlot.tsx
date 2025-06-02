@@ -81,25 +81,6 @@ export default class StudyViewDensityScatterPlot
         super(props);
         makeObservable(this);
     }
-    // Fix svg-img-alt 508 issue
-    componentDidMount(): void {
-        setTimeout(() => {
-            const wrappers = document.querySelectorAll(
-                `#${
-                    this.props.axisLabelY
-                        ? CSS.escape(this.props.axisLabelY)
-                        : 'study-view-density-scatter-plot'
-                } .VictoryContainer > svg`
-            );
-            wrappers?.forEach(wrapper => {
-                wrapper.setAttribute(
-                    'aria-label',
-                    `${this.props.axisLabelY ||
-                        'Study View Density Scatter Plot'}`
-                );
-            });
-        }, 5000);
-    }
     @observable tooltipModel: any | null = null;
     @observable pointHovered: boolean = false;
     @observable mouseIsDown: boolean = false;
@@ -627,10 +608,6 @@ export default class StudyViewDensityScatterPlot
             <div>
                 {this.data.length > 0 && (
                     <div
-                        id={
-                            this.props.axisLabelY ||
-                            'study-view-density-scatter-plot'
-                        }
                         style={{
                             width: this.props.width,
                             height: this.props.height,
