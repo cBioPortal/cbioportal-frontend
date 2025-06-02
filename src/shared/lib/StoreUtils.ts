@@ -14,7 +14,6 @@ import {
     ClinicalDataSingleStudyFilter,
     CopyNumberCountIdentifier,
     CopyNumberSeg,
-    CosmicMutation,
     DiscreteCopyNumberData,
     DiscreteCopyNumberFilter,
     Gene,
@@ -60,7 +59,6 @@ import {
     OtherBiomarkersQueryType,
 } from 'oncokb-frontend-commons';
 import { getAlterationString } from 'shared/lib/CopyNumberUtils';
-import { keywordToCosmic } from 'shared/lib/AnnotationUtils';
 import { indexPdbAlignments } from 'shared/lib/PdbUtils';
 import { IGisticData } from 'shared/model/Gistic';
 import { IMutSigData } from 'shared/model/MutSig';
@@ -624,44 +622,6 @@ export async function fetchStudiesForSamplesWithoutCancerTypeClinicalData(
     }
 
     return studies;
-}
-
-export async function fetchCosmicData(
-    mutationData: MobxPromise<Mutation[]>,
-    uncalledMutationData?: MobxPromise<Mutation[]>,
-    client: CBioPortalAPIInternal = internalClient
-) {
-    const mutationDataResult = concatMutationData(
-        mutationData,
-        uncalledMutationData
-    );
-
-    if (mutationDataResult.length === 0) {
-        return undefined;
-    }
-
-    // we have to check and see if keyword property is present
-    // it is NOT present sometimes
-    const queryKeywords: string[] = _.chain(mutationDataResult)
-        .filter((mutation: Mutation) => mutation.hasOwnProperty('keyword'))
-        .map((mutation: Mutation) => mutation.keyword)
-        .uniq()
-        .value();
-
-    if (queryKeywords.length > 0) {
-        const cosmicData: CosmicMutation[] = await client.fetchCosmicCountsUsingPOST(
-            {
-                keywords: _.filter(
-                    queryKeywords,
-                    (query: string) => query != null
-                ),
-            }
-        );
-
-        return keywordToCosmic(cosmicData);
-    } else {
-        return undefined;
-    }
 }
 
 export async function fetchMutSigData(

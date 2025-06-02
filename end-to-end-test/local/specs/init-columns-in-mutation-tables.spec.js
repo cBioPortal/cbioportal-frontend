@@ -16,7 +16,6 @@ const DEFAULT_RESULT_COLS = {
     ANNOTATION: 'Annotation',
     MUTATION_TYPE: 'Mutation Type',
     COPY_NUM: 'Copy #',
-    COSMIC: 'COSMIC',
     NUM_MUT_IN_SAMPLE: '# Mut in Sample',
 };
 
@@ -27,7 +26,6 @@ const DEFAULT_PATIENT_COLS = {
     MUTATION_TYPE: 'Mutation Type',
     COPY_NUM: 'Copy #',
     COHORT: 'Cohort',
-    COSMIC: 'COSMIC',
 };
 
 describe('default init columns in mutation tables', function() {
@@ -64,7 +62,6 @@ describe('default init columns in mutation tables', function() {
                 await columnIsNotDisplayed(DEFAULT_RESULT_COLS.MUTATION_TYPE)
             );
             assert(await columnIsNotDisplayed(DEFAULT_RESULT_COLS.COPY_NUM));
-            assert(await columnIsNotDisplayed(DEFAULT_RESULT_COLS.COSMIC));
             assert(
                 await columnIsNotDisplayed(
                     DEFAULT_RESULT_COLS.NUM_MUT_IN_SAMPLE
@@ -88,7 +85,6 @@ describe('default init columns in mutation tables', function() {
                 await columnIsNotDisplayed(DEFAULT_RESULT_COLS.MUTATION_TYPE)
             );
             assert(await columnIsNotDisplayed(DEFAULT_RESULT_COLS.COPY_NUM));
-            assert(await columnIsNotDisplayed(DEFAULT_RESULT_COLS.COSMIC));
             assert(
                 await columnIsNotDisplayed(
                     DEFAULT_RESULT_COLS.NUM_MUT_IN_SAMPLE
@@ -135,7 +131,6 @@ describe('default init columns in mutation tables', function() {
             );
             assert(await columnIsNotDisplayed(DEFAULT_PATIENT_COLS.COPY_NUM));
             assert(await columnIsNotDisplayed(DEFAULT_PATIENT_COLS.COHORT));
-            assert(await columnIsNotDisplayed(DEFAULT_PATIENT_COLS.COSMIC));
             assert(await columnIsNotDisplayed('Functional Impact'));
             assert(await columnIsNotDisplayed('Variant Type'));
             assert(await namespaceColumnsAreNotDisplayed());
@@ -158,7 +153,6 @@ describe('default init columns in mutation tables', function() {
             );
             assert(await columnIsNotDisplayed(DEFAULT_PATIENT_COLS.COPY_NUM));
             assert(await columnIsNotDisplayed(DEFAULT_PATIENT_COLS.COHORT));
-            assert(await columnIsNotDisplayed(DEFAULT_PATIENT_COLS.COSMIC));
             assert(await columnIsNotDisplayed('Functional Impact'));
             assert(await columnIsNotDisplayed('Variant Type'));
             assert(await namespaceColumnsAreDisplayed());
@@ -182,9 +176,6 @@ const defaultResultColumnsAreDisplayed = async () => {
         )) &&
         (await isDisplayed(
             "//span[text() = '" + DEFAULT_RESULT_COLS.COPY_NUM + "']"
-        )) &&
-        (await isDisplayed(
-            "//span[text() = '" + DEFAULT_RESULT_COLS.COSMIC + "']"
         )) &&
         (await isDisplayed(
             "//span[text() = '" + DEFAULT_RESULT_COLS.NUM_MUT_IN_SAMPLE + "']"
@@ -213,9 +204,6 @@ const defaultPatientColumnsAreDisplayed = async () => {
         )) &&
         (await isDisplayed(
             "//span[text() = '" + DEFAULT_PATIENT_COLS.COHORT + "']"
-        )) &&
-        (await isDisplayed(
-            "//span[text() = '" + DEFAULT_PATIENT_COLS.COSMIC + "']"
         )) &&
         !(await isDisplayed("//span[text() = 'Functional Impact']")) &&
         !(await isDisplayed("//span[text() = 'Variant Type']"))

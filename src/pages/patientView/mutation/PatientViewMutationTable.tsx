@@ -88,7 +88,6 @@ export default class PatientViewMutationTable extends MutationTable<
             MutationTableColumnType.CANCER_CELL_FRACTION,
             MutationTableColumnType.EXPECTED_ALT_COPIES,
             MutationTableColumnType.FUNCTIONAL_IMPACT,
-            MutationTableColumnType.COSMIC,
             MutationTableColumnType.TUMOR_ALLELE_FREQ,
             MutationTableColumnType.SAMPLES,
             MutationTableColumnType.EXON,
@@ -332,7 +331,6 @@ export default class PatientViewMutationTable extends MutationTable<
         this._columns[MutationTableColumnType.COPY_NUM].order = 177;
         this._columns[MutationTableColumnType.MRNA_EXPR].order = 182;
         this._columns[MutationTableColumnType.COHORT].order = 183;
-        this._columns[MutationTableColumnType.COSMIC].order = 184;
         this._columns[MutationTableColumnType.EXON].order = 185;
         this._columns[MutationTableColumnType.GNOMAD].order = 187;
         this._columns[MutationTableColumnType.CLINVAR].order = 188;

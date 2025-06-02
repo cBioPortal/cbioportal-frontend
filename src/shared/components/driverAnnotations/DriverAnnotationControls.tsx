@@ -16,7 +16,6 @@ enum EVENT_KEY {
     annotateOncoKb = '1',
     annotateHotspots = '2',
     annotateCBioPortal = '3',
-    annotateCOSMIC = '4',
     customDriverBinaryAnnotation = '5',
 }
 
