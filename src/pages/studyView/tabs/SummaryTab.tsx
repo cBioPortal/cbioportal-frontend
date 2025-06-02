@@ -902,31 +902,6 @@ export class StudySummaryTab extends React.Component<
         );
     };
 
-    // Fix aria-required-parent and aria-required-children 508 issues
-    componentDidMount(): void {
-        setTimeout(() => {
-            const virtualizedTableWrappers = document.querySelectorAll(
-                '.ReactVirtualized__Table'
-            );
-            virtualizedTableWrappers?.forEach(tableWrapper => {
-                tableWrapper.setAttribute('role', 'table');
-            });
-            const tableGridWrapper = document.querySelectorAll(
-                '.ReactVirtualized__Grid.ReactVirtualized__Table__Grid'
-            );
-            tableGridWrapper?.forEach(wrapper => {
-                wrapper.setAttribute('role', 'rowgroup');
-                wrapper.removeAttribute('aria-readonly');
-            });
-            const innerScrollWrapper = document.querySelectorAll(
-                '.ReactVirtualized__Grid__innerScrollContainer'
-            );
-            innerScrollWrapper?.forEach(wrapper => {
-                wrapper.removeAttribute('role');
-            });
-        }, 5000);
-    }
-
     @autobind
     onResize(newLayout: Layout[]) {
         newLayout
