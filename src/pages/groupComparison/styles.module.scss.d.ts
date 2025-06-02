@@ -14,6 +14,7 @@ declare const styles: {
   readonly "noGroupsMessage": string;
   readonly "noMutationsMessage": string;
   readonly "noPaddingLeftTruncationCheckbox": string;
+  readonly "numericalData": string;
   readonly "settingsMenuButton": string;
   readonly "sharedGroup": string;
   readonly "survivalPlotHeader": string;

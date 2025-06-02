@@ -16,7 +16,6 @@ enum EVENT_KEY {
     annotateOncoKb = '1',
     annotateHotspots = '2',
     annotateCBioPortal = '3',
-    annotateCOSMIC = '4',
     customDriverBinaryAnnotation = '5',
 }
 
@@ -127,6 +126,7 @@ export default class DriverAnnotationControls extends React.Component<
                                             )}
                                             <img
                                                 src={require('oncokb-styles/dist/images/logo/oncokb.svg')}
+                                                alt="OncoKB SVG"
                                                 style={{
                                                     maxHeight: '12px',
                                                     cursor: 'pointer',
@@ -230,6 +230,7 @@ export default class DriverAnnotationControls extends React.Component<
                                                 >
                                                     <img
                                                         src={require('../../../rootImages/cancer-hotspots.svg')}
+                                                        alt="Cancer Hotspots SVG"
                                                         style={{
                                                             height: '15px',
                                                             width: '15px',

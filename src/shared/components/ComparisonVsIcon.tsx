@@ -13,6 +13,7 @@ const ComparisonVsIcon: React.FunctionComponent<IComparisonVsIconProps> = ({
     return (
         <img
             src={require('../../rootImages/compare_vs.svg')}
+            alt="Compare VS SVG"
             className={className || ''}
             style={{
                 width,

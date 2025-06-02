@@ -112,8 +112,15 @@ export default class SampleSummaryList extends React.Component<
                                 '',
                                 <span style={{ display: 'inline-flex' }}>
                                     {'\u00A0'}
-                                    {isPDX && <img src={mouseIcon} />}
-                                    {isOrganoid && <img src={organoidIcon} />}
+                                    {isPDX && (
+                                        <img src={mouseIcon} alt="Mouse Icon" />
+                                    )}
+                                    {isOrganoid && (
+                                        <img
+                                            src={organoidIcon}
+                                            alt="Organoid Icon"
+                                        />
+                                    )}
                                     {(isPDX || isOrganoid) && '\u00A0'}
                                     <a
                                         href={getSampleViewUrl(

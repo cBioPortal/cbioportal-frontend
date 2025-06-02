@@ -1901,6 +1901,11 @@ export function getExponent(value: number): number {
 }
 
 export function getCNAByAlteration(alteration: string | number) {
+    // "NA" here actually means "Not Profiled"
+    // See details in https://github.com/cBioPortal/cbioportal/issues/10809
+    if (alteration === 'NA') {
+        return 'Not Profiled';
+    }
     const numberValue = Number(alteration);
     return !isNaN(numberValue) ? CNA_TO_ALTERATION[numberValue] || '' : 'NA';
 }

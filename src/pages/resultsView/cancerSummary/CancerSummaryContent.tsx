@@ -726,6 +726,7 @@ export class CancerSummaryContent extends React.Component<
                             <ControlLabel>Sort X-Axis By</ControlLabel>
                             <FormControl
                                 componentClass="select"
+                                aria-label="cancerSummaryXAxisSelect"
                                 data-test="cancerSummaryXAxisSelect"
                                 onChange={this.handleXAxisChange}
                                 ref={(el: any) => (this.inputXAxisEl = el)}
@@ -771,6 +772,7 @@ export class CancerSummaryContent extends React.Component<
                             <ControlLabel>Y-Axis Value</ControlLabel>
                             <FormControl
                                 componentClass="select"
+                                aria-label="cancerSummaryYAxisSelect"
                                 data-test="cancerSummaryYAxisSelect"
                                 onChange={this.handleYAxisChange}
                                 ref={(el: any) => (this.inputYAxisEl = el)}
