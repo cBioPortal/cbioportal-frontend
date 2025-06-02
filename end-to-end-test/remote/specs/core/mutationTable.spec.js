@@ -55,8 +55,6 @@ describe('Mutation Table', function() {
         });
 
         it('should show the exon number after adding the exon column', async () => {
-            // check if 6 appears once in COSMIC column
-
             // click on column button
             await clickElement('button*=Columns');
             // scroll down to activated "Exon" selection

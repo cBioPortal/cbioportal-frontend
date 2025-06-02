@@ -55,6 +55,20 @@ export function getTabId(pathname: string) {
     }
 }
 
+export function getSubTabId(pathName: string) {
+    const tabSegment = getTabId(pathName);
+    if (!tabSegment) {
+        return undefined;
+    }
+    // Extract subtab name after "results/tabSegment/" in the URL path
+    const subtabMatch = pathName.match(/\/results\/[^\/]+\/([^\/?#]+)/);
+    if (subtabMatch) {
+        return subtabMatch?.[1];
+    } else {
+        return undefined;
+    }
+}
+
 export const oldTabToNewTabRoute: { [legacyTabId: string]: ResultsViewTab } = {
     oncoprint: ResultsViewTab.ONCOPRINT,
     cancer_types_summary: ResultsViewTab.CANCER_TYPES_SUMMARY,

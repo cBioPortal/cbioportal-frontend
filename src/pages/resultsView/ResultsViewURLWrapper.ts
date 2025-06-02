@@ -3,9 +3,12 @@ import ExtendedRouterStore from '../../shared/lib/ExtendedRouterStore';
 import { computed, makeObservable, observable } from 'mobx';
 import autobind from 'autobind-decorator';
 import {
+    getSubTabId,
+    getTabId,
     LegacyResultsViewComparisonSubTab,
     oldTabToNewTabRoute,
     ResultsViewComparisonSubTab,
+    ResultsViewPathwaysSubTab,
     ResultsViewTab,
 } from 'pages/resultsView/ResultsViewPageHelpers';
 import { getServerConfig } from 'config/config';
@@ -304,6 +307,11 @@ function backwardsCompatibilityMapping(oldParams: any) {
     return newParams;
 }
 
+export function sanitizeForUrl(value: string): string {
+    // Convert to lowercase and replace spaces with hyphens
+    return value.toLowerCase().replace(/\s+/g, '-');
+}
+
 const ALL_TRACKS_DELETED = 'null';
 
 export default class ResultsViewURLWrapper
@@ -330,6 +338,18 @@ export default class ResultsViewURLWrapper
     pathContext = '/results';
 
     @computed public get tabId() {
+        const tabSegment = this.currentTabSegment;
+        if (tabSegment) {
+            // Match enum VALUE (right side) to URL segment
+            const matchedTab = Object.values(ResultsViewTab).find(
+                tabValue => tabValue.toLowerCase() === tabSegment.toLowerCase()
+            );
+
+            if (matchedTab) {
+                return matchedTab;
+            }
+        }
+
         const tabInPath = this.pathName.split('/').pop();
         if (tabInPath && tabInPath in oldTabToNewTabRoute) {
             // map legacy tab ids
@@ -389,18 +409,28 @@ export default class ResultsViewURLWrapper
         );
     }
 
-    @computed public get comparisonSubTabId() {
-        return this.query.comparison_subtab || GroupComparisonTab.OVERLAP;
-    }
-
     @autobind
     public setTabId(tabId: ResultsViewTab, replace?: boolean) {
         this.updateURL({}, `results/${tabId}`, false, replace);
     }
 
+    public get subTab() {
+        return getSubTabId(this.pathName);
+    }
+
     @autobind
-    public setComparisonSubTabId(tabId: GroupComparisonTab) {
-        this.updateURL({ comparison_subtab: tabId });
+    public setSubTab(
+        subtab: ResultsViewComparisonSubTab | ResultsViewPathwaysSubTab
+    ) {
+        const tabSegment = this.currentTabSegment;
+        if (tabSegment) {
+            const sanitized = sanitizeForUrl(subtab);
+            this.updateURL({}, `results/${tabSegment}/${sanitized}`);
+        }
+    }
+
+    private get currentTabSegment(): string | undefined {
+        return getTabId(this.pathName);
     }
 
     @computed public get selectedEnrichmentEventTypes() {

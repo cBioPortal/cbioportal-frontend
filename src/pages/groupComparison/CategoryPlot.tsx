@@ -63,6 +63,7 @@ export default class CategoryPlot extends React.Component<
             <CategoryTable
                 data={plotData}
                 labels={this.props.horzCategoryOrder!}
+                category={this.props.axisLabelY}
             />
         );
     }

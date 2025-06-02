@@ -851,4 +851,43 @@ describe('group comparison page screenshot tests', () => {
             assertScreenShotMatch(res);
         });
     });
+
+    describe('clinical tab categorical table', () => {
+        before(async () => {
+            await goToUrlAndSetLocalStorage(
+                `${CBIOPORTAL_URL}/comparison?sessionId=67a22dd583e9543d61940572`
+            );
+            await (
+                await getElement('div[data-test="ComparisonPageOverlapTabDiv"]')
+            ).waitForDisplayed({ timeout: 60000 });
+        });
+
+        it('group comparison page clinical tab race plot type table', async () => {
+            assert(
+                await (await getElement('a.tabAnchor_clinical')).isDisplayed()
+            );
+            await clickElement('a.tabAnchor_clinical');
+            await (
+                await getElement(
+                    'div[data-test="ComparisonPageClinicalTabDiv"] div[data-test="ClinicalTabPlotDiv"]'
+                )
+            ).waitForDisplayed({ timeout: 20000 });
+            await clickElement(
+                'div[data-test="ComparisonPageClinicalTabDiv"] span[data-test="Race"]'
+            );
+            await setInputText(
+                '[data-test="plotTypeSelector"] .Select-input input',
+                'Table'
+            );
+            await clickElement('[data-test="plotTypeSelector"] .Select-option');
+
+            await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
+            const res = await browser.checkElement(
+                'div[data-test="ComparisonPageClinicalTabDiv"] div[data-test="ClinicalTabPlotDiv"]',
+                '',
+                { hide: ['.qtip'] }
+            );
+            assertScreenShotMatch(res);
+        });
+    });
 });

@@ -1,6 +1,7 @@
 import { assert } from 'chai';
 import {
     getTabId,
+    getSubTabId,
     parseSamplesSpecifications,
     ResultsViewTab,
 } from './ResultsViewPageHelpers';
@@ -23,6 +24,35 @@ describe('ResultsViewPageHelpers', () => {
         });
     });
 
+    describe('getSubTabId', () => {
+        it('should return the correct subtab for comparison path', () => {
+            assert.equal(getSubTabId('/results/comparison/overlap'), 'overlap');
+            assert.equal(
+                getSubTabId('/results/comparison/survival'),
+                'survival'
+            );
+            assert.equal(
+                getSubTabId('/results/comparison/dna_methylation'),
+                'dna_methylation'
+            );
+        });
+
+        it('should return the correct subtab for pathways path', () => {
+            assert.equal(
+                getSubTabId('/results/pathways/pathwaymapper'),
+                'pathwaymapper'
+            );
+            assert.equal(
+                getSubTabId('/results/pathways/ndex-cancer-pathways'),
+                'ndex-cancer-pathways'
+            );
+        });
+
+        it('should return undefined for invalid paths', () => {
+            assert.equal(getSubTabId('/results/comparison/'), undefined);
+            assert.equal(getSubTabId('/results/pathways/'), undefined);
+        });
+    });
     describe('parseSamplesSpecifications', () => {
         it('should parse session caseids with \\r/\\n delimter', () => {
             let query = {

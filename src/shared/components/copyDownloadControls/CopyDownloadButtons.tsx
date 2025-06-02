@@ -38,6 +38,7 @@ export class CopyDownloadButtons extends React.Component<
                 className="btn btn-sm btn-default"
                 data-clipboard-text="NA"
                 id="copyButton"
+                aria-label={this.props.copyLabel ? undefined : 'Copy Button'}
                 onClick={this.props.handleCopy}
             >
                 {this.props.copyLabel} <i className="fa fa-clipboard" />
@@ -72,7 +73,13 @@ export class CopyDownloadButtons extends React.Component<
                 {...this.baseTooltipProps}
                 overlayClassName={this.props.className}
             >
-                <Button className="btn-sm" onClick={this.props.handleDownload}>
+                <Button
+                    className="btn-sm"
+                    onClick={this.props.handleDownload}
+                    aria-label={
+                        this.props.downloadLabel ? undefined : 'Download TSV'
+                    }
+                >
                     {this.props.downloadLabel}{' '}
                     <i className="fa fa-cloud-download" />
                 </Button>

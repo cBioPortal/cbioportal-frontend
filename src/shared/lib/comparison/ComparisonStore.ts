@@ -1285,7 +1285,7 @@ export default abstract class ComparisonStore extends AnalysisStore
             this.selectedStudyStructuralVariantEnrichmentProfileMap.result!,
         ],
         referenceGenesPromise: this.hugoGeneSymbolToReferenceGene,
-        fetchData: () => {
+        fetchData: async () => {
             if (
                 (!_.isEmpty(
                     this.alterationsEnrichmentDataRequestGroups.result
@@ -1326,12 +1326,21 @@ export default abstract class ComparisonStore extends AnalysisStore
                     } as unknown) as AlterationFilter,
                 };
 
-                return this.internalClient.fetchAlterationEnrichmentsUsingPOST({
-                    enrichmentType: this.usePatientLevelEnrichments
-                        ? 'PATIENT'
-                        : 'SAMPLE',
-                    molecularProfileCasesGroupAndAlterationTypeFilter: groupsAndAlterationTypes,
+                const data = await this.internalClient.fetchAlterationEnrichmentsUsingPOST(
+                    {
+                        enrichmentType: this.usePatientLevelEnrichments
+                            ? 'PATIENT'
+                            : 'SAMPLE',
+                        molecularProfileCasesGroupAndAlterationTypeFilter: groupsAndAlterationTypes,
+                    }
+                );
+
+                // this is a temporary cludge till these are filtered out server side
+                const onlyWithSomeAlterations = data.filter(d => {
+                    return _.some(d.counts, count => count.alteredCount > 0);
                 });
+
+                return onlyWithSomeAlterations;
             }
             return Promise.resolve([]);
         },

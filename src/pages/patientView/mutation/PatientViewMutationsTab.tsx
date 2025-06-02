@@ -310,14 +310,8 @@ export default class PatientViewMutationsTab extends React.Component<
                     mutSigData={
                         this.props.patientViewPageStore.mutSigData.result
                     }
-                    myCancerGenomeData={
-                        this.props.patientViewPageStore.myCancerGenomeData
-                    }
                     hotspotData={
                         this.props.patientViewPageStore.indexedHotspotData
-                    }
-                    cosmicData={
-                        this.props.patientViewPageStore.cosmicData.result
                     }
                     oncoKbData={this.props.patientViewPageStore.oncoKbData}
                     oncoKbCancerGenes={
@@ -337,7 +331,6 @@ export default class PatientViewMutationsTab extends React.Component<
                     enableOncoKb={getServerConfig().show_oncokb}
                     enableFunctionalImpact={getServerConfig().show_genomenexus}
                     enableHotspot={getServerConfig().show_hotspot}
-                    enableMyCancerGenome={getServerConfig().mycancergenome_show}
                     enableCivic={getServerConfig().show_civic}
                     enableRevue={getServerConfig().show_revue}
                     columnVisibility={this.props.mutationTableColumnVisibility}

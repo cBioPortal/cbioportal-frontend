@@ -30,7 +30,6 @@ export default class PatientHeader extends React.Component<
                         this.props.studyId,
                         this.props.sampleManager
                     )}
-                {this.getDarwinUrl(this.props.darwinUrl)}
             </div>
         );
     }

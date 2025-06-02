@@ -65,7 +65,6 @@ import {
     fetchCnaOncoKbDataForOncoprint,
     fetchCopyNumberData,
     fetchCopyNumberSegments,
-    fetchCosmicData,
     fetchDiscreteCNAData,
     fetchGisticData,
     fetchMutationData,
@@ -151,12 +150,10 @@ import { createVariantAnnotationsByMutationFetcher } from 'shared/components/mut
 import SampleManager from '../SampleManager';
 import { getFilteredMolecularProfilesByAlterationType } from 'pages/studyView/StudyViewUtils';
 import {
-    getMyCancerGenomeData,
     getMyVariantInfoAnnotationsFromIndexedVariantAnnotations,
     ICivicGeneIndex,
     ICivicVariantIndex,
     IHotspotIndex,
-    IMyCancerGenomeData,
     IMyVariantInfoIndex,
     indexHotspotsData,
     IOncoKbData,
@@ -486,8 +483,6 @@ export class PatientViewPageStore {
     //     // return memoryCachedIds ? memoryCachedIds :
     //     return this._patientIdsInCohort;
     // }
-
-    readonly myCancerGenomeData: IMyCancerGenomeData = getMyCancerGenomeData();
 
     // get mutational signature molecular profile Ids (contribution and confidence)
     readonly mutationalSignatureMolecularProfiles = remoteData<
@@ -1145,12 +1140,6 @@ export class PatientViewPageStore {
         },
         []
     );
-
-    readonly cosmicData = remoteData({
-        await: () => [this.mutationData, this.uncalledMutationData],
-        invoke: () =>
-            fetchCosmicData(this.mutationData, this.uncalledMutationData),
-    });
 
     readonly mutSigData = remoteData({
         invoke: async () => fetchMutSigData(this.studyId),
@@ -2632,7 +2621,7 @@ export class PatientViewPageStore {
 
                 // Note:
                 // - custom driver annotations are part of the incoming datum
-                // - cbio counts, cosmic and custom driver annnotations are
+                // - cbio counts, and custom driver annotations are
                 //   not used for driver evaluation
                 return evaluatePutativeDriverInfoWithHotspots(
                     mutation,

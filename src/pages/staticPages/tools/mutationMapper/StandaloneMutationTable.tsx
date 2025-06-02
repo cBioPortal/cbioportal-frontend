@@ -97,7 +97,6 @@ export default class StandaloneMutationTable extends MutationTable<
         this._columns[MutationTableColumnType.MUTATION_TYPE].order = 40;
         this._columns[MutationTableColumnType.VARIANT_TYPE].order = 45;
         //this._columns[MutationTableColumnType.COPY_NUM].order = 50;
-        //this._columns[MutationTableColumnType.COSMIC].order = 60;
         this._columns[MutationTableColumnType.MUTATION_STATUS].order = 70;
         this._columns[MutationTableColumnType.VALIDATION_STATUS].order = 80;
         this._columns[MutationTableColumnType.CENTER].order = 100;
