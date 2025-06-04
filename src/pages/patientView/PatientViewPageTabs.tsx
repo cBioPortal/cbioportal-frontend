@@ -96,6 +96,7 @@ export function tabs(
     urlWrapper: PatientViewUrlWrapper
 ) {
     const tabs: JSX.Element[] = [];
+
     tabs.push(
         <MSKTab key={0} id={PatientViewPageTabs.Summary} linkText="Summary">
             <LoadingIndicator
@@ -109,6 +110,21 @@ export function tabs(
                 pageComponent.patientViewPageStore.clinicalEvents.result
                     .length > 0 && (
                     <div>
+                        {pageComponent.patientViewPageStore.aiData.isComplete &&
+                            pageComponent.patientViewPageStore.aiData
+                                .result && (
+                                <>
+                                    <p>
+                                        {
+                                            pageComponent.patientViewPageStore
+                                                .aiData.result[
+                                                'Clinical timeline'
+                                            ]
+                                        }
+                                    </p>
+                                    <br />
+                                </>
+                            )}
                         <div
                             style={{
                                 marginTop: 20,
