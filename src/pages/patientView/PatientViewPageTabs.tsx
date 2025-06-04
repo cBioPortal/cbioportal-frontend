@@ -40,7 +40,7 @@ import { Else, If } from 'react-if';
 
 export enum PatientViewPageTabs {
     Summary = 'summary',
-    aiSummary = 'AI Summary',
+    aiSummary = 'aiSummary',
     genomicEvolution = 'genomicEvolution',
     ClinicalData = 'clinicalData',
     FilesAndLinks = 'filesAndLinks',
@@ -114,14 +114,9 @@ export function tabs(
                             pageComponent.patientViewPageStore.aiData
                                 .result && (
                                 <>
-                                    <p>
-                                        {
-                                            pageComponent.patientViewPageStore
-                                                .aiData.result[
-                                                'Clinical timeline'
-                                            ]
-                                        }
-                                    </p>
+                                    <AISummaryShortContent
+                                        urlWrapper={urlWrapper}
+                                    />
                                     <br />
                                 </>
                             )}
@@ -767,6 +762,42 @@ export function tabs(
 
     return tabs;
 }
+
+// insert AI Summary content component
+interface AISummaryShortContentProps {
+    urlWrapper: PatientViewUrlWrapper;
+}
+
+const AISummaryShortContent: React.FC<AISummaryShortContentProps> = ({
+    urlWrapper,
+}) => {
+    const [data, setData] = React.useState<any>(null);
+    React.useEffect(() => {
+        fetch('https://cbio-case-summarizer.surge.sh/P04.json')
+            .then(res => res.json())
+            .then(setData)
+            .catch(() => setData({ error: 'Failed to load AI summary' }));
+    }, []);
+    if (!data) {
+        return <LoadingIndicator isLoading={true} size="big" center={true} />;
+    }
+    return (
+        <div>
+            <b>AI Summary:</b> {data['Clinical timeline']}
+            ...{' '}
+            <a
+                onClick={() => {
+                    urlWrapper.routing.history.push({
+                        pathname: '/patient/aiSummary',
+                        search: urlWrapper.routing.location.search,
+                    });
+                }}
+            >
+                Read more
+            </a>
+        </div>
+    );
+};
 
 // insert AI Summary content component
 const AISummaryContent: React.FC = () => {
