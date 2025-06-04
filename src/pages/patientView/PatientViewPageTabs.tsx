@@ -803,7 +803,9 @@ const AISummaryShortContent: React.FC<AISummaryShortContentProps> = ({
 const AISummaryContent: React.FC = () => {
     const [data, setData] = React.useState<any>(null);
     React.useEffect(() => {
-        fetch('https://cbio-case-summarizer.surge.sh/P04.json')
+        const searchParams = new URLSearchParams(window.location.search);
+        const patientId = searchParams.get('caseId') || 'P04';
+        fetch(`https://cbio-case-summarizer.surge.sh/${patientId}.json`)
             .then(res => res.json())
             .then(setData)
             .catch(() => setData({ error: 'Failed to load AI summary' }));
@@ -821,28 +823,15 @@ const AISummaryContent: React.FC = () => {
             </small>
             <br />
             <br />
-            {[
-                'Clinical context',
-                'Clinical timeline',
-                'Molecular profile',
-                'Study context',
-                'Patient in study',
-                'Scientific implications',
-                'Mechanisms of resistance',
-                'Diagnosis history',
-                'Mutational signatures',
-                'Methylation',
-                'Treatment history',
-                'Treatment recommendation',
-                'Clinical trial recommendation',
-            ].map(key =>
-                data[key] ? (
-                    <div key={key} style={{ marginBottom: 16 }}>
-                        <b>{key}</b>
-                        <p>{data[key]}</p>
-                    </div>
-                ) : null
-            )}
+            <b>Clinical Context</b>
+            <p>
+                {data['Clinical context']} {data['Clinical timeline']}
+            </p>
+            <b>Molecular profile</b>
+            <p>
+                {data['Molecular profile']} {data['Mutational signatures']}{' '}
+                {data['Methylation']}
+            </p>
         </div>
     );
 };
