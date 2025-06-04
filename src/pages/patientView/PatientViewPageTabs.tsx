@@ -40,6 +40,7 @@ import { Else, If } from 'react-if';
 
 export enum PatientViewPageTabs {
     Summary = 'summary',
+    aiSummary = 'AI Summary',
     genomicEvolution = 'genomicEvolution',
     ClinicalData = 'clinicalData',
     FilesAndLinks = 'filesAndLinks',
@@ -448,11 +449,21 @@ export function tabs(
         </MSKTab>
     );
 
+    tabs.push(
+        <MSKTab
+            key={1}
+            id={PatientViewPageTabs.aiSummary}
+            linkText="AI Summary"
+        >
+            <AISummaryContent />
+        </MSKTab>
+    );
+
     !!sampleManager &&
         pageComponent.patientViewPageStore.sampleIds.length > 1 &&
         pageComponent.patientViewPageStore.existsSomeMutationWithVAFData &&
         tabs.push(
-            <MSKTab key={1} id="genomicEvolution" linkText="Genomic Evolution">
+            <MSKTab key={2} id="genomicEvolution" linkText="Genomic Evolution">
                 <PatientViewMutationsTab
                     patientViewPageStore={pageComponent.patientViewPageStore}
                     mutationTableColumnVisibility={
@@ -509,7 +520,7 @@ export function tabs(
 
     tabs.push(
         <MSKTab
-            key={2}
+            key={3}
             id={PatientViewPageTabs.ClinicalData}
             linkText="Clinical Data"
             className={'patient-clinical-data-tab'}
@@ -556,7 +567,7 @@ export function tabs(
     if (pageComponent.shouldShowResources)
         tabs.push(
             <MSKTab
-                key={4}
+                key={5}
                 id={PatientViewPageTabs.FilesAndLinks}
                 linkText={RESOURCES_TAB_NAME}
             >
@@ -575,7 +586,7 @@ export function tabs(
 
     tabs.push(
         <MSKTab
-            key={3}
+            key={4}
             id={PatientViewPageTabs.PathologyReport}
             linkText="Pathology Report"
             hide={!pageComponent.shouldShowPathologyReport}
@@ -594,7 +605,7 @@ export function tabs(
 
     tabs.push(
         <MSKTab
-            key={5}
+            key={6}
             id={PatientViewPageTabs.TissueImage}
             linkText="Tissue Image"
             hide={pageComponent.hideTissueImageTab}
@@ -614,7 +625,7 @@ export function tabs(
         pageComponent.wholeSlideViewerUrl.result &&
         tabs.push(
             <MSKTab
-                key={6}
+                key={7}
                 id={PatientViewPageTabs.MSKTissueImage}
                 linkText="Tissue Image"
                 unmountOnHide={false}
@@ -631,7 +642,7 @@ export function tabs(
     pageComponent.shouldShowTrialMatch &&
         tabs.push(
             <MSKTab
-                key={7}
+                key={8}
                 id={PatientViewPageTabs.TrialMatchTab}
                 linkText="Matched Trials"
             >
@@ -651,7 +662,7 @@ export function tabs(
             .isComplete &&
         tabs.push(
             <MSKTab
-                key={8}
+                key={9}
                 id="mutationalSignatures"
                 linkText="Mutational Signatures"
                 hide={
@@ -740,3 +751,34 @@ export function tabs(
 
     return tabs;
 }
+
+// insert AI Summary content component
+const AISummaryContent: React.FC = () => {
+    const [data, setData] = React.useState<any>(null);
+    React.useEffect(() => {
+        fetch('https://cbio-case-summarizer.surge.sh/P04.json')
+            .then(res => res.json())
+            .then(setData)
+            .catch(() => setData({ error: 'Failed to load AI summary' }));
+    }, []);
+    if (!data) {
+        return <LoadingIndicator isLoading={true} size="big" center={true} />;
+    }
+    return (
+        <div>
+            <small>
+                <i>
+                    ✨ These summaries are generated using AI, please interpret
+                    with caution
+                </i>
+            </small>
+            <br />
+            <br />
+            <b>Clinical Context</b>
+            <p>{data['Clinical context']}</p>
+            <b>Clinical Timeline</b>
+            <p>{data['Clinical timeline']}</p>
+            {/* add more fields as needed, e.g. data.diagnosis */}
+        </div>
+    );
+};
