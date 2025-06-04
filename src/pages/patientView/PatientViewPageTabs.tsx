@@ -773,7 +773,9 @@ const AISummaryShortContent: React.FC<AISummaryShortContentProps> = ({
 }) => {
     const [data, setData] = React.useState<any>(null);
     React.useEffect(() => {
-        fetch('https://cbio-case-summarizer.surge.sh/P04.json')
+        const searchParams = new URLSearchParams(window.location.search);
+        const patientId = searchParams.get('caseId') || 'P04';
+        fetch(`https://cbio-case-summarizer.surge.sh/${patientId}.json`)
             .then(res => res.json())
             .then(setData)
             .catch(() => setData({ error: 'Failed to load AI summary' }));
@@ -781,22 +783,26 @@ const AISummaryShortContent: React.FC<AISummaryShortContentProps> = ({
     if (!data) {
         return <LoadingIndicator isLoading={true} size="big" center={true} />;
     }
-    return (
-        <div>
-            <b>AI Summary:</b> {data['Clinical timeline']}
-            ...{' '}
-            <a
-                onClick={() => {
-                    urlWrapper.routing.history.push({
-                        pathname: '/patient/aiSummary',
-                        search: urlWrapper.routing.location.search,
-                    });
-                }}
-            >
-                Read more
-            </a>
-        </div>
-    );
+    if (data['Clinical timeline']) {
+        return (
+            <div>
+                <b>AI Summary:</b> {data['Clinical timeline']}
+                ...{' '}
+                <a
+                    onClick={() => {
+                        urlWrapper.routing.history.push({
+                            pathname: '/patient/aiSummary',
+                            search: urlWrapper.routing.location.search,
+                        });
+                    }}
+                >
+                    Read more
+                </a>
+            </div>
+        );
+    } else {
+        return null;
+    }
 };
 
 // insert AI Summary content component
