@@ -774,11 +774,28 @@ const AISummaryContent: React.FC = () => {
             </small>
             <br />
             <br />
-            <b>Clinical Context</b>
-            <p>{data['Clinical context']}</p>
-            <b>Clinical Timeline</b>
-            <p>{data['Clinical timeline']}</p>
-            {/* add more fields as needed, e.g. data.diagnosis */}
+            {[
+                'Clinical context',
+                'Clinical timeline',
+                'Molecular profile',
+                'Study context',
+                'Patient in study',
+                'Scientific implications',
+                'Mechanisms of resistance',
+                'Diagnosis history',
+                'Mutational signatures',
+                'Methylation',
+                'Treatment history',
+                'Treatment recommendation',
+                'Clinical trial recommendation',
+            ].map(key =>
+                data[key] ? (
+                    <div key={key} style={{ marginBottom: 16 }}>
+                        <b>{key}</b>
+                        <p>{data[key]}</p>
+                    </div>
+                ) : null
+            )}
         </div>
     );
 };
