@@ -301,7 +301,7 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
             },
 
             {
-                ...this.getDefaultColumnConfig('resourceUrl', ''),
+                ...this.getDefaultColumnConfig('resourceUrl', 'Resource URL'),
                 render: (data: { [id: string]: string }) => {
                     return (
                         <div>
