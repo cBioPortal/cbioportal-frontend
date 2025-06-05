@@ -139,6 +139,7 @@ export default class Venn extends React.Component<IVennProps, {}> {
             >
                 <svg
                     id={this.props.svgId || ''}
+                    aria-label={this.props.svgId || 'Overlap Venn'}
                     xmlns="http://www.w3.org/2000/svg"
                     width={this.chartWidth}
                     height={this.chartHeight}
