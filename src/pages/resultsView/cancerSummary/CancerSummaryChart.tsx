@@ -787,6 +787,7 @@ export class CancerSummaryChart extends React.Component<
                                 height: this.svgHeight,
                                 pointerEvents: 'all',
                             }}
+                            aria-label="Cancer Summary Chart"
                             height={this.svgHeight}
                             width={this.svgWidth}
                             role="img"
