@@ -29,14 +29,11 @@ import { AppStore } from '../../AppStore';
 import ClinicalData from './ClinicalData';
 import ReactSelect from 'react-select';
 import { trackEvent } from 'shared/lib/tracking';
-import URL from 'url';
 import GroupComparisonURLWrapper from './GroupComparisonURLWrapper';
-import classnames from 'classnames';
 import styles from './styles.module.scss';
 import { OverlapStrategy } from '../../shared/lib/comparison/ComparisonStore';
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
 import MethylationEnrichments from './MethylationEnrichments';
-import _ from 'lodash';
 import AlterationEnrichments from './AlterationEnrichments';
 import AlterationEnrichmentTypeSelector from '../../shared/lib/comparison/AlterationEnrichmentTypeSelector';
 import { AlterationFilterMenuSection } from 'pages/groupComparison/GroupComparisonUtils';
@@ -125,22 +122,22 @@ export default class GroupComparisonPage extends React.Component<
 
     readonly tabs = MakeMobxView({
         await: () => [
-            this.store._activeGroupsNotOverlapRemoved,
-            this.store.activeGroups,
-            this.store.mutationEnrichmentProfiles,
-            this.store.structuralVariantEnrichmentProfiles,
-            this.store.copyNumberEnrichmentProfiles,
-            this.store.mRNAEnrichmentProfiles,
-            this.store.proteinEnrichmentProfiles,
-            this.store.methylationEnrichmentProfiles,
-            this.store.survivalClinicalDataExists,
-            this.store.genericAssayEnrichmentProfilesGroupedByGenericAssayType,
-            this.store
-                .genericAssayBinaryEnrichmentProfilesGroupedByGenericAssayType,
-            this.store.alterationsEnrichmentData,
-            this.store.alterationsEnrichmentAnalysisGroups,
-            this.store.genesSortedByMutationFrequency,
-            this.store.genesSortedByAlterationFrequency,
+            // this.store._activeGroupsNotOverlapRemoved,
+            // this.store.activeGroups,
+            // this.store.mutationEnrichmentProfiles,
+            // this.store.structuralVariantEnrichmentProfiles,
+            // this.store.copyNumberEnrichmentProfiles,
+            // this.store.mRNAEnrichmentProfiles,
+            // this.store.proteinEnrichmentProfiles,
+            // this.store.methylationEnrichmentProfiles,
+            // this.store.survivalClinicalDataExists,
+            // this.store.genericAssayEnrichmentProfilesGroupedByGenericAssayType,
+            // this.store
+            //     .genericAssayBinaryEnrichmentProfilesGroupedByGenericAssayType,
+            // this.store.alterationsEnrichmentData,
+            // this.store.alterationsEnrichmentAnalysisGroups,
+            // this.store.genesSortedByMutationFrequency,
+            // this.store.genesSortedByAlterationFrequency,
         ],
         render: () => {
             return (
@@ -162,19 +159,21 @@ export default class GroupComparisonPage extends React.Component<
                             store={this.store}
                         />
                     </MSKTab>
-                    {this.store.showSurvivalTab && (
-                        <MSKTab
-                            id={GroupComparisonTab.SURVIVAL}
-                            linkText="Survival"
-                            anchorClassName={
-                                this.store.survivalTabUnavailable
-                                    ? 'greyedOut'
-                                    : ''
-                            }
-                        >
-                            <Survival store={this.store} />
-                        </MSKTab>
-                    )}
+                    <MSKTab
+                        id={GroupComparisonTab.SURVIVAL}
+                        linkText="Survival"
+                        anchorClassName={
+                            !this.store.showSurvivalTab ||
+                            this.store.survivalTabUnavailable
+                                ? 'greyedOut'
+                                : ''
+                        }
+                    >
+                        <Survival
+                            store={this.store}
+                            key={`gc-survival-${this.store.overlapStrategy}`}
+                        />
+                    </MSKTab>
                     <MSKTab
                         id={GroupComparisonTab.CLINICAL}
                         linkText="Clinical"
@@ -182,82 +181,83 @@ export default class GroupComparisonPage extends React.Component<
                             this.store.clinicalTabUnavailable ? 'greyedOut' : ''
                         }
                     >
-                        <ClinicalData store={this.store} />
+                        <ClinicalData
+                            store={this.store}
+                            key={`gc-clinical-data-${this.store.overlapStrategy}`}
+                        />
                     </MSKTab>
-                    {this.store.showAlterationsTab && (
-                        <MSKTab
-                            id={GroupComparisonTab.ALTERATIONS}
-                            linkText={this.alterationEnrichmentTabName}
-                            anchorClassName={
-                                this.store.alterationsTabUnavailable
-                                    ? 'greyedOut'
-                                    : ''
-                            }
-                        >
-                            {(getServerConfig().skin_show_settings_menu && (
-                                <AlterationFilterMenuSection
-                                    store={this.store}
-                                    updateSelectedEnrichmentEventTypes={
-                                        this.store
-                                            .updateSelectedEnrichmentEventTypes
-                                    }
-                                />
-                            )) || (
-                                <AlterationEnrichmentTypeSelector
-                                    classNames={
-                                        styles.inlineAlterationTypeSelectorMenu
-                                    }
-                                    store={this.store}
-                                    updateSelectedEnrichmentEventTypes={
-                                        this.store
-                                            .updateSelectedEnrichmentEventTypes
-                                    }
-                                    showMutations={
-                                        this.store.hasMutationEnrichmentData
-                                    }
-                                    showCnas={this.store.hasCnaEnrichmentData}
-                                    showStructuralVariants={
-                                        this.store.hasStructuralVariantData
-                                    }
-                                />
-                            )}
-                            <AlterationEnrichments store={this.store} />
-                        </MSKTab>
-                    )}
-                    {this.store.showMutationsTab && (
-                        <MSKTab
-                            id={GroupComparisonTab.MUTATIONS}
-                            linkText={
-                                <span>
-                                    Mutations{' '}
-                                    <strong className={'beta-text'}>
-                                        Beta!
-                                    </strong>
-                                </span>
-                            }
-                        >
-                            <GroupComparisonMutationsTab
+                    <MSKTab
+                        id={GroupComparisonTab.ALTERATIONS}
+                        linkText={this.alterationEnrichmentTabName}
+                        anchorClassName={
+                            !this.store.showAlterationsTab ||
+                            this.store.alterationsTabUnavailable
+                                ? 'greyedOut'
+                                : ''
+                        }
+                    >
+                        {(getServerConfig().skin_show_settings_menu && (
+                            <AlterationFilterMenuSection
                                 store={this.store}
-                                urlWrapper={this.urlWrapper}
+                                updateSelectedEnrichmentEventTypes={
+                                    this.store
+                                        .updateSelectedEnrichmentEventTypes
+                                }
                             />
-                            {/* stacked lollipop plots for > 2 groups */}
-                            {/* {this.store.activeGroups.result!.map(g => {
-                                return (
-                                    <div>
-                                        <h3>{g.name}</h3>
-                                        <Mutations
-                                            store={this.store}
-                                            mutations={
-                                                this.store.mutationsByGroup
-                                                    .result![g.uid]
-                                            }
-                                            filters={{}}
-                                        />
-                                    </div>
-                                );
-                            })} */}
-                        </MSKTab>
-                    )}
+                        )) || (
+                            <AlterationEnrichmentTypeSelector
+                                classNames={
+                                    styles.inlineAlterationTypeSelectorMenu
+                                }
+                                store={this.store}
+                                updateSelectedEnrichmentEventTypes={
+                                    this.store
+                                        .updateSelectedEnrichmentEventTypes
+                                }
+                                showMutations={
+                                    this.store.hasMutationEnrichmentData
+                                }
+                                showCnas={this.store.hasCnaEnrichmentData}
+                                showStructuralVariants={
+                                    this.store.hasStructuralVariantData
+                                }
+                            />
+                        )}
+                        <AlterationEnrichments store={this.store} />
+                    </MSKTab>
+                    <MSKTab
+                        id={GroupComparisonTab.MUTATIONS}
+                        linkText={
+                            <span>
+                                Mutations{' '}
+                                <strong className={'beta-text'}>Beta!</strong>
+                            </span>
+                        }
+                        anchorClassName={
+                            !this.store.showMutationsTab ? 'greyedOut' : ''
+                        }
+                    >
+                        <GroupComparisonMutationsTab
+                            store={this.store}
+                            urlWrapper={this.urlWrapper}
+                        />
+                        {/* stacked lollipop plots for > 2 groups */}
+                        {/* {this.store.activeGroups.result!.map(g => {
+                            return (
+                                <div>
+                                    <h3>{g.name}</h3>
+                                    <Mutations
+                                        store={this.store}
+                                        mutations={
+                                            this.store.mutationsByGroup
+                                                .result![g.uid]
+                                        }
+                                        filters={{}}
+                                    />
+                                </div>
+                            );
+                        })} */}
+                    </MSKTab>
                     {this.props.appStore.featureFlagStore.has(
                         'group_comparison_pathways'
                     ) && (
@@ -265,56 +265,67 @@ export default class GroupComparisonPage extends React.Component<
                             id={GroupComparisonTab.PATHWAYS}
                             linkText={'Pathways'}
                         >
-                            <GroupComparisonPathwayMapper
-                                genomicData={
-                                    this.store.alterationEnrichmentRowData
-                                        .result || []
-                                }
-                                activeGroups={this.store.activeGroups.result}
-                                groupComparisonStore={this.store}
-                                userSelectionStore={
-                                    this.pathwayMapperUserSelectionStore
-                                }
-                            />
+                            {this.store.activeGroups.isComplete &&
+                            this.store.genesSortedByAlterationFrequency
+                                .isComplete ? (
+                                <GroupComparisonPathwayMapper
+                                    genomicData={
+                                        this.store.alterationEnrichmentRowData
+                                            .result || []
+                                    }
+                                    activeGroups={
+                                        this.store.activeGroups.result
+                                    }
+                                    groupComparisonStore={this.store}
+                                    userSelectionStore={
+                                        this.pathwayMapperUserSelectionStore
+                                    }
+                                />
+                            ) : (
+                                <LoadingIndicator
+                                    center={true}
+                                    isLoading={true}
+                                    size={'big'}
+                                />
+                            )}
                         </MSKTab>
                     )}
-                    {this.store.showMRNATab && (
-                        <MSKTab
-                            id={GroupComparisonTab.MRNA}
-                            linkText="mRNA"
-                            anchorClassName={
-                                this.store.mRNATabUnavailable ? 'greyedOut' : ''
-                            }
-                        >
-                            <MRNAEnrichments store={this.store} />
-                        </MSKTab>
-                    )}
-                    {this.store.showProteinTab && (
-                        <MSKTab
-                            id={GroupComparisonTab.PROTEIN}
-                            linkText="Protein"
-                            anchorClassName={
-                                this.store.proteinTabUnavailable
-                                    ? 'greyedOut'
-                                    : ''
-                            }
-                        >
-                            <ProteinEnrichments store={this.store} />
-                        </MSKTab>
-                    )}
-                    {this.store.showMethylationTab && (
-                        <MSKTab
-                            id={GroupComparisonTab.DNAMETHYLATION}
-                            linkText="DNA Methylation"
-                            anchorClassName={
-                                this.store.methylationTabUnavailable
-                                    ? 'greyedOut'
-                                    : ''
-                            }
-                        >
-                            <MethylationEnrichments store={this.store} />
-                        </MSKTab>
-                    )}
+                    <MSKTab
+                        id={GroupComparisonTab.MRNA}
+                        linkText="mRNA"
+                        anchorClassName={
+                            !this.store.showMRNATab ||
+                            this.store.mRNATabUnavailable
+                                ? 'greyedOut'
+                                : ''
+                        }
+                    >
+                        <MRNAEnrichments store={this.store} />
+                    </MSKTab>
+                    <MSKTab
+                        id={GroupComparisonTab.PROTEIN}
+                        linkText="Protein"
+                        anchorClassName={
+                            !this.store.showProteinTab ||
+                            this.store.proteinTabUnavailable
+                                ? 'greyedOut'
+                                : ''
+                        }
+                    >
+                        <ProteinEnrichments store={this.store} />
+                    </MSKTab>
+                    <MSKTab
+                        id={GroupComparisonTab.DNAMETHYLATION}
+                        linkText="DNA Methylation"
+                        anchorClassName={
+                            !this.store.showMethylationTab ||
+                            this.store.methylationTabUnavailable
+                                ? 'greyedOut'
+                                : ''
+                        }
+                    >
+                        <MethylationEnrichments store={this.store} />
+                    </MSKTab>
                     {(this.store.showGenericAssayCategoricalTab ||
                         this.store.showGenericAssayBinaryTab ||
                         this.store.showGenericAssayTab) &&
