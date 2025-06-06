@@ -1943,7 +1943,7 @@ const cnaToAppearance = {
     },
     '0': {
         legendLabel: 'Diploid',
-        stroke: DEFAULT_GREY,
+        stroke: '#7d7d7d', // DEFAULT_GREY
         strokeOpacity: 1,
     },
     '1': {
