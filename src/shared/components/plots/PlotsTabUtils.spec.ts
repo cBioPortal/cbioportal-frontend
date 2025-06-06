@@ -486,6 +486,8 @@ describe('PlotsTabUtils', () => {
             | 'proteinChange'
             | 'mutationType'
             | 'putativeDriver'
+            | 'tumorAltCount'
+            | 'tumorRefCount'
         >[];
         let coverageInformation: CoverageInformation;
         let samples: Pick<Sample, 'uniqueSampleKey'>[];
@@ -499,30 +501,40 @@ describe('PlotsTabUtils', () => {
                     proteinChange: '',
                     mutationType: 'missense',
                     putativeDriver: true,
+                    tumorAltCount: 12,
+                    tumorRefCount: 88,
                 },
                 {
                     uniqueSampleKey: 'sample1',
                     proteinChange: '',
                     mutationType: 'missense',
                     putativeDriver: true,
+                    tumorAltCount: 10,
+                    tumorRefCount: 90,
                 },
                 {
                     uniqueSampleKey: 'sample2',
                     proteinChange: '',
                     mutationType: 'in_frame_del',
                     putativeDriver: false,
+                    tumorAltCount: 5,
+                    tumorRefCount: 95,
                 },
                 {
                     uniqueSampleKey: 'sample2',
                     proteinChange: '',
                     mutationType: 'nonsense',
                     putativeDriver: true,
+                    tumorAltCount: 8,
+                    tumorRefCount: 92,
                 },
                 {
                     uniqueSampleKey: 'sample3',
                     proteinChange: '',
                     mutationType: 'missense',
                     putativeDriver: false,
+                    tumorAltCount: 15,
+                    tumorRefCount: 85,
                 },
             ];
             coverageInformation = {
