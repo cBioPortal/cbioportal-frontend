@@ -12,7 +12,7 @@ export interface configAttribute {
 export const colors = {
     sampleColorPrimary: 'black',
     sampleColorRecurrence: '#805300',
-    sampleColorMetastasis: '#e00000',
+    sampleColorMetastasis: '#c70000',
     sampleColorCfdna: 'blue',
     sampleColorOrganoid: 'paleVioletRed',
 };

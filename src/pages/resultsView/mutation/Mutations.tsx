@@ -135,6 +135,7 @@ export default class Mutations extends React.Component<
         const tabs: JSX.Element[] = [];
 
         genes.forEach((gene: string) => {
+            console.log(gene);
             if (mutationsByGene[gene]) {
                 const tabHasMutations = mutationsByGene[gene].length > 0;
                 // gray out tab if no mutations
@@ -145,7 +146,7 @@ export default class Mutations extends React.Component<
                 tabs.push(
                     <MSKTab
                         key={gene}
-                        id={gene}
+                        id={`${gene}Tab`}
                         linkText={gene}
                         anchorStyle={anchorStyle}
                     >
