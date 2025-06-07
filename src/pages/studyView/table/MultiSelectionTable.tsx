@@ -54,7 +54,7 @@ export type MultiSelectionTableRow = OncokbCancerGene & {
 
 export enum MultiSelectionTableColumnKey {
     GENE = 'Gene',
-    MOLECULAR_PROFILE = 'Molecular Profile',
+    MOLECULAR_PROFILE = '',
     CASE_LIST = 'Name',
     MUTATION_TYPE = 'Mutation Type',
     NUMBER_STRUCTURAL_VARIANTS = '# SV',

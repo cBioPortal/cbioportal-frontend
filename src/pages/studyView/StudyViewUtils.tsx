@@ -251,7 +251,7 @@ export const SPECIAL_CHARTS: ChartMetaWithDimensionAndChartType[] = [
     },
     {
         uniqueKey: SpecialChartsUniqueKeyEnum.GENOMIC_PROFILES_SAMPLE_COUNT,
-        displayName: 'Genomic Profile Sample Counts',
+        displayName: 'Data Types',
         description: '',
         chartType: ChartTypeEnum.GENOMIC_PROFILES_TABLE,
         dataType: ChartMetaDataTypeEnum.GENOMIC,
