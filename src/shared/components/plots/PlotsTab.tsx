@@ -4016,6 +4016,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                         <label className="label-text">Data Type</label>
                         <div style={{ display: 'flex', alignItems: 'center' }}>
                             <ReactSelect
+                                aria-label="Data Type Dropdown"
                                 name={`${
                                     vertical ? 'v' : 'h'
                                 }-profile-type-selector`}
