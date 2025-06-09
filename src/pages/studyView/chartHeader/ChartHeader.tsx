@@ -48,6 +48,7 @@ export interface IChartHeaderProps {
     hideLabel?: boolean;
     chartControls?: ChartControls;
     changeChartType: (chartType: ChartType) => void;
+    toggleRenderPieChartForDownload: () => void;
     getSVG?: () => Promise<SVGElement | null>;
     getData?:
         | ((dataType?: DataType) => Promise<string | null>)
@@ -661,6 +662,9 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                     getServerConfig()
                                         .skin_hide_download_controls ===
                                     DownloadControlOption.SHOW_ALL
+                                }
+                                toggleRenderSvgForDownload={
+                                    this.props.toggleRenderPieChartForDownload
                                 }
                             />
                         )}
