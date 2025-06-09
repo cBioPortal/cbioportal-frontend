@@ -388,6 +388,7 @@ import {
     PlotsColoringParam,
     PlotsSelectionParam,
 } from 'pages/resultsView/ResultsViewURLWrapper';
+import { CBioPortalAPI } from 'cbioportal-ts-api-client';
 
 export const STUDY_VIEW_FILTER_AUTOSUBMIT = 'study_view_filter_autosubmit';
 
@@ -617,7 +618,8 @@ export class StudyViewPageStore
         public appStore: AppStore,
         private sessionServiceIsEnabled: boolean,
         private urlWrapper: StudyViewURLWrapper,
-        public internalClient: CBioPortalAPIInternal
+        public internalClient: CBioPortalAPIInternal,
+        public defaultClient: CBioPortalAPI
     ) {
         makeObservable(this);
 
@@ -6165,13 +6167,15 @@ export class StudyViewPageStore
         },
     });
 
-    readonly namespaceAttributes = remoteData({
+    readonly namespaceAttributes = remoteData<NamespaceAttribute[]>({
         await: () => [this.queriedPhysicalStudyIds],
         invoke: async () => {
             if (this.queriedPhysicalStudyIds.result.length > 0) {
-                return await defaultClient.fetchNamespaceAttributesUsingPOST({
-                    studyIds: this.queriedPhysicalStudyIds.result,
-                });
+                return await this.defaultClient.fetchNamespaceAttributesUsingPOST(
+                    {
+                        studyIds: this.queriedPhysicalStudyIds.result,
+                    }
+                );
             }
             return [];
         },

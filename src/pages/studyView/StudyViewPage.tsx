@@ -80,6 +80,7 @@ import {
 import { VirtualStudyModal } from 'pages/studyView/virtualStudy/VirtualStudyModal';
 import PlotsTab from 'shared/components/plots/PlotsTab';
 import { PlotsTabWrapper } from 'pages/studyView/StudyViewPlotsTabWrapper';
+import { getClient } from 'shared/api/cbioportalClientInstance';
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -147,7 +148,8 @@ export default class StudyViewPage extends React.Component<
             this.props.appStore,
             ServerConfigHelpers.sessionServiceIsEnabled(),
             this.urlWrapper,
-            getInternalClient()
+            getInternalClient(),
+            getClient()
         );
 
         // Expose store to window for use in custom tabs.
