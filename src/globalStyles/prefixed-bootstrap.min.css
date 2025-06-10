@@ -724,7 +724,7 @@
   font-size: inherit;
   line-height: inherit; }
 .cbioportal-frontend a {
-  color: #2f73a7;
+  color: #3786C2;
   text-decoration: none; }
 .cbioportal-frontend a:hover, .cbioportal-frontend a:focus {
   color: #265d86;
@@ -1961,7 +1961,7 @@
   background-color: #333; }
 .cbioportal-frontend .btn-primary {
   color: #fff;
-  background-color: #2f73a7;
+  background-color: #3786C2;
   border-color: #3178ae; }
 .cbioportal-frontend .btn-primary:focus, .cbioportal-frontend .btn-primary.focus {
   color: #fff;
@@ -2096,7 +2096,7 @@
   background-color: #fff; }
 .cbioportal-frontend .btn-link {
   font-weight: 400;
-  color: #2f73a7;
+  color: #3786C2;
   border-radius: 0; }
 .cbioportal-frontend .btn-link, .cbioportal-frontend .btn-link:active, .cbioportal-frontend .btn-link.active, .cbioportal-frontend .btn-link[disabled], fieldset[disabled] .cbioportal-frontend .btn-link {
   background-color: transparent;
@@ -3039,11 +3039,11 @@
 .cbioportal-frontend .label-default[href]:hover, .cbioportal-frontend .label-default[href]:focus {
   background-color: #5e5e5e; }
 .cbioportal-frontend .label-primary {
-  background-color: #2f73a7; }
+  background-color: #3786C2; }
 .cbioportal-frontend .label-primary[href]:hover, .cbioportal-frontend .label-primary[href]:focus {
   background-color: #2c6b9a; }
 .cbioportal-frontend .label-success {
-  background-color: #3a833a; }
+  background-color: #5cb85c; }
 .cbioportal-frontend .label-success[href]:hover, .cbioportal-frontend .label-success[href]:focus {
   background-color: #449d44; }
 .cbioportal-frontend .label-info {
@@ -3051,12 +3051,11 @@
 .cbioportal-frontend .label-info[href]:hover, .cbioportal-frontend .label-info[href]:focus {
   background-color: #31b0d5; }
 .cbioportal-frontend .label-warning {
-  color: #4a4a4a;
   background-color: #f0ad4e; }
 .cbioportal-frontend .label-warning[href]:hover, .cbioportal-frontend .label-warning[href]:focus {
   background-color: #ec971f; }
 .cbioportal-frontend .label-danger {
-  background-color: #d4403a; }
+  background-color: #d9534f; }
 .cbioportal-frontend .label-danger[href]:hover, .cbioportal-frontend .label-danger[href]:focus {
   background-color: #c9302c; }
 .cbioportal-frontend .badge {
