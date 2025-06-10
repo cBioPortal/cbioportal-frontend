@@ -83,6 +83,7 @@ import { getCategoryOrderByGenericAssayType } from 'shared/lib/GenericAssayUtils
 import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
 import { AnnotatedNumericGeneMolecularData } from 'shared/model/AnnotatedNumericGeneMolecularData';
 import { CustomDriverNumericGeneMolecularData } from 'shared/model/CustomDriverNumericGeneMolecularData';
+import { getVariantAlleleFrequency, VAFReport } from 'shared/lib/MutationUtils';
 
 export const CLIN_ATTR_DATA_TYPE = 'clinical_attribute';
 export const CUSTOM_ATTR_DATA_TYPE = 'custom_attribute';
@@ -1158,14 +1159,12 @@ export function makeAxisDataPromise_Molecular_MakeMutationData(
     samples: Pick<Sample, 'uniqueSampleKey'>[]
 ): IStringAxisData | INumberAxisData {
     const sampleToMutations = _.groupBy(mutations, m => m.uniqueSampleKey);
-    let data: {
+    const data: {
         uniqueSampleKey: string;
         value: string | number | string[] | number[];
-    }[] = [];
-
-    data = samples.map(s => {
+    }[] = samples.map(s => {
         const sampleMutations = sampleToMutations[s.uniqueSampleKey];
-        let value: any;
+        let value: string | string[] | number | number[];
 
         const isProfiled = _.some(
             isSampleProfiledInMultiple(
@@ -1209,24 +1208,14 @@ export function makeAxisDataPromise_Molecular_MakeMutationData(
                 }
                 break;
 
-            case MutationCountBy.VAF:
+            case MutationCountBy.VariantAlleleFrequency:
                 if (!sampleMutations) {
                     value = isProfiled ? 0 : NaN;
                 } else {
                     const vafs = sampleMutations
-                        .map(m => {
-                            if (
-                                Number.isInteger(m.tumorAltCount) &&
-                                Number.isInteger(m.tumorRefCount)
-                            ) {
-                                const total = m.tumorAltCount + m.tumorRefCount;
-                                return total > 0
-                                    ? m.tumorAltCount / total
-                                    : null;
-                            }
-                            return null;
-                        })
-                        .filter((v): v is number => v !== null);
+                        .map(m => getVariantAlleleFrequency(m))
+                        .filter((v): v is VAFReport => v !== null)
+                        .map(report => report.vaf);
                     value = vafs.length > 0 ? vafs : NaN;
                 }
                 break;
@@ -1249,7 +1238,7 @@ export function makeAxisDataPromise_Molecular_MakeMutationData(
         };
     });
 
-    if (mutationCountBy === MutationCountBy.VAF) {
+    if (mutationCountBy === MutationCountBy.VariantAlleleFrequency) {
         return {
             data,
             hugoGeneSymbol,

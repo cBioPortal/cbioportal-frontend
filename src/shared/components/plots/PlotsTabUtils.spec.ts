@@ -694,6 +694,54 @@ describe('PlotsTabUtils', () => {
                 }
             );
         });
+        it('gives the correct result for variant allele frequency', () => {
+            assert.deepEqual(
+                makeAxisDataPromise_Molecular_MakeMutationData(
+                    [molecularProfileId],
+                    'BRCA1',
+                    mutations,
+                    coverageInformation,
+                    MutationCountBy.VariantAlleleFrequency,
+                    samples
+                ),
+                {
+                    data: [
+                        {
+                            uniqueSampleKey: 'sample1',
+                            value: [
+                                12 / (12 + 88), // 0.12
+                                10 / (10 + 90), // 0.10
+                            ],
+                        },
+                        {
+                            uniqueSampleKey: 'sample2',
+                            value: [
+                                5 / (5 + 95), // 0.05
+                                8 / (8 + 92), // 0.08
+                            ],
+                        },
+                        {
+                            uniqueSampleKey: 'sample3',
+                            value: [15 / (15 + 85)], // 0.15
+                        },
+                        {
+                            uniqueSampleKey: 'sample4',
+                            value: 0,
+                        },
+                        {
+                            uniqueSampleKey: 'sample5',
+                            value: NaN,
+                        },
+                        {
+                            uniqueSampleKey: 'sample6',
+                            value: NaN,
+                        },
+                    ],
+                    hugoGeneSymbol: 'BRCA1',
+                    datatype: 'number',
+                }
+            );
+        });
         it('gives the correct result for mutation type data', () => {
             assert.deepEqual(
                 makeAxisDataPromise_Molecular_MakeMutationData(
