@@ -195,6 +195,7 @@ export default class GroupComparisonPage extends React.Component<
                                 ? 'greyedOut'
                                 : ''
                         }
+                        pending={this.store.activeGroups.isPending}
                     >
                         {(getServerConfig().skin_show_settings_menu && (
                             <AlterationFilterMenuSection
@@ -292,6 +293,7 @@ export default class GroupComparisonPage extends React.Component<
                     )}
                     <MSKTab
                         id={GroupComparisonTab.MRNA}
+                        pending={this.store.mRNAEnrichmentProfiles.isPending}
                         linkText="mRNA"
                         anchorClassName={
                             !this.store.showMRNATab ||
