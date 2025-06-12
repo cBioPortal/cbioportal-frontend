@@ -202,6 +202,9 @@ export class MultiSelectionTable extends React.Component<
             },
             [MultiSelectionTableColumnKey.MOLECULAR_PROFILE]: {
                 name: columnKey,
+                headerRender: () => {
+                    return <></>;
+                },
                 render: (data: MultiSelectionTableRow) => {
                     return (
                         <div className={styles.labelContent}>
