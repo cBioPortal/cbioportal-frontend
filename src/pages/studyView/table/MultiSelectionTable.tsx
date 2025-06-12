@@ -54,7 +54,7 @@ export type MultiSelectionTableRow = OncokbCancerGene & {
 
 export enum MultiSelectionTableColumnKey {
     GENE = 'Gene',
-    MOLECULAR_PROFILE = '',
+    MOLECULAR_PROFILE = 'Molecular Profile', // this table has been generalized to "Data Types"
     CASE_LIST = 'Name',
     MUTATION_TYPE = 'Mutation Type',
     NUMBER_STRUCTURAL_VARIANTS = '# SV',
@@ -202,17 +202,6 @@ export class MultiSelectionTable extends React.Component<
             },
             [MultiSelectionTableColumnKey.MOLECULAR_PROFILE]: {
                 name: columnKey,
-                headerRender: () => {
-                    return (
-                        <div
-                            style={{ marginLeft: cellMargin }}
-                            className={styles.displayFlex}
-                            data-test="profile-column-header"
-                        >
-                            {columnKey}
-                        </div>
-                    );
-                },
                 render: (data: MultiSelectionTableRow) => {
                     return (
                         <div className={styles.labelContent}>
