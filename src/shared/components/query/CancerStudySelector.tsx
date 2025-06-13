@@ -215,8 +215,9 @@ export default class CancerStudySelector extends React.Component<
         const filterAttributes = StudyFilterOptionsFormatted.filter(
             item => item.name
         );
+        const resourceFilters = this.store.resourceFilterOptionsFormatted;
         const sampleCountsPerFilter = getSampleCountsPerFilter(
-            StudyFilterOptionsFormatted,
+            [...StudyFilterOptionsFormatted, ...resourceFilters],
             studyForCalculation
         );
         return sampleCountsPerFilter;
@@ -232,8 +233,9 @@ export default class CancerStudySelector extends React.Component<
         const filterAttributes = StudyFilterOptionsFormatted.filter(
             item => item.name
         );
+        const resourceFilters = this.store.resourceFilterOptionsFormatted;
         const studyCount = getStudyCountPerFilter(
-            StudyFilterOptionsFormatted,
+            [...StudyFilterOptionsFormatted, ...resourceFilters],
             studyForCalculation
         );
         return studyCount;
@@ -273,6 +275,8 @@ export default class CancerStudySelector extends React.Component<
             shownStudies,
             shownAndSelectedStudies,
         } = this.logic.mainView.getSelectionReport();
+
+        const resourceFilters = this.store.resourceFilterOptionsFormatted;
 
         // TO DO shownStudies can be filtered based on the DataTypeFIlter
         const quickSetButtons = this.logic.mainView.quickSelectButtons(
@@ -334,9 +338,10 @@ export default class CancerStudySelector extends React.Component<
                                             }
                                             isChecked={false}
                                             buttonText={'Data type'}
-                                            dataFilterActive={
-                                                StudyFilterOptionsFormatted
-                                            }
+                                            dataFilterActive={[
+                                                ...StudyFilterOptionsFormatted,
+                                                ...resourceFilters,
+                                            ]}
                                             store={this.store}
                                             samplePerFilter={
                                                 this.showSamplesPerFilterType
