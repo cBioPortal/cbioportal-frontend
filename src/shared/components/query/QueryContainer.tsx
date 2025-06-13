@@ -244,16 +244,6 @@ export default class QueryContainer extends React.Component<
                     />
                 )}
 
-                {this.store.forDownloadTab && (
-                    <div className={'alert alert-danger'} role="alert">
-                        The Download interface has been removed. Enhanced
-                        download functionality is now available through the
-                        Query interface. Run a query with your gene(s) of
-                        interest and use the Download tab to download all
-                        available data types.
-                    </div>
-                )}
-
                 {(this.store.defaultSelectedIds.size === 0 ||
                     this.studiesDataReady) && (
                     <>
@@ -307,33 +297,6 @@ export default class QueryContainer extends React.Component<
                                     <GenesetsSelector />
                                 )}
 
-                                {!!this.store.forDownloadTab && (
-                                    <span
-                                        className={
-                                            styles.downloadSubmitExplanation
-                                        }
-                                    >
-                                        Clicking submit will generate a
-                                        tab-delimited file containing your
-                                        requested data.
-                                    </span>
-                                )}
-
-                                {!!this.store.forDownloadTab && (
-                                    <LabeledCheckbox
-                                        labelProps={{
-                                            className:
-                                                styles.transposeDataMatrix,
-                                        }}
-                                        checked={this.store.transposeDataMatrix}
-                                        onChange={event =>
-                                            (this.store.transposeDataMatrix =
-                                                event.currentTarget.checked)
-                                        }
-                                    >
-                                        Transpose data matrix
-                                    </LabeledCheckbox>
-                                )}
                                 <FlexRow
                                     overflow={true}
                                     padded
@@ -353,9 +316,7 @@ export default class QueryContainer extends React.Component<
                                         onClick={() => this.handleSubmit()}
                                         data-test="queryButton"
                                     >
-                                        {!this.store.forDownloadTab
-                                            ? 'Submit Query'
-                                            : 'Download'}
+                                        Submit Query
                                     </button>
                                 </FlexRow>
                             </>
