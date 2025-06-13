@@ -1617,7 +1617,11 @@ export class QueryStore {
         return _.reduce(
             this.resourceDefinitions.result,
             (acc: { checked: boolean; id: string; name: string }[], rd) => {
-                if (!resourceIds.has(rd.resourceId)) {
+                if (
+                    rd.resourceId !== 'CHROMOSCOPE' &&
+                    rd.resourceId !== 'FIGURES' &&
+                    !resourceIds.has(rd.resourceId)
+                ) {
                     resourceIds.add(rd.resourceId);
                     acc.push({
                         id: rd.resourceId,
