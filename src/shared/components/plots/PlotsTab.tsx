@@ -220,6 +220,7 @@ export enum MutationCountBy {
     MutationType = 'MutationType',
     MutatedVsWildType = 'MutatedVsWildType',
     DriverVsVUS = 'DriverVsVUS',
+    VariantAlleleFrequency = 'VariantAlleleFrequency',
 }
 
 export enum StructuralVariantCountBy {
@@ -417,6 +418,10 @@ const mutationCountByOptions = [
     { value: MutationCountBy.MutationType, label: 'Mutation Type' },
     { value: MutationCountBy.MutatedVsWildType, label: 'Mutated vs Wild-type' },
     { value: MutationCountBy.DriverVsVUS, label: 'Driver vs VUS' },
+    {
+        value: MutationCountBy.VariantAlleleFrequency,
+        label: 'Variant Allele Freqency',
+    },
 ];
 const structuralVariantCountByOptions = [
     {
