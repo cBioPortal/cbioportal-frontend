@@ -28,6 +28,49 @@ export enum GeneSetProfilesEnum {
     gsva_scores = 'gsva_scores',
 }
 
+export const DEFAULT_STUDY_FILTER_OPTIONS = [
+    {
+        id: 'sequencedSampleCount',
+        name: 'Mutations',
+        checked: false,
+    },
+    {
+        id: 'cnaSampleCount',
+        name: 'CNA',
+        checked: false,
+    },
+    {
+        id: 'mrnaRnaSeqV2SampleCount',
+        name: 'RNA-Seq',
+        checked: false,
+    },
+    {
+        id: 'mrnaMicroarraySampleCount',
+        name: 'RNA (microarray)',
+        checked: false,
+    },
+    {
+        id: 'miRnaSampleCount',
+        name: 'miRNA',
+        checked: false,
+    },
+    {
+        id: 'rppaSampleCount',
+        name: 'RPPA',
+        checked: false,
+    },
+    {
+        id: 'massSpectrometrySampleCount',
+        name: 'Protein Mass-Spectrometry',
+        checked: false,
+    },
+    {
+        id: 'treatmentCount',
+        name: 'Treatment',
+        checked: false,
+    },
+];
+
 export function currentQueryParams(store: QueryStore) {
     const selectableSelectedStudyIds = store.selectableSelectedStudyIds;
 

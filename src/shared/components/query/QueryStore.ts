@@ -39,7 +39,11 @@ import URL from 'url';
 import { redirectToStudyView } from '../../api/urls';
 import StudyListLogic from './StudyListLogic';
 import chunkMapReduce from 'shared/lib/chunkMapReduce';
-import { categorizedSamplesCount, currentQueryParams } from './QueryStoreUtils';
+import {
+    categorizedSamplesCount,
+    currentQueryParams,
+    DEFAULT_STUDY_FILTER_OPTIONS,
+} from './QueryStoreUtils';
 
 import getOverlappingStudies from '../../lib/getOverlappingStudies';
 import MolecularProfilesInStudyCache from '../../cache/MolecularProfilesInStudyCache';
@@ -299,48 +303,7 @@ export class QueryStore {
 
     @observable.ref dataTypeFilters: string[] = [];
 
-    @observable studyFilterOptionsFormatted = [
-        {
-            id: 'sequencedSampleCount',
-            name: 'Mutations',
-            checked: false,
-        },
-        {
-            id: 'cnaSampleCount',
-            name: 'CNA',
-            checked: false,
-        },
-        {
-            id: 'mrnaRnaSeqV2SampleCount',
-            name: 'RNA-Seq',
-            checked: false,
-        },
-        {
-            id: 'mrnaMicroarraySampleCount',
-            name: 'RNA (microarray)',
-            checked: false,
-        },
-        {
-            id: 'miRnaSampleCount',
-            name: 'miRNA',
-            checked: false,
-        },
-        {
-            id: 'rppaSampleCount',
-            name: 'RPPA',
-            checked: false,
-        },
-        {
-            id: 'massSpectrometrySampleCount',
-            name: 'Protein Mass-Spectrometry',
-            checked: false,
-        },
-        {
-            id: 'treatmentCount',
-            name: 'Treatment',
-            checked: false,
-        },
-    ];
+    @observable studyFilterOptions = DEFAULT_STUDY_FILTER_OPTIONS;
 
     @computed get searchText(): string {
         return toQueryString(this.searchClauses);

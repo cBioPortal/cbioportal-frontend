@@ -164,9 +164,7 @@ export default class CancerStudySelector extends React.Component<
 
     @action.bound
     toggleFilter(id: string) {
-        let option = this.store.studyFilterOptionsFormatted.find(
-            o => o.id === id
-        );
+        let option = this.store.studyFilterOptions.find(o => o.id === id);
         if (option) {
             option.checked = !option.checked;
         }
@@ -179,11 +177,11 @@ export default class CancerStudySelector extends React.Component<
             shownStudies.length < this.store.cancerStudies.result.length
                 ? shownStudies
                 : this.store.cancerStudies.result;
-        const filterAttributes = this.store.studyFilterOptionsFormatted.filter(
+        const filterAttributes = this.store.studyFilterOptions.filter(
             item => item.name
         );
         const sampleCountsPerFilter = getSampleCountsPerFilter(
-            this.store.studyFilterOptionsFormatted,
+            this.store.studyFilterOptions,
             studyForCalculation
         );
         return sampleCountsPerFilter;
@@ -196,11 +194,11 @@ export default class CancerStudySelector extends React.Component<
             shownStudies.length < this.store.cancerStudies.result.length
                 ? shownStudies
                 : this.store.cancerStudies.result;
-        const filterAttributes = this.store.studyFilterOptionsFormatted.filter(
+        const filterAttributes = this.store.studyFilterOptions.filter(
             item => item.name
         );
         const studyCount = getStudyCountPerFilter(
-            this.store.studyFilterOptionsFormatted,
+            this.store.studyFilterOptions,
             studyForCalculation
         );
         return studyCount;
@@ -302,8 +300,7 @@ export default class CancerStudySelector extends React.Component<
                                             isChecked={false}
                                             buttonText={'Data type'}
                                             dataFilterActive={
-                                                this.store
-                                                    .studyFilterOptionsFormatted
+                                                this.store.studyFilterOptions
                                             }
                                             store={this.store}
                                             samplePerFilter={
