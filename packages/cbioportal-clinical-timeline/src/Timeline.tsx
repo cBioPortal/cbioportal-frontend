@@ -525,6 +525,12 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                     type={'button'}
                     style={{ marginLeft: 7 }}
                 />
+                <span
+                    style={{ marginLeft: 8, cursor: 'pointer' }}
+                    title="This is an info tooltip"
+                >
+                    <i className="fa fa-info-circle" aria-hidden="true" />
+                </span>
             </div>
         </div>
     );
