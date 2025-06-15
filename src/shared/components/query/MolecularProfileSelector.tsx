@@ -11,6 +11,7 @@ import SectionHeader from '../sectionHeader/SectionHeader';
 import { getServerConfig } from 'config/config';
 import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
 import { allowExpressionCrossStudy } from 'shared/lib/allowExpressionCrossStudy';
+import { AlterationTypeConstants } from 'shared/constants';
 
 @observer
 export default class MolecularProfileSelector extends QueryStoreComponent<
@@ -19,6 +20,27 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
 > {
     private get showGSVA() {
         return getServerConfig().skin_show_gsva;
+    }
+
+    componentDidMount() {
+        // Select RNA expression profile by default if no mutation data is present
+        const hasMutationProfile =
+            this.store.getFilteredProfiles(
+                'MUTATION_EXTENDED' as MolecularProfile['molecularAlterationType']
+            ).length > 0;
+        const hasMrnaProfile =
+            this.store.getFilteredProfiles(
+                'MRNA_EXPRESSION' as MolecularProfile['molecularAlterationType']
+            ).length > 0;
+
+        if (!hasMutationProfile && hasMrnaProfile) {
+            const mrnaProfiles = this.store.getFilteredProfiles(
+                'MRNA_EXPRESSION' as MolecularProfile['molecularAlterationType']
+            );
+            if (mrnaProfiles.length > 0) {
+                this.store.selectMolecularProfile(mrnaProfiles[0], true);
+            }
+        }
     }
 
     render() {
