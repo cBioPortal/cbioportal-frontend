@@ -9843,6 +9843,15 @@ export class StudyViewPageStore
                     getSuffixOfMolecularProfile(this.defaultProtProfile)
                 );
             }
+            // Add RNA profile if no other profiles are selected
+            if (
+                molecularProfileFilters.length === 0 &&
+                this.defaultMrnaProfile
+            ) {
+                molecularProfileFilters.push(
+                    getSuffixOfMolecularProfile(this.defaultMrnaProfile)
+                );
+            }
         } else {
             molecularProfileFilters = _.chain([
                 ...this.mutationProfiles.result,
