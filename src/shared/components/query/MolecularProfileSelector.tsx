@@ -11,7 +11,6 @@ import SectionHeader from '../sectionHeader/SectionHeader';
 import { getServerConfig } from 'config/config';
 import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
 import { allowExpressionCrossStudy } from 'shared/lib/allowExpressionCrossStudy';
-import { AlterationTypeConstants } from 'shared/constants';
 
 @observer
 export default class MolecularProfileSelector extends QueryStoreComponent<
