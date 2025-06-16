@@ -1,5 +1,5 @@
 [build.environment]
-  NODE_VERSION = "15.2.1"
+  NODE_VERSION = "16.10.0"
   YARN_VERSION = "1.22.5"
   YARN_FLAGS = "--frozen-lockfile --ignore-engines"
   BABEL_CACHE_FOLDER = "/opt/build/cache/"

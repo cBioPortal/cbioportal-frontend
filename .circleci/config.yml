@@ -25,7 +25,7 @@ defaults: &defaults
   working_directory: /tmp/repo
   docker:
     # specify the version you desire here
-    - image: circleci/node:15.2.1-browsers
+    - image: circleci/node:16.10.0-browsers
   resource_class: large
 
 run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts

@@ -51,7 +51,7 @@
                         </goals>
 
                         <configuration>
-                            <nodeVersion>v15.2.1</nodeVersion>
+                            <nodeVersion>v16.10.0</nodeVersion>
                             <yarnVersion>v1.22.5</yarnVersion>
                         </configuration>
 

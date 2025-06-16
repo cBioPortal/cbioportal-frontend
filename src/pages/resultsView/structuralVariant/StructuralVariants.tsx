@@ -1,23 +1,3 @@
-/**
- * Copyright (c) 2018 The Hyve B.V.
- * This code is licensed under the GNU Affero General Public License (AGPL),
- * version 3, or (at your option) any later version.
- *
- * This file is part of cBioPortal.
- *
- * cBioPortal is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- **/
-
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import { ResultsViewPageStore } from '../ResultsViewPageStore';
@@ -28,7 +8,7 @@ import ResultsViewStructuralVariantMapper from './ResultsViewStructuralVariantMa
 import autobind from 'autobind-decorator';
 import ResultsViewURLWrapper from 'pages/resultsView/ResultsViewURLWrapper';
 
-export interface IFusionPageProps {
+export interface IStructuralVariantPageProps {
     store: ResultsViewPageStore;
     urlWrapper: ResultsViewURLWrapper;
 }
@@ -36,7 +16,7 @@ export interface IFusionPageProps {
 @autobind
 @observer
 export default class StructuralVariants extends React.Component<
-    IFusionPageProps,
+    IStructuralVariantPageProps,
     {}
 > {
     @computed get generateTabs(): JSX.Element[] {
@@ -44,10 +24,10 @@ export default class StructuralVariants extends React.Component<
         const { structuralVariantMapperStores } = this.props.store;
 
         for (const gene of this.props.store.hugoGeneSymbols!) {
-            const fusionMapperStore =
+            const structuralVariantMapperStore =
                 structuralVariantMapperStores.result[gene];
 
-            if (fusionMapperStore) {
+            if (structuralVariantMapperStore) {
                 tabs.push(
                     <MSKTab key={gene} id={gene} linkText={gene}>
                         <div className="alert alert-info">
@@ -58,7 +38,7 @@ export default class StructuralVariants extends React.Component<
                             please reach out on cbioportal@googlegroups.com
                         </div>
                         <ResultsViewStructuralVariantMapper
-                            store={fusionMapperStore}
+                            store={structuralVariantMapperStore}
                         />
                     </MSKTab>
                 );
@@ -93,7 +73,7 @@ export default class StructuralVariants extends React.Component<
         const activeTabId = this.selectedGeneSymbol;
 
         return (
-            <div data-test="fusionsTabDiv">
+            <div data-test="structuralVariantsTabDiv">
                 {this.props.store.structuralVariantMapperStores.isPending && (
                     <LoadingIndicator
                         center={true}
@@ -103,10 +83,10 @@ export default class StructuralVariants extends React.Component<
                 )}
                 {this.props.store.structuralVariantMapperStores.isComplete && (
                     <MSKTabs
-                        id="fusionsPageTabs"
+                        id="structuralVariantsPageTabs"
                         activeTabId={activeTabId}
                         onTabClick={(id: string) => this.handleTabChange(id)}
-                        className="pillTabs resultsPageFusionsGeneTabs"
+                        className="pillTabs resultsPageStructuralVariantsGeneTabs"
                         arrowStyle={{ 'line-height': 0.8 }}
                         tabButtonStyle="pills"
                         unmountOnHide={true}
