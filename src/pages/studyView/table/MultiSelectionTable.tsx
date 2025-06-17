@@ -350,6 +350,9 @@ export class MultiSelectionTable extends React.Component<
                     return <div style={{ marginLeft: cellMargin }}>Freq</div>;
                 },
                 render: (data: MultiSelectionTableRow) => {
+                    // this is for backward compatibility after we introduced
+                    // numberOfAlteredCasesOnPanel for alteration count services
+                    // should be abstracted
                     const alteredCases =
                         'numberOfAlteredCasesOnPanel' in data
                             ? // @ts-ignore
@@ -370,16 +373,27 @@ export class MultiSelectionTable extends React.Component<
                     );
                 },
                 sortBy: (data: MultiSelectionTableRow) => {
-                    if (
-                        // @ts-ignore
-                        data.numberOfAlteredCasesOnPanel === 0 ||
-                        data.numberOfProfiledCases === 0
-                    ) {
-                        return 0;
+                    // this is for backward compatibility after we introduced
+                    // numberOfAlteredCasesOnPanel for alteration count services
+                    // should be abstracted
+                    if ('numberOfAlteredCasesOnPanel' in data) {
+                        if (
+                            // @ts-ignore
+                            data.numberOfAlteredCasesOnPanel === 0 ||
+                            data.numberOfProfiledCases === 0
+                        ) {
+                            return 0;
+                        } else {
+                            return (
+                                // @ts-ignore
+                                (data.numberOfAlteredCasesOnPanel /
+                                    data.numberOfProfiledCases) *
+                                100
+                            );
+                        }
                     } else {
                         return (
-                            // @ts-ignore
-                            (data.numberOfAlteredCasesOnPanel /
+                            (data.numberOfAlteredCases /
                                 data.numberOfProfiledCases) *
                             100
                         );
