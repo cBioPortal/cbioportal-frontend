@@ -380,6 +380,7 @@ export class MultiSelectionTable extends React.Component<
                         if (
                             // @ts-ignore
                             data.numberOfAlteredCasesOnPanel === 0 ||
+                            // @ts-ignore
                             data.numberOfProfiledCases === 0
                         ) {
                             return 0;
@@ -387,6 +388,7 @@ export class MultiSelectionTable extends React.Component<
                             return (
                                 // @ts-ignore
                                 (data.numberOfAlteredCasesOnPanel /
+                                    // @ts-ignore
                                     data.numberOfProfiledCases) *
                                 100
                             );
