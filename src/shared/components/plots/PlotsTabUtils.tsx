@@ -1667,9 +1667,49 @@ export function getAxisLabel(
                 selection.entrezGeneId !== undefined &&
                 selection.entrezGeneId !== NONE_SELECTED_OPTION_NUMERICAL_VALUE
             ) {
-                label = `${
-                    entrezGeneIdToGene[selection.entrezGeneId].hugoGeneSymbol
-                }: ${profile.name}`;
+                const geneSymbol =
+                    entrezGeneIdToGene[selection.entrezGeneId].hugoGeneSymbol;
+                if (
+                    profile.molecularAlterationType ===
+                        AlterationTypeConstants.MUTATION_EXTENDED &&
+                    selection.mutationCountBy
+                ) {
+                    switch (selection.mutationCountBy) {
+                        case MutationCountBy.MutationType:
+                            label = `${geneSymbol}: Mutations Type`;
+                            break;
+                        case MutationCountBy.DriverVsVUS:
+                            label = `${geneSymbol}: Driver vs VUS Mutations`;
+                            break;
+                        case MutationCountBy.VariantAlleleFrequency:
+                            label = `${geneSymbol}: Variant Allele Frequency`;
+                            break;
+                        case MutationCountBy.MutatedVsWildType:
+                            label = `${geneSymbol}: Mutated vs Wild Type`;
+                            break;
+                        default:
+                            label = `${geneSymbol}: ${profile.name}`;
+                            break;
+                    }
+                } else if (
+                    profile.molecularAlterationType ===
+                        AlterationTypeConstants.STRUCTURAL_VARIANT &&
+                    selection.structuralVariantCountBy
+                ) {
+                    switch (selection.structuralVariantCountBy) {
+                        case StructuralVariantCountBy.VariantType:
+                            label = `${geneSymbol}: Variant Type`;
+                            break;
+                        case StructuralVariantCountBy.MutatedVsWildType:
+                            label = `${geneSymbol}: Variant vs No Variant`;
+                            break;
+                        default:
+                            label = `${geneSymbol}: ${profile.name}`;
+                            break;
+                    }
+                } else {
+                    label = `${geneSymbol}: ${profile.name}`;
+                }
             }
             break;
     }
