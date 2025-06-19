@@ -180,7 +180,7 @@ export default class CancerStudySelector extends React.Component<
         const filterAttributes = this.store.studyFilterOptions.filter(
             item => item.name
         );
-        const resourceFilters = this.store.resourceFilterOptionsFormatted;
+        const resourceFilters = this.store.resourceFilterOptions;
         const sampleCountsPerFilter = getSampleCountsPerFilter(
             [...this.store.studyFilterOptions, ...resourceFilters],
             studyForCalculation
@@ -198,7 +198,7 @@ export default class CancerStudySelector extends React.Component<
         const filterAttributes = this.store.studyFilterOptions.filter(
             item => item.name
         );
-        const resourceFilters = this.store.resourceFilterOptionsFormatted;
+        const resourceFilters = this.store.resourceFilterOptions;
         const studyCount = getStudyCountPerFilter(
             [...this.store.studyFilterOptions, ...resourceFilters],
             studyForCalculation
@@ -241,7 +241,7 @@ export default class CancerStudySelector extends React.Component<
             shownAndSelectedStudies,
         } = this.logic.mainView.getSelectionReport();
 
-        const resourceFilters = this.store.resourceFilterOptionsFormatted;
+        const resourceFilters = this.store.resourceFilterOptions;
 
         // TO DO shownStudies can be filtered based on the DataTypeFIlter
         const quickSetButtons = this.logic.mainView.quickSelectButtons(
@@ -304,7 +304,8 @@ export default class CancerStudySelector extends React.Component<
                                             isChecked={false}
                                             buttonText={'Data type'}
                                             dataFilterActive={[
-                                                ...this.store.studyFilterOptions,
+                                                ...this.store
+                                                    .studyFilterOptions,
                                                 ...resourceFilters,
                                             ]}
                                             store={this.store}
