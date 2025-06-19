@@ -3796,7 +3796,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 dataSourceLabel = 'Clinical Attribute';
                 break;
             case AlterationTypeConstants.MUTATION_EXTENDED:
-                dataSourceLabel = 'Group Mutations by';
+                dataSourceLabel = 'Plot Mutations by';
                 dataSourceValue = axisSelection.mutationCountBy;
                 dataSourceOptions = mutationCountByOptions;
                 onDataSourceChange = vertical
@@ -3804,7 +3804,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     : this.onHorizontalAxisMutationCountBySelect;
                 break;
             case AlterationTypeConstants.STRUCTURAL_VARIANT:
-                dataSourceLabel = 'Group Structural variants by';
+                dataSourceLabel = 'Plot Structural variants by';
                 dataSourceValue = axisSelection.structuralVariantCountBy;
                 dataSourceOptions = filterStructuralVariantOptions;
                 onDataSourceChange = vertical
