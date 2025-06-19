@@ -1614,7 +1614,7 @@ export class QueryStore {
         default: [],
     });
 
-    @computed get resourceFilterOptionsFormatted(): {
+    @computed get resourceFilterOptions(): {
         checked: boolean;
         id: string;
         name: string;
