@@ -1212,10 +1212,13 @@ export function makeAxisDataPromise_Molecular_MakeMutationData(
                 if (!sampleMutations) {
                     value = isProfiled ? 0 : NaN;
                 } else {
-                    const vafs = sampleMutations
-                        .map(m => getVariantAlleleFrequency(m))
-                        .filter((v): v is VAFReport => v !== null)
-                        .map(report => report.vaf);
+                    const vafs: number[] = [];
+                    for (const m of sampleMutations) {
+                        const report = getVariantAlleleFrequency(m);
+                        if (report !== null) {
+                            vafs.push(report.vaf);
+                        }
+                    }
                     value = vafs.length > 0 ? vafs : NaN;
                 }
                 break;
