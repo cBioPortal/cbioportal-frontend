@@ -36,15 +36,16 @@ if (
         // ADD MESSAGE IN FOLLOWING FORMAT
         // UNIQUE ID IS IMPORTANT B/C WE REMEMBER A MESSAGE HAS BEEN SHOWN
         // BASED ON USERS LOCALSTORAGE
-
-        {
-            dateEnd: 100000000000000,
-            content: `Re-introducing the cBioPortal Newsletter! Subscribe via <a href="https://www.linkedin.com/newsletters/cbioportal-newsletter-7178731490539634689/" target="_blank">LinkedIn</a> or <a href="https://groups.google.com/g/cbioportal-news" target="_blank">Google Groups</a>`,
-            showCondition: routingStore => {
-                return getServerConfig().app_name === 'public-portal';
-            },
-            id: '2024_newsletter_intro',
-        },
+        // TODO: THIS SHOULD BE LOADED FROM CONFIGURATION
+        //
+        // {
+        //     dateEnd: 100000000000000,
+        //     content: `Re-introducing the cBioPortal Newsletter! Subscribe via <a href="https://www.linkedin.com/newsletters/cbioportal-newsletter-7178731490539634689/" target="_blank">LinkedIn</a> or <a href="https://groups.google.com/g/cbioportal-news" target="_blank">Google Groups</a>`,
+        //     showCondition: routingStore => {
+        //         return getServerConfig().app_name === 'public-portal';
+        //     },
+        //     id: '2024_newsletter_intro',
+        // },
     ];
 
     // MSK specific messaging
