@@ -388,7 +388,8 @@ export function fillHeatmapTrackDatum<
     featureId: T[K],
     case_: Sample | Patient,
     data?: HeatmapCaseDatum[],
-    sortOrder?: string
+    sortOrder?: string,
+    zScoreThreshold?: number
 ) {
     trackDatum[featureKey] = featureId;
     trackDatum.study_id = case_.studyId;
@@ -416,43 +417,120 @@ export function fillHeatmapTrackDatum<
                 'Unexpectedly received multiple heatmap profile data for one sample'
             );
         } else {
-            // aggregate samples for this patient by selecting the highest absolute (Z-)score
-            // default: the most extreme value (pos. or neg.) is shown for data
-            // sortOrder=ASC: the smallest value is shown for data
-            // sortOrder=DESC: the largest value is shown for data
+            // aggregate samples for this patient
             let representingDatum;
             let bestValue;
-            switch (sortOrder) {
-                case 'ASC':
-                    bestValue = _(dataWithValue)
-                        .map((d: HeatmapCaseDatum) => d.value)
-                        .min();
-                    representingDatum = selectRepresentingDataPoint(
-                        bestValue!,
-                        dataWithValue,
-                        false
-                    );
-                    break;
-                case 'DESC':
-                    bestValue = _(dataWithValue)
-                        .map((d: HeatmapCaseDatum) => d.value)
-                        .max();
-                    representingDatum = selectRepresentingDataPoint(
-                        bestValue!,
-                        dataWithValue,
-                        false
-                    );
-                    break;
-                default:
-                    bestValue = _.maxBy(dataWithValue, (d: HeatmapCaseDatum) =>
-                        Math.abs(d.value)
+
+            // If Z-score threshold is provided, use thresholded logic similar to oncoprint
+            if (zScoreThreshold !== undefined) {
+                console.log(
+                    'DEBUG: Processing patient with zScoreThreshold:',
+                    zScoreThreshold
+                );
+                console.log(
+                    'DEBUG: Patient data values:',
+                    dataWithValue.map(d => d.value)
+                );
+
+                // Filter data that meets the Z-score threshold
+                const thresholdedData = dataWithValue.filter(
+                    d => Math.abs(d.value) >= zScoreThreshold
+                );
+
+                console.log(
+                    'DEBUG: Thresholded data values:',
+                    thresholdedData.map(d => d.value)
+                );
+
+                if (thresholdedData.length > 0) {
+                    // Among thresholded data, select the most extreme value
+                    bestValue = _.maxBy(
+                        thresholdedData,
+                        (d: HeatmapCaseDatum) => Math.abs(d.value)
                     )!.value;
                     representingDatum = selectRepresentingDataPoint(
                         bestValue,
-                        dataWithValue,
+                        thresholdedData,
                         true
                     );
-                    break;
+                    console.log(
+                        'DEBUG: Selected thresholded value:',
+                        bestValue
+                    );
+                } else {
+                    console.log(
+                        'DEBUG: No data meets threshold, falling back to original logic'
+                    );
+                    // If no data meets threshold, fall back to original logic
+                    switch (sortOrder) {
+                        case 'ASC':
+                            bestValue = _(dataWithValue)
+                                .map((d: HeatmapCaseDatum) => d.value)
+                                .min();
+                            representingDatum = selectRepresentingDataPoint(
+                                bestValue!,
+                                dataWithValue,
+                                false
+                            );
+                            break;
+                        case 'DESC':
+                            bestValue = _(dataWithValue)
+                                .map((d: HeatmapCaseDatum) => d.value)
+                                .max();
+                            representingDatum = selectRepresentingDataPoint(
+                                bestValue!,
+                                dataWithValue,
+                                false
+                            );
+                            break;
+                        default:
+                            bestValue = _.maxBy(
+                                dataWithValue,
+                                (d: HeatmapCaseDatum) => Math.abs(d.value)
+                            )!.value;
+                            representingDatum = selectRepresentingDataPoint(
+                                bestValue,
+                                dataWithValue,
+                                true
+                            );
+                            break;
+                    }
+                }
+            } else {
+                // Original logic when no Z-score threshold is provided
+                switch (sortOrder) {
+                    case 'ASC':
+                        bestValue = _(dataWithValue)
+                            .map((d: HeatmapCaseDatum) => d.value)
+                            .min();
+                        representingDatum = selectRepresentingDataPoint(
+                            bestValue!,
+                            dataWithValue,
+                            false
+                        );
+                        break;
+                    case 'DESC':
+                        bestValue = _(dataWithValue)
+                            .map((d: HeatmapCaseDatum) => d.value)
+                            .max();
+                        representingDatum = selectRepresentingDataPoint(
+                            bestValue!,
+                            dataWithValue,
+                            false
+                        );
+                        break;
+                    default:
+                        bestValue = _.maxBy(
+                            dataWithValue,
+                            (d: HeatmapCaseDatum) => Math.abs(d.value)
+                        )!.value;
+                        representingDatum = selectRepresentingDataPoint(
+                            bestValue,
+                            dataWithValue,
+                            true
+                        );
+                        break;
+                }
             }
 
             // `data` can contain data points with only NaN values
@@ -471,6 +549,13 @@ export function fillHeatmapTrackDatum<
                       }${trackDatum.profile_data.toFixed(2)}`
                     : undefined;
             }
+
+            console.log(
+                'DEBUG: Final selected value for patient:',
+                case_.uniquePatientKey || case_.uniqueSampleKey,
+                '=',
+                trackDatum.profile_data
+            );
         }
     }
     return trackDatum;
@@ -482,8 +567,9 @@ function selectRepresentingDataPoint(
     useAbsolute: boolean
 ): HeatmapCaseDatum {
     const fFilter = useAbsolute
-        ? (d: HeatmapCaseDatum) => Math.abs(d.value) === bestValue
-        : (d: HeatmapCaseDatum) => d.value === bestValue;
+        ? (d: HeatmapCaseDatum) =>
+              Math.abs(Math.abs(d.value) - Math.abs(bestValue)) < 0.0001
+        : (d: HeatmapCaseDatum) => Math.abs(d.value - bestValue) < 0.0001;
     const selData = _.filter(data, fFilter);
     const selDataNoTreshold = _.filter(
         selData,
@@ -582,7 +668,8 @@ export function makeHeatmapTrackData<
         uniqueSampleKey: string;
         thresholdType?: '>' | '<';
     }[],
-    sortOrder?: string
+    sortOrder?: string,
+    zScoreThreshold?: number
 ): T[] {
     if (!cases.length) {
         return [];
@@ -602,7 +689,9 @@ export function makeHeatmapTrackData<
                 featureKey,
                 featureId,
                 c,
-                caseData
+                caseData,
+                sortOrder,
+                zScoreThreshold
             );
             return trackDatum as T;
         });
@@ -619,7 +708,8 @@ export function makeHeatmapTrackData<
                 featureId,
                 c,
                 caseData,
-                sortOrder
+                sortOrder,
+                zScoreThreshold
             );
             return trackDatum as T;
         });

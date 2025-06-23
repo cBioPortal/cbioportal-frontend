@@ -1175,12 +1175,24 @@ export function makeHeatmapTracksMobxPromise(
             const samples = oncoprint.props.store.filteredSamples.result!;
             const patients = oncoprint.props.store.filteredPatients.result!;
 
-            return cacheQueries.map(query => {
+            const tracks = cacheQueries.map(query => {
                 const molecularProfileId = query.molecularProfileId;
                 const gene = query.hugoGeneSymbol;
                 const data = oncoprint.props.store.geneMolecularDataCache.result!.get(
                     query
                 )!.data!;
+
+                // get Z-score threshold from the store (default to 2 if not present)
+                const zScoreThreshold =
+                    typeof oncoprint.props.store.zScoreThreshold === 'string'
+                        ? parseFloat(oncoprint.props.store.zScoreThreshold)
+                        : oncoprint.props.store.zScoreThreshold ?? 2;
+
+                console.log(
+                    'DEBUG: zScoreThreshold from store:',
+                    oncoprint.props.store.zScoreThreshold
+                );
+                console.log('DEBUG: parsed zScoreThreshold:', zScoreThreshold);
 
                 return {
                     key: `HEATMAPTRACK_${molecularProfileId},${gene}`,
@@ -1202,7 +1214,9 @@ export function makeHeatmapTracksMobxPromise(
                         'hugo_gene_symbol',
                         gene,
                         sampleMode ? samples : patients,
-                        data
+                        data,
+                        undefined,
+                        zScoreThreshold
                     ),
                     trackGroupIndex:
                         molecularProfileIdToAdditionalTracks[molecularProfileId]
@@ -1239,6 +1253,7 @@ export function makeHeatmapTracksMobxPromise(
                     }),
                 };
             });
+            return tracks;
         },
         default: [],
     });
