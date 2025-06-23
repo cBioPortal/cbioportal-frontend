@@ -10,6 +10,7 @@ import {
     reaction,
     runInAction,
     toJS,
+    when,
 } from 'mobx';
 import {
     CancerStudy,
@@ -45,6 +46,7 @@ import {
     categorizedSamplesCount,
     currentQueryParams,
     DEFAULT_STUDY_FILTER_OPTIONS,
+    getResourceFilterOptions,
 } from './QueryStoreUtils';
 
 import getOverlappingStudies from '../../lib/getOverlappingStudies';
@@ -153,6 +155,19 @@ export class QueryStore {
             }
         );
         this.initialize(urlWithInitialParams);
+
+        when(
+            () => this.resourceDefinitions.isComplete,
+            () => {
+                const resourceFilterOptions = getResourceFilterOptions(
+                    this.resourceDefinitions.result
+                );
+                this.setStudyFilterOptions([
+                    ...DEFAULT_STUDY_FILTER_OPTIONS,
+                    ...resourceFilterOptions,
+                ]);
+            }
+        );
     }
 
     @computed
@@ -305,7 +320,11 @@ export class QueryStore {
 
     @observable.ref dataTypeFilters: string[] = [];
 
-    @observable studyFilterOptions = DEFAULT_STUDY_FILTER_OPTIONS;
+    @observable _studyFilterOptions: {
+        checked: boolean;
+        id: string;
+        name: string;
+    }[];
 
     @computed get searchText(): string {
         return toQueryString(this.searchClauses);
@@ -1614,31 +1633,22 @@ export class QueryStore {
         default: [],
     });
 
-    @computed get resourceFilterOptions(): {
+    @action.bound setStudyFilterOptions(
+        filterOptions: {
+            id: string;
+            name: string;
+            checked: boolean;
+        }[]
+    ) {
+        this._studyFilterOptions = filterOptions;
+    }
+
+    @computed get studyFilterOptions(): {
         checked: boolean;
         id: string;
         name: string;
     }[] {
-        const resourceIds = new Set<string>();
-        return _.reduce(
-            this.resourceDefinitions.result,
-            (acc: { checked: boolean; id: string; name: string }[], rd) => {
-                if (
-                    rd.resourceId !== 'CHROMOSCOPE' &&
-                    rd.resourceId !== 'FIGURES' &&
-                    !resourceIds.has(rd.resourceId)
-                ) {
-                    resourceIds.add(rd.resourceId);
-                    acc.push({
-                        id: rd.resourceId,
-                        name: rd.displayName,
-                        checked: false,
-                    });
-                }
-                return acc;
-            },
-            []
-        );
+        return this._studyFilterOptions;
     }
 
     public isVirtualStudy(studyId: string): boolean {
