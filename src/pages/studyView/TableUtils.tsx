@@ -115,16 +115,22 @@ export function getFreqColumnRender(
     style?: CSSProperties,
     className?: string
 ) {
-    let tooltipContent = '# of samples profiled';
+    let tooltipContent = '# of samples';
     if (type !== 'data') {
-        tooltipContent += ` for ${type} in this gene: ${numberOfProfiledCases.toLocaleString()}`;
+        tooltipContent += ` with a ${type.replace(
+            /s$/,
+            ''
+        )} in this gene that are also profiled for ${type}: ${numberOfAlteredCases.toLocaleString()}
+        <br />
+        # of samples profiled for ${type} in this gene: ${numberOfProfiledCases.toLocaleString()}
+        `;
     }
     const addTotalProfiledOverlay = () => (
         <span
             style={{ display: 'flex', flexDirection: 'column' }}
             data-test="freq-cell-tooltip"
         >
-            <span>{tooltipContent}</span>
+            <span dangerouslySetInnerHTML={{ __html: tooltipContent }}>{}</span>
             <GenePanelList
                 genePanelIds={matchingGenePanelIds}
                 toggleModal={toggleModal!}
