@@ -163,17 +163,18 @@ describe('results page', function() {
                 ).isDisplayed())
             );
         });
-        it('should hide survival tab in a query without any survival data', async () => {
+        it('should grey out survival tab in a query without any survival data', async () => {
             await goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/results/comparison?session_id=5bc64bb5498eb8b3d5685afb`
             );
             await getElement('div[data-test="ComparisonPageOverlapTabDiv"]', {
                 timeout: 20000,
             });
+            await waitForNetworkQuiet();
             assert(
-                !(await (
-                    await getElement('a.tabAnchor_survival')
-                ).isDisplayed())
+                await (
+                    await getElement('a.tabAnchor_survival.greyedOut')
+                ).isDisplayed()
             );
         });
     });
