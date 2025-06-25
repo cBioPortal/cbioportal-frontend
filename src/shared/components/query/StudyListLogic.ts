@@ -109,8 +109,8 @@ export default class StudyListLogic {
                         return value > 0;
                     }
 
-                    // check inside resources array otherwise
-                    const resource = nodeStudy?.resources?.find(
+                    // check inside resourceCounts array otherwise
+                    const resource = nodeStudy?.resourceCounts?.find(
                         r => r.resourceId === typeId
                     );
                     return (resource?.sampleCount || 0) > 0;
