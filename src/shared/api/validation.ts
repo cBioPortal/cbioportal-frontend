@@ -369,6 +369,13 @@ export function compareCounts(clData: any, legacyData: any, label: string) {
     //     });
     // });
 
+    // remove this property which is not in legacy
+    if (clDataSorted.forEach) {
+        clDataSorted.forEach((n: any) => {
+            delete n.numberOfAlteredCasesOnPanel;
+        });
+    }
+
     // get rid of these little guys
     if (clDataSorted && clDataSorted.filter)
         clDataSorted = clDataSorted.filter((n: any) => n.specialValue != 'NA');
