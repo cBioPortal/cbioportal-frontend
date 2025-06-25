@@ -74,9 +74,9 @@ export function getSampleCountsPerFilter(
                 return value;
             }
 
-            // check inside resources array otherwise
+            // check inside resourceCounts array otherwise
             const resource = _.find(
-                study.resources,
+                study.resourceCounts,
                 r => r.resourceId === filter.id
             );
             return resource?.sampleCount || 0;
@@ -96,9 +96,9 @@ export function getStudyCountPerFilter(
                 return true;
             }
 
-            // check inside resources array otherwise
+            // check inside resourcesCountsarray otherwise
             const resource = _.find(
-                study.resources,
+                study.resourceCounts,
                 r => r.resourceId === filter.id
             );
             return resource?.sampleCount > 0;
