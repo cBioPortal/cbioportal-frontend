@@ -56,6 +56,29 @@ export default class TrialMatchTableNew extends React.Component<
         makeObservable(this);
     }
 
+    public getSampleIdIcons(sampleIds: string[]) {
+        let sortedSampleIds = sampleIds;
+        if (sampleIds.length > 1) {
+            const sampleOrder = this.props.sampleManager!.getSampleIdsInOrder();
+            sortedSampleIds = sampleOrder.filter((sampleId: string) =>
+                sampleIds.includes(sampleId)
+            );
+        }
+        return (
+            <React.Fragment>
+                {sortedSampleIds.map((sampleId: string) => (
+                    <div className={styles.genomicSpan}>
+                        {this.props.sampleManager!.getComponentForSample(
+                            sampleId,
+                            1,
+                            ''
+                        )}
+                    </div>
+                ))}
+            </React.Fragment>
+        );
+    }
+
     @computed
     get sortedTrialMatches() {
         return _.orderBy(
@@ -93,6 +116,7 @@ export default class TrialMatchTableNew extends React.Component<
                         : acc.sampleId.concat(', ').concat(trialmatch.sampleId)
                     : trialmatch.sampleId;
                 acc.arm_code = trialmatch.arm_code;
+                acc.trial_step_number = trialmatch.trial_step_number;
                 acc.trial_match_date = acc.trial_match_date
                     ? acc.trial_match_date
                     : trialmatch.trial_match_date;
@@ -119,6 +143,7 @@ export default class TrialMatchTableNew extends React.Component<
                         ? acc.sampleId
                         : acc.sampleId.concat(', ').concat(trialmatch.sampleId)
                     : trialmatch.sampleId;
+                //acc.trial_arm_number = trialmatch.trial_arm_number;
                 acc.arm_code = acc.arm_code
                     ? acc.arm_code.indexOf(trialmatch.arm_code) > -1
                         ? acc.arm_code
@@ -134,6 +159,7 @@ export default class TrialMatchTableNew extends React.Component<
                       trialmatch.arm_code;
                 //acc.arm_code = acc.arm_code ? acc.arm_code.concat(', ').concat(trialmatch.arm_code) : trialmatch.arm_code;
                 //acc.arm_code.concat(trialmatch.arm_code).concat(',');
+                acc.trial_step_number = trialmatch.trial_step_number;
                 acc.trial_match_date = acc.trial_match_date
                     ? acc.trial_match_date
                     : trialmatch.trial_match_date;
@@ -152,6 +178,27 @@ export default class TrialMatchTableNew extends React.Component<
     handleViewChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         this.selectedView = event.target.value;
     };
+
+
+    formattedtrialMatchDate (trial_date: string) {
+        const date = new Date(trial_date);
+        const options: Intl.DateTimeFormatOptions = {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+        };
+        return date.toLocaleDateString('en-CA', options);
+    }
+
+    formattedtrialMatchField (field_name: string) {
+        const field_terms = field_name.split('_');
+        const new_field_terms = field_terms.map(term => {
+            return term.charAt(0).toUpperCase() + term.slice(1);
+        });
+        const new_field = new_field_terms.join(' ');
+        return new_field;
+    }
+    
 
     @computed
     get columnWidths() {
@@ -210,7 +257,11 @@ export default class TrialMatchTableNew extends React.Component<
             name: ColumnKey.SAMPLES,
             render: (trialmatch: ITrialMatch) => (
                 <div>
-                    <div>Sample ID:&nbsp;{trialmatch.sampleId}</div>
+                    <div>{trialmatch.sampleId}
+                        {this.getSampleIdIcons(
+                                                [trialmatch.sampleId]
+                                            )}
+                                            </div>
                 </div>
             ),
             sortBy: (trialmatch: ITrialMatch) => trialmatch.sampleId,
@@ -266,7 +317,7 @@ export default class TrialMatchTableNew extends React.Component<
                             trialmatch.patient_match_values.replace(/'/g, '"')
                         )
                     ).map(key => (
-                        <p>{key as React.ReactNode}</p>
+                        <p>{this.formattedtrialMatchField(key) as React.ReactNode}</p>
                     ))}
                 </div>
             ),
@@ -294,7 +345,7 @@ export default class TrialMatchTableNew extends React.Component<
             name: ColumnKey.MATCHDATE,
             render: (trialmatch: ITrialMatch) => (
                 <div>
-                    <div>{trialmatch.trial_match_date}</div>
+                    <div>{this.formattedtrialMatchDate(trialmatch.trial_match_date)}</div>
                 </div>
             ),
             sortBy: (trialmatch: ITrialMatch) => trialmatch.trial_match_date,
