@@ -220,6 +220,7 @@ export enum MutationCountBy {
     MutationType = 'MutationType',
     MutatedVsWildType = 'MutatedVsWildType',
     DriverVsVUS = 'DriverVsVUS',
+    VariantAlleleFrequency = 'VariantAlleleFrequency',
 }
 
 export enum StructuralVariantCountBy {
@@ -417,6 +418,10 @@ const mutationCountByOptions = [
     { value: MutationCountBy.MutationType, label: 'Mutation Type' },
     { value: MutationCountBy.MutatedVsWildType, label: 'Mutated vs Wild-type' },
     { value: MutationCountBy.DriverVsVUS, label: 'Driver vs VUS' },
+    {
+        value: MutationCountBy.VariantAlleleFrequency,
+        label: 'Variant Allele Freqency',
+    },
 ];
 const structuralVariantCountByOptions = [
     {
@@ -3791,7 +3796,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 dataSourceLabel = 'Clinical Attribute';
                 break;
             case AlterationTypeConstants.MUTATION_EXTENDED:
-                dataSourceLabel = 'Group Mutations by';
+                dataSourceLabel = 'Plot Mutations by';
                 dataSourceValue = axisSelection.mutationCountBy;
                 dataSourceOptions = mutationCountByOptions;
                 onDataSourceChange = vertical
@@ -3799,7 +3804,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     : this.onHorizontalAxisMutationCountBySelect;
                 break;
             case AlterationTypeConstants.STRUCTURAL_VARIANT:
-                dataSourceLabel = 'Group Structural variants by';
+                dataSourceLabel = 'Plot Structural variants by';
                 dataSourceValue = axisSelection.structuralVariantCountBy;
                 dataSourceOptions = filterStructuralVariantOptions;
                 onDataSourceChange = vertical
