@@ -351,12 +351,6 @@ export function compareCounts(clData: any, legacyData: any, label: string) {
         ).toFixed(5);
     }
 
-    // getArrays(clDataSorted, []).forEach((arr: any) => {
-    //     arr.filter((n: any) => /NA/i.test(n.value)).forEach((val: any) => {
-    //         removeElement(arr, val);
-    //     });
-    // });
-
     // getArrays(legacyDataSorted, []).forEach((arr: any) => {
     //     arr.filter((n: any) => /NA/i.test(n.value)).forEach((val: any) => {
     //         removeElement(arr, val);
@@ -368,6 +362,29 @@ export function compareCounts(clData: any, legacyData: any, label: string) {
     //         removeElement(arr, val);
     //     });
     // });
+
+    // remove this property which is not in legacy
+    if (clDataSorted.forEach) {
+        clDataSorted.forEach((n: any) => {
+            delete n.numberOfAlteredCasesOnPanel;
+        });
+    }
+
+    if (clDataSorted.filter) {
+        clDataSorted = clDataSorted.filter((n: any) => {
+            return (
+                !n.counts || (n.counts.length != 1 && n.counts[0].value != 'na')
+            );
+        });
+    }
+
+    if (legacyDataSorted.filter) {
+        legacyDataSorted = legacyDataSorted.filter((n: any) => {
+            return (
+                !n.counts || (n.counts.length != 1 && n.counts[0].value != 'na')
+            );
+        });
+    }
 
     // get rid of these little guys
     if (clDataSorted && clDataSorted.filter)
