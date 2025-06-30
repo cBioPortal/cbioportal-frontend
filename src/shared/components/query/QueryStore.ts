@@ -1092,6 +1092,12 @@ export class QueryStore {
                 this.studiesHaveChangedSinceInitialization
             ) {
                 this.profileFilterSet = undefined;
+
+                // default profile selection when profiles are loaded
+                const defaultMrnaProfile = this.defaultMrnaProfileToSelect;
+                if (defaultMrnaProfile) {
+                    this.selectMolecularProfile(defaultMrnaProfile, true);
+                }
             }
         },
     });
@@ -1764,6 +1770,29 @@ export class QueryStore {
             this.defaultProfilesForOql &&
             this.defaultProfilesForOql[AlterationTypeConstants.PROTEIN_LEVEL]
         );
+    }
+
+    @computed get shouldSelectDefaultMrnaProfile() {
+        // select default mRNA profile if no profiles are currently selected
+
+        if (Object.keys(this.selectedProfileIdSet).length > 0) {
+            return false;
+        }
+
+        const hasMutationProfile =
+            this.getFilteredProfiles('MUTATION_EXTENDED').length > 0;
+        const hasMrnaProfile =
+            this.getFilteredProfiles('MRNA_EXPRESSION').length > 0;
+
+        return !hasMutationProfile && hasMrnaProfile;
+    }
+
+    @computed get defaultMrnaProfileToSelect() {
+        if (this.shouldSelectDefaultMrnaProfile) {
+            const mrnaProfiles = this.getFilteredProfiles('MRNA_EXPRESSION');
+            return mrnaProfiles.length > 0 ? mrnaProfiles[0] : undefined;
+        }
+        return undefined;
     }
 
     // SAMPLE LIST
