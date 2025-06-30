@@ -21,27 +21,6 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
         return getServerConfig().skin_show_gsva;
     }
 
-    componentDidMount() {
-        // Select RNA expression profile by default if no mutation data is present
-        const hasMutationProfile =
-            this.store.getFilteredProfiles(
-                'MUTATION_EXTENDED' as MolecularProfile['molecularAlterationType']
-            ).length > 0;
-        const hasMrnaProfile =
-            this.store.getFilteredProfiles(
-                'MRNA_EXPRESSION' as MolecularProfile['molecularAlterationType']
-            ).length > 0;
-
-        if (!hasMutationProfile && hasMrnaProfile) {
-            const mrnaProfiles = this.store.getFilteredProfiles(
-                'MRNA_EXPRESSION' as MolecularProfile['molecularAlterationType']
-            );
-            if (mrnaProfiles.length > 0) {
-                this.store.selectMolecularProfile(mrnaProfiles[0], true);
-            }
-        }
-    }
-
     render() {
         // we pass default=false because when there is no configuration
         // we want to maintain legacy behavior of forbidding expression comparison
