@@ -4,6 +4,7 @@ import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import * as Plotly from 'plotly.js';
 import umapData from '../../../data/msk_chord_2024_umap_data.json';
+import { SpecialChartsUniqueKeyEnum } from '../StudyViewUtils';
 
 export interface IEmbeddingsTabProps {
     store: StudyViewPageStore;
@@ -13,26 +14,90 @@ export interface IEmbeddingsTabProps {
 export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     private plotRef = React.createRef<HTMLDivElement>();
     private plotCreated = false;
+    private patientDataMap = new Map<string, any>();
 
     private loadUMAPData() {
-        const data = umapData.data.map(patient => ({
+        // Get currently selected patient keys to filter the UMAP data
+        const selectedPatientKeys =
+            this.props.store.selectedPatientKeys.result || [];
+        const selectedPatientIds = new Set(selectedPatientKeys);
+
+        // Get actual patients from the store to map to real patient IDs
+        const actualPatients = this.props.store.selectedPatients.result || [];
+        const actualPatientIds = actualPatients.map(p => p.patientId);
+
+        console.log('Selected patient keys:', selectedPatientKeys);
+        console.log('Actual patient IDs:', actualPatientIds.slice(0, 10)); // Log first 10 for debugging
+        console.log(
+            'UMAP patient IDs:',
+            umapData.data.slice(0, 10).map(p => p.patientId)
+        ); // Log first 10 UMAP IDs
+
+        const allData = umapData.data.map((patient, index) => ({
             x: patient.x,
             y: patient.y,
             patientId: patient.patientId,
             cluster: Math.floor(Math.random() * 8) + 1,
+            pointIndex: index,
         }));
 
-        return data;
+        // Filter data to only include currently selected patients
+        // If no patients are specifically selected (i.e., no filters applied), show all
+        const filteredData =
+            selectedPatientIds.size > 0
+                ? allData.filter(point =>
+                      selectedPatientIds.has(point.patientId)
+                  )
+                : allData;
+
+        // Build a map for quick lookup
+        this.patientDataMap.clear();
+        filteredData.forEach((point, index) => {
+            // Re-index the filtered data
+            point.pointIndex = index;
+            this.patientDataMap.set(point.pointIndex, point);
+        });
+
+        return filteredData;
     }
 
     componentDidMount() {
         this.createPlot();
     }
 
-    componentDidUpdate() {
-        if (!this.plotCreated) {
-            this.createPlot();
+    componentDidUpdate(prevProps: IEmbeddingsTabProps) {
+        // Recreate plot when filters change or when initially not created
+        if (
+            !this.plotCreated ||
+            this.props.store.selectedPatientKeys.isComplete
+        ) {
+            this.recreatePlot();
         }
+
+        // Check if custom selection was cleared and clear Plotly selection
+        const hasCustomSelection =
+            this.props.store.numberOfSelectedSamplesInCustomSelection > 0;
+        const hadCustomSelection = prevProps
+            ? prevProps.store.numberOfSelectedSamplesInCustomSelection > 0
+            : false;
+
+        if (
+            hadCustomSelection &&
+            !hasCustomSelection &&
+            this.plotRef.current &&
+            this.plotCreated
+        ) {
+            // Clear the Plotly selection when custom filters are cleared
+            Plotly.restyle(this.plotRef.current, { selectedpoints: [null] });
+        }
+    }
+
+    private recreatePlot() {
+        if (this.plotRef.current && this.plotCreated) {
+            Plotly.purge(this.plotRef.current);
+            this.plotCreated = false;
+        }
+        this.createPlot();
     }
 
     componentWillUnmount() {
@@ -124,7 +189,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
 
         const config = {
             displayModeBar: true,
-            modeBarButtonsToRemove: ['lasso2d', 'select2d'],
+            modeBarButtonsToRemove: [],
             displaylogo: false,
             toImageButtonOptions: {
                 format: 'png',
@@ -136,7 +201,74 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         };
 
         Plotly.newPlot(this.plotRef.current, traces, layout, config);
+
+        // Add selection event handler
+        this.plotRef.current.on('plotly_selected', eventData => {
+            this.handlePlotSelection(eventData);
+        });
+
         this.plotCreated = true;
+    }
+
+    private handlePlotSelection(eventData: any) {
+        if (!eventData || !eventData.points || eventData.points.length === 0) {
+            return;
+        }
+
+        // Extract selected patient IDs from the selection
+        const selectedPatientIds: string[] = [];
+
+        eventData.points.forEach((point: any) => {
+            // Get point index from the trace data
+            const pointIndex = point.pointIndex;
+            // Look up the corresponding patient data
+            const patientData = this.patientDataMap.get(pointIndex);
+            if (patientData && patientData.patientId) {
+                selectedPatientIds.push(patientData.patientId);
+            }
+        });
+
+        if (selectedPatientIds.length > 0) {
+            console.log('Selected patient IDs from UMAP:', selectedPatientIds);
+
+            // Get actual samples from the store to map patient IDs to sample IDs
+            const allSamples = this.props.store.samples.result || [];
+            const selectedPatientSet = new Set(selectedPatientIds);
+
+            // Find samples that belong to the selected patients
+            const samplesForSelectedPatients = allSamples.filter(sample =>
+                selectedPatientSet.has(sample.patientId)
+            );
+
+            console.log(
+                'Samples for selected patients:',
+                samplesForSelectedPatients
+            );
+
+            // Create CustomChartData for patient selection
+            const customChartData = {
+                origin: ['UMAP'],
+                displayName: 'UMAP Selection',
+                description: 'Patients selected from UMAP embedding',
+                datatype: 'STRING',
+                patientAttribute: true,
+                priority: 1,
+                data: samplesForSelectedPatients.map(sample => ({
+                    studyId: sample.studyId,
+                    patientId: sample.patientId,
+                    sampleId: sample.sampleId,
+                    value: 'Selected',
+                })),
+            };
+
+            console.log(
+                'Custom chart data with correct sample IDs:',
+                customChartData
+            );
+
+            // Update the study view filter with selected patients
+            this.props.store.updateCustomSelect(customChartData);
+        }
     }
 
     render() {
