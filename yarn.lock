@@ -4184,6 +4184,11 @@
   resolved "https://registry.yarnpkg.com/@types/pdfobject/-/pdfobject-2.0.5.tgz#96e3d3a6fc27ae9be96b2eaecbd26b036d8b020b"
   integrity sha1-luPTpvwnrpvpay6uy9JrA22LAgs=
 
+"@types/plotly.js@^3.0.2":
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/@types/plotly.js/-/plotly.js-3.0.2.tgz#77bf0b6753107736e4c69b8122235b72359fd553"
+  integrity sha512-84eSnXD5gTM36iaOv3/4cduF2X0eptMnK9CcghH56A4uhSiFjAIgqhFGmdq+0yDh2jLQzL1s34CsBU5KD3MvPA==
+
 "@types/prettier@^2.1.5":
   version "2.3.2"
   resolved "https://registry.yarnpkg.com/@types/prettier/-/prettier-2.3.2.tgz#fc8c2825e4ed2142473b4a81064e6e081463d1b3"
@@ -20394,6 +20399,11 @@ react-overlays@0.7.4, react-overlays@^0.7.4:
     prop-types "^15.5.10"
     prop-types-extra "^1.0.1"
     warning "^3.0.0"
+
+react-plotly@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/react-plotly/-/react-plotly-1.0.0.tgz#addff804d47abe4e2abc49ad96f8a038cfe7f498"
+  integrity sha512-vVwqUePJ9gIdezCrT3dQDT4r6sL5bDGwdkhy/yR3cuXt9BWlwwyQ5wst5ouTdK6xCGSBB324Ok+EjcWTRo9qQQ==
 
 react-portal@^4.2.0:
   version "4.2.0"

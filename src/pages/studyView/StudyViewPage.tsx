@@ -16,6 +16,7 @@ import {
 } from 'pages/studyView/StudyViewPageTabs';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { ClinicalDataTab } from './tabs/ClinicalDataTab';
+import { EmbeddingsTab } from './tabs/EmbeddingsTab';
 import {
     DefaultTooltip,
     getBrowserWindow,
@@ -757,6 +758,15 @@ export default class StudyViewPage extends React.Component<
                                             store={this.store}
                                             urlWrapper={this.urlWrapper}
                                         />
+                                    </MSKTab>
+                                    <MSKTab
+                                        key={6}
+                                        id={StudyViewPageTabKeyEnum.EMBEDDINGS}
+                                        linkText={
+                                            StudyViewPageTabDescriptions.EMBEDDINGS
+                                        }
+                                    >
+                                        <EmbeddingsTab store={this.store} />
                                     </MSKTab>
 
                                     {this.resourceTabs.component}
