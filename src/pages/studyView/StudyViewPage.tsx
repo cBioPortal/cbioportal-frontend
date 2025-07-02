@@ -16,6 +16,7 @@ import {
 } from 'pages/studyView/StudyViewPageTabs';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { ClinicalDataTab } from './tabs/ClinicalDataTab';
+import { EmbeddingsTab } from './tabs/EmbeddingsTab';
 import {
     DefaultTooltip,
     getBrowserWindow,
@@ -709,7 +710,9 @@ export default class StudyViewPage extends React.Component<
                                     >
                                         <IFrameLoader
                                             className="mdacc-heatmap-iframe"
-                                            url={`https://bioinformatics.mdanderson.org/TCGA/NGCHMPortal/?${this.store.MDACCHeatmapStudyMeta.result[0]}`}
+                                            url={`https://bioinformatics.mdanderson.org/TCGA/NGCHMPortal/?${this
+                                                .store.MDACCHeatmapStudyMeta
+                                                .result?.[0] || ''}`}
                                         />
                                     </MSKTab>
                                     <MSKTab
@@ -765,6 +768,20 @@ export default class StudyViewPage extends React.Component<
                                             store={this.store}
                                             urlWrapper={this.urlWrapper}
                                         />
+                                    </MSKTab>
+                                    <MSKTab
+                                        key={6}
+                                        id={StudyViewPageTabKeyEnum.EMBEDDINGS}
+                                        linkText={
+                                            StudyViewPageTabDescriptions.EMBEDDINGS
+                                        }
+                                        hide={
+                                            this.store.studyIds.length > 1 ||
+                                            this.store.studyIds[0] !==
+                                                'msk_chord_2024'
+                                        }
+                                    >
+                                        <EmbeddingsTab store={this.store} />
                                     </MSKTab>
 
                                     {this.resourceTabs.component}
