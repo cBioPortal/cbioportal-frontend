@@ -27,9 +27,20 @@ export interface ColorSamplesByDropdownProps {
     logScalePossible: boolean;
     isLoading: boolean;
 
+    // Gene-based coloring options (like PlotsTab)
+    mutationDataExists?: boolean;
+    cnaDataExists?: boolean;
+    svDataExists?: boolean;
+    mutationTypeEnabled?: boolean;
+    copyNumberEnabled?: boolean;
+    structuralVariantEnabled?: boolean;
+
     // Event handlers
     onSelectionChange: (option: ColoringMenuOmnibarOption | undefined) => void;
     onLogScaleChange: (enabled: boolean) => void;
+    onMutationTypeToggle?: (enabled: boolean) => void;
+    onCopyNumberToggle?: (enabled: boolean) => void;
+    onStructuralVariantToggle?: (enabled: boolean) => void;
 
     // Optional styling
     className?: string;
@@ -114,6 +125,14 @@ export class ColorSamplesByDropdown extends React.Component<
         }, []);
     }
 
+    @computed get isGeneSelected(): boolean {
+        return !!(
+            this.props.selectedOption?.info?.entrezGeneId &&
+            this.props.selectedOption.info.entrezGeneId !==
+                NONE_SELECTED_OPTION_NUMERICAL_VALUE
+        );
+    }
+
     @action.bound
     private handleSelectionChange(
         selectedOption: ColoringMenuOmnibarOption | null
@@ -126,13 +145,74 @@ export class ColorSamplesByDropdown extends React.Component<
         this.props.onLogScaleChange(!this.props.logScale);
     }
 
+    @action.bound
+    private handleMutationTypeToggle() {
+        if (this.props.onMutationTypeToggle) {
+            this.props.onMutationTypeToggle(!this.props.mutationTypeEnabled);
+        }
+    }
+
+    @action.bound
+    private handleCopyNumberToggle() {
+        if (this.props.onCopyNumberToggle) {
+            this.props.onCopyNumberToggle(!this.props.copyNumberEnabled);
+        }
+    }
+
+    @action.bound
+    private handleStructuralVariantToggle() {
+        if (this.props.onStructuralVariantToggle) {
+            this.props.onStructuralVariantToggle(
+                !this.props.structuralVariantEnabled
+            );
+        }
+    }
+
     private loadColoringOptions = async (
         inputValue: string
-    ): Promise<ColoringMenuOmnibarOption[]> => {
+    ): Promise<(ColoringMenuOmnibarOption | ColoringMenuOmnibarGroup)[]> => {
         const stringCompare = (option: ColoringMenuOmnibarOption) =>
             option.label.toLowerCase().includes(inputValue.toLowerCase());
 
-        return this.flattenedOptions.filter(stringCompare).slice(0, 20);
+        if (!inputValue || inputValue.length === 0) {
+            // Return grouped options with limited genes for performance (matches PlotsTab pattern)
+            return this.coloringMenuOmnibarOptions.map(item => {
+                if ('options' in item && item.label === 'Genes') {
+                    // Limit to first 20 genes for initial display performance
+                    return {
+                        ...item,
+                        options: item.options.slice(0, 20),
+                    };
+                }
+                return item;
+            });
+        }
+
+        // Filter and maintain group structure
+        const filteredGroups: (
+            | ColoringMenuOmnibarOption
+            | ColoringMenuOmnibarGroup
+        )[] = [];
+
+        for (const item of this.coloringMenuOmnibarOptions) {
+            if ('options' in item) {
+                // This is a group
+                const filteredOptions = item.options.filter(stringCompare);
+                if (filteredOptions.length > 0) {
+                    filteredGroups.push({
+                        ...item,
+                        options: filteredOptions.slice(0, 10), // Limit per group
+                    });
+                }
+            } else {
+                // This is a single option (like "None")
+                if (stringCompare(item)) {
+                    filteredGroups.push(item);
+                }
+            }
+        }
+
+        return filteredGroups;
     };
 
     render() {
@@ -176,6 +256,9 @@ export class ColorSamplesByDropdown extends React.Component<
                                         'Search for gene or clinical attribute'
                                     }
                                     loadOptions={this.loadColoringOptions}
+                                    defaultOptions={
+                                        this.coloringMenuOmnibarOptions
+                                    }
                                     cacheOptions={true}
                                 />
                             </Then>
@@ -200,6 +283,60 @@ export class ColorSamplesByDropdown extends React.Component<
                     >
                         Log Scale
                     </LabeledCheckbox>
+                )}
+                {/* Gene-based coloring checkboxes (like PlotsTab) */}
+                {this.isGeneSelected && (
+                    <div
+                        style={{
+                            marginLeft: '10px',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '10px',
+                        }}
+                    >
+                        {this.props.mutationDataExists && (
+                            <LabeledCheckbox
+                                checked={
+                                    this.props.mutationTypeEnabled || false
+                                }
+                                onChange={this.handleMutationTypeToggle}
+                                inputProps={{
+                                    style: { marginTop: 4 },
+                                    className: 'mutationTypeToggle',
+                                }}
+                            >
+                                Mutation Type
+                            </LabeledCheckbox>
+                        )}
+
+                        {this.props.cnaDataExists && (
+                            <LabeledCheckbox
+                                checked={this.props.copyNumberEnabled || false}
+                                onChange={this.handleCopyNumberToggle}
+                                inputProps={{
+                                    style: { marginTop: 4 },
+                                    className: 'copyNumberToggle',
+                                }}
+                            >
+                                Copy Number
+                            </LabeledCheckbox>
+                        )}
+
+                        {this.props.svDataExists && (
+                            <LabeledCheckbox
+                                checked={
+                                    this.props.structuralVariantEnabled || false
+                                }
+                                onChange={this.handleStructuralVariantToggle}
+                                inputProps={{
+                                    style: { marginTop: 4 },
+                                    className: 'structuralVariantToggle',
+                                }}
+                            >
+                                Structural Variant
+                            </LabeledCheckbox>
+                        )}
+                    </div>
                 )}
             </div>
         );

@@ -21,6 +21,7 @@ interface UMAPDataPoint {
     pointIndex: number;
     cancerType?: string;
     color?: string;
+    strokeColor?: string;
 }
 
 export interface IEmbeddingsTabProps {
@@ -35,6 +36,9 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
 
     @observable private selectedColoringOption?: ColoringMenuOmnibarOption;
     @observable private coloringLogScale = false;
+    @observable private mutationTypeEnabled = true;
+    @observable private copyNumberEnabled = true;
+    @observable private structuralVariantEnabled = true;
 
     constructor(props: IEmbeddingsTabProps) {
         super(props);
@@ -42,6 +46,10 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
 
         this.coloringService = new ColoringService({
             clinicalDataCache: this.props.store.clinicalDataCache,
+            annotatedMutationCache: this.props.store.annotatedMutationCache,
+            annotatedCnaCache: this.props.store.annotatedCnaCache,
+            annotatedSvCache: this.props.store.structuralVariantCache,
+            driversAnnotated: false, // Use false for now, can be enhanced later
         });
     }
 
@@ -50,12 +58,6 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         const cancerTypeAttr = this.clinicalAttributes.find(
             attr => attr.clinicalAttributeId === 'CANCER_TYPE_DETAILED'
         );
-
-        console.log(
-            'Initializing default coloring - available attributes:',
-            this.clinicalAttributes.length
-        );
-        console.log('CANCER_TYPE_DETAILED found:', !!cancerTypeAttr);
 
         if (cancerTypeAttr) {
             this.selectedColoringOption = {
@@ -66,21 +68,10 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                 },
             };
 
-            console.log(
-                'Set selectedColoringOption to:',
-                this.selectedColoringOption
-            );
-
             // Trigger the clinical data cache to load this attribute
             const cacheEntry = this.props.store.clinicalDataCache.get(
                 cancerTypeAttr
             );
-            console.log('Clinical data cache entry status:', {
-                isPending: cacheEntry.isPending,
-                isComplete: cacheEntry.isComplete,
-                isError: cacheEntry.isError,
-                hasResult: !!cacheEntry.result,
-            });
 
             // Update the coloring service with the default selection
             this.coloringService.updateConfig({
@@ -116,9 +107,10 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     }
 
     @computed get genes(): Gene[] {
-        // For EmbeddingsTab, we might not need genes initially
-        // but this allows the dropdown to show gene options if needed
-        return [];
+        // Use allGenes to match PlotsTab pattern exactly
+        // This provides comprehensive gene search capability in StudyView
+        const genesResult = this.props.store.allGenes;
+        return genesResult.isComplete ? genesResult.result || [] : [];
     }
 
     @computed get logScalePossible(): boolean {
@@ -126,28 +118,45 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         return false;
     }
 
+    @computed get mutationDataExists(): boolean {
+        return !!this.props.store.annotatedMutationCache;
+    }
+
+    @computed get cnaDataExists(): boolean {
+        return !!this.props.store.annotatedCnaCache;
+    }
+
+    @computed get svDataExists(): boolean {
+        return !!this.props.store.structuralVariantCache;
+    }
+
     @action.bound
     private onColoringSelectionChange(option?: ColoringMenuOmnibarOption) {
-        console.log('Coloring selection changed to:', option);
         this.selectedColoringOption = option;
-        this.coloringService.updateConfig({ selectedOption: option });
+        this.coloringService.updateConfig({
+            selectedOption: option,
+            annotatedMutationCache: this.mutationTypeEnabled
+                ? this.props.store.annotatedMutationCache
+                : undefined,
+            annotatedCnaCache: this.copyNumberEnabled
+                ? this.props.store.annotatedCnaCache
+                : undefined,
+            annotatedSvCache: this.structuralVariantEnabled
+                ? this.props.store.structuralVariantCache
+                : undefined,
+            driversAnnotated: false,
+        });
 
-        // Trigger clinical data loading by accessing the cache
+        // Handle different selection types
         if (option?.info?.clinicalAttribute) {
-            console.log(
-                'Selected clinical attribute:',
-                option.info.clinicalAttribute.clinicalAttributeId,
-                option.info.clinicalAttribute.displayName
-            );
             const cacheEntry = this.props.store.clinicalDataCache.get(
                 option.info.clinicalAttribute
             );
-            console.log('Cache entry status for new selection:', {
-                isPending: cacheEntry.isPending,
-                isComplete: cacheEntry.isComplete,
-                isError: cacheEntry.isError,
-                hasResult: !!cacheEntry.result,
-            });
+        } else if (
+            option?.info?.entrezGeneId &&
+            option.info.entrezGeneId !== -3
+        ) {
+        } else {
         }
 
         // MobX will automatically trigger re-render when plotData computed changes
@@ -161,6 +170,41 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         // MobX will automatically trigger re-render when plotData computed changes
     }
 
+    @action.bound
+    private onMutationTypeToggle(enabled: boolean) {
+        this.mutationTypeEnabled = enabled;
+        this.updateColoringServiceConfig();
+    }
+
+    @action.bound
+    private onCopyNumberToggle(enabled: boolean) {
+        this.copyNumberEnabled = enabled;
+        this.updateColoringServiceConfig();
+    }
+
+    @action.bound
+    private onStructuralVariantToggle(enabled: boolean) {
+        this.structuralVariantEnabled = enabled;
+        this.updateColoringServiceConfig();
+    }
+
+    private updateColoringServiceConfig() {
+        this.coloringService.updateConfig({
+            selectedOption: this.selectedColoringOption,
+            logScale: this.coloringLogScale,
+            annotatedMutationCache: this.mutationTypeEnabled
+                ? this.props.store.annotatedMutationCache
+                : undefined,
+            annotatedCnaCache: this.copyNumberEnabled
+                ? this.props.store.annotatedCnaCache
+                : undefined,
+            annotatedSvCache: this.structuralVariantEnabled
+                ? this.props.store.structuralVariantCache
+                : undefined,
+            driversAnnotated: false,
+        });
+    }
+
     @computed get filteredPatientIds(): string[] {
         // selectedSamples IS the filtered data! It returns filtered results when chartsAreFiltered is true
         const filteredSamples = this.props.store.selectedSamples.result || [];
@@ -170,15 +214,6 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         const patientIds = [
             ...new Set(filteredSamples.map((s: any) => s.patientId)),
         ];
-
-        console.log(
-            'COMPUTED: filteredPatientIds - chartsAreFiltered:',
-            chartsAreFiltered,
-            'patients:',
-            patientIds.length,
-            'samples:',
-            filteredSamples.length
-        );
 
         return patientIds;
     }
@@ -191,33 +226,10 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         const samplesReady = this.props.store.samples.isComplete;
         const allSamples = this.props.store.samples.result || [];
 
-        console.log(
-            'Data readiness - samples:',
-            samplesReady,
-            'total samples:',
-            allSamples.length
-        );
-
         // Get all unique patient IDs from samples
         const allPatientIds = [
             ...new Set(allSamples.map((s: any) => s.patientId)),
         ];
-
-        console.log(
-            'All patient IDs in study:',
-            allPatientIds.length,
-            allPatientIds.slice(0, 5)
-        );
-        console.log(
-            'Filtered patient IDs (from computed):',
-            filteredPatientIds.length,
-            filteredPatientIds.slice(0, 5)
-        );
-        console.log(
-            'UMAP patient IDs:',
-            umapData.data.length,
-            umapData.data.slice(0, 5).map((p: any) => p.patientId)
-        );
 
         const allData: UMAPDataPoint[] = umapData.data.map(
             (patient: any, index: number) => {
@@ -227,43 +239,52 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                 );
 
                 let color = '#CCCCCC';
+                let strokeColor = '#CCCCCC';
                 let cancerType = 'Unknown';
 
                 if (sample && this.selectedColoringOption) {
-                    // Update coloring service config to ensure it has the latest selection
+                    // Update coloring service config to ensure it has the latest selection and molecular data
                     this.coloringService.updateConfig({
                         selectedOption: this.selectedColoringOption,
                         logScale: this.coloringLogScale,
+                        annotatedMutationCache: this.mutationTypeEnabled
+                            ? this.props.store.annotatedMutationCache
+                            : undefined,
+                        annotatedCnaCache: this.copyNumberEnabled
+                            ? this.props.store.annotatedCnaCache
+                            : undefined,
+                        annotatedSvCache: this.structuralVariantEnabled
+                            ? this.props.store.structuralVariantCache
+                            : undefined,
+                        driversAnnotated: false,
                     });
 
-                    console.log(
-                        `Processing patient ${patient.patientId} with selectedOption: ${this.selectedColoringOption.label}`
+                    // Get both fill and stroke colors for proper molecular alteration display
+                    const appearance = this.coloringService.getPointAppearance(
+                        sample
                     );
-                    color = this.coloringService.getPointColor(sample);
+                    color = appearance.fill;
+                    strokeColor = appearance.stroke;
                     const displayValue = this.coloringService.getDisplayValue(
                         sample
                     );
-                    cancerType =
-                        displayValue ||
-                        this.getPatientCancerType(patient.patientId) ||
-                        'Unknown';
 
-                    if (index < 3) {
-                        // Only log first few patients to avoid spam
-                        console.log(
-                            `Patient ${patient.patientId}: sample=${sample.sampleId}, selectedOption=${this.selectedColoringOption?.label}, color=${color}, cancerType=${cancerType}, displayValue=${displayValue}`
+                    // For gene-based coloring, use alteration type as category
+                    if (
+                        this.selectedColoringOption.info.entrezGeneId &&
+                        this.selectedColoringOption.info.entrezGeneId !== -3
+                    ) {
+                        // Use the legend label directly from the appearance function (same as PlotsTab)
+                        cancerType = this.coloringService.getGeneLegendLabel(
+                            sample,
+                            this.selectedColoringOption.info.entrezGeneId
                         );
-                    }
-                } else {
-                    if (index < 3) {
-                        console.log(
-                            `Patient ${
-                                patient.patientId
-                            }: sample found=${!!sample}, selectedOption=${!!this
-                                .selectedColoringOption}, optionLabel=${
-                                this.selectedColoringOption?.label
-                            }`
-                        );
+                    } else {
+                        // For clinical data coloring, use the display value or cancer type
+                        cancerType =
+                            displayValue ||
+                            this.getPatientCancerType(patient.patientId) ||
+                            'Unknown';
                     }
                 }
 
@@ -275,13 +296,13 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                     pointIndex: index,
                     cancerType: cancerType,
                     color: color,
+                    strokeColor: strokeColor,
                 };
             }
         );
 
         // If samples aren't ready yet, show all UMAP data
         if (!samplesReady || allPatientIds.length === 0) {
-            console.log('Data not ready, showing all UMAP points');
             this.patientDataMap.clear();
             allData.forEach((point: UMAPDataPoint, index: number) => {
                 point.pointIndex = index;
@@ -298,30 +319,13 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         const studyUmapOverlap = allPatientIds.filter((pid: string) =>
             umapPatientIds.has(pid)
         );
-        console.log(
-            'Overlap between study and UMAP patients:',
-            studyUmapOverlap.length,
-            studyUmapOverlap.slice(0, 5)
-        );
 
         // Use the filtered patient IDs from the computed property
         // This will automatically contain the right patients based on current filters
         const patientsToShow = new Set(filteredPatientIds);
-        console.log(
-            'Using filtered patients from store:',
-            filteredPatientIds.length
-        );
 
         const filteredData = allData.filter((point: UMAPDataPoint) =>
             patientsToShow.has(point.patientId)
-        );
-
-        console.log(
-            'Final filtered UMAP data:',
-            filteredData.length,
-            'points out of',
-            allData.length,
-            'total UMAP points'
         );
 
         // Build a map for quick lookup
@@ -463,6 +467,28 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         // Convert to hex color
         const c = (hash & 0x00ffffff).toString(16).toUpperCase();
         return '#' + '00000'.substring(0, 6 - c.length) + c;
+    }
+
+    private getColoringLabel(): string {
+        if (!this.selectedColoringOption) {
+            return 'Cancer Type';
+        }
+
+        // For gene-based coloring, return the gene name
+        if (
+            this.selectedColoringOption.info.entrezGeneId &&
+            this.selectedColoringOption.info.entrezGeneId !== -3
+        ) {
+            return this.selectedColoringOption.label; // e.g., "EGFR"
+        }
+
+        // For clinical attribute coloring, return the display name
+        if (this.selectedColoringOption.info.clinicalAttribute) {
+            return this.selectedColoringOption.label; // e.g., "Clinical Summary", "Age at Diagnosis"
+        }
+
+        // Default fallback
+        return 'Cancer Type';
     }
 
     componentDidMount() {
@@ -646,21 +672,17 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             )
         ).sort();
 
-        console.log('Cancer types found in UMAP data:', cancerTypes);
-
         const traces = cancerTypes.map(cancerType => {
             const cancerTypeData = patientData.filter(
                 (d: UMAPDataPoint) => (d.cancerType || 'Unknown') === cancerType
             );
 
-            // Use the cancer type color for all points of this type
-            const cancerTypeColor =
-                cancerTypeData.length > 0
-                    ? cancerTypeData[0].color || '#CCCCCC'
-                    : '#CCCCCC';
-
-            console.log(
-                `Cancer type '${cancerType}': ${cancerTypeData.length} patients, color: ${cancerTypeColor}`
+            // Use individual colors for each point to support both fill and stroke colors
+            const fillColors = cancerTypeData.map(
+                (d: UMAPDataPoint) => d.color || '#CCCCCC'
+            );
+            const strokeColors = cancerTypeData.map(
+                (d: UMAPDataPoint) => d.strokeColor || '#CCCCCC'
             );
 
             return {
@@ -670,16 +692,21 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                 type: 'scattergl' as const,
                 name: cancerType,
                 marker: {
-                    color: cancerTypeColor,
-                    size: 4,
+                    color: fillColors,
+                    size: 8,
                     opacity: 0.8,
+                    line: {
+                        color: strokeColors,
+                        width: 1,
+                    },
                 },
-                text: cancerTypeData.map(
-                    (d: UMAPDataPoint) =>
-                        `Patient: ${
-                            d.patientId
-                        }<br>Cancer Type: ${d.cancerType || 'Unknown'}`
-                ),
+                text: cancerTypeData.map((d: UMAPDataPoint) => {
+                    // Get the dynamic label based on selected coloring option
+                    const coloringLabel = this.getColoringLabel();
+                    return `Patient: ${
+                        d.patientId
+                    }<br>${coloringLabel}: ${d.cancerType || 'Unknown'}`;
+                }),
                 hovertemplate: '%{text}<extra></extra>',
             };
         });
@@ -758,8 +785,6 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         });
 
         if (selectedPatientIds.length > 0) {
-            console.log('Selected patient IDs from UMAP:', selectedPatientIds);
-
             // Get actual samples from the store to map patient IDs to sample IDs
             const allSamples = this.props.store.samples.result || [];
             const selectedPatientSet = new Set(selectedPatientIds);
@@ -767,11 +792,6 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             // Find samples that belong to the selected patients
             const samplesForSelectedPatients = allSamples.filter(sample =>
                 selectedPatientSet.has(sample.patientId)
-            );
-
-            console.log(
-                'Samples for selected patients:',
-                samplesForSelectedPatients
             );
 
             // Create CustomChartData for patient selection
@@ -789,11 +809,6 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                     value: 'Selected',
                 })),
             };
-
-            console.log(
-                'Custom chart data with correct sample IDs:',
-                customChartData
-            );
 
             // Update the study view filter with selected patients
             this.props.store.updateCustomSelect(customChartData);
@@ -835,8 +850,17 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                     hasNoQueriedGenes={true}
                     logScalePossible={this.logScalePossible}
                     isLoading={this.isLoading}
+                    mutationDataExists={this.mutationDataExists}
+                    cnaDataExists={this.cnaDataExists}
+                    svDataExists={this.svDataExists}
+                    mutationTypeEnabled={this.mutationTypeEnabled}
+                    copyNumberEnabled={this.copyNumberEnabled}
+                    structuralVariantEnabled={this.structuralVariantEnabled}
                     onSelectionChange={this.onColoringSelectionChange}
                     onLogScaleChange={this.onLogScaleChange}
+                    onMutationTypeToggle={this.onMutationTypeToggle}
+                    onCopyNumberToggle={this.onCopyNumberToggle}
+                    onStructuralVariantToggle={this.onStructuralVariantToggle}
                 />
             </div>
         );
