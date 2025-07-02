@@ -1,10 +1,21 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
+import { computed } from 'mobx';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import * as Plotly from 'plotly.js';
 import umapData from '../../../data/msk_chord_2024_umap_data.json';
 import { SpecialChartsUniqueKeyEnum } from '../StudyViewUtils';
+
+interface UMAPDataPoint {
+    x: number;
+    y: number;
+    patientId: string;
+    cluster: number;
+    pointIndex: number;
+    cancerType?: string;
+    color?: string;
+}
 
 export interface IEmbeddingsTabProps {
     store: StudyViewPageStore;
@@ -14,45 +25,124 @@ export interface IEmbeddingsTabProps {
 export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     private plotRef = React.createRef<HTMLDivElement>();
     private plotCreated = false;
-    private patientDataMap = new Map<string, any>();
+    private patientDataMap = new Map<number, UMAPDataPoint>();
 
-    private loadUMAPData() {
-        // Get currently selected patient keys to filter the UMAP data
-        const selectedPatientKeys =
-            this.props.store.selectedPatientKeys.result || [];
-        const selectedPatientIds = new Set(selectedPatientKeys);
+    @computed get filteredPatientIds(): string[] {
+        // selectedSamples IS the filtered data! It returns filtered results when chartsAreFiltered is true
+        const filteredSamples = this.props.store.selectedSamples.result || [];
+        const chartsAreFiltered = this.props.store.chartsAreFiltered;
 
-        // Get actual patients from the store to map to real patient IDs
-        const actualPatients = this.props.store.selectedPatients.result || [];
-        const actualPatientIds = actualPatients.map(p => p.patientId);
+        // Extract unique patient IDs from the filtered samples
+        const patientIds = [
+            ...new Set(filteredSamples.map((s: any) => s.patientId)),
+        ];
 
-        console.log('Selected patient keys:', selectedPatientKeys);
-        console.log('Actual patient IDs:', actualPatientIds.slice(0, 10)); // Log first 10 for debugging
+        console.log(
+            'COMPUTED: filteredPatientIds - chartsAreFiltered:',
+            chartsAreFiltered,
+            'patients:',
+            patientIds.length,
+            'samples:',
+            filteredSamples.length
+        );
+
+        return patientIds;
+    }
+
+    private loadUMAPData(): UMAPDataPoint[] {
+        // Use the computed property to force reactivity
+        const filteredPatientIds = this.filteredPatientIds;
+
+        // Check if data is ready
+        const samplesReady = this.props.store.samples.isComplete;
+        const allSamples = this.props.store.samples.result || [];
+
+        console.log(
+            'Data readiness - samples:',
+            samplesReady,
+            'total samples:',
+            allSamples.length
+        );
+
+        // Get all unique patient IDs from samples
+        const allPatientIds = [
+            ...new Set(allSamples.map((s: any) => s.patientId)),
+        ];
+
+        console.log(
+            'All patient IDs in study:',
+            allPatientIds.length,
+            allPatientIds.slice(0, 5)
+        );
+        console.log(
+            'Filtered patient IDs (from computed):',
+            filteredPatientIds.length,
+            filteredPatientIds.slice(0, 5)
+        );
         console.log(
             'UMAP patient IDs:',
-            umapData.data.slice(0, 10).map(p => p.patientId)
-        ); // Log first 10 UMAP IDs
+            umapData.data.length,
+            umapData.data.slice(0, 5).map((p: any) => p.patientId)
+        );
 
-        const allData = umapData.data.map((patient, index) => ({
-            x: patient.x,
-            y: patient.y,
-            patientId: patient.patientId,
-            cluster: Math.floor(Math.random() * 8) + 1,
-            pointIndex: index,
-        }));
+        const allData: UMAPDataPoint[] = umapData.data.map(
+            (patient: any, index: number) => ({
+                x: patient.x,
+                y: patient.y,
+                patientId: patient.patientId,
+                cluster: Math.floor(Math.random() * 8) + 1,
+                pointIndex: index,
+            })
+        );
 
-        // Filter data to only include currently selected patients
-        // If no patients are specifically selected (i.e., no filters applied), show all
-        const filteredData =
-            selectedPatientIds.size > 0
-                ? allData.filter(point =>
-                      selectedPatientIds.has(point.patientId)
-                  )
-                : allData;
+        // If samples aren't ready yet, show all UMAP data
+        if (!samplesReady || allPatientIds.length === 0) {
+            console.log('Data not ready, showing all UMAP points');
+            this.patientDataMap.clear();
+            allData.forEach((point: UMAPDataPoint, index: number) => {
+                point.pointIndex = index;
+                this.patientDataMap.set(point.pointIndex, point);
+            });
+            return allData;
+        }
+
+        // Check overlap between study patients and UMAP patients
+        const studyPatientIds = new Set(allPatientIds);
+        const umapPatientIds = new Set(
+            umapData.data.map((p: any) => p.patientId)
+        );
+        const studyUmapOverlap = allPatientIds.filter((pid: string) =>
+            umapPatientIds.has(pid)
+        );
+        console.log(
+            'Overlap between study and UMAP patients:',
+            studyUmapOverlap.length,
+            studyUmapOverlap.slice(0, 5)
+        );
+
+        // Use the filtered patient IDs from the computed property
+        // This will automatically contain the right patients based on current filters
+        const patientsToShow = new Set(filteredPatientIds);
+        console.log(
+            'Using filtered patients from store:',
+            filteredPatientIds.length
+        );
+
+        const filteredData = allData.filter((point: UMAPDataPoint) =>
+            patientsToShow.has(point.patientId)
+        );
+
+        console.log(
+            'Final filtered UMAP data:',
+            filteredData.length,
+            'points out of',
+            allData.length,
+            'total UMAP points'
+        );
 
         // Build a map for quick lookup
         this.patientDataMap.clear();
-        filteredData.forEach((point, index) => {
+        filteredData.forEach((point: UMAPDataPoint, index: number) => {
             // Re-index the filtered data
             point.pointIndex = index;
             this.patientDataMap.set(point.pointIndex, point);
@@ -66,18 +156,48 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     }
 
     componentDidUpdate(prevProps: IEmbeddingsTabProps) {
-        // Recreate plot when filters change or when initially not created
+        // Only update if the component is actually visible and data is ready
         if (
-            !this.plotCreated ||
-            this.props.store.selectedPatientKeys.isComplete
+            !this.props.store.samples.isComplete ||
+            !this.props.store.selectedSamples.isComplete
         ) {
+            return;
+        }
+
+        // Check if the selected samples have changed (this indicates filters changed)
+        const currentSamples = this.props.store.selectedSamples.result || [];
+        const prevSamples = prevProps?.store?.selectedSamples?.result || [];
+
+        const samplesChanged = currentSamples.length !== prevSamples.length;
+
+        // Also check patient keys as backup
+        const currentPatientKeys =
+            this.props.store.selectedPatientKeys.result || [];
+        const prevPatientKeys =
+            prevProps?.store?.selectedPatientKeys?.result || [];
+
+        const patientsChanged =
+            currentPatientKeys.length !== prevPatientKeys.length ||
+            !currentPatientKeys.every(key => prevPatientKeys.includes(key));
+
+        // Only recreate plot if not created yet OR if samples/patients actually changed
+        if (!this.plotCreated) {
+            console.log('Creating plot for first time');
+            this.createPlot();
+        } else if (samplesChanged || patientsChanged) {
+            console.log(
+                'Filters changed, recreating plot. Current samples:',
+                currentSamples.length,
+                'Previous samples:',
+                prevSamples.length
+            );
             this.recreatePlot();
         }
 
         // Check if custom selection was cleared and clear Plotly selection
         const hasCustomSelection =
             this.props.store.numberOfSelectedSamplesInCustomSelection > 0;
-        const hadCustomSelection = prevProps
+        const hadCustomSelection = prevProps?.store
             ? prevProps.store.numberOfSelectedSamplesInCustomSelection > 0
             : false;
 
@@ -88,7 +208,13 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             this.plotCreated
         ) {
             // Clear the Plotly selection when custom filters are cleared
-            Plotly.restyle(this.plotRef.current, { selectedpoints: [null] });
+            try {
+                Plotly.restyle(this.plotRef.current, {
+                    selectedpoints: [null],
+                });
+            } catch (error) {
+                console.warn('Error clearing Plotly selection:', error);
+            }
         }
     }
 
@@ -125,8 +251,8 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         const patientData = this.loadUMAPData();
 
         const clusters = Array.from(
-            new Set(patientData.map(d => d.cluster))
-        ).sort((a, b) => a - b);
+            new Set(patientData.map((d: UMAPDataPoint) => d.cluster))
+        ).sort((a: number, b: number) => a - b);
         const colors = [
             '#1f77b4',
             '#ff7f0e',
@@ -139,12 +265,14 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         ];
 
         const traces = clusters.map((cluster, idx) => {
-            const clusterData = patientData.filter(d => d.cluster === cluster);
+            const clusterData = patientData.filter(
+                (d: UMAPDataPoint) => d.cluster === cluster
+            );
             return {
-                x: clusterData.map(d => d.x),
-                y: clusterData.map(d => d.y),
-                mode: 'markers',
-                type: 'scattergl',
+                x: clusterData.map((d: UMAPDataPoint) => d.x),
+                y: clusterData.map((d: UMAPDataPoint) => d.y),
+                mode: 'markers' as const,
+                type: 'scattergl' as const,
                 name: `Cluster ${cluster}`,
                 marker: {
                     color: colors[idx % colors.length],
@@ -152,24 +280,25 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                     opacity: 0.7,
                 },
                 text: clusterData.map(
-                    d => `Patient: ${d.patientId}<br>Cluster: ${d.cluster}`
+                    (d: UMAPDataPoint) =>
+                        `Patient: ${d.patientId}<br>Cluster: ${d.cluster}`
                 ),
                 hovertemplate: '%{text}<extra></extra>',
             };
         });
 
-        const layout = {
+        const layout: Partial<Plotly.Layout> = {
             title: {
                 text: `UMAP Embedding - ${currentStudyId} (${patientData.length.toLocaleString()} patients)`,
                 font: { size: 16 },
             },
             xaxis: {
-                title: 'UMAP 1',
+                title: { text: 'UMAP 1' },
                 showgrid: false,
                 zeroline: false,
             },
             yaxis: {
-                title: 'UMAP 2',
+                title: { text: 'UMAP 2' },
                 showgrid: false,
                 zeroline: false,
             },
@@ -187,12 +316,12 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             hovermode: 'closest',
         };
 
-        const config = {
+        const config: Partial<Plotly.Config> = {
             displayModeBar: true,
             modeBarButtonsToRemove: [],
             displaylogo: false,
             toImageButtonOptions: {
-                format: 'png',
+                format: 'png' as const,
                 filename: `umap_embedding_${currentStudyId}`,
                 height: 600,
                 width: 800,
@@ -203,9 +332,14 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         Plotly.newPlot(this.plotRef.current, traces, layout, config);
 
         // Add selection event handler
-        this.plotRef.current.on('plotly_selected', eventData => {
-            this.handlePlotSelection(eventData);
-        });
+        if (this.plotRef.current) {
+            (this.plotRef.current as any).on(
+                'plotly_selected',
+                (eventData: any) => {
+                    this.handlePlotSelection(eventData);
+                }
+            );
+        }
 
         this.plotCreated = true;
     }
@@ -272,12 +406,24 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     }
 
     render() {
+        // Show loading if samples aren't ready
         if (!this.props.store.samples.isComplete) {
             return <LoadingIndicator isLoading={true} />;
         }
 
-        const currentStudyId = this.props.store.queriedPhysicalStudyIds
-            .result?.[0];
+        // Safety check for study ID access
+        const studyIds = this.props.store.queriedPhysicalStudyIds.result;
+        const currentStudyId =
+            studyIds && studyIds.length > 0 ? studyIds[0] : null;
+
+        if (!currentStudyId) {
+            return (
+                <div style={{ padding: '20px', textAlign: 'center' }}>
+                    <h4>Embeddings Visualization</h4>
+                    <p>Loading study information...</p>
+                </div>
+            );
+        }
 
         if (currentStudyId !== 'msk_chord_2024') {
             return (

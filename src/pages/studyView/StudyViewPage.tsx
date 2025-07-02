@@ -702,7 +702,9 @@ export default class StudyViewPage extends React.Component<
                                     >
                                         <IFrameLoader
                                             className="mdacc-heatmap-iframe"
-                                            url={`https://bioinformatics.mdanderson.org/TCGA/NGCHMPortal/?${this.store.MDACCHeatmapStudyMeta.result[0]}`}
+                                            url={`https://bioinformatics.mdanderson.org/TCGA/NGCHMPortal/?${this
+                                                .store.MDACCHeatmapStudyMeta
+                                                .result?.[0] || ''}`}
                                         />
                                     </MSKTab>
                                     <MSKTab
