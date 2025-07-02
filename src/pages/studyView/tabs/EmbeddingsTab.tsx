@@ -1,11 +1,17 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { computed } from 'mobx';
+import { computed, observable, action, makeObservable, reaction } from 'mobx';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import * as Plotly from 'plotly.js';
 import umapData from '../../../data/msk_chord_2024_umap_data.json';
 import { SpecialChartsUniqueKeyEnum } from '../StudyViewUtils';
+import ColorSamplesByDropdown from 'shared/components/colorSamplesByDropdown/ColorSamplesByDropdown';
+import ColoringService from 'shared/components/colorSamplesByDropdown/ColoringService';
+import { ColoringMenuOmnibarOption } from 'shared/components/plots/PlotsTab';
+import { remoteData, MobxPromise } from 'cbioportal-frontend-commons';
+import { ClinicalAttribute, Gene } from 'cbioportal-ts-api-client';
+import { getRemoteDataGroupStatus } from 'cbioportal-utils';
 
 interface UMAPDataPoint {
     x: number;
@@ -24,8 +30,136 @@ export interface IEmbeddingsTabProps {
 @observer
 export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     private plotRef = React.createRef<HTMLDivElement>();
-    private plotCreated = false;
     private patientDataMap = new Map<number, UMAPDataPoint>();
+    private coloringService: ColoringService;
+
+    @observable private selectedColoringOption?: ColoringMenuOmnibarOption;
+    @observable private coloringLogScale = false;
+
+    constructor(props: IEmbeddingsTabProps) {
+        super(props);
+        makeObservable(this);
+
+        this.coloringService = new ColoringService({
+            clinicalDataCache: this.props.store.clinicalDataCache,
+        });
+    }
+
+    private initializeDefaultColoring() {
+        // Set default to CANCER_TYPE_DETAILED if available
+        const cancerTypeAttr = this.clinicalAttributes.find(
+            attr => attr.clinicalAttributeId === 'CANCER_TYPE_DETAILED'
+        );
+
+        console.log(
+            'Initializing default coloring - available attributes:',
+            this.clinicalAttributes.length
+        );
+        console.log('CANCER_TYPE_DETAILED found:', !!cancerTypeAttr);
+
+        if (cancerTypeAttr) {
+            this.selectedColoringOption = {
+                label: cancerTypeAttr.displayName,
+                value: `clinical_${cancerTypeAttr.clinicalAttributeId}`,
+                info: {
+                    clinicalAttribute: cancerTypeAttr,
+                },
+            };
+
+            console.log(
+                'Set selectedColoringOption to:',
+                this.selectedColoringOption
+            );
+
+            // Trigger the clinical data cache to load this attribute
+            const cacheEntry = this.props.store.clinicalDataCache.get(
+                cancerTypeAttr
+            );
+            console.log('Clinical data cache entry status:', {
+                isPending: cacheEntry.isPending,
+                isComplete: cacheEntry.isComplete,
+                isError: cacheEntry.isError,
+                hasResult: !!cacheEntry.result,
+            });
+
+            // Update the coloring service with the default selection
+            this.coloringService.updateConfig({
+                selectedOption: this.selectedColoringOption,
+            });
+        }
+    }
+
+    @computed get clinicalAttributes(): ClinicalAttribute[] {
+        // Get clinical attributes from the study view store
+        const clinicalAttributesCacheEntry = this.props.store
+            .clinicalAttributes;
+        return clinicalAttributesCacheEntry.result || [];
+    }
+
+    @computed get coloringClinicalDataPromise(): MobxPromise<any> | undefined {
+        if (
+            this.selectedColoringOption &&
+            this.selectedColoringOption.info.clinicalAttribute
+        ) {
+            return this.props.store.clinicalDataCache.get(
+                this.selectedColoringOption.info.clinicalAttribute
+            );
+        }
+        return undefined;
+    }
+
+    @computed get shouldInitializeDefaultColoring(): boolean {
+        // Reactive check for when we should initialize default coloring
+        return (
+            this.clinicalAttributes.length > 0 && !this.selectedColoringOption
+        );
+    }
+
+    @computed get genes(): Gene[] {
+        // For EmbeddingsTab, we might not need genes initially
+        // but this allows the dropdown to show gene options if needed
+        return [];
+    }
+
+    @computed get logScalePossible(): boolean {
+        // Log scale not needed for UMAP coordinates
+        return false;
+    }
+
+    @action.bound
+    private onColoringSelectionChange(option?: ColoringMenuOmnibarOption) {
+        console.log('Coloring selection changed to:', option);
+        this.selectedColoringOption = option;
+        this.coloringService.updateConfig({ selectedOption: option });
+
+        // Trigger clinical data loading by accessing the cache
+        if (option?.info?.clinicalAttribute) {
+            console.log(
+                'Selected clinical attribute:',
+                option.info.clinicalAttribute.clinicalAttributeId,
+                option.info.clinicalAttribute.displayName
+            );
+            const cacheEntry = this.props.store.clinicalDataCache.get(
+                option.info.clinicalAttribute
+            );
+            console.log('Cache entry status for new selection:', {
+                isPending: cacheEntry.isPending,
+                isComplete: cacheEntry.isComplete,
+                isError: cacheEntry.isError,
+                hasResult: !!cacheEntry.result,
+            });
+        }
+
+        // MobX will automatically trigger re-render when plotData computed changes
+    }
+
+    @action.bound
+    private onLogScaleChange(enabled: boolean) {
+        this.coloringLogScale = enabled;
+        this.coloringService.updateConfig({ logScale: enabled });
+
+        // MobX will automatically trigger re-render when plotData computed changes
+    }
 
     @computed get filteredPatientIds(): string[] {
         // selectedSamples IS the filtered data! It returns filtered results when chartsAreFiltered is true
@@ -86,13 +220,63 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         );
 
         const allData: UMAPDataPoint[] = umapData.data.map(
-            (patient: any, index: number) => ({
-                x: patient.x,
-                y: patient.y,
-                patientId: patient.patientId,
-                cluster: Math.floor(Math.random() * 8) + 1,
-                pointIndex: index,
-            })
+            (patient: any, index: number) => {
+                // Find the sample for this patient
+                const sample = allSamples.find(
+                    s => s.patientId === patient.patientId
+                );
+
+                let color = '#CCCCCC';
+                let cancerType = 'Unknown';
+
+                if (sample && this.selectedColoringOption) {
+                    // Update coloring service config to ensure it has the latest selection
+                    this.coloringService.updateConfig({
+                        selectedOption: this.selectedColoringOption,
+                        logScale: this.coloringLogScale,
+                    });
+
+                    console.log(
+                        `Processing patient ${patient.patientId} with selectedOption: ${this.selectedColoringOption.label}`
+                    );
+                    color = this.coloringService.getPointColor(sample);
+                    const displayValue = this.coloringService.getDisplayValue(
+                        sample
+                    );
+                    cancerType =
+                        displayValue ||
+                        this.getPatientCancerType(patient.patientId) ||
+                        'Unknown';
+
+                    if (index < 3) {
+                        // Only log first few patients to avoid spam
+                        console.log(
+                            `Patient ${patient.patientId}: sample=${sample.sampleId}, selectedOption=${this.selectedColoringOption?.label}, color=${color}, cancerType=${cancerType}, displayValue=${displayValue}`
+                        );
+                    }
+                } else {
+                    if (index < 3) {
+                        console.log(
+                            `Patient ${
+                                patient.patientId
+                            }: sample found=${!!sample}, selectedOption=${!!this
+                                .selectedColoringOption}, optionLabel=${
+                                this.selectedColoringOption?.label
+                            }`
+                        );
+                    }
+                }
+
+                return {
+                    x: patient.x,
+                    y: patient.y,
+                    patientId: patient.patientId,
+                    cluster: Math.floor(Math.random() * 8) + 1,
+                    pointIndex: index,
+                    cancerType: cancerType,
+                    color: color,
+                };
+            }
         );
 
         // If samples aren't ready yet, show all UMAP data
@@ -151,137 +335,350 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         return filteredData;
     }
 
-    componentDidMount() {
-        this.createPlot();
+    private getPatientCancerType(patientId: string): string | undefined {
+        // Get cancer type from the filtered samples by detailed cancer type
+        const filteredSamplesByDetailedCancerType = this.props.store
+            .filteredSamplesByDetailedCancerType.result;
+
+        if (filteredSamplesByDetailedCancerType) {
+            // Find which cancer type this patient belongs to
+            for (const [cancerType, samples] of Object.entries(
+                filteredSamplesByDetailedCancerType
+            )) {
+                if (
+                    samples.some(
+                        (sample: any) => sample.patientId === patientId
+                    )
+                ) {
+                    return cancerType;
+                }
+            }
+        }
+
+        // Fallback: try to get from study information
+        const studyIdToStudy = this.props.store.studyIdToStudy.result;
+        const samples = this.props.store.samples.result || [];
+
+        if (studyIdToStudy) {
+            for (const sample of samples) {
+                if (sample.patientId === patientId) {
+                    const study = studyIdToStudy[sample.studyId];
+                    if (study && study.cancerType) {
+                        return (
+                            study.cancerType.name ||
+                            study.cancerType.cancerTypeId
+                        );
+                    }
+                }
+            }
+        }
+
+        return undefined;
     }
 
-    componentDidUpdate(prevProps: IEmbeddingsTabProps) {
-        // Only update if the component is actually visible and data is ready
+    private getCancerTypeColorMap(): Map<string, string> {
+        const colorMap = new Map<string, string>();
+
+        // First try to get colors from the study view store's cancer type chart
+        const filteredSamplesByDetailedCancerType = this.props.store
+            .filteredSamplesByDetailedCancerType.result;
+
+        if (filteredSamplesByDetailedCancerType) {
+            // Get cancer type chart data which should have colors assigned
+            const cancerTypeChartData = this.getCancerTypeChartData();
+
+            if (cancerTypeChartData) {
+                cancerTypeChartData.forEach((item: any) => {
+                    if (item.value && item.color) {
+                        colorMap.set(item.value, item.color);
+                    }
+                });
+            }
+        }
+
+        // Fallback: get colors from study dedicated colors
+        if (colorMap.size === 0) {
+            const studyIdToStudy = this.props.store.studyIdToStudy.result;
+            if (studyIdToStudy) {
+                Object.values(studyIdToStudy).forEach((study: any) => {
+                    if (study.cancerType) {
+                        const cancerTypeName =
+                            study.cancerType.name ||
+                            study.cancerType.cancerTypeId;
+                        const color =
+                            study.cancerType.dedicatedColor ||
+                            this.generateColorFromString(cancerTypeName);
+                        colorMap.set(cancerTypeName, color);
+                    }
+                });
+            }
+        }
+
+        // Add default color for unknown
+        colorMap.set('Unknown', '#CCCCCC');
+
+        return colorMap;
+    }
+
+    private getCancerTypeChartData(): any[] | undefined {
+        try {
+            // Try to get cancer type chart data from the store
+            // Look for CANCER_TYPE_DETAILED clinical attribute
+            const cancerTypeAttr = this.clinicalAttributes.find(
+                attr => attr.clinicalAttributeId === 'CANCER_TYPE_DETAILED'
+            );
+
+            if (cancerTypeAttr) {
+                const clinicalDataCache = this.props.store.clinicalDataCache;
+                const cacheEntry = clinicalDataCache.get(cancerTypeAttr);
+                if (
+                    cacheEntry.isComplete &&
+                    cacheEntry.result &&
+                    cacheEntry.result.categoryToColor
+                ) {
+                    // Convert categoryToColor map to array format
+                    const categoryToColor = cacheEntry.result.categoryToColor;
+                    return Object.entries(categoryToColor).map(
+                        ([value, color]) => ({
+                            value,
+                            color,
+                        })
+                    );
+                }
+            }
+        } catch (e) {
+            console.warn('Could not get cancer type chart data:', e);
+        }
+
+        return undefined;
+    }
+
+    private generateColorFromString(str: string): string {
+        // Generate a consistent color based on string hash
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            hash = str.charCodeAt(i) + ((hash << 5) - hash);
+        }
+
+        // Convert to hex color
+        const c = (hash & 0x00ffffff).toString(16).toUpperCase();
+        return '#' + '00000'.substring(0, 6 - c.length) + c;
+    }
+
+    componentDidMount() {
+        // Check if we should initialize default coloring
+        if (this.shouldInitializeDefaultColoring) {
+            this.initializeDefaultColoring();
+        }
+    }
+
+    componentDidUpdate() {
+        // Check if we should initialize default coloring
+        if (this.shouldInitializeDefaultColoring) {
+            this.initializeDefaultColoring();
+        }
+    }
+
+    componentWillUnmount() {
+        if (this.plotRef.current) {
+            Plotly.purge(this.plotRef.current);
+        }
+    }
+
+    @computed get plotData(): UMAPDataPoint[] {
+        // This computed property will automatically trigger re-render when dependencies change
         if (
             !this.props.store.samples.isComplete ||
             !this.props.store.selectedSamples.isComplete
         ) {
-            return;
+            return [];
         }
 
-        // Check if the selected samples have changed (this indicates filters changed)
-        const currentSamples = this.props.store.selectedSamples.result || [];
-        const prevSamples = prevProps?.store?.selectedSamples?.result || [];
-
-        const samplesChanged = currentSamples.length !== prevSamples.length;
-
-        // Also check patient keys as backup
-        const currentPatientKeys =
-            this.props.store.selectedPatientKeys.result || [];
-        const prevPatientKeys =
-            prevProps?.store?.selectedPatientKeys?.result || [];
-
-        const patientsChanged =
-            currentPatientKeys.length !== prevPatientKeys.length ||
-            !currentPatientKeys.every(key => prevPatientKeys.includes(key));
-
-        // Only recreate plot if not created yet OR if samples/patients actually changed
-        if (!this.plotCreated) {
-            console.log('Creating plot for first time');
-            this.createPlot();
-        } else if (samplesChanged || patientsChanged) {
-            console.log(
-                'Filters changed, recreating plot. Current samples:',
-                currentSamples.length,
-                'Previous samples:',
-                prevSamples.length
+        // Check if clinical data is needed and ready
+        if (this.selectedColoringOption?.info?.clinicalAttribute) {
+            const cacheEntry = this.props.store.clinicalDataCache.get(
+                this.selectedColoringOption.info.clinicalAttribute
             );
-            this.recreatePlot();
-        }
-
-        // Check if custom selection was cleared and clear Plotly selection
-        const hasCustomSelection =
-            this.props.store.numberOfSelectedSamplesInCustomSelection > 0;
-        const hadCustomSelection = prevProps?.store
-            ? prevProps.store.numberOfSelectedSamplesInCustomSelection > 0
-            : false;
-
-        if (
-            hadCustomSelection &&
-            !hasCustomSelection &&
-            this.plotRef.current &&
-            this.plotCreated
-        ) {
-            // Clear the Plotly selection when custom filters are cleared
-            try {
-                Plotly.restyle(this.plotRef.current, {
-                    selectedpoints: [null],
-                });
-            } catch (error) {
-                console.warn('Error clearing Plotly selection:', error);
+            if (!cacheEntry.isComplete) {
+                return []; // Still loading clinical data
             }
         }
+
+        return this.loadUMAPData();
     }
 
-    private recreatePlot() {
-        if (this.plotRef.current && this.plotCreated) {
-            Plotly.purge(this.plotRef.current);
-            this.plotCreated = false;
-        }
-        this.createPlot();
-    }
-
-    componentWillUnmount() {
-        if (this.plotRef.current && this.plotCreated) {
-            Plotly.purge(this.plotRef.current);
-        }
-    }
-
-    private createPlot() {
+    @computed get isLoading(): boolean {
         if (
-            !this.plotRef.current ||
             !this.props.store.samples.isComplete ||
-            this.plotCreated
+            !this.props.store.selectedSamples.isComplete
         ) {
+            return true;
+        }
+
+        if (this.selectedColoringOption?.info?.clinicalAttribute) {
+            const cacheEntry = this.props.store.clinicalDataCache.get(
+                this.selectedColoringOption.info.clinicalAttribute
+            );
+            return !cacheEntry.isComplete;
+        }
+
+        return false;
+    }
+
+    @computed get plotComponent(): JSX.Element {
+        if (this.isLoading) {
+            return (
+                <div
+                    style={{
+                        width: '100%',
+                        height: '600px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }}
+                >
+                    <LoadingIndicator
+                        isLoading={true}
+                        center={true}
+                        size={'big'}
+                    />
+                </div>
+            );
+        }
+
+        const patientData = this.plotData;
+        if (patientData.length === 0) {
+            return (
+                <div
+                    style={{
+                        width: '100%',
+                        height: '600px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }}
+                >
+                    <span>No data available for visualization</span>
+                </div>
+            );
+        }
+
+        // Trigger plot creation when this computed runs with new data
+        setTimeout(() => {
+            if (this.plotRef.current && patientData.length > 0) {
+                this.createPlotlyVisualization(patientData);
+            }
+        }, 0);
+
+        return (
+            <div
+                ref={this.plotRef}
+                style={{ width: '100%', height: '600px' }}
+                key={`plot-${this.selectedColoringOption?.value || 'none'}`} // Force re-render when selection changes
+            />
+        );
+    }
+
+    render() {
+        // Safety check for study ID access
+        const studyIds = this.props.store.queriedPhysicalStudyIds.result;
+        const currentStudyId =
+            studyIds && studyIds.length > 0 ? studyIds[0] : null;
+
+        if (!currentStudyId) {
+            return (
+                <div style={{ padding: '20px', textAlign: 'center' }}>
+                    <h4>Embeddings Visualization</h4>
+                    <p>Loading study information...</p>
+                </div>
+            );
+        }
+
+        if (currentStudyId !== 'msk_chord_2024') {
+            return (
+                <div style={{ padding: '20px', textAlign: 'center' }}>
+                    <h4>Embeddings Visualization</h4>
+                    <p>
+                        Embeddings are currently only available for the
+                        msk_chord_2024 study.
+                    </p>
+                    <p>
+                        Current study: <strong>{currentStudyId}</strong>
+                    </p>
+                </div>
+            );
+        }
+
+        return (
+            <div style={{ padding: '20px' }}>
+                <div style={{ marginBottom: '20px' }}>
+                    <h4>Patient Embeddings Visualization</h4>
+                    <p>
+                        Interactive UMAP projection showing patient similarity
+                        patterns. Each point represents a patient. Use the
+                        toolbar to zoom, pan, and download the plot.
+                    </p>
+                </div>
+
+                {this.controls}
+
+                {/* Reactive plot component */}
+                {this.plotComponent}
+            </div>
+        );
+    }
+
+    private createPlotlyVisualization(patientData: UMAPDataPoint[]) {
+        if (!this.plotRef.current) {
             return;
         }
+
+        // Clear any existing plot
+        Plotly.purge(this.plotRef.current);
 
         const currentStudyId = this.props.store.queriedPhysicalStudyIds
             .result?.[0];
 
-        if (currentStudyId !== 'msk_chord_2024') {
-            return;
-        }
+        // Group by cancer type for coloring
+        const cancerTypes = Array.from(
+            new Set(
+                patientData.map((d: UMAPDataPoint) => d.cancerType || 'Unknown')
+            )
+        ).sort();
 
-        const patientData = this.loadUMAPData();
+        console.log('Cancer types found in UMAP data:', cancerTypes);
 
-        const clusters = Array.from(
-            new Set(patientData.map((d: UMAPDataPoint) => d.cluster))
-        ).sort((a: number, b: number) => a - b);
-        const colors = [
-            '#1f77b4',
-            '#ff7f0e',
-            '#2ca02c',
-            '#d62728',
-            '#9467bd',
-            '#8c564b',
-            '#e377c2',
-            '#7f7f7f',
-        ];
-
-        const traces = clusters.map((cluster, idx) => {
-            const clusterData = patientData.filter(
-                (d: UMAPDataPoint) => d.cluster === cluster
+        const traces = cancerTypes.map(cancerType => {
+            const cancerTypeData = patientData.filter(
+                (d: UMAPDataPoint) => (d.cancerType || 'Unknown') === cancerType
             );
+
+            // Use the cancer type color for all points of this type
+            const cancerTypeColor =
+                cancerTypeData.length > 0
+                    ? cancerTypeData[0].color || '#CCCCCC'
+                    : '#CCCCCC';
+
+            console.log(
+                `Cancer type '${cancerType}': ${cancerTypeData.length} patients, color: ${cancerTypeColor}`
+            );
+
             return {
-                x: clusterData.map((d: UMAPDataPoint) => d.x),
-                y: clusterData.map((d: UMAPDataPoint) => d.y),
+                x: cancerTypeData.map((d: UMAPDataPoint) => d.x),
+                y: cancerTypeData.map((d: UMAPDataPoint) => d.y),
                 mode: 'markers' as const,
                 type: 'scattergl' as const,
-                name: `Cluster ${cluster}`,
+                name: cancerType,
                 marker: {
-                    color: colors[idx % colors.length],
-                    size: 3,
-                    opacity: 0.7,
+                    color: cancerTypeColor,
+                    size: 4,
+                    opacity: 0.8,
                 },
-                text: clusterData.map(
+                text: cancerTypeData.map(
                     (d: UMAPDataPoint) =>
-                        `Patient: ${d.patientId}<br>Cluster: ${d.cluster}`
+                        `Patient: ${
+                            d.patientId
+                        }<br>Cancer Type: ${d.cancerType || 'Unknown'}`
                 ),
                 hovertemplate: '%{text}<extra></extra>',
             };
@@ -340,8 +737,6 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                 }
             );
         }
-
-        this.plotCreated = true;
     }
 
     private handlePlotSelection(eventData: any) {
@@ -405,55 +800,43 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         }
     }
 
-    render() {
-        // Show loading if samples aren't ready
-        if (!this.props.store.samples.isComplete) {
-            return <LoadingIndicator isLoading={true} />;
-        }
-
-        // Safety check for study ID access
-        const studyIds = this.props.store.queriedPhysicalStudyIds.result;
-        const currentStudyId =
-            studyIds && studyIds.length > 0 ? studyIds[0] : null;
-
-        if (!currentStudyId) {
+    @computed get controls(): JSX.Element {
+        if (
+            !this.props.store.samples.isComplete ||
+            this.clinicalAttributes.length === 0
+        ) {
             return (
-                <div style={{ padding: '20px', textAlign: 'center' }}>
-                    <h4>Embeddings Visualization</h4>
-                    <p>Loading study information...</p>
-                </div>
-            );
-        }
-
-        if (currentStudyId !== 'msk_chord_2024') {
-            return (
-                <div style={{ padding: '20px', textAlign: 'center' }}>
-                    <h4>Embeddings Visualization</h4>
-                    <p>
-                        Embeddings are currently only available for the
-                        msk_chord_2024 study.
-                    </p>
-                    <p>
-                        Current study: <strong>{currentStudyId}</strong>
-                    </p>
-                </div>
+                <LoadingIndicator isLoading={true} center={true} size={'big'} />
             );
         }
 
         return (
-            <div style={{ padding: '20px' }}>
-                <div style={{ marginBottom: '20px' }}>
-                    <h4>Patient Embeddings Visualization</h4>
-                    <p>
-                        Interactive UMAP projection showing patient similarity
-                        patterns. Each point represents a patient, colored by
-                        cluster assignment. Use the toolbar to zoom, pan, and
-                        download the plot.
-                    </p>
-                </div>
-                <div
-                    ref={this.plotRef}
-                    style={{ width: '100%', height: '600px' }}
+            <div
+                className="coloring-menu"
+                style={{
+                    marginBottom: '20px',
+                    textAlign: 'left',
+                    position: 'relative',
+                    minWidth: 600,
+                }}
+            >
+                <style>
+                    {`
+                        .coloring-menu .gene-select-background .gene-select-container .gene-select {
+                            width: 350px !important;
+                        }
+                    `}
+                </style>
+                <ColorSamplesByDropdown
+                    genes={this.genes}
+                    clinicalAttributes={this.clinicalAttributes}
+                    selectedOption={this.selectedColoringOption}
+                    logScale={this.coloringLogScale}
+                    hasNoQueriedGenes={true}
+                    logScalePossible={this.logScalePossible}
+                    isLoading={this.isLoading}
+                    onSelectionChange={this.onColoringSelectionChange}
+                    onLogScaleChange={this.onLogScaleChange}
                 />
             </div>
         );
