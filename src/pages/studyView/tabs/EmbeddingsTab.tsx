@@ -49,7 +49,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             annotatedMutationCache: this.props.store.annotatedMutationCache,
             annotatedCnaCache: this.props.store.annotatedCnaCache,
             annotatedSvCache: this.props.store.structuralVariantCache,
-            driversAnnotated: false, // Use false for now, can be enhanced later
+            driversAnnotated: true, // Use false for now, can be enhanced later
         });
     }
 
@@ -76,6 +76,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             // Update the coloring service with the default selection
             this.coloringService.updateConfig({
                 selectedOption: this.selectedColoringOption,
+                driversAnnotated: true,
             });
         }
     }
@@ -141,10 +142,10 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             annotatedCnaCache: this.copyNumberEnabled
                 ? this.props.store.annotatedCnaCache
                 : undefined,
-            annotatedSvCache: this.structuralVariantEnabled
+            structuralVariantCache: this.structuralVariantEnabled
                 ? this.props.store.structuralVariantCache
                 : undefined,
-            driversAnnotated: false,
+            driversAnnotated: true,
         });
 
         // Handle different selection types
@@ -198,10 +199,10 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             annotatedCnaCache: this.copyNumberEnabled
                 ? this.props.store.annotatedCnaCache
                 : undefined,
-            annotatedSvCache: this.structuralVariantEnabled
+            structuralVariantCache: this.structuralVariantEnabled
                 ? this.props.store.structuralVariantCache
                 : undefined,
-            driversAnnotated: false,
+            driversAnnotated: true,
         });
     }
 
@@ -253,10 +254,10 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                         annotatedCnaCache: this.copyNumberEnabled
                             ? this.props.store.annotatedCnaCache
                             : undefined,
-                        annotatedSvCache: this.structuralVariantEnabled
+                        structuralVariantCache: this.structuralVariantEnabled
                             ? this.props.store.structuralVariantCache
                             : undefined,
-                        driversAnnotated: false,
+                        driversAnnotated: true,
                     });
 
                     // Get both fill and stroke colors for proper molecular alteration display
@@ -533,6 +534,52 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         return this.loadUMAPData();
     }
 
+    @computed get molecularDataCachesComplete(): boolean {
+        // Only check caches that are enabled and relevant to the current selection
+        if (
+            this.selectedColoringOption?.info?.entrezGeneId &&
+            this.selectedColoringOption.info.entrezGeneId !== -3
+        ) {
+            const entrezGeneId = this.selectedColoringOption.info.entrezGeneId;
+
+            // For gene-based coloring, check enabled molecular data types
+            if (
+                this.mutationTypeEnabled &&
+                this.props.store.annotatedMutationCache
+            ) {
+                const mutationCacheResult = this.props.store.annotatedMutationCache.get(
+                    { entrezGeneId }
+                );
+                if (!mutationCacheResult.isComplete) {
+                    return false;
+                }
+            }
+
+            if (this.copyNumberEnabled && this.props.store.annotatedCnaCache) {
+                const cnaCacheResult = this.props.store.annotatedCnaCache.get({
+                    entrezGeneId,
+                });
+                if (!cnaCacheResult.isComplete) {
+                    return false;
+                }
+            }
+
+            if (
+                this.structuralVariantEnabled &&
+                this.props.store.structuralVariantCache
+            ) {
+                const svCacheResult = this.props.store.structuralVariantCache.get(
+                    { entrezGeneId }
+                );
+                if (!svCacheResult.isComplete) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
     @computed get isLoading(): boolean {
         if (
             !this.props.store.samples.isComplete ||
@@ -546,6 +593,11 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                 this.selectedColoringOption.info.clinicalAttribute
             );
             return !cacheEntry.isComplete;
+        }
+
+        // Check molecular data caches to prevent flickering
+        if (!this.molecularDataCachesComplete) {
+            return true;
         }
 
         return false;
@@ -691,13 +743,14 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                 mode: 'markers' as const,
                 type: 'scattergl' as const,
                 name: cancerType,
+                showlegend: false, // Hide default legend for data traces
                 marker: {
                     color: fillColors,
                     size: 8,
                     opacity: 0.8,
                     line: {
                         color: strokeColors,
-                        width: 1,
+                        width: 2,
                     },
                 },
                 text: cancerTypeData.map((d: UMAPDataPoint) => {
@@ -710,6 +763,95 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                 hovertemplate: '%{text}<extra></extra>',
             };
         });
+
+        // Create custom legend traces
+        if (this.selectedColoringOption) {
+            if (
+                this.selectedColoringOption.info?.entrezGeneId &&
+                this.selectedColoringOption.info.entrezGeneId !== -3
+            ) {
+                // Gene-based coloring: show molecular alteration types that are present
+                const presentAlterations = new Set<string>();
+                patientData.forEach(point => {
+                    if (point.cancerType && point.cancerType !== 'Unknown') {
+                        presentAlterations.add(point.cancerType);
+                    }
+                });
+
+                const legendData = this.coloringService.getLegendData();
+
+                // Filter legend to only show alterations that are present in the data
+                const filteredLegendData = legendData.filter(item =>
+                    presentAlterations.has(item.name)
+                );
+
+                filteredLegendData.forEach(item => {
+                    let marker: any = { size: 8, opacity: 0.8 };
+
+                    if (item.style === 'filled') {
+                        // Filled dots for mutations
+                        marker.color = item.color;
+                        marker.line = { width: 0 };
+                    } else if (item.style === 'border') {
+                        // Unfilled with colored border for CNAs and SVs
+                        marker.color = 'rgba(255,255,255,0.9)'; // Nearly transparent fill
+                        marker.line = { color: item.color, width: 2 };
+                    } else if (item.style === 'vanilla') {
+                        // Vanilla dot for no mutation
+                        marker.color = item.color;
+                        marker.line = { width: 0 };
+                    } else {
+                        // Fallback
+                        marker.color = item.color;
+                        marker.line = { width: 1 };
+                    }
+
+                    traces.push({
+                        x: [NaN],
+                        y: [NaN],
+                        mode: 'markers' as const,
+                        type: 'scattergl' as const,
+                        name: item.name,
+                        marker: marker,
+                        showlegend: true,
+                        hovertemplate: '<extra></extra>', // Hide hover for legend items
+                    } as any);
+                });
+            } else if (this.selectedColoringOption.info?.clinicalAttribute) {
+                // Clinical attribute coloring: show categories that are present
+                const presentCategories = new Set<string>();
+                patientData.forEach(point => {
+                    if (point.cancerType && point.cancerType !== 'Unknown') {
+                        presentCategories.add(point.cancerType);
+                    }
+                });
+
+                const legendData = this.coloringService.getLegendData();
+
+                // Filter to show only present categories
+                const filteredLegendData = legendData.filter(item =>
+                    presentCategories.has(item.name)
+                );
+
+                filteredLegendData.forEach(item => {
+                    traces.push({
+                        x: [NaN],
+                        y: [NaN],
+                        mode: 'markers' as const,
+                        type: 'scattergl' as const,
+                        name: item.name,
+                        marker: {
+                            color: item.color,
+                            size: 8,
+                            opacity: 0.8,
+                            line: { width: 0 },
+                        },
+                        showlegend: true,
+                        hovertemplate: '<extra></extra>', // Hide hover for legend items
+                    } as any);
+                });
+            }
+        }
 
         const layout: Partial<Plotly.Layout> = {
             title: {
@@ -730,10 +872,24 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             legend: {
                 x: 1.02,
                 y: 1,
-                bgcolor: 'rgba(255,255,255,0.8)',
-                bordercolor: 'rgba(0,0,0,0.2)',
-                borderwidth: 1,
+                bgcolor: 'rgba(255,255,255,0.9)',
+                borderwidth: 0,
             },
+            annotations: [
+                {
+                    text: `<b>${this.getColoringLabel()}</b>`,
+                    x: 1.02,
+                    y: 1.01,
+                    xref: 'paper',
+                    yref: 'paper',
+                    xanchor: 'left',
+                    yanchor: 'bottom',
+                    showarrow: false,
+                    font: { size: 12, color: 'black' },
+                    bgcolor: 'rgba(255,255,255,0.9)',
+                    borderwidth: 0,
+                },
+            ],
             margin: { l: 60, r: 150, t: 60, b: 60 },
             plot_bgcolor: 'white',
             paper_bgcolor: 'white',

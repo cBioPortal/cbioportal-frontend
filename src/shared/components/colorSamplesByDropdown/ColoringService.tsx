@@ -38,6 +38,7 @@ export interface ColoringServiceConfig {
     annotatedMutationCache?: any;
     annotatedCnaCache?: any;
     annotatedSvCache?: any;
+    structuralVariantCache?: any; // Raw structural variant cache for Study View
     // Additional flags for gene-based coloring
     driversAnnotated?: boolean;
 }
@@ -156,7 +157,10 @@ export class ColoringService {
         if (this.config.annotatedCnaCache) {
             coloringTypes[ColoringType.CopyNumber] = true;
         }
-        if (this.config.annotatedSvCache) {
+        if (
+            this.config.annotatedSvCache ||
+            this.config.structuralVariantCache
+        ) {
             coloringTypes[ColoringType.StructuralVariant] = true;
         }
 
@@ -252,7 +256,10 @@ export class ColoringService {
         if (this.config.annotatedCnaCache) {
             coloringTypes[ColoringType.CopyNumber] = true;
         }
-        if (this.config.annotatedSvCache) {
+        if (
+            this.config.annotatedSvCache ||
+            this.config.structuralVariantCache
+        ) {
             coloringTypes[ColoringType.StructuralVariant] = true;
         }
 
@@ -386,8 +393,11 @@ export class ColoringService {
             }
 
             // Get structural variant data for this gene and sample
-            if (this.config.annotatedSvCache) {
-                const svCacheResult = this.config.annotatedSvCache.get({
+            const svCache =
+                this.config.annotatedSvCache ||
+                this.config.structuralVariantCache;
+            if (svCache) {
+                const svCacheResult = svCache.get({
                     entrezGeneId,
                 });
                 if (svCacheResult?.isComplete && svCacheResult.result) {
@@ -398,7 +408,10 @@ export class ColoringService {
                     );
 
                     if (plotData.structuralVariants.length > 0) {
-                        plotData.dispStructuralVariant = 'SV'; // Simple marker for structural variant presence
+                        // For structural variants, use the variant class or type as the display value
+                        const firstSv = plotData.structuralVariants[0];
+                        plotData.dispStructuralVariant =
+                            firstSv.variantClass || firstSv.eventInfo || 'SV';
                         plotData.isProfiledStructuralVariants = true;
                     } else {
                         plotData.isProfiledStructuralVariants = true;
@@ -470,7 +483,10 @@ export class ColoringService {
         if (this.config.annotatedCnaCache) {
             coloringTypes[ColoringType.CopyNumber] = true;
         }
-        if (this.config.annotatedSvCache) {
+        if (
+            this.config.annotatedSvCache ||
+            this.config.structuralVariantCache
+        ) {
             coloringTypes[ColoringType.StructuralVariant] = true;
         }
 
@@ -496,8 +512,11 @@ export class ColoringService {
         try {
             const appearance = appearanceFunction(plotSampleData);
 
-            // Determine the label based on the sample data
-            if (
+            // Determine the label based on the sample data, prioritizing structural variants first
+            if (plotSampleData.structuralVariants.length > 0) {
+                // Has structural variants - highest priority for visibility
+                return 'Structural Variant';
+            } else if (
                 plotSampleData.mutations.length > 0 &&
                 plotSampleData.dispMutationType
             ) {
@@ -508,17 +527,16 @@ export class ColoringService {
                 return label;
             } else if (
                 plotSampleData.copyNumberAlterations.length > 0 &&
-                plotSampleData.dispCna
+                plotSampleData.dispCna &&
+                plotSampleData.dispCna.value !== 0
             ) {
-                // Has CNA - return CNA type based on value
+                // Has non-diploid CNA alterations - return CNA type
                 const cnaValue = plotSampleData.dispCna.value;
                 switch (cnaValue) {
                     case -2:
                         return 'Deep Deletion';
                     case -1:
                         return 'Shallow Deletion';
-                    case 0:
-                        return 'Diploid';
                     case 1:
                         return 'Gain';
                     case 2:
@@ -526,10 +544,15 @@ export class ColoringService {
                     default:
                         return `CNA ${cnaValue}`;
                 }
-            } else if (plotSampleData.structuralVariants.length > 0) {
-                return 'Structural Variant';
+            } else if (
+                plotSampleData.copyNumberAlterations.length > 0 &&
+                plotSampleData.dispCna &&
+                plotSampleData.dispCna.value === 0
+            ) {
+                // Has diploid CNA (value 0) but no mutations or SVs - return Diploid
+                return 'Diploid';
             } else {
-                // No alterations found
+                // No alterations found - this should be the vanilla dot
                 return 'No mutation';
             }
         } catch (error) {
@@ -538,7 +561,7 @@ export class ColoringService {
         }
     }
 
-    public getLegendData(): { name: string; color: string }[] {
+    public getLegendData(): { name: string; color: string; style?: string }[] {
         if (!this.config.selectedOption) {
             return [];
         }
@@ -573,36 +596,78 @@ export class ColoringService {
             option.info.entrezGeneId &&
             option.info.entrezGeneId !== NONE_SELECTED_OPTION_NUMERICAL_VALUE
         ) {
-            const legend: { name: string; color: string }[] = [];
+            const legend: {
+                name: string;
+                color: string;
+                style?: string;
+            }[] = [];
 
-            // Add mutation type legends if mutations are enabled
+            // Add mutation type legends if mutations are enabled (show as filled dots)
             if (this.config.annotatedMutationCache) {
                 legend.push(
-                    { name: 'Missense', color: MUT_COLOR_MISSENSE },
-                    { name: 'Truncating', color: MUT_COLOR_TRUNC },
-                    { name: 'Inframe', color: MUT_COLOR_INFRAME },
-                    { name: 'Splice', color: MUT_COLOR_SPLICE },
-                    { name: 'Other', color: MUT_COLOR_OTHER },
-                    { name: 'No mutation', color: '#c4e5f5' } // Light blue like PlotsTab
+                    {
+                        name: 'Missense',
+                        color: MUT_COLOR_MISSENSE,
+                        style: 'filled',
+                    },
+                    {
+                        name: 'Truncating',
+                        color: MUT_COLOR_TRUNC,
+                        style: 'filled',
+                    },
+                    {
+                        name: 'Inframe',
+                        color: MUT_COLOR_INFRAME,
+                        style: 'filled',
+                    },
+                    {
+                        name: 'Splice',
+                        color: MUT_COLOR_SPLICE,
+                        style: 'filled',
+                    },
+                    { name: 'Other', color: MUT_COLOR_OTHER, style: 'filled' }
                 );
             }
 
-            // Add CNA type legends if CNAs are enabled
+            // Add vanilla "No mutation" dot (unfilled, no border)
+            legend.push({
+                name: 'No mutation',
+                color: '#c4e5f5',
+                style: 'vanilla',
+            });
+
+            // Add CNA type legends if CNAs are enabled (show as unfilled borders)
             if (this.config.annotatedCnaCache) {
                 legend.push(
-                    { name: 'Amplification', color: CNA_COLOR_AMP }, // Red
-                    { name: 'Gain', color: '#ff8c9f' }, // Pink
-                    { name: 'Diploid', color: DEFAULT_GREY }, // Grey
-                    { name: 'Shallow Deletion', color: '#2aced4' }, // Light blue
-                    { name: 'Deep Deletion', color: CNA_COLOR_HOMDEL } // Blue
+                    {
+                        name: 'Amplification',
+                        color: CNA_COLOR_AMP,
+                        style: 'border',
+                    }, // Red border
+                    { name: 'Gain', color: '#ff8c9f', style: 'border' }, // Pink border
+                    { name: 'Diploid', color: DEFAULT_GREY, style: 'border' }, // Grey border
+                    {
+                        name: 'Shallow Deletion',
+                        color: '#2aced4',
+                        style: 'border',
+                    }, // Light blue border
+                    {
+                        name: 'Deep Deletion',
+                        color: CNA_COLOR_HOMDEL,
+                        style: 'border',
+                    } // Blue border
                 );
             }
 
-            // Add structural variant legend if SVs are enabled
-            if (this.config.annotatedSvCache) {
+            // Add structural variant legend if SVs are enabled (show as unfilled border)
+            if (
+                this.config.annotatedSvCache ||
+                this.config.structuralVariantCache
+            ) {
                 legend.push({
                     name: 'Structural Variant',
                     color: STRUCTURAL_VARIANT_COLOR,
+                    style: 'border',
                 });
             }
 
