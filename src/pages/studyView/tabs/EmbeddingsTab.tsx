@@ -875,21 +875,25 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                 bgcolor: 'rgba(255,255,255,0.9)',
                 borderwidth: 0,
             },
-            annotations: [
-                {
-                    text: `<b>${this.getColoringLabel()}</b>`,
-                    x: 1.02,
-                    y: 1.01,
-                    xref: 'paper',
-                    yref: 'paper',
-                    xanchor: 'left',
-                    yanchor: 'bottom',
-                    showarrow: false,
-                    font: { size: 12, color: 'black' },
-                    bgcolor: 'rgba(255,255,255,0.9)',
-                    borderwidth: 0,
-                },
-            ],
+            annotations:
+                this.selectedColoringOption &&
+                this.selectedColoringOption.value !== 'none'
+                    ? [
+                          {
+                              text: `<b>${this.getColoringLabel()}</b>`,
+                              x: 1.02,
+                              y: 1.01,
+                              xref: 'paper',
+                              yref: 'paper',
+                              xanchor: 'left',
+                              yanchor: 'bottom',
+                              showarrow: false,
+                              font: { size: 12, color: 'black' },
+                              bgcolor: 'rgba(255,255,255,0.9)',
+                              borderwidth: 0,
+                          },
+                      ]
+                    : [],
             margin: { l: 60, r: 150, t: 60, b: 60 },
             plot_bgcolor: 'white',
             paper_bgcolor: 'white',

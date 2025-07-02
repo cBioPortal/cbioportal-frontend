@@ -237,7 +237,7 @@ export class ColorSamplesByDropdown extends React.Component<
                 data-test="ColorSamplesByDropdown"
                 className={`coloring-menu ${this.props.className || ''}`}
             >
-                <label className="legend-label">Color samples by:</label>
+                <label className="legend-label">Color by:</label>
                 &nbsp;
                 <div
                     style={{
