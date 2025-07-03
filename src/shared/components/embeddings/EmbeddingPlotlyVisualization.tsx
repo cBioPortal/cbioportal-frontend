@@ -6,7 +6,9 @@ import { EmbeddingVisualizationProps, EmbeddingPoint } from './EmbeddingTypes';
  * Reusable Plotly-based visualization component for embedding data
  * Can be used for UMAP, t-SNE, PCA, or any 2D embedding visualization
  */
-export class EmbeddingPlotlyVisualization extends React.Component<EmbeddingVisualizationProps> {
+export class EmbeddingPlotlyVisualization extends React.Component<
+    EmbeddingVisualizationProps
+> {
     private plotRef = React.createRef<HTMLDivElement>();
 
     componentDidMount() {
@@ -27,7 +29,11 @@ export class EmbeddingPlotlyVisualization extends React.Component<EmbeddingVisua
     }
 
     private createPlot = () => {
-        if (!this.plotRef.current || !this.props.data || this.props.data.length === 0) {
+        if (
+            !this.plotRef.current ||
+            !this.props.data ||
+            this.props.data.length === 0
+        ) {
             return;
         }
 
@@ -43,14 +49,16 @@ export class EmbeddingPlotlyVisualization extends React.Component<EmbeddingVisua
             height = 600,
             showLegend = true,
             filename = 'embedding_plot',
-            onPointSelection
+            onPointSelection,
         } = this.props;
 
         // Group by appearance to minimize traces and improve performance
         const appearanceGroups = new Map<string, EmbeddingPoint[]>();
-        
+
         data.forEach(point => {
-            const appearanceKey = `${point.color || '#CCCCCC'}|${point.strokeColor || '#CCCCCC'}|${point.cancerType || 'Unknown'}`;
+            const appearanceKey = `${point.color ||
+                '#CCCCCC'}|${point.strokeColor ||
+                '#CCCCCC'}|${point.cancerType || 'Unknown'}`;
             if (!appearanceGroups.has(appearanceKey)) {
                 appearanceGroups.set(appearanceKey, []);
             }
@@ -61,8 +69,10 @@ export class EmbeddingPlotlyVisualization extends React.Component<EmbeddingVisua
 
         // Create data traces
         appearanceGroups.forEach((points, appearanceKey) => {
-            const [fillColor, strokeColor, cancerType] = appearanceKey.split('|');
-            
+            const [fillColor, strokeColor, cancerType] = appearanceKey.split(
+                '|'
+            );
+
             traces.push({
                 x: points.map(d => d.x),
                 y: points.map(d => d.y),
@@ -71,15 +81,40 @@ export class EmbeddingPlotlyVisualization extends React.Component<EmbeddingVisua
                 name: cancerType,
                 showlegend: false, // Legend will be handled separately
                 marker: {
-                    color: fillColor,
+                    // Apply special styling for data points
+                    color:
+                        cancerType.includes('Not mutated') ||
+                        cancerType.includes('Missense') ||
+                            cancerType.includes('Truncating') ||
+                            cancerType.includes('Inframe') ||
+                            cancerType.includes('Splice') ||
+                            cancerType.includes('Other')
+                            ? fillColor
+                            : '#c4e5f5', // Use blue fill for all non-mutated points
                     size: 8,
                     opacity: 0.8,
                     line: {
-                        color: strokeColor,
-                        width: strokeColor !== fillColor ? 2 : 0,
+                        color:
+                            cancerType.includes('Amplification') ||
+                            cancerType.includes('Gain') ||
+                            cancerType.includes('Deletion') ||
+                            cancerType.includes('Structural')
+                                ? strokeColor
+                                : 'rgba(0,0,0,0)',
+                        width:
+                            cancerType.includes('Amplification') ||
+                            cancerType.includes('Gain') ||
+                            cancerType.includes('Deletion') ||
+                            cancerType.includes('Structural')
+                                ? 2
+                                : 0,
                     },
                 },
-                text: points.map(d => `Patient: ${d.patientId}<br>Type: ${d.cancerType || 'Unknown'}`),
+                text: points.map(
+                    d =>
+                        `Patient: ${d.patientId}<br>Type: ${d.cancerType ||
+                            'Unknown'}`
+                ),
                 hovertemplate: '%{text}<extra></extra>',
                 customdata: points.map(d => d.patientId), // For selection events
             });
@@ -87,35 +122,41 @@ export class EmbeddingPlotlyVisualization extends React.Component<EmbeddingVisua
 
         // Create legend traces if showLegend is true
         if (showLegend) {
-            const categoryToAppearance = new Map<string, { color: string; strokeColor: string }>();
+            const categoryToAppearance = new Map<
+                string,
+                { color: string; strokeColor: string }
+            >();
             data.forEach(point => {
                 if (point.cancerType && point.cancerType !== 'Unknown') {
                     categoryToAppearance.set(point.cancerType, {
                         color: point.color || '#CCCCCC',
-                        strokeColor: point.strokeColor || '#CCCCCC'
+                        strokeColor: point.strokeColor || '#CCCCCC',
                     });
                 }
             });
 
             categoryToAppearance.forEach((appearance, category) => {
                 let marker: any = { size: 8, opacity: 0.8 };
-                
-                // Use border-only styling for CNAs and SVs (same as backup file)
-                if (category.includes('Amplification') || category.includes('Gain') || 
-                    category.includes('Diploid') || category.includes('Deletion') ||
-                    category.includes('Structural')) {
-                    // Border-only for CNAs and SVs
-                    marker.color = 'rgba(255,255,255,0.9)'; // Nearly transparent fill
+
+                // Special handling for legend entries
+                if (
+                    category.includes('Amplification') ||
+                    category.includes('Gain') ||
+                    category.includes('Deletion') ||
+                    category.includes('Structural')
+                ) {
+                    // For legend entries - CNA/SV should have transparent fill and colored border
+                    marker.color = 'rgba(255,255,255,0.9)'; // Nearly transparent fill for legend
                     marker.line = {
                         color: appearance.strokeColor,
                         width: 2,
                     };
                 } else {
-                    // Filled dots for mutations and "no alterations"
+                    // For legend entries - mutations and "Not mutated" should have solid fill
                     marker.color = appearance.color;
                     marker.line = { width: 0 };
                 }
-                
+
                 traces.push({
                     x: [NaN],
                     y: [NaN],
@@ -157,15 +198,26 @@ export class EmbeddingPlotlyVisualization extends React.Component<EmbeddingVisua
 
         // Add selection event handler if callback is provided
         if (onPointSelection && this.plotRef.current) {
-            (this.plotRef.current as any).on('plotly_selected', (eventData: any) => {
-                if (eventData && eventData.points && eventData.points.length > 0) {
-                    const selectedPoints = eventData.points.map((point: any) => {
-                        const patientId = point.customdata;
-                        return data.find(d => d.patientId === patientId);
-                    }).filter(Boolean);
-                    onPointSelection(selectedPoints);
+            (this.plotRef.current as any).on(
+                'plotly_selected',
+                (eventData: any) => {
+                    if (
+                        eventData &&
+                        eventData.points &&
+                        eventData.points.length > 0
+                    ) {
+                        const selectedPoints = eventData.points
+                            .map((point: any) => {
+                                const patientId = point.customdata;
+                                return data.find(
+                                    d => d.patientId === patientId
+                                );
+                            })
+                            .filter(Boolean);
+                        onPointSelection(selectedPoints);
+                    }
                 }
-            });
+            );
         }
     };
 
@@ -174,7 +226,10 @@ export class EmbeddingPlotlyVisualization extends React.Component<EmbeddingVisua
             <div>
                 <div
                     ref={this.plotRef}
-                    style={{ width: '100%', height: `${this.props.height || 600}px` }}
+                    style={{
+                        width: '100%',
+                        height: `${this.props.height || 600}px`,
+                    }}
                 />
             </div>
         );
