@@ -6169,7 +6169,7 @@ export class StudyViewPageStore
         await: () => [this.queriedPhysicalStudyIds],
         invoke: async () => {
             if (this.queriedPhysicalStudyIds.result.length > 0) {
-                return await defaultClient.fetchNamespaceAttributesUsingPOST({
+                return await getClient().fetchNamespaceAttributesUsingPOST({
                     studyIds: this.queriedPhysicalStudyIds.result,
                 });
             }
