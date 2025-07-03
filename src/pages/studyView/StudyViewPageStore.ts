@@ -12255,4 +12255,5 @@ export class StudyViewPageStore
         }
         return getGenomeNexusUrl(this.displayedStudies.result);
     }
+
 }
