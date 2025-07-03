@@ -81,33 +81,12 @@ export class EmbeddingPlotlyVisualization extends React.Component<
                 name: cancerType,
                 showlegend: false, // Legend will be handled separately
                 marker: {
-                    // Apply special styling for data points
-                    color:
-                        cancerType.includes('Not mutated') ||
-                        cancerType.includes('Missense') ||
-                            cancerType.includes('Truncating') ||
-                            cancerType.includes('Inframe') ||
-                            cancerType.includes('Splice') ||
-                            cancerType.includes('Other')
-                            ? fillColor
-                            : '#c4e5f5', // Use blue fill for all non-mutated points
+                    color: fillColor,
                     size: 8,
                     opacity: 0.8,
                     line: {
-                        color:
-                            cancerType.includes('Amplification') ||
-                            cancerType.includes('Gain') ||
-                            cancerType.includes('Deletion') ||
-                            cancerType.includes('Structural')
-                                ? strokeColor
-                                : 'rgba(0,0,0,0)',
-                        width:
-                            cancerType.includes('Amplification') ||
-                            cancerType.includes('Gain') ||
-                            cancerType.includes('Deletion') ||
-                            cancerType.includes('Structural')
-                                ? 2
-                                : 0,
+                        color: strokeColor,
+                        width: strokeColor !== fillColor ? 2 : 0,
                     },
                 },
                 text: points.map(
