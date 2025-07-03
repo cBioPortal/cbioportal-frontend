@@ -15,7 +15,6 @@ import umapData from '../../../data/msk_chord_2024_umap_data.json';
 import pcaData from '../../../data/msk_chord_2024_pca_data.json';
 import { SpecialChartsUniqueKeyEnum } from '../StudyViewUtils';
 import ColorSamplesByDropdown from 'shared/components/colorSamplesByDropdown/ColorSamplesByDropdown';
-import ColoringService from 'shared/components/colorSamplesByDropdown/ColoringService';
 import { ColoringMenuOmnibarOption } from 'shared/components/plots/PlotsTab';
 import { makeScatterPlotPointAppearance } from 'shared/components/plots/PlotsTabUtils';
 import { remoteData, MobxPromise } from 'cbioportal-frontend-commons';
@@ -75,7 +74,6 @@ export interface IEmbeddingsTabProps {
 export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     private plotRef = React.createRef<HTMLDivElement>();
     private patientDataMap = new Map<number, EmbeddingDataPoint>();
-    private coloringService: ColoringService;
 
     @observable private selectedColoringOption?: ColoringMenuOmnibarOption;
     @observable private coloringLogScale = false;
@@ -95,14 +93,6 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     constructor(props: IEmbeddingsTabProps) {
         super(props);
         makeObservable(this);
-
-        this.coloringService = new ColoringService({
-            clinicalDataCache: this.props.store.clinicalDataCache,
-            annotatedMutationCache: this.props.store.annotatedMutationCache,
-            annotatedCnaCache: this.props.store.annotatedCnaCache,
-            annotatedSvCache: this.props.store.structuralVariantCache,
-            driverAnnotationSettings: this.props.store.driverAnnotationSettings,
-        });
     }
 
     private initializeDefaultColoring() {
@@ -124,13 +114,6 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             const cacheEntry = this.props.store.clinicalDataCache.get(
                 cancerTypeAttr
             );
-
-            // Update the coloring service with the default selection
-            this.coloringService.updateConfig({
-                selectedOption: this.selectedColoringOption,
-                driverAnnotationSettings: this.props.store
-                    .driverAnnotationSettings,
-            });
         }
     }
 
@@ -187,19 +170,6 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     @action.bound
     private onColoringSelectionChange(option?: ColoringMenuOmnibarOption) {
         this.selectedColoringOption = option;
-        this.coloringService.updateConfig({
-            selectedOption: option,
-            annotatedMutationCache: this.mutationTypeEnabled
-                ? this.props.store.annotatedMutationCache
-                : undefined,
-            annotatedCnaCache: this.copyNumberEnabled
-                ? this.props.store.annotatedCnaCache
-                : undefined,
-            structuralVariantCache: this.structuralVariantEnabled
-                ? this.props.store.structuralVariantCache
-                : undefined,
-            driverAnnotationSettings: this.props.store.driverAnnotationSettings,
-        });
 
         // Handle different selection types
         if (option?.info?.clinicalAttribute) {
@@ -219,44 +189,21 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     @action.bound
     private onLogScaleChange(enabled: boolean) {
         this.coloringLogScale = enabled;
-        this.coloringService.updateConfig({ logScale: enabled });
-
-        // MobX will automatically trigger re-render when plotData computed changes
     }
 
     @action.bound
     private onMutationTypeToggle(enabled: boolean) {
         this.mutationTypeEnabled = enabled;
-        this.updateColoringServiceConfig();
     }
 
     @action.bound
     private onCopyNumberToggle(enabled: boolean) {
         this.copyNumberEnabled = enabled;
-        this.updateColoringServiceConfig();
     }
 
     @action.bound
     private onStructuralVariantToggle(enabled: boolean) {
         this.structuralVariantEnabled = enabled;
-        this.updateColoringServiceConfig();
-    }
-
-    private updateColoringServiceConfig() {
-        this.coloringService.updateConfig({
-            selectedOption: this.selectedColoringOption,
-            logScale: this.coloringLogScale,
-            annotatedMutationCache: this.mutationTypeEnabled
-                ? this.props.store.annotatedMutationCache
-                : undefined,
-            annotatedCnaCache: this.copyNumberEnabled
-                ? this.props.store.annotatedCnaCache
-                : undefined,
-            structuralVariantCache: this.structuralVariantEnabled
-                ? this.props.store.structuralVariantCache
-                : undefined,
-            driverAnnotationSettings: this.props.store.driverAnnotationSettings,
-        });
     }
 
     @computed get embeddingOptions(): EmbeddingOption[] {
@@ -381,8 +328,6 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     }
 
     private async loadEmbeddingDataAsync(): Promise<EmbeddingDataPoint[]> {
-        console.time('🔍 TOTAL loadEmbeddingDataAsync');
-
         const embeddingData = this.selectedEmbedding.data;
 
         // Use the computed property to force reactivity
@@ -397,16 +342,11 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             ...new Set(allSamples.map((s: any) => s.patientId)),
         ];
 
-        console.time('📊 Sample lookup map creation');
-        // PERFORMANCE OPTIMIZATION: Create sample lookup map to eliminate O(n²) operations
+        // Create sample lookup map to eliminate O(n²) operations
         const sampleLookupMap = new Map<string, any>();
         allSamples.forEach(sample => {
             sampleLookupMap.set(sample.patientId, sample);
         });
-        console.timeEnd('📊 Sample lookup map creation');
-        console.log(
-            `📊 Created sample lookup for ${allSamples.length} samples`
-        );
 
         // PERFORMANCE OPTIMIZATION: Pre-compute cancer type lookup map
         const patientToCancerTypeMap = new Map<string, string>();
@@ -443,8 +383,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             });
         }
 
-        console.time('🧬 Molecular data pre-aggregation');
-        // PERFORMANCE OPTIMIZATION: Results View approach - pre-aggregate molecular data by PATIENT
+        // Results View approach - pre-aggregate molecular data by PATIENT
         let patientMolecularDataMap = new Map<
             string,
             {
@@ -460,12 +399,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             this.selectedColoringOption.info.entrezGeneId !== -3
         ) {
             const entrezGeneId = this.selectedColoringOption.info.entrezGeneId;
-            console.log(
-                `🧬 Pre-aggregating molecular data for gene ${entrezGeneId}`
-            );
-
-            console.time('🧬 Step 1: Fetch molecular data');
-            // Step 1: Get all molecular data for the gene (like Results View does)
+            // Get all molecular data for the gene (like Results View does)
             let allMutations: any[] = [];
             let allCnas: any[] = [];
             let allSvs: any[] = [];
@@ -505,13 +439,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                     allSvs = svCacheResult.result;
                 }
             }
-            console.timeEnd('🧬 Step 1: Fetch molecular data');
-            console.log(
-                `🧬 Found: ${allMutations.length} mutations, ${allCnas.length} CNAs, ${allSvs.length} SVs`
-            );
-
-            console.time('🧬 Step 2: Patient-to-samples mapping');
-            // Step 2: Group molecular data by patient (taking union like Results View)
+            // Group molecular data by patient (taking union like Results View)
             const patientToSamplesMap = new Map<string, any[]>();
             allSamples.forEach(sample => {
                 if (!patientToSamplesMap.has(sample.patientId)) {
@@ -519,15 +447,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                 }
                 patientToSamplesMap.get(sample.patientId)!.push(sample);
             });
-            console.timeEnd('🧬 Step 2: Patient-to-samples mapping');
-            console.log(
-                `🧬 Mapped ${patientToSamplesMap.size} patients to samples`
-            );
-
-            console.time('🧬 Step 3: Patient-level aggregation');
-
-            // PERFORMANCE FIX: Index molecular data by sample key first to avoid O(n²) operations
-            console.time('🧬 Step 3a: Index molecular data by sample');
+            // Index molecular data by sample key first to avoid O(n²) operations
             const mutationsBySample = new Map<string, any[]>();
             const cnasBySample = new Map<string, any[]>();
             const svsBySample = new Map<string, any[]>();
@@ -558,13 +478,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                 }
                 svsBySample.get(sampleKey)!.push(sv);
             });
-            console.timeEnd('🧬 Step 3a: Index molecular data by sample');
-            console.log(
-                `🧬 Indexed: ${mutationsBySample.size} mutation samples, ${cnasBySample.size} CNA samples, ${svsBySample.size} SV samples`
-            );
-
-            console.time('🧬 Step 3b: Aggregate by patient (O(n) lookups)');
-            // Step 3: Pre-compute patient-level molecular data aggregations using indexed lookups
+            // Pre-compute patient-level molecular data aggregations using indexed lookups
             patientToSamplesMap.forEach((samples, patientId) => {
                 const patientMutations: any[] = [];
                 const patientCnas: any[] = [];
@@ -600,16 +514,9 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                         patientSvs.length > 0,
                 });
             });
-            console.timeEnd('🧬 Step 3b: Aggregate by patient (O(n) lookups)');
-            console.timeEnd('🧬 Step 3: Patient-level aggregation');
-            console.log(
-                `🧬 Aggregated molecular data for ${patientMolecularDataMap.size} patients (embedding has ${embeddingData.data.length} patients)`
-            );
         }
-        console.timeEnd('🧬 Molecular data pre-aggregation');
 
-        console.time('🎨 Clinical data pre-aggregation');
-        // PERFORMANCE OPTIMIZATION: Pre-compute clinical data colors AND values for fast lookup
+        // Pre-compute clinical data colors and values for fast lookup
         let clinicalDataColorMap = new Map<string, string>();
         let clinicalDataValueMap = new Map<string, string>();
 
@@ -656,31 +563,8 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                 }
             }
         }
-        console.timeEnd('🎨 Clinical data pre-aggregation');
-        console.log(
-            `🎨 Pre-computed colors and values for ${clinicalDataColorMap.size} clinical data points`
-        );
 
-        // PERFORMANCE OPTIMIZATION: Configure ColoringService once outside the loop
-        if (this.selectedColoringOption) {
-            this.coloringService.updateConfig({
-                selectedOption: this.selectedColoringOption,
-                logScale: this.coloringLogScale,
-                annotatedMutationCache: this.mutationTypeEnabled
-                    ? this.props.store.annotatedMutationCache
-                    : undefined,
-                annotatedCnaCache: this.copyNumberEnabled
-                    ? this.props.store.annotatedCnaCache
-                    : undefined,
-                structuralVariantCache: this.structuralVariantEnabled
-                    ? this.props.store.structuralVariantCache
-                    : undefined,
-                driverAnnotationSettings: this.props.store
-                    .driverAnnotationSettings,
-            });
-        }
-
-        // PERFORMANCE OPTIMIZATION: Fast patient-level molecular data lookup (Results View pattern)
+        // Fast patient-level molecular data lookup (Results View pattern)
         const getPatientMolecularData = (patientId: string) => {
             return (
                 patientMolecularDataMap.get(patientId) || {
@@ -692,7 +576,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             );
         };
 
-        // PERFORMANCE OPTIMIZATION: Pre-compute appearance function once (not per patient!)
+        // Pre-compute appearance function once (not per patient!)
         let appearanceFunction: ((plotData: any) => any) | null = null;
         let coloringTypes: any = {};
 
@@ -721,12 +605,12 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             );
         }
 
-        // PERFORMANCE OPTIMIZATION: Simplified patient processing
+        // Simplified patient processing
         const processPatient = (
             patient: any,
             index: number
         ): EmbeddingDataPoint => {
-            // OPTIMIZED: Use Map lookup instead of find() - O(1) vs O(n)
+            // Use Map lookup instead of find() - O(1) vs O(n)
             const sample = sampleLookupMap.get(patient.patientId);
 
             let color = '#CCCCCC';
@@ -743,7 +627,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                         patient.patientId
                     );
 
-                    // PERFORMANCE OPTIMIZATION: Generate legend label using proper mutation categories (same as PlotsTab)
+                    // Generate legend label using proper mutation categories (same as PlotsTab)
                     if (molecularData.svs.length > 0) {
                         cancerType = 'Structural Variant';
                     } else if (molecularData.mutations.length > 0) {
@@ -860,7 +744,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                         plotData.isProfiledStructuralVariants = true;
                     }
 
-                    // PERFORMANCE FIX: Use standard cBioPortal colors (same as PlotsTab)
+                    // Use standard cBioPortal colors (same as PlotsTab)
                     if (molecularData.svs.length > 0) {
                         // Structural variants - use standard SV color
                         color = 'rgba(255,255,255,0.9)'; // Nearly transparent fill
@@ -981,19 +865,9 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             };
         };
 
-        console.time('🎨 Patient processing');
-        console.log(
-            `🎨 Processing ${embeddingData.data.length} patients for ${this.selectedEmbedding.label}`
-        );
-
-        // For small datasets (like PCA with 10 patients), don't use chunking
+        // Process all patients
         const allData: EmbeddingDataPoint[] = embeddingData.data.map(
             processPatient
-        );
-
-        console.timeEnd('🎨 Patient processing');
-        console.log(
-            `🎨 Processed ${allData.length} data points for ${this.selectedEmbedding.label}`
         );
 
         // If samples aren't ready yet, show all embedding data
@@ -1031,17 +905,12 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             this.patientDataMap.set(point.pointIndex, point);
         });
 
-        console.time('💾 Cache and return');
         // Cache the result and mark data as ready
         runInAction(() => {
             this.cachedEmbeddingData = filteredData;
             this.isDataReady = true;
             this.isProcessingData = false;
         });
-        console.timeEnd('💾 Cache and return');
-
-        console.timeEnd('🔍 TOTAL loadEmbeddingDataAsync');
-        console.log(`✅ Returning ${filteredData.length} data points`);
 
         return filteredData;
     }
@@ -1507,33 +1376,24 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     }
 
     private createPlotlyVisualization(patientData: EmbeddingDataPoint[]) {
-        console.time('📊 TOTAL Plotly visualization');
-        console.log(
-            `📊 Creating Plotly visualization for ${patientData.length} points`
-        );
-
         if (!this.plotRef.current) {
             return;
         }
 
-        console.time('📊 Plotly purge');
         // Clear any existing plot
         Plotly.purge(this.plotRef.current);
-        console.timeEnd('📊 Plotly purge');
 
         const currentStudyId = this.props.store.queriedPhysicalStudyIds
             .result?.[0];
 
-        // PERFORMANCE OPTIMIZATION: Create sample lookup for tooltip generation
+        // Create sample lookup for tooltip generation
         const allSamples = this.props.store.samples.result || [];
         const sampleLookupMap = new Map<string, any>();
         allSamples.forEach(sample => {
             sampleLookupMap.set(sample.patientId, sample);
         });
 
-        console.time('📊 Appearance grouping');
-        // PERFORMANCE OPTIMIZATION: Group by appearance (color + stroke) instead of cancer type
-        // This minimizes data passed to Plotly and reduces rendering overhead
+        // Group by appearance (color + stroke) to minimize traces
         const appearanceGroups = new Map<string, EmbeddingDataPoint[]>();
 
         patientData.forEach(point => {
@@ -1547,10 +1407,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             }
             appearanceGroups.get(appearanceKey)!.push(point);
         });
-        console.timeEnd('📊 Appearance grouping');
-        console.log(`📊 Created ${appearanceGroups.size} appearance groups`);
 
-        console.time('📊 Trace creation');
         const traces: any[] = [];
 
         // Create one trace per appearance group (much fewer traces than individual points)
@@ -1576,7 +1433,6 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                     },
                 },
                 text: points.map((d: EmbeddingDataPoint) => {
-                    // PERFORMANCE OPTIMIZATION: Use pre-computed cancerType instead of expensive service calls
                     const coloringLabel = this.getColoringLabel();
                     return `Patient: ${
                         d.patientId
@@ -1585,10 +1441,6 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                 hovertemplate: '%{text}<extra></extra>',
             });
         });
-        console.timeEnd('📊 Trace creation');
-        console.log(`📊 Created ${traces.length} traces`);
-
-        console.time('📊 Legend creation');
         // Create custom legend traces
         if (this.selectedColoringOption) {
             if (
@@ -1698,30 +1550,32 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                     } as any);
                 });
             } else if (this.selectedColoringOption.info?.clinicalAttribute) {
-                // Clinical attribute coloring: show categories that are present
-                const presentCategories = new Set<string>();
+                // Clinical attribute coloring: collect categories and their actual colors from the data
+                const categoryToActualColor = new Map<string, string>();
+
                 patientData.forEach(point => {
-                    if (point.cancerType && point.cancerType !== 'Unknown') {
-                        presentCategories.add(point.cancerType);
+                    if (
+                        point.cancerType &&
+                        point.cancerType !== 'Unknown' &&
+                        point.color
+                    ) {
+                        categoryToActualColor.set(
+                            point.cancerType,
+                            point.color
+                        );
                     }
                 });
 
-                const legendData = this.coloringService.getLegendData();
-
-                // Filter to show only present categories
-                const filteredLegendData = legendData.filter(item =>
-                    presentCategories.has(item.name)
-                );
-
-                filteredLegendData.forEach(item => {
+                // Create legend entries using the same colors as the actual data points
+                categoryToActualColor.forEach((color, category) => {
                     traces.push({
                         x: [NaN],
                         y: [NaN],
                         mode: 'markers' as const,
                         type: 'scattergl' as const,
-                        name: item.name,
+                        name: category,
                         marker: {
-                            color: item.color,
+                            color: color,
                             size: 8,
                             opacity: 0.8,
                             line: { width: 0 },
@@ -1794,11 +1648,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                 scale: 2,
             },
         };
-        console.timeEnd('📊 Legend creation');
-
-        console.time('📊 Plotly.newPlot');
         Plotly.newPlot(this.plotRef.current, traces, layout, config);
-        console.timeEnd('📊 Plotly.newPlot');
 
         // Add selection event handler
         if (this.plotRef.current) {
@@ -1809,9 +1659,6 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                 }
             );
         }
-
-        console.timeEnd('📊 TOTAL Plotly visualization');
-        console.log('📊 Plotly visualization complete');
     }
 
     private handlePlotSelection(eventData: any) {
