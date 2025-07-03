@@ -758,6 +758,27 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                 text: cancerTypeData.map((d: UMAPDataPoint) => {
                     // Get the dynamic label based on selected coloring option
                     const coloringLabel = this.getColoringLabel();
+                    
+                    // For gene-based coloring, show all alterations in tooltip
+                    if (
+                        this.selectedColoringOption?.info?.entrezGeneId &&
+                        this.selectedColoringOption.info.entrezGeneId !== -3
+                    ) {
+                        // Find the sample for this patient
+                        const allSamples = this.props.store.samples.result || [];
+                        const sample = allSamples.find(s => s.patientId === d.patientId);
+                        
+                        if (sample) {
+                            const allAlterations = this.coloringService.getAllAlterationsForSample(
+                                sample,
+                                this.selectedColoringOption.info.entrezGeneId
+                            );
+                            const alterationsText = allAlterations.join(', ');
+                            return `Patient: ${d.patientId}<br>${coloringLabel}: ${alterationsText}`;
+                        }
+                    }
+                    
+                    // For clinical data coloring, use the single category
                     return `Patient: ${
                         d.patientId
                     }<br>${coloringLabel}: ${d.cancerType || 'Unknown'}`;
@@ -784,8 +805,10 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                 const legendData = this.coloringService.getLegendData();
 
                 // Filter legend to only show alterations that are present in the data
+                // Always include "No mutation", but only include "Not profiled" if present
                 const filteredLegendData = legendData.filter(item =>
-                    presentAlterations.has(item.name)
+                    presentAlterations.has(item.name) || 
+                    item.name === 'No mutation'
                 );
 
                 filteredLegendData.forEach(item => {

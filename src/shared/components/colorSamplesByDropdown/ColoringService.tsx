@@ -720,14 +720,14 @@ export class ColoringService {
                         }
                     );
                 }
+                
+                // Add vanilla "No mutation" dot when mutations are enabled
+                legend.push({
+                    name: 'No mutation',
+                    color: '#c4e5f5',
+                    style: 'vanilla',
+                });
             }
-
-            // Add vanilla "No mutation" dot (unfilled, no border)
-            legend.push({
-                name: 'No mutation',
-                color: '#c4e5f5',
-                style: 'vanilla',
-            });
 
             // Add CNA type legends if CNAs are enabled (show as unfilled borders)
             if (this.config.annotatedCnaCache) {
@@ -771,6 +771,75 @@ export class ColoringService {
         }
 
         return [];
+    }
+
+    public getAllAlterationsForSample(sample: Sample, entrezGeneId: number): string[] {
+        const plotSampleData = this.buildPlotSampleData(sample, entrezGeneId);
+        if (!plotSampleData) {
+            return ['Not profiled'];
+        }
+
+        const alterations: string[] = [];
+        const driversAnnotated = this.config.driverAnnotationSettings?.driversAnnotated || false;
+
+        // Check for mutations
+        if (plotSampleData.mutations.length > 0 && plotSampleData.dispMutationType) {
+            const mutationType = plotSampleData.dispMutationType;
+            const isDriverMutation = (plotSampleData as any).isDriverMutation;
+            const capitalizedType = mutationType.charAt(0).toUpperCase() + mutationType.slice(1);
+            
+            if (driversAnnotated) {
+                const driverLabel = isDriverMutation ? `${capitalizedType} (Driver)` : `${capitalizedType} (VUS)`;
+                alterations.push(driverLabel);
+            } else {
+                alterations.push(capitalizedType);
+            }
+        }
+
+        // Check for copy number alterations
+        if (
+            plotSampleData.copyNumberAlterations.length > 0 &&
+            plotSampleData.dispCna &&
+            plotSampleData.dispCna.value !== 0
+        ) {
+            const cnaValue = plotSampleData.dispCna.value;
+            switch (cnaValue) {
+                case -2:
+                    alterations.push('Deep Deletion');
+                    break;
+                case -1:
+                    alterations.push('Shallow Deletion');
+                    break;
+                case 1:
+                    alterations.push('Gain');
+                    break;
+                case 2:
+                    alterations.push('Amplification');
+                    break;
+                default:
+                    alterations.push(`CNA ${cnaValue}`);
+            }
+        }
+
+        // Check for structural variants
+        if (plotSampleData.structuralVariants.length > 0) {
+            alterations.push('Structural Variant');
+        }
+
+        // If no alterations found, return appropriate message
+        if (alterations.length === 0) {
+            if (
+                plotSampleData.copyNumberAlterations.length > 0 &&
+                plotSampleData.dispCna &&
+                plotSampleData.dispCna.value === 0
+            ) {
+                return ['Diploid']; // Has diploid CNA but no other alterations
+            } else {
+                return ['No alterations']; // No alterations found
+            }
+        }
+
+        return alterations;
     }
 
     public updateConfig(newConfig: Partial<ColoringServiceConfig>) {
