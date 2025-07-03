@@ -114,29 +114,29 @@ export class EmbeddingPlotlyVisualization extends React.Component<
                 }
             });
 
-            categoryToAppearance.forEach((appearance, category) => {
+            // Define the order of categories
+            const legendOrder = [
+                'Missense', 'Truncating', 'Inframe', 'Splice', 'Other',
+                'Amplification', 'Gain', 'Shallow Deletion', 'Deep Deletion',
+                'Structural Variant', 'Not mutated'
+            ];
+            
+            // Helper function for legend entries
+            const createLegendTrace = (category: string, appearance: { color: string; strokeColor: string }) => {
                 let marker: any = { size: 8, opacity: 0.8 };
-
-                // Special handling for legend entries
-                if (
-                    category.includes('Amplification') ||
-                    category.includes('Gain') ||
-                    category.includes('Deletion') ||
-                    category.includes('Structural')
-                ) {
-                    // For legend entries - CNA/SV should have transparent fill and colored border
-                    marker.color = 'rgba(255,255,255,0.9)'; // Nearly transparent fill for legend
-                    marker.line = {
-                        color: appearance.strokeColor,
-                        width: 2,
-                    };
+                
+                if (category.includes('Amplification') || category.includes('Gain') || 
+                    category.includes('Deletion') || category.includes('Structural')) {
+                    // Border-only for CNAs and SVs
+                    marker.color = 'rgba(255,255,255,0.9)';
+                    marker.line = { color: appearance.strokeColor, width: 2 };
                 } else {
-                    // For legend entries - mutations and "Not mutated" should have solid fill
+                    // Filled dots for mutations and "Not mutated"
                     marker.color = appearance.color;
                     marker.line = { width: 0 };
                 }
-
-                traces.push({
+                
+                return {
                     x: [NaN],
                     y: [NaN],
                     mode: 'markers' as const,
@@ -145,7 +145,22 @@ export class EmbeddingPlotlyVisualization extends React.Component<
                     marker: marker,
                     showlegend: true,
                     hovertemplate: '<extra></extra>',
+                };
+            };
+            
+            // First add entries that match our predefined order
+            for (const orderCategory of legendOrder) {
+                categoryToAppearance.forEach((appearance, category) => {
+                    if (category.includes(orderCategory)) {
+                        traces.push(createLegendTrace(category, appearance));
+                        categoryToAppearance.delete(category); // Remove to avoid duplicates
+                    }
                 });
+            }
+            
+            // Then add any remaining categories (like clinical attributes)
+            categoryToAppearance.forEach((appearance, category) => {
+                traces.push(createLegendTrace(category, appearance));
             });
         }
 
