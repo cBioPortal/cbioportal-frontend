@@ -22,6 +22,24 @@ import { remoteData, MobxPromise } from 'cbioportal-frontend-commons';
 import _ from 'lodash';
 import { ClinicalAttribute, Gene } from 'cbioportal-ts-api-client';
 import { getRemoteDataGroupStatus } from 'cbioportal-utils';
+import {
+    MUT_COLOR_MISSENSE,
+    MUT_COLOR_MISSENSE_PASSENGER,
+    MUT_COLOR_TRUNC,
+    MUT_COLOR_TRUNC_PASSENGER,
+    MUT_COLOR_INFRAME,
+    MUT_COLOR_INFRAME_PASSENGER,
+    MUT_COLOR_SPLICE,
+    MUT_COLOR_SPLICE_PASSENGER,
+    MUT_COLOR_OTHER,
+    MUT_COLOR_OTHER_PASSENGER,
+    CNA_COLOR_AMP,
+    CNA_COLOR_HOMDEL,
+    STRUCTURAL_VARIANT_COLOR,
+} from 'cbioportal-frontend-commons';
+
+// Define standard gray color for diploid CNAs
+const DEFAULT_GREY = '#BEBEBE';
 
 interface EmbeddingDataPoint {
     x: number;
@@ -351,7 +369,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     private getCacheKey(): string {
         // Create a cache key based on dependencies that affect the data
         return JSON.stringify({
-            selectedEmbedding: this.selectedEmbedding.value,
+            selectedEmbedding: this.selectedEmbedding.value, // This will invalidate cache when switching embeddings
             selectedColoring: this.selectedColoringOption?.value || 'none',
             mutationEnabled: this.mutationTypeEnabled,
             cnaEnabled: this.copyNumberEnabled,
@@ -363,6 +381,10 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     }
 
     private async loadEmbeddingDataAsync(): Promise<EmbeddingDataPoint[]> {
+        console.time('🔍 TOTAL loadEmbeddingDataAsync');
+
+        const embeddingData = this.selectedEmbedding.data;
+
         // Use the computed property to force reactivity
         const filteredPatientIds = this.filteredPatientIds;
 
@@ -375,11 +397,16 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             ...new Set(allSamples.map((s: any) => s.patientId)),
         ];
 
+        console.time('📊 Sample lookup map creation');
         // PERFORMANCE OPTIMIZATION: Create sample lookup map to eliminate O(n²) operations
         const sampleLookupMap = new Map<string, any>();
         allSamples.forEach(sample => {
             sampleLookupMap.set(sample.patientId, sample);
         });
+        console.timeEnd('📊 Sample lookup map creation');
+        console.log(
+            `📊 Created sample lookup for ${allSamples.length} samples`
+        );
 
         // PERFORMANCE OPTIMIZATION: Pre-compute cancer type lookup map
         const patientToCancerTypeMap = new Map<string, string>();
@@ -416,20 +443,33 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             });
         }
 
-        // PERFORMANCE OPTIMIZATION: Pre-fetch molecular data for gene-based coloring (PlotsTab pattern)
-        let molecularDataMaps: {
-            mutationsMap?: { [sampleKey: string]: any[] };
-            cnaMap?: { [sampleKey: string]: any[] };
-            svMap?: { [sampleKey: string]: any[] };
-        } = {};
+        console.time('🧬 Molecular data pre-aggregation');
+        // PERFORMANCE OPTIMIZATION: Results View approach - pre-aggregate molecular data by PATIENT
+        let patientMolecularDataMap = new Map<
+            string,
+            {
+                mutations: any[];
+                cnas: any[];
+                svs: any[];
+                hasAnyAlteration: boolean;
+            }
+        >();
 
         if (
             this.selectedColoringOption?.info?.entrezGeneId &&
             this.selectedColoringOption.info.entrezGeneId !== -3
         ) {
             const entrezGeneId = this.selectedColoringOption.info.entrezGeneId;
+            console.log(
+                `🧬 Pre-aggregating molecular data for gene ${entrezGeneId}`
+            );
 
-            // Pre-fetch and group molecular data by sample (like PlotsTab does)
+            console.time('🧬 Step 1: Fetch molecular data');
+            // Step 1: Get all molecular data for the gene (like Results View does)
+            let allMutations: any[] = [];
+            let allCnas: any[] = [];
+            let allSvs: any[] = [];
+
             if (
                 this.mutationTypeEnabled &&
                 this.props.store.annotatedMutationCache
@@ -441,11 +481,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                     mutationCacheResult?.isComplete &&
                     mutationCacheResult.result
                 ) {
-                    // Group by uniqueSampleKey for O(1) lookups
-                    molecularDataMaps.mutationsMap = _.groupBy(
-                        mutationCacheResult.result,
-                        (m: any) => `${m.studyId}:${m.sampleId}`
-                    );
+                    allMutations = mutationCacheResult.result;
                 }
             }
 
@@ -454,10 +490,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                     entrezGeneId,
                 });
                 if (cnaCacheResult?.isComplete && cnaCacheResult.result) {
-                    molecularDataMaps.cnaMap = _.groupBy(
-                        cnaCacheResult.result,
-                        (c: any) => `${c.studyId}:${c.sampleId}`
-                    );
+                    allCnas = cnaCacheResult.result;
                 }
             }
 
@@ -469,13 +502,164 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                     { entrezGeneId }
                 );
                 if (svCacheResult?.isComplete && svCacheResult.result) {
-                    molecularDataMaps.svMap = _.groupBy(
-                        svCacheResult.result,
-                        (sv: any) => `${sv.studyId}:${sv.sampleId}`
-                    );
+                    allSvs = svCacheResult.result;
+                }
+            }
+            console.timeEnd('🧬 Step 1: Fetch molecular data');
+            console.log(
+                `🧬 Found: ${allMutations.length} mutations, ${allCnas.length} CNAs, ${allSvs.length} SVs`
+            );
+
+            console.time('🧬 Step 2: Patient-to-samples mapping');
+            // Step 2: Group molecular data by patient (taking union like Results View)
+            const patientToSamplesMap = new Map<string, any[]>();
+            allSamples.forEach(sample => {
+                if (!patientToSamplesMap.has(sample.patientId)) {
+                    patientToSamplesMap.set(sample.patientId, []);
+                }
+                patientToSamplesMap.get(sample.patientId)!.push(sample);
+            });
+            console.timeEnd('🧬 Step 2: Patient-to-samples mapping');
+            console.log(
+                `🧬 Mapped ${patientToSamplesMap.size} patients to samples`
+            );
+
+            console.time('🧬 Step 3: Patient-level aggregation');
+
+            // PERFORMANCE FIX: Index molecular data by sample key first to avoid O(n²) operations
+            console.time('🧬 Step 3a: Index molecular data by sample');
+            const mutationsBySample = new Map<string, any[]>();
+            const cnasBySample = new Map<string, any[]>();
+            const svsBySample = new Map<string, any[]>();
+
+            // Index mutations by sample key
+            allMutations.forEach(m => {
+                const sampleKey = `${m.studyId}:${m.sampleId}`;
+                if (!mutationsBySample.has(sampleKey)) {
+                    mutationsBySample.set(sampleKey, []);
+                }
+                mutationsBySample.get(sampleKey)!.push(m);
+            });
+
+            // Index CNAs by sample key
+            allCnas.forEach(c => {
+                const sampleKey = `${c.studyId}:${c.sampleId}`;
+                if (!cnasBySample.has(sampleKey)) {
+                    cnasBySample.set(sampleKey, []);
+                }
+                cnasBySample.get(sampleKey)!.push(c);
+            });
+
+            // Index SVs by sample key
+            allSvs.forEach(sv => {
+                const sampleKey = `${sv.studyId}:${sv.sampleId}`;
+                if (!svsBySample.has(sampleKey)) {
+                    svsBySample.set(sampleKey, []);
+                }
+                svsBySample.get(sampleKey)!.push(sv);
+            });
+            console.timeEnd('🧬 Step 3a: Index molecular data by sample');
+            console.log(
+                `🧬 Indexed: ${mutationsBySample.size} mutation samples, ${cnasBySample.size} CNA samples, ${svsBySample.size} SV samples`
+            );
+
+            console.time('🧬 Step 3b: Aggregate by patient (O(n) lookups)');
+            // Step 3: Pre-compute patient-level molecular data aggregations using indexed lookups
+            patientToSamplesMap.forEach((samples, patientId) => {
+                const patientMutations: any[] = [];
+                const patientCnas: any[] = [];
+                const patientSvs: any[] = [];
+
+                // Aggregate all alterations across patient's samples (union approach)
+                // Now using O(1) Map lookups instead of O(n) filter operations
+                samples.forEach(sample => {
+                    const sampleKey = `${sample.studyId}:${sample.sampleId}`;
+
+                    // O(1) lookup instead of O(n) filter
+                    const sampleMutations =
+                        mutationsBySample.get(sampleKey) || [];
+                    patientMutations.push(...sampleMutations);
+
+                    // O(1) lookup instead of O(n) filter
+                    const sampleCnas = cnasBySample.get(sampleKey) || [];
+                    patientCnas.push(...sampleCnas);
+
+                    // O(1) lookup instead of O(n) filter
+                    const sampleSvs = svsBySample.get(sampleKey) || [];
+                    patientSvs.push(...sampleSvs);
+                });
+
+                // Store aggregated patient data
+                patientMolecularDataMap.set(patientId, {
+                    mutations: patientMutations,
+                    cnas: patientCnas,
+                    svs: patientSvs,
+                    hasAnyAlteration:
+                        patientMutations.length > 0 ||
+                        patientCnas.length > 0 ||
+                        patientSvs.length > 0,
+                });
+            });
+            console.timeEnd('🧬 Step 3b: Aggregate by patient (O(n) lookups)');
+            console.timeEnd('🧬 Step 3: Patient-level aggregation');
+            console.log(
+                `🧬 Aggregated molecular data for ${patientMolecularDataMap.size} patients (embedding has ${embeddingData.data.length} patients)`
+            );
+        }
+        console.timeEnd('🧬 Molecular data pre-aggregation');
+
+        console.time('🎨 Clinical data pre-aggregation');
+        // PERFORMANCE OPTIMIZATION: Pre-compute clinical data colors AND values for fast lookup
+        let clinicalDataColorMap = new Map<string, string>();
+        let clinicalDataValueMap = new Map<string, string>();
+
+        if (this.selectedColoringOption?.info?.clinicalAttribute) {
+            const clinicalAttribute = this.selectedColoringOption.info
+                .clinicalAttribute;
+            const cacheEntry = this.props.store.clinicalDataCache.get(
+                clinicalAttribute
+            );
+
+            if (cacheEntry.isComplete && cacheEntry.result) {
+                const data = cacheEntry.result;
+
+                // Pre-compute BOTH color and value for each sample to avoid repeated lookups
+                if (data.data && Array.isArray(data.data)) {
+                    (data.data as any[]).forEach((clinicalData: any) => {
+                        const sampleKey = `${clinicalData.studyId}:${clinicalData.sampleId}`;
+                        let color = '#BEBEBE'; // Default
+
+                        if (
+                            clinicalAttribute.datatype === 'STRING' &&
+                            data.categoryToColor
+                        ) {
+                            color =
+                                data.categoryToColor[clinicalData.value] ||
+                                '#BEBEBE';
+                        } else if (
+                            clinicalAttribute.datatype === 'NUMBER' &&
+                            data.numericalValueToColor
+                        ) {
+                            const numValue = parseFloat(clinicalData.value);
+                            if (!isNaN(numValue)) {
+                                color = data.numericalValueToColor(numValue);
+                            }
+                        }
+
+                        // Store both color and value for O(1) lookup
+                        clinicalDataColorMap.set(sampleKey, color);
+                        clinicalDataValueMap.set(
+                            sampleKey,
+                            clinicalData.value || 'Unknown'
+                        );
+                    });
                 }
             }
         }
+        console.timeEnd('🎨 Clinical data pre-aggregation');
+        console.log(
+            `🎨 Pre-computed colors and values for ${clinicalDataColorMap.size} clinical data points`
+        );
 
         // PERFORMANCE OPTIMIZATION: Configure ColoringService once outside the loop
         if (this.selectedColoringOption) {
@@ -496,22 +680,48 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             });
         }
 
-        const currentEmbeddingData = this.selectedEmbedding.data;
-
-        // PERFORMANCE OPTIMIZATION: Fast molecular data lookup function (PlotsTab pattern)
-        const getMolecularDataForSample = (sample: any) => {
-            if (!sample || !molecularDataMaps)
-                return { mutations: [], cnas: [], svs: [] };
-
-            const sampleKey = `${sample.studyId}:${sample.sampleId}`;
-            return {
-                mutations: molecularDataMaps.mutationsMap?.[sampleKey] || [],
-                cnas: molecularDataMaps.cnaMap?.[sampleKey] || [],
-                svs: molecularDataMaps.svMap?.[sampleKey] || [],
-            };
+        // PERFORMANCE OPTIMIZATION: Fast patient-level molecular data lookup (Results View pattern)
+        const getPatientMolecularData = (patientId: string) => {
+            return (
+                patientMolecularDataMap.get(patientId) || {
+                    mutations: [],
+                    cnas: [],
+                    svs: [],
+                    hasAnyAlteration: false,
+                }
+            );
         };
 
-        // PERFORMANCE OPTIMIZATION: Process data in chunks to prevent browser freezing
+        // PERFORMANCE OPTIMIZATION: Pre-compute appearance function once (not per patient!)
+        let appearanceFunction: ((plotData: any) => any) | null = null;
+        let coloringTypes: any = {};
+
+        if (this.selectedColoringOption) {
+            if (this.mutationTypeEnabled) {
+                coloringTypes.MutationType = true;
+            }
+            if (this.copyNumberEnabled) {
+                coloringTypes.CopyNumber = true;
+            }
+            if (this.structuralVariantEnabled) {
+                coloringTypes.StructuralVariant = true;
+            }
+
+            // Create appearance function ONCE outside the loop
+            appearanceFunction = makeScatterPlotPointAppearance(
+                coloringTypes,
+                this.mutationDataExists,
+                this.cnaDataExists,
+                this.svDataExists,
+                this.props.store.driverAnnotationSettings?.driversAnnotated ||
+                    false,
+                this.selectedColoringOption,
+                this.props.store.clinicalDataCache,
+                this.coloringLogScale
+            );
+        }
+
+        // PERFORMANCE OPTIMIZATION: Simplified patient processing
         const processPatient = (
             patient: any,
             index: number
@@ -523,67 +733,240 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             let strokeColor = '#CCCCCC';
             let cancerType = 'Unknown';
 
-            if (sample && this.selectedColoringOption) {
-                const coloringTypes: any = {};
-                if (this.mutationTypeEnabled) {
-                    coloringTypes.MutationType = true;
-                }
-                if (this.copyNumberEnabled) {
-                    coloringTypes.CopyNumber = true;
-                }
-                if (this.structuralVariantEnabled) {
-                    coloringTypes.StructuralVariant = true;
-                }
-
-                const molecularData =
-                    this.selectedColoringOption.info.entrezGeneId &&
-                    this.selectedColoringOption.info.entrezGeneId !== -3
-                        ? getMolecularDataForSample(sample)
-                        : { mutations: [], cnas: [], svs: [] };
-
-                const plotData = {
-                    sampleId: sample.sampleId,
-                    studyId: sample.studyId,
-                    mutations: molecularData.mutations,
-                    copyNumberAlterations: molecularData.cnas,
-                    structuralVariants: molecularData.svs,
-                    uniqueSampleKey: `${sample.studyId}:${sample.sampleId}`,
-                };
-
-                const appearanceFunction = makeScatterPlotPointAppearance(
-                    coloringTypes,
-                    this.mutationDataExists,
-                    this.cnaDataExists,
-                    this.svDataExists,
-                    this.props.store.driverAnnotationSettings
-                        ?.driversAnnotated || false,
-                    this.selectedColoringOption,
-                    this.props.store.clinicalDataCache,
-                    this.coloringLogScale
-                );
-
-                const appearance = appearanceFunction(plotData);
-
-                color = appearance.fill;
-                strokeColor = appearance.stroke;
-
+            if (sample && this.selectedColoringOption && appearanceFunction) {
                 if (
                     this.selectedColoringOption.info.entrezGeneId &&
                     this.selectedColoringOption.info.entrezGeneId !== -3
                 ) {
-                    cancerType = this.coloringService.getGeneLegendLabel(
-                        sample,
-                        this.selectedColoringOption.info.entrezGeneId
+                    // Gene-based coloring - use pre-aggregated patient molecular data
+                    const molecularData = getPatientMolecularData(
+                        patient.patientId
                     );
+
+                    // PERFORMANCE OPTIMIZATION: Generate legend label using proper mutation categories (same as PlotsTab)
+                    if (molecularData.svs.length > 0) {
+                        cancerType = 'Structural Variant';
+                    } else if (molecularData.mutations.length > 0) {
+                        // Use proper mutation categorization that matches PlotsTab
+                        const firstMutation = molecularData.mutations[0];
+                        const mutationType =
+                            firstMutation.mutationType ||
+                            firstMutation.type ||
+                            'unknown';
+
+                        // Group mutations the same way as PlotsTab
+                        let categoryType: string;
+                        const lowerType = mutationType.toLowerCase();
+
+                        if (lowerType.includes('missense')) {
+                            categoryType = 'Missense';
+                        } else if (
+                            lowerType.includes('truncating') ||
+                            lowerType.includes('nonsense') ||
+                            lowerType.includes('stop_gained') ||
+                            lowerType.includes('frame_shift') ||
+                            lowerType.includes('frameshift')
+                        ) {
+                            categoryType = 'Truncating';
+                        } else if (
+                            lowerType.includes('frame_del') ||
+                            lowerType.includes('frame_ins') ||
+                            lowerType.includes('in_frame_del') ||
+                            lowerType.includes('in_frame_ins') ||
+                            lowerType.includes('inframe')
+                        ) {
+                            categoryType = 'Inframe';
+                        } else if (lowerType.includes('splice')) {
+                            categoryType = 'Splice';
+                        } else {
+                            categoryType = 'Other';
+                        }
+
+                        const driversAnnotated =
+                            this.props.store.driverAnnotationSettings
+                                ?.driversAnnotated || false;
+                        if (driversAnnotated) {
+                            const isDriver = firstMutation.putativeDriver;
+                            cancerType = isDriver
+                                ? `${categoryType} (Driver)`
+                                : `${categoryType} (VUS)`;
+                        } else {
+                            cancerType = categoryType;
+                        }
+                    } else if (molecularData.cnas.length > 0) {
+                        // Use first CNA's value
+                        const firstCna = molecularData.cnas[0];
+                        const cnaValue =
+                            firstCna.value !== undefined ? firstCna.value : 0;
+                        switch (cnaValue) {
+                            case -2:
+                                cancerType = 'Deep Deletion';
+                                break;
+                            case -1:
+                                cancerType = 'Shallow Deletion';
+                                break;
+                            case 1:
+                                cancerType = 'Gain';
+                                break;
+                            case 2:
+                                cancerType = 'Amplification';
+                                break;
+                            case 0:
+                                cancerType = 'Diploid';
+                                break;
+                            default:
+                                cancerType = `CNA ${cnaValue}`;
+                        }
+                    } else {
+                        cancerType = 'No mutation';
+                    }
+
+                    // Build proper plotData structure that makeScatterPlotPointAppearance expects
+                    const plotData: any = {
+                        sampleId: sample.sampleId,
+                        studyId: sample.studyId,
+                        mutations: molecularData.mutations,
+                        copyNumberAlterations: molecularData.cnas,
+                        structuralVariants: molecularData.svs,
+                        uniqueSampleKey: `${sample.studyId}:${sample.sampleId}`,
+                    };
+
+                    // Add required fields for appearance function to work correctly
+                    if (molecularData.mutations.length > 0) {
+                        const firstMutation = molecularData.mutations[0];
+                        plotData.dispMutationType =
+                            firstMutation.mutationType || firstMutation.type;
+                        plotData.isDriverMutation =
+                            firstMutation.putativeDriver;
+                        plotData.isProfiledMutations = true;
+                    } else {
+                        plotData.isProfiledMutations = true; // Still profiled, just no mutations
+                    }
+
+                    if (molecularData.cnas.length > 0) {
+                        const firstCna = molecularData.cnas[0];
+                        plotData.dispCna = firstCna;
+                        plotData.isProfiledCna = true;
+                    } else {
+                        plotData.isProfiledCna = true; // Still profiled, just no CNAs
+                    }
+
+                    if (molecularData.svs.length > 0) {
+                        const firstSv = molecularData.svs[0];
+                        plotData.dispStructuralVariant =
+                            firstSv.variantClass || firstSv.eventInfo || 'SV';
+                        plotData.isProfiledStructuralVariants = true;
+                    } else {
+                        plotData.isProfiledStructuralVariants = true;
+                    }
+
+                    // PERFORMANCE FIX: Use standard cBioPortal colors (same as PlotsTab)
+                    if (molecularData.svs.length > 0) {
+                        // Structural variants - use standard SV color
+                        color = 'rgba(255,255,255,0.9)'; // Nearly transparent fill
+                        strokeColor = STRUCTURAL_VARIANT_COLOR; // Standard purple stroke
+                    } else if (molecularData.mutations.length > 0) {
+                        // Mutations - use standard mutation colors with proper categorization (same as PlotsTab)
+                        const firstMutation = molecularData.mutations[0];
+                        const mutationType =
+                            firstMutation.mutationType ||
+                            firstMutation.type ||
+                            'unknown';
+                        const isDriver = firstMutation.putativeDriver;
+                        const driversAnnotated =
+                            this.props.store.driverAnnotationSettings
+                                ?.driversAnnotated || false;
+
+                        // Use exact same categorization and colors as PlotsTab
+                        const lowerType = mutationType.toLowerCase();
+
+                        if (lowerType.includes('missense')) {
+                            color =
+                                driversAnnotated && !isDriver
+                                    ? MUT_COLOR_MISSENSE_PASSENGER
+                                    : MUT_COLOR_MISSENSE;
+                        } else if (
+                            lowerType.includes('truncating') ||
+                            lowerType.includes('nonsense') ||
+                            lowerType.includes('stop_gained') ||
+                            lowerType.includes('frame_shift') ||
+                            lowerType.includes('frameshift')
+                        ) {
+                            color =
+                                driversAnnotated && !isDriver
+                                    ? MUT_COLOR_TRUNC_PASSENGER
+                                    : MUT_COLOR_TRUNC;
+                        } else if (
+                            lowerType.includes('frame_del') ||
+                            lowerType.includes('frame_ins') ||
+                            lowerType.includes('in_frame_del') ||
+                            lowerType.includes('in_frame_ins') ||
+                            lowerType.includes('inframe')
+                        ) {
+                            color =
+                                driversAnnotated && !isDriver
+                                    ? MUT_COLOR_INFRAME_PASSENGER
+                                    : MUT_COLOR_INFRAME;
+                        } else if (lowerType.includes('splice')) {
+                            color =
+                                driversAnnotated && !isDriver
+                                    ? MUT_COLOR_SPLICE_PASSENGER
+                                    : MUT_COLOR_SPLICE;
+                        } else {
+                            color =
+                                driversAnnotated && !isDriver
+                                    ? MUT_COLOR_OTHER_PASSENGER
+                                    : MUT_COLOR_OTHER;
+                        }
+                        strokeColor = color;
+                    } else if (molecularData.cnas.length > 0) {
+                        // CNAs - use standard CNA colors
+                        const firstCna = molecularData.cnas[0];
+                        const cnaValue =
+                            firstCna.value !== undefined ? firstCna.value : 0;
+
+                        color = 'rgba(255,255,255,0.9)'; // Nearly transparent fill for CNAs
+
+                        switch (cnaValue) {
+                            case -2:
+                                strokeColor = CNA_COLOR_HOMDEL;
+                                break; // Deep deletion - standard blue
+                            case -1:
+                                strokeColor = '#8FC7E8';
+                                break; // Shallow deletion - light blue
+                            case 0:
+                                strokeColor = DEFAULT_GREY;
+                                break; // Diploid - standard gray
+                            case 1:
+                                strokeColor = '#FF8A8A';
+                                break; // Gain - light red
+                            case 2:
+                                strokeColor = CNA_COLOR_AMP;
+                                break; // Amplification - standard red
+                            default:
+                                strokeColor = DEFAULT_GREY;
+                        }
+                    } else {
+                        // No alterations - standard vanilla color
+                        color = '#c4e5f5'; // Standard "no mutation" color
+                        strokeColor = '#c4e5f5';
+                    }
                 } else {
-                    const displayValue = this.coloringService.getDisplayValue(
-                        sample
-                    );
+                    // Clinical attribute coloring - use pre-computed colors and values for O(1) lookup
+                    const sampleKey = `${sample.studyId}:${sample.sampleId}`;
+                    color = clinicalDataColorMap.get(sampleKey) || '#BEBEBE';
+                    strokeColor = color;
+
+                    // Get display value using O(1) lookup instead of expensive find()
                     cancerType =
-                        displayValue ||
+                        clinicalDataValueMap.get(sampleKey) ||
                         patientToCancerTypeMap.get(patient.patientId) ||
                         'Unknown';
                 }
+            } else if (sample) {
+                // Default coloring
+                cancerType =
+                    patientToCancerTypeMap.get(patient.patientId) || 'Unknown';
             }
 
             return {
@@ -598,15 +981,20 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             };
         };
 
-        // Use chunked processing for large datasets (>1000 patients)
-        const allData: EmbeddingDataPoint[] =
-            currentEmbeddingData.data.length > 1000
-                ? await this.processDataInChunks(
-                      currentEmbeddingData.data,
-                      processPatient,
-                      1000
-                  )
-                : currentEmbeddingData.data.map(processPatient);
+        console.time('🎨 Patient processing');
+        console.log(
+            `🎨 Processing ${embeddingData.data.length} patients for ${this.selectedEmbedding.label}`
+        );
+
+        // For small datasets (like PCA with 10 patients), don't use chunking
+        const allData: EmbeddingDataPoint[] = embeddingData.data.map(
+            processPatient
+        );
+
+        console.timeEnd('🎨 Patient processing');
+        console.log(
+            `🎨 Processed ${allData.length} data points for ${this.selectedEmbedding.label}`
+        );
 
         // If samples aren't ready yet, show all embedding data
         if (!samplesReady || allPatientIds.length === 0) {
@@ -621,7 +1009,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         // Check overlap between study patients and embedding patients
         const studyPatientIds = new Set(allPatientIds);
         const embeddingPatientIds = new Set(
-            currentEmbeddingData.data.map((p: any) => p.patientId)
+            embeddingData.data.map((p: any) => p.patientId)
         );
         const studyEmbeddingOverlap = allPatientIds.filter((pid: string) =>
             embeddingPatientIds.has(pid)
@@ -643,10 +1031,17 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             this.patientDataMap.set(point.pointIndex, point);
         });
 
-        // Cache the result
+        console.time('💾 Cache and return');
+        // Cache the result and mark data as ready
         runInAction(() => {
             this.cachedEmbeddingData = filteredData;
+            this.isDataReady = true;
+            this.isProcessingData = false;
         });
+        console.timeEnd('💾 Cache and return');
+
+        console.timeEnd('🔍 TOTAL loadEmbeddingDataAsync');
+        console.log(`✅ Returning ${filteredData.length} data points`);
 
         return filteredData;
     }
@@ -1112,12 +1507,19 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     }
 
     private createPlotlyVisualization(patientData: EmbeddingDataPoint[]) {
+        console.time('📊 TOTAL Plotly visualization');
+        console.log(
+            `📊 Creating Plotly visualization for ${patientData.length} points`
+        );
+
         if (!this.plotRef.current) {
             return;
         }
 
+        console.time('📊 Plotly purge');
         // Clear any existing plot
         Plotly.purge(this.plotRef.current);
+        console.timeEnd('📊 Plotly purge');
 
         const currentStudyId = this.props.store.queriedPhysicalStudyIds
             .result?.[0];
@@ -1129,120 +1531,159 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             sampleLookupMap.set(sample.patientId, sample);
         });
 
-        // Group by cancer type for coloring
-        const cancerTypes = Array.from(
-            new Set(
-                patientData.map(
-                    (d: EmbeddingDataPoint) => d.cancerType || 'Unknown'
-                )
-            )
-        ).sort();
+        console.time('📊 Appearance grouping');
+        // PERFORMANCE OPTIMIZATION: Group by appearance (color + stroke) instead of cancer type
+        // This minimizes data passed to Plotly and reduces rendering overhead
+        const appearanceGroups = new Map<string, EmbeddingDataPoint[]>();
 
-        const traces = cancerTypes.map(cancerType => {
-            const cancerTypeData = patientData.filter(
-                (d: EmbeddingDataPoint) =>
-                    (d.cancerType || 'Unknown') === cancerType
+        patientData.forEach(point => {
+            // Create a unique key for each appearance combination
+            const appearanceKey = `${point.color ||
+                '#CCCCCC'}|${point.strokeColor ||
+                '#CCCCCC'}|${point.cancerType || 'Unknown'}`;
+
+            if (!appearanceGroups.has(appearanceKey)) {
+                appearanceGroups.set(appearanceKey, []);
+            }
+            appearanceGroups.get(appearanceKey)!.push(point);
+        });
+        console.timeEnd('📊 Appearance grouping');
+        console.log(`📊 Created ${appearanceGroups.size} appearance groups`);
+
+        console.time('📊 Trace creation');
+        const traces: any[] = [];
+
+        // Create one trace per appearance group (much fewer traces than individual points)
+        appearanceGroups.forEach((points, appearanceKey) => {
+            const [fillColor, strokeColor, cancerType] = appearanceKey.split(
+                '|'
             );
 
-            // Use individual colors for each point to support both fill and stroke colors
-            const fillColors = cancerTypeData.map(
-                (d: EmbeddingDataPoint) => d.color || '#CCCCCC'
-            );
-            const strokeColors = cancerTypeData.map(
-                (d: EmbeddingDataPoint) => d.strokeColor || '#CCCCCC'
-            );
-
-            return {
-                x: cancerTypeData.map((d: EmbeddingDataPoint) => d.x),
-                y: cancerTypeData.map((d: EmbeddingDataPoint) => d.y),
+            traces.push({
+                x: points.map(d => d.x),
+                y: points.map(d => d.y),
                 mode: 'markers' as const,
                 type: 'scattergl' as const,
                 name: cancerType,
                 showlegend: false, // Hide default legend for data traces
                 marker: {
-                    color: fillColors,
+                    color: fillColor,
                     size: 8,
                     opacity: 0.8,
                     line: {
-                        color: strokeColors,
-                        width: 2,
+                        color: strokeColor,
+                        width: strokeColor !== fillColor ? 2 : 0, // Only show stroke if different from fill
                     },
                 },
-                text: cancerTypeData.map((d: EmbeddingDataPoint) => {
-                    // Get the dynamic label based on selected coloring option
+                text: points.map((d: EmbeddingDataPoint) => {
+                    // PERFORMANCE OPTIMIZATION: Use pre-computed cancerType instead of expensive service calls
                     const coloringLabel = this.getColoringLabel();
-
-                    // For gene-based coloring, show all alterations in tooltip
-                    if (
-                        this.selectedColoringOption?.info?.entrezGeneId &&
-                        this.selectedColoringOption.info.entrezGeneId !== -3
-                    ) {
-                        // OPTIMIZED: Use Map lookup instead of find()
-                        const sample = sampleLookupMap.get(d.patientId);
-
-                        if (sample) {
-                            const allAlterations = this.coloringService.getAllAlterationsForSample(
-                                sample,
-                                this.selectedColoringOption.info.entrezGeneId
-                            );
-                            const alterationsText = allAlterations.join(', ');
-                            return `Patient: ${d.patientId}<br>${coloringLabel}: ${alterationsText}`;
-                        }
-                    }
-
-                    // For clinical data coloring, use the single category
                     return `Patient: ${
                         d.patientId
                     }<br>${coloringLabel}: ${d.cancerType || 'Unknown'}`;
                 }),
                 hovertemplate: '%{text}<extra></extra>',
-            };
+            });
         });
+        console.timeEnd('📊 Trace creation');
+        console.log(`📊 Created ${traces.length} traces`);
 
+        console.time('📊 Legend creation');
         // Create custom legend traces
         if (this.selectedColoringOption) {
             if (
                 this.selectedColoringOption.info?.entrezGeneId &&
                 this.selectedColoringOption.info.entrezGeneId !== -3
             ) {
-                // Gene-based coloring: show molecular alteration types that are present
+                // Gene-based coloring: Generate legend based on actual data present and our direct coloring logic
                 const presentAlterations = new Set<string>();
+                const alterationToAppearance = new Map<
+                    string,
+                    { color: string; strokeColor: string }
+                >();
+
+                // Collect all unique alterations and their colors from the actual data
                 patientData.forEach(point => {
                     if (point.cancerType && point.cancerType !== 'Unknown') {
                         presentAlterations.add(point.cancerType);
+                        alterationToAppearance.set(point.cancerType, {
+                            color: point.color || '#CCCCCC',
+                            strokeColor: point.strokeColor || '#CCCCCC',
+                        });
                     }
                 });
 
-                // Use the updated getLegendData method which now supports drivers
-                const legendData = this.coloringService.getLegendData();
-
-                // Filter legend to only show alterations that are present in the data
-                // Always include "No mutation", but only include "Not profiled" if present
-                const filteredLegendData = legendData.filter(
-                    item =>
-                        presentAlterations.has(item.name) ||
-                        item.name === 'No mutation'
+                // Convert to array and sort for consistent ordering
+                const sortedAlterations = Array.from(presentAlterations).sort(
+                    (a, b) => {
+                        // Sort order: mutations first, then CNAs, then SVs, then "No mutation"
+                        const getOrder = (name: string) => {
+                            if (name.includes('Missense')) return 1;
+                            if (name.includes('In_Frame')) return 2;
+                            if (
+                                name.includes('Truncating') ||
+                                name.includes('Nonsense')
+                            )
+                                return 3;
+                            if (name.includes('Splice')) return 4;
+                            if (name.includes('Amplification')) return 5;
+                            if (name.includes('Gain')) return 6;
+                            if (name.includes('Diploid')) return 7;
+                            if (name.includes('Deletion')) return 8;
+                            if (name.includes('Structural')) return 9;
+                            if (name.includes('No mutation')) return 10;
+                            return 99;
+                        };
+                        return getOrder(a) - getOrder(b);
+                    }
                 );
 
-                filteredLegendData.forEach(item => {
+                // Create legend traces for each present alteration
+                sortedAlterations.forEach(alterationType => {
+                    const appearance = alterationToAppearance.get(
+                        alterationType
+                    );
+                    if (!appearance) return;
+
                     let marker: any = { size: 8, opacity: 0.8 };
 
-                    if (item.style === 'filled') {
-                        // Filled dots for mutations
-                        marker.color = item.color;
+                    // Determine marker style based on alteration type
+                    if (
+                        alterationType.includes('Missense') ||
+                        alterationType.includes('In_Frame') ||
+                        alterationType.includes('Truncating') ||
+                        alterationType.includes('Splice') ||
+                        alterationType.includes('No mutation')
+                    ) {
+                        // Filled dots for mutations and "no mutation"
+                        marker.color = appearance.color;
                         marker.line = { width: 0 };
-                    } else if (item.style === 'border') {
-                        // Unfilled with colored border for CNAs and SVs
+                    } else if (
+                        alterationType.includes('Amplification') ||
+                        alterationType.includes('Gain') ||
+                        alterationType.includes('Diploid') ||
+                        alterationType.includes('Deletion')
+                    ) {
+                        // Border-only for CNAs
                         marker.color = 'rgba(255,255,255,0.9)'; // Nearly transparent fill
-                        marker.line = { color: item.color, width: 2 };
-                    } else if (item.style === 'vanilla') {
-                        // Vanilla dot for no mutation
-                        marker.color = item.color;
-                        marker.line = { width: 0 };
+                        marker.line = {
+                            color: appearance.strokeColor,
+                            width: 2,
+                        };
+                    } else if (alterationType.includes('Structural')) {
+                        // Border-only for SVs
+                        marker.color = 'rgba(255,255,255,0.9)'; // Nearly transparent fill
+                        marker.line = {
+                            color: appearance.strokeColor,
+                            width: 2,
+                        };
                     } else {
                         // Fallback
-                        marker.color = item.color;
-                        marker.line = { width: 1 };
+                        marker.color = appearance.color;
+                        marker.line = {
+                            color: appearance.strokeColor,
+                            width: 1,
+                        };
                     }
 
                     traces.push({
@@ -1250,7 +1691,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                         y: [NaN],
                         mode: 'markers' as const,
                         type: 'scattergl' as const,
-                        name: item.name,
+                        name: alterationType,
                         marker: marker,
                         showlegend: true,
                         hovertemplate: '<extra></extra>', // Hide hover for legend items
@@ -1353,8 +1794,11 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                 scale: 2,
             },
         };
+        console.timeEnd('📊 Legend creation');
 
+        console.time('📊 Plotly.newPlot');
         Plotly.newPlot(this.plotRef.current, traces, layout, config);
+        console.timeEnd('📊 Plotly.newPlot');
 
         // Add selection event handler
         if (this.plotRef.current) {
@@ -1365,6 +1809,9 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                 }
             );
         }
+
+        console.timeEnd('📊 TOTAL Plotly visualization');
+        console.log('📊 Plotly visualization complete');
     }
 
     private handlePlotSelection(eventData: any) {
