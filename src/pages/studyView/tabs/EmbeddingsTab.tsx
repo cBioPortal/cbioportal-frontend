@@ -321,17 +321,8 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         }
 
         return (
-            <div className="embeddings-tab" style={{ padding: '20px' }}>
-                <div style={{ marginBottom: '20px' }}>
-                    <h4>Patient Embeddings Visualization</h4>
-                    <p>
-                        Interactive {this.selectedEmbedding.label} projection
-                        showing patient similarity patterns.
-                    </p>
-                </div>
-
-                {/* Controls */}
-                <div style={{ marginBottom: '20px' }}>
+            <div className="embeddings-tab">
+                <div style={{ marginBottom: '10px' }}>
                     <div
                         style={{
                             display: 'inline-block',
