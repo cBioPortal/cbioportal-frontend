@@ -5,6 +5,7 @@ import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import * as Plotly from 'plotly.js';
 import umapData from '../../../data/msk_chord_2024_umap_data.json';
+import pcaData from '../../../data/msk_chord_2024_pca_data.json';
 import { SpecialChartsUniqueKeyEnum } from '../StudyViewUtils';
 import ColorSamplesByDropdown from 'shared/components/colorSamplesByDropdown/ColorSamplesByDropdown';
 import ColoringService from 'shared/components/colorSamplesByDropdown/ColoringService';
@@ -13,7 +14,7 @@ import { remoteData, MobxPromise } from 'cbioportal-frontend-commons';
 import { ClinicalAttribute, Gene } from 'cbioportal-ts-api-client';
 import { getRemoteDataGroupStatus } from 'cbioportal-utils';
 
-interface UMAPDataPoint {
+interface EmbeddingDataPoint {
     x: number;
     y: number;
     patientId: string;
@@ -24,6 +25,21 @@ interface UMAPDataPoint {
     strokeColor?: string;
 }
 
+interface EmbeddingData {
+    studyId: string;
+    title: string;
+    description: string;
+    totalPatients: number;
+    sampleSize: number;
+    data: { patientId: string; x: number; y: number }[];
+}
+
+interface EmbeddingOption {
+    value: string;
+    label: string;
+    data: EmbeddingData;
+}
+
 export interface IEmbeddingsTabProps {
     store: StudyViewPageStore;
 }
@@ -31,7 +47,7 @@ export interface IEmbeddingsTabProps {
 @observer
 export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     private plotRef = React.createRef<HTMLDivElement>();
-    private patientDataMap = new Map<number, UMAPDataPoint>();
+    private patientDataMap = new Map<number, EmbeddingDataPoint>();
     private coloringService: ColoringService;
 
     @observable private selectedColoringOption?: ColoringMenuOmnibarOption;
@@ -39,6 +55,11 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     @observable private mutationTypeEnabled = true;
     @observable private copyNumberEnabled = true;
     @observable private structuralVariantEnabled = true;
+    @observable private selectedEmbedding: EmbeddingOption = {
+        value: 'umap',
+        label: 'UMAP',
+        data: umapData as EmbeddingData,
+    };
 
     constructor(props: IEmbeddingsTabProps) {
         super(props);
@@ -207,6 +228,26 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         });
     }
 
+    @computed get embeddingOptions(): EmbeddingOption[] {
+        return [
+            {
+                value: 'umap',
+                label: 'UMAP',
+                data: umapData as EmbeddingData,
+            },
+            {
+                value: 'pca',
+                label: 'PCA',
+                data: pcaData as EmbeddingData,
+            },
+        ];
+    }
+
+    @action.bound
+    private onEmbeddingSelectionChange(option: EmbeddingOption) {
+        this.selectedEmbedding = option;
+    }
+
     @computed get filteredPatientIds(): string[] {
         // selectedSamples IS the filtered data! It returns filtered results when chartsAreFiltered is true
         const filteredSamples = this.props.store.selectedSamples.result || [];
@@ -220,7 +261,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         return patientIds;
     }
 
-    private loadUMAPData(): UMAPDataPoint[] {
+    private loadEmbeddingData(): EmbeddingDataPoint[] {
         // Use the computed property to force reactivity
         const filteredPatientIds = this.filteredPatientIds;
 
@@ -233,7 +274,8 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             ...new Set(allSamples.map((s: any) => s.patientId)),
         ];
 
-        const allData: UMAPDataPoint[] = umapData.data.map(
+        const currentEmbeddingData = this.selectedEmbedding.data;
+        const allData: EmbeddingDataPoint[] = currentEmbeddingData.data.map(
             (patient: any, index: number) => {
                 // Find the sample for this patient
                 const sample = allSamples.find(
@@ -304,36 +346,36 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             }
         );
 
-        // If samples aren't ready yet, show all UMAP data
+        // If samples aren't ready yet, show all embedding data
         if (!samplesReady || allPatientIds.length === 0) {
             this.patientDataMap.clear();
-            allData.forEach((point: UMAPDataPoint, index: number) => {
+            allData.forEach((point: EmbeddingDataPoint, index: number) => {
                 point.pointIndex = index;
                 this.patientDataMap.set(point.pointIndex, point);
             });
             return allData;
         }
 
-        // Check overlap between study patients and UMAP patients
+        // Check overlap between study patients and embedding patients
         const studyPatientIds = new Set(allPatientIds);
-        const umapPatientIds = new Set(
-            umapData.data.map((p: any) => p.patientId)
+        const embeddingPatientIds = new Set(
+            currentEmbeddingData.data.map((p: any) => p.patientId)
         );
-        const studyUmapOverlap = allPatientIds.filter((pid: string) =>
-            umapPatientIds.has(pid)
+        const studyEmbeddingOverlap = allPatientIds.filter((pid: string) =>
+            embeddingPatientIds.has(pid)
         );
 
         // Use the filtered patient IDs from the computed property
         // This will automatically contain the right patients based on current filters
         const patientsToShow = new Set(filteredPatientIds);
 
-        const filteredData = allData.filter((point: UMAPDataPoint) =>
+        const filteredData = allData.filter((point: EmbeddingDataPoint) =>
             patientsToShow.has(point.patientId)
         );
 
         // Build a map for quick lookup
         this.patientDataMap.clear();
-        filteredData.forEach((point: UMAPDataPoint, index: number) => {
+        filteredData.forEach((point: EmbeddingDataPoint, index: number) => {
             // Re-index the filtered data
             point.pointIndex = index;
             this.patientDataMap.set(point.pointIndex, point);
@@ -514,7 +556,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         }
     }
 
-    @computed get plotData(): UMAPDataPoint[] {
+    @computed get plotData(): EmbeddingDataPoint[] {
         // This computed property will automatically trigger re-render when dependencies change
         if (
             !this.props.store.samples.isComplete ||
@@ -533,7 +575,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             }
         }
 
-        return this.loadUMAPData();
+        return this.loadEmbeddingData();
     }
 
     @computed get molecularDataCachesComplete(): boolean {
@@ -708,7 +750,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         );
     }
 
-    private createPlotlyVisualization(patientData: UMAPDataPoint[]) {
+    private createPlotlyVisualization(patientData: EmbeddingDataPoint[]) {
         if (!this.plotRef.current) {
             return;
         }
@@ -722,26 +764,29 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         // Group by cancer type for coloring
         const cancerTypes = Array.from(
             new Set(
-                patientData.map((d: UMAPDataPoint) => d.cancerType || 'Unknown')
+                patientData.map(
+                    (d: EmbeddingDataPoint) => d.cancerType || 'Unknown'
+                )
             )
         ).sort();
 
         const traces = cancerTypes.map(cancerType => {
             const cancerTypeData = patientData.filter(
-                (d: UMAPDataPoint) => (d.cancerType || 'Unknown') === cancerType
+                (d: EmbeddingDataPoint) =>
+                    (d.cancerType || 'Unknown') === cancerType
             );
 
             // Use individual colors for each point to support both fill and stroke colors
             const fillColors = cancerTypeData.map(
-                (d: UMAPDataPoint) => d.color || '#CCCCCC'
+                (d: EmbeddingDataPoint) => d.color || '#CCCCCC'
             );
             const strokeColors = cancerTypeData.map(
-                (d: UMAPDataPoint) => d.strokeColor || '#CCCCCC'
+                (d: EmbeddingDataPoint) => d.strokeColor || '#CCCCCC'
             );
 
             return {
-                x: cancerTypeData.map((d: UMAPDataPoint) => d.x),
-                y: cancerTypeData.map((d: UMAPDataPoint) => d.y),
+                x: cancerTypeData.map((d: EmbeddingDataPoint) => d.x),
+                y: cancerTypeData.map((d: EmbeddingDataPoint) => d.y),
                 mode: 'markers' as const,
                 type: 'scattergl' as const,
                 name: cancerType,
@@ -755,19 +800,22 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                         width: 2,
                     },
                 },
-                text: cancerTypeData.map((d: UMAPDataPoint) => {
+                text: cancerTypeData.map((d: EmbeddingDataPoint) => {
                     // Get the dynamic label based on selected coloring option
                     const coloringLabel = this.getColoringLabel();
-                    
+
                     // For gene-based coloring, show all alterations in tooltip
                     if (
                         this.selectedColoringOption?.info?.entrezGeneId &&
                         this.selectedColoringOption.info.entrezGeneId !== -3
                     ) {
                         // Find the sample for this patient
-                        const allSamples = this.props.store.samples.result || [];
-                        const sample = allSamples.find(s => s.patientId === d.patientId);
-                        
+                        const allSamples =
+                            this.props.store.samples.result || [];
+                        const sample = allSamples.find(
+                            s => s.patientId === d.patientId
+                        );
+
                         if (sample) {
                             const allAlterations = this.coloringService.getAllAlterationsForSample(
                                 sample,
@@ -777,7 +825,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                             return `Patient: ${d.patientId}<br>${coloringLabel}: ${alterationsText}`;
                         }
                     }
-                    
+
                     // For clinical data coloring, use the single category
                     return `Patient: ${
                         d.patientId
@@ -806,9 +854,10 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
 
                 // Filter legend to only show alterations that are present in the data
                 // Always include "No mutation", but only include "Not profiled" if present
-                const filteredLegendData = legendData.filter(item =>
-                    presentAlterations.has(item.name) || 
-                    item.name === 'No mutation'
+                const filteredLegendData = legendData.filter(
+                    item =>
+                        presentAlterations.has(item.name) ||
+                        item.name === 'No mutation'
                 );
 
                 filteredLegendData.forEach(item => {
@@ -881,16 +930,18 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
 
         const layout: Partial<Plotly.Layout> = {
             title: {
-                text: `UMAP Embedding - ${currentStudyId} (${patientData.length.toLocaleString()} patients)`,
+                text: `${
+                    this.selectedEmbedding.label
+                } Embedding - ${currentStudyId} (${patientData.length.toLocaleString()} patients)`,
                 font: { size: 16 },
             },
             xaxis: {
-                title: { text: 'UMAP 1' },
+                title: { text: `${this.selectedEmbedding.label} 1` },
                 showgrid: false,
                 zeroline: false,
             },
             yaxis: {
-                title: { text: 'UMAP 2' },
+                title: { text: `${this.selectedEmbedding.label} 2` },
                 showgrid: false,
                 zeroline: false,
             },
@@ -932,7 +983,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             displaylogo: false,
             toImageButtonOptions: {
                 format: 'png' as const,
-                filename: `umap_embedding_${currentStudyId}`,
+                filename: `${this.selectedEmbedding.value}_embedding_${currentStudyId}`,
                 height: 600,
                 width: 800,
                 scale: 2,
@@ -982,9 +1033,9 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
 
             // Create CustomChartData for patient selection
             const customChartData = {
-                origin: ['UMAP'],
-                displayName: 'UMAP Selection',
-                description: 'Patients selected from UMAP embedding',
+                origin: [this.selectedEmbedding.label],
+                displayName: `${this.selectedEmbedding.label} Selection`,
+                description: `Patients selected from ${this.selectedEmbedding.label} embedding`,
                 datatype: 'STRING',
                 patientAttribute: true,
                 priority: 1,
@@ -1012,42 +1063,94 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         }
 
         return (
-            <div
-                className="coloring-menu"
-                style={{
-                    marginBottom: '20px',
-                    textAlign: 'left',
-                    position: 'relative',
-                    minWidth: 600,
-                }}
-            >
-                <style>
-                    {`
-                        .coloring-menu .gene-select-background .gene-select-container .gene-select {
-                            width: 350px !important;
-                        }
-                    `}
-                </style>
-                <ColorSamplesByDropdown
-                    genes={this.genes}
-                    clinicalAttributes={this.clinicalAttributes}
-                    selectedOption={this.selectedColoringOption}
-                    logScale={this.coloringLogScale}
-                    hasNoQueriedGenes={true}
-                    logScalePossible={this.logScalePossible}
-                    isLoading={this.isLoading}
-                    mutationDataExists={this.mutationDataExists}
-                    cnaDataExists={this.cnaDataExists}
-                    svDataExists={this.svDataExists}
-                    mutationTypeEnabled={this.mutationTypeEnabled}
-                    copyNumberEnabled={this.copyNumberEnabled}
-                    structuralVariantEnabled={this.structuralVariantEnabled}
-                    onSelectionChange={this.onColoringSelectionChange}
-                    onLogScaleChange={this.onLogScaleChange}
-                    onMutationTypeToggle={this.onMutationTypeToggle}
-                    onCopyNumberToggle={this.onCopyNumberToggle}
-                    onStructuralVariantToggle={this.onStructuralVariantToggle}
-                />
+            <div style={{ marginBottom: '20px' }}>
+                {/* Embedding and Color Selection on same line */}
+                <div
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '20px',
+                        marginBottom: '15px',
+                        flexWrap: 'wrap',
+                    }}
+                >
+                    {/* Embedding Selection */}
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <label
+                            style={{ marginRight: '10px', fontWeight: 'bold' }}
+                        >
+                            Embedding:
+                        </label>
+                        <select
+                            value={this.selectedEmbedding.value}
+                            onChange={e => {
+                                const selectedOption = this.embeddingOptions.find(
+                                    opt => opt.value === e.target.value
+                                );
+                                if (selectedOption) {
+                                    this.onEmbeddingSelectionChange(
+                                        selectedOption
+                                    );
+                                }
+                            }}
+                            style={{
+                                padding: '5px 10px',
+                                borderRadius: '4px',
+                                border: '1px solid #ccc',
+                                fontSize: '14px',
+                            }}
+                        >
+                            {this.embeddingOptions.map(option => (
+                                <option key={option.value} value={option.value}>
+                                    {option.label}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Color By Selection */}
+                    <div
+                        className="coloring-menu"
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            position: 'relative',
+                            minWidth: 350,
+                        }}
+                    >
+                        <style>
+                            {`
+                                .coloring-menu .gene-select-background .gene-select-container .gene-select {
+                                    width: 350px !important;
+                                }
+                            `}
+                        </style>
+                        <ColorSamplesByDropdown
+                            genes={this.genes}
+                            clinicalAttributes={this.clinicalAttributes}
+                            selectedOption={this.selectedColoringOption}
+                            logScale={this.coloringLogScale}
+                            hasNoQueriedGenes={true}
+                            logScalePossible={this.logScalePossible}
+                            isLoading={this.isLoading}
+                            mutationDataExists={this.mutationDataExists}
+                            cnaDataExists={this.cnaDataExists}
+                            svDataExists={this.svDataExists}
+                            mutationTypeEnabled={this.mutationTypeEnabled}
+                            copyNumberEnabled={this.copyNumberEnabled}
+                            structuralVariantEnabled={
+                                this.structuralVariantEnabled
+                            }
+                            onSelectionChange={this.onColoringSelectionChange}
+                            onLogScaleChange={this.onLogScaleChange}
+                            onMutationTypeToggle={this.onMutationTypeToggle}
+                            onCopyNumberToggle={this.onCopyNumberToggle}
+                            onStructuralVariantToggle={
+                                this.onStructuralVariantToggle
+                            }
+                        />
+                    </div>
+                </div>
             </div>
         );
     }
