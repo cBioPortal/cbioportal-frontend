@@ -49,7 +49,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             annotatedMutationCache: this.props.store.annotatedMutationCache,
             annotatedCnaCache: this.props.store.annotatedCnaCache,
             annotatedSvCache: this.props.store.structuralVariantCache,
-            driversAnnotated: true, // Use false for now, can be enhanced later
+            driverAnnotationSettings: this.props.store.driverAnnotationSettings,
         });
     }
 
@@ -76,7 +76,8 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             // Update the coloring service with the default selection
             this.coloringService.updateConfig({
                 selectedOption: this.selectedColoringOption,
-                driversAnnotated: true,
+                driverAnnotationSettings: this.props.store
+                    .driverAnnotationSettings,
             });
         }
     }
@@ -145,7 +146,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             structuralVariantCache: this.structuralVariantEnabled
                 ? this.props.store.structuralVariantCache
                 : undefined,
-            driversAnnotated: true,
+            driverAnnotationSettings: this.props.store.driverAnnotationSettings,
         });
 
         // Handle different selection types
@@ -202,7 +203,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             structuralVariantCache: this.structuralVariantEnabled
                 ? this.props.store.structuralVariantCache
                 : undefined,
-            driversAnnotated: true,
+            driverAnnotationSettings: this.props.store.driverAnnotationSettings,
         });
     }
 
@@ -257,7 +258,8 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                         structuralVariantCache: this.structuralVariantEnabled
                             ? this.props.store.structuralVariantCache
                             : undefined,
-                        driversAnnotated: true,
+                        driverAnnotationSettings: this.props.store
+                            .driverAnnotationSettings,
                     });
 
                     // Get both fill and stroke colors for proper molecular alteration display
@@ -778,6 +780,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                     }
                 });
 
+                // Use the updated getLegendData method which now supports drivers
                 const legendData = this.coloringService.getLegendData();
 
                 // Filter legend to only show alterations that are present in the data

@@ -14,10 +14,15 @@ import {
     CNA_COLOR_AMP,
     CNA_COLOR_HOMDEL,
     MUT_COLOR_INFRAME,
+    MUT_COLOR_INFRAME_PASSENGER,
     MUT_COLOR_MISSENSE,
+    MUT_COLOR_MISSENSE_PASSENGER,
     MUT_COLOR_TRUNC,
+    MUT_COLOR_TRUNC_PASSENGER,
     MUT_COLOR_SPLICE,
+    MUT_COLOR_SPLICE_PASSENGER,
     MUT_COLOR_OTHER,
+    MUT_COLOR_OTHER_PASSENGER,
     STRUCTURAL_VARIANT_COLOR,
 } from 'cbioportal-frontend-commons';
 
@@ -39,8 +44,8 @@ export interface ColoringServiceConfig {
     annotatedCnaCache?: any;
     annotatedSvCache?: any;
     structuralVariantCache?: any; // Raw structural variant cache for Study View
-    // Additional flags for gene-based coloring
-    driversAnnotated?: boolean;
+    // Driver annotation settings (same as PlotsTab)
+    driverAnnotationSettings?: any;
 }
 
 export class ColoringService {
@@ -170,7 +175,7 @@ export class ColoringService {
             !!this.config.annotatedMutationCache,
             !!this.config.annotatedCnaCache,
             !!this.config.annotatedSvCache,
-            !!this.config.driversAnnotated,
+            !!this.config.driverAnnotationSettings?.driversAnnotated,
             this.config.selectedOption,
             this.config.clinicalDataCache,
             this.config.logScale
@@ -269,7 +274,7 @@ export class ColoringService {
             !!this.config.annotatedMutationCache,
             !!this.config.annotatedCnaCache,
             !!this.config.annotatedSvCache,
-            !!this.config.driversAnnotated,
+            !!this.config.driverAnnotationSettings?.driversAnnotated,
             this.config.selectedOption,
             this.config.clinicalDataCache,
             this.config.logScale
@@ -353,11 +358,20 @@ export class ColoringService {
                             mut.studyId === sample.studyId
                     );
 
-                    // Set dispMutationType based on mutations
+                    // Set dispMutationType based on mutations with driver annotation support
                     if (plotData.mutations.length > 0) {
                         plotData.dispMutationType = getOncoprintMutationType(
                             plotData.mutations[0]
                         );
+
+                        // Store driver status separately to avoid type conflicts
+                        const driversAnnotated =
+                            this.config.driverAnnotationSettings
+                                ?.driversAnnotated || false;
+                        (plotData as any).isDriverMutation =
+                            driversAnnotated &&
+                            plotData.mutations[0]?.putativeDriver;
+
                         plotData.isProfiledMutations = true;
                     } else {
                         plotData.isProfiledMutations = true; // Still profiled, just no mutations
@@ -503,7 +517,7 @@ export class ColoringService {
             !!this.config.annotatedMutationCache,
             !!this.config.annotatedCnaCache,
             !!this.config.annotatedSvCache,
-            !!this.config.driversAnnotated,
+            !!this.config.driverAnnotationSettings?.driversAnnotated,
             this.config.selectedOption,
             this.config.clinicalDataCache,
             this.config.logScale
@@ -520,11 +534,25 @@ export class ColoringService {
                 plotSampleData.mutations.length > 0 &&
                 plotSampleData.dispMutationType
             ) {
-                // Has mutations - return mutation type
-                const label =
-                    plotSampleData.dispMutationType.charAt(0).toUpperCase() +
-                    plotSampleData.dispMutationType.slice(1);
-                return label;
+                // Has mutations - return mutation type with driver/VUS annotation
+                const mutationType = plotSampleData.dispMutationType;
+                const isDriverMutation = (plotSampleData as any)
+                    .isDriverMutation;
+                const driversAnnotated =
+                    this.config.driverAnnotationSettings?.driversAnnotated ||
+                    false;
+
+                const capitalizedType =
+                    mutationType.charAt(0).toUpperCase() +
+                    mutationType.slice(1);
+
+                if (driversAnnotated) {
+                    return isDriverMutation
+                        ? `${capitalizedType} (Driver)`
+                        : `${capitalizedType} (VUS)`;
+                } else {
+                    return capitalizedType;
+                }
             } else if (
                 plotSampleData.copyNumberAlterations.length > 0 &&
                 plotSampleData.dispCna &&
@@ -604,29 +632,94 @@ export class ColoringService {
 
             // Add mutation type legends if mutations are enabled (show as filled dots)
             if (this.config.annotatedMutationCache) {
-                legend.push(
-                    {
-                        name: 'Missense',
-                        color: MUT_COLOR_MISSENSE,
-                        style: 'filled',
-                    },
-                    {
-                        name: 'Truncating',
-                        color: MUT_COLOR_TRUNC,
-                        style: 'filled',
-                    },
-                    {
-                        name: 'Inframe',
-                        color: MUT_COLOR_INFRAME,
-                        style: 'filled',
-                    },
-                    {
-                        name: 'Splice',
-                        color: MUT_COLOR_SPLICE,
-                        style: 'filled',
-                    },
-                    { name: 'Other', color: MUT_COLOR_OTHER, style: 'filled' }
-                );
+                const driversAnnotated =
+                    this.config.driverAnnotationSettings?.driversAnnotated ||
+                    false;
+
+                if (driversAnnotated) {
+                    // Show both driver and VUS versions with correct colors
+                    legend.push(
+                        {
+                            name: 'Missense (Driver)',
+                            color: MUT_COLOR_MISSENSE,
+                            style: 'filled',
+                        },
+                        {
+                            name: 'Missense (VUS)',
+                            color: MUT_COLOR_MISSENSE_PASSENGER,
+                            style: 'filled',
+                        },
+                        {
+                            name: 'Truncating (Driver)',
+                            color: MUT_COLOR_TRUNC,
+                            style: 'filled',
+                        },
+                        {
+                            name: 'Truncating (VUS)',
+                            color: MUT_COLOR_TRUNC_PASSENGER,
+                            style: 'filled',
+                        },
+                        {
+                            name: 'Inframe (Driver)',
+                            color: MUT_COLOR_INFRAME,
+                            style: 'filled',
+                        },
+                        {
+                            name: 'Inframe (VUS)',
+                            color: MUT_COLOR_INFRAME_PASSENGER,
+                            style: 'filled',
+                        },
+                        {
+                            name: 'Splice (Driver)',
+                            color: MUT_COLOR_SPLICE,
+                            style: 'filled',
+                        },
+                        {
+                            name: 'Splice (VUS)',
+                            color: MUT_COLOR_SPLICE_PASSENGER,
+                            style: 'filled',
+                        },
+                        {
+                            name: 'Other (Driver)',
+                            color: MUT_COLOR_OTHER,
+                            style: 'filled',
+                        },
+                        {
+                            name: 'Other (VUS)',
+                            color: MUT_COLOR_OTHER_PASSENGER,
+                            style: 'filled',
+                        }
+                    );
+                } else {
+                    // Show standard mutation types when driver annotations are disabled
+                    legend.push(
+                        {
+                            name: 'Missense',
+                            color: MUT_COLOR_MISSENSE,
+                            style: 'filled',
+                        },
+                        {
+                            name: 'Truncating',
+                            color: MUT_COLOR_TRUNC,
+                            style: 'filled',
+                        },
+                        {
+                            name: 'Inframe',
+                            color: MUT_COLOR_INFRAME,
+                            style: 'filled',
+                        },
+                        {
+                            name: 'Splice',
+                            color: MUT_COLOR_SPLICE,
+                            style: 'filled',
+                        },
+                        {
+                            name: 'Other',
+                            color: MUT_COLOR_OTHER,
+                            style: 'filled',
+                        }
+                    );
+                }
             }
 
             // Add vanilla "No mutation" dot (unfilled, no border)
