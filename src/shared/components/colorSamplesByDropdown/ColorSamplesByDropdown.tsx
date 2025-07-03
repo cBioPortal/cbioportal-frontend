@@ -4,6 +4,7 @@ import { observable, action, computed, makeObservable } from 'mobx';
 import Select from 'react-select';
 import AsyncSelect from 'react-select/async';
 import { If, Then, Else } from 'react-if';
+import _ from 'lodash';
 import LabeledCheckbox from '../labeledCheckbox/LabeledCheckbox';
 import {
     ColoringMenuOmnibarOption,
@@ -51,6 +52,8 @@ export interface ColorSamplesByDropdownProps {
 export class ColorSamplesByDropdown extends React.Component<
     ColorSamplesByDropdownProps
 > {
+    private lastSearchTerm = '';
+
     constructor(props: ColorSamplesByDropdownProps) {
         super(props);
         makeObservable(this);
@@ -65,17 +68,22 @@ export class ColorSamplesByDropdown extends React.Component<
             | ColoringMenuOmnibarGroup
         )[] = [];
 
-        // Add gene options
+        // Add gene options with pre-computed search strings for performance
         if (this.props.genes.length > 0) {
             allOptions.push({
                 label: 'Genes',
-                options: this.props.genes.map(gene => ({
-                    label: gene.hugoGeneSymbol,
-                    value: `gene_${gene.entrezGeneId}`,
-                    info: {
-                        entrezGeneId: gene.entrezGeneId,
-                    },
-                })),
+                options: this.props.genes.map(
+                    gene =>
+                        ({
+                            label: gene.hugoGeneSymbol,
+                            value: `gene_${gene.entrezGeneId}`,
+                            info: {
+                                entrezGeneId: gene.entrezGeneId,
+                            },
+                            // Pre-compute lowercase for faster searching
+                            searchString: gene.hugoGeneSymbol.toLowerCase(),
+                        } as any)
+                ),
             });
         }
 
@@ -89,13 +97,18 @@ export class ColorSamplesByDropdown extends React.Component<
                             a.clinicalAttributeId !==
                             SpecialAttribute.MutationSpectrum
                     )
-                    .map(clinicalAttribute => ({
-                        label: clinicalAttribute.displayName,
-                        value: `clinical_${clinicalAttribute.clinicalAttributeId}`,
-                        info: {
-                            clinicalAttribute,
-                        },
-                    })),
+                    .map(
+                        clinicalAttribute =>
+                            ({
+                                label: clinicalAttribute.displayName,
+                                value: `clinical_${clinicalAttribute.clinicalAttributeId}`,
+                                info: {
+                                    clinicalAttribute,
+                                },
+                                // Pre-compute lowercase for faster searching
+                                searchString: clinicalAttribute.displayName.toLowerCase(),
+                            } as any)
+                    ),
             });
         }
 
@@ -168,27 +181,40 @@ export class ColorSamplesByDropdown extends React.Component<
         }
     }
 
-    private loadColoringOptions = async (
+    // Optimized string comparison with priority matching
+    private getMatchScore = (
+        option: ColoringMenuOmnibarOption,
+        searchTerm: string
+    ): number => {
+        // Use pre-computed search string if available, otherwise compute
+        const label =
+            (option as any).searchString || option.label.toLowerCase();
+        const search = searchTerm.toLowerCase();
+
+        if (label === search) return 100; // Exact match
+        if (label.startsWith(search)) return 80; // Starts with
+        if (label.includes(search)) return 60; // Contains
+        return 0; // No match
+    };
+
+    private loadColoringOptionsImpl = async (
         inputValue: string
     ): Promise<(ColoringMenuOmnibarOption | ColoringMenuOmnibarGroup)[]> => {
-        const stringCompare = (option: ColoringMenuOmnibarOption) =>
-            option.label.toLowerCase().includes(inputValue.toLowerCase());
-
         if (!inputValue || inputValue.length === 0) {
-            // Return grouped options with limited genes for performance (matches PlotsTab pattern)
+            // Return grouped options with limited genes for performance
             return this.coloringMenuOmnibarOptions.map(item => {
                 if ('options' in item && item.label === 'Genes') {
-                    // Limit to first 20 genes for initial display performance
+                    // Show more initial genes for better UX
                     return {
                         ...item,
-                        options: item.options.slice(0, 20),
+                        options: item.options.slice(0, 50),
                     };
                 }
                 return item;
             });
         }
 
-        // Filter and maintain group structure
+        // Filter and maintain group structure with relevance scoring
         const filteredGroups: (
             | ColoringMenuOmnibarOption
             | ColoringMenuOmnibarGroup
@@ -196,23 +222,50 @@ export class ColorSamplesByDropdown extends React.Component<
 
         for (const item of this.coloringMenuOmnibarOptions) {
             if ('options' in item) {
-                // This is a group
-                const filteredOptions = item.options.filter(stringCompare);
-                if (filteredOptions.length > 0) {
+                // This is a group - filter and sort by relevance
+                const scoredOptions = item.options
+                    .map(option => ({
+                        option,
+                        score: this.getMatchScore(option, inputValue),
+                    }))
+                    .filter(scored => scored.score > 0)
+                    .sort((a, b) => b.score - a.score)
+                    .map(scored => scored.option);
+
+                if (scoredOptions.length > 0) {
                     filteredGroups.push({
                         ...item,
-                        options: filteredOptions.slice(0, 10), // Limit per group
+                        options: scoredOptions.slice(0, 50), // Increased limit for better UX
                     });
                 }
             } else {
                 // This is a single option (like "None")
-                if (stringCompare(item)) {
+                if (this.getMatchScore(item, inputValue) > 0) {
                     filteredGroups.push(item);
                 }
             }
         }
 
         return filteredGroups;
+    };
+
+    private loadColoringOptions = async (
+        inputValue: string
+    ): Promise<(ColoringMenuOmnibarOption | ColoringMenuOmnibarGroup)[]> => {
+        this.lastSearchTerm = inputValue;
+
+        // For very short searches, apply a small delay to avoid excessive calls
+        if (inputValue && inputValue.length > 0 && inputValue.length < 3) {
+            // Small delay for short terms to avoid excessive filtering
+            await new Promise(resolve => setTimeout(resolve, 150));
+
+            // Check if search term changed during delay - if so, cancel this request
+            if (this.lastSearchTerm !== inputValue) {
+                return [];
+            }
+        }
+
+        return await this.loadColoringOptionsImpl(inputValue);
     };
 
     render() {
@@ -252,14 +305,21 @@ export class ColorSamplesByDropdown extends React.Component<
                                     aria-label="Gene or Clinical Attribute Search Dropdown"
                                     name="colorSamplesByDropdown"
                                     {...selectProps}
-                                    noOptionsMessage={() =>
-                                        'Search for gene or clinical attribute'
-                                    }
+                                    noOptionsMessage={(obj: {
+                                        inputValue: string;
+                                    }) => {
+                                        if (
+                                            obj.inputValue &&
+                                            obj.inputValue.length > 0
+                                        ) {
+                                            return `No results found for "${obj.inputValue}"`;
+                                        }
+                                        return 'Search for gene or clinical attribute';
+                                    }}
                                     loadOptions={this.loadColoringOptions}
-                                    defaultOptions={
-                                        this.coloringMenuOmnibarOptions
-                                    }
+                                    defaultOptions={true} // Load initial options on mount
                                     cacheOptions={true}
+                                    loadingMessage={() => 'Searching...'}
                                 />
                             </Then>
                             <Else>
