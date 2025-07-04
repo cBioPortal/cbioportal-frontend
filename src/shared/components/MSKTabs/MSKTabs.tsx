@@ -332,7 +332,11 @@ export class MSKTabs extends React.Component<IMSKTabsProps> {
                 className={classnames('nav', `nav-${navButtonStyle}`)}
             >
                 {prev}
-                {pages[this.currentPage - 1]}
+                {pages &&
+                pages.length > 0 &&
+                this.currentPage - 1 < pages.length
+                    ? pages[this.currentPage - 1]
+                    : null}
                 {next}
             </ul>
         );
@@ -386,6 +390,7 @@ export class MSKTabs extends React.Component<IMSKTabsProps> {
                 if (
                     this.props.getPaginationWidth &&
                     this.pageBreaks.length > 0 &&
+                    currentPage - 1 < this.pageBreaks.length &&
                     this.pageBreaks[currentPage - 1] === tab.props.id
                 ) {
                     currentPage++;
