@@ -17,7 +17,6 @@
             "*": [
                 "src/*"
             ],
-            "plotly.js-dist": ["node_modules/@types/plotly.js"]
         },
         "typeRoots": [
             "node_modules/@types"

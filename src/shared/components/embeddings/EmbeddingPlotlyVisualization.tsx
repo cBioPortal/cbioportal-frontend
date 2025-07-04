@@ -1,5 +1,5 @@
 import * as React from 'react';
-import * as Plotly from 'plotly.js-dist';
+import * as Plotly from 'plotly.js-gl2d-dist';
 import { EmbeddingVisualizationProps, EmbeddingPoint } from './EmbeddingTypes';
 
 /**
