@@ -116,17 +116,32 @@ export class EmbeddingPlotlyVisualization extends React.Component<
 
             // Define the order of categories
             const legendOrder = [
-                'Missense', 'Truncating', 'Inframe', 'Splice', 'Other',
-                'Amplification', 'Gain', 'Shallow Deletion', 'Deep Deletion',
-                'Structural Variant', 'Not mutated'
+                'Missense',
+                'Truncating',
+                'Inframe',
+                'Splice',
+                'Other',
+                'Amplification',
+                'Gain',
+                'Shallow Deletion',
+                'Deep Deletion',
+                'Structural Variant',
+                'Not mutated',
             ];
-            
+
             // Helper function for legend entries
-            const createLegendTrace = (category: string, appearance: { color: string; strokeColor: string }) => {
+            const createLegendTrace = (
+                category: string,
+                appearance: { color: string; strokeColor: string }
+            ) => {
                 let marker: any = { size: 8, opacity: 0.8 };
-                
-                if (category.includes('Amplification') || category.includes('Gain') || 
-                    category.includes('Deletion') || category.includes('Structural')) {
+
+                if (
+                    category.includes('Amplification') ||
+                    category.includes('Gain') ||
+                    category.includes('Deletion') ||
+                    category.includes('Structural')
+                ) {
                     // Border-only for CNAs and SVs
                     marker.color = 'rgba(255,255,255,0.9)';
                     marker.line = { color: appearance.strokeColor, width: 2 };
@@ -135,7 +150,7 @@ export class EmbeddingPlotlyVisualization extends React.Component<
                     marker.color = appearance.color;
                     marker.line = { width: 0 };
                 }
-                
+
                 return {
                     x: [NaN],
                     y: [NaN],
@@ -147,7 +162,7 @@ export class EmbeddingPlotlyVisualization extends React.Component<
                     hovertemplate: '<extra></extra>',
                 };
             };
-            
+
             // First add entries that match our predefined order
             for (const orderCategory of legendOrder) {
                 categoryToAppearance.forEach((appearance, category) => {
@@ -157,7 +172,7 @@ export class EmbeddingPlotlyVisualization extends React.Component<
                     }
                 });
             }
-            
+
             // Then add any remaining categories (like clinical attributes)
             categoryToAppearance.forEach((appearance, category) => {
                 traces.push(createLegendTrace(category, appearance));

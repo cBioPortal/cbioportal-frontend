@@ -35,7 +35,7 @@ export function getMolecularDataForGeneSync(
     const {
         mutationTypeEnabled = true,
         copyNumberEnabled = true,
-        structuralVariantEnabled = true
+        structuralVariantEnabled = true,
     } = options;
 
     let mutations: any[] = [];
@@ -44,7 +44,9 @@ export function getMolecularDataForGeneSync(
 
     // Get mutations if enabled and cache exists
     if (mutationTypeEnabled && store.annotatedMutationCache) {
-        const mutationCacheResult = store.annotatedMutationCache.get({ entrezGeneId });
+        const mutationCacheResult = store.annotatedMutationCache.get({
+            entrezGeneId,
+        });
         if (mutationCacheResult?.isComplete && mutationCacheResult.result) {
             mutations = mutationCacheResult.result;
         }
@@ -60,7 +62,9 @@ export function getMolecularDataForGeneSync(
 
     // Get structural variants if enabled and cache exists
     if (structuralVariantEnabled && store.structuralVariantCache) {
-        const svCacheResult = store.structuralVariantCache.get({ entrezGeneId });
+        const svCacheResult = store.structuralVariantCache.get({
+            entrezGeneId,
+        });
         if (svCacheResult?.isComplete && svCacheResult.result) {
             svs = svCacheResult.result;
         }
@@ -102,7 +106,7 @@ export function aggregateMolecularDataByPatient(
     allSvs: any[]
 ): Map<string, PatientMolecularData> {
     const patientMolecularDataMap = new Map<string, PatientMolecularData>();
-    
+
     // Group samples by patient
     const patientToSamplesMap = new Map<string, Sample[]>();
     allSamples.forEach(sample => {
@@ -153,7 +157,7 @@ export function aggregateMolecularDataByPatient(
         // Aggregate all alterations across patient's samples
         samples.forEach(sample => {
             const sampleKey = `${sample.studyId}:${sample.sampleId}`;
-            
+
             // O(1) lookup instead of O(n) filter
             const sampleMutations = mutationsBySample.get(sampleKey) || [];
             patientMutations.push(...sampleMutations);
@@ -170,7 +174,10 @@ export function aggregateMolecularDataByPatient(
             mutations: patientMutations,
             cnas: patientCnas,
             svs: patientSvs,
-            hasAnyAlteration: patientMutations.length > 0 || patientCnas.length > 0 || patientSvs.length > 0
+            hasAnyAlteration:
+                patientMutations.length > 0 ||
+                patientCnas.length > 0 ||
+                patientSvs.length > 0,
         });
     });
 
@@ -180,7 +187,9 @@ export function aggregateMolecularDataByPatient(
 /**
  * Creates a fast lookup map from patients to samples
  */
-export function createSampleLookupMap(allSamples: Sample[]): Map<string, Sample> {
+export function createSampleLookupMap(
+    allSamples: Sample[]
+): Map<string, Sample> {
     const sampleLookupMap = new Map<string, Sample>();
     allSamples.forEach(sample => {
         sampleLookupMap.set(sample.patientId, sample);
@@ -193,12 +202,12 @@ export function createSampleLookupMap(allSamples: Sample[]): Map<string, Sample>
  */
 export function preComputeClinicalDataMaps(
     clinicalData: any[],
-    categoryToColor?: {[key: string]: string},
+    categoryToColor?: { [key: string]: string },
     numericalValueToColor?: (value: number) => string
-): { colorMap: Map<string, string>, valueMap: Map<string, string> } {
+): { colorMap: Map<string, string>; valueMap: Map<string, string> } {
     const clinicalDataColorMap = new Map<string, string>();
     const clinicalDataValueMap = new Map<string, string>();
-    
+
     if (clinicalData) {
         clinicalData.forEach(data => {
             const sampleKey = `${data.studyId}:${data.sampleId}`;
@@ -218,9 +227,9 @@ export function preComputeClinicalDataMaps(
             clinicalDataValueMap.set(sampleKey, data.value || 'Unknown');
         });
     }
-    
-    return { 
-        colorMap: clinicalDataColorMap, 
-        valueMap: clinicalDataValueMap 
+
+    return {
+        colorMap: clinicalDataColorMap,
+        valueMap: clinicalDataValueMap,
     };
 }

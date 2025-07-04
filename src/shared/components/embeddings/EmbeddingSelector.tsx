@@ -24,15 +24,21 @@ export const EmbeddingSelector: React.FC<EmbeddingSelectorProps> = ({
     onSelectionChange,
     label = 'Embedding Type:',
     className,
-    style
+    style,
 }) => {
     const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         onSelectionChange(event.target.value);
     };
 
     return (
-        <div className={className} style={{ display: 'flex', alignItems: 'center', ...style }}>
-            <label htmlFor="embedding-select" style={{ marginRight: '8px', whiteSpace: 'nowrap' }}>
+        <div
+            className={className}
+            style={{ display: 'flex', alignItems: 'center', ...style }}
+        >
+            <label
+                htmlFor="embedding-select"
+                style={{ marginRight: '8px', whiteSpace: 'nowrap' }}
+            >
                 {label}
             </label>
             <select
@@ -40,17 +46,21 @@ export const EmbeddingSelector: React.FC<EmbeddingSelectorProps> = ({
                 value={selectedValue}
                 onChange={handleChange}
                 className="form-control"
-                style={{ 
+                style={{
                     minWidth: '150px',
                     height: '34px', // Match bootstrap form-control height
                     fontSize: '14px',
                     border: '1px solid #ccc',
                     borderRadius: '4px',
-                    padding: '6px 12px'
+                    padding: '6px 12px',
                 }}
             >
                 {options.map(option => (
-                    <option key={option.value} value={option.value} title={option.description}>
+                    <option
+                        key={option.value}
+                        value={option.value}
+                        title={option.description}
+                    >
                         {option.label}
                     </option>
                 ))}
