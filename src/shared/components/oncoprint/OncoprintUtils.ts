@@ -1188,12 +1188,6 @@ export function makeHeatmapTracksMobxPromise(
                         ? parseFloat(oncoprint.props.store.zScoreThreshold)
                         : oncoprint.props.store.zScoreThreshold ?? 2;
 
-                console.log(
-                    'DEBUG: zScoreThreshold from store:',
-                    oncoprint.props.store.zScoreThreshold
-                );
-                console.log('DEBUG: parsed zScoreThreshold:', zScoreThreshold);
-
                 return {
                     key: `HEATMAPTRACK_${molecularProfileId},${gene}`,
                     label: gene,

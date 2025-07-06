@@ -423,23 +423,9 @@ export function fillHeatmapTrackDatum<
 
             // If Z-score threshold is provided, use thresholded logic similar to oncoprint
             if (zScoreThreshold !== undefined) {
-                console.log(
-                    'DEBUG: Processing patient with zScoreThreshold:',
-                    zScoreThreshold
-                );
-                console.log(
-                    'DEBUG: Patient data values:',
-                    dataWithValue.map(d => d.value)
-                );
-
                 // Filter data that meets the Z-score threshold
                 const thresholdedData = dataWithValue.filter(
                     d => Math.abs(d.value) >= zScoreThreshold
-                );
-
-                console.log(
-                    'DEBUG: Thresholded data values:',
-                    thresholdedData.map(d => d.value)
                 );
 
                 if (thresholdedData.length > 0) {
@@ -453,14 +439,7 @@ export function fillHeatmapTrackDatum<
                         thresholdedData,
                         true
                     );
-                    console.log(
-                        'DEBUG: Selected thresholded value:',
-                        bestValue
-                    );
                 } else {
-                    console.log(
-                        'DEBUG: No data meets threshold, falling back to original logic'
-                    );
                     // If no data meets threshold, fall back to original logic
                     switch (sortOrder) {
                         case 'ASC':
@@ -549,13 +528,6 @@ export function fillHeatmapTrackDatum<
                       }${trackDatum.profile_data.toFixed(2)}`
                     : undefined;
             }
-
-            console.log(
-                'DEBUG: Final selected value for patient:',
-                case_.uniquePatientKey || case_.uniqueSampleKey,
-                '=',
-                trackDatum.profile_data
-            );
         }
     }
     return trackDatum;
