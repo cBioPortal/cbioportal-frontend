@@ -3,6 +3,7 @@ import {
     TickIntervalEnum,
     TimelineEvent,
     TimelineTrackSpecification,
+    TimelineTrackType,
 } from './types';
 import { action, computed, observable, makeObservable } from 'mobx';
 import {
@@ -310,6 +311,7 @@ export class TimelineStore {
                                 </button>
                             </span>
                         )}
+                        max value
                     </div>
                 )}
                 <div>{content}</div>
