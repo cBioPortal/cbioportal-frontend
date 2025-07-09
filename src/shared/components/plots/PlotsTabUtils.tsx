@@ -1240,6 +1240,22 @@ export function makeAxisDataPromise_Molecular_MakeMutationData(
     });
 
     if (mutationCountBy === MutationCountBy.VariantAlleleFrequency) {
+        // Check if any mutation has both tumorAltCount and tumorRefCount as numbers
+        const hasVafData = mutations.some(
+            m =>
+                typeof m.tumorAltCount === 'number' &&
+                typeof m.tumorRefCount === 'number'
+        );
+        if (!hasVafData) {
+            return {
+                data: [],
+                hugoGeneSymbol,
+                datatype: 'number',
+            } as INumberAxisData;
+        }
+    }
+
+    if (mutationCountBy === MutationCountBy.VariantAlleleFrequency) {
         return {
             data,
             hugoGeneSymbol,
