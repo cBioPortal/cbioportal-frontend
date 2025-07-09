@@ -4468,6 +4468,7 @@ export class ResultsViewPageStore extends AnalysisStore
             const MRNA_EXPRESSION = AlterationTypeConstants.MRNA_EXPRESSION;
             const PROTEIN_LEVEL = AlterationTypeConstants.PROTEIN_LEVEL;
             const METHYLATION = AlterationTypeConstants.METHYLATION;
+            const MUTATION_EXTENDED = AlterationTypeConstants.MUTATION_EXTENDED;
             const selectedMolecularProfileIds = stringListToSet(
                 this.selectedMolecularProfiles.result!.map(
                     profile => profile.molecularProfileId
@@ -4483,7 +4484,8 @@ export class ResultsViewPageStore extends AnalysisStore
                             profile.molecularAlterationType ===
                                 PROTEIN_LEVEL) &&
                             profile.showProfileInAnalysisTab) ||
-                        profile.molecularAlterationType === METHYLATION
+                        profile.molecularAlterationType === METHYLATION ||
+                        profile.molecularAlterationType === MUTATION_EXTENDED
                     );
                 }),
                 profile => {
@@ -4499,15 +4501,19 @@ export class ResultsViewPageStore extends AnalysisStore
                                 return 1;
                             case METHYLATION:
                                 return 2;
+                            case MUTATION_EXTENDED:
+                                return 3;
                         }
                     } else {
                         switch (profile.molecularAlterationType) {
                             case MRNA_EXPRESSION:
-                                return 3;
-                            case PROTEIN_LEVEL:
                                 return 4;
-                            case METHYLATION:
+                            case PROTEIN_LEVEL:
                                 return 5;
+                            case METHYLATION:
+                                return 6;
+                            case MUTATION_EXTENDED:
+                                return 7;
                         }
                     }
                 }
