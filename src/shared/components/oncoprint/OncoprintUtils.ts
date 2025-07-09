@@ -71,6 +71,7 @@ import { AnnotatedExtendedAlteration } from 'shared/model/AnnotatedExtendedAlter
 import { IQueriedCaseData } from 'shared/model/IQueriedCaseData';
 import { IQueriedMergedTrackCaseData } from 'shared/model/IQueriedMergedTrackCaseData';
 import { OncoprintModel } from 'oncoprintjs';
+import { getVariantAlleleFrequency } from 'shared/lib/MutationUtils';
 
 interface IGenesetExpansionMap {
     [genesetTrackKey: string]: IHeatmapTrackSpec[];
@@ -1220,24 +1221,112 @@ export function makeHeatmapTracksMobxPromise(
 
             return cacheQueries.map(query => {
                 const molecularProfileId = query.molecularProfileId;
+                const profileType =
+                    molecularProfileIdToMolecularProfile[molecularProfileId]
+                        .molecularAlterationType;
                 const gene = query.hugoGeneSymbol;
-                const data = oncoprint.props.store.geneMolecularDataCache.result!.get(
-                    query
-                )!.data!;
+                const datatype =
+                    molecularProfileIdToMolecularProfile[molecularProfileId]
+                        .datatype;
+                const molecularProfileName =
+                    molecularProfileIdToMolecularProfile[molecularProfileId]
+                        .name;
+                const trackGroupIndex =
+                    molecularProfileIdToAdditionalTracks[molecularProfileId]
+                        .trackGroupIndex;
+                const onClickRemoveInTrackMenu = action(() => {
+                    const trackGroup =
+                        oncoprint.molecularProfileIdToAdditionalTracks[
+                            molecularProfileId
+                        ];
+                    if (trackGroup) {
+                        const newEntities = _.keys(trackGroup.entities).filter(
+                            entity => entity !== gene
+                        );
+                        if (newEntities.length === 0) {
+                            oncoprint.removeHeatmapTracksByMolecularProfileId(
+                                molecularProfileId
+                            );
+                        } else {
+                            oncoprint.setHeatmapTracks(
+                                molecularProfileId,
+                                newEntities
+                            );
+                        }
+                    }
 
+                    if (
+                        trackGroup === undefined &&
+                        oncoprint.sortMode.type === 'heatmap' &&
+                        oncoprint.sortMode.clusteredHeatmapProfile ===
+                            molecularProfileId
+                    ) {
+                        oncoprint.sortByData();
+                    }
+                });
+
+                // Unified data handling for VAF and other heatmap types
+                let data: {
+                    value: number;
+                    uniqueSampleKey: string;
+                    uniquePatientKey: string;
+                    thresholdType?: '>' | '<';
+                }[] = [];
+                if (profileType === AlterationTypeConstants.MUTATION_EXTENDED) {
+                    // Use mutationsByGene for VAF data
+                    const geneMutations =
+                        (oncoprint.props.store.mutationsByGene.result &&
+                            oncoprint.props.store.mutationsByGene.result[
+                                gene
+                            ]) ||
+                        [];
+                    data = geneMutations
+                        .map(m => {
+                            const vafReport = getVariantAlleleFrequency(m);
+                            if (
+                                vafReport &&
+                                typeof vafReport.vaf === 'number' &&
+                                !isNaN(vafReport.vaf)
+                            ) {
+                                return {
+                                    uniqueSampleKey: m.uniqueSampleKey,
+                                    uniquePatientKey: m.uniquePatientKey,
+                                    value: vafReport.vaf,
+                                };
+                            }
+                            return null;
+                        })
+                        .filter(
+                            (
+                                d
+                            ): d is {
+                                value: number;
+                                uniqueSampleKey: string;
+                                uniquePatientKey: string;
+                            } => d !== null
+                        );
+                } else {
+                    // Other heatmap types (expression, protein, methylation, etc.)
+                    data = oncoprint.props.store.geneMolecularDataCache
+                        .result!.get(query)!
+                        .data!.map(d => ({
+                            value: d.value,
+                            uniqueSampleKey: d.uniqueSampleKey,
+                            uniquePatientKey: d.uniquePatientKey,
+                        }));
+                }
+                console.log(
+                    `Other heatmap track:${molecularProfileName}`,
+                    gene,
+                    data
+                );
                 return {
                     key: `HEATMAPTRACK_${molecularProfileId},${gene}`,
                     label: gene,
-                    molecularProfileId: molecularProfileId,
-                    molecularProfileName:
-                        molecularProfileIdToMolecularProfile[molecularProfileId]
-                            .name,
-                    molecularAlterationType:
-                        molecularProfileIdToMolecularProfile[molecularProfileId]
-                            .molecularAlterationType,
-                    datatype:
-                        molecularProfileIdToMolecularProfile[molecularProfileId]
-                            .datatype,
+                    molecularProfileId,
+                    molecularProfileName,
+                    molecularAlterationType: profileType,
+                    datatype,
                     data: makeHeatmapTrackData<
                         IGeneHeatmapTrackDatum,
                         'hugo_gene_symbol'
@@ -1247,39 +1336,8 @@ export function makeHeatmapTracksMobxPromise(
                         sampleMode ? samples : patients,
                         data
                     ),
-                    trackGroupIndex:
-                        molecularProfileIdToAdditionalTracks[molecularProfileId]
-                            .trackGroupIndex,
-                    onClickRemoveInTrackMenu: action(() => {
-                        const trackGroup =
-                            oncoprint.molecularProfileIdToAdditionalTracks[
-                                molecularProfileId
-                            ];
-                        if (trackGroup) {
-                            const newEntities = _.keys(
-                                trackGroup.entities
-                            ).filter(entity => entity !== gene);
-                            if (newEntities.length === 0) {
-                                oncoprint.removeHeatmapTracksByMolecularProfileId(
-                                    molecularProfileId
-                                );
-                            } else {
-                                oncoprint.setHeatmapTracks(
-                                    molecularProfileId,
-                                    newEntities
-                                );
-                            }
-                        }
-
-                        if (
-                            trackGroup === undefined &&
-                            oncoprint.sortMode.type === 'heatmap' &&
-                            oncoprint.sortMode.clusteredHeatmapProfile ===
-                                molecularProfileId
-                        ) {
-                            oncoprint.sortByData();
-                        }
-                    }),
+                    trackGroupIndex,
+                    onClickRemoveInTrackMenu,
                 };
             });
         },
@@ -1476,11 +1534,12 @@ export function makeGenericAssayProfileHeatmapTracksMobxPromise(
                         'entityId',
                         entityId,
                         sampleMode ? samples : patients,
-                        dataCache.get(query)!.data!.map(d => ({
-                            ...d,
-                            value: parseFloat(d.value),
-                        })),
-                        sortOrder
+                        dataCache
+                            .get({ molecularProfileId, stableId: entityId })!
+                            .data!.map(d => ({
+                                ...d!,
+                                value: parseFloat(d.value!),
+                            }))
                     ),
                     genericAssayType: genericAssayType,
                     pivotThreshold: pivotThreshold,
@@ -1739,4 +1798,67 @@ export function extractGenericAssaySelections(
 export function splitHeatmapTextField(text: string): string[] {
     text = text.replace(/[,\s\n]+/g, ' ').trim();
     return _.uniq(text.split(/[,\s\n]+/));
+}
+
+function getVafHeatmapTrackSpec({
+    molecularProfileId,
+    gene,
+    query,
+    datatype,
+    oncoprint,
+    samples,
+    trackGroupIndex,
+    molecularProfileName,
+    onClickRemoveInTrackMenu,
+}: {
+    molecularProfileId: string;
+    gene: string;
+    query: any;
+    datatype: any;
+    oncoprint: ResultsViewOncoprint;
+    samples: any[];
+    trackGroupIndex: number;
+    molecularProfileName: string;
+    onClickRemoveInTrackMenu: () => void;
+}) {
+    const mutations = oncoprint.props.store.annotatedMutationCache.get({
+        entrezGeneId: query.entrezGeneId,
+    })!.result!;
+    const vafData = mutations
+        .map(m => {
+            const vafReport = getVariantAlleleFrequency(m);
+            return vafReport
+                ? {
+                      uniqueSampleKey: m.uniqueSampleKey,
+                      uniquePatientKey: m.uniquePatientKey,
+                      value: vafReport.vaf,
+                  }
+                : null;
+        })
+        .filter(
+            (
+                d
+            ): d is {
+                uniqueSampleKey: string;
+                uniquePatientKey: string;
+                value: number;
+            } => d !== null
+        );
+
+    return {
+        key: `HEATMAPTRACK_${molecularProfileId},${gene}`,
+        label: gene,
+        molecularProfileId,
+        molecularProfileName,
+        molecularAlterationType: AlterationTypeConstants.MUTATION_EXTENDED,
+        datatype,
+        data: makeHeatmapTrackData<IGeneHeatmapTrackDatum, 'hugo_gene_symbol'>(
+            'hugo_gene_symbol',
+            gene,
+            samples,
+            vafData
+        ),
+        trackGroupIndex,
+        onClickRemoveInTrackMenu,
+    };
 }
