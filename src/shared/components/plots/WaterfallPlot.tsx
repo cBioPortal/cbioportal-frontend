@@ -22,7 +22,7 @@ import {
 import WaterfallPlotTooltip from './WaterfallPlotTooltip';
 import { tickFormatNumeral } from 'cbioportal-frontend-commons';
 import {
-    IAxisLogScaleParams,
+    IAxisScaleTransformParams,
     waterfallSearchIndicatorAppearance,
     limitValueAppearance,
     IValue1D,
@@ -77,7 +77,7 @@ export interface IWaterfallPlotProps<D extends IBaseWaterfallPlotData> {
     horizontal: boolean;
     legendData?: LegendDataWithId<D>[];
     legendLocationWidthThreshold?: number;
-    log?: IAxisLogScaleParams | undefined;
+    log?: IAxisScaleTransformParams | undefined;
     useLogSpaceTicks?: boolean; // if log scale for an axis, then this prop determines whether the ticks are shown in post-log coordinate, or original data coordinate space
     axisLabel?: string;
     fontFamily?: string;
@@ -475,11 +475,15 @@ export default class WaterfallPlot<
     private tickFormat(
         t: number,
         ticks: number[],
-        logScaleFunc: IAxisLogScaleParams | undefined
+        logScaleFunc: IAxisScaleTransformParams | undefined
     ) {
-        if (logScaleFunc && !this.props.useLogSpaceTicks) {
-            t = logScaleFunc.fInvLogScale(t);
-            ticks = ticks.map(x => logScaleFunc.fInvLogScale(x));
+        if (
+            logScaleFunc &&
+            logScaleFunc.inverseTransform &&
+            !this.props.useLogSpaceTicks
+        ) {
+            t = logScaleFunc.inverseTransform(t);
+            ticks = ticks.map(logScaleFunc.inverseTransform);
         }
         return tickFormatNumeral(t, ticks);
     }
@@ -531,10 +535,10 @@ export default class WaterfallPlot<
         // add offset to data points and log-transform when applicable
         _.each(dataPoints, (d: IBaseWaterfallPlotData) => {
             d.offset = logTransFormFunc
-                ? logTransFormFunc.fLogScale(offset, logOffset)
+                ? logTransFormFunc.transform(offset + logOffset)
                 : offset;
             d.value = logTransFormFunc
-                ? logTransFormFunc.fLogScale(d.value, logOffset)
+                ? logTransFormFunc.transform(d.value + logOffset)
                 : d.value;
         });
 
