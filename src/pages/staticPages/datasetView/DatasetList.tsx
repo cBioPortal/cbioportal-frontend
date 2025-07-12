@@ -2,12 +2,11 @@ import * as React from 'react';
 import _ from 'lodash';
 import { CancerStudy } from 'cbioportal-ts-api-client';
 import { ThreeBounce } from 'better-react-spinkit';
-import request from 'superagent';
 import LazyMobXTable from 'shared/components/lazyMobXTable/LazyMobXTable';
-import { getStudyDownloadListUrl } from '../../../shared/api/urls';
-import { getBrowserWindow, getNCBIlink } from 'cbioportal-frontend-commons';
+import { getNCBIlink } from 'cbioportal-frontend-commons';
 import { StudyLink } from '../../../shared/components/StudyLink/StudyLink';
 import { StudyDataDownloadLink } from '../../../shared/components/StudyDataDownloadLink/StudyDataDownloadLink';
+import { getServerConfig } from 'config/config';
 
 interface IDataTableRow {
     name: string;
@@ -133,7 +132,11 @@ export default class DataSetsPageTable extends React.Component<
                                     const studyIsDownloadable = this.props.downloadables.includes(
                                         data.studyId
                                     );
-                                    if (studyIsDownloadable) {
+                                    if (
+                                        getServerConfig()
+                                            .feature_study_export ||
+                                        studyIsDownloadable
+                                    ) {
                                         return (
                                             <StudyDataDownloadLink
                                                 studyId={data.studyId}
