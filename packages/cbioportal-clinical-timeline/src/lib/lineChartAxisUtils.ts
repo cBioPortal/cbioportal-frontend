@@ -62,7 +62,7 @@ export function getLineChartYCoordinateForEvents(
     }
 
     return getLineChartYCoordinateForValue(
-        _.mean(values),
+        _.max(values) || 0,
         track,
         trackHeight,
         trackValueRange
