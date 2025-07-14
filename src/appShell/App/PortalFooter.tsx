@@ -234,14 +234,49 @@ export default class PortalFooter extends React.Component<
                         </If>
                         <div className="footer-elem">
                             <h3>CONTACT</h3>
-                            <ul>
+                            <ul style={{ display: 'flex' }}>
                                 <li>
                                     <a
                                         href={`mailto:${
                                             getServerConfig().skin_email_contact
                                         }`}
                                     >
-                                        {getServerConfig().skin_email_contact}
+                                        <i
+                                            className="fa fa-envelope"
+                                            aria-hidden="true"
+                                        ></i>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="https://github.com/cBioPortal/">
+                                        <i
+                                            className="fa fa-github"
+                                            aria-hidden="true"
+                                        ></i>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="https://www.linkedin.com/company/cbioportal/">
+                                        <i
+                                            className="fa fa-linkedin"
+                                            aria-hidden="true"
+                                        ></i>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="http://www.twitter.com/cbioportal">
+                                        <i
+                                            className="fa fa-twitter"
+                                            aria-hidden="true"
+                                        ></i>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="https://www.cbioportal.org/">
+                                        <i
+                                            className="fa fa-globe"
+                                            aria-hidden="true"
+                                        ></i>
                                     </a>
                                 </li>
                             </ul>

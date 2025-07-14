@@ -189,4 +189,7 @@ export interface IServerConfig {
     enable_study_tags: boolean;
     clickhouse_mode: boolean;
     download_custom_buttons_json: string;
+    skin_show_learn_tab: boolean;
+    skin_show_contribute_tab: boolean;
+    skin_show_contact_tab: boolean;
 }
