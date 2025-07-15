@@ -116,7 +116,7 @@ import {
 } from 'cbioportal-frontend-commons';
 import Pluralize from 'pluralize';
 import LastPlotsTabSelectionForDatatype from './LastPlotsTabSelectionForDatatype';
-import { generateQuickPlots } from './QuickPlots';
+import { ButtonInfo, generateQuickPlots, TypeSourcePair } from './QuickPlots';
 import ResultsViewURLWrapper, {
     PlotsSelectionParam,
     ResultsViewURLQuery,
@@ -713,6 +713,196 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 </ul>
             </div>
         );
+    }
+
+    @computed get researchFindingButtons(): JSX.Element {
+        if (
+            !this.dataTypeOptions.isComplete ||
+            !this.dataTypeToDataSourceOptions.isComplete ||
+            !this.props.filteredSamplesByDetailedCancerType.isComplete ||
+            !this.props.mutations.isComplete ||
+            !this.vertGenericAssayOptions.isComplete ||
+            !this.horzGenericAssayOptions.isComplete
+        ) {
+            return <LoadingIndicator isLoading={true} size={'small'} />;
+        }
+
+        const cancerTypes = Object.keys(
+            this.props.filteredSamplesByDetailedCancerType
+        );
+        const mutationCount = this.props.mutations.result.length;
+        const horizontalSource = this.horzSelection.selectedDataSourceOption
+            ? this.horzSelection.selectedDataSourceOption.value
+            : undefined;
+        const verticalSource = this.vertSelection.selectedDataSourceOption
+            ? this.vertSelection.selectedDataSourceOption.value
+            : undefined;
+
+        const plots = this.generateResearchFindingPlots(
+            this.dataTypeOptions.result,
+            this.dataTypeToDataSourceOptions.result,
+            cancerTypes,
+            mutationCount,
+            { type: this.horzSelection.dataType, source: horizontalSource },
+            { type: this.vertSelection.dataType, source: verticalSource }
+        );
+
+        return (
+            <div className="pillTabs">
+                <ul className="nav nav-pills">
+                    {plots.map(pill => (
+                        <li
+                            className={
+                                'plots-tab-pills ' +
+                                (pill.selected ? 'active' : '')
+                            }
+                            onClick={action(() => {
+                                if (pill.plotModel.horizontal.dataType) {
+                                    this.onHorizontalAxisDataTypeSelect(
+                                        pill.plotModel.horizontal.dataType
+                                    );
+                                }
+                                if (pill.plotModel.horizontal.dataSource) {
+                                    this.onHorizontalAxisDataSourceSelect(
+                                        pill.plotModel.horizontal.dataSource
+                                    );
+                                }
+                                if (pill.plotModel.vertical.dataType) {
+                                    this.onVerticalAxisDataTypeSelect(
+                                        pill.plotModel.vertical.dataType
+                                    );
+                                }
+                                if (pill.plotModel.vertical.dataSource) {
+                                    this.onVerticalAxisDataSourceSelect(
+                                        pill.plotModel.vertical.dataSource
+                                    );
+                                }
+                                if (pill.plotModel.horizontal.genericAssayId) {
+                                    if (
+                                        this.horzSelection.dataSourceId != null
+                                    ) {
+                                        console.log('entity selected');
+                                        this.onHorizontalAxisGenericAssaySelect(
+                                            this.horzGenericAssayOptions.result?.find(
+                                                option =>
+                                                    option.value ===
+                                                    pill.plotModel.horizontal
+                                                        .genericAssayId
+                                            )
+                                        );
+                                    }
+                                }
+                                if (pill.plotModel.vertical.genericAssayId) {
+                                    if (
+                                        this.vertSelection.dataSourceId != null
+                                    ) {
+                                        console.log('entity selected');
+                                        this.onVerticalAxisGenericAssaySelect(
+                                            this.vertGenericAssayOptions.result?.find(
+                                                option =>
+                                                    option.value ===
+                                                    pill.plotModel.vertical
+                                                        .genericAssayId
+                                            )
+                                        );
+                                    }
+                                }
+                                maybeSetLogScale(this.horzSelection);
+                                maybeSetLogScale(this.vertSelection);
+                                if (pill.plotModel.vertical.useSameGene) {
+                                    this.selectSameGeneOptionForVerticalAxis();
+                                }
+                            })}
+                        >
+                            <a>{pill.display}</a>
+                        </li>
+                    ))}
+                </ul>
+            </div>
+        );
+    }
+
+    @observable researchFindingButtonSelected = null;
+
+    private generateResearchFindingPlots(
+        dataTypes: PlotsTabOption[],
+        dataSources: PlotsTabDataSource,
+        cancerTypes: string[],
+        mutationCount: number,
+        horizontal: TypeSourcePair,
+        vertical: TypeSourcePair
+    ): ButtonInfo[] {
+        return [
+            {
+                selected:
+                    vertical.type === CLIN_ATTR_DATA_TYPE &&
+                    vertical.source === 'TMB' &&
+                    horizontal.type === CLIN_ATTR_DATA_TYPE &&
+                    horizontal.source === 'TIPMMR',
+                display: 'tipMMR vs TMB',
+                plotModel: {
+                    vertical: {
+                        dataType: dataTypes.find(
+                            dataType => dataType.value === CLIN_ATTR_DATA_TYPE
+                        ),
+                        dataSource: dataSources[CLIN_ATTR_DATA_TYPE].find(
+                            attritube => attritube.value === 'TMB'
+                        ),
+                    },
+                    horizontal: {
+                        dataType: dataTypes.find(
+                            dataType => dataType.value === CLIN_ATTR_DATA_TYPE
+                        ),
+                        dataSource: dataSources[CLIN_ATTR_DATA_TYPE].find(
+                            attritube => attritube.value === 'TIPMMR'
+                        ),
+                    },
+                },
+            },
+            {
+                selected:
+                    vertical.type === CLIN_ATTR_DATA_TYPE &&
+                    vertical.source === 'LOCATION',
+                display: 'Anatomical location vs CD8',
+                plotModel: {
+                    vertical: {
+                        dataType: dataTypes.find(
+                            dataType => dataType.value === CLIN_ATTR_DATA_TYPE
+                        ),
+                        dataSource: dataSources[CLIN_ATTR_DATA_TYPE].find(
+                            attritube => attritube.value === 'LOCATION'
+                        ),
+                    },
+                    horizontal: {
+                        dataType: dataTypes.find(
+                            dataType => dataType.value === 'CELL_DENSITY'
+                        ),
+                        dataSource: dataSources['CELL_DENSITY'].find(
+                            attritube => attritube.value === 'cell_density'
+                        ),
+                        genericAssayId: 'CD8_50r',
+                    },
+                },
+            },
+            {
+                selected: false,
+                display: 'CD8 vs CD3',
+                plotModel: {
+                    vertical: {
+                        dataType: dataTypes.find(
+                            dataType => dataType.value === 'CELL_DENSITY'
+                        ),
+                        genericAssayId: 'CD3_50r',
+                    },
+                    horizontal: {
+                        dataType: dataTypes.find(
+                            dataType => dataType.value === 'CELL_DENSITY'
+                        ),
+                        genericAssayId: 'CD8_50r',
+                    },
+                },
+            },
+        ] as ButtonInfo[];
     }
 
     @computed get showPlot(): boolean {
@@ -6356,6 +6546,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     <div className="quickPlotsContainer">
                         <strong className="quickPlotsTitle">Examples: </strong>
                         {this.quickPlotButtons}
+                    </div>
+                    <div className="researchFindingPlotsContainer">
+                        <strong className="quickPlotsTitle">
+                            Research Findings:{' '}
+                        </strong>
+                        {this.researchFindingButtons}
                     </div>
                     <div style={{ display: 'flex' }}>
                         <div className="leftColumn">

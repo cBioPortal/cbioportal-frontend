@@ -16,11 +16,13 @@ export type ButtonInfo = {
         vertical: {
             dataSource: PlotsTabOption | undefined;
             dataType: PlotsTabOption | undefined;
+            genericAssayId?: string | undefined;
             useSameGene?: boolean;
         };
         horizontal: {
             dataSource: PlotsTabOption | undefined;
             dataType: PlotsTabOption | undefined;
+            genericAssayId?: string | undefined;
         };
     };
 };
