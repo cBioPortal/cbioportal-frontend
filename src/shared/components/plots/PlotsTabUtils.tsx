@@ -1241,9 +1241,7 @@ export function makeAxisDataPromise_Molecular_MakeMutationData(
 
     if (mutationCountBy === MutationCountBy.VariantAlleleFrequency) {
         const hasVafData = mutations.some(
-            m =>
-                typeof m.tumorAltCount === 'number' &&
-                typeof m.tumorRefCount === 'number'
+            m => _.isFinite(m.tumorAltCount) && _.isFinite(m.tumorRefCount)
         );
 
         return {
