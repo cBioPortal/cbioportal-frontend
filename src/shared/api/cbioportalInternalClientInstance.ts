@@ -5,7 +5,7 @@ import { overrideApiRequestForColumnStore } from 'shared/api/overrideApiRequestF
 
 const internalClient = new CBioPortalAPIInternal();
 
-const internalClientColumnStore = new CBioPortalAPIInternal();
+export const internalClientColumnStore = new CBioPortalAPIInternal();
 
 overrideApiRequestForColumnStore(internalClientColumnStore);
 
@@ -32,7 +32,7 @@ proxyColumnStore(internalClientColumnStore, 'fetchGenomicDataBinCounts');
 proxyColumnStore(internalClientColumnStore, 'fetchGenericAssayDataBinCounts');
 proxyColumnStore(internalClientColumnStore, 'fetchGenericAssayDataCounts');
 proxyColumnStore(internalClientColumnStore, 'fetchClinicalDataViolinPlots');
-//proxyColumnStore(internalClientColumnStore, 'fetchAlterationEnrichments');
+proxyColumnStore(internalClientColumnStore, 'fetchAlterationEnrichments');
 
 export default internalClient;
 

@@ -6,7 +6,7 @@ import { isClickhouseMode } from 'config/config';
 import { proxyColumnStore } from 'shared/api/proxyColumnStore';
 import { overrideApiRequestForColumnStore } from 'shared/api/overrideApiRequestForColumnStore';
 
-const clientColumnStore = new CBioPortalAPI();
+export const clientColumnStore = new CBioPortalAPI();
 
 export function getClient() {
     return isClickhouseMode() ? clientColumnStore : client;

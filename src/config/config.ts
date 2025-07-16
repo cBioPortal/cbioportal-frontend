@@ -19,8 +19,12 @@ import genomeNexusClient from '../shared/api/genomeNexusClientInstance';
 import internalGenomeNexusClient from '../shared/api/genomeNexusInternalClientInstance';
 import oncoKBClient from '../shared/api/oncokbClientInstance';
 import genome2StructureClient from '../shared/api/g2sClientInstance';
-import client, { getClient } from '../shared/api/cbioportalClientInstance';
+import client, {
+    clientColumnStore,
+    getClient,
+} from '../shared/api/cbioportalClientInstance';
 import internalClient, {
+    internalClientColumnStore,
     getInternalClient,
 } from '../shared/api/cbioportalInternalClientInstance';
 import $ from 'jquery';
@@ -197,6 +201,8 @@ export function initializeAPIClients() {
     (client as any).domain = getCbioPortalApiUrl();
     (getClient() as any).domain = getCbioPortalApiUrl();
     (internalClient as any).domain = getCbioPortalApiUrl();
+    (internalClientColumnStore as any).domain = getCbioPortalApiUrl();
+    (clientColumnStore as any).domain = getCbioPortalApiUrl();
     (getInternalClient() as any).domain = getCbioPortalApiUrl();
     (genomeNexusClient as any).domain = getGenomeNexusApiUrl();
     (internalGenomeNexusClient as any).domain = getGenomeNexusApiUrl();
