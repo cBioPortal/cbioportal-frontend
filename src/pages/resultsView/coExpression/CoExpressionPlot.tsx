@@ -17,7 +17,7 @@ import {
 } from './CoExpressionPlotUtils';
 import _ from 'lodash';
 import { scatterPlotSize } from '../../../shared/components/plots/PlotUtils';
-import { IAxisLogScaleParams } from 'shared/components/plots/PlotsTabUtils';
+import { IAxisScaleTransformParams } from 'shared/components/plots/PlotsTabUtils';
 import autobind from 'autobind-decorator';
 import { GeneticEntity } from 'shared/model/GeneticEntity';
 import { getServerConfig } from 'config/config';
@@ -247,7 +247,9 @@ export default class CoExpressionPlot extends React.Component<
         );
     }
 
-    @computed get axisLogScaleFunction(): IAxisLogScaleParams | undefined {
+    @computed get axisLogScaleFunction():
+        | IAxisScaleTransformParams
+        | undefined {
         const MIN_LOG_ARGUMENT = 0.01;
 
         if (!this.props.logScale) {
@@ -255,9 +257,8 @@ export default class CoExpressionPlot extends React.Component<
         }
         return {
             label: 'log2',
-            fLogScale: (x: number, offset: number) =>
-                Math.log2(Math.max(x, MIN_LOG_ARGUMENT)),
-            fInvLogScale: (x: number) => Math.pow(2, x),
+            transform: (x: number) => Math.log2(Math.max(x, MIN_LOG_ARGUMENT)),
+            inverseTransform: (x: number) => Math.pow(2, x),
         };
     }
 
