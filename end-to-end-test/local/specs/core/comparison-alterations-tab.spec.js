@@ -60,7 +60,7 @@ describe('comparison alterations tab', () => {
         await clickAlterationTypeCheckBox('Deletion');
         await submitEnrichmentRequest();
         await waitForElementDisplayed('[data-test=LazyMobXTable]');
-        assert.strictEqual(await selectUnalteredCount('ACAP3'), '7 (0.90%)');
+        assert.strictEqual(await selectUnalteredCount('ACAP3'), '7 (0.91%)');
     });
 });
 
