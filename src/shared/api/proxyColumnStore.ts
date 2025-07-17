@@ -61,7 +61,9 @@ function overrideOldMethod(
     oldMethod: Function
 ) {
     client[methodName] = function columnStore(params: any) {
-        const host = getLoadConfig().baseUrl;
+        const host = getLoadConfig()
+            .apiRoot!.replace(/\/$/, '')
+            .replace(/^https?:\/\//, '');
 
         const oldRequest = this.request;
 
