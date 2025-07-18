@@ -43,6 +43,7 @@ import {
     ClinicalTrackConfigMap,
 } from 'shared/components/oncoprint/Oncoprint';
 import { getServerConfig } from 'config/config';
+import { AlterationTypeConstants } from 'shared/constants';
 
 export interface IOncoprintControlsHandlers
     extends IDriverAnnotationControlsHandlers {
@@ -474,11 +475,24 @@ export default class OncoprintControls extends React.Component<
         ) {
             return _.map(
                 this.props.state.heatmapProfilesPromise.result,
-                profile => ({
-                    label: profile.name,
-                    value: profile.molecularProfileId,
-                    type: profile.molecularAlterationType,
-                })
+                profile => {
+                    let label = profile.name;
+
+                    // Add a custom label for mutation profiles if they support VAF
+                    if (
+                        profile.molecularAlterationType ===
+                        AlterationTypeConstants.MUTATION_EXTENDED
+                    ) {
+                        // You could do better detection logic here if needed
+                        label = `Variant Allele Frequency`;
+                    }
+
+                    return {
+                        label,
+                        value: profile.molecularProfileId,
+                        type: profile.molecularAlterationType,
+                    };
+                }
             );
         } else {
             return [];
