@@ -533,6 +533,27 @@ export function getCategoricalTrackRuleSetParams(
     };
 }
 
+function getGeneProfileQueries(
+    molecularProfileIdToAdditionalTracks: any,
+    geneCache: any
+) {
+    const geneProfiles = _.filter(
+        _.values(molecularProfileIdToAdditionalTracks),
+        d => d.molecularAlterationType !== AlterationTypeConstants.GENERIC_ASSAY
+    );
+
+    return _.flatten(
+        geneProfiles.map(entry =>
+            _.keys(entry.entities).map(g => ({
+                molecularProfileId: entry.molecularProfileId,
+                entrezGeneId: geneCache.get({ hugoGeneSymbol: g })?.data
+                    ?.entrezGeneId,
+                hugoGeneSymbol: g.toUpperCase(),
+            }))
+        )
+    ).filter(query => query.entrezGeneId);
+}
+
 export function percentAltered(altered: number, sequenced: number) {
     if (sequenced === 0) {
         return 'N/P';
@@ -1181,24 +1202,11 @@ export function makeHeatmapTracksMobxPromise(
             const molecularProfileIdToAdditionalTracks =
                 oncoprint.molecularProfileIdToAdditionalTracks;
 
-            const geneProfiles = _.filter(
-                _.values(molecularProfileIdToAdditionalTracks),
-                d =>
-                    d.molecularAlterationType !==
-                    AlterationTypeConstants.GENERIC_ASSAY
+            const cacheQueries = getGeneProfileQueries(
+                molecularProfileIdToAdditionalTracks,
+                oncoprint.props.store.geneCache
             );
 
-            const cacheQueries = _.flatten(
-                geneProfiles.map(entry =>
-                    _.keys(entry.entities).map(g => ({
-                        molecularProfileId: entry.molecularProfileId,
-                        entrezGeneId: oncoprint.props.store.geneCache.get({
-                            hugoGeneSymbol: g,
-                        })?.data?.entrezGeneId,
-                        hugoGeneSymbol: g.toUpperCase(),
-                    }))
-                )
-            ).filter(query => query.entrezGeneId);
             const mutationQueries = cacheQueries.filter(query => {
                 const profileType =
                     molecularProfileIdToMolecularProfile[
@@ -1227,33 +1235,29 @@ export function makeHeatmapTracksMobxPromise(
             const molecularProfileIdToAdditionalTracks =
                 oncoprint.molecularProfileIdToAdditionalTracks;
 
-            const geneProfiles = _.filter(
-                _.values(molecularProfileIdToAdditionalTracks),
-                d =>
-                    d.molecularAlterationType !==
-                    AlterationTypeConstants.GENERIC_ASSAY
-            );
             const neededGenes = _.flatten(
-                geneProfiles.map(v => _.keys(v.entities))
+                _.filter(
+                    _.values(molecularProfileIdToAdditionalTracks),
+                    d =>
+                        d.molecularAlterationType !==
+                        AlterationTypeConstants.GENERIC_ASSAY
+                ).map(v => _.keys(v.entities))
             );
 
-            // Get gene information for entrez IDs
             await oncoprint.props.store.geneCache.getPromise(
                 neededGenes.map(g => ({ hugoGeneSymbol: g })),
                 true
             );
 
-            const cacheQueries = _.flatten(
-                geneProfiles.map(entry =>
-                    _.keys(entry.entities).map(g => ({
-                        molecularProfileId: entry.molecularProfileId,
-                        entrezGeneId: oncoprint.props.store.geneCache.get({
-                            hugoGeneSymbol: g,
-                        })!.data!.entrezGeneId,
-                        hugoGeneSymbol: g.toUpperCase(),
-                    }))
-                )
-            );
+            const cacheQueries = getGeneProfileQueries(
+                molecularProfileIdToAdditionalTracks,
+                oncoprint.props.store.geneCache
+            ).map(query => ({
+                ...query,
+                entrezGeneId: oncoprint.props.store.geneCache.get({
+                    hugoGeneSymbol: query.hugoGeneSymbol.toLowerCase(),
+                })!.data!.entrezGeneId,
+            }));
 
             const nonMutationQueries = cacheQueries.filter(query => {
                 const profileType =
@@ -1265,7 +1269,6 @@ export function makeHeatmapTracksMobxPromise(
                 );
             });
 
-            // Handle non-mutation data fetching
             if (nonMutationQueries.length > 0) {
                 await oncoprint.props.store.geneMolecularDataCache.result!.getPromise(
                     nonMutationQueries,
@@ -1277,11 +1280,10 @@ export function makeHeatmapTracksMobxPromise(
             const patients = oncoprint.props.store.filteredPatients.result!;
 
             return cacheQueries.map(query => {
-                const molecularProfileId = query.molecularProfileId;
+                const { molecularProfileId, hugoGeneSymbol: gene } = query;
                 const profileType =
                     molecularProfileIdToMolecularProfile[molecularProfileId]
                         .molecularAlterationType;
-                const gene = query.hugoGeneSymbol;
                 const datatype =
                     molecularProfileIdToMolecularProfile[molecularProfileId]
                         .datatype;
@@ -1323,11 +1325,13 @@ export function makeHeatmapTracksMobxPromise(
                     }
                 });
 
-                // Unified data handling for VAF and other heatmap types
-                let dataForTrack: any[] = [];
+                let dataForTrack: {
+                    uniqueSampleKey: string;
+                    uniquePatientKey: string;
+                    value: number;
+                }[] = [];
 
                 if (profileType === AlterationTypeConstants.MUTATION_EXTENDED) {
-                    // Get the result from the MobxPromise
                     const mutationPromise = oncoprint.props.store.annotatedMutationCache.get(
                         {
                             entrezGeneId: query.entrezGeneId,
