@@ -2384,6 +2384,16 @@ export class StudyViewPageStore
             });
         }
 
+        if (!_.isEmpty(filters.namespaceDataFilters)) {
+            filters.namespaceDataFilters!.forEach(namespaceDataFilter => {
+                const uniqueKey = getUniqueNamespaceKey(namespaceDataFilter);
+                this._namespaceDataFilterSet.set(
+                    uniqueKey,
+                    _.clone(namespaceDataFilter)
+                );
+            });
+        }
+
         if (!_.isEmpty(filters.genericAssayDataFilters)) {
             filters.genericAssayDataFilters!.forEach(genericAssayDataFilter => {
                 const uniqueKey = getGenericAssayChartUniqueKey(
@@ -7787,6 +7797,15 @@ export class StudyViewPageStore
             this.changeChartVisibility(
                 SpecialChartsUniqueKeyEnum.CASE_LISTS_SAMPLE_COUNT,
                 true
+            );
+        }
+
+        if (!_.isEmpty(this.initialFilters.namespaceDataFilters)) {
+            this.initialFilters.namespaceDataFilters.forEach(
+                (obj: NamespaceAttribute) => {
+                    const uniqueKey = getUniqueNamespaceKey(obj);
+                    this.changeChartVisibility(uniqueKey, true);
+                }
             );
         }
 
