@@ -325,6 +325,25 @@ export function buildBaseConfig(
                 trackTypeMatch: /TOXICITY/,
                 configureTrack: (cat: TimelineTrackSpecification) => {},
             },
+
+            {
+                trackTypeMatch: /MEASUREMENTS/i,
+                configureTrack: (cat: TimelineTrackSpecification) => {
+                    if (cat.tracks) {
+                        cat.tracks.forEach(track => {
+                            if (track.items.length) {
+                                if (allResultValuesAreNumerical(track.items)) {
+                                    track.trackType =
+                                        TimelineTrackType.LINE_CHART;
+                                    track.getLineChartValue = e =>
+                                        getNumericalAttrVal('RESULT', e);
+                                }
+                            }
+                        });
+                    }
+                },
+            },
+
             {
                 trackTypeMatch: /LAB_TEST/i,
                 configureTrack: (cat: TimelineTrackSpecification) => {

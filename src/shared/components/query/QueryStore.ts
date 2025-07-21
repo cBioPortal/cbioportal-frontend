@@ -39,7 +39,11 @@ import URL from 'url';
 import { redirectToStudyView } from '../../api/urls';
 import StudyListLogic from './StudyListLogic';
 import chunkMapReduce from 'shared/lib/chunkMapReduce';
-import { categorizedSamplesCount, currentQueryParams } from './QueryStoreUtils';
+import {
+    categorizedSamplesCount,
+    currentQueryParams,
+    DEFAULT_STUDY_FILTER_OPTIONS,
+} from './QueryStoreUtils';
 
 import getOverlappingStudies from '../../lib/getOverlappingStudies';
 import MolecularProfilesInStudyCache from '../../cache/MolecularProfilesInStudyCache';
@@ -298,6 +302,8 @@ export class QueryStore {
     @observable.ref searchClauses: SearchClause[] = [];
 
     @observable.ref dataTypeFilters: string[] = [];
+
+    @observable studyFilterOptions = DEFAULT_STUDY_FILTER_OPTIONS;
 
     @computed get searchText(): string {
         return toQueryString(this.searchClauses);

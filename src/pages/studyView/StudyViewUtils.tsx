@@ -251,7 +251,7 @@ export const SPECIAL_CHARTS: ChartMetaWithDimensionAndChartType[] = [
     },
     {
         uniqueKey: SpecialChartsUniqueKeyEnum.GENOMIC_PROFILES_SAMPLE_COUNT,
-        displayName: 'Genomic Profile Sample Counts',
+        displayName: 'Data Types',
         description: '',
         chartType: ChartTypeEnum.GENOMIC_PROFILES_TABLE,
         dataType: ChartMetaDataTypeEnum.GENOMIC,
@@ -1862,7 +1862,8 @@ export function correctColumnWidth(columnWidth: number) {
 
 export function getFrequencyStr(value: number) {
     let str = '';
-    if (value < 0) {
+
+    if (value < 0 || _.isNaN(value)) {
         return Datalabel.NA;
     } else if (value === 0) {
         str = '0';

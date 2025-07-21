@@ -54,7 +54,7 @@ export type MultiSelectionTableRow = OncokbCancerGene & {
 
 export enum MultiSelectionTableColumnKey {
     GENE = 'Gene',
-    MOLECULAR_PROFILE = 'Molecular Profile',
+    MOLECULAR_PROFILE = 'Molecular Profile', // this table has been generalized to "Data Types"
     CASE_LIST = 'Name',
     MUTATION_TYPE = 'Mutation Type',
     NUMBER_STRUCTURAL_VARIANTS = '# SV',
@@ -148,6 +148,7 @@ export class MultiSelectionTable extends React.Component<
         columnWidth: number,
         cellMargin: number
     ) => {
+        // @ts-ignore
         const defaults: {
             [key in MultiSelectionTableColumnKey]: Column<
                 MultiSelectionTableRow
@@ -203,15 +204,7 @@ export class MultiSelectionTable extends React.Component<
             [MultiSelectionTableColumnKey.MOLECULAR_PROFILE]: {
                 name: columnKey,
                 headerRender: () => {
-                    return (
-                        <div
-                            style={{ marginLeft: cellMargin }}
-                            className={styles.displayFlex}
-                            data-test="profile-column-header"
-                        >
-                            {columnKey}
-                        </div>
-                    );
+                    return <></>;
                 },
                 render: (data: MultiSelectionTableRow) => {
                     return (
@@ -357,10 +350,20 @@ export class MultiSelectionTable extends React.Component<
                     return <div style={{ marginLeft: cellMargin }}>Freq</div>;
                 },
                 render: (data: MultiSelectionTableRow) => {
+                    // this is for backward compatibility after we introduced
+                    // numberOfAlteredCasesOnPanel for alteration count services
+                    // should be abstracted
+                    const alteredCases =
+                        'numberOfAlteredCasesOnPanel' in data
+                            ? // @ts-ignore
+                              data.numberOfAlteredCasesOnPanel
+                            : data.numberOfAlteredCases;
+
                     return getFreqColumnRender(
                         this.props.tableType,
                         data.numberOfProfiledCases,
-                        data.numberOfAlteredCases,
+                        // @ts-ignore
+                        alteredCases,
                         data.matchingGenePanelIds || [],
                         this.toggleModal,
                         {
@@ -369,9 +372,36 @@ export class MultiSelectionTable extends React.Component<
                         styles.pullRight
                     );
                 },
-                sortBy: (data: MultiSelectionTableRow) =>
-                    (data.numberOfAlteredCases / data.numberOfProfiledCases) *
-                    100,
+                sortBy: (data: MultiSelectionTableRow) => {
+                    // this is for backward compatibility after we introduced
+                    // numberOfAlteredCasesOnPanel for alteration count services
+                    // should be abstracted
+                    if ('numberOfAlteredCasesOnPanel' in data) {
+                        if (
+                            // @ts-ignore
+                            data.numberOfAlteredCasesOnPanel === 0 ||
+                            // @ts-ignore
+                            data.numberOfProfiledCases === 0
+                        ) {
+                            return 0;
+                        } else {
+                            return (
+                                // @ts-ignore
+                                (data.numberOfAlteredCasesOnPanel /
+                                    // @ts-ignore
+                                    data.numberOfProfiledCases) *
+                                100
+                            );
+                        }
+                    } else {
+                        return (
+                            (data.numberOfAlteredCases /
+                                data.numberOfProfiledCases) *
+                            100
+                        );
+                    }
+                },
+
                 defaultSortDirection: 'desc' as 'desc',
                 filter: (
                     data: MultiSelectionTableRow,

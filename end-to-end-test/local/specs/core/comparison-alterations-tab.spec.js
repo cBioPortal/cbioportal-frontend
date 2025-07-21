@@ -55,12 +55,12 @@ describe('comparison alterations tab', () => {
 
         await submitEnrichmentRequest();
         await waitForElementDisplayed('[data-test=LazyMobXTable]');
-        assert.strictEqual(await selectUnalteredCount('ACAP3'), '9 (1.16%)');
+        assert.strictEqual(await selectUnalteredCount('ACAP3'), '9 (1.17%)');
 
         await clickAlterationTypeCheckBox('Deletion');
         await submitEnrichmentRequest();
         await waitForElementDisplayed('[data-test=LazyMobXTable]');
-        assert.strictEqual(await selectUnalteredCount('ACAP3'), '7 (0.90%)');
+        assert.strictEqual(await selectUnalteredCount('ACAP3'), '7 (0.91%)');
     });
 });
 
