@@ -1526,7 +1526,10 @@ export class StudyViewPageStore
             chartType === ChartTypeEnum.PATIENT_TREATMENTS_TABLE ||
             chartType === ChartTypeEnum.PATIENT_TREATMENT_GROUPS_TABLE ||
             chartType === ChartTypeEnum.PATIENT_TREATMENT_TARGET_TABLE;
-        const promises = [this.selectedSampleSet, this.sampleTreatments];
+        const promises = [
+            this.selectedSampleSet,
+            this.detailedSampleTreatments,
+        ];
 
         return new Promise<string>(resolve => {
             onMobxPromise<any>(
@@ -10815,7 +10818,6 @@ export class StudyViewPageStore
         invoke: async () => {
             if (this.shouldDisplaySampleTreatments.result) {
                 if (isClickhouseMode()) {
-                    // @ts-ignore (will be available when go live with Clickhouse for all portals)
                     return await this.internalClient.fetchSampleTreatmentCountsUsingPOST(
                         {
                             studyViewFilter: this.filters,
@@ -10831,6 +10833,31 @@ export class StudyViewPageStore
                 }
             } else {
                 return Promise.resolve(undefined);
+            }
+        },
+    });
+
+    // We need this to create treatments comparison session.
+    // DETAILED projection returns a list of samples in addition to the treatment count.
+    // Samples are needed to properly initiate the comparison session.
+    public readonly detailedSampleTreatments = remoteData<
+        SampleTreatmentReport | undefined
+    >({
+        invoke: async () => {
+            if (isClickhouseMode()) {
+                return await this.internalClient.fetchSampleTreatmentCountsUsingPOST(
+                    {
+                        studyViewFilter: this.filters,
+                        projection: 'DETAILED',
+                    }
+                );
+            } else {
+                // we need to transform old response into new SampleTreatmentReport
+                return await getSampleTreatmentReport(
+                    this.filters,
+                    undefined,
+                    this.internalClient
+                );
             }
         },
     });
