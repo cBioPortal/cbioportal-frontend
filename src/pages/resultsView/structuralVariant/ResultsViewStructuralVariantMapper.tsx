@@ -1,23 +1,3 @@
-/**
- * Copyright (c) 2018 The Hyve B.V.
- * This code is licensed under the GNU Affero General Public License (AGPL),
- * version 3, or (at your option) any later version.
- *
- * This file is part of cBioPortal.
- *
- * cBioPortal is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- **/
-
 import * as React from 'react';
 import ResultsViewStructuralVariantTable from './ResultsViewStructuralVariantTable';
 import { observer } from 'mobx-react';
@@ -31,27 +11,27 @@ import {
 import { MakeMobxView } from 'shared/components/MobxView';
 import ErrorMessage from 'shared/components/ErrorMessage';
 
-export interface IFusionMapperProps {
+export interface IStructuralVariantMapperProps {
     store: ResultsViewStructuralVariantMapperStore;
 }
 
 @observer
 export default class ResultsViewStructuralVariantMapper extends React.Component<
-    IFusionMapperProps,
+    IStructuralVariantMapperProps,
     {}
 > {
-    @observable mergeFusionTableOncoKbIcons;
+    @observable mergeStructuralVariantTableOncoKbIcons;
 
-    constructor(props: IFusionMapperProps) {
+    constructor(props: IStructuralVariantMapperProps) {
         super(props);
         makeObservable(this);
 
-        this.mergeFusionTableOncoKbIcons = getOncoKbIconStyleFromLocalStorage().mergeIcons;
+        this.mergeStructuralVariantTableOncoKbIcons = getOncoKbIconStyleFromLocalStorage().mergeIcons;
     }
 
     @action.bound
     handleOncoKbIconToggle(mergeIcons: boolean) {
-        this.mergeFusionTableOncoKbIcons = mergeIcons;
+        this.mergeStructuralVariantTableOncoKbIcons = mergeIcons;
         saveOncoKbIconStyleToLocalStorage({ mergeIcons });
     }
 
@@ -97,7 +77,9 @@ export default class ResultsViewStructuralVariantMapper extends React.Component<
                         usingPublicOncoKbInstance={
                             this.props.store.usingPublicOncoKbInstance
                         }
-                        mergeOncoKbIcons={this.mergeFusionTableOncoKbIcons}
+                        mergeOncoKbIcons={
+                            this.mergeStructuralVariantTableOncoKbIcons
+                        }
                         onOncoKbIconToggle={this.handleOncoKbIconToggle}
                     />
                 </>
