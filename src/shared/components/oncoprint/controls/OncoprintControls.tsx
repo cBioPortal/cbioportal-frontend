@@ -477,13 +477,10 @@ export default class OncoprintControls extends React.Component<
                 this.props.state.heatmapProfilesPromise.result,
                 profile => {
                     let label = profile.name;
-
-                    // Add a custom label for mutation profiles if they support VAF
                     if (
                         profile.molecularAlterationType ===
                         AlterationTypeConstants.MUTATION_EXTENDED
                     ) {
-                        // You could do better detection logic here if needed
                         label = `Variant Allele Frequency`;
                     }
 
