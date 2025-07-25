@@ -135,7 +135,7 @@ export default class GenesetsSelector extends QueryStoreComponent<
                             <GenesetsHierarchySelector
                                 initialSelection={this.store.genesetIds}
                                 gsvaProfile={
-                                    this.store.getFilteredProfiles(
+                                    this.store.getZScoreProfiles(
                                         'GENESET_SCORE'
                                     )[0].molecularProfileId
                                 }
