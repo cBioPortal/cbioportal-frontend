@@ -1268,11 +1268,38 @@ export function makeHeatmapTracksMobxPromise(
 ) {
     return remoteData<IHeatmapTrackSpec[]>({
         await: () => {
+            const molecularProfileIdToMolecularProfile = oncoprint.props.store
+                .molecularProfileIdToMolecularProfile.result!;
+            const molecularProfileIdToAdditionalTracks =
+                oncoprint.molecularProfileIdToAdditionalTracks;
+
+            // We need to include mutation cache dependencies in await
+            const cacheQueries = getGeneProfileQueries(
+                molecularProfileIdToAdditionalTracks,
+                oncoprint.props.store.geneCache
+            );
+
+            const mutationQueries = cacheQueries.filter(query => {
+                const profileType =
+                    molecularProfileIdToMolecularProfile[
+                        query.molecularProfileId
+                    ]?.molecularAlterationType;
+                return (
+                    profileType === AlterationTypeConstants.MUTATION_EXTENDED
+                );
+            });
+
             return [
                 oncoprint.props.store.filteredSamples,
                 oncoprint.props.store.filteredPatients,
                 oncoprint.props.store.molecularProfileIdToMolecularProfile,
                 oncoprint.props.store.geneMolecularDataCache,
+                // Include mutation cache promises in dependencies
+                ...mutationQueries.map(query =>
+                    oncoprint.props.store.annotatedMutationCache.get({
+                        entrezGeneId: query.entrezGeneId!,
+                    })
+                ),
             ];
         },
         invoke: async () => {
@@ -1304,28 +1331,6 @@ export function makeHeatmapTracksMobxPromise(
                     hugoGeneSymbol: query.hugoGeneSymbol.toLowerCase(),
                 })!.data!.entrezGeneId,
             }));
-
-            // Filter mutation queries and ensure mutation cache is loaded
-            const mutationQueries = cacheQueries.filter(query => {
-                const profileType =
-                    molecularProfileIdToMolecularProfile[
-                        query.molecularProfileId
-                    ]?.molecularAlterationType;
-                return (
-                    profileType === AlterationTypeConstants.MUTATION_EXTENDED
-                );
-            });
-
-            // Await mutation data if needed
-            if (mutationQueries.length > 0) {
-                await Promise.all(
-                    mutationQueries.map(query =>
-                        oncoprint.props.store.annotatedMutationCache.get({
-                            entrezGeneId: query.entrezGeneId!,
-                        })
-                    )
-                );
-            }
 
             const nonMutationQueries = cacheQueries.filter(query => {
                 const profileType =
