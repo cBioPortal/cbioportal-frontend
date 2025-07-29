@@ -3,6 +3,7 @@ import { getServerConfig } from 'config/config';
 
 export default class VAFChartWrapperStore {
     @observable groupByOption: string | null = null;
+    @observable selectedSamplesOptions: Array<any> = [];
 
     @observable _showSequentialMode: boolean = getServerConfig()
         .vaf_sequential_mode_default;
@@ -28,6 +29,11 @@ export default class VAFChartWrapperStore {
     @action
     setGroupByOption(value: string) {
         this.groupByOption = value;
+    }
+
+    @action
+    setSelectedSamplesOptions(value: Array<any>) {
+        this.selectedSamplesOptions = value;
     }
 
     @action
