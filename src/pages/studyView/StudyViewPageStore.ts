@@ -10845,10 +10845,14 @@ export class StudyViewPageStore
     >({
         invoke: async () => {
             if (isClickhouseMode()) {
+                // @ts-ignore
                 return await this.internalClient.fetchSampleTreatmentCountsUsingPOST(
                     {
                         studyViewFilter: this.filters,
-                        projection: 'DETAILED',
+                        // @ts-ignore
+                        $queryParameters: {
+                            projection: 'DETAILED',
+                        },
                     }
                 );
             } else {
