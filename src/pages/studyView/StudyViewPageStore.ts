@@ -2413,7 +2413,7 @@ export class StudyViewPageStore
     }
 
     @action
-    async updateStoreFromURL(query: StudyViewURLQuery): Promise<void> {
+    async updateStoreFromURL(query: StudyViewURLQuery): Promise<any> {
         const queryExtractors: Array<StudyViewQueryExtractor<void>> = [
             new StudyIdQueryExtractor(),
             new SharedGroupsAndCustomDataQueryExtractor(),
@@ -2432,7 +2432,7 @@ export class StudyViewPageStore
             extractor.accept(query, this);
         }
 
-        await Promise.all(
+        return await Promise.all(
             asyncQueryExtractors.map(ex => ex.accept(query, this))
         );
     }
