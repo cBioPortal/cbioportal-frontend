@@ -379,7 +379,7 @@
     "swagger-js-codegen": "git+https://github.com/cBioPortal/swagger-js-codegen.git#0362f4a1e2d116ad6dffc36e4b57cdfbc93956cf",
     "ts-jest": "^27.0.5",
     "ts-node": "^10.2.1",
-    "webpack-dev-server": "^4.1.0",
+    "webpack-dev-server": "^5.2.1",
     "yargs": "^6.6.0"
   },
   "packageManager": "yarn@1.22.5"
