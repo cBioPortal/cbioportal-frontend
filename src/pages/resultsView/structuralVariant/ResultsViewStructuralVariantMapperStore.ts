@@ -1,26 +1,6 @@
-/**
- * Copyright (c) 2018 The Hyve B.V.
- * This code is licensed under the GNU Affero General Public License (AGPL),
- * version 3, or (at your option) any later version.
- *
- * This file is part of cBioPortal.
- *
- * cBioPortal is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- **/
-
 import { computed, makeObservable } from 'mobx';
-import { StructuralVariantExt } from 'shared/model/Fusion';
-import ResultViewFusionMapperDataStore from './ResultsViewStructuralVariantMapperDataStore';
+import { StructuralVariantExt } from 'shared/model/StructuralVariantExt';
+import ResultViewStructuralVariantMapperDataStore from './ResultsViewStructuralVariantMapperDataStore';
 import {
     CancerStudy,
     Gene,
@@ -51,7 +31,7 @@ export class ResultsViewStructuralVariantMapperStore {
         public molecularProfileIdToMolecularProfile: MobxPromise<{
             [molecularProfileId: string]: MolecularProfile;
         }>,
-        public fusions: StructuralVariantExt[],
+        public structuralVariants: StructuralVariantExt[],
         public uniqueSampleKeyToTumorType: {
             [uniqueSampleKey: string]: string;
         },
@@ -68,12 +48,18 @@ export class ResultsViewStructuralVariantMapperStore {
     readonly ensemblTranscriptsByTranscriptIds = remoteData(
         {
             invoke: async () => {
-                // Collect all transcript id's from the fusion data
+                // Collect all transcript id's from the structuralVariant data
                 const transcriptIds = new Set<string>();
-                this.fusions.forEach((fusion: StructuralVariant) => {
-                    transcriptIds.add(fusion.site1EnsemblTranscriptId);
-                    transcriptIds.add(fusion.site2EnsemblTranscriptId);
-                });
+                this.structuralVariants.forEach(
+                    (structuralVariant: StructuralVariant) => {
+                        transcriptIds.add(
+                            structuralVariant.site1EnsemblTranscriptId
+                        );
+                        transcriptIds.add(
+                            structuralVariant.site2EnsemblTranscriptId
+                        );
+                    }
+                );
                 // Fetch ensembl transcript data with transcript ids as request params
                 return await fetchEnsemblTranscriptsByEnsemblFilter(
                     {
@@ -89,14 +75,16 @@ export class ResultsViewStructuralVariantMapperStore {
     readonly canonicalTranscriptsByHugoSymbols = remoteData(
         {
             invoke: async () => {
-                // Collect all transcript id's from the fusion data
+                // Collect all transcript id's from the structuralVariant data
                 const hugoSymbols = new Set<string>();
-                this.fusions.forEach((fusion: StructuralVariant) => {
-                    if (fusion.site1HugoSymbol)
-                        hugoSymbols.add(fusion.site1HugoSymbol);
-                    if (fusion.site2HugoSymbol)
-                        hugoSymbols.add(fusion.site2HugoSymbol);
-                });
+                this.structuralVariants.forEach(
+                    (structuralVariant: StructuralVariant) => {
+                        if (structuralVariant.site1HugoSymbol)
+                            hugoSymbols.add(structuralVariant.site1HugoSymbol);
+                        if (structuralVariant.site2HugoSymbol)
+                            hugoSymbols.add(structuralVariant.site2HugoSymbol);
+                    }
+                );
                 // Fetch ensembl transcript data with transcript ids as request params
                 return await fetchCanonicalTranscripts(
                     Array.from(hugoSymbols),
@@ -129,10 +117,12 @@ export class ResultsViewStructuralVariantMapperStore {
     }
 
     @computed
-    get dataStore(): ResultViewFusionMapperDataStore {
-        const fusionData = (
-            this.fusions || []
-        ).map((fusion: StructuralVariant) => [fusion]);
-        return new ResultViewFusionMapperDataStore(fusionData);
+    get dataStore(): ResultViewStructuralVariantMapperDataStore {
+        const structuralVariantData = (
+            this.structuralVariants || []
+        ).map((structuralVariant: StructuralVariant) => [structuralVariant]);
+        return new ResultViewStructuralVariantMapperDataStore(
+            structuralVariantData
+        );
     }
 }
