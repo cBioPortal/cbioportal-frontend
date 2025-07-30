@@ -353,11 +353,14 @@ describe('enrichments tab screenshot tests', function() {
         await (
             await browser.$('.comparisonTabSubTabs .tabAnchor_mrna')
         ).waitForDisplayed();
-
         await clickElement('.comparisonTabSubTabs .tabAnchor_mrna');
-        await clickElement('a=mRNA');
 
+        await waitForElementDisplayed(
+            'div[data-test="GroupComparisonMRNAEnrichments"]'
+        );
         await clickElement('b=MERTK');
+        await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
+        await waitForElementDisplayed('div[data-test="MiniBoxPlot"]');
 
         const res = await browser.checkElement(
             'div[data-test="ComparisonTabDiv"]'

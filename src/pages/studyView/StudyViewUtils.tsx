@@ -1696,7 +1696,7 @@ export function intervalFiltersDisplayValue(
                     }
                 }}
                 numericOnly={true}
-                allowEmptyValue={true}
+                allowEmptyValue={false}
                 textFieldAppearance={true}
             />
         );
@@ -1726,7 +1726,7 @@ export function intervalFiltersDisplayValue(
                     return true;
                 }}
                 numericOnly={true}
-                allowEmptyValue={true}
+                allowEmptyValue={false}
                 textFieldAppearance={true}
             />
         );
@@ -1748,7 +1748,7 @@ export function intervalFiltersDisplayValue(
                     }
                 }}
                 numericOnly={true}
-                allowEmptyValue={true}
+                allowEmptyValue={false}
                 textFieldAppearance={true}
             />
         );
@@ -1887,7 +1887,8 @@ export function correctColumnWidth(columnWidth: number) {
 
 export function getFrequencyStr(value: number) {
     let str = '';
-    if (value < 0) {
+
+    if (value < 0 || _.isNaN(value)) {
         return Datalabel.NA;
     } else if (value === 0) {
         str = '0';
