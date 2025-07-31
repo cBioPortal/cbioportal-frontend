@@ -198,6 +198,19 @@ export function createSampleLookupMap(
 }
 
 /**
+ * Creates a lookup map for samples by sampleId (for sample-level embeddings)
+ */
+export function createSampleIdLookupMap(
+    allSamples: Sample[]
+): Map<string, Sample> {
+    const sampleLookupMap = new Map<string, Sample>();
+    allSamples.forEach(sample => {
+        sampleLookupMap.set(sample.sampleId, sample);
+    });
+    return sampleLookupMap;
+}
+
+/**
  * Pre-computes clinical data colors and values for fast O(1) lookup
  */
 export function preComputeClinicalDataMaps(
