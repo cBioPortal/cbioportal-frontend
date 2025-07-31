@@ -116,6 +116,10 @@ export class EmbeddingDeckGLVisualization extends React.Component<
     private onClick = (info: any) => {
         const { object } = info;
         if (object && this.props.onPointSelection) {
+            // Don't allow selection of non-cohort samples
+            if (object.isInCohort === false) {
+                return;
+            }
             this.props.onPointSelection([object]);
         }
     };
@@ -128,7 +132,12 @@ export class EmbeddingDeckGLVisualization extends React.Component<
     };
 
     private renderTooltip() {
-        return <TooltipDisplay hoveredPoint={this.state.hoveredPoint} />;
+        return (
+            <TooltipDisplay
+                hoveredPoint={this.state.hoveredPoint}
+                embeddingType={this.props.embeddingType}
+            />
+        );
     }
 
     private renderLegend() {
@@ -137,6 +146,17 @@ export class EmbeddingDeckGLVisualization extends React.Component<
                 data={this.props.data}
                 showLegend={this.props.showLegend}
                 actualHeight={this.state.actualHeight}
+                categoryCounts={this.props.categoryCounts}
+                categoryColors={this.props.categoryColors}
+                hiddenCategories={this.props.hiddenCategories}
+                onToggleCategoryVisibility={
+                    this.props.onToggleCategoryVisibility
+                }
+                onToggleAllCategories={this.props.onToggleAllCategories}
+                visibleSampleCount={this.props.visibleSampleCount}
+                totalSampleCount={this.props.totalSampleCount}
+                visibleCategoryCount={this.props.visibleCategoryCount}
+                totalCategoryCount={this.props.totalCategoryCount}
             />
         );
     }

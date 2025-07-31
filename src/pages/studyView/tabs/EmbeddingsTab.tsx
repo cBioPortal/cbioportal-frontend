@@ -3,20 +3,18 @@ import { observer } from 'mobx-react';
 import { computed, observable, action, makeObservable } from 'mobx';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
-import umapData from '../../../data/msk_chord_2024_umap_data.json';
-import pcaData from '../../../data/msk_chord_2024_pca_data.json';
+import boehmData from '../../../data/boehm_2025_umap_embedding.json';
 import ColorSamplesByDropdown from 'shared/components/colorSamplesByDropdown/ColorSamplesByDropdown';
 import { ColoringMenuOmnibarOption } from 'shared/components/plots/PlotsTab';
 import {
     makeEmbeddingScatterPlotData,
-    EmbeddingCoordinate,
     EmbeddingPlotPoint,
 } from 'shared/components/plots/EmbeddingPlotUtils';
 import {
-    EmbeddingSelector,
     EmbeddingDeckGLVisualization,
     EmbeddingDataOption,
 } from 'shared/components/embeddings';
+import Select from 'react-select';
 import { Gene } from 'cbioportal-ts-api-client';
 
 import {
@@ -37,17 +35,15 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     @observable private mutationTypeEnabled = true;
     @observable private copyNumberEnabled = true;
     @observable private structuralVariantEnabled = true;
-    @observable private selectedEmbedding: EmbeddingDataOption = {
-        value: 'umap',
-        label: 'UMAP',
-        data: umapData as EmbeddingData,
-    };
+    @observable private selectedEmbeddingValue: string = 'boehm_2025';
     @observable.ref private viewState: ViewState = {
         target: [0, 0, 0],
         zoom: 0,
         minZoom: -5,
         maxZoom: 10,
     };
+    @observable private windowHeight = window.innerHeight;
+    @observable private hiddenCategories = new Set<string>();
 
     constructor(props: IEmbeddingsTabProps) {
         super(props);
@@ -58,6 +54,22 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
 
         // Initialize view state based on initial data
         this.initializeViewState();
+
+        // Listen for window resize events
+        this.handleResize = this.handleResize.bind(this);
+    }
+
+    componentDidMount() {
+        window.addEventListener('resize', this.handleResize);
+    }
+
+    componentWillUnmount() {
+        window.removeEventListener('resize', this.handleResize);
+    }
+
+    @action.bound
+    private handleResize() {
+        this.windowHeight = window.innerHeight;
     }
 
     private initializeDefaultColoring() {
@@ -84,15 +96,17 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
 
     private initializeViewState() {
         // Calculate initial view state when component loads
-        const bounds = calculateDataBounds(
-            this.selectedEmbedding.data.data as EmbeddingPoint[]
-        );
-        this.viewState = {
-            target: [bounds.centerX, bounds.centerY, 0],
-            zoom: bounds.zoom,
-            minZoom: -5,
-            maxZoom: 10,
-        };
+        if (this.selectedEmbedding?.data) {
+            const bounds = calculateDataBounds(
+                this.selectedEmbedding.data.data as EmbeddingPoint[]
+            );
+            this.viewState = {
+                target: [bounds.centerX, bounds.centerY, 0],
+                zoom: bounds.zoom,
+                minZoom: -5,
+                maxZoom: 10,
+            };
+        }
     }
 
     @computed get clinicalAttributes() {
@@ -111,6 +125,24 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         return false;
     }
 
+    @computed get plotHeight(): number {
+        // Calculate available viewport height dynamically
+        const viewportHeight = this.windowHeight;
+
+        // Estimate space used by headers, controls, and padding (more conservative)
+        // - cBioPortal header: ~50px
+        // - Study view tabs: ~50px
+        // - Embedding controls: ~50px
+        // - Bottom axis labels and padding: ~90px
+        // - Additional buffer for safety: ~60px
+        const headerAndControlsHeight = 300;
+
+        const calculatedHeight = viewportHeight - headerAndControlsHeight;
+
+        // Minimum 500px for usability, maximum 70% of viewport to ensure bottom axis is visible
+        return Math.max(500, Math.min(calculatedHeight, viewportHeight * 0.8));
+    }
+
     @computed get mutationDataExists(): boolean {
         return !!this.props.store.annotatedMutationCache;
     }
@@ -123,40 +155,75 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         return !!this.props.store.structuralVariantCache;
     }
 
-    @computed get embeddingOptions(): EmbeddingDataOption[] {
+    @computed get allEmbeddingOptions(): EmbeddingDataOption[] {
         return [
             {
-                value: 'umap',
-                label: 'UMAP',
-                data: umapData as EmbeddingData,
-            },
-            {
-                value: 'pca',
-                label: 'PCA',
-                data: pcaData as EmbeddingData,
+                value: 'boehm_2025',
+                label: 'Boehm 2025',
+                data: boehmData as EmbeddingData,
             },
         ];
+    }
+
+    @computed get currentStudyIds(): string[] {
+        return this.props.store.queriedPhysicalStudyIds.result || [];
+    }
+
+    @computed get embeddingOptions(): EmbeddingDataOption[] {
+        // Filter embedding options to only show those that support ALL current studies
+        if (this.currentStudyIds.length === 0) {
+            return [];
+        }
+
+        return this.allEmbeddingOptions.filter(option =>
+            this.currentStudyIds.every(studyId =>
+                option.data.studyIds.includes(studyId)
+            )
+        );
+    }
+
+    @computed get hasEmbeddingSupport(): boolean {
+        return this.embeddingOptions.length > 0;
+    }
+
+    @computed get selectedEmbedding(): EmbeddingDataOption | null {
+        const availableOption = this.embeddingOptions.find(
+            option => option.value === this.selectedEmbeddingValue
+        );
+
+        // If the selected embedding is not available for current study, fall back to first available
+        if (!availableOption && this.embeddingOptions.length > 0) {
+            return this.embeddingOptions[0];
+        }
+
+        return availableOption || null;
+    }
+
+    @computed get reactSelectEmbeddingOptions() {
+        return this.embeddingOptions.map(option => ({
+            value: option.value,
+            label: option.label,
+        }));
+    }
+
+    @computed get selectedReactSelectOption() {
+        const selected = this.selectedEmbedding;
+        return selected
+            ? { value: selected.value, label: selected.label }
+            : null;
     }
 
     @computed get plotData(): EmbeddingPlotPoint[] {
         if (
             !this.props.store.samples.isComplete ||
-            !this.selectedEmbedding.data
+            !this.selectedEmbedding?.data
         ) {
             return [];
         }
 
-        // Use the new utility function to transform embedding data
-        const embeddingCoordinates: EmbeddingCoordinate[] = this.selectedEmbedding.data.data.map(
-            point => ({
-                x: point.x,
-                y: point.y,
-                patientId: point.patientId,
-            })
-        );
-
-        return makeEmbeddingScatterPlotData(
-            embeddingCoordinates,
+        // Pass the entire embedding data object to handle both patient and sample types
+        const rawPlotData = makeEmbeddingScatterPlotData(
+            this.selectedEmbedding.data,
             this.props.store,
             this.selectedColoringOption,
             this.mutationTypeEnabled,
@@ -164,6 +231,290 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             this.structuralVariantEnabled,
             this.coloringLogScale
         );
+
+        // Post-process to handle selection state - update displayLabels for better legend consistency
+        const selectedPatientIds = this.selectedPatientIds;
+        const hasSelection = selectedPatientIds.length > 0;
+
+        if (!hasSelection) {
+            // Even without selection, clean up "Unknown" labels to be more descriptive
+            const unknownPoints = rawPlotData.filter(
+                p => p.displayLabel === 'Unknown'
+            );
+            if (unknownPoints.length > 0) {
+                console.log(
+                    '🔍 Found Unknown points (no selection):',
+                    unknownPoints.length,
+                    'examples:',
+                    unknownPoints.slice(0, 3).map(p => ({
+                        patientId: p.patientId,
+                        sampleId: p.sampleId,
+                        displayLabel: p.displayLabel,
+                        isInCohort: p.isInCohort,
+                        color: p.color,
+                    }))
+                );
+            }
+
+            return rawPlotData.map(point => {
+                if (
+                    point.displayLabel === 'Unknown' &&
+                    point.isInCohort !== false
+                ) {
+                    return {
+                        ...point,
+                        displayLabel: 'Unspecified Cancer Type',
+                    };
+                }
+                return point;
+            });
+        }
+
+        const selectedPatientSet = new Set(selectedPatientIds);
+
+        const processedData = rawPlotData.map(point => {
+            // Skip non-cohort samples
+            if (point.isInCohort === false) {
+                return point;
+            }
+
+            // Check if this point is selected (must have patientId and be in the selected set)
+            const hasPatientId = Boolean(point.patientId);
+            const isSelected =
+                hasPatientId && selectedPatientSet.has(point.patientId!);
+
+            if (!isSelected) {
+                // Update ALL unselected in-cohort points to show "Unselected" in legend with light gray color
+                return {
+                    ...point,
+                    displayLabel: 'Unselected',
+                    color: '#C8C8C8', // Light gray to match visual rendering
+                    strokeColor: '#C8C8C8',
+                };
+            }
+
+            // This point is SELECTED - but if it's "Unknown", make it more descriptive
+            if (point.displayLabel === 'Unknown') {
+                return {
+                    ...point,
+                    displayLabel: 'Cancer Type Not Available',
+                };
+            }
+
+            return point;
+        });
+
+        // Filter out hidden categories
+        const filteredData = processedData.filter(
+            point => !this.hiddenCategories.has(point.displayLabel || '')
+        );
+
+        return filteredData;
+    }
+
+    @computed get categoryCounts(): Map<string, number> {
+        if (
+            !this.props.store.samples.isComplete ||
+            !this.selectedEmbedding?.data
+        ) {
+            return new Map();
+        }
+
+        // Get the raw plot data without any filtering to count all categories
+        const rawPlotData = makeEmbeddingScatterPlotData(
+            this.selectedEmbedding.data,
+            this.props.store,
+            this.selectedColoringOption,
+            this.mutationTypeEnabled,
+            this.copyNumberEnabled,
+            this.structuralVariantEnabled,
+            this.coloringLogScale
+        );
+
+        // Apply the same post-processing logic as plotData but without filtering
+        const selectedPatientIds = this.selectedPatientIds;
+        const hasSelection = selectedPatientIds.length > 0;
+
+        let processedData;
+        if (!hasSelection) {
+            processedData = rawPlotData.map(point => {
+                if (
+                    point.displayLabel === 'Unknown' &&
+                    point.isInCohort !== false
+                ) {
+                    return {
+                        ...point,
+                        displayLabel: 'Unspecified Cancer Type',
+                    };
+                }
+                return point;
+            });
+        } else {
+            const selectedPatientSet = new Set(selectedPatientIds);
+            processedData = rawPlotData.map(point => {
+                if (point.isInCohort === false) {
+                    return point;
+                }
+                const hasPatientId = Boolean(point.patientId);
+                const isSelected =
+                    hasPatientId && selectedPatientSet.has(point.patientId!);
+
+                if (!isSelected) {
+                    return { ...point, displayLabel: 'Unselected' };
+                }
+                if (point.displayLabel === 'Unknown') {
+                    return {
+                        ...point,
+                        displayLabel: 'Cancer Type Not Available',
+                    };
+                }
+                return point;
+            });
+        }
+
+        // Count categories
+        const counts = new Map<string, number>();
+        processedData.forEach(point => {
+            const category = point.displayLabel || '';
+            counts.set(category, (counts.get(category) || 0) + 1);
+        });
+
+        return counts;
+    }
+
+    @computed get categoryColors(): Map<
+        string,
+        { fillColor: string; strokeColor: string; hasStroke: boolean }
+    > {
+        if (
+            !this.props.store.samples.isComplete ||
+            !this.selectedEmbedding?.data
+        ) {
+            return new Map();
+        }
+
+        // Get the raw plot data without any filtering to get all category colors
+        const rawPlotData = makeEmbeddingScatterPlotData(
+            this.selectedEmbedding.data,
+            this.props.store,
+            this.selectedColoringOption,
+            this.mutationTypeEnabled,
+            this.copyNumberEnabled,
+            this.structuralVariantEnabled,
+            this.coloringLogScale
+        );
+
+        // Apply the same post-processing logic as plotData but without filtering
+        const selectedPatientIds = this.selectedPatientIds;
+        const hasSelection = selectedPatientIds.length > 0;
+
+        let processedData;
+        if (!hasSelection) {
+            processedData = rawPlotData.map(point => {
+                if (
+                    point.displayLabel === 'Unknown' &&
+                    point.isInCohort !== false
+                ) {
+                    return {
+                        ...point,
+                        displayLabel: 'Unspecified Cancer Type',
+                    };
+                }
+                return point;
+            });
+        } else {
+            const selectedPatientSet = new Set(selectedPatientIds);
+            processedData = rawPlotData.map(point => {
+                if (point.isInCohort === false) {
+                    return point;
+                }
+                const hasPatientId = Boolean(point.patientId);
+                const isSelected =
+                    hasPatientId && selectedPatientSet.has(point.patientId!);
+
+                if (!isSelected) {
+                    return { ...point, displayLabel: 'Unselected' };
+                }
+                if (point.displayLabel === 'Unknown') {
+                    return {
+                        ...point,
+                        displayLabel: 'Cancer Type Not Available',
+                    };
+                }
+                return point;
+            });
+        }
+
+        // Extract color information for each category
+        const colors = new Map<
+            string,
+            { fillColor: string; strokeColor: string; hasStroke: boolean }
+        >();
+        processedData.forEach(point => {
+            if (
+                point.displayLabel &&
+                point.color &&
+                !colors.has(point.displayLabel)
+            ) {
+                colors.set(point.displayLabel, {
+                    fillColor: point.color,
+                    strokeColor: point.strokeColor || point.color,
+                    hasStroke: !!(
+                        point.strokeColor && point.strokeColor !== point.color
+                    ),
+                });
+            }
+        });
+
+        return colors;
+    }
+
+    @computed get visibleSampleCount(): number {
+        if (!this.categoryCounts) return 0;
+        let visibleCount = 0;
+        this.categoryCounts.forEach((count, category) => {
+            // Only count samples from categories that are not hidden
+            // Also exclude non-cohort samples from visible count like we do for total
+            if (
+                !this.hiddenCategories.has(category) &&
+                category !== 'Sample not in this cohort' &&
+                category !== 'Case not in this cohort'
+            ) {
+                visibleCount += count;
+            }
+        });
+        return visibleCount;
+    }
+
+    @computed get totalSampleCount(): number {
+        if (!this.categoryCounts) return 0;
+        let total = 0;
+        this.categoryCounts.forEach((count, category) => {
+            // Exclude samples that are not in this cohort from the total count
+            // These samples were used to construct the embedding but are not part of the current study
+            if (
+                category !== 'Sample not in this cohort' &&
+                category !== 'Case not in this cohort'
+            ) {
+                total += count;
+            }
+        });
+        return total;
+    }
+
+    @computed get visibleCategoryCount(): number {
+        if (!this.categoryCounts) return 0;
+        let visibleCount = 0;
+        this.categoryCounts.forEach((count, category) => {
+            if (!this.hiddenCategories.has(category)) {
+                visibleCount++;
+            }
+        });
+        return visibleCount;
+    }
+
+    @computed get totalCategoryCount(): number {
+        return this.categoryCounts?.size || 0;
     }
 
     @computed get selectedPatientIds(): string[] {
@@ -270,22 +621,26 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     }
 
     @action.bound
-    private onEmbeddingChange(value: string) {
-        const selectedOption = this.embeddingOptions.find(
-            option => option.value === value
-        );
+    private onEmbeddingChange(
+        selectedOption: { value: string; label: string } | null
+    ) {
         if (selectedOption) {
-            this.selectedEmbedding = selectedOption;
-            // Reset view state when embedding type changes
-            const bounds = calculateDataBounds(
-                selectedOption.data.data as EmbeddingPoint[]
+            const embeddingOption = this.embeddingOptions.find(
+                option => option.value === selectedOption.value
             );
-            this.viewState = {
-                target: [bounds.centerX, bounds.centerY, 0],
-                zoom: bounds.zoom,
-                minZoom: -5,
-                maxZoom: 10,
-            };
+            if (embeddingOption) {
+                this.selectedEmbeddingValue = selectedOption.value;
+                // Reset view state when embedding type changes
+                const bounds = calculateDataBounds(
+                    embeddingOption.data.data as EmbeddingPoint[]
+                );
+                this.viewState = {
+                    target: [bounds.centerX, bounds.centerY, 0],
+                    zoom: bounds.zoom,
+                    minZoom: -5,
+                    maxZoom: 10,
+                };
+            }
         }
     }
 
@@ -295,38 +650,104 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     }
 
     @action.bound
+    private toggleCategoryVisibility(category: string) {
+        if (this.hiddenCategories.has(category)) {
+            this.hiddenCategories.delete(category);
+        } else {
+            this.hiddenCategories.add(category);
+        }
+    }
+
+    @action.bound
+    private toggleAllCategories() {
+        if (this.hiddenCategories.size === 0) {
+            // All categories are currently visible, so hide all biological categories
+            // (allowing for an empty plot - only UI elements may remain)
+            if (this.categoryCounts) {
+                // Hide all biological categories but preserve UI categories
+                this.categoryCounts.forEach((count, category) => {
+                    // Don't hide UI categories like "Sample not in this cohort" and "Unselected"
+                    const isUiCategory =
+                        category === 'Sample not in this cohort' ||
+                        category === 'Case not in this cohort' ||
+                        category === 'Unselected';
+
+                    if (!isUiCategory) {
+                        this.hiddenCategories.add(category);
+                    }
+                });
+            }
+        } else {
+            // Some categories are hidden, so show all of them
+            this.hiddenCategories.clear();
+        }
+    }
+
+    @action.bound
     private handlePointSelection(selectedPoints: any[]) {
-        if (!selectedPoints || selectedPoints.length === 0) return;
+        if (
+            !selectedPoints ||
+            selectedPoints.length === 0 ||
+            !this.selectedEmbedding
+        )
+            return;
 
-        // Get all samples from the store to map patient IDs to sample IDs
         const allSamples = this.props.store.samples.result || [];
-        const selectedPatientSet = new Set(
-            selectedPoints.map(p => p.patientId)
-        );
+        const embeddingType = this.selectedEmbedding.data.embedding_type;
 
-        // Find samples that belong to the selected patients
-        const samplesForSelectedPatients = allSamples.filter(sample =>
-            selectedPatientSet.has(sample.patientId)
-        );
+        if (embeddingType === 'samples') {
+            // Sample-level embedding: select specific samples
+            const selectedSampleIds = new Set(
+                selectedPoints.map(p => p.sampleId).filter(Boolean)
+            );
 
-        // Create CustomChartData for patient selection
-        const customChartData = {
-            origin: [this.selectedEmbedding.label],
-            displayName: `${this.selectedEmbedding.label} Selection`,
-            description: `Patients selected from ${this.selectedEmbedding.label} embedding`,
-            datatype: 'STRING',
-            patientAttribute: true,
-            priority: 1,
-            data: samplesForSelectedPatients.map(sample => ({
-                studyId: sample.studyId,
-                patientId: sample.patientId,
-                sampleId: sample.sampleId,
-                value: 'Selected',
-            })),
-        };
+            const samplesForSelection = allSamples.filter(sample =>
+                selectedSampleIds.has(sample.sampleId)
+            );
 
-        // Update the study view filter with selected patients
-        this.props.store.updateCustomSelect(customChartData);
+            const customChartData = {
+                origin: [this.selectedEmbedding.label],
+                displayName: `${this.selectedEmbedding.label} Sample Selection`,
+                description: `Samples selected from ${this.selectedEmbedding.label} embedding`,
+                datatype: 'STRING',
+                patientAttribute: false, // Sample-level selection
+                priority: 1,
+                data: samplesForSelection.map(sample => ({
+                    studyId: sample.studyId,
+                    patientId: sample.patientId,
+                    sampleId: sample.sampleId,
+                    value: 'Selected',
+                })),
+            };
+
+            this.props.store.updateCustomSelect(customChartData);
+        } else {
+            // Patient-level embedding: select all samples from selected patients
+            const selectedPatientSet = new Set(
+                selectedPoints.map(p => p.patientId).filter(Boolean)
+            );
+
+            const samplesForSelectedPatients = allSamples.filter(sample =>
+                selectedPatientSet.has(sample.patientId)
+            );
+
+            const customChartData = {
+                origin: [this.selectedEmbedding.label],
+                displayName: `${this.selectedEmbedding.label} Patient Selection`,
+                description: `Patients selected from ${this.selectedEmbedding.label} embedding`,
+                datatype: 'STRING',
+                patientAttribute: true, // Patient-level selection
+                priority: 1,
+                data: samplesForSelectedPatients.map(sample => ({
+                    studyId: sample.studyId,
+                    patientId: sample.patientId,
+                    sampleId: sample.sampleId,
+                    value: 'Selected',
+                })),
+            };
+
+            this.props.store.updateCustomSelect(customChartData);
+        }
     }
 
     @computed get plotComponent(): JSX.Element {
@@ -335,7 +756,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                 <div
                     style={{
                         width: '100%',
-                        height: '600px',
+                        height: `${this.plotHeight}px`,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -356,7 +777,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                 <div
                     style={{
                         width: '100%',
-                        height: '600px',
+                        height: `${this.plotHeight}px`,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -367,18 +788,44 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             );
         }
 
+        if (!this.selectedEmbedding) {
+            return (
+                <div
+                    style={{
+                        width: '100%',
+                        height: `${this.plotHeight}px`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }}
+                >
+                    <p>No embedding selected</p>
+                </div>
+            );
+        }
+
         const visualizationProps = {
             data: patientData,
             title: `${this.selectedEmbedding.label} Embedding - ${this.selectedEmbedding.data.title}`,
             xAxisLabel: `${this.selectedEmbedding.label}1`,
             yAxisLabel: `${this.selectedEmbedding.label}2`,
-            height: 600,
+            height: this.plotHeight,
             showLegend: true,
             filename: `${this.selectedEmbedding.value}_embedding`,
             viewState: this.viewState,
             onViewStateChange: this.onViewStateChange,
             onPointSelection: this.handlePointSelection,
             selectedPatientIds: this.selectedPatientIds,
+            embeddingType: this.selectedEmbedding.data.embedding_type,
+            categoryCounts: this.categoryCounts,
+            categoryColors: this.categoryColors,
+            hiddenCategories: this.hiddenCategories,
+            onToggleCategoryVisibility: this.toggleCategoryVisibility,
+            onToggleAllCategories: this.toggleAllCategories,
+            visibleSampleCount: this.visibleSampleCount,
+            totalSampleCount: this.totalSampleCount,
+            visibleCategoryCount: this.visibleCategoryCount,
+            totalCategoryCount: this.totalCategoryCount,
         };
 
         return (
@@ -390,11 +837,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
 
     render() {
         // Safety check for study ID access
-        const studyIds = this.props.store.queriedPhysicalStudyIds.result;
-        const currentStudyId =
-            studyIds && studyIds.length > 0 ? studyIds[0] : null;
-
-        if (!currentStudyId) {
+        if (this.currentStudyIds.length === 0) {
             return (
                 <div style={{ padding: '20px', textAlign: 'center' }}>
                     <h4>Embeddings Visualization</h4>
@@ -403,16 +846,24 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             );
         }
 
-        if (currentStudyId !== 'msk_chord_2024') {
+        if (!this.hasEmbeddingSupport) {
+            const studyText =
+                this.currentStudyIds.length === 1
+                    ? `Current study: ${this.currentStudyIds[0]}`
+                    : `Current studies: ${this.currentStudyIds.join(', ')}`;
+
             return (
                 <div style={{ padding: '20px', textAlign: 'center' }}>
                     <h4>Embeddings Visualization</h4>
                     <p>
-                        Embeddings are currently only available for the
-                        msk_chord_2024 study.
+                        Embeddings are not available for{' '}
+                        {this.currentStudyIds.length === 1
+                            ? 'this study'
+                            : 'this combination of studies'}
+                        .
                     </p>
                     <p>
-                        Current study: <strong>{currentStudyId}</strong>
+                        <strong>{studyText}</strong>
                     </p>
                 </div>
             );
@@ -428,16 +879,39 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                             verticalAlign: 'middle',
                         }}
                     >
-                        <EmbeddingSelector
-                            options={this.embeddingOptions.map(opt => ({
-                                value: opt.value,
-                                label: opt.label,
-                                description: opt.data.description,
-                            }))}
-                            selectedValue={this.selectedEmbedding.value}
-                            onSelectionChange={this.onEmbeddingChange}
-                            label="Embedding:"
-                        />
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                            <label
+                                style={{
+                                    marginRight: '8px',
+                                    whiteSpace: 'nowrap',
+                                    fontSize: '14px',
+                                }}
+                            >
+                                Embedding:
+                            </label>
+                            <Select
+                                name="embedding-select"
+                                value={this.selectedReactSelectOption}
+                                onChange={this.onEmbeddingChange}
+                                options={this.reactSelectEmbeddingOptions}
+                                isSearchable={false}
+                                styles={{
+                                    container: (base: any) => ({
+                                        ...base,
+                                        minWidth: '150px',
+                                    }),
+                                    control: (base: any) => ({
+                                        ...base,
+                                        fontSize: '14px',
+                                        minHeight: '34px',
+                                    }),
+                                    menu: (base: any) => ({
+                                        ...base,
+                                        zIndex: 9999,
+                                    }),
+                                }}
+                            />
+                        </div>
                     </div>
 
                     <div

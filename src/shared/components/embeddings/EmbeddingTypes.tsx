@@ -2,14 +2,26 @@
  * Common types and interfaces for embedding visualizations
  */
 
-export interface EmbeddingData {
-    studyId: string;
+interface BaseEmbeddingData {
+    studyIds: string[];
     title: string;
     description: string;
     totalPatients: number;
     sampleSize: number;
+    embedding_type: 'patients' | 'samples';
+}
+
+export interface PatientEmbeddingData extends BaseEmbeddingData {
+    embedding_type: 'patients';
     data: { patientId: string; x: number; y: number }[];
 }
+
+export interface SampleEmbeddingData extends BaseEmbeddingData {
+    embedding_type: 'samples';
+    data: { sampleId: string; x: number; y: number }[];
+}
+
+export type EmbeddingData = PatientEmbeddingData | SampleEmbeddingData;
 
 export interface EmbeddingDataOption {
     value: string;
@@ -20,10 +32,13 @@ export interface EmbeddingDataOption {
 export interface EmbeddingPoint {
     x: number;
     y: number;
-    patientId: string;
+    patientId?: string;
+    sampleId?: string;
+    uniqueSampleKey?: string;
     color?: string;
     strokeColor?: string;
-    cancerType?: string;
+    displayLabel?: string;
+    isInCohort?: boolean;
     [key: string]: any; // Allow additional properties for extensibility
 }
 
@@ -47,6 +62,19 @@ export interface EmbeddingVisualizationProps {
     filename?: string;
     viewState?: ViewState;
     onViewStateChange?: (viewState: ViewState) => void;
+    embeddingType?: 'patients' | 'samples';
+    categoryCounts?: Map<string, number>;
+    categoryColors?: Map<
+        string,
+        { fillColor: string; strokeColor: string; hasStroke: boolean }
+    >;
+    hiddenCategories?: Set<string>;
+    onToggleCategoryVisibility?: (category: string) => void;
+    onToggleAllCategories?: () => void;
+    visibleSampleCount?: number;
+    totalSampleCount?: number;
+    visibleCategoryCount?: number;
+    totalCategoryCount?: number;
 }
 
 export interface EmbeddingControlsProps {
