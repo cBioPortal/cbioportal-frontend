@@ -29,18 +29,10 @@ import { getTextColor } from 'pages/groupComparison/OverlapUtils';
 import numeral from 'numeral';
 
 export function formatPieChartNumber(n: number) {
-    // if four digits, decimal, and letter are present, it is too long so remove the decimal and number after
-    if (n >= 100000000) {
-        return `~${numeral(n).format('0a')}`;
-    } else if (n >= 10000000) {
-        return `~${numeral(n).format('0.[0]a')}`;
-    } else if (n >= 100000) {
-        return `~${numeral(n).format('0a')}`;
-    } else if (n >= 10000) {
-        return `~${numeral(n).format('0.[0]a')}`;
-    } else {
-        return numeral(n).format('0,0');
-    }
+    // capitalize k and m number abbreviations
+    return numeral(n)
+        .format('0.[0]a')
+        .replace(/([km])$/, m => m.toUpperCase());
 }
 
 export interface IPieChartProps {
