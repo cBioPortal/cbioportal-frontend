@@ -17,6 +17,8 @@ import {
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { ClinicalDataTab } from './tabs/ClinicalDataTab';
 import { EmbeddingsTab } from './tabs/EmbeddingsTab';
+import boehmData from '../../data/boehm_2025_umap_embedding.json';
+import { EmbeddingData } from 'shared/components/embeddings/EmbeddingTypes';
 import {
     DefaultTooltip,
     getBrowserWindow,
@@ -386,6 +388,20 @@ export default class StudyViewPage extends React.Component<
         } else {
             return false;
         }
+    }
+
+    @computed get hasEmbeddingSupport() {
+        // Check if we have any studies
+        if (this.store.studyIds.length === 0) {
+            return false;
+        }
+
+        // Check if the Boehm embedding dataset supports ALL the current studies
+        const boehmEmbeddingData = boehmData as EmbeddingData;
+
+        return this.store.studyIds.every(studyId =>
+            boehmEmbeddingData.studyIds.includes(studyId)
+        );
     }
 
     @computed get isLoading() {
@@ -775,11 +791,7 @@ export default class StudyViewPage extends React.Component<
                                         linkText={
                                             StudyViewPageTabDescriptions.EMBEDDINGS
                                         }
-                                        hide={
-                                            this.store.studyIds.length > 1 ||
-                                            this.store.studyIds[0] !==
-                                                'msk_chord_2024'
-                                        }
+                                        hide={!this.hasEmbeddingSupport}
                                     >
                                         <EmbeddingsTab store={this.store} />
                                     </MSKTab>

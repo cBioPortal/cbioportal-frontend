@@ -3,12 +3,21 @@ import { EmbeddingPoint } from '../EmbeddingTypes';
 
 export interface TooltipDisplayProps {
     hoveredPoint: EmbeddingPoint | null;
+    embeddingType?: 'patients' | 'samples';
 }
 
 export const TooltipDisplay: React.FC<TooltipDisplayProps> = ({
     hoveredPoint,
+    embeddingType,
 }) => {
     if (!hoveredPoint) return null;
+
+    // Show appropriate ID based on embedding type
+    const idLabel = embeddingType === 'samples' ? 'Sample ID' : 'Patient ID';
+    const idValue =
+        embeddingType === 'samples'
+            ? hoveredPoint.sampleId
+            : hoveredPoint.patientId;
 
     return (
         <div
@@ -27,15 +36,15 @@ export const TooltipDisplay: React.FC<TooltipDisplayProps> = ({
             }}
         >
             <div>
-                <strong>Patient ID:</strong> {hoveredPoint.patientId}
+                <strong>{idLabel}:</strong> {idValue}
             </div>
             <div>
                 <strong>Position:</strong> ({hoveredPoint.x.toFixed(2)},{' '}
                 {hoveredPoint.y.toFixed(2)})
             </div>
-            {hoveredPoint.cancerType && (
+            {hoveredPoint.displayLabel && (
                 <div>
-                    <strong>Cancer Type:</strong> {hoveredPoint.cancerType}
+                    <strong>Category:</strong> {hoveredPoint.displayLabel}
                 </div>
             )}
         </div>
