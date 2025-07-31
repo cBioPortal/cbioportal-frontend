@@ -26,19 +26,20 @@ import {
 import { DEFAULT_NA_COLOR } from 'shared/lib/Colors';
 import ifNotDefined from '../../../../shared/lib/ifNotDefined';
 import { getTextColor } from 'pages/groupComparison/OverlapUtils';
+import numeral from 'numeral';
 
 export function formatPieChartNumber(n: number) {
     // if four digits, decimal, and letter are present, it is too long so remove the decimal and number after
     if (n >= 100000000) {
-        return `~${(n / 1000000).toFixed(0)}M`;
+        return `~${numeral(n).format('0a')}`;
     } else if (n >= 10000000) {
-        return `~${(n / 1000000).toFixed(1).replace(/\.0$/, '')}M`;
+        return `~${numeral(n).format('0.[0]a')}`;
     } else if (n >= 100000) {
-        return `~${(n / 1000).toFixed(0)}k`;
+        return `~${numeral(n).format('0a')}`;
     } else if (n >= 10000) {
-        return `~${(n / 1000).toFixed(1).replace(/\.0$/, '')}k`;
+        return `~${numeral(n).format('0.[0]a')}`;
     } else {
-        return n.toLocaleString();
+        return numeral(n).format('0,0');
     }
 }
 
