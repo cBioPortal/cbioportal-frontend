@@ -1783,8 +1783,24 @@ export class QueryStore {
             return false;
         }
 
+        // how many profile types are available
+        let profileTypeCount = 0;
+        Object.values(AlterationTypeConstants).forEach(profileType => {
+            if (this.getFilteredProfiles(profileType as any).length > 0) {
+                profileTypeCount++;
+            }
+        });
+
+        // if only one profile type available,  use it
+        if (profileTypeCount === 1) {
+            return this.filteredMrnaProfiles.length > 0;
+        }
+
+        // fall back (original) logic for multiple profile types
         const hasMutationProfile =
-            this.getFilteredProfiles('MUTATION_EXTENDED').length > 0;
+            this.getFilteredProfiles(
+                AlterationTypeConstants.MUTATION_EXTENDED as any
+            ).length > 0;
         const hasMrnaProfile = this.filteredMrnaProfiles.length > 0;
 
         return !hasMutationProfile && hasMrnaProfile;
