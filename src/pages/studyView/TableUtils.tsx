@@ -98,6 +98,7 @@ export enum FreqColumnTypeEnum {
     STRUCTURAL_VARIANT = 'structural variants',
     STRUCTURAL_VARIANT_PAIR = 'structural variant pairs',
     CNA = 'copy number alterations',
+    VA = 'variant annotations',
     DATA = 'data',
 }
 

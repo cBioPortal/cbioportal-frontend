@@ -35,6 +35,7 @@ import {
     logScalePossible,
     ChartMetaDataTypeEnum,
     getMutationTypesDownloadData,
+    getVariantAnnotationTypesDownloadData,
     getScatterDownloadData,
     getSurvivalDownloadData,
     getMutatedGenesDownloadData,
@@ -169,6 +170,21 @@ export class StudySummaryTab extends React.Component<
             ) => {
                 this.store.addMutationDataFilters(chartMeta.uniqueKey, values);
             },
+            onSetNamespaceDataValues: (
+                chartMeta: ChartMeta,
+                values: string[][]
+            ) => {
+                this.store.updateNamespaceDataFilters(
+                    chartMeta.uniqueKey,
+                    values
+                );
+            },
+            onAddNamespaceDataValues: (
+                chartMeta: ChartMeta,
+                values: string[][]
+            ) => {
+                this.store.addNamespaceDataFilters(chartMeta.uniqueKey, values);
+            },
             onGenericAssayDataBinSelection: (
                 chartMeta: ChartMeta,
                 dataBins: GenericAssayDataBin[]
@@ -177,6 +193,9 @@ export class StudySummaryTab extends React.Component<
                     chartMeta.uniqueKey,
                     dataBins
                 );
+            },
+            onRemoveNamespaceDataFilters: (chartMeta: ChartMeta) => {
+                this.store.updateNamespaceDataFilters(chartMeta.uniqueKey, []);
             },
             onGenericAssayCategoricalValueSelection: (
                 chartMeta: ChartMeta,
@@ -456,6 +475,21 @@ export class StudySummaryTab extends React.Component<
                 alterationFilterEnabled: getServerConfig()
                     .skin_show_settings_menu,
                 filterAlterations: this.store.isGlobalMutationFilterActive,
+            }),
+            [ChartTypeEnum.VARIANT_ANNOTATIONS_TABLE]: () => ({
+                filters: this.store.getNamespaceDataFiltersByUniqueKey(
+                    chartMeta.uniqueKey
+                ),
+                promise: this.store.getVariantAnnotationChartData(chartMeta),
+                onValueSelection: this.handlers.onAddNamespaceDataValues,
+                onResetSelection: this.handlers.onSetNamespaceDataValues,
+                id: 'variant-annotations-table',
+                title: chartMeta.displayName,
+                getData: () =>
+                    getVariantAnnotationTypesDownloadData(
+                        this.store.getVariantAnnotationChartData(chartMeta)
+                    ),
+                downloadTypes: ['Data'],
             }),
             [ChartTypeEnum.MUTATION_TYPE_COUNTS_TABLE]: () => ({
                 filters: this.store.getMutationDataFiltersByUniqueKey(

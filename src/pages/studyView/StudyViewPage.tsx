@@ -429,6 +429,7 @@ export default class StudyViewPage extends React.Component<
                 ..._.values(this.store.clinicalDataBinPromises),
                 ..._.values(this.store.clinicalDataCountPromises),
                 ..._.values(this.store.genericAssayDataCountPromises),
+                ..._.values(this.store.namespaceDataChartCountPromises),
                 this.store.mutationProfiles,
                 this.store.cnaProfiles,
                 this.store.selectedSamples,
@@ -1005,6 +1006,10 @@ export default class StudyViewPage extends React.Component<
                                                     StudyViewPageTabKeyEnum.CLINICAL_DATA
                                                 }
                                                 disableGenericAssayTabs={
+                                                    this.store.currentTab ===
+                                                    StudyViewPageTabKeyEnum.CLINICAL_DATA
+                                                }
+                                                disableVariantAnnotationsTab={
                                                     this.store.currentTab ===
                                                     StudyViewPageTabKeyEnum.CLINICAL_DATA
                                                 }
