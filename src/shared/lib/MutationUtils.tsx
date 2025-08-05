@@ -379,7 +379,9 @@ export type VAFReport = {
     variantReadCount: number;
     totalReadCount: number;
 };
-export function getVariantAlleleFrequency(m: Mutation): VAFReport | null {
+export function getVariantAlleleFrequency(
+    m: Pick<Mutation, 'tumorAltCount' | 'tumorRefCount'>
+): VAFReport | null {
     if (
         Number.isInteger(m.tumorRefCount) &&
         Number.isInteger(m.tumorAltCount)
