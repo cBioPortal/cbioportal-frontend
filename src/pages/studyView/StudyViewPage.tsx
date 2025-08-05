@@ -396,10 +396,11 @@ export default class StudyViewPage extends React.Component<
             return false;
         }
 
-        // Check if the Boehm embedding dataset supports ALL the current studies
+        // Check if the Boehm embedding dataset supports ANY of the current studies
+        // This allows embeddings to show up if at least one study is supported
         const boehmEmbeddingData = boehmData as EmbeddingData;
 
-        return this.store.studyIds.every(studyId =>
+        return this.store.studyIds.some(studyId =>
             boehmEmbeddingData.studyIds.includes(studyId)
         );
     }
