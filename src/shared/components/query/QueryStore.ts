@@ -77,6 +77,11 @@ import { QueryParser } from 'shared/lib/query/QueryParser';
 import { AppStore } from 'AppStore';
 import { ResultsViewTab } from 'pages/resultsView/ResultsViewPageHelpers';
 import { CaseSetId } from 'shared/components/query/CaseSetSelectorUtils';
+import {
+    isZScoreCalculatableProfile,
+    isZScoreProfile,
+} from 'shared/model/MolecularProfileUtils';
+import comparisonClient from 'shared/api/comparisonGroupClientInstance';
 
 // interface for communicating
 export type CancerStudyQueryUrlParams = {
@@ -97,8 +102,6 @@ export type CancerStudyQueryUrlParams = {
     case_ids: string;
     gene_list: string;
     geneset_list?: string;
-    tab_index: 'tab_download' | 'tab_visualize';
-    transpose_matrix?: 'on';
     Action: 'Submit';
     patient_enrichments?: string;
     show_samples?: string;
@@ -125,6 +128,8 @@ export function normalizeQuery(geneQuery: string) {
 type GenesetId = string;
 
 export class QueryStore {
+    mrnaPopulationGroup: string;
+    rppaPopulationGroup: string;
     constructor(urlWithInitialParams?: string) {
         getBrowserWindow().activeQueryStore = this;
 
@@ -295,10 +300,6 @@ export class QueryStore {
     // QUERY PARAMETERS
     ////////////////////////////////////////////////////////////////////////////////
 
-    @observable forDownloadTab: boolean = false;
-
-    @observable transposeDataMatrix = false;
-
     @observable.ref searchClauses: SearchClause[] = [];
 
     @observable.ref dataTypeFilters: string[] = [];
@@ -332,7 +333,7 @@ export class QueryStore {
             return obj;
         }, []);
         ids = _.uniq(ids);
-        return this.forDownloadTab ? ids.slice(-1) : ids;
+        return ids;
     }
 
     set selectableSelectedStudyIds(val: string[]) {
@@ -344,19 +345,10 @@ export class QueryStore {
 
     @action
     public setStudyIdSelected(studyId: string, selected: boolean) {
-        if (this.forDownloadTab) {
-            // only one can be selected at a time
-            let newMap: { [studyId: string]: boolean } = {};
-            if (selected) {
-                newMap[studyId] = selected;
-            }
-            this._allSelectedStudyIds = observable.map(newMap);
+        if (selected) {
+            this._allSelectedStudyIds.set(studyId, true);
         } else {
-            if (selected) {
-                this._allSelectedStudyIds.set(studyId, true);
-            } else {
-                this._allSelectedStudyIds.delete(studyId);
-            }
+            this._allSelectedStudyIds.delete(studyId);
         }
     }
 
@@ -377,6 +369,7 @@ export class QueryStore {
     profileIdsFromUrl?: string[];
     profileFilterSetFromUrl?: string[];
 
+    //TODO simplify!!!
     @computed get selectedProfileIdSet() {
         let selectedIdSet: { [is: string]: boolean } = {};
         if (this.validProfileIdSetForSelectedStudies.isComplete) {
@@ -404,7 +397,7 @@ export class QueryStore {
                                         AlterationTypeConstants.MUTATION_EXTENDED
                                     ) {
                                         acc = acc.concat(
-                                            this.getFilteredProfiles(
+                                            this.getZScoreProfiles(
                                                 'STRUCTURAL_VARIANT'
                                             )
                                         );
@@ -437,7 +430,7 @@ export class QueryStore {
                         }
 
                         let profiles = _.flatMap(altTypes, altType =>
-                            this.getFilteredProfiles(altType)
+                            this.getZScoreProfiles(altType)
                         );
 
                         profiles.forEach(profile => {
@@ -453,7 +446,7 @@ export class QueryStore {
                         'COPY_NUMBER_ALTERATION',
                     ];
                     altTypes.forEach(altType => {
-                        _(this.getFilteredProfiles(altType))
+                        _(this.getZScoreProfiles(altType))
                             .groupBy(profile => profile.studyId)
                             .forEach(profiles => {
                                 selectedIdSet[
@@ -474,8 +467,9 @@ export class QueryStore {
         profile: MolecularProfile,
         checked: boolean
     ) {
-        let groupProfiles = this.getFilteredProfiles(
-            profile.molecularAlterationType
+        let groupProfiles = this.getZScoreProfiles(
+            profile.molecularAlterationType,
+            true
         );
 
         if (this.profileFilterSet === undefined) {
@@ -613,9 +607,7 @@ export class QueryStore {
         10
     );
     @computed get maxTreeDepth() {
-        return this.forDownloadTab && this._maxTreeDepth > 0
-            ? 1
-            : this._maxTreeDepth;
+        return this._maxTreeDepth;
     }
 
     set maxTreeDepth(value) {
@@ -1230,6 +1222,14 @@ export class QueryStore {
         default: { found: [], suggestions: [] },
     });
 
+    readonly groups = remoteData(
+        () =>
+            this.allSelectedStudyIds.length > 0 && this.appStore.isLoggedIn
+                ? comparisonClient.getGroupsForStudies(this.allSelectedStudyIds)
+                : Promise.resolve([]),
+        []
+    );
+
     readonly genesets = remoteData({
         invoke: () => this.invokeGenesetsLater(this.genesetIds),
         default: { found: [], invalid: [] },
@@ -1552,12 +1552,8 @@ export class QueryStore {
             studies: this.cancerStudies.result,
             allStudyTags: this.cancerStudyTags.result,
             priorityStudies: this.priorityStudies,
-            virtualStudies: this.forDownloadTab
-                ? []
-                : this.userVirtualStudies.result,
-            publicVirtualStudies: this.forDownloadTab
-                ? []
-                : this.publicVirtualStudies.result,
+            virtualStudies: this.userVirtualStudies.result,
+            publicVirtualStudies: this.publicVirtualStudies.result,
             maxTreeDepth: this.maxTreeDepth,
         });
     }
@@ -1685,19 +1681,17 @@ export class QueryStore {
         );
     }
 
-    getFilteredProfiles(
-        molecularAlterationType: MolecularProfile['molecularAlterationType']
+    getZScoreProfiles(
+        molecularAlterationType: MolecularProfile['molecularAlterationType'],
+        includeCalculableZScoreProfiles: boolean = false
     ) {
-        const ret = this.molecularProfilesInSelectedStudies.result.filter(
-            profile => {
-                if (profile.molecularAlterationType != molecularAlterationType)
-                    return false;
-
-                return profile.showProfileInAnalysisTab || this.forDownloadTab;
-            }
+        return this.molecularProfilesInSelectedStudies.result.filter(
+            profile =>
+                profile.molecularAlterationType == molecularAlterationType &&
+                (profile.showProfileInAnalysisTab ||
+                    (includeCalculableZScoreProfiles &&
+                        isZScoreCalculatableProfile(profile)))
         );
-
-        return ret;
     }
 
     isProfileTypeSelected(profileType: string) {
@@ -1707,13 +1701,13 @@ export class QueryStore {
     getSelectedProfileTypeFromMolecularAlterationType(
         molecularAlterationType: MolecularProfile['molecularAlterationType']
     ) {
-        return this.getFilteredProfiles(molecularAlterationType)
+        return this.getZScoreProfiles(molecularAlterationType, true)
             .map(profile => getSuffixOfMolecularProfile(profile))
             .find(profile => this.isProfileTypeSelected(profile));
     }
 
     get isGenesetProfileSelected() {
-        const genesetProfiles = this.getFilteredProfiles('GENESET_SCORE');
+        const genesetProfiles = this.getZScoreProfiles('GENESET_SCORE');
         if (genesetProfiles.length > 0) {
             const profileType = getSuffixOfMolecularProfile(genesetProfiles[0]);
             return this.isProfileTypeSelected(profileType) || false;
@@ -1928,7 +1922,7 @@ export class QueryStore {
     readonly hierarchyData = remoteData<any[]>({
         invoke: async () => {
             const hierarchyData = await getHierarchyData(
-                this.getFilteredProfiles('GENESET_SCORE')[0].molecularProfileId,
+                this.getZScoreProfiles('GENESET_SCORE')[0].molecularProfileId,
                 Number(this.volcanoPlotSelectedPercentile.value),
                 0,
                 1,
@@ -2250,7 +2244,6 @@ export class QueryStore {
                 params[ResultsViewURLQueryEnum.geneset_list] || ''
             )
         );
-        this.forDownloadTab = params.tab_index === 'tab_download';
         this.initiallySelected.profileIds = true;
         this.initiallySelected.sampleListId = true;
     }
