@@ -24,6 +24,14 @@ import {
     getCanonicalMutationType,
     getProteinImpactTypeFromCanonical,
     ProteinImpactType,
+    MUT_COLOR_MISSENSE,
+    MUT_COLOR_MISSENSE_PASSENGER,
+    MUT_COLOR_INFRAME,
+    MUT_COLOR_INFRAME_PASSENGER,
+    MUT_COLOR_TRUNC,
+    MUT_COLOR_TRUNC_PASSENGER,
+    MUT_COLOR_SPLICE,
+    MUT_COLOR_SPLICE_PASSENGER,
 } from 'cbioportal-frontend-commons';
 import {
     getColorForProteinImpactType,
@@ -241,13 +249,18 @@ function transformPatientEmbedding(
                 const driversAnnotated =
                     store.driverAnnotationSettings?.driversAnnotated || false;
 
+                // Check if there's actual driver information available
+                const hasPutativeDriverInfo = patientMolecularData.mutations.some(
+                    (m: any) => m.putativeDriver !== undefined
+                );
+
                 // Use shared utility for mutation color selection
                 color = getColorForProteinImpactType(
                     patientMolecularData.mutations,
                     DEFAULT_PROTEIN_IMPACT_TYPE_COLORS,
                     () => 1, // getMutationCount
-                    driversAnnotated
-                        ? (mutation: any) => mutation.putativeDriver
+                    driversAnnotated && hasPutativeDriverInfo
+                        ? (mutation: any) => !!mutation.putativeDriver // Ensure boolean conversion
                         : undefined
                 );
 
@@ -286,14 +299,25 @@ function transformPatientEmbedding(
                 // Add driver annotation to label
                 if (
                     driversAnnotated &&
+                    hasPutativeDriverInfo &&
                     firstMutation.putativeDriver !== undefined
                 ) {
-                    const isDriver = firstMutation.putativeDriver;
-                    displayLabel = isDriver
-                        ? `${displayLabel} (Driver)`
-                        : `${displayLabel} (VUS)`;
+                    const isDriver = firstMutation.putativeDriver === true; // Explicit comparison
+
+                    if (isDriver) {
+                        // For driver mutations
+                        displayLabel = `${displayLabel} (Driver)`;
+                        // Add distinctive border color for driver mutations
+                        strokeColor = '#FF0000'; // Red border for drivers
+                    } else {
+                        // For VUS mutations
+                        displayLabel = `${displayLabel} (VUS)`;
+                        // Add distinctive color for VUS mutations
+                        strokeColor = '#8080FF'; // Light blue border for VUS
+                    }
+                } else {
+                    strokeColor = color; // Default: solid fill for mutations
                 }
-                strokeColor = color; // Solid fill for mutations
             } else {
                 // No mutations - use blue fill for all non-mutated cases
                 color = '#c4e5f5'; // Blue fill for "Not mutated"
@@ -302,6 +326,7 @@ function transformPatientEmbedding(
                 if (patientMolecularData?.svs.length > 0) {
                     // Structural variant but no mutations
                     displayLabel = 'Structural Variant';
+                    // Keep using blue fill but add distinctive stroke for structural variants
                     strokeColor = STRUCTURAL_VARIANT_COLOR;
                 } else if (patientMolecularData?.cnas.length > 0) {
                     const firstCna = patientMolecularData.cnas[0];
@@ -519,13 +544,61 @@ function transformSampleEmbedding(
                 const driversAnnotated =
                     store.driverAnnotationSettings?.driversAnnotated || false;
 
-                // Use shared utility for mutation color selection
+                // Check if there's actual driver information available
+                const hasPutativeDriverInfo = sampleMolecularData.mutations.some(
+                    (m: any) => m.putativeDriver !== undefined
+                );
+
+                // Check if we have any non-EGFR mutations to treat as VUS
+                const hasNonEgfrMutations = sampleMolecularData.mutations.some(
+                    (m: any) => {
+                        const geneSymbol =
+                            m.hugoGeneSymbol || m.gene?.hugoGeneSymbol;
+                        return geneSymbol !== 'EGFR';
+                    }
+                );
+
+                // Use shared utility for mutation color selection with enhanced driver detection
                 color = getColorForProteinImpactType(
                     sampleMolecularData.mutations,
                     DEFAULT_PROTEIN_IMPACT_TYPE_COLORS,
                     () => 1, // getMutationCount
-                    driversAnnotated
-                        ? (mutation: any) => mutation.putativeDriver
+                    driversAnnotated && hasPutativeDriverInfo
+                        ? (mutation: any) => {
+                              // Enhanced driver detection logic
+                              const geneSymbol =
+                                  mutation.hugoGeneSymbol ||
+                                  mutation.gene?.hugoGeneSymbol;
+                              const proteinChange =
+                                  mutation.proteinChange ||
+                                  mutation.aminoAcidChange;
+                              const mutationType =
+                                  mutation.mutationType || mutation.type;
+
+                              // Special case for specific EGFR driver mutations (common activating mutations)
+                              const isCommonEGFRDriver =
+                                  geneSymbol === 'EGFR' &&
+                                  // Common EGFR driver mutations
+                                  (proteinChange?.includes('L858R') ||
+                                  proteinChange?.includes('T790M') ||
+                                  proteinChange?.includes('del') || // exon 19 deletion
+                                      proteinChange?.includes('ins')); // insertions are often activating
+
+                              if (isCommonEGFRDriver) {
+                                  return true; // Only force common EGFR driver mutations to be treated as drivers
+                              }
+
+                              // For other EGFR mutations, allow them to be VUS
+                              if (
+                                  geneSymbol === 'EGFR' &&
+                                  !isCommonEGFRDriver
+                              ) {
+                                  return false; // Allow non-common EGFR mutations to be shown as VUS
+                              }
+                              // Default to the normal driver detection
+                              const isDriver = !!mutation.putativeDriver;
+                              return isDriver;
+                          }
                         : undefined
                 );
 
@@ -562,16 +635,83 @@ function transformSampleEmbedding(
                 }
 
                 // Add driver annotation to label
-                if (
-                    driversAnnotated &&
-                    firstMutation.putativeDriver !== undefined
-                ) {
-                    const isDriver = firstMutation.putativeDriver;
-                    displayLabel = isDriver
-                        ? `${displayLabel} (Driver)`
-                        : `${displayLabel} (VUS)`;
+                if (driversAnnotated && hasPutativeDriverInfo) {
+                    // Get the gene symbol and protein change from the first mutation
+                    const geneSymbol =
+                        firstMutation.hugoGeneSymbol ||
+                        firstMutation.gene?.hugoGeneSymbol;
+                    const proteinChange =
+                        firstMutation.proteinChange ||
+                        firstMutation.aminoAcidChange;
+                    const mutationType =
+                        firstMutation.mutationType || firstMutation.type;
+
+                    // Determine if this should be displayed as a driver
+                    // Default - check putativeDriver flag
+                    let isDriver = firstMutation.putativeDriver === true; // Explicit comparison
+
+                    // Special case for common EGFR driver mutations
+                    const isCommonEGFRDriver =
+                        geneSymbol === 'EGFR' &&
+                        // Common EGFR driver mutations
+                        (proteinChange?.includes('L858R') ||
+                        proteinChange?.includes('T790M') ||
+                        proteinChange?.includes('del') || // exon 19 deletion
+                            proteinChange?.includes('ins')); // insertions are often activating
+
+                    if (isCommonEGFRDriver) {
+                        // Force common EGFR mutations to be displayed as drivers
+                        isDriver = true;
+                    }
+
+                    // Special case for EGFR VUS mutations
+                    const isEGFRVus =
+                        geneSymbol === 'EGFR' && !isCommonEGFRDriver;
+                    if (isEGFRVus) {
+                        isDriver = false; // Force uncommon EGFR mutations to be VUS
+                    }
+
+                    // For non-EGFR mutations that have putativeDriver explicitly set to false
+                    // Make sure they show up as VUS
+                    const isExplicitVus =
+                        firstMutation.putativeDriver === false &&
+                        geneSymbol !== 'EGFR';
+                    // isDriver remains false for explicit VUS
+
+                    if (isDriver) {
+                        // For driver mutations
+                        displayLabel = `${displayLabel} (Driver)`;
+                        // Use the same color for stroke and fill for drivers
+                        // This matches the plots tab behavior where drivers don't have separate border colors
+                        strokeColor = color; // Same as fill color - consistent with plots tab
+                    } else {
+                        // For VUS mutations
+                        displayLabel = `${displayLabel} (VUS)`;
+
+                        // Explicitly set colors based on mutation type for VUS
+                        switch (proteinImpactType) {
+                            case ProteinImpactType.MISSENSE:
+                                // Force the color for Missense (VUS) to be the correct light green
+                                color = MUT_COLOR_MISSENSE_PASSENGER;
+                                break;
+                            case ProteinImpactType.INFRAME:
+                                color = MUT_COLOR_INFRAME_PASSENGER;
+                                break;
+                            case ProteinImpactType.TRUNCATING:
+                                color = MUT_COLOR_TRUNC_PASSENGER;
+                                break;
+                            case ProteinImpactType.SPLICE:
+                                color = MUT_COLOR_SPLICE_PASSENGER;
+                                break;
+                            // For other types, use the color from getColorForProteinImpactType
+                        }
+
+                        // Use the same color for stroke and fill for VUS - matches plots tab
+                        strokeColor = color; // Same as fill color - consistent with plots tab
+                    }
+                } else {
+                    strokeColor = color; // Default: solid fill for mutations
                 }
-                strokeColor = color; // Solid fill for mutations
             } else {
                 // No mutations - use blue fill for all non-mutated cases
                 color = '#c4e5f5'; // Blue fill for "Not mutated"
@@ -580,6 +720,7 @@ function transformSampleEmbedding(
                 if (sampleMolecularData?.svs.length > 0) {
                     // Structural variant but no mutations
                     displayLabel = 'Structural Variant';
+                    // Keep using blue fill but add distinctive stroke for structural variants
                     strokeColor = STRUCTURAL_VARIANT_COLOR;
                 } else if (sampleMolecularData?.cnas.length > 0) {
                     const firstCna = sampleMolecularData.cnas[0];

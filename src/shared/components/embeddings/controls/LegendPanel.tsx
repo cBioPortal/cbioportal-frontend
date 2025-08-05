@@ -8,6 +8,42 @@ const formatCount = (count: number): string => {
 };
 
 // Helper function to render a legend item
+// Helper function to check if a category should be rendered as unfilled (transparent with border)
+const isUnfilledCategory = (displayLabel: string): boolean => {
+    return (
+        displayLabel === 'Amplification' ||
+        displayLabel === 'Deep Deletion' ||
+        displayLabel === 'Structural Variant'
+    );
+};
+
+// Helper function to check if a category is a VUS mutation
+const isVUSCategory = (displayLabel: string): boolean => {
+    return displayLabel.endsWith('(VUS)');
+};
+
+// Import required constants for VUS coloring
+import {
+    MUT_COLOR_MISSENSE_PASSENGER,
+    MUT_COLOR_INFRAME_PASSENGER,
+    MUT_COLOR_TRUNC_PASSENGER,
+    MUT_COLOR_SPLICE_PASSENGER,
+} from 'cbioportal-frontend-commons';
+
+// Helper function to get the correct VUS color based on mutation type
+const getVUSColor = (displayLabel: string): string | undefined => {
+    if (displayLabel === 'Missense (VUS)') {
+        return MUT_COLOR_MISSENSE_PASSENGER;
+    } else if (displayLabel === 'Inframe (VUS)') {
+        return MUT_COLOR_INFRAME_PASSENGER;
+    } else if (displayLabel === 'Truncating (VUS)') {
+        return MUT_COLOR_TRUNC_PASSENGER;
+    } else if (displayLabel === 'Splice (VUS)') {
+        return MUT_COLOR_SPLICE_PASSENGER;
+    }
+    return undefined;
+};
+
 const renderLegendItem = (
     displayLabel: string,
     styling: { fillColor: string; strokeColor: string; hasStroke: boolean },
@@ -60,27 +96,23 @@ const renderLegendItem = (
                             displayLabel === 'Case not in this cohort' ||
                             displayLabel === 'Sample not in this cohort'
                                 ? '4px'
-                                : '10px',
+                                : '12px', // Slightly larger dots for better visibility
                         height:
                             displayLabel === 'Case not in this cohort' ||
                             displayLabel === 'Sample not in this cohort'
                                 ? '4px'
-                                : '10px',
+                                : '12px', // Slightly larger dots for better visibility
                         backgroundColor: isHidden
-                            ? styling.hasStroke
-                                ? 'transparent'
-                                : '#CCCCCC'
-                            : styling.hasStroke
-                            ? 'transparent'
+                            ? '#CCCCCC'
+                            : isUnfilledCategory(displayLabel)
+                            ? 'transparent' // Use transparent background for unfilled categories
                             : styling.fillColor,
                         borderRadius: '50%',
                         border: isHidden
-                            ? styling.hasStroke
-                                ? '2px solid #CCCCCC'
-                                : '1px solid #CCCCCC'
+                            ? '1px solid #CCCCCC'
                             : styling.hasStroke
-                            ? `2px solid ${styling.strokeColor}`
-                            : `1px solid ${styling.strokeColor}`,
+                            ? `2px solid ${styling.strokeColor}` // Use strokeColor with moderately thick border
+                            : `1px solid ${styling.fillColor}`,
                         opacity: isHidden ? 0.4 : 1,
                     }}
                 />
@@ -168,7 +200,19 @@ export const LegendPanel: React.FC<LegendPanelProps> = ({
         categoryCounts.forEach((count, category) => {
             const colorInfo = categoryColors.get(category);
             if (colorInfo) {
-                legendItems[category] = colorInfo;
+                // Check if this is a VUS category and use explicit VUS color if available
+                const vusColor = isVUSCategory(category)
+                    ? getVUSColor(category)
+                    : undefined;
+
+                legendItems[category] = {
+                    fillColor: vusColor || colorInfo.fillColor, // Use VUS color if available
+                    strokeColor:
+                        colorInfo.strokeColor ||
+                        vusColor ||
+                        colorInfo.fillColor,
+                    hasStroke: colorInfo.hasStroke,
+                };
             } else {
                 // Fallback styling for categories not in color data (shouldn't happen, but defensive)
                 legendItems[category] = {
@@ -186,9 +230,14 @@ export const LegendPanel: React.FC<LegendPanelProps> = ({
 
         legendItems = data.reduce((acc, point) => {
             if (point.displayLabel && point.color) {
+                // Use explicit VUS colors for categories that end with (VUS)
+                const vusColor = isVUSCategory(point.displayLabel)
+                    ? getVUSColor(point.displayLabel)
+                    : undefined;
+
                 acc[point.displayLabel] = {
-                    fillColor: point.color,
-                    strokeColor: point.strokeColor || point.color,
+                    fillColor: vusColor || point.color, // Use VUS color if available
+                    strokeColor: point.strokeColor || vusColor || point.color, // Use strokeColor or VUS color
                     hasStroke: !!(
                         point.strokeColor && point.strokeColor !== point.color
                     ),
@@ -203,6 +252,7 @@ export const LegendPanel: React.FC<LegendPanelProps> = ({
         'Case not in this cohort',
         'Sample not in this cohort',
         'Unselected',
+        // 'Not mutated' is moved to biological categories for proper display in main legend
     ];
 
     const biologicalEntries: [
@@ -235,6 +285,7 @@ export const LegendPanel: React.FC<LegendPanelProps> = ({
             'Case not in this cohort': 1,
             'Sample not in this cohort': 1,
             Unselected: 2,
+            'Not mutated': 3, // Place Not mutated category after the above categories
         };
 
         const priorityA = priority[labelA as keyof typeof priority] || 999;

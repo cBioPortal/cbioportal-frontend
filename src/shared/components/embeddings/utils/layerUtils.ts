@@ -58,8 +58,8 @@ export function createScatterplotLayer(
         getLineColor: (d: EmbeddingPoint) => {
             // Non-cohort samples always show their dark gray color
             if (d.isInCohort === false) {
-                const strokeColor = d.strokeColor || d.color || '#666666';
-                return hexToRgb(strokeColor);
+                const color = d.color || '#666666';
+                return hexToRgb(color); // Use same color for stroke and fill for consistency
             }
 
             const isSelected =
@@ -71,9 +71,9 @@ export function createScatterplotLayer(
                 return [200, 200, 200]; // Light gray for ALL unselected
             }
 
-            // Default: show actual stroke color or fill color
-            const strokeColor = d.strokeColor || d.color || '#CCCCCC';
-            return hexToRgb(strokeColor);
+            // Use strokeColor when provided (for copy number and structural variants), otherwise use fill color
+            const color = d.strokeColor || d.color || '#CCCCCC';
+            return hexToRgb(color);
         },
         getLineWidth: (d: EmbeddingPoint) => {
             const isSelected =
@@ -83,8 +83,23 @@ export function createScatterplotLayer(
             if (isSelected) {
                 return 0.01; // Thicker border for selected points
             }
-            // Show border for amplified alterations or when strokeColor differs from fillColor
-            return d.strokeColor && d.strokeColor !== d.color ? 0.005 : 0;
+
+            // Special handling for specific categories
+            // Check for Amplification and Deep Deletion (copy number alterations)
+            if (
+                d.displayLabel === 'Amplification' ||
+                d.displayLabel === 'Deep Deletion'
+            ) {
+                return 0.007; // Moderately thick border for CNA points
+            }
+
+            // Check for Structural Variant
+            if (d.displayLabel === 'Structural Variant') {
+                return 0.007; // Moderately thick border for SV points
+            }
+
+            // Make all other points have a very thin consistent stroke width as in plots tab
+            return 0.003; // Small consistent border width for most points
         },
         filled: true,
         stroked: true,
