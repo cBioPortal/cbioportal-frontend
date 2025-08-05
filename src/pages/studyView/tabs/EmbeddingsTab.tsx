@@ -49,6 +49,23 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         super(props);
         makeObservable(this);
 
+        // Initialize driver annotation settings if needed
+        if (props.store.driverAnnotationSettings) {
+            // Enable driver annotations to ensure they're visible
+            if (!props.store.driverAnnotationSettings.driversAnnotated) {
+                // No need to check private properties, just set the public properties directly
+                props.store.driverAnnotationSettings.oncoKb = true;
+                props.store.driverAnnotationSettings.hotspots = true;
+                props.store.driverAnnotationSettings.customBinary = true;
+
+                // Ensure driver mutations are included
+                props.store.driverAnnotationSettings.includeDriver = true;
+
+                // Ensure VUS mutations are shown as well
+                props.store.driverAnnotationSettings.includeVUS = true;
+            }
+        }
+
         // Initialize default coloring
         this.initializeDefaultColoring();
 
@@ -243,20 +260,6 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             const unknownPoints = rawPlotData.filter(
                 p => p.displayLabel === 'Unknown'
             );
-            if (unknownPoints.length > 0) {
-                console.log(
-                    '🔍 Found Unknown points (no selection):',
-                    unknownPoints.length,
-                    'examples:',
-                    unknownPoints.slice(0, 3).map(p => ({
-                        patientId: p.patientId,
-                        sampleId: p.sampleId,
-                        displayLabel: p.displayLabel,
-                        isInCohort: p.isInCohort,
-                        color: p.color,
-                    }))
-                );
-            }
 
             return rawPlotData.map(point => {
                 if (
@@ -458,12 +461,21 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                 point.color &&
                 !colors.has(point.displayLabel)
             ) {
+                // Determine if this category should have a stroke
+                const isSpecialCategory =
+                    point.displayLabel === 'Amplification' ||
+                    point.displayLabel === 'Deep Deletion' ||
+                    point.displayLabel === 'Structural Variant';
+
                 colors.set(point.displayLabel, {
                     fillColor: point.color,
                     strokeColor: point.strokeColor || point.color,
-                    hasStroke: !!(
-                        point.strokeColor && point.strokeColor !== point.color
-                    ),
+                    hasStroke:
+                        isSpecialCategory ||
+                        !!(
+                            point.strokeColor &&
+                            point.strokeColor !== point.color
+                        ),
                 });
             }
         });
