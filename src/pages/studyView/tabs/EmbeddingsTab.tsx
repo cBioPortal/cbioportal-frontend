@@ -170,13 +170,14 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     }
 
     @computed get embeddingOptions(): EmbeddingDataOption[] {
-        // Filter embedding options to only show those that support ALL current studies
+        // Filter embedding options to show those that support ANY of the current studies
+        // (Changed from requiring ALL studies to just needing at least one match)
         if (this.currentStudyIds.length === 0) {
             return [];
         }
 
         return this.allEmbeddingOptions.filter(option =>
-            this.currentStudyIds.every(studyId =>
+            this.currentStudyIds.some(studyId =>
                 option.data.studyIds.includes(studyId)
             )
         );
@@ -191,7 +192,8 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             option => option.value === this.selectedEmbeddingValue
         );
 
-        // If the selected embedding is not available for current study, fall back to first available
+        // If the selected embedding is not available for any of the current studies,
+        // fall back to first available option
         if (!availableOption && this.embeddingOptions.length > 0) {
             return this.embeddingOptions[0];
         }
@@ -856,10 +858,10 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                 <div style={{ padding: '20px', textAlign: 'center' }}>
                     <h4>Embeddings Visualization</h4>
                     <p>
-                        Embeddings are not available for{' '}
+                        Embeddings are not available for any of{' '}
                         {this.currentStudyIds.length === 1
                             ? 'this study'
-                            : 'this combination of studies'}
+                            : 'these studies'}
                         .
                     </p>
                     <p>
