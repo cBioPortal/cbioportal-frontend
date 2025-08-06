@@ -377,11 +377,16 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             });
         }
 
-        // Count categories
+        // Count categories - when there's a selection, exclude "Unselected" points from the count
+        // This makes the legend totals reflect the selected cohort, not the entire dataset
         const counts = new Map<string, number>();
         processedData.forEach(point => {
             const category = point.displayLabel || '';
-            counts.set(category, (counts.get(category) || 0) + 1);
+            // When there's a selection, only count selected points (exclude "Unselected")
+            // When there's no selection, count all points as before
+            if (!hasSelection || category !== 'Unselected') {
+                counts.set(category, (counts.get(category) || 0) + 1);
+            }
         });
 
         return counts;
