@@ -47,6 +47,7 @@ export function getMolecularDataForGeneSync(
         const mutationCacheResult = store.annotatedMutationCache.get({
             entrezGeneId,
         });
+
         if (mutationCacheResult?.isComplete && mutationCacheResult.result) {
             mutations = mutationCacheResult.result;
         }

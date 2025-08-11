@@ -549,56 +549,13 @@ function transformSampleEmbedding(
                     (m: any) => m.putativeDriver !== undefined
                 );
 
-                // Check if we have any non-EGFR mutations to treat as VUS
-                const hasNonEgfrMutations = sampleMolecularData.mutations.some(
-                    (m: any) => {
-                        const geneSymbol =
-                            m.hugoGeneSymbol || m.gene?.hugoGeneSymbol;
-                        return geneSymbol !== 'EGFR';
-                    }
-                );
-
-                // Use shared utility for mutation color selection with enhanced driver detection
+                // Use shared utility for mutation color selection
                 color = getColorForProteinImpactType(
                     sampleMolecularData.mutations,
                     DEFAULT_PROTEIN_IMPACT_TYPE_COLORS,
                     () => 1, // getMutationCount
                     driversAnnotated && hasPutativeDriverInfo
-                        ? (mutation: any) => {
-                              // Enhanced driver detection logic
-                              const geneSymbol =
-                                  mutation.hugoGeneSymbol ||
-                                  mutation.gene?.hugoGeneSymbol;
-                              const proteinChange =
-                                  mutation.proteinChange ||
-                                  mutation.aminoAcidChange;
-                              const mutationType =
-                                  mutation.mutationType || mutation.type;
-
-                              // Special case for specific EGFR driver mutations (common activating mutations)
-                              const isCommonEGFRDriver =
-                                  geneSymbol === 'EGFR' &&
-                                  // Common EGFR driver mutations
-                                  (proteinChange?.includes('L858R') ||
-                                  proteinChange?.includes('T790M') ||
-                                  proteinChange?.includes('del') || // exon 19 deletion
-                                      proteinChange?.includes('ins')); // insertions are often activating
-
-                              if (isCommonEGFRDriver) {
-                                  return true; // Only force common EGFR driver mutations to be treated as drivers
-                              }
-
-                              // For other EGFR mutations, allow them to be VUS
-                              if (
-                                  geneSymbol === 'EGFR' &&
-                                  !isCommonEGFRDriver
-                              ) {
-                                  return false; // Allow non-common EGFR mutations to be shown as VUS
-                              }
-                              // Default to the normal driver detection
-                              const isDriver = !!mutation.putativeDriver;
-                              return isDriver;
-                          }
+                        ? (mutation: any) => !!mutation.putativeDriver
                         : undefined
                 );
 
@@ -646,37 +603,8 @@ function transformSampleEmbedding(
                     const mutationType =
                         firstMutation.mutationType || firstMutation.type;
 
-                    // Determine if this should be displayed as a driver
-                    // Default - check putativeDriver flag
-                    let isDriver = firstMutation.putativeDriver === true; // Explicit comparison
-
-                    // Special case for common EGFR driver mutations
-                    const isCommonEGFRDriver =
-                        geneSymbol === 'EGFR' &&
-                        // Common EGFR driver mutations
-                        (proteinChange?.includes('L858R') ||
-                        proteinChange?.includes('T790M') ||
-                        proteinChange?.includes('del') || // exon 19 deletion
-                            proteinChange?.includes('ins')); // insertions are often activating
-
-                    if (isCommonEGFRDriver) {
-                        // Force common EGFR mutations to be displayed as drivers
-                        isDriver = true;
-                    }
-
-                    // Special case for EGFR VUS mutations
-                    const isEGFRVus =
-                        geneSymbol === 'EGFR' && !isCommonEGFRDriver;
-                    if (isEGFRVus) {
-                        isDriver = false; // Force uncommon EGFR mutations to be VUS
-                    }
-
-                    // For non-EGFR mutations that have putativeDriver explicitly set to false
-                    // Make sure they show up as VUS
-                    const isExplicitVus =
-                        firstMutation.putativeDriver === false &&
-                        geneSymbol !== 'EGFR';
-                    // isDriver remains false for explicit VUS
+                    // Determine if this should be displayed as a driver based on OncoKB/Hotspots annotations
+                    const isDriver = firstMutation.putativeDriver === true;
 
                     if (isDriver) {
                         // For driver mutations

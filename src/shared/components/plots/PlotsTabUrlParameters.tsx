@@ -28,7 +28,7 @@ export type PlotsColoringParam = {
     colorBySv?: string;
 };
 
-const PlotsColoringParamProps: Required<PlotsColoringParam> = {
+export const PlotsColoringParamProps: Required<PlotsColoringParam> = {
     selectedOption: '',
     logScale: '',
     colorByMutationType: '',
