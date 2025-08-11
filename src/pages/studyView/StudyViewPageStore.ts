@@ -445,6 +445,7 @@ export type StudyViewURLQuery = {
     plots_horz_selection?: PlotsSelectionParam;
     plots_vert_selection?: PlotsSelectionParam;
     plots_coloring_selection?: PlotsColoringParam;
+    embeddings_coloring_selection?: PlotsColoringParam;
     generic_assay_groups?: string;
     geneset_list?: string;
 };
@@ -11352,6 +11353,20 @@ export class StudyViewPageStore
                     '^[0-9]*'
                 )![0];
                 entrezIds.push(selectedColoringGene);
+            }
+            // gene selected in embeddings color menu
+            if (
+                this.urlWrapper.query.embeddings_coloring_selection
+                    ?.selectedOption &&
+                this.urlWrapper.query.embeddings_coloring_selection.selectedOption.match(
+                    '^[0-9]*'
+                )
+            ) {
+                // extract entrezGeneId from embeddings coloring selection string
+                let selectedEmbeddingsColoringGene = this.urlWrapper.query.embeddings_coloring_selection.selectedOption.match(
+                    '^[0-9]*'
+                )![0];
+                entrezIds.push(selectedEmbeddingsColoringGene);
             }
             if (entrezIds.length > 0) {
                 return getClient().fetchGenesUsingPOST({

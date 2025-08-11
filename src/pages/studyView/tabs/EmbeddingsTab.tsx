@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import { computed, observable, action, makeObservable } from 'mobx';
+import { remoteData } from 'cbioportal-frontend-commons';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import boehmData from '../../../data/boehm_2025_umap_embedding.json';
@@ -49,23 +50,6 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         super(props);
         makeObservable(this);
 
-        // Initialize driver annotation settings if needed
-        if (props.store.driverAnnotationSettings) {
-            // Enable driver annotations to ensure they're visible
-            if (!props.store.driverAnnotationSettings.driversAnnotated) {
-                // No need to check private properties, just set the public properties directly
-                props.store.driverAnnotationSettings.oncoKb = true;
-                props.store.driverAnnotationSettings.hotspots = true;
-                props.store.driverAnnotationSettings.customBinary = true;
-
-                // Ensure driver mutations are included
-                props.store.driverAnnotationSettings.includeDriver = true;
-
-                // Ensure VUS mutations are shown as well
-                props.store.driverAnnotationSettings.includeVUS = true;
-            }
-        }
-
         // Initialize default coloring
         this.initializeDefaultColoring();
 
@@ -90,7 +74,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     }
 
     private initializeDefaultColoring() {
-        // Set default to CANCER_TYPE_DETAILED if available
+        // Initialize with basic default - URL parameter will be applied reactively once genes load
         const cancerTypeAttr = this.clinicalAttributes.find(
             attr => attr.clinicalAttributeId === 'CANCER_TYPE_DETAILED'
         );
@@ -108,6 +92,35 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                     entrezGeneId: -10000,
                 },
             };
+        }
+    }
+
+    private parseColoringSelectionFromURL(
+        selectedOption: string
+    ): ColoringMenuOmnibarOption | undefined {
+        try {
+            // Parse gene selection (format: "entrezGeneId_undefined" e.g., "1956_undefined")
+            const geneMatch = selectedOption.match(/^(\d+)_/);
+            if (geneMatch) {
+                const entrezGeneId = parseInt(geneMatch[1]);
+
+                // Find the gene in the genes list
+                const gene = this.genes.find(
+                    g => g.entrezGeneId === entrezGeneId
+                );
+                if (gene) {
+                    return {
+                        info: { entrezGeneId: gene.entrezGeneId },
+                        label: gene.hugoGeneSymbol,
+                        value: `${gene.entrezGeneId}_${gene.hugoGeneSymbol}`,
+                    } as ColoringMenuOmnibarOption;
+                }
+            }
+
+            // Could add parsing for clinical attributes if needed
+            return undefined;
+        } catch (e) {
+            return undefined;
         }
     }
 
@@ -135,6 +148,60 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         // This provides comprehensive gene search capability in StudyView
         const genesResult = this.props.store.allGenes;
         return genesResult.isComplete ? genesResult.result || [] : [];
+    }
+
+    // Reactive computed property that applies URL parameter once genes are loaded
+    @computed get coloringFromURLParameter():
+        | ColoringMenuOmnibarOption
+        | undefined {
+        // First check if genes are loaded
+        if (this.genes.length === 0) {
+            return undefined;
+        }
+
+        // Check if there's a URL parameter for embeddings coloring selection
+        const embeddingsColoringSelection = (this.props.store as any).urlWrapper
+            ?.query?.embeddings_coloring_selection;
+        if (embeddingsColoringSelection?.selectedOption) {
+            const parsedOption = this.parseColoringSelectionFromURL(
+                embeddingsColoringSelection.selectedOption
+            );
+            if (parsedOption) {
+                return parsedOption;
+            }
+        }
+
+        return undefined;
+    }
+
+    // Reactive effect that applies URL parameter when available
+    @computed get effectiveColoringOption():
+        | ColoringMenuOmnibarOption
+        | undefined {
+        const urlOption = this.coloringFromURLParameter;
+        if (
+            urlOption &&
+            (!this.selectedColoringOption ||
+                this.isDefaultColoring(this.selectedColoringOption))
+        ) {
+            // Apply the URL-based coloring by updating the selected option
+            this.applyColoringOption(urlOption);
+            return urlOption;
+        }
+        return this.selectedColoringOption;
+    }
+
+    private isDefaultColoring(option: ColoringMenuOmnibarOption): boolean {
+        // Check if this is the default cancer type coloring
+        return (
+            option.info?.clinicalAttribute?.clinicalAttributeId ===
+                'CANCER_TYPE_DETAILED' || option.info?.entrezGeneId === -10000
+        ); // "None" option
+    }
+
+    @action.bound
+    private applyColoringOption(option: ColoringMenuOmnibarOption) {
+        this.selectedColoringOption = option;
     }
 
     @computed get logScalePossible(): boolean {
@@ -232,12 +299,118 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             : null;
     }
 
+    // Ensure molecular data is loaded for gene-based coloring (similar to PlotsTab pattern)
+    readonly molecularDataForColoring = remoteData({
+        await: () => {
+            const toAwait: any[] = [];
+
+            if (
+                this.selectedColoringOption?.info?.entrezGeneId &&
+                this.selectedColoringOption.info.entrezGeneId !== -3 // Not "Cancer Type"
+            ) {
+                const entrezGeneId = this.selectedColoringOption.info
+                    .entrezGeneId;
+                const queries = [{ entrezGeneId }];
+
+                // Ensure driver annotations are enabled first (reactive dependency)
+                const driverAnnotationsReady = this.driverAnnotationsEnabled;
+
+                // CRITICAL FIX: Explicitly wait for OncoKB and Hotspots data to be fully loaded
+                // This ensures annotatedMutationCache doesn't use stale driver annotation data
+                if (
+                    driverAnnotationsReady &&
+                    this.props.store.driverAnnotationSettings
+                ) {
+                    // Wait for OncoKB annotation data if enabled
+                    if (this.props.store.driverAnnotationSettings.oncoKb) {
+                        toAwait.push(
+                            this.props.store
+                                .oncoKbMutationAnnotationForOncoprint
+                        );
+                    }
+
+                    // Wait for Hotspots data if enabled
+                    if (this.props.store.driverAnnotationSettings.hotspots) {
+                        toAwait.push(this.props.store.isHotspotForOncoprint);
+                    }
+
+                    // IMPORTANT: Wait for the driver info function itself - this is the key dependency
+                    // The annotatedMutationCache depends on getMutationPutativeDriverInfo, so we need
+                    // to ensure it's ready before we allow the cache to be used
+                    toAwait.push(
+                        this.props.store.getMutationPutativeDriverInfo
+                    );
+                }
+
+                // CRITICAL: Wait for the annotation dependencies BEFORE accessing mutation cache
+                // This ensures that annotatedMutationCache has fresh data computed with proper annotations
+
+                // Add mutation data if enabled
+                if (
+                    this.mutationTypeEnabled &&
+                    this.props.store.annotatedMutationCache
+                ) {
+                    toAwait.push(
+                        ...this.props.store.annotatedMutationCache.getAll(
+                            queries
+                        )
+                    );
+                }
+
+                // Add CNA data if enabled
+                if (
+                    this.copyNumberEnabled &&
+                    this.props.store.annotatedCnaCache
+                ) {
+                    toAwait.push(
+                        ...this.props.store.annotatedCnaCache.getAll(queries)
+                    );
+                }
+
+                // Add structural variant data if enabled
+                if (
+                    this.structuralVariantEnabled &&
+                    this.props.store.structuralVariantCache
+                ) {
+                    toAwait.push(
+                        ...this.props.store.structuralVariantCache.getAll(
+                            queries
+                        )
+                    );
+                }
+            }
+
+            return toAwait;
+        },
+        invoke: () => Promise.resolve(true), // Just indicate that data is ready
+    });
+
     @computed get plotData(): EmbeddingPlotPoint[] {
+        // Trigger URL parameter application if genes are loaded
+        const effectiveColoring = this.effectiveColoringOption;
+
         if (
             !this.props.store.samples.isComplete ||
             !this.selectedEmbedding?.data
         ) {
             return [];
+        }
+
+        // Ensure driver annotations are enabled (this will trigger reactive updates)
+        const driverAnnotationsEnabled = this.driverAnnotationsEnabled;
+
+        // If we're coloring by a gene, wait for molecular data to be loaded
+        if (
+            this.selectedColoringOption?.info?.entrezGeneId &&
+            this.selectedColoringOption.info.entrezGeneId !== -3 && // Not "Cancer Type"
+            (this.mutationTypeEnabled ||
+                this.copyNumberEnabled ||
+                this.structuralVariantEnabled)
+        ) {
+            // Depend on the remoteData to ensure proper loading
+            if (!this.molecularDataForColoring.isComplete) {
+                return [];
+            }
         }
 
         // Pass the entire embedding data object to handle both patient and sample types
@@ -543,50 +716,41 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         );
     }
 
-    @computed get molecularDataCachesComplete(): boolean {
-        // Only check caches that are enabled and relevant to the current selection
-        if (
-            this.selectedColoringOption?.info?.entrezGeneId &&
-            this.selectedColoringOption.info.entrezGeneId !== -3
-        ) {
-            const entrezGeneId = this.selectedColoringOption.info.entrezGeneId;
+    @computed get driverAnnotationsEnabled(): boolean {
+        // This computed property ensures driver annotations are enabled when needed
+        // and triggers reactive updates when the settings change
+        if (this.props.store.driverAnnotationSettings) {
+            const settings = this.props.store.driverAnnotationSettings;
 
-            // For gene-based coloring, check enabled molecular data types
+            // If not already annotated and we're coloring by a gene, enable them
             if (
-                this.mutationTypeEnabled &&
-                this.props.store.annotatedMutationCache
+                !settings.driversAnnotated &&
+                this.selectedColoringOption?.info?.entrezGeneId &&
+                this.selectedColoringOption.info.entrezGeneId !== -3
             ) {
-                const mutationCacheResult = this.props.store.annotatedMutationCache.get(
-                    { entrezGeneId }
-                );
-                if (!mutationCacheResult.isComplete) {
-                    return false;
-                }
+                // Use MobX action to ensure proper reactivity
+                this.enableDriverAnnotations();
+
+                return true;
             }
 
-            if (this.copyNumberEnabled && this.props.store.annotatedCnaCache) {
-                const cnaCacheResult = this.props.store.annotatedCnaCache.get({
-                    entrezGeneId,
-                });
-                if (!cnaCacheResult.isComplete) {
-                    return false;
-                }
-            }
-
-            if (
-                this.structuralVariantEnabled &&
-                this.props.store.structuralVariantCache
-            ) {
-                const svCacheResult = this.props.store.structuralVariantCache.get(
-                    { entrezGeneId }
-                );
-                if (!svCacheResult.isComplete) {
-                    return false;
-                }
-            }
+            return settings.driversAnnotated;
         }
+        return false;
+    }
 
-        return true;
+    @action.bound
+    private enableDriverAnnotations() {
+        if (this.props.store.driverAnnotationSettings) {
+            this.props.store.driverAnnotationSettings.oncoKb = true;
+            this.props.store.driverAnnotationSettings.hotspots = true;
+            this.props.store.driverAnnotationSettings.customBinary = true;
+            this.props.store.driverAnnotationSettings.includeDriver = true;
+            this.props.store.driverAnnotationSettings.includeVUS = true;
+
+            // MobX should automatically invalidate getMutationPutativeDriverInfo and
+            // annotatedMutationCache when driverAnnotationSettings change
+        }
     }
 
     @computed get isLoading(): boolean {
@@ -606,8 +770,15 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             }
         }
 
-        // Check molecular data caches to prevent flickering
-        if (!this.molecularDataCachesComplete) {
+        // Check molecular data loading to prevent flickering
+        if (
+            this.selectedColoringOption?.info?.entrezGeneId &&
+            this.selectedColoringOption.info.entrezGeneId !== -3 &&
+            (this.mutationTypeEnabled ||
+                this.copyNumberEnabled ||
+                this.structuralVariantEnabled) &&
+            !this.molecularDataForColoring.isComplete
+        ) {
             return true;
         }
 
@@ -617,6 +788,49 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     @action.bound
     private onColoringSelectionChange(option?: ColoringMenuOmnibarOption) {
         this.selectedColoringOption = option;
+
+        // Sync to URL parameter
+        this.syncColoringSelectionToURL(option);
+    }
+
+    private syncColoringSelectionToURL(option?: ColoringMenuOmnibarOption) {
+        const urlWrapper = (this.props.store as any).urlWrapper;
+        if (!urlWrapper) {
+            return;
+        }
+
+        try {
+            if (
+                option?.info?.entrezGeneId &&
+                option.info.entrezGeneId !== -10000 &&
+                option.info.entrezGeneId !== -3
+            ) {
+                // Gene coloring selection
+                const selectedOption = `${option.info.entrezGeneId}_undefined`;
+
+                urlWrapper.updateURL({
+                    embeddings_coloring_selection: {
+                        selectedOption: selectedOption,
+                        colorByMutationType: this.mutationTypeEnabled
+                            ? 'true'
+                            : 'false',
+                        colorByCopyNumber: this.copyNumberEnabled
+                            ? 'true'
+                            : 'false',
+                        colorBySv: this.structuralVariantEnabled
+                            ? 'true'
+                            : 'false',
+                    },
+                });
+            } else {
+                // Clear gene coloring selection (e.g., for clinical attributes or none)
+                urlWrapper.updateURL({
+                    embeddings_coloring_selection: undefined,
+                });
+            }
+        } catch (e) {
+            // Error syncing coloring selection to URL
+        }
     }
 
     @action.bound
