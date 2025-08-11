@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { computed, observable, action, makeObservable } from 'mobx';
+import { computed, observable, action, makeObservable, reaction } from 'mobx';
 import { remoteData } from 'cbioportal-frontend-commons';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
@@ -45,6 +45,8 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     };
     @observable private windowHeight = window.innerHeight;
     @observable private hiddenCategories = new Set<string>();
+    private urlParameterReactionDisposer?: () => void;
+    private urlSyncReactionDisposer?: () => void;
 
     constructor(props: IEmbeddingsTabProps) {
         super(props);
@@ -58,6 +60,48 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
 
         // Listen for window resize events
         this.handleResize = this.handleResize.bind(this);
+
+        // Set up reaction to apply URL parameter once genes are loaded
+        this.urlParameterReactionDisposer = reaction(
+            () => this.coloringFromURLParameter,
+            urlOption => {
+                if (urlOption) {
+                    this.applyColoringOption(urlOption);
+                }
+            },
+            { fireImmediately: true }
+        );
+
+        // Set up reaction to ensure default coloring is synced to URL
+        this.urlSyncReactionDisposer = reaction(
+            () => ({
+                selectedOption: this.selectedColoringOption,
+                hasUrlParams: this.hasExistingURLParameters,
+                clinicalAttributesReady: this.clinicalAttributes.length > 0,
+                urlWrapperReady: !!(this.props.store as any).urlWrapper,
+            }),
+            ({
+                selectedOption,
+                hasUrlParams,
+                clinicalAttributesReady,
+                urlWrapperReady,
+            }) => {
+                // Only sync if:
+                // 1. URL wrapper is ready
+                // 2. Clinical attributes are loaded
+                // 3. We have a selected option
+                // 4. No existing URL parameters (don't override user's URL)
+                if (
+                    urlWrapperReady &&
+                    clinicalAttributesReady &&
+                    selectedOption &&
+                    !hasUrlParams
+                ) {
+                    this.syncColoringSelectionToURL(selectedOption);
+                }
+            },
+            { fireImmediately: true }
+        );
     }
 
     componentDidMount() {
@@ -66,6 +110,14 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
 
     componentWillUnmount() {
         window.removeEventListener('resize', this.handleResize);
+
+        // Clean up reactions
+        if (this.urlParameterReactionDisposer) {
+            this.urlParameterReactionDisposer();
+        }
+        if (this.urlSyncReactionDisposer) {
+            this.urlSyncReactionDisposer();
+        }
     }
 
     @action.bound
@@ -74,7 +126,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     }
 
     private initializeDefaultColoring() {
-        // Initialize with basic default - URL parameter will be applied reactively once genes load
+        // Initialize with default coloring - URL parameters will be applied via reaction
         const cancerTypeAttr = this.clinicalAttributes.find(
             attr => attr.clinicalAttributeId === 'CANCER_TYPE_DETAILED'
         );
@@ -117,7 +169,28 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                 }
             }
 
-            // Could add parsing for clinical attributes if needed
+            // Parse clinical attribute selection (format: "undefined_{...json...}")
+            // This matches PlotsTab's encoding format exactly
+            if (selectedOption.startsWith('undefined_')) {
+                const jsonPart = selectedOption.substring('undefined_'.length);
+                const clinicalInfo = JSON.parse(jsonPart);
+
+                // Find the clinical attribute by ID
+                const clinicalAttr = this.clinicalAttributes.find(
+                    attr =>
+                        attr.clinicalAttributeId ===
+                        clinicalInfo.clinicalAttributeId
+                );
+
+                if (clinicalAttr) {
+                    return {
+                        info: { clinicalAttribute: clinicalAttr },
+                        label: clinicalAttr.displayName,
+                        value: `clinical_${clinicalAttr.clinicalAttributeId}`,
+                    } as ColoringMenuOmnibarOption;
+                }
+            }
+
             return undefined;
         } catch (e) {
             return undefined;
@@ -143,6 +216,13 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         return this.props.store.clinicalAttributes.result || [];
     }
 
+    @computed get hasExistingURLParameters(): boolean {
+        // Check if there are already URL parameters for embeddings coloring selection
+        const embeddingsColoringSelection = (this.props.store as any).urlWrapper
+            ?.query?.embeddings_coloring_selection;
+        return !!embeddingsColoringSelection?.selectedOption;
+    }
+
     @computed get genes(): Gene[] {
         // Use allGenes to match PlotsTab pattern exactly
         // This provides comprehensive gene search capability in StudyView
@@ -150,21 +230,26 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         return genesResult.isComplete ? genesResult.result || [] : [];
     }
 
-    // Reactive computed property that applies URL parameter once genes are loaded
+    // Reactive computed property that applies URL parameter once genes are loaded (for genes) or immediately (for clinical attributes)
     @computed get coloringFromURLParameter():
         | ColoringMenuOmnibarOption
         | undefined {
-        // First check if genes are loaded
-        if (this.genes.length === 0) {
-            return undefined;
-        }
-
         // Check if there's a URL parameter for embeddings coloring selection
         const embeddingsColoringSelection = (this.props.store as any).urlWrapper
             ?.query?.embeddings_coloring_selection;
         if (embeddingsColoringSelection?.selectedOption) {
+            const selectedOption = embeddingsColoringSelection.selectedOption;
+
+            // For gene selections (format: "1956_undefined"), wait for genes to load
+            if (selectedOption.match(/^\d+_/)) {
+                if (this.genes.length === 0) {
+                    return undefined;
+                }
+            }
+            // For clinical attributes (format: "undefined_{...}"), process immediately
+
             const parsedOption = this.parseColoringSelectionFromURL(
-                embeddingsColoringSelection.selectedOption
+                selectedOption
             );
             if (parsedOption) {
                 return parsedOption;
@@ -174,20 +259,10 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         return undefined;
     }
 
-    // Reactive effect that applies URL parameter when available
+    // Effective coloring option (URL parameter is applied via reaction to selectedColoringOption)
     @computed get effectiveColoringOption():
         | ColoringMenuOmnibarOption
         | undefined {
-        const urlOption = this.coloringFromURLParameter;
-        if (
-            urlOption &&
-            (!this.selectedColoringOption ||
-                this.isDefaultColoring(this.selectedColoringOption))
-        ) {
-            // Apply the URL-based coloring by updating the selected option
-            this.applyColoringOption(urlOption);
-            return urlOption;
-        }
         return this.selectedColoringOption;
     }
 
@@ -709,6 +784,24 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         return this.categoryCounts?.size || 0;
     }
 
+    @computed get shouldShowToolbar(): boolean {
+        // Check if there are URL parameters for embeddings coloring selection
+        const hasUrlParams = (this.props.store as any).urlWrapper?.query
+            ?.embeddings_coloring_selection?.selectedOption;
+
+        if (hasUrlParams) {
+            // For gene selections (format: "1956_undefined"), wait for genes to load
+            if (hasUrlParams.match(/^\d+_/)) {
+                return this.genes.length > 0;
+            }
+            // For clinical attributes (format: "undefined_{...}"), show immediately
+            return true;
+        } else {
+            // No URL params, show toolbar immediately
+            return true;
+        }
+    }
+
     @computed get selectedPatientIds(): string[] {
         return (
             this.props.store.selectedPatients?.map((p: any) => p.patientId) ||
@@ -822,8 +915,36 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                             : 'false',
                     },
                 });
+            } else if (option?.info?.clinicalAttribute) {
+                // Clinical attribute coloring selection
+                // Follow PlotsTab's encoding format exactly
+                const clinicalInfo = {
+                    clinicalAttributeId:
+                        option.info.clinicalAttribute.clinicalAttributeId,
+                    patientAttribute:
+                        option.info.clinicalAttribute.patientAttribute || false,
+                    studyId: this.currentStudyIds[0] || '', // Use first study ID
+                };
+                const selectedOption = `undefined_${JSON.stringify(
+                    clinicalInfo
+                )}`;
+
+                urlWrapper.updateURL({
+                    embeddings_coloring_selection: {
+                        selectedOption: selectedOption,
+                        colorByMutationType: this.mutationTypeEnabled
+                            ? 'true'
+                            : 'false',
+                        colorByCopyNumber: this.copyNumberEnabled
+                            ? 'true'
+                            : 'false',
+                        colorBySv: this.structuralVariantEnabled
+                            ? 'true'
+                            : 'false',
+                    },
+                });
             } else {
-                // Clear gene coloring selection (e.g., for clinical attributes or none)
+                // Clear coloring selection (e.g., for "None" option)
                 urlWrapper.updateURL({
                     embeddings_coloring_selection: undefined,
                 });
@@ -1104,91 +1225,100 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
 
         return (
             <div className="embeddings-tab">
-                <div style={{ marginBottom: '10px' }}>
-                    <div
-                        style={{
-                            display: 'inline-block',
-                            marginRight: '20px',
-                            verticalAlign: 'middle',
-                        }}
-                    >
-                        <div style={{ display: 'flex', alignItems: 'center' }}>
-                            <label
+                {this.shouldShowToolbar && (
+                    <div style={{ marginBottom: '10px' }}>
+                        <div
+                            style={{
+                                display: 'inline-block',
+                                marginRight: '20px',
+                                verticalAlign: 'middle',
+                            }}
+                        >
+                            <div
                                 style={{
-                                    marginRight: '8px',
-                                    whiteSpace: 'nowrap',
-                                    fontSize: '14px',
+                                    display: 'flex',
+                                    alignItems: 'center',
                                 }}
                             >
-                                Embedding:
-                            </label>
-                            <Select
-                                name="embedding-select"
-                                value={this.selectedReactSelectOption}
-                                onChange={this.onEmbeddingChange}
-                                options={this.reactSelectEmbeddingOptions}
-                                isSearchable={false}
-                                styles={{
-                                    container: (base: any) => ({
-                                        ...base,
-                                        minWidth: '150px',
-                                    }),
-                                    control: (base: any) => ({
-                                        ...base,
+                                <label
+                                    style={{
+                                        marginRight: '8px',
+                                        whiteSpace: 'nowrap',
                                         fontSize: '14px',
-                                        minHeight: '34px',
-                                    }),
-                                    menu: (base: any) => ({
-                                        ...base,
-                                        zIndex: 9999,
-                                    }),
-                                }}
+                                    }}
+                                >
+                                    Embedding:
+                                </label>
+                                <Select
+                                    name="embedding-select"
+                                    value={this.selectedReactSelectOption}
+                                    onChange={this.onEmbeddingChange}
+                                    options={this.reactSelectEmbeddingOptions}
+                                    isSearchable={false}
+                                    styles={{
+                                        container: (base: any) => ({
+                                            ...base,
+                                            minWidth: '150px',
+                                        }),
+                                        control: (base: any) => ({
+                                            ...base,
+                                            fontSize: '14px',
+                                            minHeight: '34px',
+                                        }),
+                                        menu: (base: any) => ({
+                                            ...base,
+                                            zIndex: 9999,
+                                        }),
+                                    }}
+                                />
+                            </div>
+                        </div>
+
+                        <div
+                            className="coloring-menu"
+                            style={{
+                                display: 'inline-block',
+                                verticalAlign: 'middle',
+                                position: 'relative',
+                                minWidth: '350px',
+                            }}
+                        >
+                            <style>
+                                {`
+                                    .embeddings-tab .coloring-menu .gene-select-background .gene-select-container .gene-select {
+                                        width: 350px !important;
+                                    }
+                                `}
+                            </style>
+                            <ColorSamplesByDropdown
+                                genes={this.genes}
+                                clinicalAttributes={this.clinicalAttributes}
+                                selectedOption={this.effectiveColoringOption}
+                                logScale={this.coloringLogScale}
+                                hasNoQueriedGenes={true}
+                                logScalePossible={this.logScalePossible}
+                                isLoading={this.isLoading}
+                                mutationDataExists={this.mutationDataExists}
+                                cnaDataExists={this.cnaDataExists}
+                                svDataExists={this.svDataExists}
+                                mutationTypeEnabled={this.mutationTypeEnabled}
+                                copyNumberEnabled={this.copyNumberEnabled}
+                                structuralVariantEnabled={
+                                    this.structuralVariantEnabled
+                                }
+                                onSelectionChange={
+                                    this.onColoringSelectionChange
+                                }
+                                onLogScaleChange={this.onLogScaleChange}
+                                onMutationTypeToggle={this.onMutationTypeToggle}
+                                onCopyNumberToggle={this.onCopyNumberToggle}
+                                onStructuralVariantToggle={
+                                    this.onStructuralVariantToggle
+                                }
                             />
                         </div>
                     </div>
-
-                    <div
-                        className="coloring-menu"
-                        style={{
-                            display: 'inline-block',
-                            verticalAlign: 'middle',
-                            position: 'relative',
-                            minWidth: '350px',
-                        }}
-                    >
-                        <style>
-                            {`
-                                .embeddings-tab .coloring-menu .gene-select-background .gene-select-container .gene-select {
-                                    width: 350px !important;
-                                }
-                            `}
-                        </style>
-                        <ColorSamplesByDropdown
-                            genes={this.genes}
-                            clinicalAttributes={this.clinicalAttributes}
-                            selectedOption={this.selectedColoringOption}
-                            logScale={this.coloringLogScale}
-                            hasNoQueriedGenes={true}
-                            logScalePossible={this.logScalePossible}
-                            isLoading={this.isLoading}
-                            mutationDataExists={this.mutationDataExists}
-                            cnaDataExists={this.cnaDataExists}
-                            svDataExists={this.svDataExists}
-                            mutationTypeEnabled={this.mutationTypeEnabled}
-                            copyNumberEnabled={this.copyNumberEnabled}
-                            structuralVariantEnabled={
-                                this.structuralVariantEnabled
-                            }
-                            onSelectionChange={this.onColoringSelectionChange}
-                            onLogScaleChange={this.onLogScaleChange}
-                            onMutationTypeToggle={this.onMutationTypeToggle}
-                            onCopyNumberToggle={this.onCopyNumberToggle}
-                            onStructuralVariantToggle={
-                                this.onStructuralVariantToggle
-                            }
-                        />
-                    </div>
-                </div>
+                )}
 
                 {/* Plot */}
                 {this.plotComponent}
