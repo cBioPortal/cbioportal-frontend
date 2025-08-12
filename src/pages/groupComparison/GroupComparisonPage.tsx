@@ -121,24 +121,7 @@ export default class GroupComparisonPage extends React.Component<
     }
 
     readonly tabs = MakeMobxView({
-        await: () => [
-            // this.store._activeGroupsNotOverlapRemoved,
-            // this.store.activeGroups,
-            // this.store.mutationEnrichmentProfiles,
-            // this.store.structuralVariantEnrichmentProfiles,
-            // this.store.copyNumberEnrichmentProfiles,
-            // this.store.mRNAEnrichmentProfiles,
-            // this.store.proteinEnrichmentProfiles,
-            // this.store.methylationEnrichmentProfiles,
-            // this.store.survivalClinicalDataExists,
-            // this.store.genericAssayEnrichmentProfilesGroupedByGenericAssayType,
-            // this.store
-            //     .genericAssayBinaryEnrichmentProfilesGroupedByGenericAssayType,
-            // this.store.alterationsEnrichmentData,
-            // this.store.alterationsEnrichmentAnalysisGroups,
-            // this.store.genesSortedByMutationFrequency,
-            // this.store.genesSortedByAlterationFrequency,
-        ],
+        await: () => [],
         render: () => {
             return (
                 <MSKTabs
@@ -161,11 +144,14 @@ export default class GroupComparisonPage extends React.Component<
                     </MSKTab>
                     <MSKTab
                         id={GroupComparisonTab.SURVIVAL}
+                        pending={
+                            this.store.survivalClinicalDataExists.isPending
+                        }
                         linkText="Survival"
                         anchorClassName={
                             !this.store.showSurvivalTab ||
                             this.store.survivalTabUnavailable
-                                ? 'greyedOut'
+                                ? 'hidden'
                                 : ''
                         }
                     >
@@ -176,6 +162,7 @@ export default class GroupComparisonPage extends React.Component<
                     </MSKTab>
                     <MSKTab
                         id={GroupComparisonTab.CLINICAL}
+                        pending={this.store.activeGroups.isPending}
                         linkText="Clinical"
                         anchorClassName={
                             this.store.clinicalTabUnavailable ? 'greyedOut' : ''
@@ -188,14 +175,14 @@ export default class GroupComparisonPage extends React.Component<
                     </MSKTab>
                     <MSKTab
                         id={GroupComparisonTab.ALTERATIONS}
+                        pending={this.store.activeGroups.isPending}
                         linkText={this.alterationEnrichmentTabName}
                         anchorClassName={
                             !this.store.showAlterationsTab ||
                             this.store.alterationsTabUnavailable
-                                ? 'greyedOut'
+                                ? 'hidden'
                                 : ''
                         }
-                        pending={this.store.activeGroups.isPending}
                     >
                         {(getServerConfig().skin_show_settings_menu && (
                             <AlterationFilterMenuSection
@@ -228,6 +215,9 @@ export default class GroupComparisonPage extends React.Component<
                     </MSKTab>
                     <MSKTab
                         id={GroupComparisonTab.MUTATIONS}
+                        pending={
+                            this.store.mutationEnrichmentProfiles.isPending
+                        }
                         linkText={
                             <span>
                                 Mutations{' '}
@@ -235,7 +225,7 @@ export default class GroupComparisonPage extends React.Component<
                             </span>
                         }
                         anchorClassName={
-                            !this.store.showMutationsTab ? 'greyedOut' : ''
+                            !this.store.showMutationsTab ? 'hidden' : ''
                         }
                     >
                         <GroupComparisonMutationsTab
@@ -298,7 +288,7 @@ export default class GroupComparisonPage extends React.Component<
                         anchorClassName={
                             !this.store.showMRNATab ||
                             this.store.mRNATabUnavailable
-                                ? 'greyedOut'
+                                ? 'hidden'
                                 : ''
                         }
                     >
@@ -306,11 +296,12 @@ export default class GroupComparisonPage extends React.Component<
                     </MSKTab>
                     <MSKTab
                         id={GroupComparisonTab.PROTEIN}
+                        pending={this.store.proteinEnrichmentProfiles.isPending}
                         linkText="Protein"
                         anchorClassName={
                             !this.store.showProteinTab ||
                             this.store.proteinTabUnavailable
-                                ? 'greyedOut'
+                                ? 'hidden'
                                 : ''
                         }
                     >
@@ -318,11 +309,14 @@ export default class GroupComparisonPage extends React.Component<
                     </MSKTab>
                     <MSKTab
                         id={GroupComparisonTab.DNAMETHYLATION}
+                        pending={
+                            this.store.methylationEnrichmentProfiles.isPending
+                        }
                         linkText="DNA Methylation"
                         anchorClassName={
                             !this.store.showMethylationTab ||
                             this.store.methylationTabUnavailable
-                                ? 'greyedOut'
+                                ? 'hidden'
                                 : ''
                         }
                     >
@@ -348,7 +342,7 @@ export default class GroupComparisonPage extends React.Component<
                                         this.store
                                             .genericAssayBinaryTabUnavailable &&
                                         this.store.genericAssayTabUnavailable
-                                            ? 'greyedOut'
+                                            ? 'hidden'
                                             : ''
                                     }
                                 >
