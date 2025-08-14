@@ -1496,7 +1496,7 @@ export function transitionHeatmapTrack(
         heatmap?: TrackId;
         heatmap01?: TrackId;
         genericAssayHeatmap?: GenericAssayProfileToTrackIdMap;
-        // Add mutation-specific key to separate VAF from other tracks
+        // Mutation-specific key to separate VAF from other tracks
         mutation?: TrackId;
     },
     expansionParentKey?: string
@@ -1570,7 +1570,7 @@ export function transitionHeatmapTrack(
                 | 'heatmap01'
                 | 'mutation';
 
-            // CRITICAL FIX: Each molecular alteration type gets its own rule set
+            // Each molecular alteration type gets its own rule set
             if (
                 nextSpec.molecularAlterationType ===
                 AlterationTypeConstants.MUTATION_EXTENDED
@@ -1587,7 +1587,7 @@ export function transitionHeatmapTrack(
             }
 
             // Only share rule set with tracks of the SAME molecular alteration type
-            // This prevents VAF tracks (0-1 scale) from sharing rules with mRNA tracks (-3 to 3 scale)
+            // Prevents VAF tracks (0-1 scale) from sharing rules with mRNA tracks (-3 to 3 scale)
             if (
                 typeof trackIdForRuleSetSharing[trackIdForRuleSetSharingKey] !==
                 'undefined'
