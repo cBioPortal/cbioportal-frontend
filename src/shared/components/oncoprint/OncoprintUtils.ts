@@ -533,7 +533,6 @@ export function getCategoricalTrackRuleSetParams(
     };
 }
 
-// Helper function to create track data based on profile type
 function createHeatmapTracksData(
     query: any,
     profileType: string,
@@ -623,6 +622,24 @@ function getGeneProfileQueries(
         .flatten()
         .filter(query => query.entrezGeneId)
         .value();
+}
+
+function getMutationHeatMapQueries(
+    molecularProfileIdToAdditionalTracks: any,
+    molecularProfileIdToMolecularProfile: any,
+    geneCache: any
+) {
+    const cacheQueries = getGeneProfileQueries(
+        molecularProfileIdToAdditionalTracks,
+        geneCache
+    );
+
+    return cacheQueries.filter(query => {
+        const profileType =
+            molecularProfileIdToMolecularProfile[query.molecularProfileId]
+                ?.molecularAlterationType;
+        return profileType === AlterationTypeConstants.MUTATION_EXTENDED;
+    });
 }
 
 export function percentAltered(altered: number, sequenced: number) {
@@ -1273,28 +1290,17 @@ export function makeHeatmapTracksMobxPromise(
             const molecularProfileIdToAdditionalTracks =
                 oncoprint.molecularProfileIdToAdditionalTracks;
 
-            // We need to include mutation cache dependencies in await
-            const cacheQueries = getGeneProfileQueries(
+            const mutationQueries = getMutationHeatMapQueries(
                 molecularProfileIdToAdditionalTracks,
+                molecularProfileIdToMolecularProfile,
                 oncoprint.props.store.geneCache
             );
-
-            const mutationQueries = cacheQueries.filter(query => {
-                const profileType =
-                    molecularProfileIdToMolecularProfile[
-                        query.molecularProfileId
-                    ]?.molecularAlterationType;
-                return (
-                    profileType === AlterationTypeConstants.MUTATION_EXTENDED
-                );
-            });
 
             return [
                 oncoprint.props.store.filteredSamples,
                 oncoprint.props.store.filteredPatients,
                 oncoprint.props.store.molecularProfileIdToMolecularProfile,
                 oncoprint.props.store.geneMolecularDataCache,
-                // Include mutation cache promises in dependencies
                 ...mutationQueries.map(query =>
                     oncoprint.props.store.annotatedMutationCache.get({
                         entrezGeneId: query.entrezGeneId!,
