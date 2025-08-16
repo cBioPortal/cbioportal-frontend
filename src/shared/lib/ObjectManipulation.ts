@@ -25,7 +25,7 @@ export function renameKeys(dict: any, keyMap: { [key: string]: string }) {
  */
 export function dropKeys<T>(dict: T, keys: (keyof T)[]): T {
     return reduce(
-        dict,
+        dict as any,
         (newDict: any, val: any, key: any) => {
             if (keys.indexOf(key) === -1) {
                 newDict[key] = val;

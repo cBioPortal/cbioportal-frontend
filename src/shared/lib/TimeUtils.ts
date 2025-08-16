@@ -1,5 +1,5 @@
 export function sleep(ms: number) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise<void>(resolve => setTimeout(resolve, ms));
 }
 
 export function sleepUntil(
@@ -7,7 +7,7 @@ export function sleepUntil(
     intervalMs: number = 100,
     timeoutMs: number = 2000
 ) {
-    return new Promise(resolve => {
+    return new Promise<void>(resolve => {
         let timeElapsed = 0;
         const interval = setInterval(() => {
             timeElapsed += intervalMs;
