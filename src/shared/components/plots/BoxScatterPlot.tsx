@@ -1020,7 +1020,7 @@ export default class BoxScatterPlot<
                                 }
                             />
                             {this.props.renderLinePlot &&
-                                this.initLineVisibility &&
+                                typeof this.initLineVisibility === 'function' &&
                                 Object.keys(this.patientLinePlotData!).map(
                                     patientId =>
                                         this.visibleLines.get(patientId) && (

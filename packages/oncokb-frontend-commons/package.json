@@ -8,8 +8,8 @@
   "typings": "dist/index.d.ts",
   "styles": "dist/styles.css",
   "engines": {
-    "node": "15.2.1",
-    "yarn": "1.22.5"
+    "node": "18.20.8",
+    "yarn": "1.22.22"
   },
   "files": [
     "dist"

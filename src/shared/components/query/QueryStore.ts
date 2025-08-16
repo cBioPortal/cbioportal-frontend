@@ -740,7 +740,7 @@ export class QueryStore {
 
             await Promise.all(
                 unknownQueriedIds.map(id => {
-                    return new Promise((resolve, reject) => {
+                    return new Promise<void>((resolve, reject) => {
                         sessionServiceClient
                             .getVirtualStudy(id)
                             .then(virtualStudy => {
@@ -884,7 +884,7 @@ export class QueryStore {
 
             await Promise.all(
                 unknownQueriedIds.map(id => {
-                    return new Promise((resolve, reject) => {
+                    return new Promise<void>((resolve, reject) => {
                         sessionServiceClient
                             .getVirtualStudy(id)
                             .then(virtualStudy => {

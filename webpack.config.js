@@ -103,11 +103,7 @@ var config = {
     },
 
     optimization: {
-        minimizer: [
-            new TerserPlugin({
-                parallel: false,
-            }),
-        ],
+        minimize: false,
     },
 
     resolve: {
