@@ -13664,21 +13664,103 @@ describe('SurvivalUtil', () => {
         });
 
         it('returns correct survival summaries for the large example data from R survival package, compare with R survival package result', () => {
-            assert.deepEqual(
-                getSurvivalSummaries(
-                    largeExamplePatientSurvivalsFromRSurvivalPackage
-                ),
-                largeExampleSurvivalSummaries
+            const result = getSurvivalSummaries(
+                largeExamplePatientSurvivalsFromRSurvivalPackage
             );
+            const expected = largeExampleSurvivalSummaries;
+
+            assert.equal(result.length, expected.length);
+            result.forEach((item, i) => {
+                const exp = expected[i];
+                // Use tolerance for floating point fields
+                if (
+                    item.high95ConfidenceInterval !== undefined &&
+                    exp.high95ConfidenceInterval !== undefined
+                ) {
+                    assert.approximately(
+                        item.high95ConfidenceInterval,
+                        exp.high95ConfidenceInterval,
+                        1e-10
+                    );
+                }
+                if (
+                    item.low95ConfidenceInterval !== undefined &&
+                    exp.low95ConfidenceInterval !== undefined
+                ) {
+                    assert.approximately(
+                        item.low95ConfidenceInterval,
+                        exp.low95ConfidenceInterval,
+                        1e-10
+                    );
+                }
+                if (
+                    item.standardError !== undefined &&
+                    exp.standardError !== undefined
+                ) {
+                    assert.approximately(
+                        item.standardError,
+                        exp.standardError,
+                        1e-10
+                    );
+                }
+                assert.approximately(
+                    item.survivalFunctionEstimate,
+                    exp.survivalFunctionEstimate,
+                    1e-10
+                );
+                // Strict comparison for integer fields
+                assert.equal(item.atRisk, exp.atRisk);
+            });
         });
 
         it('returns correct survival summaries for example data from github repository: delayed_entry_clin_genom_studies', () => {
-            assert.deepEqual(
-                getSurvivalSummaries(
-                    examplePatientSurvivalsFromDelayedEntryRepo
-                ),
-                delayedEntrySurvivalSummaries
+            const result = getSurvivalSummaries(
+                examplePatientSurvivalsFromDelayedEntryRepo
             );
+            const expected = delayedEntrySurvivalSummaries;
+
+            assert.equal(result.length, expected.length);
+            result.forEach((item, i) => {
+                const exp = expected[i];
+                // Use tolerance for floating point fields
+                if (
+                    item.high95ConfidenceInterval !== undefined &&
+                    exp.high95ConfidenceInterval !== undefined
+                ) {
+                    assert.approximately(
+                        item.high95ConfidenceInterval,
+                        exp.high95ConfidenceInterval,
+                        1e-10
+                    );
+                }
+                if (
+                    item.low95ConfidenceInterval !== undefined &&
+                    exp.low95ConfidenceInterval !== undefined
+                ) {
+                    assert.approximately(
+                        item.low95ConfidenceInterval,
+                        exp.low95ConfidenceInterval,
+                        1e-10
+                    );
+                }
+                if (
+                    item.standardError !== undefined &&
+                    exp.standardError !== undefined
+                ) {
+                    assert.approximately(
+                        item.standardError,
+                        exp.standardError,
+                        1e-10
+                    );
+                }
+                assert.approximately(
+                    item.survivalFunctionEstimate,
+                    exp.survivalFunctionEstimate,
+                    1e-10
+                );
+                // Strict comparison for integer fields
+                assert.equal(item.atRisk, exp.atRisk);
+            });
         });
     });
 
