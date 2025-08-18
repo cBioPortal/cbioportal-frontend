@@ -33,7 +33,9 @@ import {
     makeHeatmapTrackData,
 } from './DataUtils';
 import _, { isNumber } from 'lodash';
-import ResultsViewOncoprint from './ResultsViewOncoprint';
+import ResultsViewOncoprint, {
+    AdditionalTrackGroupRecord,
+} from './ResultsViewOncoprint';
 import { action, IObservableArray, ObservableMap, runInAction } from 'mobx';
 import GenesetCorrelatedGeneCache from 'shared/cache/GenesetCorrelatedGeneCache';
 import {
@@ -46,6 +48,7 @@ import {
     Patient,
     Sample,
     Gene,
+    NumericGeneMolecularData,
 } from 'cbioportal-ts-api-client';
 import {
     clinicalAttributeIsPROFILEDIN,
@@ -73,6 +76,7 @@ import { IQueriedMergedTrackCaseData } from 'shared/model/IQueriedMergedTrackCas
 import { OncoprintModel } from 'oncoprintjs';
 import { getVariantAlleleFrequency } from 'shared/lib/MutationUtils';
 import { DataType } from 'pages/studyView/StudyViewUtils';
+import GeneCache from 'shared/cache/GeneCache';
 
 interface IGenesetExpansionMap {
     [genesetTrackKey: string]: IHeatmapTrackSpec[];
@@ -533,6 +537,11 @@ export function getCategoricalTrackRuleSetParams(
     };
 }
 
+/**
+ * Processes molecular data for heatmap tracks based on profile type.
+ * For MUTATION_EXTENDED profiles, calculates variant allele frequency (VAF) from mutations.
+ * For other profiles, retrieves molecular data values directly from cache.
+ */
 function createHeatmapTracksData(
     query: any,
     profileType: string,
@@ -556,8 +565,8 @@ function createHeatmapTracksData(
                 m => m.molecularProfileId === query.molecularProfileId
             );
 
-            return profileMutations
-                .map(m => {
+            return _.compact(
+                profileMutations.map(m => {
                     const vafReport = getVariantAlleleFrequency(m);
                     if (
                         vafReport &&
@@ -572,34 +581,35 @@ function createHeatmapTracksData(
                     }
                     return null;
                 })
-                .filter(
-                    (
-                        d
-                    ): d is {
-                        uniqueSampleKey: string;
-                        uniquePatientKey: string;
-                        value: number;
-                    } => d !== null
-                );
+            );
         }
     } else {
         const molecularDataResult = oncoprint.props.store.geneMolecularDataCache.result!.get(
             query
         );
         if (molecularDataResult && molecularDataResult.data) {
-            return molecularDataResult.data.map((d: any) => ({
-                value: d.value,
-                uniqueSampleKey: d.uniqueSampleKey,
-                uniquePatientKey: d.uniquePatientKey,
-            }));
+            return molecularDataResult.data.map(
+                (d: NumericGeneMolecularData) => ({
+                    value: d.value,
+                    uniqueSampleKey: d.uniqueSampleKey,
+                    uniquePatientKey: d.uniquePatientKey,
+                })
+            );
         }
     }
     return [];
 }
 
+/**
+ * Generates queries for gene-molecular profile combinations from additional tracks.
+ * Maps gene symbols to entrez IDs and creates query objects for data retrieval.
+ * Excludes GENERIC_ASSAY molecular alteration types.
+ */
 function getGeneProfileQueries(
-    molecularProfileIdToAdditionalTracks: any,
-    geneCache: any
+    molecularProfileIdToAdditionalTracks: {
+        [molecularProfileId: string]: AdditionalTrackGroupRecord;
+    },
+    geneCache: GeneCache
 ) {
     const geneProfiles = _(molecularProfileIdToAdditionalTracks)
         .values()
@@ -624,10 +634,15 @@ function getGeneProfileQueries(
         .value();
 }
 
+// Filters gene profile queries to return only those with MUTATION_EXTENDED alteration type.
 function getMutationHeatMapQueries(
-    molecularProfileIdToAdditionalTracks: any,
-    molecularProfileIdToMolecularProfile: any,
-    geneCache: any
+    molecularProfileIdToAdditionalTracks: {
+        [molecularProfileId: string]: AdditionalTrackGroupRecord;
+    },
+    molecularProfileIdToMolecularProfile: {
+        [molecularProfileId: string]: MolecularProfile;
+    },
+    geneCache: GeneCache
 ) {
     const cacheQueries = getGeneProfileQueries(
         molecularProfileIdToAdditionalTracks,
@@ -1315,12 +1330,13 @@ export function makeHeatmapTracksMobxPromise(
                 oncoprint.molecularProfileIdToAdditionalTracks;
 
             const neededGenes = _.flatten(
-                _.filter(
-                    _.values(molecularProfileIdToAdditionalTracks),
-                    d =>
-                        d.molecularAlterationType !==
-                        AlterationTypeConstants.GENERIC_ASSAY
-                ).map(v => _.keys(v.entities))
+                _.values(molecularProfileIdToAdditionalTracks)
+                    .filter(
+                        d =>
+                            d.molecularAlterationType !==
+                            AlterationTypeConstants.GENERIC_ASSAY
+                    )
+                    .map(v => _.keys(v.entities))
             );
 
             await oncoprint.props.store.geneCache.getPromise(
