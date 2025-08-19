@@ -1,16 +1,12 @@
 import * as React from 'react';
 import _ from 'lodash';
 import classnames from 'classnames';
-import { ThreeBounce } from 'better-react-spinkit';
-import ReactResizeDetector from 'react-resize-detector';
 import './styles.scss';
 import autobind from 'autobind-decorator';
-import Spinner from 'react-spinkit';
 import LoadingIndicator from '../loadingIndicator/LoadingIndicator';
 import {
     action,
     autorun,
-    computed,
     IReactionDisposer,
     makeObservable,
     observable,
@@ -268,7 +264,6 @@ export class MSKTabs extends React.Component<IMSKTabsProps> {
                     )}
                 >
                     {this.navTabs(children, targetTabId)}
-
                     <DeferredRender
                         className="tab-content"
                         loadingState={
@@ -326,6 +321,10 @@ export class MSKTabs extends React.Component<IMSKTabsProps> {
 
         const navButtonStyle: string = this.props.tabButtonStyle || 'tabs';
 
+        const isPending = React.Children.toArray(this.props.children).some(
+            (c: any) => c.props.pending
+        );
+
         return (
             <ul
                 ref={this.navTabsRefHandler.bind(this)}
@@ -333,6 +332,13 @@ export class MSKTabs extends React.Component<IMSKTabsProps> {
             >
                 {prev}
                 {pages[this.currentPage - 1]}
+                <li>
+                    <LoadingIndicator
+                        isLoading={isPending}
+                        style={{ position: 'absolute', top: 10, minWidth: 50 }}
+                        small={true}
+                    />
+                </li>
                 {next}
             </ul>
         );
