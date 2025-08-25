@@ -44,7 +44,7 @@
     "classnames": "^2.2.5",
     "genome-nexus-ts-api-client": "^1.1.35",
     "jquery": "^3.2.1",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.21",
     "memoize-weak-decorator": "^1.0.3",
     "oncokb-frontend-commons": "^0.0.32",
     "oncokb-styles": "~1.4.2",

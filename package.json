@@ -216,7 +216,7 @@
     "little-loader": "^0.2.0",
     "loader-utils": "^1.0.2",
     "localforage": "^1.9.0",
-    "lodash": "^4.17.11",
+    "lodash": "^4.17.21",
     "lolex": "^1.6.0",
     "measure-text": "0.0.4",
     "memoize-weak-decorator": "^1.0.3",

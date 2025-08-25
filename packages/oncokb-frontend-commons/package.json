@@ -37,7 +37,7 @@
   "dependencies": {
     "cbioportal-utils": "^0.3.48",
     "classnames": "^2.2.5",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.21",
     "oncokb-styles": "~1.4.2",
     "oncokb-ts-api-client": "^1.3.8",
     "rc-tooltip": "^5.0.2",
