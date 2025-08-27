@@ -9020,6 +9020,9 @@ export class StudyViewPageStore
                     return count > 0;
                 });
         },
+        onError: () => {
+            // fail silently
+        },
     });
 
     readonly selectedDriverTiers = remoteData<string[]>({
