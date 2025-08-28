@@ -16,7 +16,9 @@ const defaultTimeoutInterval = 180000;
 
 const resultsDir = process.env.JUNIT_REPORT_PATH || './shared/results/';
 
-const retries = process.env.RETRIES || 2;
+const chromedriverCustomPath = process.env.CHROMEDRIVER_CUSTOM_PATH;
+
+const retries = 0;
 
 let screenshotRoot = process.env.SCREENSHOT_DIRECTORY;
 
@@ -26,6 +28,7 @@ screenshotRoot = screenshotRoot.replace(/\/$/, '');
 const chromeArgs = [
     '--disable-composited-antialiasing',
     '--allow-insecure-localhost',
+    '--window-size=1600,1000',
 ].concat(
     (function() {
         return process.env.HEADLESS_CHROME === 'true'
@@ -105,7 +108,7 @@ function saveErrorImage(
 ) {
     if (error) {
         if (!fs.existsSync(errorDir)) {
-            fs.mkdirSync(errorDir, 0744);
+            fs.mkdirSync(errorDir, 0o744);
         }
         const title = test.title.trim().replace(/\s/g, '_');
         const img = `${errorDir}${title}.png`;
@@ -263,47 +266,26 @@ exports.config = {
     // commands. Instead, they hook themselves up into the test process.
     services: [
         [
+            'chromedriver',
+            {
+                logLevel: 'info',
+                outputDir: './driver-logs',
+                chromedriverCustomPath,
+            },
+        ],
+        [
             'novus-visual-regression',
             {
                 compare: LocalCompare,
                 viewportChangePause: 300,
                 viewports: [{ width: 1600, height: 1000 }],
                 orientations: ['landscape', 'portrait'],
+                after: () => {},
             },
         ],
     ],
 
-    //port: 53171,
-    // FROM OLD webdriver config
-    // capabilities: [
-    //     {
-    //         //browserName: 'chrome',
-    //         chromeOptions: {
-    //             args: [
-    //                 '--disable-composited-antialiasing',
-    //                 '--allow-insecure-localhost',
-    //             ],
-    //         },
-    //
-    //         os: 'OS X',
-    //         os_version: 'High Sierra',
-    //         browser: 'Chrome',
-    //         browser_version: '74.0 beta',
-    //         resolution: '1600x1200',
-    //     },
-    // ],
-    //
-    // IECapabilties: [
-    //     {
-    //         os: 'Windows',
-    //         os_version: '10',
-    //         browser: 'IE',
-    //         browser_version: '11.0',
-    //         'browserstack.selenium_version': '3.5.2',
-    //         resolution: '1600x1200',
-    //         'browserstack.local': true,
-    //     },
-    // ],
+    //port: 53473,
 
     // Framework you want to run your specs with.
     // The following are supported: Mocha, Jasmine, and Cucumber
