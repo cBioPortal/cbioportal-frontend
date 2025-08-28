@@ -1390,12 +1390,12 @@ export default class ResultsViewOncoprint extends React.Component<
                 )
             );
         }
-
-        this.oncoprintJs.onHorzZoom(z => (this.horzZoom = z));
-        this.horzZoom = this.oncoprintJs.getHorzZoom();
-        onMobxPromise(this.alteredKeys, (alteredUids: string[]) => {
-            this.oncoprintJs.setHorzZoomToFit(alteredUids);
-        });
+        //
+        // this.oncoprintJs.onHorzZoom(z => (this.horzZoom = z));
+        // this.horzZoom = this.oncoprintJs.getHorzZoom();
+        // onMobxPromise(this.alteredKeys, (alteredUids: string[]) => {
+        //     this.oncoprintJs.setHorzZoomToFit(alteredUids);
+        // });
     }
 
     private setColumnMode(type: OncoprintAnalysisCaseType) {

@@ -78,6 +78,13 @@
     }
 }
 
+.oncoprintContainer {
+    opacity: 1;
+    max-width: 95vw;
+    &.fadeIn {
+    }
+}
+
 .tabMessageContainer {
     .alert {
         margin-bottom: 5px;
