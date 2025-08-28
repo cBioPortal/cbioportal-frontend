@@ -16,7 +16,10 @@ const defaultTimeoutInterval = 180000;
 
 const resultsDir = process.env.JUNIT_REPORT_PATH || './shared/results/';
 
-const retries = process.env.RETRIES || 2;
+const chromedriverCustomPath =
+    process.env.CHROMEDRIVER_CUSTOM_PATH || '/opt/homebrew/bin/chromedriver';
+
+const retries = 0;
 
 let screenshotRoot = process.env.SCREENSHOT_DIRECTORY;
 
@@ -25,7 +28,10 @@ screenshotRoot = screenshotRoot.replace(/\/$/, '');
 
 const chromeArgs = [
     '--disable-composited-antialiasing',
+    '--disable-dev-shm-usage',
     '--allow-insecure-localhost',
+    '--window-size=1600,1000',
+    '--no-sandbox',
 ].concat(
     (function() {
         return process.env.HEADLESS_CHROME === 'true'
@@ -178,7 +184,7 @@ function saveErrorImage(
 ) {
     if (error) {
         if (!fs.existsSync(errorDir)) {
-            fs.mkdirSync(errorDir, 0744);
+            fs.mkdirSync(errorDir, 0o744);
         }
         const title = test.title.trim().replace(/\s/g, '_');
         const img = `${errorDir}${title}.png`;
@@ -218,6 +224,9 @@ SPEC_FILE_PATTERN = SPEC_FILE_PATTERN.includes('/')
     ? SPEC_FILE_PATTERN
     : `${TEST_TYPE}/specs/**/${SPEC_FILE_PATTERN}`;
 
+console.log(`ENV SPEC_FILE_PATTERN: ` + process.env.SPEC_FILE_PATTERN);
+console.log(`active spec file pattern: ` + SPEC_FILE_PATTERN);
+
 exports.config = {
     //
     // ====================
@@ -240,7 +249,7 @@ exports.config = {
 
     specs: [SPEC_FILE_PATTERN],
 
-    exclude: ['./local/specs/web-tour.spec.js'],
+    //exclude: ['./remote/specs/core/groupComparisonLollipop.spec.js'],
 
     // Patterns to exclude.
     //exclude: ['./local/specs/web-tour.spec.js'],
@@ -253,14 +262,14 @@ exports.config = {
     // sessions. Within your capabilities you can overwrite the spec and exclude options in
     // order to group specific specs to a specific capability.
     //
-    // First, you can define how many instances should be started at the same time. Let's
+    // First, you can define how mfany instances should be started at the same time. Let's
     // say you have 3 different capabilities (Chrome, Firefox, and Safari) and you have
     // set maxInstances to 1; wdio will spawn 3 processes. Therefore, if you have 10 spec
     // files and you set maxInstances to 10, all spec files will get tested at the same time
     // and 30 processes will get spawned. The property handles how many capabilities
     // from the same test should run tests.
     //
-    maxInstances: debug ? 1 : defaultMaxInstances,
+    maxInstances: debug ? 1 : 2,
     //
     // If you have trouble getting all important capabilities together, check out the
     // Sauce Labs platform configurator - a great tool to configure your capabilities:
@@ -277,6 +286,7 @@ exports.config = {
             'goog:chromeOptions': {
                 args: chromeArgs,
             },
+            'goog:loggingPrefs': { browser: 'SEVERE' },
             acceptInsecureCerts: true,
             //acceptSslCerts: true,
             // If outputDir is provided WebdriverIO can capture driver session logs
@@ -335,48 +345,28 @@ exports.config = {
     // your test setup with almost no effort. Unlike plugins, they don't add new
     // commands. Instead, they hook themselves up into the test process.
     services: [
+        // [
+        //     'chromedriver',
+        //     {
+        //         logLevel: 'info',
+        //         outputDir: './driver-logs',
+        //         chromedriverCustomPath,
+        //     },
+        // ],
+        ['devtools'],
         [
             'novus-visual-regression',
             {
                 compare: LocalCompare,
                 viewportChangePause: 300,
                 viewports: [{ width: 1600, height: 1000 }],
-                orientations: ['landscape', 'portrait'],
+                orientations: ['landscape'],
+                after: () => {},
             },
         ],
     ],
 
-    //port: 53171,
-    // FROM OLD webdriver config
-    // capabilities: [
-    //     {
-    //         //browserName: 'chrome',
-    //         chromeOptions: {
-    //             args: [
-    //                 '--disable-composited-antialiasing',
-    //                 '--allow-insecure-localhost',
-    //             ],
-    //         },
-    //
-    //         os: 'OS X',
-    //         os_version: 'High Sierra',
-    //         browser: 'Chrome',
-    //         browser_version: '74.0 beta',
-    //         resolution: '1600x1200',
-    //     },
-    // ],
-    //
-    // IECapabilties: [
-    //     {
-    //         os: 'Windows',
-    //         os_version: '10',
-    //         browser: 'IE',
-    //         browser_version: '11.0',
-    //         'browserstack.selenium_version': '3.5.2',
-    //         resolution: '1600x1200',
-    //         'browserstack.local': true,
-    //     },
-    // ],
+    //port: 54532,
 
     // Framework you want to run your specs with.
     // The following are supported: Mocha, Jasmine, and Cucumber

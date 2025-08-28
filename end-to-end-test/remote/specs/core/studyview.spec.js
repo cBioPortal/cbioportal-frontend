@@ -725,7 +725,7 @@ describe('check the simple filter(filterAttributeId, filterValues) is working pr
         const url = `${CBIOPORTAL_URL}/study?id=lgg_tcga&filterAttributeId=ONCOTREE_CODE_TEST&filterValues=OAST`;
         await goToUrlAndSetLocalStorage(url);
         await waitForNetworkQuiet();
-        await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
+        //await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
 
         const res = await checkElementWithMouseDisabled(
             "[data-test='study-view-header']"

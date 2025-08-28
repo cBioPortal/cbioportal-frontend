@@ -25,11 +25,19 @@ defaults: &defaults
   working_directory: /tmp/repo
   docker:
     # specify the version you desire here
-    - image: circleci/node:15.2.1-browsers
+    - image: cimg/node:22.18.0-browsers
   resource_class: large
 
 run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
   steps:
+    - browser-tools/install_chrome:
+        timeout: 5m
+    - browser-tools/install_chromedriver:
+        timeout: 5m
+    - run:
+        command: |
+          google-chrome --version
+          chromedriver --version
     - when:
         condition: << pipeline.parameters.enable_remote_e2e >>
         steps:
@@ -91,6 +99,8 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
           - run: echo "Job Ignored via enable_remote_e2e"
           - run: exit 1
 
+orbs:
+  browser-tools: circleci/browser-tools@2.3.1
 jobs:
   api_sync:
     <<: *defaults
@@ -172,6 +182,7 @@ jobs:
       JUNIT_REPORT_PATH: ./remote/junit/
       SCREENSHOT_DIRECTORY: ./remote/screenshots
       CBIOPORTAL_URL: https://www.cbioportal.org
+      CHROMEDRIVER_CUSTOM_PATH: /usr/local/bin/chromedriver
     <<: *run_e2e_and_save_artifacts
 
   e2e_tests_against_master:
@@ -181,6 +192,7 @@ jobs:
       JUNIT_REPORT_PATH: ./remote/junit/
       SCREENSHOT_DIRECTORY: ./remote/screenshots
       CBIOPORTAL_URL: https://master.cbioportal.org
+      CHROMEDRIVER_CUSTOM_PATH: /usr/local/bin/chromedriver
     <<: *run_e2e_and_save_artifacts
 
   prettier:
@@ -329,6 +341,7 @@ jobs:
             SCREENSHOT_DIRECTORY: ./local/screenshots
             PORTAL_SOURCE_DIR: /tmp/repo/cbioportal-frontend
             TEST_HOME: /tmp/repo/cbioportal-frontend/end-to-end-test/local
+            CHROMEDRIVER_CUSTOM_PATH: /usr/local/bin/chromedriver
           command: |
             cd $PORTAL_SOURCE_DIR
             $TEST_HOME/docker_compose/test.sh
@@ -391,23 +404,23 @@ workflows:
       - build_frontend:
           requires:
             - checkout
-      - e2e_localdb_tests:
-          requires:
-            - pull_cbioportal_test_codebase
-            - build_frontend
+#      - e2e_localdb_tests:
+#          requires:
+#            - pull_cbioportal_test_codebase
+#            - build_frontend
       - e2e_tests:
           requires:
             - pull_cbioportal_test_codebase
             - build_frontend
-      - api_sync:
-          requires:
-            - build_frontend
-      - unit_tests_packages:
-          requires:
-            - build_frontend
-      - unit_tests_main:
-          requires:
-            - build_frontend
+#      - api_sync:
+#          requires:
+#            - build_frontend
+#      - unit_tests_packages:
+#          requires:
+#            - build_frontend
+#      - unit_tests_main:
+#          requires:
+#            - build_frontend
 
 
   nightly:

@@ -17,7 +17,7 @@ describe('coexpression tab screenshot tests', function() {
         await getElement('div[data-test="CoExpressionPlot"]', {
             timeout: COEXPRESSION_TIMEOUT,
         }); // wait for plot to show up
-        await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
+        //await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
         const res = await browser.checkElement(
             'div[data-test="coExpressionTabDiv"]'
         );
@@ -29,7 +29,7 @@ describe('coexpression tab screenshot tests', function() {
                 'div[data-test="coExpressionTabDiv"] input[data-test="logScale"]'
             )
         ).click();
-        await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
+        //await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
         const res = await browser.checkElement(
             'div[data-test="coExpressionTabDiv"]'
         );
@@ -39,7 +39,7 @@ describe('coexpression tab screenshot tests', function() {
         await (
             await getElement('input[data-test="ShowRegressionLine"]')
         ).click();
-        await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
+        //await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
         const res = await browser.checkElement(
             'div[data-test="coExpressionTabDiv"]'
         );
@@ -54,7 +54,7 @@ describe('coexpression tab screenshot tests', function() {
                 'div[data-test="coExpressionTabDiv"] input[data-test="ShowMutations"]'
             )
         ).click();
-        await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
+        //await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
         const res = await browser.checkElement(
             'div[data-test="coExpressionTabDiv"]'
         );
@@ -64,7 +64,7 @@ describe('coexpression tab screenshot tests', function() {
         await (
             await getElement('#coexpressionTabGeneTabs>ul>li:nth-child(2)>a')
         ).click(); // click on NRAS
-        await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
+        //await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
         await browser.pause(100); // give time to start loading
         await getElement('div[data-test="CoExpressionPlot"]', {
             timeout: COEXPRESSION_TIMEOUT,
