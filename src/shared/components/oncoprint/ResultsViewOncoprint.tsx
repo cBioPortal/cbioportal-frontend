@@ -1383,19 +1383,19 @@ export default class ResultsViewOncoprint extends React.Component<
 
     private oncoprintJsRef(oncoprintJs: OncoprintJS) {
         this.oncoprintJs = oncoprintJs;
-        if (this.props.addOnBecomeVisibleListener) {
-            this.props.addOnBecomeVisibleListener(() =>
-                this.oncoprintJs.triggerPendingResizeAndOrganize(
-                    this.onReleaseRendering
-                )
-            );
-        }
-
-        this.oncoprintJs.onHorzZoom(z => (this.horzZoom = z));
-        this.horzZoom = this.oncoprintJs.getHorzZoom();
-        onMobxPromise(this.alteredKeys, (alteredUids: string[]) => {
-            this.oncoprintJs.setHorzZoomToFit(alteredUids);
-        });
+        // if (this.props.addOnBecomeVisibleListener) {
+        //     this.props.addOnBecomeVisibleListener(() =>
+        //         this.oncoprintJs.triggerPendingResizeAndOrganize(
+        //             this.onReleaseRendering
+        //         )
+        //     );
+        // }
+        //
+        // this.oncoprintJs.onHorzZoom(z => (this.horzZoom = z));
+        // this.horzZoom = this.oncoprintJs.getHorzZoom();
+        // onMobxPromise(this.alteredKeys, (alteredUids: string[]) => {
+        //     this.oncoprintJs.setHorzZoomToFit(alteredUids);
+        // });
     }
 
     private setColumnMode(type: OncoprintAnalysisCaseType) {
