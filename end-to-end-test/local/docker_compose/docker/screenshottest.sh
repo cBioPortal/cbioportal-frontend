@@ -28,6 +28,7 @@ chromedriver --version
 
 echo "✅ Installation complete."
 
+export CHROMEDRIVER_CUSTOM_PATH=/usr/local/bin/chromedriver
 export FRONTEND_TEST_USE_LOCAL_DIST=false
 export HEADLESS_CHROME=true
 
