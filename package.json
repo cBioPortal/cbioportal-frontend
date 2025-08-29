@@ -74,7 +74,7 @@
     "localChromeDriver": "chromedriver"
   },
   "engines": {
-    "node": "15.2.1",
+    "node": "16.10.0",
     "yarn": "1.22.5"
   },
   "resolutions": {
@@ -195,6 +195,8 @@
     "fork-ts-checker-webpack-plugin": "^6.3.3",
     "genome-nexus-ts-api-client": "^1.1.35",
     "git-revision-webpack-plugin": "^5.0.0",
+    "gosling.js": "0.17.0",
+    "higlass": "^1.13.6",
     "history": "4.10.1",
     "html-webpack-plugin": "^5.3.2",
     "igv": "^2.11.2",
@@ -241,6 +243,7 @@
     "pathway-mapper": "^2.3.0",
     "pdfobject": "^2.0.201604172",
     "pegjs": "^0.10.0",
+    "pixi.js": "^6.0.4",
     "plotly.js": "^1.42.5",
     "pluralize": "^7.0.0",
     "postcss-loader": "^1.2.2",
@@ -255,7 +258,7 @@
     "rc-tooltip": "^5.0.2",
     "rc-trigger": "^5.2.1",
     "rc-util": "^5.8.0",
-    "react": "^16.4",
+    "react": "^16.6.3",
     "react-addons-pure-render-mixin": "^15.4.2",
     "react-addons-test-utils": "^15.4.2",
     "react-bootstrap": "^0.31.5",
@@ -264,7 +267,7 @@
     "react-collapse": "^4.0.3",
     "react-color": "^2.18.1",
     "react-column-resizer": "^1.1.9",
-    "react-dom": "^16.6",
+    "react-dom": "^16.6.3",
     "react-draggable": "^3.3.0",
     "react-file-download": "^0.3.2",
     "react-fontawesome": "^1.5.0",
