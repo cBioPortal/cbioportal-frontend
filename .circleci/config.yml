@@ -10,7 +10,7 @@ parameters:
     default: "./remote/specs/**/*.spec.js"
   localdb_spec_pattern:
     type: string
-    default: "./local/specs/**/plotstab.spec.js"
+    default: "./local/specs/**/*.spec.js"
   enable_remote_e2e:
     type: boolean
     default: true
