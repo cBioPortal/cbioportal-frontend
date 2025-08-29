@@ -148,6 +148,9 @@ SPEC_FILE_PATTERN = SPEC_FILE_PATTERN.includes('/')
     ? SPEC_FILE_PATTERN
     : `${TEST_TYPE}/specs/**/${SPEC_FILE_PATTERN}`;
 
+console.log(`ENV SPEC_FILE_PATTERN: ` + process.env.SPEC_FILE_PATTERN);
+console.log(`active spec file pattern: ` + SPEC_FILE_PATTERN);
+
 exports.config = {
     //
     // ====================
