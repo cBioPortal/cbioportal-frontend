@@ -4,31 +4,30 @@ set -e
 set -u # unset variables throw error
 set -o pipefail # pipes fail when partial command fails
 
-apt-get update
-apt-get install -y lsb-release libappindicator3-1 curl
 
-# Install Chrome
-curl -L -o google-chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-dpkg -i google-chrome.deb
-sed -i 's|HERE/chrome"|HERE/chrome" --no-sandbox|g' /opt/google/chrome/google-chrome
-rm google-chrome.deb
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    wget \
+    unzip \
+    curl \
+    lsb-release \
+    libappindicator3-1 \
+    && rm -rf /var/lib/apt/lists/*
 
-# Get Chrome version and install matching chromedriver
-CHROME_VERSION=$(google-chrome --version | cut -d ' ' -f3 | cut -d '.' -f1-3)
-echo "Chrome version: $CHROME_VERSION"
+# Install Chrome 139.0.7258.154
+RUN wget -q https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_139.0.7258.154-1_amd64.deb \
+    && dpkg -i google-chrome-stable_139.0.7258.154-1_amd64.deb || apt-get install -yf \
+    && rm google-chrome-stable_139.0.7258.154-1_amd64.deb
 
-# Get the matching chromedriver version
-CHROMEDRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROME_VERSION")
-echo "ChromeDriver version: $CHROMEDRIVER_VERSION"
+# Install ChromeDriver 139.0.7258.154
+RUN wget -q https://storage.googleapis.com/chrome-for-testing-public/139.0.7258.154/linux64/chromedriver-linux64.zip \
+    && unzip chromedriver-linux64.zip \
+    && mv chromedriver-linux64/chromedriver /usr/local/bin/ \
+    && chmod +x /usr/local/bin/chromedriver \
+    && rm -rf chromedriver-linux64.zip chromedriver-linux64
 
-# Download and install chromedriver
-curl -L -o chromedriver.zip "https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip"
-unzip chromedriver.zip
-chmod +x chromedriver
-mv chromedriver /usr/local/bin/
-rm chromedriver.zip
-
-
+# Verify installations
+RUN google-chrome --version && chromedriver --version
 
 export FRONTEND_TEST_USE_LOCAL_DIST=false
 export HEADLESS_CHROME=false
