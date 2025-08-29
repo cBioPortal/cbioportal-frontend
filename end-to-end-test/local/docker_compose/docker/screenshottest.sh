@@ -4,30 +4,29 @@ set -e
 set -u # unset variables throw error
 set -o pipefail # pipes fail when partial command fails
 
+CHROME_VERSION="139.0.7258.154"
 
-# Install dependencies
-RUN apt-get update && apt-get install -y \
-    wget \
-    unzip \
-    curl \
-    lsb-release \
-    libappindicator3-1 \
-    && rm -rf /var/lib/apt/lists/*
+echo "Installing Google Chrome ${CHROME_VERSION}..."
 
-# Install Chrome 139.0.7258.154
-RUN wget -q https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_139.0.7258.154-1_amd64.deb \
-    && dpkg -i google-chrome-stable_139.0.7258.154-1_amd64.deb || apt-get install -yf \
-    && rm google-chrome-stable_139.0.7258.154-1_amd64.deb
+# Download and install Chrome
+wget -q "https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_${CHROME_VERSION}-1_amd64.deb"
+sudo dpkg -i "google-chrome-stable_${CHROME_VERSION}-1_amd64.deb" || sudo apt-get install -yf
+rm "google-chrome-stable_${CHROME_VERSION}-1_amd64.deb"
 
-# Install ChromeDriver 139.0.7258.154
-RUN wget -q https://storage.googleapis.com/chrome-for-testing-public/139.0.7258.154/linux64/chromedriver-linux64.zip \
-    && unzip chromedriver-linux64.zip \
-    && mv chromedriver-linux64/chromedriver /usr/local/bin/ \
-    && chmod +x /usr/local/bin/chromedriver \
-    && rm -rf chromedriver-linux64.zip chromedriver-linux64
+echo "Installing ChromeDriver ${CHROME_VERSION}..."
 
-# Verify installations
-RUN google-chrome --version && chromedriver --version
+# Download and install ChromeDriver
+wget -q "https://storage.googleapis.com/chrome-for-testing-public/${CHROME_VERSION}/linux64/chromedriver-linux64.zip"
+unzip -q chromedriver-linux64.zip
+sudo mv chromedriver-linux64/chromedriver /usr/local/bin/
+sudo chmod +x /usr/local/bin/chromedriver
+rm -rf chromedriver-linux64.zip chromedriver-linux64
+
+echo "Verifying installations..."
+google-chrome --version
+chromedriver --version
+
+echo "✅ Installation complete."
 
 export FRONTEND_TEST_USE_LOCAL_DIST=false
 export HEADLESS_CHROME=false
