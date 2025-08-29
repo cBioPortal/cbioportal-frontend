@@ -356,11 +356,10 @@ export class FilteredCancerTreeView {
         let meta = this.getMetadata(node);
 
         if (meta.isCancerType) {
-            if (!this.store.forDownloadTab)
-                clickedStudyIds = this.getDescendantCancerStudies(node)
-                    // The user can only check studies for which she/he is authorized.
-                    .filter(study => study.readPermission)
-                    .map(study => study.studyId);
+            clickedStudyIds = this.getDescendantCancerStudies(node)
+                // The user can only check studies for which she/he is authorized.
+                .filter(study => study.readPermission)
+                .map(study => study.studyId);
         } else {
             clickedStudyIds = [(node as CancerStudy).studyId];
         }
