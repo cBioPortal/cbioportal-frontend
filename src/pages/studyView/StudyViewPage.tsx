@@ -597,9 +597,8 @@ export default class StudyViewPage extends React.Component<
     }
 
     content() {
-        // this is just to eagerlyload this data so that the add charts functionality
-        // opens faster
-        const eager = this.store.dataWithCount.isComplete;
+        // this is just to eagerly  this data so that the add charts functionality opens faster
+        const _eager = this.store.dataWithCount.isComplete;
 
         return (
             <div className="studyView">
