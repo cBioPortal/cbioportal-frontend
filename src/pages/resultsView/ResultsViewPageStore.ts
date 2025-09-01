@@ -4463,6 +4463,7 @@ export class ResultsViewPageStore extends AnalysisStore
             this.molecularProfilesInStudies,
             this.selectedMolecularProfiles,
             this.genesetMolecularProfile,
+            this.hasVAFData,
         ],
         invoke: () => {
             const MRNA_EXPRESSION = AlterationTypeConstants.MRNA_EXPRESSION;
@@ -4474,6 +4475,7 @@ export class ResultsViewPageStore extends AnalysisStore
                     profile => profile.molecularProfileId
                 )
             );
+            const hasVAF = this.hasVAFData.result;
 
             const expressionHeatmaps = _.sortBy(
                 _.filter(this.molecularProfilesInStudies.result!, profile => {
@@ -4485,7 +4487,9 @@ export class ResultsViewPageStore extends AnalysisStore
                                 PROTEIN_LEVEL) &&
                             profile.showProfileInAnalysisTab) ||
                         profile.molecularAlterationType === METHYLATION ||
-                        profile.molecularAlterationType === MUTATION_EXTENDED
+                        (profile.molecularAlterationType ===
+                            MUTATION_EXTENDED &&
+                            hasVAF)
                     );
                 }),
                 profile => {
@@ -4525,6 +4529,18 @@ export class ResultsViewPageStore extends AnalysisStore
                 : [];
             return Promise.resolve(expressionHeatmaps.concat(genesetHeatmaps));
         },
+    });
+
+    readonly hasVAFData = remoteData<boolean>({
+        await: () => [this.mutations],
+        invoke: () => {
+            const hasVAF = this.mutations.result!.some(
+                m => _.isFinite(m.tumorAltCount) && _.isFinite(m.tumorRefCount)
+            );
+
+            return Promise.resolve(hasVAF);
+        },
+        default: false,
     });
 
     readonly genesetMolecularProfile = remoteData<Optional<MolecularProfile>>({
