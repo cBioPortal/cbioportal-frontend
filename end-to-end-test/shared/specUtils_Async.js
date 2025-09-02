@@ -494,6 +494,13 @@ async function pasteToElement(elementSelector, text) {
 
 async function checkOncoprintElement(selector, viewports) {
     //browser.moveToObject('body', 0, 0);
+
+    if (
+        await $('.oncoprint__controls .open #viewDropdownButton').isExisting()
+    ) {
+        await clickElement('.dropdown.open #viewDropdownButton');
+    }
+
     await browser.execute(() => {
         frontendOnc.clearMouseOverEffects(); // clear mouse hover effects for uniform screenshot
     });
