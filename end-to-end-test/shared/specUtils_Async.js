@@ -65,7 +65,7 @@ async function waitForOncoprint(timeout = 100000) {
         },
         { timeout }
     );
-    await browser.pause(500);
+    await browser.pause(1000);
 }
 
 async function waitForComparisonTab() {
