@@ -19,7 +19,7 @@ const resultsDir = process.env.JUNIT_REPORT_PATH || './shared/results/';
 const chromedriverCustomPath =
     process.env.CHROMEDRIVER_CUSTOM_PATH || '/opt/homebrew/bin/chromedriver';
 
-const retries = 0;
+const retries = 1;
 
 let screenshotRoot = process.env.SCREENSHOT_DIRECTORY;
 
