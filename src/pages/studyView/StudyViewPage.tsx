@@ -597,9 +597,6 @@ export default class StudyViewPage extends React.Component<
     }
 
     content() {
-        // this is just to eagerly  this data so that the add charts functionality opens faster
-        const _eager = this.store.dataWithCount.isComplete;
-
         return (
             <div className="studyView">
                 {this.showBookmarkModal && this.bookmarkModal}
@@ -814,6 +811,20 @@ export default class StudyViewPage extends React.Component<
                                                         <Then>
                                                             {summary}
                                                             {buttons}
+                                                            {
+                                                                // this is hidden, it's just to eagerly load
+                                                            }
+                                                            <div
+                                                                className={
+                                                                    'hide'
+                                                                }
+                                                            >
+                                                                {
+                                                                    this.store
+                                                                        .dataWithCount
+                                                                        .isComplete
+                                                                }
+                                                            </div>
                                                         </Then>
                                                         <Else>
                                                             <LoadingIndicator
