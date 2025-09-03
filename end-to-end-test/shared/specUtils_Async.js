@@ -27,7 +27,6 @@ async function waitForPlotsTab(timeout) {
 }
 
 async function waitForAndCheckPlotsTab() {
-    await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
     await waitForElementDisplayed('div[data-test="PlotsTabPlotDiv"]', {
         timeout: 20000,
     });
