@@ -172,7 +172,7 @@ exports.config = {
     //
     //
 
-    specs: ['./remote/specs/core/coexpression.screenshot.spec.js'],
+    specs: [SPEC_FILE_PATTERN],
 
     exclude: ['./local/specs/web-tour.spec.js'],
 
@@ -194,7 +194,7 @@ exports.config = {
     // and 30 processes will get spawned. The property handles how many capabilities
     // from the same test should run tests.
     //
-    maxInstances: debug ? 1 : defaultMaxInstances,
+    maxInstances: debug ? 1 : 1,
     //
     // If you have trouble getting all important capabilities together, check out the
     // Sauce Labs platform configurator - a great tool to configure your capabilities:
