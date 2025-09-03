@@ -172,7 +172,7 @@ exports.config = {
     //
     //
 
-    specs: ['./remote/specs/core/groupComparison.spec.js'],
+    specs: [SPEC_FILE_PATTERN],
 
     exclude: ['./local/specs/web-tour.spec.js'],
 
