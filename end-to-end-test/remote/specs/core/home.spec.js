@@ -42,7 +42,7 @@ describe('homepage', () => {
     }
 
     // this just shows that we have some studies listed
-    it.only('it should have some (>0) studies listed ', async () => {
+    it('it should have some (>0) studies listed ', async () => {
         await goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
         const selector = '[data-test="cancerTypeListContainer"] > ul > ul';
         await getElement(selector, {
