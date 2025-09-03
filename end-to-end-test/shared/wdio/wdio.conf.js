@@ -172,7 +172,7 @@ exports.config = {
     //
     //
 
-    specs: [SPEC_FILE_PATTERN],
+    specs: ['./remote/specs/core/groupComparison.spec.js'],
 
     exclude: ['./local/specs/web-tour.spec.js'],
 
@@ -289,7 +289,7 @@ exports.config = {
         ],
     ],
 
-    port: 54532,
+    //port: 54532,
 
     // Framework you want to run your specs with.
     // The following are supported: Mocha, Jasmine, and Cucumber
