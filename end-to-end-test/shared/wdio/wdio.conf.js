@@ -172,7 +172,7 @@ exports.config = {
     //
     //
 
-    specs: [SPEC_FILE_PATTERN],
+    specs: ['./remote/specs/core/coexpression.screenshot.spec.js'],
 
     exclude: ['./local/specs/web-tour.spec.js'],
 

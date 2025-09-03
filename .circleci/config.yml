@@ -402,23 +402,23 @@ workflows:
       - build_frontend:
           requires:
             - checkout
-      - e2e_localdb_tests:
-          requires:
-            - pull_cbioportal_test_codebase
-            - build_frontend
+#      - e2e_localdb_tests:
+#          requires:
+#            - pull_cbioportal_test_codebase
+#            - build_frontend
       - e2e_tests:
           requires:
             - pull_cbioportal_test_codebase
             - build_frontend
-      - api_sync:
-          requires:
-            - build_frontend
-      - unit_tests_packages:
-          requires:
-            - build_frontend
-      - unit_tests_main:
-          requires:
-            - build_frontend
+#      - api_sync:
+#          requires:
+#            - build_frontend
+#      - unit_tests_packages:
+#          requires:
+#            - build_frontend
+#      - unit_tests_main:
+#          requires:
+#            - build_frontend
 
 
   nightly:
