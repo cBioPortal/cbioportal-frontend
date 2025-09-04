@@ -26,7 +26,7 @@ defaults: &defaults
   docker:
     # specify the version you desire here
     - image: cimg/node:22.18.0-browsers
-  resource_class: xlarge
+  resource_class: large
 
 run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
   steps:

@@ -874,13 +874,17 @@ async function isUnselected(selector, options) {
 }
 
 async function clickElement(selector, options = {}) {
-    let el = await getElement(selector);
+    // note that selector can be string an element
+    let el =
+        typeof selector === 'string' ? await getElement(selector) : selector;
+
     //
     // if (/^handle=/.test(selector)) {
     //     el = await getElementByTestHandle(selector.replace(/^handle=/, ''));
     // } else {
     //     el = await $(selector);
     // }
+    await el.moveTo();
     await el.waitForDisplayed(options);
     await el.click();
 }
