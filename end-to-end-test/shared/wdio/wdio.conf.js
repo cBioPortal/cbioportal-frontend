@@ -28,6 +28,7 @@ screenshotRoot = screenshotRoot.replace(/\/$/, '');
 
 const chromeArgs = [
     '--disable-composited-antialiasing',
+    '--disable-dev-shm-usage',
     '--allow-insecure-localhost',
     '--window-size=1600,1000',
 ].concat(
@@ -172,7 +173,7 @@ exports.config = {
     //
     //
 
-    specs: ['./remote/specs/core/groupComparisonLollipop.spec.js'],
+    specs: [SPEC_FILE_PATTERN],
 
     exclude: ['./remote/specs/core/groupComparisonLollipop.spec.js'],
 
