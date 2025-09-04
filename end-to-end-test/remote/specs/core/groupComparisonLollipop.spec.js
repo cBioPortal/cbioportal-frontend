@@ -640,6 +640,9 @@ describe('group comparison mutations tab tests', () => {
         });
 
         it('clicking protein type badge only button selects both protein driver and vus, deselects others', async () => {
+            await (
+                await getElementByTestHandle('missense_only')
+            ).scrollIntoView();
             await (await getElementByTestHandle('missense_only')).click();
             assert.equal(
                 await getColorByTestHandle('badge-missense_putative_driver'),
