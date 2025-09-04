@@ -878,13 +878,7 @@ async function clickElement(selector, options = {}) {
     let el =
         typeof selector === 'string' ? await getElement(selector) : selector;
 
-    //
-    // if (/^handle=/.test(selector)) {
-    //     el = await getElementByTestHandle(selector.replace(/^handle=/, ''));
-    // } else {
-    //     el = await $(selector);
-    // }
-    await el.moveTo();
+    if (options?.moveTo) await el.moveTo();
     await el.waitForDisplayed(options);
     await el.click();
 }

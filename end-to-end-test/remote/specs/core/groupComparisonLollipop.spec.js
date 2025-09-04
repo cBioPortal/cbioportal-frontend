@@ -177,8 +177,12 @@ describe('group comparison mutations tab tests', () => {
 
     describe('adding annotation tracks', () => {
         it('track visibility stays on gene change', async () => {
-            await clickElement('div.annotation-track-selector');
-            await (await getElementByTestHandle('CancerHotspots')).click();
+            await clickElement('div.annotation-track-selector', {
+                moveTo: true,
+            });
+            //await (await getElementByTestHandle('')).click();
+            await clickElement('handle=CancerHotspots', { moveTo: true });
+
             await waitForElementDisplayed('a.tabAnchor_APC');
             await clickElement('a.tabAnchor_APC');
             await (
@@ -602,7 +606,9 @@ describe('group comparison mutations tab tests', () => {
 
     describe('protein only selecting', () => {
         it('clicking protein driver/vus badge only button selects protein driver/vus, deselects others', async () => {
-            await clickElement('handle=badge-splice_putative_driver');
+            await clickElement('handle=badge-splice_putative_driver', {
+                moveTo: true,
+            });
 
             assert.equal(
                 await getColorByTestHandle('badge-splice_putative_driver'),
@@ -636,7 +642,7 @@ describe('group comparison mutations tab tests', () => {
         });
 
         it('clicking protein type badge only button selects both protein driver and vus, deselects others', async () => {
-            await clickElement('handle=missense_only');
+            await clickElement('handle=missense_only', { moveTo: true });
 
             assert.equal(
                 await getColorByTestHandle('badge-missense_putative_driver'),
@@ -678,11 +684,11 @@ describe('group comparison mutations tab tests', () => {
             // selecting vus badge, then driver only button
             //await (await getElementByTestHandle('badge-VUS')).click();
 
-            await clickElement('handle=badge-VUS');
+            await clickElement('handle=badge-VUS', { moveTo: true });
 
             //await (await getElementByTestHandle('driver_only')).click();
 
-            await clickElement('handle=driver_only');
+            await clickElement('handle=driver_only', { moveTo: true });
 
             assert.equal(
                 await getColorOfNthElement('[data-test="badge-driver"]', 1),
@@ -766,7 +772,7 @@ describe('group comparison mutations tab tests', () => {
             );
 
             // selecting vus only button
-            await clickElement('handle=VUS_only');
+            await clickElement('handle=VUS_only', { moveTo: true });
 
             assert.equal(
                 await getColorByTestHandle('badge-VUS'),
@@ -865,7 +871,8 @@ describe('group comparison mutations tab tests', () => {
 
             // selecting driver badge
             await clickElement(
-                await getNthElements('[data-test="badge-driver"]', 1)
+                await getNthElements('[data-test="badge-driver"]', 1),
+                { moveTo: true }
             );
 
             assert.equal(
@@ -889,7 +896,9 @@ describe('group comparison mutations tab tests', () => {
 
         it('fisher test text and tooltip dynamically changes when filtering and selecting', async () => {
             // filter value
-            await clickElement('handle=missense_putative_driver_only');
+            await clickElement('handle=missense_putative_driver_only', {
+                moveTo: true,
+            });
 
             assert.equal(
                 await (
