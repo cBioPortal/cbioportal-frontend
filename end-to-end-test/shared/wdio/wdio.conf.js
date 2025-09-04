@@ -173,7 +173,7 @@ exports.config = {
     //
     //
 
-    specs: ['/remote/specs/core/groupComparison.screenshot.spec.js'],
+    specs: ['./remote/specs/**/groupComparisonLollipop.spec.js'],
 
     //exclude: ['./remote/specs/core/groupComparisonLollipop.spec.js'],
 
