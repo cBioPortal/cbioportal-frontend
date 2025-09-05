@@ -19,7 +19,7 @@ const resultsDir = process.env.JUNIT_REPORT_PATH || './shared/results/';
 const chromedriverCustomPath =
     process.env.CHROMEDRIVER_CUSTOM_PATH || '/opt/homebrew/bin/chromedriver';
 
-const retries = 1;
+const retries = 0;
 
 let screenshotRoot = process.env.SCREENSHOT_DIRECTORY;
 
@@ -196,7 +196,7 @@ exports.config = {
     // and 30 processes will get spawned. The property handles how many capabilities
     // from the same test should run tests.
     //
-    maxInstances: debug ? 1 : 1,
+    maxInstances: debug ? 1 : 2,
     //
     // If you have trouble getting all important capabilities together, check out the
     // Sauce Labs platform configurator - a great tool to configure your capabilities:
