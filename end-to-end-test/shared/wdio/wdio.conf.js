@@ -32,6 +32,7 @@ const chromeArgs = [
     '--allow-insecure-localhost',
     '--window-size=1600,1000',
     '--no-sandbox',
+    '--headless=new',
 ].concat(
     (function() {
         return process.env.HEADLESS_CHROME === 'true'
