@@ -1,23 +1,3 @@
-/**
- * Copyright (c) 2018 The Hyve B.V.
- * This code is licensed under the GNU Affero General Public License (AGPL),
- * version 3, or (at your option) any later version.
- *
- * This file is part of cBioPortal.
- *
- * cBioPortal is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- **/
-
 import * as _ from 'lodash';
 import * as React from 'react';
 import { observer } from 'mobx-react';
@@ -28,7 +8,7 @@ import {
     SortDirection,
 } from 'shared/components/lazyMobXTable/LazyMobXTable';
 import { getSampleViewUrl, getStudySummaryUrl } from '../../api/urls';
-import { StructuralVariantExt } from '../../model/Fusion';
+import { StructuralVariantExt } from '../../model/StructuralVariantExt';
 import { ILazyMobXTableApplicationDataStore } from '../../lib/ILazyMobXTableApplicationDataStore';
 import { ILazyMobXTableApplicationLazyDownloadDataFetcher } from '../../lib/ILazyMobXTableApplicationLazyDownloadDataFetcher';
 import { IPaginationControlsProps } from '../paginationControls/PaginationControls';
@@ -52,9 +32,9 @@ import { CancerGene } from 'oncokb-ts-api-client';
 import { Exon } from 'genome-nexus-ts-api-client';
 
 /**
- * Fusion table column types
+ * StructuralVariant table column types
  */
-export enum FusionTableColumnType {
+export enum StructuralVariantTableColumnType {
     STUDY = 'Study',
     SAMPLE_ID = 'Sample ID',
     CANCER_TYPE_DETAILED = 'Cancer Type Detailed',
@@ -96,67 +76,74 @@ export enum FusionTableColumnType {
     COMMENTS = 'Comments',
 }
 
-const fusionTableColumnAttributes: {
-    [key in FusionTableColumnType]: string;
+const structuralVariantTableColumnAttributes: {
+    [key in StructuralVariantTableColumnType]: string;
 } = {
-    [FusionTableColumnType.STUDY]: 'studyId',
-    [FusionTableColumnType.SAMPLE_ID]: 'sampleId',
-    [FusionTableColumnType.CANCER_TYPE_DETAILED]: 'cancerTypeDetailed',
-    [FusionTableColumnType.SITE1_HUGO_SYMBOL]: 'site1HugoSymbol',
-    [FusionTableColumnType.SITE1_ENTREZ_GENE_ID]: 'site1EntrezGeneId',
-    [FusionTableColumnType.SITE1_ENSEMBL_TRANSCRIPT_ID]:
+    [StructuralVariantTableColumnType.STUDY]: 'studyId',
+    [StructuralVariantTableColumnType.SAMPLE_ID]: 'sampleId',
+    [StructuralVariantTableColumnType.CANCER_TYPE_DETAILED]:
+        'cancerTypeDetailed',
+    [StructuralVariantTableColumnType.SITE1_HUGO_SYMBOL]: 'site1HugoSymbol',
+    [StructuralVariantTableColumnType.SITE1_ENTREZ_GENE_ID]:
+        'site1EntrezGeneId',
+    [StructuralVariantTableColumnType.SITE1_ENSEMBL_TRANSCRIPT_ID]:
         'site1EnsemblTranscriptId',
-    [FusionTableColumnType.SITE1_CHROMOSOME]: 'site1Chromosome',
-    [FusionTableColumnType.SITE1_POSITION]: 'site1Position',
-    [FusionTableColumnType.SITE1_EXON]: '',
-    [FusionTableColumnType.SITE1_DESCRIPTION]: 'site1Description',
-    [FusionTableColumnType.SITE2_HUGO_SYMBOL]: 'site2HugoSymbol',
-    [FusionTableColumnType.SITE2_ENTREZ_GENE_ID]: 'site2EntrezGeneId',
-    [FusionTableColumnType.SITE2_ENSEMBL_TRANSCRIPT_ID]:
+    [StructuralVariantTableColumnType.SITE1_CHROMOSOME]: 'site1Chromosome',
+    [StructuralVariantTableColumnType.SITE1_POSITION]: 'site1Position',
+    [StructuralVariantTableColumnType.SITE1_EXON]: '',
+    [StructuralVariantTableColumnType.SITE1_DESCRIPTION]: 'site1Description',
+    [StructuralVariantTableColumnType.SITE2_HUGO_SYMBOL]: 'site2HugoSymbol',
+    [StructuralVariantTableColumnType.SITE2_ENTREZ_GENE_ID]:
+        'site2EntrezGeneId',
+    [StructuralVariantTableColumnType.SITE2_ENSEMBL_TRANSCRIPT_ID]:
         'site2EnsemblTranscriptId',
-    [FusionTableColumnType.SITE2_CHROMOSOME]: 'site2Chromosome',
-    [FusionTableColumnType.SITE2_POSITION]: 'site2Position',
-    [FusionTableColumnType.SITE2_EXON]: '',
-    [FusionTableColumnType.SITE2_DESCRIPTION]: 'site2Description',
-    [FusionTableColumnType.SITE2_EFFECT_ON_FRAME]: 'site2EffectOnFrame',
-    [FusionTableColumnType.ANNOTATION]: '',
-    [FusionTableColumnType.MUTATION_STATUS]: 'svStatus',
-    [FusionTableColumnType.NCBI_BUILD]: 'ncbiBuild',
-    [FusionTableColumnType.DNA_SUPPORT]: 'dnaSupport',
-    [FusionTableColumnType.RNA_SUPPORT]: 'rnaSupport',
-    [FusionTableColumnType.NORMAL_READ_COUNT]: 'normalReadCount',
-    [FusionTableColumnType.TUMOR_READ_COUNT]: 'tumorReadCount',
-    [FusionTableColumnType.NORMAL_VARIANT_COUNT]: 'normalVariantCount',
-    [FusionTableColumnType.TUMOR_VARIANT_COUNT]: 'tumorVariantCount',
-    [FusionTableColumnType.NORMAL_PAIRED_END_READ_COUNT]:
+    [StructuralVariantTableColumnType.SITE2_CHROMOSOME]: 'site2Chromosome',
+    [StructuralVariantTableColumnType.SITE2_POSITION]: 'site2Position',
+    [StructuralVariantTableColumnType.SITE2_EXON]: '',
+    [StructuralVariantTableColumnType.SITE2_DESCRIPTION]: 'site2Description',
+    [StructuralVariantTableColumnType.SITE2_EFFECT_ON_FRAME]:
+        'site2EffectOnFrame',
+    [StructuralVariantTableColumnType.ANNOTATION]: '',
+    [StructuralVariantTableColumnType.MUTATION_STATUS]: 'svStatus',
+    [StructuralVariantTableColumnType.NCBI_BUILD]: 'ncbiBuild',
+    [StructuralVariantTableColumnType.DNA_SUPPORT]: 'dnaSupport',
+    [StructuralVariantTableColumnType.RNA_SUPPORT]: 'rnaSupport',
+    [StructuralVariantTableColumnType.NORMAL_READ_COUNT]: 'normalReadCount',
+    [StructuralVariantTableColumnType.TUMOR_READ_COUNT]: 'tumorReadCount',
+    [StructuralVariantTableColumnType.NORMAL_VARIANT_COUNT]:
+        'normalVariantCount',
+    [StructuralVariantTableColumnType.TUMOR_VARIANT_COUNT]: 'tumorVariantCount',
+    [StructuralVariantTableColumnType.NORMAL_PAIRED_END_READ_COUNT]:
         'normalPairedEndReadCount',
-    [FusionTableColumnType.TUMOR_PAIRED_END_READ_COUNT]:
+    [StructuralVariantTableColumnType.TUMOR_PAIRED_END_READ_COUNT]:
         'tumorPairedEndReadCount',
-    [FusionTableColumnType.NORMAL_SPLIT_READ_COUNT]: 'normalSplitReadCount',
-    [FusionTableColumnType.TUMOR_SPLIT_READ_COUNT]: 'tumorSplitReadCount',
-    [FusionTableColumnType.BREAKPOINT_TYPE]: 'breakpointType',
-    [FusionTableColumnType.SV_DESCRIPTION]: 'annotation',
-    [FusionTableColumnType.CENTER]: 'center',
-    [FusionTableColumnType.CONNECTION_TYPE]: 'connectionType',
-    [FusionTableColumnType.EVENT_INFO]: 'eventInfo',
-    [FusionTableColumnType.VARIANT_CLASS]: 'variantClass',
-    [FusionTableColumnType.LENGTH]: 'length',
-    [FusionTableColumnType.COMMENTS]: 'comments',
+    [StructuralVariantTableColumnType.NORMAL_SPLIT_READ_COUNT]:
+        'normalSplitReadCount',
+    [StructuralVariantTableColumnType.TUMOR_SPLIT_READ_COUNT]:
+        'tumorSplitReadCount',
+    [StructuralVariantTableColumnType.BREAKPOINT_TYPE]: 'breakpointType',
+    [StructuralVariantTableColumnType.SV_DESCRIPTION]: 'annotation',
+    [StructuralVariantTableColumnType.CENTER]: 'center',
+    [StructuralVariantTableColumnType.CONNECTION_TYPE]: 'connectionType',
+    [StructuralVariantTableColumnType.EVENT_INFO]: 'eventInfo',
+    [StructuralVariantTableColumnType.VARIANT_CLASS]: 'variantClass',
+    [StructuralVariantTableColumnType.LENGTH]: 'length',
+    [StructuralVariantTableColumnType.COMMENTS]: 'comments',
 };
 
-export type FusionTableColumn = Column<StructuralVariant[]> & {
+export type StructuralVariantTableColumn = Column<StructuralVariant[]> & {
     order?: number;
     shouldExclude?: () => boolean;
 };
 
-export interface IFusionTableProps {
+export interface IStructuralVariantTableProps {
     studyIdToStudy?: { [studyId: string]: CancerStudy };
     molecularProfileIdToMolecularProfile?: {
         [molecularProfileId: string]: MolecularProfile;
     };
     uniqueSampleKeyToTumorType?: { [uniqueSampleKey: string]: string };
     transcriptToExons?: Map<string, Exon[]>;
-    columns?: FusionTableColumnType[];
+    columns?: StructuralVariantTableColumnType[];
     dataStore?: ILazyMobXTableApplicationDataStore<StructuralVariant[]>;
     downloadDataFetcher?: ILazyMobXTableApplicationLazyDownloadDataFetcher;
     initialItemsPerPage?: number;
@@ -173,15 +160,19 @@ export interface IFusionTableProps {
     onOncoKbIconToggle: (mergeIcons: boolean) => void;
 }
 
-export class FusionTableComponent extends LazyMobXTable<StructuralVariant[]> {}
+export class StructuralVariantTableComponent extends LazyMobXTable<
+    StructuralVariant[]
+> {}
 
 const ANNOTATION_ELEMENT_ID = 'sv-annotation';
 
 @observer
 export default class StructuralVariantTable<
-    P extends IFusionTableProps
+    P extends IStructuralVariantTableProps
 > extends React.Component<P, {}> {
-    @observable protected _columns: { [columnType: string]: FusionTableColumn };
+    @observable protected _columns: {
+        [columnType: string]: StructuralVariantTableColumn;
+    };
     @observable mergeOncoKbIcons;
     @observable oncokbWidth = DEFAULT_ONCOKB_CONTENT_WIDTH;
     private oncokbInterval: any;
@@ -218,7 +209,7 @@ export default class StructuralVariantTable<
         return this.orderedColumns.reduce(
             (
                 columns: Column<StructuralVariant[]>[],
-                next: FusionTableColumnType
+                next: StructuralVariantTableColumnType
             ) => {
                 let column = this._columns[next];
 
@@ -236,9 +227,10 @@ export default class StructuralVariantTable<
     }
 
     @computed
-    protected get orderedColumns(): FusionTableColumnType[] {
-        const columns = (this.props.columns || []) as FusionTableColumnType[];
-        return _.sortBy(columns, (c: FusionTableColumnType) => {
+    protected get orderedColumns(): StructuralVariantTableColumnType[] {
+        const columns = (this.props.columns ||
+            []) as StructuralVariantTableColumnType[];
+        return _.sortBy(columns, (c: StructuralVariantTableColumnType) => {
             let order: number = -1;
 
             if (this._columns[c] && this._columns[c].order) {
@@ -251,7 +243,7 @@ export default class StructuralVariantTable<
 
     public render() {
         return (
-            <FusionTableComponent
+            <StructuralVariantTableComponent
                 columns={this.columns}
                 dataStore={this.props.dataStore}
                 downloadDataFetcher={this.props.downloadDataFetcher}
@@ -270,42 +262,43 @@ export default class StructuralVariantTable<
         this._columns = {};
 
         const defaultColumns = [
-            FusionTableColumnType.SITE1_HUGO_SYMBOL,
-            FusionTableColumnType.SITE1_ENTREZ_GENE_ID,
-            FusionTableColumnType.SITE1_ENSEMBL_TRANSCRIPT_ID,
-            FusionTableColumnType.SITE1_CHROMOSOME,
-            FusionTableColumnType.SITE1_POSITION,
-            FusionTableColumnType.SITE1_DESCRIPTION,
-            FusionTableColumnType.SITE2_HUGO_SYMBOL,
-            FusionTableColumnType.SITE2_ENTREZ_GENE_ID,
-            FusionTableColumnType.SITE2_ENSEMBL_TRANSCRIPT_ID,
-            FusionTableColumnType.SITE2_CHROMOSOME,
-            FusionTableColumnType.SITE2_POSITION,
-            FusionTableColumnType.SITE2_DESCRIPTION,
-            FusionTableColumnType.SITE2_EFFECT_ON_FRAME,
-            FusionTableColumnType.NCBI_BUILD,
-            FusionTableColumnType.DNA_SUPPORT,
-            FusionTableColumnType.RNA_SUPPORT,
-            FusionTableColumnType.NORMAL_READ_COUNT,
-            FusionTableColumnType.TUMOR_READ_COUNT,
-            FusionTableColumnType.NORMAL_VARIANT_COUNT,
-            FusionTableColumnType.TUMOR_VARIANT_COUNT,
-            FusionTableColumnType.NORMAL_PAIRED_END_READ_COUNT,
-            FusionTableColumnType.TUMOR_PAIRED_END_READ_COUNT,
-            FusionTableColumnType.NORMAL_SPLIT_READ_COUNT,
-            FusionTableColumnType.TUMOR_SPLIT_READ_COUNT,
-            FusionTableColumnType.BREAKPOINT_TYPE,
-            FusionTableColumnType.SV_DESCRIPTION,
-            FusionTableColumnType.CENTER,
-            FusionTableColumnType.CONNECTION_TYPE,
-            FusionTableColumnType.EVENT_INFO,
-            FusionTableColumnType.VARIANT_CLASS,
-            FusionTableColumnType.LENGTH,
-            FusionTableColumnType.COMMENTS,
+            StructuralVariantTableColumnType.SITE1_HUGO_SYMBOL,
+            StructuralVariantTableColumnType.SITE1_ENTREZ_GENE_ID,
+            StructuralVariantTableColumnType.SITE1_ENSEMBL_TRANSCRIPT_ID,
+            StructuralVariantTableColumnType.SITE1_CHROMOSOME,
+            StructuralVariantTableColumnType.SITE1_POSITION,
+            StructuralVariantTableColumnType.SITE1_DESCRIPTION,
+            StructuralVariantTableColumnType.SITE2_HUGO_SYMBOL,
+            StructuralVariantTableColumnType.SITE2_ENTREZ_GENE_ID,
+            StructuralVariantTableColumnType.SITE2_ENSEMBL_TRANSCRIPT_ID,
+            StructuralVariantTableColumnType.SITE2_CHROMOSOME,
+            StructuralVariantTableColumnType.SITE2_POSITION,
+            StructuralVariantTableColumnType.SITE2_DESCRIPTION,
+            StructuralVariantTableColumnType.SITE2_EFFECT_ON_FRAME,
+            StructuralVariantTableColumnType.NCBI_BUILD,
+            StructuralVariantTableColumnType.DNA_SUPPORT,
+            StructuralVariantTableColumnType.RNA_SUPPORT,
+            StructuralVariantTableColumnType.NORMAL_READ_COUNT,
+            StructuralVariantTableColumnType.TUMOR_READ_COUNT,
+            StructuralVariantTableColumnType.NORMAL_VARIANT_COUNT,
+            StructuralVariantTableColumnType.TUMOR_VARIANT_COUNT,
+            StructuralVariantTableColumnType.NORMAL_PAIRED_END_READ_COUNT,
+            StructuralVariantTableColumnType.TUMOR_PAIRED_END_READ_COUNT,
+            StructuralVariantTableColumnType.NORMAL_SPLIT_READ_COUNT,
+            StructuralVariantTableColumnType.TUMOR_SPLIT_READ_COUNT,
+            StructuralVariantTableColumnType.BREAKPOINT_TYPE,
+            StructuralVariantTableColumnType.SV_DESCRIPTION,
+            StructuralVariantTableColumnType.CENTER,
+            StructuralVariantTableColumnType.CONNECTION_TYPE,
+            StructuralVariantTableColumnType.EVENT_INFO,
+            StructuralVariantTableColumnType.VARIANT_CLASS,
+            StructuralVariantTableColumnType.LENGTH,
+            StructuralVariantTableColumnType.COMMENTS,
         ];
 
         defaultColumns.forEach(columnType => {
-            const attribute = fusionTableColumnAttributes[columnType];
+            const attribute =
+                structuralVariantTableColumnAttributes[columnType];
             this._columns[columnType] = {
                 name: columnType,
                 render: this.defaultRender(attribute),
@@ -317,9 +310,11 @@ export default class StructuralVariantTable<
         });
 
         const studyAttribute =
-            fusionTableColumnAttributes[FusionTableColumnType.STUDY];
-        this._columns[FusionTableColumnType.STUDY] = {
-            name: FusionTableColumnType.STUDY,
+            structuralVariantTableColumnAttributes[
+                StructuralVariantTableColumnType.STUDY
+            ];
+        this._columns[StructuralVariantTableColumnType.STUDY] = {
+            name: StructuralVariantTableColumnType.STUDY,
             render: (d: StructuralVariant[]) => {
                 const molecularProfileId =
                     d[0].studyId + '_structural_variants';
@@ -349,13 +344,17 @@ export default class StructuralVariantTable<
             sortBy: this.defaultSortBy(studyAttribute),
             filter: this.defaultFilter(studyAttribute),
             download: this.defaultDownload(studyAttribute),
-            visible: this.isColumnVisible(FusionTableColumnType.STUDY),
+            visible: this.isColumnVisible(
+                StructuralVariantTableColumnType.STUDY
+            ),
         };
 
         const sampleIdAttribute =
-            fusionTableColumnAttributes[FusionTableColumnType.SAMPLE_ID];
-        this._columns[FusionTableColumnType.SAMPLE_ID] = {
-            name: FusionTableColumnType.SAMPLE_ID,
+            structuralVariantTableColumnAttributes[
+                StructuralVariantTableColumnType.SAMPLE_ID
+            ];
+        this._columns[StructuralVariantTableColumnType.SAMPLE_ID] = {
+            name: StructuralVariantTableColumnType.SAMPLE_ID,
             render: (d: StructuralVariantExt[]) => {
                 const { studyId, sampleId } = d[0];
                 const molecularProfileId = studyId + '_structural_variants';
@@ -375,15 +374,17 @@ export default class StructuralVariantTable<
             sortBy: this.defaultSortBy(sampleIdAttribute),
             filter: this.defaultFilter(sampleIdAttribute),
             download: this.defaultDownload(sampleIdAttribute),
-            visible: this.isColumnVisible(FusionTableColumnType.SAMPLE_ID),
+            visible: this.isColumnVisible(
+                StructuralVariantTableColumnType.SAMPLE_ID
+            ),
         };
 
         const cancerTypeDetailedAttribute =
-            fusionTableColumnAttributes[
-                FusionTableColumnType.CANCER_TYPE_DETAILED
+            structuralVariantTableColumnAttributes[
+                StructuralVariantTableColumnType.CANCER_TYPE_DETAILED
             ];
-        this._columns[FusionTableColumnType.CANCER_TYPE_DETAILED] = {
-            name: FusionTableColumnType.CANCER_TYPE_DETAILED,
+        this._columns[StructuralVariantTableColumnType.CANCER_TYPE_DETAILED] = {
+            name: StructuralVariantTableColumnType.CANCER_TYPE_DETAILED,
             render: (d: StructuralVariant[]) => {
                 const data =
                     this.props.uniqueSampleKeyToTumorType?.[
@@ -411,14 +412,16 @@ export default class StructuralVariantTable<
             },
             download: this.defaultDownload(cancerTypeDetailedAttribute),
             visible: this.isColumnVisible(
-                FusionTableColumnType.CANCER_TYPE_DETAILED
+                StructuralVariantTableColumnType.CANCER_TYPE_DETAILED
             ),
         };
 
         const site1ExonAttribute =
-            fusionTableColumnAttributes[FusionTableColumnType.SITE1_EXON];
-        this._columns[FusionTableColumnType.SITE1_EXON] = {
-            name: FusionTableColumnType.SITE1_EXON,
+            structuralVariantTableColumnAttributes[
+                StructuralVariantTableColumnType.SITE1_EXON
+            ];
+        this._columns[StructuralVariantTableColumnType.SITE1_EXON] = {
+            name: StructuralVariantTableColumnType.SITE1_EXON,
             render: (d: StructuralVariant[]) => {
                 const transcriptKey =
                     d[0].site1EnsemblTranscriptId !== 'NA'
@@ -430,13 +433,17 @@ export default class StructuralVariantTable<
             sortBy: this.defaultSortBy(site1ExonAttribute),
             filter: this.defaultFilter(site1ExonAttribute),
             download: this.defaultDownload(site1ExonAttribute),
-            visible: this.isColumnVisible(FusionTableColumnType.SITE1_EXON),
+            visible: this.isColumnVisible(
+                StructuralVariantTableColumnType.SITE1_EXON
+            ),
         };
 
         const site2ExonAttribute =
-            fusionTableColumnAttributes[FusionTableColumnType.SITE2_EXON];
-        this._columns[FusionTableColumnType.SITE2_EXON] = {
-            name: FusionTableColumnType.SITE2_EXON,
+            structuralVariantTableColumnAttributes[
+                StructuralVariantTableColumnType.SITE2_EXON
+            ];
+        this._columns[StructuralVariantTableColumnType.SITE2_EXON] = {
+            name: StructuralVariantTableColumnType.SITE2_EXON,
             render: (d: StructuralVariant[]) => {
                 const transcriptKey =
                     d[0].site2EnsemblTranscriptId !== 'NA'
@@ -448,11 +455,13 @@ export default class StructuralVariantTable<
             sortBy: this.defaultSortBy(site2ExonAttribute),
             filter: this.defaultFilter(site2ExonAttribute),
             download: this.defaultDownload(site2ExonAttribute),
-            visible: this.isColumnVisible(FusionTableColumnType.SITE2_EXON),
+            visible: this.isColumnVisible(
+                StructuralVariantTableColumnType.SITE2_EXON
+            ),
         };
 
-        this._columns[FusionTableColumnType.ANNOTATION] = {
-            name: FusionTableColumnType.ANNOTATION,
+        this._columns[StructuralVariantTableColumnType.ANNOTATION] = {
+            name: StructuralVariantTableColumnType.ANNOTATION,
             headerRender: (name: string) =>
                 AnnotationColumnFormatter.headerRender(
                     name,
@@ -494,9 +503,11 @@ export default class StructuralVariantTable<
         };
 
         const mutationStatusAttribute =
-            fusionTableColumnAttributes[FusionTableColumnType.MUTATION_STATUS];
-        this._columns[FusionTableColumnType.MUTATION_STATUS] = {
-            name: FusionTableColumnType.MUTATION_STATUS,
+            structuralVariantTableColumnAttributes[
+                StructuralVariantTableColumnType.MUTATION_STATUS
+            ];
+        this._columns[StructuralVariantTableColumnType.MUTATION_STATUS] = {
+            name: StructuralVariantTableColumnType.MUTATION_STATUS,
             render: (d: StructuralVariant[]) => {
                 const data = d[0].svStatus;
                 let content: JSX.Element;
@@ -526,7 +537,7 @@ export default class StructuralVariantTable<
             filter: this.defaultFilter(mutationStatusAttribute),
             download: this.defaultDownload(mutationStatusAttribute),
             visible: this.isColumnVisible(
-                FusionTableColumnType.MUTATION_STATUS
+                StructuralVariantTableColumnType.MUTATION_STATUS
             ),
         };
     }
@@ -554,16 +565,16 @@ export default class StructuralVariantTable<
         d: StructuralVariantExt[]
     ) => d[0][attribute];
 
-    private isColumnVisible(columnType: FusionTableColumnType) {
+    private isColumnVisible(columnType: StructuralVariantTableColumnType) {
         const visibleColumns = [
-            FusionTableColumnType.SAMPLE_ID,
-            FusionTableColumnType.CANCER_TYPE_DETAILED,
-            FusionTableColumnType.SITE1_HUGO_SYMBOL,
-            FusionTableColumnType.SITE2_HUGO_SYMBOL,
-            FusionTableColumnType.ANNOTATION,
-            FusionTableColumnType.VARIANT_CLASS,
-            FusionTableColumnType.EVENT_INFO,
-            FusionTableColumnType.CONNECTION_TYPE,
+            StructuralVariantTableColumnType.SAMPLE_ID,
+            StructuralVariantTableColumnType.CANCER_TYPE_DETAILED,
+            StructuralVariantTableColumnType.SITE1_HUGO_SYMBOL,
+            StructuralVariantTableColumnType.SITE2_HUGO_SYMBOL,
+            StructuralVariantTableColumnType.ANNOTATION,
+            StructuralVariantTableColumnType.VARIANT_CLASS,
+            StructuralVariantTableColumnType.EVENT_INFO,
+            StructuralVariantTableColumnType.CONNECTION_TYPE,
         ];
         return visibleColumns.includes(columnType);
     }
