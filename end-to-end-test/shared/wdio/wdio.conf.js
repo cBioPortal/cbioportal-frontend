@@ -285,7 +285,7 @@ exports.config = {
             'novus-visual-regression',
             {
                 compare: LocalCompare,
-                viewportChangePause: 300,
+                viewportChangePause: 1500,
                 viewports: [{ width: 1600, height: 1000 }],
                 orientations: ['landscape', 'portrait'],
                 after: () => {},
