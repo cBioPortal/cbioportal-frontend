@@ -32,7 +32,7 @@ import { getRemoteDataGroupStatus } from 'cbioportal-utils';
 import { EnrichmentAnalysisComparisonGroup } from 'pages/groupComparison/GroupComparisonUtils';
 import {
     IAxisData,
-    IAxisLogScaleParams,
+    IAxisScaleTransformParams,
     IStringAxisData,
 } from 'shared/components/plots/PlotsTabUtils';
 import CategoryPlot, {
@@ -161,7 +161,7 @@ export default class GenericAssayCategoricalEnrichmentsContainer extends React.C
         group => group.name
     );
     @observable private logScale = false;
-    @observable logScaleFunction: IAxisLogScaleParams | undefined;
+    @observable logScaleFunction: IAxisScaleTransformParams | undefined;
     @observable swapAxes = false;
     @observable showPAndQ = false;
     @observable horizontalBars = false;
@@ -199,9 +199,9 @@ export default class GenericAssayCategoricalEnrichmentsContainer extends React.C
             const MIN_LOG_ARGUMENT = 0.01;
             this.logScaleFunction = {
                 label: 'log2',
-                fLogScale: (x: number, offset: number) =>
+                transform: (x: number) =>
                     Math.log2(Math.max(x, MIN_LOG_ARGUMENT)),
-                fInvLogScale: (x: number) => Math.pow(2, x),
+                inverseTransform: (x: number) => Math.pow(2, x),
             };
         } else {
             this.logScaleFunction = undefined;
