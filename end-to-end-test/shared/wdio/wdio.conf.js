@@ -19,7 +19,7 @@ const resultsDir = process.env.JUNIT_REPORT_PATH || './shared/results/';
 const chromedriverCustomPath =
     process.env.CHROMEDRIVER_CUSTOM_PATH || '/opt/homebrew/bin/chromedriver';
 
-const retries = 0;
+const retries = 1;
 
 let screenshotRoot = process.env.SCREENSHOT_DIRECTORY;
 
@@ -31,9 +31,8 @@ const chromeArgs = [
     '--disable-dev-shm-usage',
     '--allow-insecure-localhost',
     '--window-size=1600,1000',
-    '--headless=new',
-    '--disable-gpu',
     '--no-sandbox',
+    '--headless=new',
 ].concat(
     (function() {
         return process.env.HEADLESS_CHROME === 'true'
@@ -215,6 +214,7 @@ exports.config = {
             'goog:chromeOptions': {
                 args: chromeArgs,
             },
+            'goog:loggingPrefs': { browser: 'SEVERE' },
             acceptInsecureCerts: true,
             //acceptSslCerts: true,
             // If outputDir is provided WebdriverIO can capture driver session logs
