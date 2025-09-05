@@ -32,7 +32,6 @@ const chromeArgs = [
     '--allow-insecure-localhost',
     '--window-size=1600,1000',
     '--no-sandbox',
-    '--headless=new',
 ].concat(
     (function() {
         return process.env.HEADLESS_CHROME === 'true'
@@ -273,14 +272,15 @@ exports.config = {
     // your test setup with almost no effort. Unlike plugins, they don't add new
     // commands. Instead, they hook themselves up into the test process.
     services: [
-        [
-            'chromedriver',
-            {
-                logLevel: 'info',
-                outputDir: './driver-logs',
-                chromedriverCustomPath,
-            },
-        ],
+        // [
+        //     'chromedriver',
+        //     {
+        //         logLevel: 'info',
+        //         outputDir: './driver-logs',
+        //         chromedriverCustomPath,
+        //     },
+        // ],
+        ['devtools'],
         [
             'novus-visual-regression',
             {
@@ -293,7 +293,7 @@ exports.config = {
         ],
     ],
 
-    //port: 54532,
+    port: 54532,
 
     // Framework you want to run your specs with.
     // The following are supported: Mocha, Jasmine, and Cucumber
