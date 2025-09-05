@@ -31,6 +31,9 @@ const chromeArgs = [
     '--disable-dev-shm-usage',
     '--allow-insecure-localhost',
     '--window-size=1600,1000',
+    '--headless=new',
+    '--disable-gpu',
+    '--no-sandbox',
 ].concat(
     (function() {
         return process.env.HEADLESS_CHROME === 'true'
@@ -188,7 +191,7 @@ exports.config = {
     // sessions. Within your capabilities you can overwrite the spec and exclude options in
     // order to group specific specs to a specific capability.
     //
-    // First, you can define how many instances should be started at the same time. Let's
+    // First, you can define how mfany instances should be started at the same time. Let's
     // say you have 3 different capabilities (Chrome, Firefox, and Safari) and you have
     // set maxInstances to 1; wdio will spawn 3 processes. Therefore, if you have 10 spec
     // files and you set maxInstances to 10, all spec files will get tested at the same time
