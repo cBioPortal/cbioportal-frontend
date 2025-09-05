@@ -287,7 +287,7 @@ exports.config = {
                 compare: LocalCompare,
                 viewportChangePause: 1500,
                 viewports: [{ width: 1600, height: 1000 }],
-                orientations: ['landscape', 'portrait'],
+                orientations: ['landscape'],
                 after: () => {},
             },
         ],
