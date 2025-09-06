@@ -27,7 +27,6 @@ async function waitForPlotsTab(timeout) {
 }
 
 async function waitForAndCheckPlotsTab() {
-    await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
     await waitForElementDisplayed('div[data-test="PlotsTabPlotDiv"]', {
         timeout: 20000,
     });
@@ -65,7 +64,7 @@ async function waitForOncoprint(timeout = 100000) {
         },
         { timeout }
     );
-    await browser.pause(500);
+    await browser.pause(1000);
 }
 
 async function waitForComparisonTab() {
@@ -494,6 +493,13 @@ async function pasteToElement(elementSelector, text) {
 
 async function checkOncoprintElement(selector, viewports) {
     //browser.moveToObject('body', 0, 0);
+
+    if (
+        await $('.oncoprint__controls .open #viewDropdownButton').isExisting()
+    ) {
+        await clickElement('.dropdown.open #viewDropdownButton');
+    }
+
     await browser.execute(() => {
         frontendOnc.clearMouseOverEffects(); // clear mouse hover effects for uniform screenshot
     });
@@ -868,13 +874,11 @@ async function isUnselected(selector, options) {
 }
 
 async function clickElement(selector, options = {}) {
-    let el = await getElement(selector);
-    //
-    // if (/^handle=/.test(selector)) {
-    //     el = await getElementByTestHandle(selector.replace(/^handle=/, ''));
-    // } else {
-    //     el = await $(selector);
-    // }
+    // note that selector can be string an element
+    let el =
+        typeof selector === 'string' ? await getElement(selector) : selector;
+
+    if (options?.moveTo) await el.moveTo();
     await el.waitForDisplayed(options);
     await el.click();
 }

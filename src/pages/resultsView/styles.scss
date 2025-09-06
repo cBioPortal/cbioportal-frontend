@@ -71,10 +71,16 @@
 
 .oncoprintContainer {
     opacity: 0;
+    width: 1500px;
+    &.fadeIn {
+        opacity: 1;
+    }
+}
+
+.oncoprintContainer {
+    opacity: 1;
     max-width: 95vw;
     &.fadeIn {
-        transition: opacity 0.75s ease-in-out;
-        opacity: 1;
     }
 }
 
