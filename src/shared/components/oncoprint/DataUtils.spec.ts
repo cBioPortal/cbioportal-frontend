@@ -4,6 +4,7 @@ import {
     fillGeneticTrackDatum,
     fillHeatmapTrackDatum,
     getOncoprintMutationType,
+    HeatmapCaseDatum,
     makeGeneticTrackData,
     selectDisplayValue,
 } from './DataUtils';
@@ -1663,7 +1664,13 @@ describe('DataUtils', () => {
                 'geneset_id',
                 'MY_FAVORITE_GENE_SET-3',
                 { sampleId: 'sample', studyId: 'study' } as Sample,
-                [{ value: 7 }]
+                [
+                    {
+                        value: 7,
+                        uniquePatientKey: 'patient_key',
+                        uniqueSampleKey: 'sample_key',
+                    },
+                ]
             );
             assert.deepEqual(partialTrackDatum, {
                 geneset_id: 'MY_FAVORITE_GENE_SET-3',
@@ -1673,7 +1680,14 @@ describe('DataUtils', () => {
         });
 
         it('adds thresholdType and category to trackDatum', () => {
-            let data = [{ value: 8, thresholdType: '>' as '>' }];
+            let data: HeatmapCaseDatum[] = [
+                {
+                    value: 8,
+                    thresholdType: '>' as '>',
+                    uniquePatientKey: 'patient_key',
+                    uniqueSampleKey: 'sample_key',
+                },
+            ];
             const partialTrackDatum = {};
             fillHeatmapTrackDatum<IGenericAssayHeatmapTrackDatum, 'entityId'>(
                 partialTrackDatum,
@@ -1692,7 +1706,23 @@ describe('DataUtils', () => {
         });
 
         it('returns smallest value with ASC sort order', () => {
-            let data = [{ value: 1 }, { value: 2 }, { value: 3 }];
+            let data: HeatmapCaseDatum[] = [
+                {
+                    value: 1,
+                    uniquePatientKey: 'patient_key',
+                    uniqueSampleKey: 'sample_key_1',
+                },
+                {
+                    value: 2,
+                    uniquePatientKey: 'patient_key',
+                    uniqueSampleKey: 'sample_key_2',
+                },
+                {
+                    value: 3,
+                    uniquePatientKey: 'patient_key',
+                    uniqueSampleKey: 'sample_key_3',
+                },
+            ];
             const partialTrackDatum = {};
             fillHeatmapTrackDatum<IGenericAssayHeatmapTrackDatum, 'entityId'>(
                 partialTrackDatum,
@@ -1710,7 +1740,23 @@ describe('DataUtils', () => {
         });
 
         it('returns largest value with DESC sort order', () => {
-            let data = [{ value: 1 }, { value: 2 }, { value: 3 }];
+            let data: HeatmapCaseDatum[] = [
+                {
+                    value: 1,
+                    uniquePatientKey: 'patient_key',
+                    uniqueSampleKey: 'sample_key_1',
+                },
+                {
+                    value: 2,
+                    uniquePatientKey: 'patient_key',
+                    uniqueSampleKey: 'sample_key_2',
+                },
+                {
+                    value: 3,
+                    uniquePatientKey: 'patient_key',
+                    uniqueSampleKey: 'sample_key_3',
+                },
+            ];
             const partialTrackDatum = {};
             fillHeatmapTrackDatum<IGenericAssayHeatmapTrackDatum, 'entityId'>(
                 partialTrackDatum,
@@ -1728,7 +1774,23 @@ describe('DataUtils', () => {
         });
 
         it('selects non-threshold over threshold data point when values are equal', () => {
-            let data = [{ value: 1, thresholdType: '>' as '>' }, { value: 1 }];
+            let data: HeatmapCaseDatum[] = [
+                {
+                    value: 1,
+                    uniquePatientKey: 'patient_key',
+                    uniqueSampleKey: 'sample_key_1',
+                },
+                {
+                    value: 2,
+                    uniquePatientKey: 'patient_key',
+                    uniqueSampleKey: 'sample_key_2',
+                },
+                {
+                    value: 3,
+                    uniquePatientKey: 'patient_key',
+                    uniqueSampleKey: 'sample_key_3',
+                },
+            ];
             const partialTrackDatum = {};
             fillHeatmapTrackDatum<IGenericAssayHeatmapTrackDatum, 'entityId'>(
                 partialTrackDatum,
@@ -1745,7 +1807,18 @@ describe('DataUtils', () => {
         });
 
         it('handles all NaN-value data points', () => {
-            let data = [{ value: NaN }, { value: NaN }];
+            let data: HeatmapCaseDatum[] = [
+                {
+                    value: NaN,
+                    uniquePatientKey: 'patient_key',
+                    uniqueSampleKey: 'sample_key_1',
+                },
+                {
+                    value: NaN,
+                    uniquePatientKey: 'patient_key',
+                    uniqueSampleKey: 'sample_key_2',
+                },
+            ];
             const partialTrackDatum = {} as IGenericAssayHeatmapTrackDatum;
             fillHeatmapTrackDatum<IGenericAssayHeatmapTrackDatum, 'entityId'>(
                 partialTrackDatum,
@@ -1759,9 +1832,18 @@ describe('DataUtils', () => {
         });
 
         it('Prefers largest non-threshold absolute value when no sort order provided', () => {
-            let data = [
-                { value: -10 },
-                { value: 10, thresholdType: '>' as '>' },
+            let data: HeatmapCaseDatum[] = [
+                {
+                    value: -10,
+                    uniquePatientKey: 'patient_key',
+                    uniqueSampleKey: 'sample_key_1',
+                },
+                {
+                    value: 10,
+                    thresholdType: '>' as '>',
+                    uniquePatientKey: 'patient_key',
+                    uniqueSampleKey: 'sample_key_2',
+                },
             ];
             const partialTrackDatum = {};
             fillHeatmapTrackDatum<IGenericAssayHeatmapTrackDatum, 'entityId'>(

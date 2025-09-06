@@ -77,6 +77,7 @@ import { OncoprintModel } from 'oncoprintjs';
 import { getVariantAlleleFrequency } from 'shared/lib/MutationUtils';
 import { DataType } from 'pages/studyView/StudyViewUtils';
 import GeneCache from 'shared/cache/GeneCache';
+import { isSampleProfiled } from 'shared/lib/isSampleProfiled';
 
 interface IGenesetExpansionMap {
     [genesetTrackKey: string]: IHeatmapTrackSpec[];
@@ -549,7 +550,8 @@ function createHeatmapTracksData(
 ): Array<{
     uniqueSampleKey: string;
     uniquePatientKey: string;
-    value: number;
+    value: number | null;
+    thresholdType?: '>' | '<';
 }> {
     if (profileType === AlterationTypeConstants.MUTATION_EXTENDED) {
         const mutationPromise = oncoprint.props.store.annotatedMutationCache.get(
@@ -559,29 +561,79 @@ function createHeatmapTracksData(
         );
 
         const mutations = mutationPromise.result;
+        const samples = oncoprint.props.store.filteredSamples.result!;
+        const coverageInfo = oncoprint.props.store.coverageInformation.result!;
 
         if (mutations) {
             const profileMutations = mutations.filter(
                 m => m.molecularProfileId === query.molecularProfileId
             );
 
-            return _.compact(
-                profileMutations.map(m => {
-                    const vafReport = getVariantAlleleFrequency(m);
+            // Create a map of samples with mutations and their VAF values
+            const sampleMutationMap = new Map<string, number | null>();
+
+            // Process mutations to get VAF values
+            profileMutations.forEach(m => {
+                const vafReport = getVariantAlleleFrequency(m);
+                if (
+                    vafReport &&
+                    typeof vafReport.vaf === 'number' &&
+                    !isNaN(vafReport.vaf)
+                ) {
+                    // Store the highest VAF if multiple mutations exist for the same sample
+                    const existingVaf = sampleMutationMap.get(
+                        m.uniqueSampleKey
+                    );
                     if (
-                        vafReport &&
-                        typeof vafReport.vaf === 'number' &&
-                        !isNaN(vafReport.vaf)
+                        existingVaf === undefined ||
+                        vafReport.vaf > existingVaf!
                     ) {
-                        return {
-                            uniqueSampleKey: m.uniqueSampleKey,
-                            uniquePatientKey: m.uniquePatientKey,
-                            value: vafReport.vaf,
-                        };
+                        sampleMutationMap.set(m.uniqueSampleKey, vafReport.vaf);
                     }
-                    return null;
+                } else {
+                    // Mutation exists but no valid VAF - only set if no VAF data exists yet
+                    if (!sampleMutationMap.has(m.uniqueSampleKey)) {
+                        sampleMutationMap.set(m.uniqueSampleKey, null);
+                    }
+                }
+            });
+
+            // Filter to only include profiled samples, then create data entries
+            return samples
+                .filter(sample => {
+                    return isSampleProfiled(
+                        sample.uniqueSampleKey,
+                        query.molecularProfileId,
+                        query.hugoGeneSymbol,
+                        coverageInfo
+                    );
                 })
-            );
+                .map(sample => {
+                    const vafValue = sampleMutationMap.get(
+                        sample.uniqueSampleKey
+                    );
+                    return {
+                        uniqueSampleKey: sample.uniqueSampleKey,
+                        uniquePatientKey: sample.uniquePatientKey,
+                        value: vafValue !== undefined ? vafValue : null, // null for profiled but not mutated
+                    };
+                });
+        } else {
+            // No mutations data available - return null values for profiled samples only
+            return samples
+                .filter(sample => {
+                    return isSampleProfiled(
+                        sample.uniqueSampleKey,
+                        query.molecularProfileId,
+                        query.hugoGeneSymbol,
+                        coverageInfo
+                    );
+                })
+                .map(sample => ({
+                    uniqueSampleKey: sample.uniqueSampleKey,
+                    uniquePatientKey: sample.uniquePatientKey,
+                    value: null,
+                }));
         }
     } else {
         const molecularDataResult = oncoprint.props.store.geneMolecularDataCache.result!.get(
@@ -1316,6 +1368,7 @@ export function makeHeatmapTracksMobxPromise(
                 oncoprint.props.store.filteredPatients,
                 oncoprint.props.store.molecularProfileIdToMolecularProfile,
                 oncoprint.props.store.geneMolecularDataCache,
+                oncoprint.props.store.coverageInformation,
                 ...mutationQueries.map(query =>
                     oncoprint.props.store.annotatedMutationCache.get({
                         entrezGeneId: query.entrezGeneId!,
