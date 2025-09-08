@@ -52,6 +52,7 @@ export default class StudyViewURLWrapper extends URLWrapper<
         | 'plots_horz_selection'
         | 'plots_vert_selection'
         | 'plots_coloring_selection'
+        | 'embeddings_coloring_selection'
         | 'geneset_list'
         | 'generic_assay_groups'
     >
@@ -69,6 +70,10 @@ export default class StudyViewURLWrapper extends URLWrapper<
                 nestedObjectProps: PlotsSelectionParamProps,
             },
             plots_coloring_selection: {
+                isSessionProp: false,
+                nestedObjectProps: PlotsColoringParamProps,
+            },
+            embeddings_coloring_selection: {
                 isSessionProp: false,
                 nestedObjectProps: PlotsColoringParamProps,
             },
