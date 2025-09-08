@@ -27,11 +27,14 @@ let screenshotRoot = process.env.SCREENSHOT_DIRECTORY;
 screenshotRoot = screenshotRoot.replace(/\/$/, '');
 
 const chromeArgs = [
-    '--disable-composited-antialiasing',
-    '--disable-dev-shm-usage',
-    '--allow-insecure-localhost',
-    '--window-size=1600,1000',
-    '--no-sandbox',
+    '--headless=new', // headless mode (use --headless=old if new causes issues)
+    '--no-sandbox', // needed in Docker/CI
+    '--disable-dev-shm-usage', // prevents crashes due to limited /dev/shm
+    '--disable-gpu', // don’t try to use GPU (safer in CI)
+    '--in-process-gpu', // workaround if GPU process crashes
+    '--disable-software-rasterizer', // avoids fallbacks that can be flaky
+    '--disable-extensions', // reduces startup noise
+    '--remote-debugging-port=9222', // helps with debugging
 ].concat(
     (function() {
         return process.env.HEADLESS_CHROME === 'true'
@@ -196,7 +199,7 @@ exports.config = {
     // and 30 processes will get spawned. The property handles how many capabilities
     // from the same test should run tests.
     //
-    maxInstances: debug ? 1 : 2,
+    maxInstances: debug ? 1 : 1,
     //
     // If you have trouble getting all important capabilities together, check out the
     // Sauce Labs platform configurator - a great tool to configure your capabilities:
@@ -293,7 +296,7 @@ exports.config = {
         ],
     ],
 
-    //port: 54532,
+    port: 57629,
 
     // Framework you want to run your specs with.
     // The following are supported: Mocha, Jasmine, and Cucumber
