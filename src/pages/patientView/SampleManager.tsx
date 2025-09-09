@@ -7,7 +7,7 @@ import {
     ClinicalAttribute,
 } from 'cbioportal-ts-api-client';
 import { cleanAndDerive } from './clinicalInformation/lib/clinicalAttributesUtil.js';
-import styles from './patientHeader/style/clinicalAttributes.scss';
+import styles from './patientHeader/style/clinicalAttributes.module.scss';
 import naturalSort from 'javascript-natural-sort';
 import { ClinicalEvent, ClinicalEventData } from 'cbioportal-ts-api-client';
 import { SampleLabelHTML } from 'shared/components/sampleLabel/SampleLabel';
@@ -193,6 +193,7 @@ class SampleManager {
         this.sampleLabels = {};
         this.clinicalDataLegacyCleanAndDerived = {};
         this.sampleColors = {};
+
         // clinical attributes that should be displayed at patient level, since
         // they are the same in all samples
         this.commonClinicalDataLegacyCleanAndDerived = {};

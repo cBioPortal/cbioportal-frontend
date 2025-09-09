@@ -770,7 +770,6 @@ export class PatientViewPageInner extends React.Component<
                             columns={3}
                         />
                     )}
-
                     {this.pageContent.component}
                 </div>
             </PageLayout>
@@ -784,6 +783,7 @@ export class PatientViewPageInner extends React.Component<
             this.pageStore.studyMetaData,
         ],
         render: () => {
+            console.log(this.pageStore.mrnaData.result);
             return (
                 <>
                     <div className="headBlock">
@@ -813,6 +813,9 @@ export class PatientViewPageInner extends React.Component<
                             </div>
                         </div>
                     </div>
+
+                    <div></div>
+
                     {patientViewTabs(
                         this,
                         this.urlWrapper,

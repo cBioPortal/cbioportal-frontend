@@ -201,6 +201,8 @@ import { buildNamespaceColumnConfig } from 'shared/components/namespaceColumns/n
 import { SiteError } from 'shared/model/appMisc';
 import { AnnotatedExtendedAlteration } from 'shared/model/AnnotatedExtendedAlteration';
 import { CustomDriverNumericGeneMolecularData } from 'shared/model/CustomDriverNumericGeneMolecularData';
+import { isRNASeqProfile } from 'pages/resultsView/ResultsViewPageStoreUtils';
+import { MolecularDataFilter } from 'cbioportal-ts-api-client/src';
 
 type PageMode = 'patient' | 'sample';
 type ResourceId = string;
@@ -464,6 +466,28 @@ export class PatientViewPageStore {
                 this.molecularProfilesInStudy,
                 this.studyId
             ),
+    });
+
+    readonly mrnaData = remoteData({
+        await: () => [this.molecularProfilesInStudy],
+        invoke: async () => {
+            const data = this.molecularProfilesInStudy.result.find(
+                (profile: MolecularProfile) =>
+                    isRNASeqProfile(profile.molecularProfileId)
+            );
+
+            const mrnadata = await getClient().fetchAllMolecularDataInMolecularProfileUsingPOST(
+                {
+                    molecularProfileId: data!.molecularProfileId,
+                    molecularDataFilter: {
+                        entrezGeneIds: [1],
+                        sampleListId: `${this.studyId}_all`,
+                    } as MolecularDataFilter,
+                }
+            );
+
+            return mrnadata;
+        },
     });
 
     // this is a string of concatenated ids
