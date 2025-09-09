@@ -27,14 +27,11 @@ let screenshotRoot = process.env.SCREENSHOT_DIRECTORY;
 screenshotRoot = screenshotRoot.replace(/\/$/, '');
 
 const chromeArgs = [
-    '--headless=new', // headless mode (use --headless=old if new causes issues)
     '--no-sandbox', // needed in Docker/CI
     '--disable-dev-shm-usage', // prevents crashes due to limited /dev/shm
     '--disable-gpu', // don’t try to use GPU (safer in CI)
     '--in-process-gpu', // workaround if GPU process crashes
     '--disable-software-rasterizer', // avoids fallbacks that can be flaky
-    '--disable-extensions', // reduces startup noise
-    '--remote-debugging-port=9222', // helps with debugging
 ].concat(
     (function() {
         return process.env.HEADLESS_CHROME === 'true'
