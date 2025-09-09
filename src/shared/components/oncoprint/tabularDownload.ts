@@ -94,7 +94,7 @@ export function getTabularDownloadData(
         //Add the currentGeneName to the oncoprintData if it does not exist
         for (const alteration in alterationsMap) {
             if (oncoprintData[alteration][currentGeneName] === undefined) {
-                oncoprintData[alteration][currentGeneName] = {};
+                oncoprintData[alteration][currentGeneName] ??= {};
             }
         }
 
@@ -111,41 +111,35 @@ export function getTabularDownloadData(
                 if (
                     oncoprintData[alteration][currentGeneName][id] === undefined
                 ) {
-                    oncoprintData[alteration][currentGeneName][id] = '';
+                    oncoprintData[alteration][currentGeneName][id] ??= '';
                 }
             }
 
             // Check if the sample/patient is initialized, and combine both results in case they are different
             for (const alteration in alterationsMap) {
-                var disp = alterationsMap[alteration] as keyof typeof string;
-                if (geneticTrackDatum[disp] !== undefined) {
-                    const geneticAlterationMap: any = {
-                        CNA: cnaMap,
-                        MUTATIONS: mutationMap,
-                        MRNA: mrnaMap,
-                        PROTEIN: proteinMap,
-                        STRUCTURAL_VARIANT: structuralVariantMap,
-                    };
+                const disp = alterationsMap[alteration];
+                // @ts-ignore
+                const dispValue = geneticTrackDatum[disp];
 
-                    const currentMap = geneticAlterationMap[alteration];
-                    var current_value = currentMap[geneticTrackDatum[disp]]
-                        ? currentMap[geneticTrackDatum[disp]]
-                        : geneticTrackDatum[disp];
+                const geneticAlterationMap: any = {
+                    CNA: cnaMap,
+                    MUTATIONS: mutationMap,
+                    MRNA: mrnaMap,
+                    PROTEIN: proteinMap,
+                    STRUCTURAL_VARIANT: structuralVariantMap,
+                };
 
-                    if (
-                        oncoprintData[alteration][currentGeneName][id] == '' ||
-                        oncoprintData[alteration][currentGeneName][id] ==
-                            current_value
-                    ) {
-                        oncoprintData[alteration][currentGeneName][
-                            id
-                        ] = current_value;
+                if (dispValue !== undefined) {
+                    const map = geneticAlterationMap[alteration];
+                    const currentValue = map[dispValue] ?? dispValue;
+
+                    const geneTrack = oncoprintData[alteration][currentGeneName];
+                    const existingValue = geneTrack[id];
+
+                    if (!existingValue || existingValue === currentValue) {
+                        geneTrack[id] = currentValue;
                     } else {
-                        oncoprintData[alteration][currentGeneName][
-                            id
-                        ] = oncoprintData[alteration][currentGeneName][
-                            id
-                        ].concat(', ', current_value);
+                        geneTrack[id] = `${existingValue}, ${currentValue}`;
                     }
                 }
             }
