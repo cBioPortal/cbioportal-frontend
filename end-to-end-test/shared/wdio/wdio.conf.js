@@ -296,7 +296,7 @@ exports.config = {
         ],
     ],
 
-    port: 57629,
+    //port: 57629,
 
     // Framework you want to run your specs with.
     // The following are supported: Mocha, Jasmine, and Cucumber
