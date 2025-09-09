@@ -291,7 +291,7 @@ exports.config = {
                 viewportChangePause: 300,
                 viewports: [{ width: 1600, height: 1000 }],
                 orientations: ['landscape'],
-                after: () => {},
+                //after: () => {},
             },
         ],
     ],
