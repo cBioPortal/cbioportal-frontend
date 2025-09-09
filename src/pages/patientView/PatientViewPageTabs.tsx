@@ -496,6 +496,12 @@ export function tabs(
             id={PatientViewPageTabs.MrnaScatterPlot}
             linkText="MRNA Expression"
         >
+            <LoadingIndicator
+                isLoading={
+                    pageComponent.patientViewPageStore.mrnaData.isPending ||
+                    pageComponent.patientViewPageStore.allGenes.isPending
+                }
+            />
             <MrnaScatterPlot
                 mrnaData={pageComponent.patientViewPageStore.mrnaData}
                 currentSampleId={pageComponent.patientViewPageStore.sampleId}

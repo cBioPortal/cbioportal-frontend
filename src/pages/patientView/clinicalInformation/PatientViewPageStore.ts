@@ -468,6 +468,14 @@ export class PatientViewPageStore {
             ),
     });
 
+    readonly allGenes = remoteData({
+        invoke: () => {
+            return getClient().getAllGenesUsingGET({
+                projection: 'SUMMARY',
+            });
+        },
+    });
+
     readonly mrnaData = remoteData({
         await: () => [this.molecularProfilesInStudy],
         invoke: async () => {
