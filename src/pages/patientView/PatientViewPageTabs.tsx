@@ -37,6 +37,7 @@ import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
 import MutationTableWrapper from './mutation/MutationTableWrapper';
 import { PatientViewPageInner } from 'pages/patientView/PatientViewPage';
 import { Else, If } from 'react-if';
+import MrnaScatterPlot from 'pages/patientView/MrnaScatterPlot';
 
 export enum PatientViewPageTabs {
     Summary = 'summary',
@@ -49,6 +50,7 @@ export enum PatientViewPageTabs {
     TrialMatchTab = 'trialMatchTab',
     MutationalSignatures = 'mutationalSignatures',
     PathwayMapper = 'pathways',
+    MrnaScatterPlot = 'mrnaScatterPlot',
 }
 
 export const PatientViewResourceTabPrefix = 'openResource_';
@@ -487,6 +489,19 @@ export function tabs(
                 />
             </MSKTab>
         );
+
+    tabs.push(
+        <MSKTab
+            key={7}
+            id={PatientViewPageTabs.MrnaScatterPlot}
+            linkText="MRNA Expression"
+        >
+            <MrnaScatterPlot
+                mrnaData={pageComponent.patientViewPageStore.mrnaData}
+                currentSampleId={pageComponent.patientViewPageStore.sampleId}
+            />
+        </MSKTab>
+    );
 
     tabs.push(
         <MSKTab

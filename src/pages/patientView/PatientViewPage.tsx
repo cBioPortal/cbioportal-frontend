@@ -63,6 +63,7 @@ import setWindowVariable from 'shared/lib/setWindowVariable';
 import { getNavCaseIdsCache } from 'shared/lib/handleLongUrls';
 import PatientViewPageHeader from 'pages/patientView/PatientViewPageHeader';
 import { MAX_URL_LENGTH } from 'pages/studyView/studyPageHeader/ActionButtons';
+import MrnaScatterPlot from './MrnaScatterPlot';
 
 export interface IPatientViewPageProps {
     routing: any;
@@ -813,8 +814,6 @@ export class PatientViewPageInner extends React.Component<
                             </div>
                         </div>
                     </div>
-
-                    <div></div>
 
                     {patientViewTabs(
                         this,
