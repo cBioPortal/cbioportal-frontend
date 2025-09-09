@@ -499,6 +499,7 @@ export function tabs(
             <MrnaScatterPlot
                 mrnaData={pageComponent.patientViewPageStore.mrnaData}
                 currentSampleId={pageComponent.patientViewPageStore.sampleId}
+                currentPatientId={pageComponent.patientViewPageStore.patientId}
             />
         </MSKTab>
     );
