@@ -63,7 +63,7 @@ console.log(`diff dir: ${diffDir}`);
 console.log(`ref dir: ${refDir}`);
 console.log(`screen dir: ${screenDir}`);
 
-var defaultMaxInstances = TEST_TYPE === 'remote' ? 3 : 1;
+var defaultMaxInstances = TEST_TYPE === 'remote' ? 3 : 2;
 
 const LocalCompare = new VisualRegressionCompare.LocalCompare({
     referenceName: getScreenshotName(refDir),
