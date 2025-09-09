@@ -150,6 +150,7 @@ import { createVariantAnnotationsByMutationFetcher } from 'shared/components/mut
 import SampleManager from '../SampleManager';
 import { getFilteredMolecularProfilesByAlterationType } from 'pages/studyView/StudyViewUtils';
 import {
+    Gene,
     getMyVariantInfoAnnotationsFromIndexedVariantAnnotations,
     ICivicGeneIndex,
     ICivicVariantIndex,
@@ -476,25 +477,31 @@ export class PatientViewPageStore {
         },
     });
 
+    @observable selectedGeneEntrezGeneIdForMRNATab: number | undefined;
+
     readonly mrnaData = remoteData({
-        await: () => [this.molecularProfilesInStudy],
+        await: () => [this.molecularProfilesInStudy, this.allGenes],
         invoke: async () => {
-            const data = this.molecularProfilesInStudy.result.find(
-                (profile: MolecularProfile) =>
-                    isRNASeqProfile(profile.molecularProfileId)
-            );
-
-            const mrnadata = await getClient().fetchAllMolecularDataInMolecularProfileUsingPOST(
-                {
-                    molecularProfileId: data!.molecularProfileId,
-                    molecularDataFilter: {
-                        entrezGeneIds: [1],
-                        sampleListId: `${this.studyId}_all`,
-                    } as MolecularDataFilter,
-                }
-            );
-
-            return mrnadata;
+            if (this.selectedGeneEntrezGeneIdForMRNATab) {
+                const data = this.molecularProfilesInStudy.result.find(
+                    (profile: MolecularProfile) =>
+                        isRNASeqProfile(profile.molecularProfileId)
+                );
+                const mrnadata = await getClient().fetchAllMolecularDataInMolecularProfileUsingPOST(
+                    {
+                        molecularProfileId: data!.molecularProfileId,
+                        molecularDataFilter: {
+                            entrezGeneIds: [
+                                this.selectedGeneEntrezGeneIdForMRNATab,
+                            ],
+                            sampleListId: `${this.studyId}_all`,
+                        } as MolecularDataFilter,
+                    }
+                );
+                return mrnadata;
+            } else {
+                return [];
+            }
         },
     });
 
