@@ -38,7 +38,7 @@ import MutationTableWrapper from './mutation/MutationTableWrapper';
 import { PatientViewPageInner } from 'pages/patientView/PatientViewPage';
 import { Else, If } from 'react-if';
 import MrnaScatterPlot from 'pages/patientView/MrnaScatterPlot';
-import Select from 'react-select';
+import GeneSelector from 'pages/patientView/GeneSelector';
 
 export enum PatientViewPageTabs {
     Summary = 'summary',
@@ -506,59 +506,19 @@ export function tabs(
             {pageComponent.patientViewPageStore.mrnaData.isComplete &&
                 pageComponent.patientViewPageStore.allGenes.isComplete && (
                     <>
-                        <Select
-                            onChange={(option: any) => {
-                                pageComponent.patientViewPageStore.selectedGeneEntrezGeneIdForMRNATab = option
-                                    ? option.entrezGeneId
-                                    : undefined;
-                            }}
-                            options={pageComponent.patientViewPageStore.allGenes
-                                .result!.sort((a, b) =>
-                                    a.hugoGeneSymbol.localeCompare(
-                                        b.hugoGeneSymbol
-                                    )
-                                )
-                                .slice(0, 50)
-                                .map(gene => ({
-                                    value: gene,
-                                    label: gene.hugoGeneSymbol,
-                                    entrezGeneId: gene.entrezGeneId,
-                                }))}
-                            placeholder="Choose a gene..."
-                            isSearchable={true}
-                            isClearable={true}
-                            filterOption={(option: any, inputValue: string) => {
-                                if (!inputValue) return true;
-                                // When searching, find matches in all genes but only show first 50 results
-                                const allMatches = pageComponent.patientViewPageStore.allGenes
-                                    .result!.filter(gene =>
-                                        gene.hugoGeneSymbol
-                                            .toLowerCase()
-                                            .includes(inputValue.toLowerCase())
-                                    )
-                                    .sort((a, b) =>
-                                        a.hugoGeneSymbol.localeCompare(
-                                            b.hugoGeneSymbol
-                                        )
-                                    );
-                                const first50Matches = allMatches.slice(0, 50);
-                                return first50Matches.some(
-                                    gene => gene.hugoGeneSymbol === option.label
-                                );
-                            }}
-                            styles={{
-                                container: (provided: any) => ({
-                                    ...provided,
-                                    width: '300px',
-                                }),
-                                control: (provided: any) => ({
-                                    ...provided,
-                                    fontSize: '12px',
-                                }),
-                                option: (provided: any) => ({
-                                    ...provided,
-                                    fontSize: '12px',
-                                }),
+                        <GeneSelector
+                            allGenes={
+                                pageComponent.patientViewPageStore.allGenes
+                                    .result!
+                            }
+                            selectedGeneEntrezId={
+                                pageComponent.patientViewPageStore
+                                    .selectedGeneEntrezGeneIdForMRNATab
+                            }
+                            onGeneSelect={(
+                                entrezGeneId: number | undefined
+                            ) => {
+                                pageComponent.patientViewPageStore.selectedGeneEntrezGeneIdForMRNATab = entrezGeneId;
                             }}
                         />
                         {pageComponent.patientViewPageStore
@@ -573,6 +533,12 @@ export function tabs(
                                 currentPatientId={
                                     pageComponent.patientViewPageStore.patientId
                                 }
+                                currentGene={pageComponent.patientViewPageStore.allGenes.result!.find(
+                                    gene =>
+                                        gene.entrezGeneId ===
+                                        pageComponent.patientViewPageStore
+                                            .selectedGeneEntrezGeneIdForMRNATab
+                                )}
                             />
                         )}
                     </>
