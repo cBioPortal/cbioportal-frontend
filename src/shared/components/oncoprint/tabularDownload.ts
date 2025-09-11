@@ -111,7 +111,7 @@ export function getTabularDownloadData(
                 if (
                     oncoprintData[alteration][currentGeneName][id] === undefined
                 ) {
-                    oncoprintData[alteration][currentGeneName][id] ??= '';
+                    oncoprintData[alteration][currentGeneName][id] = '';
                 }
             }
 
