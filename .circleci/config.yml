@@ -175,31 +175,31 @@ jobs:
             yarn run checkIncorrectImportStatements
 
   e2e_tests:
-      machine:
-          image: ubuntu-2004:current   # Full VM, Ubuntu 20.04
-        steps:
-          - checkout
+    machine:
+      image: ubuntu-2004:current   # Full VM, Ubuntu 20.04
+    steps:
+      - checkout
 
-          # Install Node.js 22
-          - run:
-              name: Install Node.js 22
-              command: |
-                curl -fsSL https://deb.nodesource.com/setup_22.18.0 | sudo -E bash -
-                sudo apt-get install -y nodejs
-                node -v
-                npm -v
+      # Install Node.js 22
+      - run:
+          name: Install Node.js 22
+          command: |
+            curl -fsSL https://deb.nodesource.com/setup_22.18.0 | sudo -E bash -
+            sudo apt-get install -y nodejs
+            node -v
+            npm -v
 
-          # Install Chrome & Chromedriver
-          - browser-tools/install-browser-tools:
-              chrome-version: latest
-              chromedriver-version: latest
+      # Install Chrome & Chromedriver
+      - browser-tools/install-browser-tools:
+          chrome-version: latest
+          chromedriver-version: latest
 
-          # Confirm browsers
-          - run:
-              name: Check installed browser versions
-              command: |
-                google-chrome --version
-                chromedriver --version
+      # Confirm browsers
+      - run:
+          name: Check installed browser versions
+          command: |
+            google-chrome --version
+            chromedriver --version
     environment:
       MANUAL_TRIGGER_BRANCH_ENV: << pipeline.parameters.manual_trigger_branch_env >>
       SPEC_FILE_PATTERN: << pipeline.parameters.remote_spec_pattern >>
