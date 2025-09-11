@@ -27,7 +27,10 @@ let screenshotRoot = process.env.SCREENSHOT_DIRECTORY;
 screenshotRoot = screenshotRoot.replace(/\/$/, '');
 
 const chromeArgs = [
-    '--disable-dev-shm-usage',
+    '--headless',
+    '--no-sandbox',
+    '--disable-setuid-sandbox',
+    '--use-gl=angle',
     '--allow-insecure-localhost',
     '--window-size=1600,1000',
 ].concat(
