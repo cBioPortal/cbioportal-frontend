@@ -94,7 +94,7 @@ export function getTabularDownloadData(
         //Add the currentGeneName to the oncoprintData if it does not exist
         for (const alteration in alterationsMap) {
             if (oncoprintData[alteration][currentGeneName] === undefined) {
-                oncoprintData[alteration][currentGeneName] ??= {};
+                oncoprintData[alteration][currentGeneName] = {};
             }
         }
 
