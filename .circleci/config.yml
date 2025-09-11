@@ -190,8 +190,9 @@ jobs:
             npm -v
 
       # Install Chrome & Chromedriver
-      - browser-tools/install-browser-tools:
+      - browser-tools/install-chrome:
           chrome-version: latest
+      - browser-tools/install-chromedriver:
           chromedriver-version: latest
 
       # Confirm browsers
