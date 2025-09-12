@@ -402,33 +402,33 @@ jobs:
 workflows:
   tests:
     jobs:
-#      - pull_cbioportal_test_codebase
-#      - checkout
-#      - prettier:
-#          requires:
-#            - checkout
-#          filters:
-#            branches:
-#              ignore:
-#                - master
-#                - release-*
-#      - check_forgotten_spec_only_statements:
-#          requires:
-#            - checkout
-#      - check_incorrect_import_statements:
-#          requires:
-#            - checkout
-#      - build_frontend:
-#          requires:
-#            - checkout
+      - pull_cbioportal_test_codebase
+      - checkout
+      - prettier:
+          requires:
+            - checkout
+          filters:
+            branches:
+              ignore:
+                - master
+                - release-*
+      - check_forgotten_spec_only_statements:
+          requires:
+            - checkout
+      - check_incorrect_import_statements:
+          requires:
+            - checkout
+      - build_frontend:
+          requires:
+            - checkout
 #      - e2e_localdb_tests:
 #          requires:
 #            - pull_cbioportal_test_codebase
 #            - build_frontend
       - e2e_tests:
-#          requires:
-#            - pull_cbioportal_test_codebase
-#            - build_frontend
+          requires:
+            - pull_cbioportal_test_codebase
+            - build_frontend
 #      - api_sync:
 #          requires:
 #            - build_frontend
