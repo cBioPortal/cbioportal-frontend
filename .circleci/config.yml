@@ -76,6 +76,7 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
                 FRONTEND_TEST_USE_LOCAL_DIST: true
                 WEBPACK_PARALLEL: false
               command: |
+                yarn config set ignore-engines true
                 cd /tmp/repo/cbioportal-frontend
                 yarn serveDist --ignore-engines &
                 cd /tmp/repo/cbioportal-test
