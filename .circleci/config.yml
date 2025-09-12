@@ -205,8 +205,6 @@ jobs:
             sudo apt-get install -y google-chrome-stable
             google-chrome --version
 
-      # Install ChromeDriver
-
     environment:
       MANUAL_TRIGGER_BRANCH_ENV: << pipeline.parameters.manual_trigger_branch_env >>
       SPEC_FILE_PATTERN: << pipeline.parameters.remote_spec_pattern >>
