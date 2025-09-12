@@ -76,14 +76,15 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
                 FRONTEND_TEST_USE_LOCAL_DIST: true
                 WEBPACK_PARALLEL: false
               command: |
+                nvm use 22.18.0
                 cd /tmp/repo/cbioportal-frontend
-                yarn serveDist &
+                yarn serveDist --ignore-engines &
                 cd /tmp/repo/cbioportal-test
                 sh ./utils/check-connection.sh --url=https://localhost:3000 --insecure='true'
                 cd /tmp/repo/cbioportal-frontend/end-to-end-test
                 ../scripts/env_vars.sh
                 eval "$(../scripts/env_vars.sh)"
-                yarn run test-webdriver-manager-remote
+                yarn run test-webdriver-manager-remote --ignore-engines
           - run:
               name: Make sure all screenshots are tracked (otherwise the test will always be successful)
               command: |
