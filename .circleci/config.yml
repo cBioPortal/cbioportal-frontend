@@ -29,15 +29,33 @@ defaults: &defaults
   resource_class: large
 
 run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
+
   steps:
-#    - browser-tools/install_chrome:
-#        timeout: 5m
-#    - browser-tools/install_chromedriver:
-#        timeout: 5m
-#    - run:
-#        command: |
-#          google-chrome --version
-#          chromedriver --version
+    - checkout
+
+    # Install Node.js 22.10.0
+    - run:
+        name: Install Node.js 22.10.0
+        command: |
+          curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+          nvm install 22.10.0
+          nvm use 22.10.0
+          nvm alias default 22.10.0
+          node -v
+          npm -v
+
+    # Install Google Chrome
+    - run:
+        name: Install Google Chrome
+        command: |
+          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+          echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
+          google-chrome --version
+
     - when:
         condition: << pipeline.parameters.enable_remote_e2e >>
         steps:
@@ -179,31 +197,31 @@ jobs:
       image: ubuntu-2204:2024.08.1
     resource_class: large
     working_directory: /tmp/repo
-    steps:
-      - checkout
-
-      # Install Node.js 22.10.0
-      - run:
-          name: Install Node.js 22.10.0
-          command: |
-            curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
-            export NVM_DIR="$HOME/.nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-            nvm install 22.10.0
-            nvm use 22.10.0
-            nvm alias default 22.10.0
-            node -v
-            npm -v
-
-      # Install Google Chrome
-      - run:
-          name: Install Google Chrome
-          command: |
-            wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
-            echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
-            sudo apt-get update
-            sudo apt-get install -y google-chrome-stable
-            google-chrome --version
+#    steps:
+#      - checkout
+#
+#      # Install Node.js 22.10.0
+#      - run:
+#          name: Install Node.js 22.10.0
+#          command: |
+#            curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+#            export NVM_DIR="$HOME/.nvm"
+#            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+#            nvm install 22.10.0
+#            nvm use 22.10.0
+#            nvm alias default 22.10.0
+#            node -v
+#            npm -v
+#
+#      # Install Google Chrome
+#      - run:
+#          name: Install Google Chrome
+#          command: |
+#            wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+#            echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+#            sudo apt-get update
+#            sudo apt-get install -y google-chrome-stable
+#            google-chrome --version
 
     environment:
       MANUAL_TRIGGER_BRANCH_ENV: << pipeline.parameters.manual_trigger_branch_env >>
