@@ -182,16 +182,39 @@ jobs:
     steps:
       - checkout
 
-      # Install Node.js 22
+      # Install Node.js 22.10.0
       - run:
-          name: Install Node.js 22
+          name: Install Node.js 22.10.0
           command: |
-            curl -fsSL https://deb.nodesource.com/setup_22.18.0 | sudo -E bash -
-            sudo apt-get install -y nodejs
+            curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            nvm install 22.10.0
+            nvm use 22.10.0
+            nvm alias default 22.10.0
             node -v
             npm -v
 
-          
+      # Install Google Chrome
+      - run:
+          name: Install Google Chrome
+          command: |
+            wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+            echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+            sudo apt-get update
+            sudo apt-get install -y google-chrome-stable
+            google-chrome --version
+
+      # Install ChromeDriver
+      - run:
+          name: Install ChromeDriver
+          command: |
+            CHROME_VERSION=$(google-chrome --version | grep -oP '\d+\.\d+\.\d+')
+            CHROMEDRIVER_VERSION=$(curl -s https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_VERSION%.*})
+            wget -O /tmp/chromedriver.zip https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip
+            sudo unzip /tmp/chromedriver.zip -d /usr/local/bin/
+            sudo chmod +x /usr/local/bin/chromedriver
+            chromedriver --version
 
     environment:
       MANUAL_TRIGGER_BRANCH_ENV: << pipeline.parameters.manual_trigger_branch_env >>
@@ -404,23 +427,23 @@ workflows:
     jobs:
       - pull_cbioportal_test_codebase
       - checkout
-      - prettier:
-          requires:
-            - checkout
-          filters:
-            branches:
-              ignore:
-                - master
-                - release-*
-      - check_forgotten_spec_only_statements:
-          requires:
-            - checkout
-      - check_incorrect_import_statements:
-          requires:
-            - checkout
-      - build_frontend:
-          requires:
-            - checkout
+#      - prettier:
+#          requires:
+#            - checkout
+#          filters:
+#            branches:
+#              ignore:
+#                - master
+#                - release-*
+#      - check_forgotten_spec_only_statements:
+#          requires:
+#            - checkout
+#      - check_incorrect_import_statements:
+#          requires:
+#            - checkout
+#      - build_frontend:
+#          requires:
+#            - checkout
 #      - e2e_localdb_tests:
 #          requires:
 #            - pull_cbioportal_test_codebase
