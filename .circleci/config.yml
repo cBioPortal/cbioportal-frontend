@@ -30,14 +30,14 @@ defaults: &defaults
 
 run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
   steps:
-    - browser-tools/install_chrome:
-        timeout: 5m
-    - browser-tools/install_chromedriver:
-        timeout: 5m
-    - run:
-        command: |
-          google-chrome --version
-          chromedriver --version
+#    - browser-tools/install_chrome:
+#        timeout: 5m
+#    - browser-tools/install_chromedriver:
+#        timeout: 5m
+#    - run:
+#        command: |
+#          google-chrome --version
+#          chromedriver --version
     - when:
         condition: << pipeline.parameters.enable_remote_e2e >>
         steps:
@@ -206,15 +206,6 @@ jobs:
             google-chrome --version
 
       # Install ChromeDriver
-      - run:
-          name: Install ChromeDriver
-          command: |
-            CHROME_VERSION=$(google-chrome --version | grep -oP '\d+\.\d+\.\d+')
-            CHROMEDRIVER_VERSION=$(curl -s https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_VERSION%.*})
-            wget -O /tmp/chromedriver.zip https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip
-            sudo unzip /tmp/chromedriver.zip -d /usr/local/bin/
-            sudo chmod +x /usr/local/bin/chromedriver
-            chromedriver --version
 
     environment:
       MANUAL_TRIGGER_BRANCH_ENV: << pipeline.parameters.manual_trigger_branch_env >>
@@ -441,9 +432,9 @@ workflows:
 #      - check_incorrect_import_statements:
 #          requires:
 #            - checkout
-#      - build_frontend:
-#          requires:
-#            - checkout
+      - build_frontend:
+          requires:
+            - checkout
 #      - e2e_localdb_tests:
 #          requires:
 #            - pull_cbioportal_test_codebase
@@ -451,7 +442,7 @@ workflows:
       - e2e_tests:
           requires:
             - pull_cbioportal_test_codebase
-#            - build_frontend
+            - build_frontend
 #      - api_sync:
 #          requires:
 #            - build_frontend
