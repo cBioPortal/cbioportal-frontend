@@ -355,15 +355,15 @@ exports.config = {
     automationProtocol: 'devtools',
 
     services: [
-        // [
-        //     'chromedriver',
-        //     {
-        //         logLevel: 'info',
-        //         outputDir: './driver-logs',
-        //         chromedriverCustomPath,
-        //     },
-        // ],
-        ['devtools'],
+        [
+            'chromedriver',
+            {
+                logLevel: 'info',
+                outputDir: './driver-logs',
+                chromedriverCustomPath,
+            },
+        ],
+        // ['devtools'],
         [
             'novus-visual-regression',
             {
