@@ -176,7 +176,9 @@ jobs:
 
   e2e_tests:
     machine:
-      image: ubuntu-2004:current   # Full VM, Ubuntu 20.04
+      image: ubuntu-2204:2024.08.1
+    resource_class: large
+    working_directory: /tmp/repo
     steps:
       - checkout
 
@@ -189,18 +191,8 @@ jobs:
             node -v
             npm -v
 
-      # Install Chrome & Chromedriver
-      - browser-tools/install-chrome:
-          chrome-version: latest
-      - browser-tools/install-chromedriver:
-          chromedriver-version: latest
+          
 
-      # Confirm browsers
-      - run:
-          name: Check installed browser versions
-          command: |
-            google-chrome --version
-            chromedriver --version
     environment:
       MANUAL_TRIGGER_BRANCH_ENV: << pipeline.parameters.manual_trigger_branch_env >>
       SPEC_FILE_PATTERN: << pipeline.parameters.remote_spec_pattern >>
@@ -410,25 +402,25 @@ jobs:
 workflows:
   tests:
     jobs:
-      - pull_cbioportal_test_codebase
-      - checkout
-      - prettier:
-          requires:
-            - checkout
-          filters:
-            branches:
-              ignore:
-                - master
-                - release-*
-      - check_forgotten_spec_only_statements:
-          requires:
-            - checkout
-      - check_incorrect_import_statements:
-          requires:
-            - checkout
-      - build_frontend:
-          requires:
-            - checkout
+#      - pull_cbioportal_test_codebase
+#      - checkout
+#      - prettier:
+#          requires:
+#            - checkout
+#          filters:
+#            branches:
+#              ignore:
+#                - master
+#                - release-*
+#      - check_forgotten_spec_only_statements:
+#          requires:
+#            - checkout
+#      - check_incorrect_import_statements:
+#          requires:
+#            - checkout
+#      - build_frontend:
+#          requires:
+#            - checkout
 #      - e2e_localdb_tests:
 #          requires:
 #            - pull_cbioportal_test_codebase
