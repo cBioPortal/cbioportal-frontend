@@ -67,6 +67,7 @@ import {
     isGenericAssaySelected,
     showWaterfallPlot,
     getOption,
+    hideExpressionPlot,
 } from './PlotsTabUtils';
 import {
     ClinicalAttribute,
@@ -169,6 +170,7 @@ import { AnnotatedNumericGeneMolecularData } from 'shared/model/AnnotatedNumeric
 import { ExtendedAlteration } from 'shared/model/ExtendedAlteration';
 import CaseFilterWarning from '../banners/CaseFilterWarning';
 import { SelectedDataAlert } from './SelectedDataAlert';
+import PatientViewUrlWrapper from 'pages/patientView/PatientViewUrlWrapper';
 
 enum EventKey {
     horz_logScale,
@@ -347,7 +349,10 @@ export interface IPlotsTabProps {
     molecularProfileIdToMolecularProfile: MobxPromiseUnionTypeWithDefault<{
         [molecularProfileId: string]: MolecularProfile;
     }>;
-    urlWrapper: ResultsViewURLWrapper | StudyViewURLWrapper;
+    urlWrapper:
+        | ResultsViewURLWrapper
+        | StudyViewURLWrapper
+        | PatientViewUrlWrapper;
     hasNoQueriedGenes?: boolean;
     genePanelDataForAllProfiles?: GenePanelData[];
     queryContainsOql?: boolean;
@@ -378,6 +383,7 @@ export interface IPlotsTabProps {
     patients: MobxPromise<Patient[]>;
     filteredPatients?: MobxPromise<Patient[]>;
     hideUnprofiledSamples?: false | 'any' | 'totally';
+    highlightedSamples?: MobxPromise<string[]>;
 }
 
 export type PlotsTabDataSource = {
@@ -2187,6 +2193,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     readonly vertDatatypeOptions = remoteData({
         await: () => [this.dataTypeOptions],
         invoke: () => {
+            if (this.props.highlightedSamples && this.dataTypeOptions.result) {
+                return Promise.resolve(
+                    this.dataTypeOptions.result.filter(
+                        o => o.value === AlterationTypeConstants.MRNA_EXPRESSION
+                    )
+                );
+            }
             let noneDatatypeOption = undefined;
             // listen to updates of `dataTypeOptions` and on the selected data type for the horzontal axis
             if (
@@ -2642,6 +2655,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
 
     @computed get waterfallPlotIsShown(): boolean {
         return showWaterfallPlot(this.horzSelection, this.vertSelection);
+    }
+
+    @computed get expressionPlotIsHidden(): boolean {
+        return hideExpressionPlot(
+            this.vertSelection,
+            !!this.props.highlightedSamples
+        );
     }
 
     readonly clinicalAttributeIdToClinicalAttribute = remoteData<{
@@ -3690,6 +3710,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         const searchMutationWords = this.searchMutationWords;
         const searchHighlight = (d: IPlotSampleData) => {
             let caseMatch = false;
+            if (
+                this.props.highlightedSamples &&
+                this.props.highlightedSamples.result!.includes(d.sampleId)
+            ) {
+                caseMatch = true;
+            }
             for (const word of searchCaseWords) {
                 caseMatch =
                     caseMatch ||
@@ -4931,19 +4957,23 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 <div className="axisBlock">
                     <Observer>{this.getHorizontalAxisMenu}</Observer>
                 </div>
-                <div className={'swapAxes'}>
-                    <button
-                        className="btn btn-link btn-xs"
-                        data-test="swapHorzVertButton"
-                        onClick={this.swapHorzVertSelections}
-                    >
-                        <i className="fa fa-arrow-up"></i> Swap Axes{' '}
-                        <i className="fa fa-arrow-down"></i>
-                    </button>
-                </div>
-                <div className="axisBlock">
-                    <Observer>{this.getVerticalAxisMenu}</Observer>
-                </div>
+                {!this.props.highlightedSamples && (
+                    <>
+                        <div className={'swapAxes'}>
+                            <button
+                                className="btn btn-link btn-xs"
+                                data-test="swapHorzVertButton"
+                                onClick={this.swapHorzVertSelections}
+                            >
+                                <i className="fa fa-arrow-up"></i> Swap Axes{' '}
+                                <i className="fa fa-arrow-down"></i>
+                            </button>
+                        </div>
+                        <div className="axisBlock">
+                            <Observer>{this.getVerticalAxisMenu}</Observer>
+                        </div>
+                    </>
+                )}
                 <div>
                     <Observer>{this.getUtilitiesMenu}</Observer>
                 </div>
@@ -5714,6 +5744,16 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                             className={'alert alert-info'}
                         >
                             No data to plot.
+                        </div>
+                    );
+                }
+                if (this.expressionPlotIsHidden) {
+                    return (
+                        <div
+                            data-test="PlotsTabNoDataDiv"
+                            className={'alert alert-info'}
+                        >
+                            No expression data to plot.
                         </div>
                     );
                 }
