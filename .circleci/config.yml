@@ -56,6 +56,17 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
           sudo apt-get install -y google-chrome-stable
           google-chrome --version
 
+    # Install ChromeDriver
+    - run:
+        name: Install ChromeDriver
+        command: |
+          CHROME_VERSION=139.0.7258.154
+          CHROMEDRIVER_VERSION=$(curl -s https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_VERSION%.*})
+          wget -O /tmp/chromedriver.zip https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip
+          sudo unzip /tmp/chromedriver.zip -d /usr/local/bin/
+          sudo chmod +x /usr/local/bin/chromedriver
+          chromedriver --version
+
     - when:
         condition: << pipeline.parameters.enable_remote_e2e >>
         steps:
