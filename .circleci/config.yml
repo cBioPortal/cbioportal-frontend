@@ -61,10 +61,10 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
         steps:
           - attach_workspace:
               at: /tmp/repo
-          - run:
-              name: Install linux dependencies
-              command: |
-                sudo apt-get install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev || true
+#          - run:
+#              name: Install linux dependencies
+#              command: |
+#                sudo apt-get install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev || true
           - run:
               name: Check remote cbioportal connection
               command: |
