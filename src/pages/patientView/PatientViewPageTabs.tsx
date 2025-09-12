@@ -37,6 +37,7 @@ import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
 import MutationTableWrapper from './mutation/MutationTableWrapper';
 import { PatientViewPageInner } from 'pages/patientView/PatientViewPage';
 import { Else, If } from 'react-if';
+import PlotsTab from 'shared/components/plots/PlotsTab';
 
 export enum PatientViewPageTabs {
     Summary = 'summary',
@@ -49,6 +50,7 @@ export enum PatientViewPageTabs {
     TrialMatchTab = 'trialMatchTab',
     MutationalSignatures = 'mutationalSignatures',
     PathwayMapper = 'pathways',
+    Plots = 'plots',
 }
 
 export const PatientViewResourceTabPrefix = 'openResource_';
@@ -487,6 +489,131 @@ export function tabs(
                 />
             </MSKTab>
         );
+
+    tabs.push(
+        <MSKTab
+            key={9}
+            id={PatientViewPageTabs.Plots}
+            linkText="MRNA Expression Plots"
+        >
+            <PlotsTab
+                filteredSamplesByDetailedCancerType={
+                    pageComponent.patientViewPageStore
+                        .filteredSamplesByDetailedCancerType
+                }
+                mutations={pageComponent.patientViewPageStore.mutationData}
+                studies={pageComponent.patientViewPageStore.studies}
+                molecularProfileIdSuffixToMolecularProfiles={
+                    pageComponent.patientViewPageStore
+                        .molecularProfileIdSuffixToMolecularProfiles
+                }
+                entrezGeneIdToGene={
+                    pageComponent.patientViewPageStore.entrezGeneIdToGeneAll
+                }
+                sampleKeyToSample={
+                    pageComponent.patientViewPageStore.sampleSetByKey
+                }
+                genes={pageComponent.patientViewPageStore.allGenes}
+                clinicalAttributes={
+                    pageComponent.patientViewPageStore.clinicalAttributes
+                }
+                genesets={pageComponent.patientViewPageStore.genesets}
+                genericAssayEntitiesGroupByMolecularProfileId={
+                    pageComponent.patientViewPageStore
+                        .genericAssayEntitiesGroupedByProfileId
+                }
+                customAttributes={
+                    pageComponent.patientViewPageStore.customAttributes
+                }
+                studyIds={
+                    pageComponent.patientViewPageStore.queriedPhysicalStudyIds
+                }
+                molecularProfilesWithData={
+                    pageComponent.patientViewPageStore.molecularProfilesInStudy
+                }
+                molecularProfilesInStudies={
+                    pageComponent.patientViewPageStore.molecularProfilesInStudy
+                }
+                annotatedCnaCache={
+                    pageComponent.patientViewPageStore.annotatedCnaCache
+                }
+                annotatedMutationCache={
+                    pageComponent.patientViewPageStore.annotatedMutationCache
+                }
+                structuralVariantCache={
+                    pageComponent.patientViewPageStore.structuralVariantCache
+                }
+                studyToMutationMolecularProfile={
+                    pageComponent.patientViewPageStore
+                        .studyToMutationMolecularProfile
+                }
+                studyToMolecularProfileDiscreteCna={
+                    pageComponent.patientViewPageStore
+                        .studyToMolecularProfileDiscreteCna
+                }
+                clinicalDataCache={
+                    pageComponent.patientViewPageStore.clinicalDataCache
+                }
+                patientKeyToFilteredSamples={
+                    pageComponent.patientViewPageStore
+                        .patientKeyToFilteredSamples
+                }
+                numericGeneMolecularDataCache={
+                    pageComponent.patientViewPageStore
+                        .numericGeneMolecularDataCache
+                }
+                coverageInformation={
+                    pageComponent.patientViewPageStore
+                        .coverageInformationForAllSamples
+                }
+                filteredSamples={
+                    pageComponent.patientViewPageStore.allSamplesInStudy
+                }
+                genesetMolecularDataCache={
+                    pageComponent.patientViewPageStore.genesetMolecularDataCache
+                }
+                genericAssayMolecularDataCache={
+                    pageComponent.patientViewPageStore
+                        .genericAssayMolecularDataCache
+                }
+                studyToStructuralVariantMolecularProfile={
+                    pageComponent.patientViewPageStore
+                        .studyToStructuralVariantMolecularProfile
+                }
+                driverAnnotationSettings={
+                    pageComponent.patientViewPageStore.driverAnnotationSettings
+                }
+                studyIdToStudy={
+                    pageComponent.patientViewPageStore.studyIdToStudy.result
+                }
+                structuralVariants={
+                    pageComponent.patientViewPageStore.structuralVariantData
+                        .result
+                }
+                hugoGeneSymbols={
+                    pageComponent.patientViewPageStore.allHugoGeneSymbols.result
+                }
+                selectedGenericAssayEntitiesGroupByMolecularProfileId={
+                    pageComponent.patientViewPageStore
+                        .selectedGenericAssayEntitiesGroupByMolecularProfileId
+                }
+                molecularProfileIdToMolecularProfile={
+                    pageComponent.patientViewPageStore
+                        .molecularProfileIdToMolecularProfile
+                }
+                urlWrapper={urlWrapper}
+                hasNoQueriedGenes={true}
+                genePanelDataForAllProfiles={
+                    pageComponent.patientViewPageStore
+                        .genePanelDataForAllProfiles.result
+                }
+                patients={pageComponent.patientViewPageStore.allPatientsInStudy}
+                highlightedSamples={
+                    pageComponent.patientViewPageStore.allSampleIdsForPatient
+                }
+            />
+        </MSKTab>
+    );
 
     tabs.push(
         <MSKTab

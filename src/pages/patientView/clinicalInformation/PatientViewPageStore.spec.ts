@@ -7,12 +7,19 @@ import {
 } from './PatientViewPageStore';
 import { assert } from 'chai';
 import { AppStore } from '../../../AppStore';
+import PatientViewUrlWrapper from '../PatientViewUrlWrapper';
 
 describe('PatientViewPageStore', () => {
     let store: PatientViewPageStore;
+    let urlWrapper: PatientViewUrlWrapper;
 
     beforeAll(() => {
-        store = new PatientViewPageStore(new AppStore(), 'someId', '');
+        store = new PatientViewPageStore(
+            new AppStore(),
+            urlWrapper,
+            'someId',
+            ''
+        );
     });
 
     it('if there are pdf items in response and their name starts with a given patientId, return collection, otherwise returns empty array', () => {
