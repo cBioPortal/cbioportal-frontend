@@ -40,9 +40,9 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
           curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
           export NVM_DIR="$HOME/.nvm"
           [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-          nvm install 22.10.0
-          nvm use 22.10.0
-          nvm alias default 22.10.0
+          nvm install 22.18.0
+          nvm use 22.18.0
+          nvm alias default 22.18.0
           node -v
           npm -v
 
@@ -76,6 +76,7 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
                 FRONTEND_TEST_USE_LOCAL_DIST: true
                 WEBPACK_PARALLEL: false
               command: |
+                nvm use 22.10.0
                 cd /tmp/repo/cbioportal-frontend
                 yarn serveDist &
                 cd /tmp/repo/cbioportal-test
