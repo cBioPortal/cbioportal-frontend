@@ -3228,6 +3228,16 @@ export function showWaterfallPlot(
     );
 }
 
+export function hideExpressionPlot(
+    vertSelection: AxisMenuSelection,
+    hasHighlightedSamples: boolean
+): boolean {
+    return (
+        hasHighlightedSamples &&
+        vertSelection.dataType !== AlterationTypeConstants.MRNA_EXPRESSION
+    );
+}
+
 export function bothAxesNoMolecularProfile(
     horzSelection: AxisMenuSelection,
     vertSelection: AxisMenuSelection
