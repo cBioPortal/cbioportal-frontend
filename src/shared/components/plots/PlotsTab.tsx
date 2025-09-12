@@ -4849,23 +4849,19 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 <div className="axisBlock">
                     <Observer>{this.getHorizontalAxisMenu}</Observer>
                 </div>
-                {!this.props.highlightedSamples && (
-                    <>
-                        <div className={'swapAxes'}>
-                            <button
-                                className="btn btn-link btn-xs"
-                                data-test="swapHorzVertButton"
-                                onClick={this.swapHorzVertSelections}
-                            >
-                                <i className="fa fa-arrow-up"></i> Swap Axes{' '}
-                                <i className="fa fa-arrow-down"></i>
-                            </button>
-                        </div>
-                        <div className="axisBlock">
-                            <Observer>{this.getVerticalAxisMenu}</Observer>
-                        </div>
-                    </>
-                )}
+                <div className={'swapAxes'}>
+                    <button
+                        className="btn btn-link btn-xs"
+                        data-test="swapHorzVertButton"
+                        onClick={this.swapHorzVertSelections}
+                    >
+                        <i className="fa fa-arrow-up"></i> Swap Axes{' '}
+                        <i className="fa fa-arrow-down"></i>
+                    </button>
+                </div>
+                <div className="axisBlock">
+                    <Observer>{this.getVerticalAxisMenu}</Observer>
+                </div>
                 <div>
                     <Observer>{this.getUtilitiesMenu}</Observer>
                 </div>
