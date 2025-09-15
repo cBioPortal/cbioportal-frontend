@@ -133,7 +133,8 @@ export function getTabularDownloadData(
                     const map = geneticAlterationMap[alteration];
                     const currentValue = map[dispValue] ?? dispValue;
 
-                    const geneTrack = oncoprintData[alteration][currentGeneName];
+                    const geneTrack =
+                        oncoprintData[alteration][currentGeneName];
                     const existingValue = geneTrack[id];
 
                     if (!existingValue || existingValue === currentValue) {
