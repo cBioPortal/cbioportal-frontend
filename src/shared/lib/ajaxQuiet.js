@@ -12,6 +12,10 @@ export function setNetworkListener() {
         origOpen = xhrProto.open;
 
     xhrProto.open = function(method, url) {
+        if (/\/api/.test(url)) {
+            console.log(url);
+        }
+
         this._url = url;
         return origOpen.apply(this, arguments);
     };

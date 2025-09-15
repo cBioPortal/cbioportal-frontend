@@ -32,13 +32,13 @@ const chromeArgs = [
     '--disable-setuid-sandbox',
     '--allow-insecure-localhost',
     '--window-size=1600,1000',
-    '--disable-dev-shm-usage',
-    '--disable-software-rasterizer',
-    '--disable-extensions',
-    '--disable-background-timer-throttling',
-    '--disable-renderer-backgrounding',
-    '--disable-backgrounding-occluded-windows',
-    '--remote-debugging-port=9222',
+    // '--disable-dev-shm-usage',
+    // '--disable-software-rasterizer',
+    // '--disable-extensions',
+    // '--disable-background-timer-throttling',
+    // '--disable-renderer-backgrounding',
+    // '--disable-backgrounding-occluded-windows',
+    // '--remote-debugging-port=9222',
 ].concat(
     (function() {
         return process.env.HEADLESS_CHROME === 'true'
