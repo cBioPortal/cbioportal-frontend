@@ -197,17 +197,6 @@ function saveErrorImage(
         const img = `${errorDir}${title}.png`;
         console.log('ERROR SHOT PATH: ' + img);
         browser.saveScreenshot(img);
-
-        networkLog[title.trim()] = browser.execute(function() {
-            Object.keys(window.ajaxRequests).forEach(key => {
-                window.ajaxRequests[key].end = Date.now();
-                window.ajaxRequests[key].duration =
-                    window.ajaxRequests[key].end -
-                    window.ajaxRequests[key].started;
-            });
-
-            return JSON.stringify(window.ajaxRequests);
-        });
     }
 }
 
