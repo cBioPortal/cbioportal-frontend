@@ -1709,14 +1709,6 @@ export class PatientViewPageStore {
         default: [],
     });
 
-    readonly allSampleIdsForPatient = remoteData({
-        await: () => [this.allSamplesForPatient],
-        invoke: async () => {
-            return this.allSamplesForPatient.result.map(s => s.sampleId);
-        },
-        default: [],
-    });
-
     // NOTE: this.samples do not contain unique keys if it is populated by the getSampleInStudyUsingGET method.
     // To make sure that samples always have unique keys we get them from this.allSamplesForPatient.
     readonly samplesWithUniqueKeys = remoteData(
