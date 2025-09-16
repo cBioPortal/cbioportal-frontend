@@ -12,6 +12,7 @@ import './styles.scss';
 import { AlterationTypeConstants, DataTypeConstants } from 'shared/constants';
 import { Button, FormControl } from 'react-bootstrap';
 import ReactSelect from 'react-select1';
+import 'react-select1/dist/react-select.css';
 import AsyncSelect from 'react-select/async';
 import Select from 'react-select';
 import _ from 'lodash';
@@ -67,7 +68,6 @@ import {
     isGenericAssaySelected,
     showWaterfallPlot,
     getOption,
-    hideExpressionPlot,
 } from './PlotsTabUtils';
 import {
     ClinicalAttribute,
@@ -380,7 +380,7 @@ export interface IPlotsTabProps {
     patients: MobxPromise<Patient[]>;
     filteredPatients?: MobxPromise<Patient[]>;
     hideUnprofiledSamples?: false | 'any' | 'totally';
-    highlightedSamples?: MobxPromise<string[]>;
+    highlightedSamples?: string[];
 }
 
 export type PlotsTabDataSource = {
@@ -1121,6 +1121,28 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     selectedDataTypeDoesNotExist
                 ) {
                     // if no queried genes, default is undefined
+                    if (
+                        self.props.highlightedSamples &&
+                        vertical &&
+                        isAlterationTypePresent(
+                            dataTypeOptions,
+                            vertical,
+                            AlterationTypeConstants.MRNA_EXPRESSION
+                        )
+                    ) {
+                        return AlterationTypeConstants.MRNA_EXPRESSION;
+                    }
+                    if (
+                        self.props.highlightedSamples &&
+                        !vertical &&
+                        isAlterationTypePresent(
+                            dataTypeOptions,
+                            !vertical,
+                            AlterationTypeConstants.MRNA_EXPRESSION
+                        )
+                    ) {
+                        return AlterationTypeConstants.COPY_NUMBER_ALTERATION;
+                    }
                     if (self.props.hasNoQueriedGenes) {
                         return undefined;
                     }
@@ -2149,13 +2171,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     readonly vertDatatypeOptions = remoteData({
         await: () => [this.dataTypeOptions],
         invoke: () => {
-            if (this.props.highlightedSamples && this.dataTypeOptions.result) {
-                return Promise.resolve(
-                    this.dataTypeOptions.result.filter(
-                        o => o.value === AlterationTypeConstants.MRNA_EXPRESSION
-                    )
-                );
-            }
             let noneDatatypeOption = undefined;
             // listen to updates of `dataTypeOptions` and on the selected data type for the horzontal axis
             if (
@@ -2611,13 +2626,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
 
     @computed get waterfallPlotIsShown(): boolean {
         return showWaterfallPlot(this.horzSelection, this.vertSelection);
-    }
-
-    @computed get expressionPlotIsHidden(): boolean {
-        return hideExpressionPlot(
-            this.vertSelection,
-            !!this.props.highlightedSamples
-        );
     }
 
     readonly clinicalAttributeIdToClinicalAttribute = remoteData<{
@@ -3668,7 +3676,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             let caseMatch = false;
             if (
                 this.props.highlightedSamples &&
-                this.props.highlightedSamples.result!.includes(d.sampleId)
+                this.props.highlightedSamples.includes(d.sampleId)
             ) {
                 caseMatch = true;
             }
@@ -5632,16 +5640,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                             className={'alert alert-info'}
                         >
                             No data to plot.
-                        </div>
-                    );
-                }
-                if (this.expressionPlotIsHidden) {
-                    return (
-                        <div
-                            data-test="PlotsTabNoDataDiv"
-                            className={'alert alert-info'}
-                        >
-                            No expression data to plot.
                         </div>
                     );
                 }
