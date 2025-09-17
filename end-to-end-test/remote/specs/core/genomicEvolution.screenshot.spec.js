@@ -132,11 +132,14 @@ describe('Patient View Genomic Evolution tab screenshot tests', () => {
         assertScreenShotMatch(res);
     });
     it('pvge hover a mutation with heatmap', async () => {
-        await (
-            await getElement(
-                'div[data-test="GenomicEvolutionMutationTable"] table tbody > tr:nth-child(9)'
-            )
-        ).moveTo();
+        const el = await getElement(
+            'div[data-test="GenomicEvolutionMutationTable"] table tbody > tr:nth-child(9)'
+        );
+
+        await el.scrollIntoView();
+
+        await el.moveTo();
+
         const res = await browser.checkElement(
             'div[data-test="GenomicEvolutionTab"]',
             '',
