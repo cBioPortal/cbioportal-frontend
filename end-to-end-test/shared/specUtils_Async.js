@@ -441,7 +441,7 @@ async function setInputText(selector, text) {
     // await (await $(selector)).click();
     //browser.keys('\uE003'.repeat($(selector).getValue().length));
 
-    // await (await $(selector)).clearValue();
+    await (await $(selector)).clearValue();
 
     await (await $(selector)).setValue('');
     //browser.pause(1000);
