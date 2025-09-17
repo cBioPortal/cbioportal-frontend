@@ -16,8 +16,8 @@ const TIMEOUT = 6000;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
-describe.only('oncoprinter clinical example data, color configuration', () => {
-    it.only('oncoprinter color configuration modal reflects user selected colors', async () => {
+describe('oncoprinter clinical example data, color configuration', () => {
+    it('oncoprinter color configuration modal reflects user selected colors', async () => {
         await goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/oncoprinter`);
         await (
             await getElement('.oncoprinterClinicalExampleData')
@@ -97,13 +97,13 @@ describe.only('oncoprinter clinical example data, color configuration', () => {
         await clickElement('.modal-dialog .close');
     });
 
-    it.only('oncoprinter reflects user selected colors', async () => {
+    it('oncoprinter reflects user selected colors', async () => {
         await clickElement('a.tabAnchor_oncoprint');
         const res = await checkOncoprintElement();
         assertScreenShotMatch(res);
     });
 
-    it.only('oncoprinter reset colors button is visible when default colors not used', async () => {
+    it('oncoprinter reset colors button is visible when default colors not used', async () => {
         // click "Edit Colors" to open modal and check "Reset Colors" button in modal
         const trackOptionsElts = await getNthOncoprintTrackOptionsElements(2);
 
@@ -118,7 +118,7 @@ describe.only('oncoprinter clinical example data, color configuration', () => {
         await waitForElementDisplayed('[data-test="resetColors"]');
     });
 
-    it.only('oncoprinter color configuration modal reflects default colors', async () => {
+    it('oncoprinter color configuration modal reflects default colors', async () => {
         // click "Reset Colors" track
         await clickElement('[data-test="resetColors"]', { moveTo: true });
         await waitForOncoprint();
@@ -145,7 +145,7 @@ describe.only('oncoprinter clinical example data, color configuration', () => {
 
     it('oncoprinter reflects default colors', async () => {
         // close modal
-        await clickElement('.modal button.close');
+        await clickElement('.modal button.close', { moveTo: true });
         const res = await checkOncoprintElement();
         assertScreenShotMatch(res);
     });
