@@ -220,7 +220,7 @@ describe('Mutation Table', function() {
         });
 
         // TODO:-- this test is not working, need to fix
-        it.only('should show the ClinVar interpretation after adding the ClinVar column', async () => {
+        it('should show the ClinVar interpretation after adding the ClinVar column', async () => {
             // click on column button
             await clickElement('button*=Columns');
             // scroll down to activated "ClinVar" selection
