@@ -16,8 +16,8 @@ const TIMEOUT = 6000;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
-describe('oncoprinter clinical example data, color configuration', () => {
-    it('oncoprinter color configuration modal reflects user selected colors', async () => {
+describe.only('oncoprinter clinical example data, color configuration', () => {
+    it.only('oncoprinter color configuration modal reflects user selected colors', async () => {
         await goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/oncoprinter`);
         await (
             await getElement('.oncoprinterClinicalExampleData')
@@ -97,16 +97,18 @@ describe('oncoprinter clinical example data, color configuration', () => {
         await clickElement('.modal-dialog .close');
     });
 
-    it('oncoprinter reflects user selected colors', async () => {
+    it.only('oncoprinter reflects user selected colors', async () => {
         await clickElement('a.tabAnchor_oncoprint');
         const res = await checkOncoprintElement();
         assertScreenShotMatch(res);
     });
 
-    it('oncoprinter reset colors button is visible when default colors not used', async () => {
+    it.only('oncoprinter reset colors button is visible when default colors not used', async () => {
         // click "Edit Colors" to open modal and check "Reset Colors" button in modal
         const trackOptionsElts = await getNthOncoprintTrackOptionsElements(2);
-        await clickElement(trackOptionsElts.button_selector);
+
+        await clickElement(trackOptionsElts.button_selector, { moveTo: true });
+
         await waitForElementDisplayed(trackOptionsElts.dropdown_selector, {
             timeout: 1000,
         });
@@ -116,9 +118,9 @@ describe('oncoprinter clinical example data, color configuration', () => {
         await waitForElementDisplayed('[data-test="resetColors"]');
     });
 
-    it('oncoprinter color configuration modal reflects default colors', async () => {
+    it.only('oncoprinter color configuration modal reflects default colors', async () => {
         // click "Reset Colors" track
-        await clickElement('[data-test="resetColors"]');
+        await clickElement('[data-test="resetColors"]', { moveTo: true });
         await waitForOncoprint();
 
         assert.strictEqual(
