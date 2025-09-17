@@ -1421,7 +1421,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                         ? self.props.urlWrapper.query.plots_vert_selection
                         : self.props.urlWrapper.query.plots_horz_selection) ||
                     {};
-                const param = urlSelection.selectedGeneOption;
+                const localSelection = vertical
+                    ? localStorage.getItem('vertGeneSelection')
+                    : localStorage.getItem('horzGeneSelection');
+                const param = urlSelection.selectedGeneOption
+                    ? urlSelection.selectedGeneOption
+                    : localSelection;
 
                 if (!param) {
                     return undefined;
@@ -1436,6 +1441,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 }
             },
             set _selectedGeneOption(o: any) {
+                if (vertical) {
+                    localStorage.setItem('vertGeneSelection', o && o.value);
+                } else {
+                    localStorage.setItem('horzGeneSelection', o && o.value);
+                }
                 self.props.urlWrapper.updateURL(
                     (
                         currentParams: ResultsViewURLQuery | StudyViewURLQuery
@@ -2150,9 +2160,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             // listen to updates of `dataTypeOptions` and on the selected data type for the vertical axis
             if (
                 this.dataTypeOptions.result &&
-                isGenericAssaySelected(this.vertSelection) &&
-                this.vertSelection.genericAssayDataType ===
-                    DataTypeConstants.LIMITVALUE
+                ((isGenericAssaySelected(this.vertSelection) &&
+                    this.vertSelection.genericAssayDataType ===
+                        DataTypeConstants.LIMITVALUE) ||
+                    (this.vertSelection.dataType &&
+                        this.vertSelection.dataType ===
+                            AlterationTypeConstants.MRNA_EXPRESSION))
             ) {
                 noneDatatypeOption = [
                     {
@@ -2175,9 +2188,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             // listen to updates of `dataTypeOptions` and on the selected data type for the horzontal axis
             if (
                 this.dataTypeOptions.result &&
-                isGenericAssaySelected(this.horzSelection) &&
-                this.horzSelection.genericAssayDataType ===
-                    DataTypeConstants.LIMITVALUE
+                ((isGenericAssaySelected(this.horzSelection) &&
+                    this.horzSelection.genericAssayDataType ===
+                        DataTypeConstants.LIMITVALUE) ||
+                    (this.horzSelection.dataType &&
+                        this.horzSelection.dataType ===
+                            AlterationTypeConstants.MRNA_EXPRESSION))
             ) {
                 noneDatatypeOption = [
                     {
@@ -2625,6 +2641,17 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     }
 
     @computed get waterfallPlotIsShown(): boolean {
+        if (
+            this.horzAxisDataPromise.isComplete &&
+            this.vertAxisDataPromise.isComplete
+        ) {
+            return showWaterfallPlot(
+                this.horzSelection,
+                this.vertSelection,
+                this.horzAxisDataPromise.result,
+                this.vertAxisDataPromise.result
+            );
+        }
         return showWaterfallPlot(this.horzSelection, this.vertSelection);
     }
 
@@ -4258,6 +4285,31 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                                 isLoading={
                                                     this.horzGeneOptions
                                                         .isPending
+                                                }
+                                                defaultOptions={
+                                                    vertical &&
+                                                    this.horzSelection
+                                                        .dataType &&
+                                                    this.showGeneSelectBox(
+                                                        this.horzSelection
+                                                            .dataType,
+                                                        isGenericAssaySelected(
+                                                            this.horzSelection
+                                                        )
+                                                    ) &&
+                                                    this.horzSelection
+                                                        .selectedGeneOption &&
+                                                    this.horzSelection
+                                                        .selectedGeneOption
+                                                        .value !==
+                                                        NONE_SELECTED_OPTION_NUMERICAL_VALUE
+                                                        ? [
+                                                              {
+                                                                  value: SAME_SELECTED_OPTION_NUMERICAL_VALUE,
+                                                                  label: `Same gene (${this.horzSelection.selectedGeneOption.label})`,
+                                                              },
+                                                          ]
+                                                        : undefined
                                                 }
                                                 noOptionsMessage={() =>
                                                     'Search for gene'
