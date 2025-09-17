@@ -153,7 +153,7 @@ describe('oncoprinter clinical example data, color configuration', () => {
     it('oncoprinter reset colors button is hidden when default colors are used', async () => {
         // click "Edit Colors" to open modal and check "Reset Colors" button in modal
         const trackOptionsElts = await getNthOncoprintTrackOptionsElements(2);
-        await clickElement(trackOptionsElts.button_selector);
+        await clickElement(trackOptionsElts.button_selector, { moveTo: true });
         await waitForElementDisplayed(trackOptionsElts.dropdown_selector, {
             timeout: 1000,
         });
