@@ -574,9 +574,9 @@ describe('invalid query from url', function() {
         // correct to valid gene symbol RB1
         await (await getElement('[data-test="geneSet"]')).setValue('RB1');
 
-        await getElement('[data-test="queryButton"]', { timeout: 15000 });
-        await clickElement('[data-test="queryButton"]');
-        await browser.pause(2000);
+        await $('[data-test="queryButton"]').waitForEnabled();
+
+        await clickElement('[data-test="queryButton"]', { timeout: 15000 });
 
         await (await getElement('#modifyQueryBtn')).waitForExist({
             timeout: 6000,
