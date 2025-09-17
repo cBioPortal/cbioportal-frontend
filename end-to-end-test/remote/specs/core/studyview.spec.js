@@ -622,11 +622,6 @@ describe('study view lgg_tcga study tests', () => {
 
             //TODO-- the move out of bounds error is happening here
             it('table should be sorted by Freq in the default setting', async () => {
-                // we need to move to the top of the page, otherwise the offset of add chart button is calculated wrong
-                await (await getElement('body')).moveTo({
-                    xOffset: 0,
-                    yOffset: 0,
-                });
                 // Open the 'Add clinical chart' menu
                 await setDropdownOpen(
                     true,
@@ -763,11 +758,12 @@ describe('the gene panel is loaded properly', () => {
             timeout: WAIT_FOR_VISIBLE_TIMEOUT,
         });
 
-        await (
-            await getElement(
-                `${CNA_GENES_TABLE} [data-test='freq-cell']:first-child`
-            )
-        ).moveTo();
+        const el = await getElement(
+            `${CNA_GENES_TABLE} [data-test='freq-cell']:first-child`
+        );
+
+        await el.scrollIntoView();
+        await el.moveTo();
 
         await (await getElement(tooltipSelector)).waitForDisplayed({
             timeout: WAIT_FOR_VISIBLE_TIMEOUT,
