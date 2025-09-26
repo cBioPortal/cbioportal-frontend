@@ -60,10 +60,39 @@ export class SampleLabelHTML extends React.Component<
                 className="case-label-header"
                 data-test="sample-icon"
             >
-                <g transform="translate(6,6)">
+                <SampleLabel
+                    label={label}
+                    color={color}
+                    fillOpacity={fillOpacity}
+                />
+            </svg>
+        );
+    }
+}
+
+export class SampleLabel extends React.Component<ISampleLabelProps, {}> {
+    public render() {
+        const {
+            x = 6,
+            y = 6,
+            events = {},
+            label,
+            color,
+            fillOpacity,
+            ...restProps
+        } = this.props;
+        const { onMouseOver, onMouseOut } = events;
+        return (
+            <>
+                <g
+                    transform={`translate(${x}, ${y})`}
+                    onMouseOver={onMouseOver}
+                    onMouseOut={onMouseOut}
+                    {...restProps}
+                >
                     <circle r="6" fill={color} fillOpacity={fillOpacity} />
                 </g>
-                <g transform="translate(6,5.5)">
+                <g transform={`translate(${x}, ${y - 0.5})`}>
                     <text
                         y="4"
                         textAnchor="middle"
@@ -74,7 +103,7 @@ export class SampleLabelHTML extends React.Component<
                         {label}
                     </text>
                 </g>
-            </svg>
+            </>
         );
     }
 }
@@ -83,4 +112,15 @@ interface ISampleLabelHTMLProps {
     label: string;
     color: string;
     fillOpacity: number;
+    x?: number;
+    y?: number;
+}
+
+interface ISampleLabelProps {
+    label: string;
+    color: string;
+    fillOpacity: number;
+    events?: any;
+    x?: number;
+    y?: number;
 }
