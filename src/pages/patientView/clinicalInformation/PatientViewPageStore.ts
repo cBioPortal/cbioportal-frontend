@@ -556,52 +556,79 @@ export class PatientViewPageStore {
         },
     });
 
-    // @observable selectedGeneEntrezGeneIdForMRNATab: number | undefined;
-
-    // readonly mrnaData = remoteData({
-    //     await: () => [this.molecularProfilesInStudy, this.allGenes],
-    //     invoke: async () => {
-    //         if (this.selectedGeneEntrezGeneIdForMRNATab) {
-    //             const data = this.molecularProfilesInStudy.result.find(
-    //                 (profile: MolecularProfile) =>
-    //                     isRNASeqProfile(profile.molecularProfileId)
-    //             );
-    //             const mrnadata = await getClient().fetchAllMolecularDataInMolecularProfileUsingPOST(
-    //                 {
-    //                     molecularProfileId: data!.molecularProfileId,
-    //                     molecularDataFilter: {
-    //                         entrezGeneIds: [
-    //                             this.selectedGeneEntrezGeneIdForMRNATab,
-    //                         ],
-    //                         sampleListId: `${this.studyId}_all`,
-    //                     } as MolecularDataFilter,
-    //                 }
-    //             );
-    //             return mrnadata;
-    //         } else {
-    //             return [];
-    //         }
-    //     },
-    // });
-
     readonly filteredSamplesByDetailedCancerType = remoteData<{
         [cancerType: string]: Sample[];
     }>({
-        await: () => [this.allSamplesInStudy, this.clinicalDataPatient],
+        await: () => [
+            this.allSamplesInStudy,
+            this.clinicalDataForAllSamplesInStudy,
+        ],
         invoke: () => {
             let groupedSamples = this.groupSamplesByCancerType(
-                this.clinicalDataPatient.result,
+                this.clinicalDataForAllSamplesInStudy.result,
                 this.allSamplesInStudy.result!,
                 'CANCER_TYPE'
             );
             if (_.size(groupedSamples) === 1) {
                 groupedSamples = this.groupSamplesByCancerType(
-                    this.clinicalDataPatient.result,
+                    this.clinicalDataForAllSamplesInStudy.result,
                     this.allSamplesInStudy.result!,
                     'CANCER_TYPE_DETAILED'
                 );
             }
             return Promise.resolve(groupedSamples);
+        },
+    });
+
+    readonly samplesWithSameCancerTypeAsHighlighted = remoteData<Sample[]>({
+        await: () => [
+            this.allSamplesInStudy,
+            this.clinicalDataForAllSamplesInStudy,
+            this.clinicalDataForSamples,
+        ],
+        invoke: () => {
+            let groupedSamples = this.groupSamplesByCancerType(
+                this.clinicalDataForAllSamplesInStudy.result,
+                this.allSamplesInStudy.result!,
+                'CANCER_TYPE'
+            );
+            const highlightedCancerTypes = _(this.clinicalDataForSamples.result)
+                .filter(d => d.clinicalAttributeId === 'CANCER_TYPE')
+                .map(d => d.value)
+                .value();
+            if (highlightedCancerTypes.length > 0) {
+                return Promise.resolve(
+                    _.flatMap(highlightedCancerTypes, t => groupedSamples[t])
+                );
+            }
+            return Promise.resolve([]);
+        },
+    });
+
+    readonly samplesWithSameCancerTypeDetailedAsHighlighted = remoteData<
+        Sample[]
+    >({
+        await: () => [
+            this.allSamplesInStudy,
+            this.clinicalDataForAllSamplesInStudy,
+            this.clinicalDataForSamples,
+        ],
+        invoke: () => {
+            let groupedSamples = this.groupSamplesByCancerType(
+                this.clinicalDataForAllSamplesInStudy.result,
+                this.allSamplesInStudy.result!,
+                'CANCER_TYPE_DETAILED'
+            );
+            const highlightedCancerTypes = _(this.clinicalDataForSamples.result)
+                .filter(d => d.clinicalAttributeId === 'CANCER_TYPE_DETAILED')
+                .map(d => d.value)
+                .value();
+            if (highlightedCancerTypes.length > 0) {
+                return Promise.resolve(
+                    _.flatMap(highlightedCancerTypes, t => groupedSamples[t])
+                );
+            }
+            return Promise.resolve([]);
         },
     });
 
@@ -2090,6 +2117,25 @@ export class PatientViewPageStore {
                     entityId: sampleId,
                     studyId: this.studyId,
                 }));
+                const clinicalDataMultiStudyFilter = {
+                    identifiers,
+                } as ClinicalDataMultiStudyFilter;
+                return fetchClinicalData(clinicalDataMultiStudyFilter);
+            },
+        },
+        []
+    );
+
+    readonly clinicalDataForAllSamplesInStudy = remoteData(
+        {
+            await: () => [this.allSamplesInStudy],
+            invoke: () => {
+                const identifiers = this.allSamplesInStudy.result.map(
+                    (sample: Sample) => ({
+                        entityId: sample.sampleId,
+                        studyId: sample.studyId,
+                    })
+                );
                 const clinicalDataMultiStudyFilter = {
                     identifiers,
                 } as ClinicalDataMultiStudyFilter;

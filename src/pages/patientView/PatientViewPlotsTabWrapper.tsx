@@ -68,6 +68,13 @@ export const PatientViewPlotsTabWrapper: React.FunctionComponent<{
             }
             patients={store.allPatientsInStudy}
             highlightedSamples={store.sampleIds}
+            samplesWithSameCancerTypeAsHighlighted={
+                store.samplesWithSameCancerTypeAsHighlighted
+            }
+            samplesWithSameCancerTypeDetailedAsHighlighted={
+                store.samplesWithSameCancerTypeDetailedAsHighlighted
+            }
+            sampleManager={store.sampleManager}
         />
     );
 });

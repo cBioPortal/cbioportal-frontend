@@ -24,7 +24,10 @@ import {
     separateScatterDataByAppearance,
 } from './PlotUtils';
 import { logicalAnd } from '../../lib/LogicUtils';
-import { tickFormatNumeral } from 'cbioportal-frontend-commons';
+import {
+    MobxPromiseUnionType,
+    tickFormatNumeral,
+} from 'cbioportal-frontend-commons';
 import { makeScatterPlotSizeFunction } from './PlotUtils';
 import {
     CBIOPORTAL_VICTORY_THEME,
@@ -47,6 +50,8 @@ import LegendDataComponent from './LegendDataComponent';
 import LegendLabelComponent from './LegendLabelComponent';
 import { PQValueLabel } from 'shared/components/plots/MultipleCategoryBarPlot';
 import { SampleIdsForPatientIds } from './PlotsTab';
+import SampleManager from 'pages/patientView/SampleManager';
+import { SampleLabel } from '../sampleLabel/SampleLabel';
 
 export interface IBaseBoxScatterPlotPoint {
     value: number;
@@ -107,6 +112,8 @@ export interface IBoxScatterPlotProps<D extends IBaseBoxScatterPlotPoint> {
     qValue?: number | null;
     renderLinePlot?: boolean;
     samplesForPatients?: SampleIdsForPatientIds[] | [];
+    highlightedSamples?: string[];
+    sampleManager?: MobxPromiseUnionType<SampleManager>;
 }
 
 export type BoxModel = {
@@ -793,7 +800,8 @@ export default class BoxScatterPlot<
             ifNotDefined(this.props.strokeOpacity, 1),
             ifNotDefined(this.props.fillOpacity, 1),
             ifNotDefined(this.props.symbol, 'circle'),
-            this.props.zIndexSortBy
+            this.props.zIndexSortBy,
+            this.props.highlightedSamples
         );
     }
 
@@ -1105,29 +1113,91 @@ export default class BoxScatterPlot<
                                             />
                                         )
                                 )}
-                            {this.scatterPlotData.map(dataWithAppearance => (
-                                <VictoryScatter
-                                    key={`${dataWithAppearance.fill},${dataWithAppearance.stroke},${dataWithAppearance.strokeWidth},${dataWithAppearance.strokeOpacity},${dataWithAppearance.fillOpacity},${dataWithAppearance.symbol}`}
-                                    style={{
-                                        data: {
-                                            fill: dataWithAppearance.fill,
-                                            stroke: dataWithAppearance.stroke,
-                                            strokeWidth:
-                                                dataWithAppearance.strokeWidth,
-                                            strokeOpacity:
-                                                dataWithAppearance.strokeOpacity,
-                                            fillOpacity:
-                                                dataWithAppearance.fillOpacity,
-                                        },
-                                    }}
-                                    size={this.scatterPlotSize}
-                                    symbol={dataWithAppearance.symbol}
-                                    data={dataWithAppearance.data}
-                                    events={this.mouseEvents}
-                                    x={this.scatterPlotX}
-                                    y={this.scatterPlotY}
-                                />
-                            ))}
+                            {this.scatterPlotData.map(dataWithAppearance => {
+                                if (
+                                    this.props.sampleManager &&
+                                    this.props.sampleManager.result &&
+                                    this.props.highlightedSamples &&
+                                    this.props.highlightedSamples.includes(
+                                        dataWithAppearance.data[0].sampleId
+                                    )
+                                ) {
+                                    return (
+                                        <VictoryScatter
+                                            key={`${dataWithAppearance.fill},${dataWithAppearance.stroke},${dataWithAppearance.strokeWidth},${dataWithAppearance.strokeOpacity},${dataWithAppearance.fillOpacity},${dataWithAppearance.symbol}`}
+                                            style={{
+                                                data: {
+                                                    fill:
+                                                        dataWithAppearance.fill,
+                                                    stroke:
+                                                        dataWithAppearance.stroke,
+                                                    strokeWidth:
+                                                        dataWithAppearance.strokeWidth,
+                                                    strokeOpacity:
+                                                        dataWithAppearance.strokeOpacity,
+                                                    fillOpacity:
+                                                        dataWithAppearance.fillOpacity,
+                                                },
+                                            }}
+                                            size={this.scatterPlotSize}
+                                            symbol={dataWithAppearance.symbol}
+                                            data={dataWithAppearance.data}
+                                            events={this.mouseEvents}
+                                            x={this.scatterPlotX}
+                                            y={this.scatterPlotY}
+                                            dataComponent={
+                                                <SampleLabel
+                                                    label={(
+                                                        this.props.sampleManager
+                                                            .result.sampleIndex[
+                                                            dataWithAppearance
+                                                                .data[0]
+                                                                .sampleId
+                                                        ] + 1
+                                                    ).toString()}
+                                                    color={
+                                                        this.props.sampleManager
+                                                            .result
+                                                            .sampleColors[
+                                                            dataWithAppearance
+                                                                .data[0]
+                                                                .sampleId
+                                                        ]
+                                                    }
+                                                    fillOpacity={1}
+                                                    events={this.mouseEvents}
+                                                />
+                                            }
+                                        />
+                                    );
+                                } else {
+                                    return (
+                                        <VictoryScatter
+                                            key={`${dataWithAppearance.fill},${dataWithAppearance.stroke},${dataWithAppearance.strokeWidth},${dataWithAppearance.strokeOpacity},${dataWithAppearance.fillOpacity},${dataWithAppearance.symbol}`}
+                                            style={{
+                                                data: {
+                                                    fill:
+                                                        dataWithAppearance.fill,
+                                                    stroke:
+                                                        dataWithAppearance.stroke,
+                                                    strokeWidth:
+                                                        dataWithAppearance.strokeWidth,
+                                                    strokeOpacity:
+                                                        dataWithAppearance.strokeOpacity,
+                                                    fillOpacity:
+                                                        dataWithAppearance.fillOpacity,
+                                                },
+                                            }}
+                                            size={this.scatterPlotSize}
+                                            symbol={dataWithAppearance.symbol}
+                                            data={dataWithAppearance.data}
+                                            events={this.mouseEvents}
+                                            x={this.scatterPlotX}
+                                            y={this.scatterPlotY}
+                                        />
+                                    );
+                                }
+                            })}
                         </VictoryChart>
                     </g>
                 </svg>

@@ -164,7 +164,7 @@ export function makeScatterPlotSizeFunction<D>(
                 const isLineHighlighted = isHovered || isHighlighted;
 
                 return size(d, active, isHighlighted, isLineHighlighted);
-            };   
+            };
         } else {
             return size;
         }
@@ -287,7 +287,8 @@ export function separateScatterDataByAppearance<D>(
     strokeOpacity: number | ((d: D) => number),
     fillOpacity: number | ((d: D) => number),
     symbol: string | ((d: D) => string),
-    zIndexSortBy?: ((d: D) => any)[] // second argument to _.sortBy
+    zIndexSortBy?: ((d: D) => any)[], // second argument to _.sortBy
+    highlightedSamples?: string[]
 ): {
     data: D[];
     fill: string;
@@ -335,6 +336,19 @@ export function separateScatterDataByAppearance<D>(
                 : fillOpacity;
         d_symbol = typeof symbol === 'function' ? symbol(datum) : symbol;
         d_sortBy = zIndexSortBy ? zIndexSortBy.map(f => f(datum)) : [1];
+
+        if (highlightedSamples?.includes((datum as any).sampleId)) {
+            buckets.push({
+                data: [datum],
+                fill: d_fill,
+                stroke: d_stroke,
+                strokeWidth: d_strokeWidth,
+                strokeOpacity: d_strokeOpacity,
+                fillOpacity: d_fillOpacity,
+                symbol: d_symbol,
+                sortBy: d_sortBy,
+            });
+        }
 
         // look for existing bucket to put datum
         bucketFound = false;
