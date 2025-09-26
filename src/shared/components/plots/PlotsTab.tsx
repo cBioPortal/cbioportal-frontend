@@ -171,6 +171,7 @@ import { ExtendedAlteration } from 'shared/model/ExtendedAlteration';
 import CaseFilterWarning from '../banners/CaseFilterWarning';
 import { SelectedDataAlert } from './SelectedDataAlert';
 import PatientViewUrlWrapper from 'pages/patientView/PatientViewUrlWrapper';
+import SampleManager from 'pages/patientView/SampleManager';
 
 enum EventKey {
     horz_logScale,
@@ -212,6 +213,12 @@ export enum DiscreteVsDiscretePlotType {
     StackedBar = 'StackedBar',
     PercentageStackedBar = 'PercentageStackedBar',
     Table = 'Table',
+}
+
+export enum CohortOptions {
+    WholeStudy = 'WholeStudy',
+    CancerType = 'CancerType',
+    CancerTypeDetailed = 'CancerTypeDetailed',
 }
 
 export enum SortByOptions {
@@ -384,6 +391,9 @@ export interface IPlotsTabProps {
     filteredPatients?: MobxPromise<Patient[]>;
     hideUnprofiledSamples?: false | 'any' | 'totally';
     highlightedSamples?: string[];
+    samplesWithSameCancerTypeAsHighlighted?: MobxPromise<Sample[]>;
+    samplesWithSameCancerTypeDetailedAsHighlighted?: MobxPromise<Sample[]>;
+    sampleManager?: MobxPromiseUnionType<SampleManager>;
 }
 
 export type PlotsTabDataSource = {
@@ -453,6 +463,18 @@ const discreteVsDiscretePlotTypeOptions = [
     { value: DiscreteVsDiscretePlotType.Table, label: 'Table' },
 ];
 
+const cohortSelectOptions = [
+    { value: CohortOptions.WholeStudy, label: 'Whole Study' },
+    {
+        value: CohortOptions.CancerType,
+        label: 'Cancer Type',
+    },
+    {
+        value: CohortOptions.CancerTypeDetailed,
+        label: 'Cancer Type Detailed',
+    },
+];
+
 @observer
 export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     @observable.ref private plotSvg: SVGElement | null = null;
@@ -469,6 +491,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     @observable sortByDropDownOptions: { value: string; label: string }[] = [];
     @observable sortByOption: string = SortByOptions.Alphabetically;
     @observable boxPlotSortByMedian = false;
+    @observable.ref cohortSelection: CohortOptions = CohortOptions.WholeStudy;
     @observable.ref searchCaseInput: string;
     @observable.ref searchMutationInput: string;
     @observable showRegressionLine = false;
@@ -2052,6 +2075,27 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     }
 
     @action.bound
+    private setCohortSelection(option: any) {
+        this.cohortSelection = option.value;
+    }
+
+    @computed get selectedCohort(): MobxPromise<Sample[]> {
+        if (
+            this.cohortSelection === CohortOptions.CancerType &&
+            this.props.samplesWithSameCancerTypeAsHighlighted
+        ) {
+            return this.props.samplesWithSameCancerTypeAsHighlighted;
+        } else if (
+            this.cohortSelection === CohortOptions.CancerTypeDetailed &&
+            this.props.samplesWithSameCancerTypeDetailedAsHighlighted
+        ) {
+            return this.props.samplesWithSameCancerTypeDetailedAsHighlighted;
+        } else {
+            return this.props.filteredSamples;
+        }
+    }
+
+    @action.bound
     private setSearchCaseInput(e: any) {
         this.searchCaseInput = e.target.value;
         clearTimeout(this.searchCaseTimeout);
@@ -3390,7 +3434,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.props.structuralVariantCache,
             this.props.numericGeneMolecularDataCache,
             this.props.coverageInformation,
-            this.props.filteredSamples,
+            this.selectedCohort,
             this.props.genesetMolecularDataCache,
             this.props.genericAssayMolecularDataCache
         );
@@ -3418,7 +3462,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.props.structuralVariantCache,
             this.props.numericGeneMolecularDataCache,
             this.props.coverageInformation,
-            this.props.filteredSamples,
+            this.selectedCohort,
             this.props.genesetMolecularDataCache,
             this.props.genericAssayMolecularDataCache
         );
@@ -4957,6 +5001,22 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                             </label>
                         </div>
                     )}
+                    {this.props.samplesWithSameCancerTypeAsHighlighted &&
+                        this.props
+                            .samplesWithSameCancerTypeDetailedAsHighlighted && (
+                            <div className="form-group">
+                                <label>Select Cohort</label>
+                                <div style={{ display: 'flex' }}>
+                                    <ReactSelect
+                                        name="cohort-select"
+                                        value={this.cohortSelection}
+                                        onChange={this.setCohortSelection}
+                                        options={cohortSelectOptions}
+                                        clearable={false}
+                                    />
+                                </div>
+                            </div>
+                        )}
                 </div>
             </div>
         );
@@ -5956,6 +6016,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                     )}
                                     legendTitle={this.legendTitle}
                                     onDataSelection={this.onDataSelection}
+                                    highlightedSamples={
+                                        this.props.highlightedSamples
+                                    }
+                                    sampleManager={this.props.sampleManager}
                                 />
                             );
                             break;
@@ -6103,6 +6167,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                     samplesForPatients={
                                         this.samplesForEachPatient
                                     }
+                                    highlightedSamples={
+                                        this.props.highlightedSamples
+                                    }
+                                    sampleManager={this.props.sampleManager}
                                 />
                             );
                             break;
@@ -6574,7 +6642,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                             />
                             <CaseFilterWarning
                                 samples={this.props.samples!}
-                                filteredSamples={this.props.filteredSamples!}
+                                filteredSamples={this.selectedCohort!}
                                 patients={this.props.patients!}
                                 filteredPatients={this.props.filteredPatients!}
                                 hideUnprofiledSamples={
