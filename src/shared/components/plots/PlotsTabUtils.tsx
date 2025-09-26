@@ -1681,7 +1681,7 @@ export function getAxisLabel(
                 ) {
                     switch (selection.mutationCountBy) {
                         case MutationCountBy.MutationType:
-                            label = `${geneSymbol}: Mutations Type`;
+                            label = `${geneSymbol}: ${profile.name}`;
                             break;
                         case MutationCountBy.DriverVsVUS:
                             label = `${geneSymbol}: Driver vs VUS Mutations`;
