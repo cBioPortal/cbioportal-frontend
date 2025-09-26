@@ -51,7 +51,7 @@ import LegendLabelComponent from './LegendLabelComponent';
 import { PQValueLabel } from 'shared/components/plots/MultipleCategoryBarPlot';
 import { SampleIdsForPatientIds } from './PlotsTab';
 import SampleManager from 'pages/patientView/SampleManager';
-import { SampleLabel } from '../sampleLabel/SampleLabel';
+import { SamplePointLabel } from '../sampleLabel/SampleLabel';
 
 export interface IBaseBoxScatterPlotPoint {
     value: number;
@@ -1146,7 +1146,7 @@ export default class BoxScatterPlot<
                                             x={this.scatterPlotX}
                                             y={this.scatterPlotY}
                                             dataComponent={
-                                                <SampleLabel
+                                                <SamplePointLabel
                                                     label={(
                                                         this.props.sampleManager
                                                             .result.sampleIndex[
@@ -1155,16 +1155,6 @@ export default class BoxScatterPlot<
                                                                 .sampleId
                                                         ] + 1
                                                     ).toString()}
-                                                    color={
-                                                        this.props.sampleManager
-                                                            .result
-                                                            .sampleColors[
-                                                            dataWithAppearance
-                                                                .data[0]
-                                                                .sampleId
-                                                        ]
-                                                    }
-                                                    fillOpacity={1}
                                                     events={this.mouseEvents}
                                                 />
                                             }

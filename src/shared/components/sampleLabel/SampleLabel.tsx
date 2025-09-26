@@ -60,39 +60,10 @@ export class SampleLabelHTML extends React.Component<
                 className="case-label-header"
                 data-test="sample-icon"
             >
-                <SampleLabel
-                    label={label}
-                    color={color}
-                    fillOpacity={fillOpacity}
-                />
-            </svg>
-        );
-    }
-}
-
-export class SampleLabel extends React.Component<ISampleLabelProps, {}> {
-    public render() {
-        const {
-            x = 6,
-            y = 6,
-            events = {},
-            label,
-            color,
-            fillOpacity,
-            ...restProps
-        } = this.props;
-        const { onMouseOver, onMouseOut } = events;
-        return (
-            <>
-                <g
-                    transform={`translate(${x}, ${y})`}
-                    onMouseOver={onMouseOver}
-                    onMouseOut={onMouseOut}
-                    {...restProps}
-                >
+                <g transform="translate(6,6)">
                     <circle r="6" fill={color} fillOpacity={fillOpacity} />
                 </g>
-                <g transform={`translate(${x}, ${y - 0.5})`}>
+                <g transform="translate(6,5.5)">
                     <text
                         y="4"
                         textAnchor="middle"
@@ -103,7 +74,7 @@ export class SampleLabel extends React.Component<ISampleLabelProps, {}> {
                         {label}
                     </text>
                 </g>
-            </>
+            </svg>
         );
     }
 }
@@ -112,15 +83,43 @@ interface ISampleLabelHTMLProps {
     label: string;
     color: string;
     fillOpacity: number;
-    x?: number;
-    y?: number;
 }
 
-interface ISampleLabelProps {
+export class SamplePointLabel extends React.Component<
+    ISamplePointLabelProps,
+    {}
+> {
+    public render() {
+        const { x = 6, y = 6, events = {}, label, ...restProps } = this.props;
+        const { onMouseOver, onMouseOut } = events;
+        return (
+            <>
+                <g
+                    transform={`translate(${x}, ${y})`}
+                    onMouseOver={onMouseOver}
+                    onMouseOut={onMouseOut}
+                >
+                    <circle r="8" {...restProps} />
+                </g>
+                <g transform={`translate(${x}, ${y - 0.5})`}>
+                    <text
+                        y="4"
+                        textAnchor="middle"
+                        fontSize="12"
+                        fill="black"
+                        style={{ cursor: 'default' }}
+                    >
+                        {label}
+                    </text>
+                </g>
+            </>
+        );
+    }
+}
+
+interface ISamplePointLabelProps {
     label: string;
-    color: string;
-    fillOpacity: number;
-    events?: any;
+    events: any;
     x?: number;
     y?: number;
 }
