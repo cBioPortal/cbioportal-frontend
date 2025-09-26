@@ -46,7 +46,7 @@ import LegendDataComponent from './LegendDataComponent';
 import LegendLabelComponent from './LegendLabelComponent';
 import autobind from 'autobind-decorator';
 import SampleManager from 'pages/patientView/SampleManager';
-import { SampleLabel } from '../sampleLabel/SampleLabel';
+import { SamplePointLabel } from '../sampleLabel/SampleLabel';
 
 export interface IBaseScatterPlotData {
     x: number;
@@ -852,7 +852,7 @@ export default class ScatterPlot<
                                     x={this.x}
                                     y={this.y}
                                     dataComponent={
-                                        <SampleLabel
+                                        <SamplePointLabel
                                             label={(
                                                 this.props.sampleManager
                                                     .result.sampleIndex[
@@ -861,16 +861,6 @@ export default class ScatterPlot<
                                                         .sampleId
                                                 ] + 1
                                             ).toString()}
-                                            color={
-                                                this.props.sampleManager
-                                                    .result
-                                                    .sampleColors[
-                                                    (dataWithAppearance
-                                                        .data[0] as any)
-                                                        .sampleId
-                                                ]
-                                            }
-                                            fillOpacity={1}
                                             events={this.mouseEvents}
                                         />
                                     }
