@@ -1555,7 +1555,12 @@ describe('DataUtils', () => {
                     { sampleId: 'sample', studyId: 'study' } as Sample,
                     data
                 ),
-                { hugo_gene_symbol: 'gene', study_id: 'study', profile_data: 3 }
+                {
+                    hugo_gene_symbol: 'gene',
+                    study_id: 'study',
+                    na: false,
+                    profile_data: 3,
+                }
             );
         });
         it('removes data points with NaN value', () => {
@@ -1571,7 +1576,12 @@ describe('DataUtils', () => {
                     { sampleId: 'sample', studyId: 'study' } as Sample,
                     data
                 ),
-                { hugo_gene_symbol: 'gene', study_id: 'study', profile_data: 3 }
+                {
+                    hugo_gene_symbol: 'gene',
+                    study_id: 'study',
+                    na: false,
+                    profile_data: 3,
+                }
             );
         });
         it('throws exception if more than one data given for sample', () => {
@@ -1605,7 +1615,12 @@ describe('DataUtils', () => {
                     { patientId: 'patient', studyId: 'study' } as Sample,
                     data
                 ),
-                { hugo_gene_symbol: 'gene', study_id: 'study', profile_data: 3 }
+                {
+                    hugo_gene_symbol: 'gene',
+                    study_id: 'study',
+                    na: false,
+                    profile_data: 3,
+                }
             );
 
             data = [{ value: 2 }];
@@ -1620,7 +1635,12 @@ describe('DataUtils', () => {
                     { patientId: 'patient', studyId: 'study' } as Sample,
                     data
                 ),
-                { hugo_gene_symbol: 'gene', study_id: 'study', profile_data: 2 }
+                {
+                    hugo_gene_symbol: 'gene',
+                    study_id: 'study',
+                    na: false,
+                    profile_data: 2,
+                }
             );
 
             data = [{ value: 2 }, { value: 3 }, { value: 4 }];
@@ -1635,7 +1655,12 @@ describe('DataUtils', () => {
                     { patientId: 'patient', studyId: 'study' } as Sample,
                     data
                 ),
-                { hugo_gene_symbol: 'gene', study_id: 'study', profile_data: 4 }
+                {
+                    hugo_gene_symbol: 'gene',
+                    study_id: 'study',
+                    na: false,
+                    profile_data: 4,
+                }
             );
 
             data = [{ value: -10 }, { value: 3 }, { value: 4 }];
@@ -1653,6 +1678,7 @@ describe('DataUtils', () => {
                 {
                     hugo_gene_symbol: 'gene',
                     study_id: 'study',
+                    na: false,
                     profile_data: -10,
                 }
             );
@@ -1675,6 +1701,7 @@ describe('DataUtils', () => {
             assert.deepEqual(partialTrackDatum, {
                 geneset_id: 'MY_FAVORITE_GENE_SET-3',
                 study_id: 'study',
+                na: false,
                 profile_data: 7,
             });
         });
@@ -1699,6 +1726,7 @@ describe('DataUtils', () => {
             assert.deepEqual(partialTrackDatum, {
                 entityId: 'GENERIC_ASSAY_ID_1',
                 study_id: 'study',
+                na: false,
                 profile_data: 8,
                 thresholdType: '>',
                 category: '>8.00',
@@ -1735,6 +1763,7 @@ describe('DataUtils', () => {
             assert.deepEqual(partialTrackDatum, {
                 entityId: 'GENERIC_ASSAY_ID_1',
                 study_id: 'study',
+                na: false,
                 profile_data: 1,
             });
         });
@@ -1769,6 +1798,7 @@ describe('DataUtils', () => {
             assert.deepEqual(partialTrackDatum, {
                 entityId: 'GENERIC_ASSAY_ID_1',
                 study_id: 'study',
+                na: false,
                 profile_data: 3,
             });
         });
@@ -1802,7 +1832,8 @@ describe('DataUtils', () => {
             assert.deepEqual(partialTrackDatum, {
                 entityId: 'GENERIC_ASSAY_ID_1',
                 study_id: 'study',
-                profile_data: 1,
+                na: false,
+                profile_data: 3,
             });
         });
 
@@ -1856,6 +1887,7 @@ describe('DataUtils', () => {
             assert.deepEqual(partialTrackDatum, {
                 entityId: 'GENERIC_ASSAY_ID_1',
                 study_id: 'study',
+                na: false,
                 profile_data: -10,
             });
         });
