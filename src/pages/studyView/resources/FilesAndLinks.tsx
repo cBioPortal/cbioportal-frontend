@@ -301,7 +301,7 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
             },
 
             {
-                ...this.getDefaultColumnConfig('resourceUrl', 'Resource URL'),
+                ...this.getDefaultColumnConfig('url', 'Resource URL'),
                 render: (data: { [id: string]: string }) => {
                     return (
                         <div>
@@ -377,7 +377,10 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
                                 showColumnVisibility={false}
                                 showCountHeader={false}
                                 showFilterClearButton={false}
-                                showCopyDownload={false}
+                                showCopyDownload={true}
+                                copyDownloadProps={{
+                                    showCopy: false,
+                                }}
                                 initialSortColumn={'resourcesPerPatient'}
                                 initialSortDirection={'desc'}
                             />
