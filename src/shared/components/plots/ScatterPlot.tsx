@@ -49,6 +49,7 @@ import { SamplePointLabel } from '../sampleLabel/SampleLabel';
 export interface IBaseScatterPlotData {
     x: number;
     y: number;
+    sampleId: string;
 }
 
 export interface IScatterPlotProps<D extends IBaseScatterPlotData> {
@@ -763,8 +764,8 @@ export default class ScatterPlot<
                                                     label={(
                                                         this.props.sampleManager
                                                             .result.sampleIndex[
-                                                            (dataWithAppearance
-                                                                .data[0] as any)
+                                                            dataWithAppearance
+                                                                .data[0]
                                                                 .sampleId
                                                         ] + 1
                                                     ).toString()}

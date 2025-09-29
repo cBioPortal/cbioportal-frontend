@@ -230,6 +230,7 @@ import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
 import ClinicalDataCache from 'shared/cache/ClinicalDataCache';
 import GenesetMolecularDataCache from 'shared/cache/GenesetMolecularDataCache';
 import GenericAssayMolecularDataCache from 'shared/cache/GenericAssayMolecularDataCache';
+import { CohortOptions } from 'shared/components/plots/PlotsTab';
 
 type PageMode = 'patient' | 'sample';
 type ResourceId = string;
@@ -404,6 +405,8 @@ export class PatientViewPageStore {
 
     @observable _sampleId = '';
 
+    @observable cohortSelection: CohortOptions = CohortOptions.WholeStudy;
+
     @observable
     driverAnnotationSettings: DriverAnnotationSettings = buildDriverAnnotationSettings(
         () => false
@@ -543,6 +546,11 @@ export class PatientViewPageStore {
             );
         },
     });
+
+    @action.bound
+    public handleCohortChange(cohort: CohortOptions) {
+        this.cohortSelection = cohort;
+    }
 
     public readonly sampleSetByKey = remoteData({
         await: () => [this.allSamplesInStudy],
@@ -912,6 +920,12 @@ export class PatientViewPageStore {
         default: [],
     });
 
+    readonly selectedCohortPatients = remoteData({
+        await: () => [this.selectedCohortSamples],
+        invoke: () => fetchPatients(this.selectedCohortSamples.result!),
+        default: [],
+    });
+
     readonly genePanelDataForAllProfiles = remoteData<GenePanelData[]>({
         // fetch all gene panel data for profiles
         // We do it this way - fetch all data for profiles, then filter based on samples -
@@ -985,19 +999,64 @@ export class PatientViewPageStore {
         },
     }));
 
+    readonly selectedCohortSamples = remoteData({
+        await: () => [
+            this.allSamplesInStudy,
+            this.samplesWithSameCancerTypeAsHighlighted,
+            this.samplesWithSameCancerTypeDetailedAsHighlighted,
+        ],
+        invoke: async () => {
+            if (this.cohortSelection === CohortOptions.CancerType) {
+                return this.samplesWithSameCancerTypeAsHighlighted.result!;
+            } else if (
+                this.cohortSelection === CohortOptions.CancerTypeDetailed
+            ) {
+                return this.samplesWithSameCancerTypeDetailedAsHighlighted
+                    .result!;
+            } else {
+                return this.allSamplesInStudy.result!;
+            }
+        },
+    });
+
+    readonly selectedCohortSampleMap = remoteData({
+        await: () => [
+            this.filteredSampleKeyToSample,
+            this.samplesWithSameCancerTypeAsHighlightedKeyToSample,
+            this.samplesWithSameCancerTypeDetailedAsHighlightedKeyToSample,
+        ],
+        invoke: async () => {
+            if (this.cohortSelection === CohortOptions.CancerType) {
+                return this.samplesWithSameCancerTypeAsHighlightedKeyToSample
+                    .result!;
+            } else if (
+                this.cohortSelection === CohortOptions.CancerTypeDetailed
+            ) {
+                return this
+                    .samplesWithSameCancerTypeDetailedAsHighlightedKeyToSample
+                    .result!;
+            } else {
+                return this.filteredSampleKeyToSample.result!;
+            }
+        },
+    });
+
     public numericGeneMolecularDataCache = new MobxPromiseCache<
         { entrezGeneId: number; molecularProfileId: string },
         NumericGeneMolecularData[]
     >(q => ({
         await: () => [
             this._numericGeneMolecularDataCache.get(q),
-            this.filteredSampleKeyToSample,
+            this.selectedCohortSampleMap,
         ],
         invoke: () => {
             const data = this._numericGeneMolecularDataCache.get(q).result!;
-            const sampleMap = this.filteredSampleKeyToSample.result!;
             return Promise.resolve(
-                data.filter(d => d.uniqueSampleKey in sampleMap)
+                data.filter(
+                    d =>
+                        d.uniqueSampleKey in
+                        this.selectedCohortSampleMap.result!
+                )
             );
         },
     }));
@@ -1196,6 +1255,31 @@ export class PatientViewPageStore {
                 _.keyBy(this.allSamplesInStudy.result!, s => s.uniqueSampleKey)
             ),
     });
+
+    readonly samplesWithSameCancerTypeAsHighlightedKeyToSample = remoteData({
+        await: () => [this.samplesWithSameCancerTypeAsHighlighted],
+        invoke: () =>
+            Promise.resolve(
+                _.keyBy(
+                    this.samplesWithSameCancerTypeAsHighlighted.result!,
+                    s => s.uniqueSampleKey
+                )
+            ),
+    });
+
+    readonly samplesWithSameCancerTypeDetailedAsHighlightedKeyToSample = remoteData(
+        {
+            await: () => [this.samplesWithSameCancerTypeDetailedAsHighlighted],
+            invoke: () =>
+                Promise.resolve(
+                    _.keyBy(
+                        this.samplesWithSameCancerTypeDetailedAsHighlighted
+                            .result!,
+                        s => s.uniqueSampleKey
+                    )
+                ),
+        }
+    );
 
     public annotatedMutationCache = new MobxPromiseCache<
         { entrezGeneId: number },
@@ -2678,8 +2762,8 @@ export class PatientViewPageStore {
     });
 
     public clinicalDataCache = new ClinicalDataCache(
-        this.allSamplesInStudy,
-        this.allPatientsInStudy,
+        this.selectedCohortSamples,
+        this.selectedCohortPatients,
         this.studyToMutationMolecularProfile,
         this.studyIdToStudy,
         this.coverageInformation,
