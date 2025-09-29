@@ -75,6 +75,8 @@ export const PatientViewPlotsTabWrapper: React.FunctionComponent<{
                 store.samplesWithSameCancerTypeDetailedAsHighlighted
             }
             sampleManager={store.sampleManager}
+            cohortSelection={store.cohortSelection}
+            handleCohortChange={store.handleCohortChange}
         />
     );
 });
