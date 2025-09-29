@@ -394,6 +394,8 @@ export interface IPlotsTabProps {
     samplesWithSameCancerTypeAsHighlighted?: MobxPromise<Sample[]>;
     samplesWithSameCancerTypeDetailedAsHighlighted?: MobxPromise<Sample[]>;
     sampleManager?: MobxPromiseUnionType<SampleManager>;
+    cohortSelection?: CohortOptions;
+    handleCohortChange?: (cohort: CohortOptions) => void;
 }
 
 export type PlotsTabDataSource = {
@@ -491,7 +493,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     @observable sortByDropDownOptions: { value: string; label: string }[] = [];
     @observable sortByOption: string = SortByOptions.Alphabetically;
     @observable boxPlotSortByMedian = false;
-    @observable.ref cohortSelection: CohortOptions = CohortOptions.WholeStudy;
     @observable.ref searchCaseInput: string;
     @observable.ref searchMutationInput: string;
     @observable showRegressionLine = false;
@@ -1023,10 +1024,39 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         }
 
         components = [
-            <div className="alert alert-info dataAvailabilityAlert">
-                {mainMessage}
-                <div data-test="dataAvailabilityAlertInfoIcon">
-                    <InfoIcon tooltip={<div>{components}</div>} />
+            <div style={{ display: 'flex', alignItems: 'baseline' }}>
+                {this.props.cohortSelection && this.props.handleCohortChange && (
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <label
+                            style={{ marginTop: '5px', paddingRight: '5px' }}
+                        >
+                            Cohort:{' '}
+                        </label>
+                        <div
+                            style={{
+                                width: 180,
+                                paddingRight: '5px',
+                                zIndex: 3,
+                            }}
+                        >
+                            <ReactSelect
+                                name="cohort-select"
+                                value={this.props.cohortSelection}
+                                onChange={this.setCohortSelection}
+                                options={cohortSelectOptions}
+                                clearable={false}
+                            />
+                        </div>
+                    </div>
+                )}
+                <div
+                    className="alert alert-info dataAvailabilityAlert"
+                    style={{ width: '100%' }}
+                >
+                    {mainMessage}
+                    <div data-test="dataAvailabilityAlertInfoIcon">
+                        <InfoIcon tooltip={<div>{components}</div>} />
+                    </div>
                 </div>
             </div>,
         ];
@@ -2076,17 +2106,20 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
 
     @action.bound
     private setCohortSelection(option: any) {
-        this.cohortSelection = option.value;
+        this.props.handleCohortChange &&
+            this.props.handleCohortChange(option.value);
     }
 
     @computed get selectedCohort(): MobxPromise<Sample[]> {
         if (
-            this.cohortSelection === CohortOptions.CancerType &&
+            this.props.cohortSelection &&
+            this.props.cohortSelection === CohortOptions.CancerType &&
             this.props.samplesWithSameCancerTypeAsHighlighted
         ) {
             return this.props.samplesWithSameCancerTypeAsHighlighted;
         } else if (
-            this.cohortSelection === CohortOptions.CancerTypeDetailed &&
+            this.props.cohortSelection &&
+            this.props.cohortSelection === CohortOptions.CancerTypeDetailed &&
             this.props.samplesWithSameCancerTypeDetailedAsHighlighted
         ) {
             return this.props.samplesWithSameCancerTypeDetailedAsHighlighted;
@@ -5001,22 +5034,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                             </label>
                         </div>
                     )}
-                    {this.props.samplesWithSameCancerTypeAsHighlighted &&
-                        this.props
-                            .samplesWithSameCancerTypeDetailedAsHighlighted && (
-                            <div className="form-group">
-                                <label>Select Cohort</label>
-                                <div style={{ display: 'flex' }}>
-                                    <ReactSelect
-                                        name="cohort-select"
-                                        value={this.cohortSelection}
-                                        onChange={this.setCohortSelection}
-                                        options={cohortSelectOptions}
-                                        clearable={false}
-                                    />
-                                </div>
-                            </div>
-                        )}
                 </div>
             </div>
         );
