@@ -37,6 +37,7 @@ import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
 import MutationTableWrapper from './mutation/MutationTableWrapper';
 import { PatientViewPageInner } from 'pages/patientView/PatientViewPage';
 import { Else, If } from 'react-if';
+import ExpressionTableWrapper from './expression/ExpressionTableWrapper';
 
 export enum PatientViewPageTabs {
     Summary = 'summary',
@@ -49,6 +50,7 @@ export enum PatientViewPageTabs {
     TrialMatchTab = 'trialMatchTab',
     MutationalSignatures = 'mutationalSignatures',
     PathwayMapper = 'pathways',
+    Expression = 'expression',
 }
 
 export const PatientViewResourceTabPrefix = 'openResource_';
@@ -485,6 +487,38 @@ export function tabs(
                             .oncoprint_custom_driver_annotation_tiers_menu_description!
                     }
                 />
+            </MSKTab>
+        );
+
+    pageComponent.patientViewPageStore.isExpressionProfiledForPatient
+        .isComplete &&
+        pageComponent.patientViewPageStore.isExpressionProfiledForPatient
+            .result &&
+        tabs.push(
+            <MSKTab
+                key={9}
+                id={PatientViewPageTabs.Expression}
+                linkText={'Expression'}
+            >
+                {pageComponent.patientViewPageStore.mrnaExpressionData
+                    .isComplete &&
+                pageComponent.patientViewPageStore.proteinExpressionData
+                    .isComplete &&
+                pageComponent.patientViewPageStore.mutationData.isComplete &&
+                pageComponent.patientViewPageStore.structuralVariantData
+                    .isComplete &&
+                pageComponent.patientViewPageStore.discreteCNAData
+                    .isComplete ? (
+                    <ExpressionTableWrapper
+                        store={pageComponent.patientViewPageStore}
+                    />
+                ) : (
+                    <LoadingIndicator
+                        isLoading={true}
+                        size={'big'}
+                        center={true}
+                    />
+                )}
             </MSKTab>
         );
 
