@@ -109,6 +109,7 @@ import {
 } from 'shared/model/CustomDriverAnnotationInfo';
 import { AnnotatedNumericGeneMolecularData } from 'shared/model/AnnotatedNumericGeneMolecularData';
 import { EnsemblFilter } from 'genome-nexus-ts-api-client';
+import { IExpressionRow } from 'pages/patientView/expression/ExpressionTableWrapper';
 
 export const MolecularAlterationType_filenameSuffix: {
     [K in MolecularProfile['molecularAlterationType']]?: string;
@@ -2010,4 +2011,66 @@ export function buildProteinChange(sv: StructuralVariant) {
     } else {
         return `${genes[0]} intragenic`;
     }
+}
+
+export function prepareExpressionRowDataForTable(
+    mrnaExpressionData: NumericGeneMolecularData[],
+    proteinExpressionData: NumericGeneMolecularData[],
+    mutationData: Mutation[],
+    structuralVariantData: StructuralVariant[],
+    discreteCNAData: DiscreteCopyNumberData[]
+): IExpressionRow[][] {
+    const tableData: IExpressionRow[][] = [];
+
+    const mrnaGeneSymbols = mrnaExpressionData.map(d => d.gene.hugoGeneSymbol);
+    const proteinGeneSymbols = proteinExpressionData.map(
+        d => d.gene.hugoGeneSymbol
+    );
+    const geneSymbols = _.uniq([...mrnaGeneSymbols, ...proteinGeneSymbols]);
+
+    const geneToMrnaExpressionDataMap = _.groupBy(
+        mrnaExpressionData,
+        d => d.gene.hugoGeneSymbol
+    );
+    const geneToProteinExpressionDataMap = _.groupBy(
+        proteinExpressionData,
+        d => d.gene.hugoGeneSymbol
+    );
+    const geneToMutationDataMap = _.keyBy(
+        mutationData,
+        d => d.gene.hugoGeneSymbol
+    );
+    const geneToStructuralVariantDataMap = _.keyBy(
+        structuralVariantData,
+        d => d.site1HugoSymbol
+    );
+    const geneToDiscreteCNADataMap = _.keyBy(
+        discreteCNAData,
+        d => d.gene.hugoGeneSymbol
+    );
+
+    for (const geneSymbol of geneSymbols) {
+        let expressionRowForTable: IExpressionRow = {
+            hugoGeneSymbol: geneSymbol,
+            mrnaExpression: averageExpressionValue(
+                geneToMrnaExpressionDataMap[geneSymbol] || []
+            ),
+            proteinExpression: averageExpressionValue(
+                geneToProteinExpressionDataMap[geneSymbol] || []
+            ),
+            mutations: geneToMutationDataMap[geneSymbol]?.keyword,
+            structuralVariants:
+                geneToStructuralVariantDataMap[geneSymbol]?.eventInfo,
+            cna: getAlterationString(
+                geneToDiscreteCNADataMap[geneSymbol]?.alteration
+            ),
+        };
+
+        tableData.push([expressionRowForTable]);
+    }
+    return tableData;
+}
+
+export function averageExpressionValue(d: NumericGeneMolecularData[]): number {
+    return _.mean(d.map(x => x.value));
 }

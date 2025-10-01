@@ -20,6 +20,7 @@ import {
     GenericAssayMeta,
     GenericAssayDataMultipleStudyFilter,
     GenericAssayMetaFilter,
+    MolecularDataFilter,
 } from 'cbioportal-ts-api-client';
 import { getClient } from '../../../shared/api/cbioportalClientInstance';
 import internalClient from '../../../shared/api/cbioportalInternalClientInstance';
@@ -195,7 +196,10 @@ import {
 } from 'shared/lib/GenericAssayUtils/MutationalSignaturesUtils';
 import { getServerConfig } from 'config/config';
 import { StructuralVariantFilter } from 'cbioportal-ts-api-client';
-import { IGenePanelDataByProfileIdAndSample } from 'shared/lib/isSampleProfiled';
+import {
+    IGenePanelDataByProfileIdAndSample,
+    isPatientProfiledInMultiple,
+} from 'shared/lib/isSampleProfiled';
 import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
 import { buildNamespaceColumnConfig } from 'shared/components/namespaceColumns/namespaceColumnsUtils';
 import { SiteError } from 'shared/model/appMisc';
@@ -469,6 +473,162 @@ export class PatientViewPageStore {
     // this is a string of concatenated ids
     @observable
     public patientIdsInCohort: string[] = [];
+
+    readonly mrnaExpressionData = remoteData({
+        await: () => [
+            this.mrnaExpressionProfiles,
+            this.analysisMrnaExpressionProfiles,
+            this.mrnaRankMolecularProfileId,
+        ],
+        invoke: async () => {
+            let mrnaData: NumericGeneMolecularData[];
+
+            if (this.analysisMrnaExpressionProfiles.result.length > 0) {
+                mrnaData = await getClient().fetchAllMolecularDataInMolecularProfileUsingPOST(
+                    {
+                        projection: 'DETAILED',
+                        molecularProfileId: this.analysisMrnaExpressionProfiles
+                            .result[0].molecularProfileId,
+                        molecularDataFilter: {
+                            sampleIds: this.sampleIds,
+                        } as MolecularDataFilter,
+                    }
+                );
+            } else if (this.mrnaExpressionProfiles.result.length > 0) {
+                mrnaData = await getClient().fetchAllMolecularDataInMolecularProfileUsingPOST(
+                    {
+                        molecularProfileId: this.mrnaExpressionProfiles
+                            .result[0].molecularProfileId,
+                        molecularDataFilter: {
+                            sampleIds: this.sampleIds,
+                        } as MolecularDataFilter,
+                    }
+                );
+            } else {
+                mrnaData = [];
+            }
+            return mrnaData;
+        },
+        default: [],
+    });
+
+    readonly mrnaExpressionProfiles = remoteData(
+        {
+            await: () => [this.molecularProfilesInStudy],
+            invoke: () => {
+                return Promise.resolve(
+                    this.molecularProfilesInStudy.result.filter(
+                        p => p.molecularAlterationType === 'MRNA_EXPRESSION'
+                    )
+                );
+            },
+        },
+        []
+    );
+
+    readonly analysisMrnaExpressionProfiles = remoteData(
+        {
+            await: () => [this.mrnaExpressionProfiles],
+            invoke: () => {
+                return Promise.resolve(
+                    this.mrnaExpressionProfiles.result.filter(
+                        p => p.showProfileInAnalysisTab
+                    )
+                );
+            },
+        },
+        []
+    );
+
+    readonly proteinExpressionData = remoteData({
+        await: () => [
+            this.proteinExpressionProfiles,
+            this.analysisProteinExpressionProfiles,
+        ],
+        invoke: async () => {
+            let mrnaData: NumericGeneMolecularData[];
+
+            if (this.analysisProteinExpressionProfiles.result.length > 0) {
+                mrnaData = await getClient().fetchAllMolecularDataInMolecularProfileUsingPOST(
+                    {
+                        projection: 'DETAILED',
+                        molecularProfileId: this
+                            .analysisProteinExpressionProfiles.result[0]
+                            .molecularProfileId,
+                        molecularDataFilter: {
+                            sampleIds: this.sampleIds,
+                        } as MolecularDataFilter,
+                    }
+                );
+            } else if (this.proteinExpressionProfiles.result.length > 0) {
+                mrnaData = await getClient().fetchAllMolecularDataInMolecularProfileUsingPOST(
+                    {
+                        molecularProfileId: this.proteinExpressionProfiles
+                            .result[0].molecularProfileId,
+                        molecularDataFilter: {
+                            sampleIds: this.sampleIds,
+                        } as MolecularDataFilter,
+                    }
+                );
+            } else {
+                mrnaData = [];
+            }
+            return mrnaData;
+        },
+        default: [],
+    });
+
+    readonly proteinExpressionProfiles = remoteData(
+        {
+            await: () => [this.molecularProfilesInStudy],
+            invoke: () => {
+                return Promise.resolve(
+                    this.molecularProfilesInStudy.result.filter(
+                        p => p.molecularAlterationType === 'PROTEIN_LEVEL'
+                    )
+                );
+            },
+        },
+        []
+    );
+
+    readonly analysisProteinExpressionProfiles = remoteData(
+        {
+            await: () => [this.proteinExpressionProfiles],
+            invoke: () => {
+                return Promise.resolve(
+                    this.proteinExpressionProfiles.result.filter(
+                        p => p.showProfileInAnalysisTab
+                    )
+                );
+            },
+        },
+        []
+    );
+
+    readonly isExpressionProfiledForPatient = remoteData({
+        await: () => [
+            this.mrnaExpressionProfiles,
+            this.proteinExpressionProfiles,
+            this.derivedUniquePatientKey,
+            this.coverageInformation,
+        ],
+        invoke: () => {
+            const expressionProfileIds = [
+                ...this.mrnaExpressionProfiles.result,
+                ...this.proteinExpressionProfiles.result,
+            ].map(p => p.molecularProfileId);
+            return Promise.resolve(
+                _.some(
+                    isPatientProfiledInMultiple(
+                        this.derivedUniquePatientKey.result,
+                        expressionProfileIds,
+                        this.coverageInformation.result
+                    )
+                )
+            );
+        },
+    });
 
     // public set patientIdsInCohort(cohortIds: string[]) {
     //     // cannot put action on setter
@@ -814,6 +974,16 @@ export class PatientViewPageStore {
         await: () => [this.samples],
         invoke: async () => {
             for (let sample of this.samples.result) return sample.patientId;
+            return '';
+        },
+        default: '',
+    });
+
+    readonly derivedUniquePatientKey = remoteData<string>({
+        await: () => [this.samples],
+        invoke: async () => {
+            for (let sample of this.samples.result)
+                return sample.uniquePatientKey;
             return '';
         },
         default: '',
