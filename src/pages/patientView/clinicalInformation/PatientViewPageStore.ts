@@ -474,6 +474,28 @@ export class PatientViewPageStore {
     @observable
     public patientIdsInCohort: string[] = [];
 
+    readonly allGenes = remoteData({
+        invoke: () => {
+            return getClient().getAllGenesUsingGET({
+                projection: 'SUMMARY',
+            });
+        },
+    });
+
+    readonly allEntrezGeneIdsToGene = remoteData<{
+        [entrezGeneId: number]: {
+            hugoGeneSymbol: string;
+            entrezGeneId: number;
+        };
+    }>({
+        await: () => [this.allGenes],
+        invoke: () =>
+            Promise.resolve(
+                _.keyBy(this.allGenes.result, gene => gene.entrezGeneId)
+            ),
+        default: {},
+    });
+
     readonly mrnaExpressionData = remoteData({
         await: () => [
             this.mrnaExpressionProfiles,
