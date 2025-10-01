@@ -2018,59 +2018,56 @@ export function prepareExpressionRowDataForTable(
     proteinExpressionData: NumericGeneMolecularData[],
     mutationData: Mutation[],
     structuralVariantData: StructuralVariant[],
-    discreteCNAData: DiscreteCopyNumberData[]
+    discreteCNAData: DiscreteCopyNumberData[],
+    allEntrezGeneIdsToGene: {
+        [entrezGeneId: number]: {
+            hugoGeneSymbol: string;
+            entrezGeneId: number;
+        };
+    }
 ): IExpressionRow[][] {
     const tableData: IExpressionRow[][] = [];
 
-    const mrnaGeneSymbols = mrnaExpressionData.map(d => d.gene.hugoGeneSymbol);
-    const proteinGeneSymbols = proteinExpressionData.map(
-        d => d.gene.hugoGeneSymbol
-    );
-    const geneSymbols = _.uniq([...mrnaGeneSymbols, ...proteinGeneSymbols]);
+    const mrnaEntrezGeneIds = mrnaExpressionData.map(d => d.entrezGeneId);
+    const proteinEntrezGeneIds = proteinExpressionData.map(d => d.entrezGeneId);
+    const entrezGeneIds = _.uniq([
+        ...mrnaEntrezGeneIds,
+        ...proteinEntrezGeneIds,
+    ]);
 
-    const geneToMrnaExpressionDataMap = _.groupBy(
+    const geneToMrnaExpressionDataMap = _.keyBy(
         mrnaExpressionData,
-        d => d.gene.hugoGeneSymbol
+        d => d.entrezGeneId
     );
-    const geneToProteinExpressionDataMap = _.groupBy(
+    const geneToProteinExpressionDataMap = _.keyBy(
         proteinExpressionData,
-        d => d.gene.hugoGeneSymbol
+        d => d.entrezGeneId
     );
-    const geneToMutationDataMap = _.keyBy(
-        mutationData,
-        d => d.gene.hugoGeneSymbol
-    );
+    const geneToMutationDataMap = _.keyBy(mutationData, d => d.entrezGeneId);
     const geneToStructuralVariantDataMap = _.keyBy(
         structuralVariantData,
-        d => d.site1HugoSymbol
+        d => d.site1EntrezGeneId
     );
     const geneToDiscreteCNADataMap = _.keyBy(
         discreteCNAData,
-        d => d.gene.hugoGeneSymbol
+        d => d.entrezGeneId
     );
 
-    for (const geneSymbol of geneSymbols) {
+    for (const entrezGeneId of entrezGeneIds) {
         let expressionRowForTable: IExpressionRow = {
-            hugoGeneSymbol: geneSymbol,
-            mrnaExpression: averageExpressionValue(
-                geneToMrnaExpressionDataMap[geneSymbol] || []
-            ),
-            proteinExpression: averageExpressionValue(
-                geneToProteinExpressionDataMap[geneSymbol] || []
-            ),
-            mutations: geneToMutationDataMap[geneSymbol]?.keyword,
+            hugoGeneSymbol: allEntrezGeneIdsToGene[entrezGeneId].hugoGeneSymbol,
+            mrnaExpression: geneToMrnaExpressionDataMap[entrezGeneId]?.value,
+            proteinExpression:
+                geneToProteinExpressionDataMap[entrezGeneId]?.value,
+            mutations: geneToMutationDataMap[entrezGeneId]?.keyword,
             structuralVariants:
-                geneToStructuralVariantDataMap[geneSymbol]?.eventInfo,
+                geneToStructuralVariantDataMap[entrezGeneId]?.eventInfo,
             cna: getAlterationString(
-                geneToDiscreteCNADataMap[geneSymbol]?.alteration
+                geneToDiscreteCNADataMap[entrezGeneId]?.alteration
             ),
         };
 
         tableData.push([expressionRowForTable]);
     }
     return tableData;
-}
-
-export function averageExpressionValue(d: NumericGeneMolecularData[]): number {
-    return _.mean(d.map(x => x.value));
 }

@@ -507,7 +507,8 @@ export function tabs(
                 pageComponent.patientViewPageStore.mutationData.isComplete &&
                 pageComponent.patientViewPageStore.structuralVariantData
                     .isComplete &&
-                pageComponent.patientViewPageStore.discreteCNAData
+                pageComponent.patientViewPageStore.discreteCNAData.isComplete &&
+                pageComponent.patientViewPageStore.allEntrezGeneIdsToGene
                     .isComplete ? (
                     <ExpressionTableWrapper
                         store={pageComponent.patientViewPageStore}

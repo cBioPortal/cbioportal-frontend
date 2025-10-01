@@ -42,7 +42,8 @@ export default class ExpressionTableWrapper extends React.Component<
             this.props.store.proteinExpressionData.result,
             this.props.store.mutationData.result,
             this.props.store.structuralVariantData.result,
-            this.props.store.discreteCNAData.result
+            this.props.store.discreteCNAData.result,
+            this.props.store.allEntrezGeneIdsToGene.result
         );
     }
 
@@ -96,15 +97,13 @@ export default class ExpressionTableWrapper extends React.Component<
                 name: this.mrnaExpressionProfileName,
                 render: (d: IExpressionRow[]) => (
                     <span>
-                        {Number.isNaN(d[0].mrnaExpression)
-                            ? ''
-                            : d[0].mrnaExpression.toFixed(2)}
+                        {d[0].mrnaExpression
+                            ? d[0].mrnaExpression.toFixed(2)
+                            : ''}
                     </span>
                 ),
                 download: (d: IExpressionRow[]) =>
-                    Number.isNaN(d[0].mrnaExpression)
-                        ? ''
-                        : d[0].mrnaExpression.toFixed(2),
+                    d[0].mrnaExpression ? d[0].mrnaExpression.toFixed(2) : '',
                 sortBy: (d: IExpressionRow[]) => {
                     if (d[0].mrnaExpression) {
                         return d[0].mrnaExpression;
@@ -122,15 +121,15 @@ export default class ExpressionTableWrapper extends React.Component<
                 name: this.proteinExpressionProfileName,
                 render: (d: IExpressionRow[]) => (
                     <span>
-                        {Number.isNaN(d[0].proteinExpression)
-                            ? ''
-                            : d[0].proteinExpression.toFixed(2)}
+                        {d[0].proteinExpression
+                            ? d[0].proteinExpression.toFixed(2)
+                            : ''}
                     </span>
                 ),
                 download: (d: IExpressionRow[]) =>
-                    Number.isNaN(d[0].proteinExpression)
-                        ? ''
-                        : d[0].proteinExpression.toFixed(2),
+                    d[0].proteinExpression
+                        ? d[0].proteinExpression.toFixed(2)
+                        : '',
                 sortBy: (d: IExpressionRow[]) => {
                     if (d[0].proteinExpression) {
                         return d[0].proteinExpression;
