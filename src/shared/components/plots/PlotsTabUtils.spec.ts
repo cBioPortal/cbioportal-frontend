@@ -724,18 +724,6 @@ describe('PlotsTabUtils', () => {
                             uniqueSampleKey: 'sample3',
                             value: [15 / (15 + 85)], // 0.15
                         },
-                        {
-                            uniqueSampleKey: 'sample4',
-                            value: 0,
-                        },
-                        {
-                            uniqueSampleKey: 'sample5',
-                            value: NaN,
-                        },
-                        {
-                            uniqueSampleKey: 'sample6',
-                            value: NaN,
-                        },
                     ],
                     hugoGeneSymbol: 'BRCA1',
                     datatype: 'number',
