@@ -1162,82 +1162,99 @@ export function makeAxisDataPromise_Molecular_MakeMutationData(
     const data: {
         uniqueSampleKey: string;
         value: string | number | string[] | number[];
-    }[] = samples.map(s => {
-        const sampleMutations = sampleToMutations[s.uniqueSampleKey];
-        let value: string | string[] | number | number[];
+    }[] = samples
+        .map(s => {
+            const sampleMutations = sampleToMutations[s.uniqueSampleKey];
+            let value: string | string[] | number | number[];
 
-        const isProfiled = _.some(
-            isSampleProfiledInMultiple(
-                s.uniqueSampleKey,
-                molecularProfileIds,
-                coverageInformation,
-                hugoGeneSymbol
-            ),
-            isSampleProfiled => isSampleProfiled === true
-        );
+            const isProfiled = _.some(
+                isSampleProfiledInMultiple(
+                    s.uniqueSampleKey,
+                    molecularProfileIds,
+                    coverageInformation,
+                    hugoGeneSymbol
+                ),
+                isSampleProfiled => isSampleProfiled === true
+            );
 
-        switch (mutationCountBy) {
-            case MutationCountBy.MutationType:
-                if (!sampleMutations) {
-                    value = isProfiled
-                        ? MUT_PROFILE_COUNT_NOT_MUTATED
-                        : MUT_PROFILE_COUNT_NOT_PROFILED;
-                } else {
-                    const types = _.uniq(
-                        sampleMutations.map(
-                            m =>
-                                mutationTypeToDisplayName[
-                                    getOncoprintMutationType(m)
-                                ]
-                        )
-                    );
-                    value =
-                        types.length > 1 ? MUT_PROFILE_COUNT_MULTIPLE : types;
-                }
-                break;
+            switch (mutationCountBy) {
+                case MutationCountBy.MutationType:
+                    if (!sampleMutations) {
+                        value = isProfiled
+                            ? MUT_PROFILE_COUNT_NOT_MUTATED
+                            : MUT_PROFILE_COUNT_NOT_PROFILED;
+                    } else {
+                        const types = _.uniq(
+                            sampleMutations.map(
+                                m =>
+                                    mutationTypeToDisplayName[
+                                        getOncoprintMutationType(m)
+                                    ]
+                            )
+                        );
+                        value =
+                            types.length > 1
+                                ? MUT_PROFILE_COUNT_MULTIPLE
+                                : types;
+                    }
+                    break;
 
-            case MutationCountBy.DriverVsVUS:
-                if (!sampleMutations) {
-                    value = isProfiled
-                        ? MUT_PROFILE_COUNT_NOT_MUTATED
-                        : MUT_PROFILE_COUNT_NOT_PROFILED;
-                } else {
-                    value = _.some(sampleMutations, m => m.putativeDriver)
-                        ? MUT_PROFILE_COUNT_DRIVER
-                        : MUT_PROFILE_COUNT_VUS;
-                }
-                break;
+                case MutationCountBy.DriverVsVUS:
+                    if (!sampleMutations) {
+                        value = isProfiled
+                            ? MUT_PROFILE_COUNT_NOT_MUTATED
+                            : MUT_PROFILE_COUNT_NOT_PROFILED;
+                    } else {
+                        value = _.some(sampleMutations, m => m.putativeDriver)
+                            ? MUT_PROFILE_COUNT_DRIVER
+                            : MUT_PROFILE_COUNT_VUS;
+                    }
+                    break;
 
-            case MutationCountBy.VariantAlleleFrequency:
-                if (!sampleMutations) {
-                    value = isProfiled ? 0 : NaN;
-                } else {
-                    const vafs: number[] = _(sampleMutations)
-                        .map(m => getVariantAlleleFrequency(m)?.vaf)
-                        .compact()
-                        .value();
+                case MutationCountBy.VariantAlleleFrequency:
+                    // Filter out samples without mutations
+                    if (!sampleMutations) {
+                        // Return null to filter out later
+                        // These are samples either:
+                        // 1. Profiled but no mutation found, or
+                        // 2. Not profiled for this gene
+                        return null;
+                    } else {
+                        const vafs: number[] = _(sampleMutations)
+                            .map(m => getVariantAlleleFrequency(m)?.vaf)
+                            .compact()
+                            .value();
 
-                    value = vafs.length > 0 ? vafs : NaN;
-                }
-                break;
+                        // Also filter out samples where mutations exist but VAF couldn't be calculated
+                        if (vafs.length === 0) {
+                            return null;
+                        }
 
-            case MutationCountBy.MutatedVsWildType:
-            default:
-                if (!sampleMutations) {
-                    value = isProfiled
-                        ? MUT_PROFILE_COUNT_NOT_MUTATED
-                        : MUT_PROFILE_COUNT_NOT_PROFILED;
-                } else {
-                    value = MUT_PROFILE_COUNT_MUTATED;
-                }
-                break;
-        }
+                        value = vafs;
+                    }
+                    break;
 
-        return {
-            uniqueSampleKey: s.uniqueSampleKey,
-            value,
-        };
-    });
+                case MutationCountBy.MutatedVsWildType:
+                default:
+                    if (!sampleMutations) {
+                        value = isProfiled
+                            ? MUT_PROFILE_COUNT_NOT_MUTATED
+                            : MUT_PROFILE_COUNT_NOT_PROFILED;
+                    } else {
+                        value = MUT_PROFILE_COUNT_MUTATED;
+                    }
+                    break;
+            }
+
+            return {
+                uniqueSampleKey: s.uniqueSampleKey,
+                value,
+            };
+        })
+        .filter(d => d !== null) as {
+        uniqueSampleKey: string;
+        value: string | number | string[] | number[];
+    }[];
 
     if (mutationCountBy === MutationCountBy.VariantAlleleFrequency) {
         const hasVafData = mutations.some(

@@ -740,7 +740,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         let vertAxisStudies: CancerStudy[] = [];
         let isHorzAxisNoneOptionSelected = false;
         let isVertAxisNoneOptionSelected = false;
-
         components.push(
             <div>
                 <div>Data availability per profile/axis:</div>
@@ -932,9 +931,20 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             </div>
         );
 
+        let mainMessage = `Showing ${axisOverlapSampleCount} samples with data in both profiles (axes)`;
+        if (
+            this.horzSelection.mutationCountBy ===
+                MutationCountBy.VariantAlleleFrequency ||
+            this.vertSelection.mutationCountBy ===
+                MutationCountBy.VariantAlleleFrequency
+        ) {
+            mainMessage +=
+                '. Samples without mutations or Variant Allele Frequency data are excluded from the plot';
+        }
+
         components = [
             <div className="alert alert-info dataAvailabilityAlert">
-                {`Showing ${axisOverlapSampleCount} samples with data in both profiles (axes)`}
+                {mainMessage}
                 <div data-test="dataAvailabilityAlertInfoIcon">
                     <InfoIcon tooltip={<div>{components}</div>} />
                 </div>
