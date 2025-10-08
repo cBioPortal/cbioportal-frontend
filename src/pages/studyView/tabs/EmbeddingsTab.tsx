@@ -61,43 +61,41 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         // Listen for window resize events
         this.handleResize = this.handleResize.bind(this);
 
-        // Set up reaction to apply URL parameter once genes are loaded
+        // Set up single URL-driven reaction for state management
         this.urlParameterReactionDisposer = reaction(
-            () => this.coloringFromURLParameter,
-            urlOption => {
-                if (urlOption) {
-                    this.applyColoringOption(urlOption);
-                }
-            },
-            { fireImmediately: true }
-        );
+            () => {
+                const urlOption = this.coloringFromURLParameter;
+                const clinicalAttributesReady =
+                    this.clinicalAttributes.length > 0;
+                const urlWrapperReady = !!(this.props.store as any).urlWrapper;
 
-        // Set up reaction to ensure default coloring is synced to URL
-        this.urlSyncReactionDisposer = reaction(
-            () => ({
-                selectedOption: this.selectedColoringOption,
-                hasUrlParams: this.hasExistingURLParameters,
-                clinicalAttributesReady: this.clinicalAttributes.length > 0,
-                urlWrapperReady: !!(this.props.store as any).urlWrapper,
-            }),
+                return {
+                    urlOption,
+                    clinicalAttributesReady,
+                    urlWrapperReady,
+                    hasUrlParams: this.hasExistingURLParameters,
+                };
+            },
             ({
-                selectedOption,
-                hasUrlParams,
+                urlOption,
                 clinicalAttributesReady,
                 urlWrapperReady,
+                hasUrlParams,
             }) => {
-                // Only sync if:
-                // 1. URL wrapper is ready
-                // 2. Clinical attributes are loaded
-                // 3. We have a selected option
-                // 4. No existing URL parameters (don't override user's URL)
-                if (
-                    urlWrapperReady &&
-                    clinicalAttributesReady &&
-                    selectedOption &&
-                    !hasUrlParams
-                ) {
-                    this.syncColoringSelectionToURL(selectedOption);
+                if (!urlWrapperReady || !clinicalAttributesReady) {
+                    return;
+                }
+
+                if (urlOption) {
+                    // URL parameters exist - apply them
+                    this.selectedColoringOption = urlOption;
+                } else if (!hasUrlParams) {
+                    // No URL parameters - set default and sync to URL
+                    const defaultOption = this.getDefaultColoringOption();
+                    if (defaultOption) {
+                        this.selectedColoringOption = defaultOption;
+                        this.syncColoringSelectionToURL(defaultOption);
+                    }
                 }
             },
             { fireImmediately: true }
