@@ -3212,7 +3212,7 @@ export class ResultsViewPageStore extends AnalysisStore
     >({
         await: () => [this.genes, this.studyToMolecularProfileDiscreteCna],
         invoke: async () => {
-            if (this.cnaMolecularProfileIds.length == 0) {
+            if (true || this.cnaMolecularProfileIds.length == 0) {
                 return [];
             }
 
@@ -3238,6 +3238,25 @@ export class ResultsViewPageStore extends AnalysisStore
                     );
                 }
             );
+
+            // const profileIds = _.values(this.studyToMolecularProfileDiscreteCna.result).map(p=>p.molecularProfileId).join(",");
+            // const sampleListIds = _.keys(this.studyToMolecularProfileDiscreteCna.result).map(k=>{
+            //    return `${k}_all`
+            // });
+            //
+            // const data = await fetch(`/api/discrete-copy-number/fetch?molecularProfileIds=${profileIds}&discreteCopyNumberEventType=HOMDEL_AND_AMP&projection=DETAILED`, {
+            //     method: 'POST',
+            //     headers: {
+            //         'Content-Type': 'application/json'
+            //     },
+            //     body: JSON.stringify({
+            //         sampleListIds: sampleListIds,
+            //         entrezGeneIds: entrezGeneIds
+            //     })
+            // })
+            //     .then(response => response.json())
+            //
+            // return data;
 
             return Promise.all(promises).then((cnaData: any[]) =>
                 _.flattenDeep(cnaData)
@@ -4761,9 +4780,10 @@ export class ResultsViewPageStore extends AnalysisStore
         {
             await: () => [this.molecularProfilesInStudies],
             invoke: async () => {
-                return await fetchGenericAssayMetaByMolecularProfileIdsGroupedByGenericAssayType(
-                    this.molecularProfilesInStudies.result
-                );
+                return Promise.resolve({});
+                // return await fetchGenericAssayMetaByMolecularProfileIdsGroupedByGenericAssayType(
+                //     this.molecularProfilesInStudies.result
+                // );
             },
         },
         {}
@@ -4774,9 +4794,10 @@ export class ResultsViewPageStore extends AnalysisStore
     }>({
         await: () => [this.molecularProfilesInStudies],
         invoke: async () => {
-            return await fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecularProfileId(
-                this.molecularProfilesInStudies.result
-            );
+            return Promise.resolve({});
+            // return await fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecularProfileId(
+            //     this.molecularProfilesInStudies.result
+            // );
         },
     });
 
