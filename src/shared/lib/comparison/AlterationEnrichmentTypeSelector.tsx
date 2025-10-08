@@ -166,6 +166,31 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
     }
 
     @autobind
+    private updateSelectedAlterationsImmediately() {
+        const selectedMutationsMap = _.pickBy(this.currentSelectedMutations);
+        const selectedMutations = _.keys(
+            selectedMutationsMap
+        ) as MutationEnrichmentEventType[];
+
+        const selectedCopyNumberMap = _.pickBy(this.currentSelectedCopyNumber);
+        const selectedCopyNumber = _.keys(
+            selectedCopyNumberMap
+        ) as CopyNumberEnrichmentEventType[];
+
+        const selectedTypes: EnrichmentEventType[] = (selectedMutations as EnrichmentEventType[]).concat(
+            selectedCopyNumber
+        ) as EnrichmentEventType[];
+
+        if (this.isStructuralVariantSelected) {
+            selectedTypes.push(
+                StructuralVariantEnrichmentEventType.structural_variant
+            );
+        }
+
+        this.props.updateSelectedEnrichmentEventTypes(selectedTypes);
+    }
+
+    @autobind
     private onInputClick(event: React.MouseEvent<HTMLInputElement>) {
         console.log((event.target as HTMLInputElement).value);
         switch ((event.target as HTMLInputElement).value) {
@@ -252,6 +277,8 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                 );
                 break;
         }
+
+        this.updateSelectedAlterationsImmediately();
     }
 
     @action
@@ -278,24 +305,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
     private updateSelectedAlterations(
         event: React.MouseEvent<HTMLButtonElement, MouseEvent>
     ) {
-        const selectedMutations = _(this.currentSelectedMutations)
-            .pickBy()
-            .keys()
-            .value();
-        const selectedCopyNumber = _(this.currentSelectedCopyNumber)
-            .pickBy()
-            .keys()
-            .value();
-        const selectedTypes: EnrichmentEventType[] = selectedMutations.concat(
-            selectedCopyNumber
-        ) as EnrichmentEventType[];
-
-        if (this.isStructuralVariantSelected) {
-            selectedTypes.push(
-                StructuralVariantEnrichmentEventType.structural_variant
-            );
-        }
-        this.props.updateSelectedEnrichmentEventTypes(selectedTypes);
+        this.updateSelectedAlterationsImmediately();
     }
 
     @computed get hasSelectionChanged() {
