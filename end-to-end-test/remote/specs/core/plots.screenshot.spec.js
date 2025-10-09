@@ -150,6 +150,14 @@ describe('plots tab screenshot tests', function() {
         });
         await waitForAndCheckPlotsTab();
     });
+    it('plots tab mutations Variant Allele Frequency mode vs clinical boxplot', async () => {
+        await browser.execute(() => {
+            resultsViewPlotsTab.onHorizontalAxisMutationCountBySelect({
+                value: 'VariantAlleleFrequency',
+            });
+        });
+        await waitForAndCheckPlotsTab();
+    });
     it('plots tab clinical vs clinical boxplot', async () => {
         await browser.execute(() => {
             resultsViewPlotsTab.onVerticalAxisDataTypeSelect({
