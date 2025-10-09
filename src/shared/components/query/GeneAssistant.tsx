@@ -1,49 +1,55 @@
 import * as React from 'react';
 import ReactMarkdown from 'react-markdown';
-import './footer.scss';
 import _ from 'lodash';
-import { AppStore } from '../../AppStore';
 import { observer } from 'mobx-react';
 import { action, observable, makeObservable } from 'mobx';
-import styles from './support.module.scss';
-import internalClient from '../../shared/api/cbioportalInternalClientInstance';
-import { SupportMessage } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
+import styles from './styles/styles.module.scss';
+import internalClient from '../../../shared/api/cbioportalInternalClientInstance';
+import { UserMessage } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
+import { QueryStoreComponent } from './QueryStore';
 
 @observer
-export default class PortalSupport extends React.Component<{
-    appStore: AppStore;
-}> {
-    @observable private userInput = '';
-    @observable private pending = false;
-    @observable private showErrorMessage = false;
-
-    constructor(props: { appStore: AppStore }) {
+export default class GeneAssistant extends QueryStoreComponent<{}, {}> {
+    constructor(props: any) {
         super(props);
         makeObservable(this);
     }
+    @observable private userMessage = '';
+    @observable private pending = false;
+    @observable private showErrorMessage = false;
+    private examples = {
+        'Find mutations in tumor suppressor genes': 'TP53, RB1, PTEN, APC',
+        'Look for oncogene amplifications': 'MYC, ERBB2, EGFR',
+        'Find KRAS mutations excluding silent ones': 'KRAS',
+    };
 
     @action.bound
     private toggleSupport() {
-        this.props.appStore.showSupport = !this.props.appStore.showSupport;
+        this.store.showSupport = !this.store.showSupport;
+    }
+
+    @action.bound
+    private queryExample(example: string) {
+        this.userMessage = example;
     }
 
     @action.bound
     private handleInputChange(event: React.ChangeEvent<HTMLInputElement>) {
-        this.userInput = event.target.value;
+        this.userMessage = event.target.value;
     }
 
     @action.bound
     private handleSendMessage(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
 
-        if (!this.userInput.trim()) return;
+        if (!this.userMessage.trim()) return;
 
-        this.props.appStore.messages.push({
+        this.store.messages.push({
             speaker: 'User',
-            text: this.userInput,
+            text: this.userMessage,
         });
         this.getResponse();
-        this.userInput = '';
+        this.userMessage = '';
     }
 
     @action.bound
@@ -52,14 +58,14 @@ export default class PortalSupport extends React.Component<{
         this.pending = true;
 
         let supportMessage = {
-            message: this.userInput,
-        } as SupportMessage;
+            message: this.userMessage,
+        } as UserMessage;
 
         try {
             const response = await internalClient.getSupportUsingPOST({
                 supportMessage,
             });
-            this.props.appStore.messages.push({
+            this.store.messages.push({
                 speaker: 'AI',
                 text: response.answer,
             });
@@ -73,18 +79,27 @@ export default class PortalSupport extends React.Component<{
     renderButton() {
         return (
             <button
-                style={{ width: '64px', height: '64px', borderRadius: '20px' }}
+                style={{ borderRadius: '8px', fontSize: '13px' }}
                 className="btn btn-primary btn-lg"
                 data-test="aiButton"
                 onClick={this.toggleSupport}
             >
-                {!this.props.appStore.showSupport ? (
-                    <i className="fa fa-comment" style={{ fontSize: '32px' }} />
+                {!this.store.showSupport ? (
+                    <div>
+                        <i
+                            className="fa-solid fa-robot"
+                            style={{ paddingRight: '5px' }}
+                        />
+                        Gene Assistant
+                    </div>
                 ) : (
-                    <i
-                        className="fa fa-angle-down"
-                        style={{ fontSize: '32px' }}
-                    />
+                    <div>
+                        <i
+                            className="fa-solid fa-robot"
+                            style={{ paddingRight: '5px' }}
+                        />
+                        Hide Assistant
+                    </div>
                 )}
             </button>
         );
@@ -113,7 +128,7 @@ export default class PortalSupport extends React.Component<{
     renderMessages() {
         return (
             <div>
-                {this.props.appStore.messages.map((msg, index) => {
+                {this.store.messages.map((msg, index) => {
                     const isUser = msg.speaker === 'User';
                     return (
                         <div
@@ -143,23 +158,56 @@ export default class PortalSupport extends React.Component<{
         );
     }
 
+    renderExamples() {
+        return (
+            <div className={styles.examplesarea}>
+                <h2>
+                    <i
+                        className="fa-solid fa-lightbulb"
+                        style={{ paddingRight: '10px' }}
+                    />
+                    Quick Examples:
+                </h2>
+
+                <div className={styles.examplestext}>
+                    {Object.entries(this.examples).map(([example, genes]) => (
+                        <div
+                            className={styles.exampleitem}
+                            onClick={() => this.queryExample(example)}
+                        >
+                            <strong className={styles.exampletitle}>
+                                {example}
+                            </strong>
+                            <span className={styles.exampledescription}>
+                                {genes}
+                            </span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
+    }
+
     render() {
         return (
             <div className={styles.supportContainer}>
-                {this.props.appStore.showSupport && (
+                {this.renderButton()}
+                {this.store.showSupport && (
                     <div className={styles.chatWindow}>
                         <section className={styles.titlearea}>
                             <img
-                                src={require('./cbioportal_icon.png')}
+                                src={require('../../../globalStyles/images/cbioportal_icon.png')}
                                 className={styles.titleIcon}
-                                alt="cBioPortal Icon"
+                                alt="cBioPortal icon"
                             />
-                            <span>cBioPortal Support</span>
+                            <span>cBioPortal Gene Assistant</span>
                         </section>
+
+                        {this.renderExamples()}
 
                         <div className={styles.textarea}>
                             <div className={styles.textheader}>
-                                Please ask your cBioPortal related questions
+                                Please ask your cBioPortal querying questions
                                 here, for example how to correctly format a
                                 query using Onco Query Language (OQL).
                             </div>
@@ -176,9 +224,9 @@ export default class PortalSupport extends React.Component<{
                                 <input
                                     className={styles.input}
                                     type="text"
-                                    value={this.userInput}
+                                    value={this.userMessage}
                                     onChange={this.handleInputChange}
-                                    placeholder="Type a message"
+                                    placeholder="Ask me about genes, cancer types or OQL syntax!"
                                 />
                                 <button
                                     type="submit"
@@ -196,7 +244,6 @@ export default class PortalSupport extends React.Component<{
                         </div>
                     </div>
                 )}
-                {this.renderButton()}
             </div>
         );
     }

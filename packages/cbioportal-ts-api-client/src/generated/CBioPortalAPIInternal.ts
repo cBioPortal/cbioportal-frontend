@@ -133,7 +133,7 @@ export type ClinicalAttributeCountFilter = {
         'sampleListId': string
 
 };
-export type SupportMessage = {
+export type UserMessage = {
         'message': string
 };
 export type ClinicalData = {
@@ -8489,17 +8489,17 @@ export default class CBioPortalAPIInternal {
      * @method
      * @name CBioPortalAPIInternal#getSupportUsingPOST
      * @param {Object} parameters - Parameters for the request.
-     * @param {SupportMessage} [parameters.supportMessage] - The message to send to the AI support system. This can contain user queries, questions, or other requests.
+     * @param {UserMessage} [parameters.userMessage] - The message to send to the AI support system. This can contain user queries, questions, or other requests.
      * @param {string} [parameters.$domain] - Optional override for the API domain. Defaults to the instance's domain if not provided.
      */
     getSupportUsingPOSTWithHttpInfo(parameters: {
-        'supportMessage' ? : SupportMessage,
+        'userMessage' ? : UserMessage,
             $domain ? : string
     }): Promise < request.Response > {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
         const request = this.request;
-        let path = '/support';
+        let path = '/api/assistant';
         let body: any;
         let queryParameters: any = {};
         let headers: any = {};
@@ -8508,8 +8508,8 @@ export default class CBioPortalAPIInternal {
             headers['Accept'] = 'application/json';
             headers['Content-Type'] = 'application/json';
 
-            if (parameters['supportMessage'] !== undefined) {
-                body = parameters['supportMessage'];
+            if (parameters['userMessage'] !== undefined) {
+                body = parameters['userMessage'];
             }
 
             request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
@@ -8522,11 +8522,11 @@ export default class CBioPortalAPIInternal {
      * @method
      * @name CBioPortalAPIInternal#getSupprtUsingPOST
      * @param {Object} parameters - Parameters for the request.
-     * @param {SupportMessage} [parameters.supportMessage] - The message to send to the AI support system.
+     * @param {UserMessage} [parameters.userMessage] - The message to send to the AI support system.
      * @param {string} [parameters.$domain] - Optional override for the API domain.
      */
     getSupportUsingPOST(parameters: {
-        'supportMessage' ? : SupportMessage,
+        'userMessage' ? : UserMessage,
                 $domain ? : string
         }): Promise<{ answer: string }>
         {

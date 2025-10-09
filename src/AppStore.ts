@@ -42,15 +42,6 @@ export class AppStore {
     }
 
     @observable private _appReady = false;
-    @observable public showSupport = false;
-    @observable public messages = [
-        {
-            speaker: 'AI',
-            text:
-                "Hi there!\nMy name is Tobi, I'm cBioPortal's Support Robot 🤖",
-        },
-        { speaker: 'AI', text: 'What can I do for you today?' },
-    ];
 
     siteErrors = observable.array<SiteError>();
 

@@ -20,6 +20,7 @@ import { Gene } from 'cbioportal-ts-api-client';
 import GenesetsValidator from './GenesetsValidator';
 import FontAwesome from 'react-fontawesome';
 import GeneSymbolValidationError from './GeneSymbolValidationError';
+import GeneAssistant from './GeneAssistant';
 
 @observer
 export default class GeneSetSelector extends QueryStoreComponent<{}, {}> {
@@ -201,6 +202,8 @@ export default class GeneSetSelector extends QueryStoreComponent<{}, {}> {
                         </Modal.Body>
                     </Modal>
                 </FlexCol>
+
+                <GeneAssistant />
             </FlexRow>
         );
     }

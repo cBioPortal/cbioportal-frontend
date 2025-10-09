@@ -3,7 +3,6 @@ import classNames from 'classnames';
 import { inject } from 'mobx-react';
 import { AppStore } from '../../../AppStore';
 import PortalFooter from '../../../appShell/App/PortalFooter';
-import PortalSupport from '../../../appShell/App/PortalSupport';
 import { RFC80Test } from 'shared/components/rfc80Tester';
 
 interface IPageLayout {
@@ -12,7 +11,6 @@ interface IPageLayout {
     noMargin?: boolean;
     appStore?: AppStore;
     hideFooter?: boolean;
-    enableSupport?: boolean;
 }
 
 @inject('appStore')
@@ -36,10 +34,6 @@ export class PageLayout extends React.Component<IPageLayout, {}> {
                         <div id="rightColumn">{this.props.rightBar}</div>
                     )}
                 </div>
-
-                {!this.props.enableSupport && (
-                    <PortalSupport appStore={this.props.appStore!} />
-                )}
 
                 {!this.props.hideFooter && (
                     <PortalFooter appStore={this.props.appStore!} />
