@@ -3212,9 +3212,9 @@ export class ResultsViewPageStore extends AnalysisStore
     >({
         await: () => [this.genes, this.studyToMolecularProfileDiscreteCna],
         invoke: async () => {
-            if (true || this.cnaMolecularProfileIds.length == 0) {
-                return [];
-            }
+            // if (true || this.cnaMolecularProfileIds.length == 0) {
+            //     return [];
+            // }
 
             const entrezGeneIds = _.map(
                 this.genes.result,
@@ -4278,10 +4278,14 @@ export class ResultsViewPageStore extends AnalysisStore
         {
             await: () => [this.studyIds],
             invoke: async () => {
-                return getClient().fetchStudiesUsingPOST({
-                    studyIds: this.studyIds.result!,
+                // we do this because get all studies (detailed projection) will be in cache
+                // for all users since it is the same for everyone
+                const allStudies = await getClient().getAllStudiesUsingGET({
                     projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
                 });
+                return allStudies.filter(study =>
+                    this.studyIds.result!.includes(study.studyId)
+                );
             },
         },
         []
