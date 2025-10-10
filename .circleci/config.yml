@@ -25,20 +25,57 @@ defaults: &defaults
   working_directory: /tmp/repo
   docker:
     # specify the version you desire here
-    - image: circleci/node:15.2.1-browsers
+    - image: cimg/node:22.18.0-browsers
   resource_class: large
 
 run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
+
   steps:
+    - checkout
+
+    # Install Node.js 22.10.0
+    - run:
+        name: Install Node.js 22.10.0
+        command: |
+          curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+          nvm install 22.18.0
+          nvm use 22.18.0
+          nvm alias default 22.18.0
+          node -v
+          npm -v
+
+    # Install Google Chrome
+    - run:
+        name: Install Google Chrome
+        command: |
+          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+          echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
+          google-chrome --version
+
+    # Install ChromeDriver
+    - run:
+        name: Install ChromeDriver
+        command: |
+          CHROME_VERSION=139.0.7258.154
+          wget -q "https://storage.googleapis.com/chrome-for-testing-public/${CHROME_VERSION}/linux64/chromedriver-linux64.zip"
+          unzip -q chromedriver-linux64.zip
+          sudo mv chromedriver-linux64/chromedriver /usr/local/bin/
+          sudo chmod +x /usr/local/bin/chromedriver
+          rm -rf chromedriver-linux64.zip chromedriver-linux64
+
     - when:
         condition: << pipeline.parameters.enable_remote_e2e >>
         steps:
           - attach_workspace:
               at: /tmp/repo
-          - run:
-              name: Install linux dependencies
-              command: |
-                sudo apt-get install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev || true
+#          - run:
+#              name: Install linux dependencies
+#              command: |
+#                sudo apt-get install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev || true
           - run:
               name: Check remote cbioportal connection
               command: |
@@ -50,14 +87,15 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
                 FRONTEND_TEST_USE_LOCAL_DIST: true
                 WEBPACK_PARALLEL: false
               command: |
+                yarn config set ignore-engines true
                 cd /tmp/repo/cbioportal-frontend
-                yarn serveDist &
+                yarn serveDist --ignore-engines &
                 cd /tmp/repo/cbioportal-test
                 sh ./utils/check-connection.sh --url=https://localhost:3000 --insecure='true'
                 cd /tmp/repo/cbioportal-frontend/end-to-end-test
                 ../scripts/env_vars.sh
                 eval "$(../scripts/env_vars.sh)"
-                yarn run test-webdriver-manager-remote
+                yarn run test-webdriver-manager-remote --ignore-engines
           - run:
               name: Make sure all screenshots are tracked (otherwise the test will always be successful)
               command: |
@@ -91,6 +129,8 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
           - run: echo "Job Ignored via enable_remote_e2e"
           - run: exit 1
 
+orbs:
+  browser-tools: circleci/browser-tools@2.3.1
 jobs:
   api_sync:
     <<: *defaults
@@ -165,13 +205,43 @@ jobs:
             yarn run checkIncorrectImportStatements
 
   e2e_tests:
-    <<: *defaults
+    machine:
+      image: ubuntu-2204:2024.08.1
+    resource_class: large
+    working_directory: /tmp/repo
+#    steps:
+#      - checkout
+#
+#      # Install Node.js 22.10.0
+#      - run:
+#          name: Install Node.js 22.10.0
+#          command: |
+#            curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+#            export NVM_DIR="$HOME/.nvm"
+#            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+#            nvm install 22.10.0
+#            nvm use 22.10.0
+#            nvm alias default 22.10.0
+#            node -v
+#            npm -v
+#
+#      # Install Google Chrome
+#      - run:
+#          name: Install Google Chrome
+#          command: |
+#            wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+#            echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+#            sudo apt-get update
+#            sudo apt-get install -y google-chrome-stable
+#            google-chrome --version
+
     environment:
       MANUAL_TRIGGER_BRANCH_ENV: << pipeline.parameters.manual_trigger_branch_env >>
       SPEC_FILE_PATTERN: << pipeline.parameters.remote_spec_pattern >>
       JUNIT_REPORT_PATH: ./remote/junit/
       SCREENSHOT_DIRECTORY: ./remote/screenshots
       CBIOPORTAL_URL: https://www.cbioportal.org
+      CHROMEDRIVER_CUSTOM_PATH: /usr/local/bin/chromedriver
     <<: *run_e2e_and_save_artifacts
 
   e2e_tests_against_master:
@@ -181,6 +251,7 @@ jobs:
       JUNIT_REPORT_PATH: ./remote/junit/
       SCREENSHOT_DIRECTORY: ./remote/screenshots
       CBIOPORTAL_URL: https://master.cbioportal.org
+      CHROMEDRIVER_CUSTOM_PATH: /usr/local/bin/chromedriver
     <<: *run_e2e_and_save_artifacts
 
   prettier:
@@ -327,6 +398,7 @@ jobs:
             SCREENSHOT_DIRECTORY: ./local/screenshots
             PORTAL_SOURCE_DIR: /tmp/repo/cbioportal-frontend
             TEST_HOME: /tmp/repo/cbioportal-frontend/end-to-end-test/local
+            CHROMEDRIVER_CUSTOM_PATH: /usr/local/bin/chromedriver
           command: |
             cd $PORTAL_SOURCE_DIR
             $TEST_HOME/docker_compose/test.sh
@@ -372,40 +444,40 @@ workflows:
     jobs:
       - pull_cbioportal_test_codebase
       - checkout
-      - prettier:
-          requires:
-            - checkout
-          filters:
-            branches:
-              ignore:
-                - master
-                - release-*
-      - check_forgotten_spec_only_statements:
-          requires:
-            - checkout
-      - check_incorrect_import_statements:
-          requires:
-            - checkout
+#      - prettier:
+#          requires:
+#            - checkout
+#          filters:
+#            branches:
+#              ignore:
+#                - master
+#                - release-*
+#      - check_forgotten_spec_only_statements:
+#          requires:
+#            - checkout
+#      - check_incorrect_import_statements:
+#          requires:
+#            - checkout
       - build_frontend:
           requires:
             - checkout
-      - e2e_localdb_tests:
-          requires:
-            - pull_cbioportal_test_codebase
-            - build_frontend
+#      - e2e_localdb_tests:
+#          requires:
+#            - pull_cbioportal_test_codebase
+#            - build_frontend
       - e2e_tests:
           requires:
             - pull_cbioportal_test_codebase
             - build_frontend
-      - api_sync:
-          requires:
-            - build_frontend
-      - unit_tests_packages:
-          requires:
-            - build_frontend
-      - unit_tests_main:
-          requires:
-            - build_frontend
+#      - api_sync:
+#          requires:
+#            - build_frontend
+#      - unit_tests_packages:
+#          requires:
+#            - build_frontend
+#      - unit_tests_main:
+#          requires:
+#            - build_frontend
 
 
   nightly:

@@ -106,7 +106,9 @@ describe('oncoprinter clinical example data, color configuration', () => {
     it('oncoprinter reset colors button is visible when default colors not used', async () => {
         // click "Edit Colors" to open modal and check "Reset Colors" button in modal
         const trackOptionsElts = await getNthOncoprintTrackOptionsElements(2);
-        await clickElement(trackOptionsElts.button_selector);
+
+        await clickElement(trackOptionsElts.button_selector, { moveTo: true });
+
         await waitForElementDisplayed(trackOptionsElts.dropdown_selector, {
             timeout: 1000,
         });
@@ -118,7 +120,7 @@ describe('oncoprinter clinical example data, color configuration', () => {
 
     it('oncoprinter color configuration modal reflects default colors', async () => {
         // click "Reset Colors" track
-        await clickElement('[data-test="resetColors"]');
+        await clickElement('[data-test="resetColors"]', { moveTo: true });
         await waitForOncoprint();
 
         assert.strictEqual(
@@ -143,7 +145,7 @@ describe('oncoprinter clinical example data, color configuration', () => {
 
     it('oncoprinter reflects default colors', async () => {
         // close modal
-        await clickElement('.modal button.close');
+        await clickElement('.modal button.close', { moveTo: true });
         const res = await checkOncoprintElement();
         assertScreenShotMatch(res);
     });
@@ -151,7 +153,7 @@ describe('oncoprinter clinical example data, color configuration', () => {
     it('oncoprinter reset colors button is hidden when default colors are used', async () => {
         // click "Edit Colors" to open modal and check "Reset Colors" button in modal
         const trackOptionsElts = await getNthOncoprintTrackOptionsElements(2);
-        await clickElement(trackOptionsElts.button_selector);
+        await clickElement(trackOptionsElts.button_selector, { moveTo: true });
         await waitForElementDisplayed(trackOptionsElts.dropdown_selector, {
             timeout: 1000,
         });

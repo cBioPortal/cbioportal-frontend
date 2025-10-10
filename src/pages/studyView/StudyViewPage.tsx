@@ -641,6 +641,13 @@ export default class StudyViewPage extends React.Component<
                                 onBookmarkClick={this.onBookmarkClick}
                             />
 
+                            {
+                                // this is hidden, it's just to eagerly load
+                            }
+                            <div className={'hide'}>
+                                {this.store.dataWithCount.isComplete}
+                            </div>
+
                             <div className={styles.mainTabs}>
                                 <MSKTabs
                                     id="studyViewTabs"
