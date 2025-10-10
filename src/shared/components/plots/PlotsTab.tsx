@@ -931,13 +931,20 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             </div>
         );
 
-        let mainMessage = `Showing ${axisOverlapSampleCount} samples with data in both profiles (axes)`;
-        if (
+        const isHorzAxisVAF =
+            this.horzSelection.dataType ===
+                AlterationTypeConstants.MUTATION_EXTENDED &&
             this.horzSelection.mutationCountBy ===
-                MutationCountBy.VariantAlleleFrequency ||
+                MutationCountBy.VariantAlleleFrequency;
+
+        const isVertAxisVAF =
+            this.vertSelection.dataType ===
+                AlterationTypeConstants.MUTATION_EXTENDED &&
             this.vertSelection.mutationCountBy ===
-                MutationCountBy.VariantAlleleFrequency
-        ) {
+                MutationCountBy.VariantAlleleFrequency;
+
+        let mainMessage = `Showing ${axisOverlapSampleCount} samples with data in both profiles (axes)`;
+        if (isHorzAxisVAF || isVertAxisVAF) {
             mainMessage +=
                 '. Samples without mutations or Variant Allele Frequency data are excluded from the plot';
         }
