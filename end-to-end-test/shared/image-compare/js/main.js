@@ -223,9 +223,13 @@ function buildDisplay(data, allData, rootUrl) {
     });
 
     var thisData = buildImagePath(data.refImagePath, rootUrl);
+    
+    // Get the URL from the test data if available
+    var screenshotUrl = data.test && data.test.screenshotUrl ? data.test.screenshotUrl : '';
 
     var template = `
      <h3 class="screenshot-name"></h3>
+        ${screenshotUrl ? `<p><strong>URL:</strong> <a href="${screenshotUrl}" target="_blank">${screenshotUrl}</a></p>` : ''}
         <button id="toggleDiffModeBtn" style="font-size:16px">Toggle Comparison Mode</button>
         <br/><br/>
         
