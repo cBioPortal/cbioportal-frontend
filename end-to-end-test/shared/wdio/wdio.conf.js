@@ -27,7 +27,7 @@ const chromeArgs = [
     '--disable-composited-antialiasing',
     '--allow-insecure-localhost',
 ].concat(
-    (function() {
+    (function () {
         return process.env.HEADLESS_CHROME === 'true'
             ? [
                   '--headless',
@@ -68,14 +68,17 @@ const LocalCompare = new VisualRegressionCompare.LocalCompare({
 
 function proxyComparisonMethod(target) {
     const oldProcessScreenshot = target.processScreenshot;
-    LocalCompare.processScreenshot = async function(context, base64Screenshot) {
+    LocalCompare.processScreenshot = async function (
+        context,
+        base64Screenshot
+    ) {
         const screenshotPath = this.getScreenshotFile(context);
         const referencePath = this.getReferencefile(context);
         const referenceExists = await fs.existsSync(referencePath);
 
         // add it to test data in case it's needed later
         context.test.referenceExists = referenceExists;
-        
+
         // Capture the current URL where the screenshot was taken
         try {
             context.test.screenshotUrl = await browser.getUrl();
@@ -119,8 +122,8 @@ function saveErrorImage(
         console.log('ERROR SHOT PATH: ' + img);
         browser.saveScreenshot(img);
 
-        networkLog[title.trim()] = browser.execute(function() {
-            Object.keys(window.ajaxRequests).forEach(key => {
+        networkLog[title.trim()] = browser.execute(function () {
+            Object.keys(window.ajaxRequests).forEach((key) => {
                 window.ajaxRequests[key].end = Date.now();
                 window.ajaxRequests[key].duration =
                     window.ajaxRequests[key].end -
@@ -134,7 +137,7 @@ function saveErrorImage(
 
 proxyComparisonMethod(LocalCompare);
 
-const grep = process.argv.find(l => /--grep=/.test(l));
+const grep = process.argv.find((l) => /--grep=/.test(l));
 
 let SPEC_FILE_PATTERN = undefined;
 
@@ -338,7 +341,7 @@ exports.config = {
             'json',
             {
                 outputDir: process.env.JUNIT_REPORT_PATH || './shared/results/',
-                outputFileFormat: function(opts) {
+                outputFileFormat: function (opts) {
                     return `results-${opts.cid}.json`;
                 },
             },
@@ -347,7 +350,7 @@ exports.config = {
             'junit',
             {
                 outputDir: process.env.JUNIT_REPORT_PATH || './shared/results/',
-                outputFileFormat: function(opts) {
+                outputFileFormat: function (opts) {
                     return `results-${opts.cid}.${opts.capabilities.browserName}.xml`;
                 },
             },
@@ -407,7 +410,7 @@ exports.config = {
      * @param {Array.<String>} specs        List of spec file paths that are to be run
      * @param {Object}         browser      instance of created browser/device session
      */
-    before: function(capabilities, specs) {},
+    before: function (capabilities, specs) {},
     /**
      * Runs before a WebdriverIO command gets executed.
      * @param {String} commandName hook command name
@@ -437,7 +440,7 @@ exports.config = {
      * Hook that gets executed _after_ a hook within the suite starts (e.g. runs after calling
      * afterEach in Mocha)
      */
-    afterHook: function(
+    afterHook: function (
         test,
         context,
         { error, result, duration, passed, retries }
@@ -452,7 +455,7 @@ exports.config = {
     /**
      * Function to be executed after a test (in Mocha/Jasmine).
      */
-    afterTest: function(
+    afterTest: function (
         test,
         context,
         { error, result, duration, passed, retries }
@@ -505,7 +508,7 @@ exports.config = {
      * @param {Array.<Object>} capabilities list of capabilities details
      * @param {<Object>} results object containing test results
      */
-    onComplete: function(exitCode, config, capabilities, results) {
+    onComplete: function (exitCode, config, capabilities, results) {
         mergeReports(resultsDir, `${resultsDir}/completeResults.json`);
         //
         // //this is going to eliminate duplicate tests caused by retries
