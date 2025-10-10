@@ -106,6 +106,7 @@ This repository contains the frontend code for cBioPortal, a comprehensive cance
 
 ### Testing Against Live Instances
 - Use `localStorage.setItem("localdev", true)` in browser console at cbioportal.org to test local changes
+- **Important**: When testing against HTTPS backends (e.g., cbioportal.org, rc.cbioportal.org), use `yarn run startSSL` instead of `yarn run start` to serve frontend over SSL
 - Clear with `localStorage.clear()` when done
 
 ## Common Patterns
