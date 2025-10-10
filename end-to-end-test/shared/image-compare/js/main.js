@@ -44,19 +44,26 @@ $(document).on('click', '#toggleDiffModeBtn', () => {
     updateComparisonMode();
 });
 
-function buildData(reportData) {
-    const data = reportData.map((test) => {
+function buildData(reportData, screenshotUrls = {}) {
+    const data = reportData.map(test => {
         const testName = test.name.replace(/\s/g, '_').toLowerCase();
         const imagePath = `/${testName}_element_chrome_1600x1000.png`;
         const rootUrl = isLocalHost
             ? `/${runMode}/screenshots/`
             : './screenshots/';
+
+        // Add the screenshot URL from the loaded URLs file
+        const testWithUrl = {
+            ...test,
+            screenshotUrl: screenshotUrls[testName] || '',
+        };
+
         return {
             screenImagePath: `${rootUrl}screen${imagePath}`,
             diffImagePath: `${rootUrl}diff${imagePath}`,
             refImagePath: `${rootUrl}reference${imagePath}`,
             imageName: testName,
-            test,
+            test: testWithUrl,
         };
     });
 
@@ -64,10 +71,12 @@ function buildData(reportData) {
 }
 
 function renderList(data) {
-    var $div = $('<div></div>').prependTo('body').css({
-        'max-height': 350,
-        overflow: 'scroll',
-    });
+    var $div = $('<div></div>')
+        .prependTo('body')
+        .css({
+            'max-height': 350,
+            overflow: 'scroll',
+        });
     var $list = $('<ul></ul>').appendTo($div);
 
     data.forEach((item, index) => {
@@ -76,11 +85,15 @@ function renderList(data) {
             `<li><a ${LI_INDEX_ATTR}='${index}' href="javascript:void(0)">${item.imageName}</a></li>`
         )
             .appendTo($list)
-            .click(function () {
+            .click(function() {
                 $list.find('a').removeClass('active');
-                $(this).find('a').addClass('active');
+                $(this)
+                    .find('a')
+                    .addClass('active');
                 selectedSSIndex = parseInt(
-                    $(this).find('a').attr(LI_INDEX_ATTR)
+                    $(this)
+                        .find('a')
+                        .attr(LI_INDEX_ATTR)
                 );
                 buildDisplay(item, data, '', runMode);
                 clearSideBySideInterval();
@@ -113,23 +126,23 @@ function renderList(data) {
 
 function deDupTests(reports) {
     return _(reports)
-        .flatMap((r) => r.suites)
-        .map((s) => {
+        .flatMap(r => r.suites)
+        .map(s => {
             // for each suite group tests by name
             // and filter for groups where ALL tests failed (retries all failed)
             return _(s.tests)
-                .groupBy((s) => s.name)
+                .groupBy(s => s.name)
                 .values()
-                .filter((tests) => {
-                    return _.every(tests, (t) => t.state === 'failed');
+                .filter(tests => {
+                    return _.every(tests, t => t.state === 'failed');
                 })
                 .value();
         })
-        .filter((a) => a.length > 0)
-        .map((a) => {
+        .filter(a => a.length > 0)
+        .map(a => {
             // the multiple failures are repeats
             // we only need one them
-            return a.map((aa) => aa[0]);
+            return a.map(aa => aa[0]);
         })
         .flatMap()
         .value();
@@ -145,14 +158,28 @@ async function bootstrap() {
 
     console.log('reportData', reportData);
 
+    // Load screenshot URLs
+    let screenshotUrls = {};
+    try {
+        const urlsResponse = await fetch(
+            `./${runMode}/screenshots/screenshot-urls.json`
+        );
+        if (urlsResponse.ok) {
+            screenshotUrls = await urlsResponse.json();
+            console.log('Loaded screenshot URLs:', screenshotUrls);
+        }
+    } catch (e) {
+        console.log('Could not load screenshot URLs:', e);
+    }
+
     var tests = _(reportData)
-        .flatMap((r) => r.suites)
-        .flatMap((s) => s.tests)
+        .flatMap(r => r.suites)
+        .flatMap(s => s.tests)
         .value();
 
     const de = deDupTests(reportData);
 
-    const filteredReportData = de.filter((test) => {
+    const filteredReportData = de.filter(test => {
         return (
             test.state === 'failed' &&
             /assertScreenShotMatch/i.test(test.standardError)
@@ -163,13 +190,13 @@ async function bootstrap() {
 
     console.log(filteredReportData);
 
-    const data = buildData(filteredReportData);
+    const data = buildData(filteredReportData, screenshotUrls);
 
     renderList(data);
 }
 
 var selectedSSIndex = 0;
-$(document).ready(function () {
+$(document).ready(function() {
     bootstrap();
 });
 
@@ -211,7 +238,7 @@ function clearSideBySideInterval() {
 }
 
 function buildDisplay(data, allData, rootUrl) {
-    var curlStatements = allData.map((item) => {
+    var curlStatements = allData.map(item => {
         var data = buildImagePath(item.refImagePath, rootUrl);
         return buildCurlStatement(data);
     });
@@ -224,7 +251,11 @@ function buildDisplay(data, allData, rootUrl) {
 
     var template = `
      <h3 class="screenshot-name"></h3>
-        ${screenshotUrl ? `<p><strong>URL:</strong> <a href="${screenshotUrl}" target="_blank">${screenshotUrl}</a></p>` : ''}
+        ${
+            screenshotUrl
+                ? `<p><strong>URL:</strong> <a href="${screenshotUrl}" target="_blank">${screenshotUrl}</a></p>`
+                : ''
+        }
         <button id="toggleDiffModeBtn" style="font-size:16px">Toggle Comparison Mode</button>
         <br/><br/>
         
@@ -296,7 +327,7 @@ function buildDisplay(data, allData, rootUrl) {
 
     $('#display').html(template);
 
-    $('#opacitySlider').on('input', (e) => {
+    $('#opacitySlider').on('input', e => {
         var opacity = e.target.value / 100;
         updateSideBySide(opacity);
     });
