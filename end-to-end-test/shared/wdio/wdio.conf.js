@@ -78,12 +78,14 @@ function proxyComparisonMethod(target) {
 
         // add it to test data in case it's needed later
         context.test.referenceExists = referenceExists;
-
+        
         // Capture the current URL where the screenshot was taken
         try {
-            context.test.screenshotUrl = await browser.getUrl();
+            if (global.browser && typeof global.browser.getUrl === 'function') {
+                context.test.screenshotUrl = await global.browser.getUrl();
+            }
         } catch (e) {
-            console.log('Could not capture URL for screenshot:', e);
+            // Silently fail - URL capture is optional
         }
 
         const resp = await oldProcessScreenshot.apply(this, arguments);
