@@ -92,10 +92,18 @@ function proxyComparisonMethod(target) {
                 console.log('[URL CAPTURE] Successfully captured:', url);
 
                 // Store URL in a separate file for the image comparison report
+                // Normalize the screenshot directory path (remove leading ./)
+                const normalizedScreenshotRoot = screenshotRoot.replace(
+                    /^\.\//,
+                    ''
+                );
                 const urlsFilePath = path.join(
                     process.cwd(),
-                    `${screenshotRoot}/screenshot-urls.json`
+                    normalizedScreenshotRoot,
+                    'screenshot-urls.json'
                 );
+                console.log('[URL CAPTURE] Writing to path:', urlsFilePath);
+
                 let urlsData = {};
                 if (fs.existsSync(urlsFilePath)) {
                     try {
@@ -114,13 +122,23 @@ function proxyComparisonMethod(target) {
                     .replace(/\s/g, '_')
                     .toLowerCase();
                 urlsData[testName] = url;
+
+                // Ensure directory exists
+                const urlsDir = path.dirname(urlsFilePath);
+                if (!fs.existsSync(urlsDir)) {
+                    console.log('[URL CAPTURE] Creating directory:', urlsDir);
+                    fs.mkdirSync(urlsDir, { recursive: true });
+                }
+
                 fs.writeFileSync(
                     urlsFilePath,
                     JSON.stringify(urlsData, null, 2)
                 );
                 console.log(
                     '[URL CAPTURE] Wrote URL to file for test:',
-                    testName
+                    testName,
+                    'at path:',
+                    urlsFilePath
                 );
             } else {
                 console.log(

@@ -161,12 +161,21 @@ async function bootstrap() {
     // Load screenshot URLs
     let screenshotUrls = {};
     try {
-        const urlsResponse = await fetch(
-            `./${runMode}/screenshots/screenshot-urls.json`
-        );
+        // Use the same path logic as screenshots - on CircleCI artifacts are at ./screenshots/
+        const urlsPath = isLocalHost
+            ? `./${runMode}/screenshots/screenshot-urls.json`
+            : './screenshots/screenshot-urls.json';
+        console.log('Fetching screenshot URLs from:', urlsPath);
+        const urlsResponse = await fetch(urlsPath);
         if (urlsResponse.ok) {
             screenshotUrls = await urlsResponse.json();
             console.log('Loaded screenshot URLs:', screenshotUrls);
+        } else {
+            console.log(
+                'Screenshot URLs file not found (status:',
+                urlsResponse.status,
+                ')'
+            );
         }
     } catch (e) {
         console.log('Could not load screenshot URLs:', e);
