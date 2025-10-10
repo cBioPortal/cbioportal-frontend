@@ -496,42 +496,46 @@ export class PatientViewPageStore {
         default: {},
     });
 
-    readonly mrnaExpressionData = remoteData({
-        await: () => [
-            this.mrnaExpressionProfiles,
-            this.analysisMrnaExpressionProfiles,
-            this.mrnaRankMolecularProfileId,
-        ],
+    readonly mrnaExpressionDataByGeneThenProfile = remoteData({
+        await: () => [this.mrnaExpressionProfiles],
         invoke: async () => {
-            let mrnaData: NumericGeneMolecularData[];
-
-            if (this.analysisMrnaExpressionProfiles.result.length > 0) {
-                mrnaData = await getClient().fetchAllMolecularDataInMolecularProfileUsingPOST(
-                    {
-                        projection: 'DETAILED',
-                        molecularProfileId: this.analysisMrnaExpressionProfiles
-                            .result[0].molecularProfileId,
-                        molecularDataFilter: {
-                            sampleIds: this.sampleIds,
-                        } as MolecularDataFilter,
-                    }
-                );
-            } else if (this.mrnaExpressionProfiles.result.length > 0) {
-                mrnaData = await getClient().fetchAllMolecularDataInMolecularProfileUsingPOST(
-                    {
-                        molecularProfileId: this.mrnaExpressionProfiles
-                            .result[0].molecularProfileId,
-                        molecularDataFilter: {
-                            sampleIds: this.sampleIds,
-                        } as MolecularDataFilter,
-                    }
-                );
-            } else {
-                mrnaData = [];
-            }
-            return mrnaData;
+            const mrnaExpressionMap: Record<
+                number,
+                Record<string, NumericGeneMolecularData[]>
+            > = {};
+            await Promise.all(
+                this.mrnaExpressionProfiles.result.map(async p => {
+                    let data = await getClient().fetchAllMolecularDataInMolecularProfileUsingPOST(
+                        {
+                            projection: 'DETAILED',
+                            molecularProfileId: p.molecularProfileId,
+                            molecularDataFilter: {
+                                sampleIds: this.sampleIds,
+                            } as MolecularDataFilter,
+                        }
+                    );
+                    data.map(d => {
+                        if (!mrnaExpressionMap[d.entrezGeneId]) {
+                            mrnaExpressionMap[d.entrezGeneId] = {};
+                        }
+                        if (
+                            !mrnaExpressionMap[d.entrezGeneId][
+                                d.molecularProfileId
+                            ]
+                        ) {
+                            mrnaExpressionMap[d.entrezGeneId][
+                                d.molecularProfileId
+                            ] = [];
+                        }
+                        mrnaExpressionMap[d.entrezGeneId][
+                            d.molecularProfileId
+                        ].push(d);
+                    });
+                })
+            );
+            return mrnaExpressionMap;
         },
-        default: [],
+        default: {},
     });
 
     readonly mrnaExpressionProfiles = remoteData(
@@ -562,42 +566,46 @@ export class PatientViewPageStore {
         []
     );
 
-    readonly proteinExpressionData = remoteData({
-        await: () => [
-            this.proteinExpressionProfiles,
-            this.analysisProteinExpressionProfiles,
-        ],
+    readonly proteinExpressionDataByGeneThenProfile = remoteData({
+        await: () => [this.proteinExpressionProfiles],
         invoke: async () => {
-            let mrnaData: NumericGeneMolecularData[];
-
-            if (this.analysisProteinExpressionProfiles.result.length > 0) {
-                mrnaData = await getClient().fetchAllMolecularDataInMolecularProfileUsingPOST(
-                    {
-                        projection: 'DETAILED',
-                        molecularProfileId: this
-                            .analysisProteinExpressionProfiles.result[0]
-                            .molecularProfileId,
-                        molecularDataFilter: {
-                            sampleIds: this.sampleIds,
-                        } as MolecularDataFilter,
-                    }
-                );
-            } else if (this.proteinExpressionProfiles.result.length > 0) {
-                mrnaData = await getClient().fetchAllMolecularDataInMolecularProfileUsingPOST(
-                    {
-                        molecularProfileId: this.proteinExpressionProfiles
-                            .result[0].molecularProfileId,
-                        molecularDataFilter: {
-                            sampleIds: this.sampleIds,
-                        } as MolecularDataFilter,
-                    }
-                );
-            } else {
-                mrnaData = [];
-            }
-            return mrnaData;
+            const proteinExpressionMap: Record<
+                number,
+                Record<string, NumericGeneMolecularData[]>
+            > = {};
+            await Promise.all(
+                this.proteinExpressionProfiles.result.map(async p => {
+                    let data = await getClient().fetchAllMolecularDataInMolecularProfileUsingPOST(
+                        {
+                            projection: 'DETAILED',
+                            molecularProfileId: p.molecularProfileId,
+                            molecularDataFilter: {
+                                sampleIds: this.sampleIds,
+                            } as MolecularDataFilter,
+                        }
+                    );
+                    data.map(d => {
+                        if (!proteinExpressionMap[d.entrezGeneId]) {
+                            proteinExpressionMap[d.entrezGeneId] = {};
+                        }
+                        if (
+                            !proteinExpressionMap[d.entrezGeneId][
+                                d.molecularProfileId
+                            ]
+                        ) {
+                            proteinExpressionMap[d.entrezGeneId][
+                                d.molecularProfileId
+                            ] = [];
+                        }
+                        proteinExpressionMap[d.entrezGeneId][
+                            d.molecularProfileId
+                        ].push(d);
+                    });
+                })
+            );
+            return proteinExpressionMap;
         },
-        default: [],
+        default: {},
     });
 
     readonly proteinExpressionProfiles = remoteData(
