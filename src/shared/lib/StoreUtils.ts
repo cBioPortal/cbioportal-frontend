@@ -2205,8 +2205,14 @@ export function buildProteinChange(sv: StructuralVariant) {
 }
 
 export function prepareExpressionRowDataForTable(
-    mrnaExpressionData: NumericGeneMolecularData[],
-    proteinExpressionData: NumericGeneMolecularData[],
+    mrnaExpressionDataByGeneThenProfile: Record<
+        string,
+        Record<string, NumericGeneMolecularData[]>
+    >,
+    proteinExpressionDataByGeneThenProfile: Record<
+        string,
+        Record<string, NumericGeneMolecularData[]>
+    >,
     mutationData: Mutation[],
     structuralVariantData: StructuralVariant[],
     discreteCNAData: DiscreteCopyNumberData[],
@@ -2219,21 +2225,17 @@ export function prepareExpressionRowDataForTable(
 ): IExpressionRow[][] {
     const tableData: IExpressionRow[][] = [];
 
-    const mrnaEntrezGeneIds = mrnaExpressionData.map(d => d.entrezGeneId);
-    const proteinEntrezGeneIds = proteinExpressionData.map(d => d.entrezGeneId);
+    const mrnaEntrezGeneIds = Object.keys(
+        mrnaExpressionDataByGeneThenProfile
+    ).map(Number);
+    const proteinEntrezGeneIds = Object.keys(
+        proteinExpressionDataByGeneThenProfile
+    ).map(Number);
     const entrezGeneIds = _.uniq([
         ...mrnaEntrezGeneIds,
         ...proteinEntrezGeneIds,
     ]);
 
-    const geneToMrnaExpressionDataMap = _.keyBy(
-        mrnaExpressionData,
-        d => d.entrezGeneId
-    );
-    const geneToProteinExpressionDataMap = _.keyBy(
-        proteinExpressionData,
-        d => d.entrezGeneId
-    );
     const geneToMutationDataMap = _.keyBy(mutationData, d => d.entrezGeneId);
     const geneToStructuralVariantDataMap = _.keyBy(
         structuralVariantData,
@@ -2247,9 +2249,9 @@ export function prepareExpressionRowDataForTable(
     for (const entrezGeneId of entrezGeneIds) {
         let expressionRowForTable: IExpressionRow = {
             hugoGeneSymbol: allEntrezGeneIdsToGene[entrezGeneId].hugoGeneSymbol,
-            mrnaExpression: geneToMrnaExpressionDataMap[entrezGeneId]?.value,
+            mrnaExpression: mrnaExpressionDataByGeneThenProfile[entrezGeneId],
             proteinExpression:
-                geneToProteinExpressionDataMap[entrezGeneId]?.value,
+                proteinExpressionDataByGeneThenProfile[entrezGeneId],
             mutations: geneToMutationDataMap[entrezGeneId]?.keyword,
             structuralVariants:
                 geneToStructuralVariantDataMap[entrezGeneId]?.eventInfo,
