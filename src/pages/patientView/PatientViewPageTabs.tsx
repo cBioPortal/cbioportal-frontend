@@ -500,16 +500,20 @@ export function tabs(
                 id={PatientViewPageTabs.Expression}
                 linkText={'Expression'}
             >
-                {pageComponent.patientViewPageStore.mrnaExpressionData
-                    .isComplete &&
-                pageComponent.patientViewPageStore.proteinExpressionData
-                    .isComplete &&
+                {pageComponent.patientViewPageStore
+                    .mrnaExpressionDataByGeneThenProfile.isComplete &&
+                pageComponent.patientViewPageStore
+                    .proteinExpressionDataByGeneThenProfile.isComplete &&
                 pageComponent.patientViewPageStore.mutationData.isComplete &&
                 pageComponent.patientViewPageStore.structuralVariantData
                     .isComplete &&
                 pageComponent.patientViewPageStore.discreteCNAData.isComplete &&
                 pageComponent.patientViewPageStore.allEntrezGeneIdsToGene
-                    .isComplete ? (
+                    .isComplete &&
+                pageComponent.patientViewPageStore
+                    .analysisMrnaExpressionProfiles.isComplete &&
+                pageComponent.patientViewPageStore
+                    .analysisProteinExpressionProfiles.isComplete ? (
                     <ExpressionTableWrapper
                         store={pageComponent.patientViewPageStore}
                     />
