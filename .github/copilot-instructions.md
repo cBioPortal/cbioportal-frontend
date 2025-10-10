@@ -63,6 +63,24 @@ This repository contains the frontend code for cBioPortal, a comprehensive cance
 - Test files should be named `*.spec.ts` or `*.spec.tsx`
 - Setup tests configuration is in `src/setupTests.ts`
 
+### End-to-End Testing
+- E2E tests can run against public instances (`remote`) or local dockerized backend (`local`)
+- Run remote e2e tests: `yarn run e2e:remote --grep=some.spec*`
+- Run local e2e tests: `yarn run e2e:local` (requires Docker, jq, and Maven)
+
+### Screenshot Testing
+- Screenshot tests are in files ending with `*.screenshot.spec.js`
+- DOM-based tests use `*.spec.js` extension
+- **Best Practices**:
+  - Only use screenshot tests for components that cannot be accessed via the DOM
+  - Keep screenshots as small as possible to minimize false positives
+  - Larger screenshots require more updates when unrelated features change
+  - Use webdriverio selectors for DOM selection (not jQuery)
+  - Use `browser.waitForExist()`, `waitForVisible()`, `waitFor()` to handle async behavior
+  - Use `browser.debug()` for interactive test development
+- **Important**: Reference screenshots created on host system differ from dockerized setup (e.g., CircleCI) and cannot be used as references
+- Failed test screenshots are in `screenshots/diff` and `screenshots/error` folders for debugging
+
 ### Code Quality
 - Pre-commit hooks automatically format code with Prettier
 - CircleCI runs prettier checks on pull requests
