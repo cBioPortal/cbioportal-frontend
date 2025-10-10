@@ -44,19 +44,26 @@ $(document).on('click', '#toggleDiffModeBtn', () => {
     updateComparisonMode();
 });
 
-function buildData(reportData) {
+function buildData(reportData, screenshotUrls = {}) {
     const data = reportData.map(test => {
         const testName = test.name.replace(/\s/g, '_').toLowerCase();
         const imagePath = `/${testName}_element_chrome_1600x1000.png`;
         const rootUrl = isLocalHost
             ? `/${runMode}/screenshots/`
             : './screenshots/';
+
+        // Add the screenshot URL from the loaded URLs file
+        const testWithUrl = {
+            ...test,
+            screenshotUrl: screenshotUrls[testName] || '',
+        };
+
         return {
             screenImagePath: `${rootUrl}screen${imagePath}`,
             diffImagePath: `${rootUrl}diff${imagePath}`,
             refImagePath: `${rootUrl}reference${imagePath}`,
             imageName: testName,
-            test,
+            test: testWithUrl,
         };
     });
 
@@ -94,10 +101,10 @@ function renderList(data) {
     });
 
     // click first one
-    $list
-        .find('a')
-        .get(0)
-        .click();
+    var firstLink = $list.find('a').get(0);
+    if (firstLink) {
+        firstLink.click();
+    }
 
     function clampSSIndex(i) {
         return Math.max(Math.min(i, data.length - 1), 0);
@@ -151,6 +158,29 @@ async function bootstrap() {
 
     console.log('reportData', reportData);
 
+    // Load screenshot URLs
+    let screenshotUrls = {};
+    try {
+        // Use the same path logic as screenshots - on CircleCI artifacts are at ./screenshots/
+        const urlsPath = isLocalHost
+            ? `./${runMode}/screenshots/screenshot-urls.json`
+            : './screenshots/screenshot-urls.json';
+        console.log('Fetching screenshot URLs from:', urlsPath);
+        const urlsResponse = await fetch(urlsPath);
+        if (urlsResponse.ok) {
+            screenshotUrls = await urlsResponse.json();
+            console.log('Loaded screenshot URLs:', screenshotUrls);
+        } else {
+            console.log(
+                'Screenshot URLs file not found (status:',
+                urlsResponse.status,
+                ')'
+            );
+        }
+    } catch (e) {
+        console.log('Could not load screenshot URLs:', e);
+    }
+
     var tests = _(reportData)
         .flatMap(r => r.suites)
         .flatMap(s => s.tests)
@@ -169,7 +199,7 @@ async function bootstrap() {
 
     console.log(filteredReportData);
 
-    const data = buildData(filteredReportData);
+    const data = buildData(filteredReportData, screenshotUrls);
 
     renderList(data);
 }
@@ -224,8 +254,17 @@ function buildDisplay(data, allData, rootUrl) {
 
     var thisData = buildImagePath(data.refImagePath, rootUrl);
 
+    // Get the URL from the test data if available
+    var screenshotUrl =
+        data.test && data.test.screenshotUrl ? data.test.screenshotUrl : '';
+
     var template = `
      <h3 class="screenshot-name"></h3>
+        ${
+            screenshotUrl
+                ? `<p><strong>URL:</strong> <a href="${screenshotUrl}" target="_blank">${screenshotUrl}</a></p>`
+                : ''
+        }
         <button id="toggleDiffModeBtn" style="font-size:16px">Toggle Comparison Mode</button>
         <br/><br/>
         
