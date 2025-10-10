@@ -34,7 +34,7 @@ import {
     makeScatterPlotPointAppearance,
     scatterPlotLegendData,
     scatterPlotZIndexSortBy,
-    IAxisLogScaleParams,
+    IAxisScaleTransformParams,
     basicAppearance,
 } from 'shared/components/plots/PlotsTabUtils';
 import { ResultsViewPageStore } from '../ResultsViewPageStore';
@@ -641,7 +641,9 @@ export default class ExpressionWrapper extends React.Component<
         return scatterPlotZIndexSortBy<IPlotSampleData>(this.coloringTypes);
     }
 
-    @computed get axisLogScaleFunction(): IAxisLogScaleParams | undefined {
+    @computed get axisLogScaleFunction():
+        | IAxisScaleTransformParams
+        | undefined {
         const MIN_LOG_ARGUMENT = 0.01;
 
         if (!this.logScale) {
@@ -649,9 +651,8 @@ export default class ExpressionWrapper extends React.Component<
         }
         return {
             label: 'log2',
-            fLogScale: (x: number, offset: number) =>
-                Math.log2(Math.max(x, MIN_LOG_ARGUMENT)),
-            fInvLogScale: (x: number) => Math.pow(2, x),
+            transform: (x: number) => Math.log2(Math.max(x, MIN_LOG_ARGUMENT)),
+            inverseTransform: (x: number) => Math.pow(2, x),
         };
     }
 

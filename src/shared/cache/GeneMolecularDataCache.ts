@@ -2,10 +2,13 @@ import LazyMobXCache, { AugmentedData } from '../lib/LazyMobXCache';
 import {
     NumericGeneMolecularData,
     MolecularDataFilter,
+    MolecularProfile,
 } from 'cbioportal-ts-api-client';
 import client from 'shared/api/cbioportalClientInstance';
 import _ from 'lodash';
 import { IDataQueryFilter } from '../lib/StoreUtils';
+import { isZScoreCalculatableProfile } from 'shared/model/MolecularProfileUtils';
+import { calculateStats } from 'shared/lib/calculation/StatsUtils';
 
 type Query = {
     entrezGeneId: number;
@@ -24,6 +27,9 @@ async function fetch(
     queries: Query[],
     molecularProfileIdToSampleFilter: {
         [molecularProfileId: string]: IDataQueryFilter;
+    },
+    molecularProfileIdToMolecularProfile: {
+        [molecularProfileId: string]: MolecularProfile;
     }
 ) {
     const molecularProfileIdToEntrezGeneIds = _.mapValues(
@@ -55,7 +61,40 @@ async function fetch(
         };
     }
     for (const queryResult of results) {
-        for (const datum of queryResult) {
+        const zScoreCalculateableData = queryResult.filter(molecularData =>
+            isZScoreCalculatableProfile(
+                molecularProfileIdToMolecularProfile[
+                    molecularData.molecularProfileId
+                ]
+            )
+        );
+        //TODO if the population group is selected we have to pull NumericGeneMolecularData[] for all molecular profiles of that group and caluculate stats for them insead
+        const stats = calculateStats(zScoreCalculateableData);
+        const zscoresMolecularData = queryResult.map(molecularData => {
+            if (
+                isZScoreCalculatableProfile(
+                    molecularProfileIdToMolecularProfile[
+                        molecularData.molecularProfileId
+                    ]
+                )
+            ) {
+                const statForEntry =
+                    stats[molecularData.molecularProfileId][
+                        molecularData.entrezGeneId
+                    ];
+                let value =
+                    (molecularData.value - statForEntry.mean) /
+                    statForEntry.stdDev;
+                value = parseFloat(value.toFixed(2)); //keep 2 digits in the fractional part
+                return { ...molecularData, value };
+            }
+            return molecularData;
+        });
+        console.log('queryResult');
+        console.log(queryResult);
+        console.log('zscoresMolecularData');
+        console.log(zscoresMolecularData);
+        for (const datum of zscoresMolecularData) {
             ret[queryToKey(datum)].data[0].push(datum);
         }
     }
@@ -70,8 +109,17 @@ export default class GeneMolecularDataCache extends LazyMobXCache<
     constructor(
         private molecularProfileIdToSampleFilter: {
             [molecularProfileId: string]: IDataQueryFilter;
+        },
+        private molecularProfileIdToMolecularProfile: {
+            [molecularProfileId: string]: MolecularProfile;
         }
     ) {
-        super(queryToKey, dataToKey, fetch, molecularProfileIdToSampleFilter);
+        super(
+            queryToKey,
+            dataToKey,
+            fetch,
+            molecularProfileIdToSampleFilter,
+            molecularProfileIdToMolecularProfile
+        );
     }
 }

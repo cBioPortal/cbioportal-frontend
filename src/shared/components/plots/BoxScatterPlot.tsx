@@ -38,7 +38,10 @@ import {
 import autobind from 'autobind-decorator';
 import { dataPointIsLimited } from 'shared/components/plots/PlotUtils';
 import _ from 'lodash';
-import { IAxisLogScaleParams, IBoxScatterPlotPoint } from './PlotsTabUtils';
+import {
+    IAxisScaleTransformParams,
+    IBoxScatterPlotPoint,
+} from './PlotsTabUtils';
 import { Popover } from 'react-bootstrap';
 import * as ReactDOM from 'react-dom';
 import classnames from 'classnames';
@@ -91,7 +94,7 @@ export interface IBoxScatterPlotProps<D extends IBaseBoxScatterPlotPoint> {
     scatterPlotTooltip?: (d: D) => JSX.Element;
     boxPlotTooltip?: (stats: BoxModel[], labels: string[]) => JSX.Element;
     legendData?: LegendDataWithId<D>[];
-    logScale?: IAxisLogScaleParams | undefined; // log scale along the point data axis
+    logScale?: IAxisScaleTransformParams | undefined; // log scale along the point data axis
     excludeLimitValuesFromBoxPlot?: boolean;
     axisLabelX?: string;
     axisLabelY?: string;
@@ -474,8 +477,8 @@ export default class BoxScatterPlot<
             }
         }
         if (this.props.logScale) {
-            min = this.props.logScale.fLogScale(min, 0);
-            max = this.props.logScale.fLogScale(max, 0);
+            min = this.props.logScale.transform(min);
+            max = this.props.logScale.transform(max);
         }
         if (this.props.startDataAxisAtZero) {
             min = Math.min(0, min);
@@ -573,7 +576,7 @@ export default class BoxScatterPlot<
     @bind
     private scatterPlotX(d: IBaseScatterPlotData & D) {
         if (this.props.logScale && this.props.horizontal) {
-            return this.props.logScale.fLogScale(d.x, 0);
+            return this.props.logScale.transform(d.x);
         } else {
             let jitter = 0;
             if (!this.props.horizontal) {
@@ -593,7 +596,7 @@ export default class BoxScatterPlot<
     @bind
     private scatterPlotY(d: IBaseScatterPlotData & D) {
         if (this.props.logScale && !this.props.horizontal) {
-            return this.props.logScale.fLogScale(d.y, 0);
+            return this.props.logScale.transform(d.y);
         } else {
             let jitter = 0;
             if (this.props.horizontal) {
@@ -663,7 +666,7 @@ export default class BoxScatterPlot<
             t,
             ticks,
             this.props.logScale && !this.props.useLogSpaceTicks
-                ? this.props.logScale.fInvLogScale
+                ? this.props.logScale.inverseTransform
                 : undefined
         );
     }
@@ -1245,7 +1248,7 @@ export function toBoxPlotData<D extends IBaseBoxScatterPlotPoint>(
     data: IBoxScatterPlotData<D>[],
     boxCalculationFilter?: (d: D) => boolean,
     excludeLimitValuesFromBoxPlot?: any,
-    logScale?: IAxisLogScaleParams,
+    logScale?: IAxisScaleTransformParams,
     calcBoxSizes?: (box: BoxModel, i: number) => void
 ) {
     // when limit values are shown in the legend, exclude
@@ -1271,7 +1274,7 @@ export function toBoxPlotData<D extends IBaseBoxScatterPlotPoint>(
                     ) {
                         // filter out values in calculating boxes, if a filter is specified ^^
                         if (logScale) {
-                            data.push(logScale.fLogScale(next.value, 0));
+                            data.push(logScale.transform(next.value));
                         } else {
                             data.push(next.value);
                         }
@@ -1307,11 +1310,11 @@ export function toBoxPlotData<D extends IBaseBoxScatterPlotPoint>(
 
 export function toDataDescriptive<D extends IBaseBoxScatterPlotPoint>(
     data: IBoxScatterPlotData<D>[],
-    logScale?: IAxisLogScaleParams
+    logScale?: IAxisScaleTransformParams
 ) {
     return data.map(d => {
         const scatterValues = d.data.map(x =>
-            logScale ? logScale.fLogScale(x.value, 0) : x.value
+            logScale ? logScale.transform(x.value) : x.value
         );
         const count = scatterValues.length;
         // Calculate minimum and maximum

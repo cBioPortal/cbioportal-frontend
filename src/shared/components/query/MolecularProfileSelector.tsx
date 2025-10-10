@@ -11,6 +11,8 @@ import SectionHeader from '../sectionHeader/SectionHeader';
 import { getServerConfig } from 'config/config';
 import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
 import { allowExpressionCrossStudy } from 'shared/lib/allowExpressionCrossStudy';
+import { isZScoreCalculatableProfile } from 'shared/model/MolecularProfileUtils';
+import { groupHeader } from './quickSearch/styles.module.scss';
 
 @observer
 export default class MolecularProfileSelector extends QueryStoreComponent<
@@ -56,7 +58,11 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
                         this.renderGroup('GENESET_SCORE', 'GSVA scores')}
 
                     {allowExpression &&
-                        this.renderGroup('MRNA_EXPRESSION', 'mRNA Expression')}
+                        this.renderGroup(
+                            'MRNA_EXPRESSION',
+                            'mRNA Expression',
+                            true
+                        )}
 
                     {this.renderGroup('METHYLATION', 'DNA Methylation')}
                     {this.renderGroup('METHYLATION_BINARY', 'DNA Methylation')}
@@ -64,7 +70,8 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
                     {allowProteinLevel &&
                         this.renderGroup(
                             'PROTEIN_LEVEL',
-                            'Protein/phosphoprotein level'
+                            'Protein/phosphoprotein level',
+                            true
                         )}
 
                     {!!(
@@ -131,9 +138,13 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
 
     renderGroup(
         molecularAlterationType: MolecularProfile['molecularAlterationType'],
-        groupLabel: string
+        groupLabel: string,
+        includeCalculableZScoreProfiles: boolean = false
     ) {
-        let profiles = this.store.getFilteredProfiles(molecularAlterationType);
+        let profiles = this.store.getZScoreProfiles(
+            molecularAlterationType,
+            includeCalculableZScoreProfiles
+        );
 
         const groupedProfiles = _.groupBy(profiles, profile => {
             const profileType = profile.molecularProfileId.replace(
@@ -155,7 +166,7 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
 
         let output: JSX.Element[] = [];
 
-        if (profiles.length > 1 && !this.store.forDownloadTab)
+        if (profiles.length > 1)
             output.push(
                 <this.ProfileToggle
                     key={'altTypeCheckbox:' + molecularAlterationType}
@@ -167,29 +178,30 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
                 />
             );
 
-        let profileToggles = profiles.map(profile => (
-            <this.ProfileToggle
-                key={'profile:' + profile.molecularProfileId}
-                profile={profile}
-                type={
-                    this.store.forDownloadTab || profiles.length > 1
-                        ? 'radio'
-                        : 'checkbox'
-                }
-                label={
-                    profile.molecularAlterationType === 'STRUCTURAL_VARIANT'
-                        ? groupLabel
-                        : profile.name
-                }
-                checked={this.store.isProfileTypeSelected(
-                    getSuffixOfMolecularProfile(profile)
-                )}
-                isGroupToggle={false}
-            />
-        ));
+        let profileToggles = profiles.map(profile => {
+            let profileToggleLabel =
+                profile.molecularAlterationType === 'STRUCTURAL_VARIANT'
+                    ? groupLabel
+                    : profile.name;
+            if (isZScoreCalculatableProfile(profile)) {
+                profileToggleLabel +=
+                    ' [z-scores will be calculated on the fly]';
+            }
+            return (
+                <this.ProfileToggle
+                    key={'profile:' + profile.molecularProfileId}
+                    profile={profile}
+                    type={profiles.length > 1 ? 'radio' : 'checkbox'}
+                    label={profileToggleLabel}
+                    checked={this.store.isProfileTypeSelected(
+                        getSuffixOfMolecularProfile(profile)
+                    )}
+                    isGroupToggle={false}
+                />
+            );
+        });
 
-        if (this.store.forDownloadTab || profiles.length == 1)
-            output.push(...profileToggles);
+        if (profiles.length == 1) output.push(...profileToggles);
         else
             output.push(
                 <div
@@ -200,8 +212,36 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
                 </div>
             );
 
-        if (this.store.forDownloadTab) return output;
+        const populationGroupOptions = () =>
+            this.store.groups.result
+                .map(group => {
+                    const numberOfSamples = group.data.studies.reduce(
+                        (sampleCount, entry) =>
+                            sampleCount + entry.samples.length,
+                        0
+                    );
+                    return { numberOfSamples, group };
+                })
+                .filter(groupHolder => {
+                    return groupHolder.numberOfSamples > 2;
+                })
+                .map(groupHolder => {
+                    return (
+                        <option value={groupHolder.group.id}>
+                            using '{groupHolder.group.data.name}' group (
+                            {groupHolder.numberOfSamples} samples)
+                        </option>
+                    );
+                });
 
+        const zScoreCalculatableProfileIsSelected = () =>
+            profiles.find(
+                profile =>
+                    isZScoreCalculatableProfile(profile) &&
+                    this.store.isProfileTypeSelected(
+                        getSuffixOfMolecularProfile(profile)
+                    )
+            );
         if (isGroupSelected && molecularAlterationType == 'MRNA_EXPRESSION') {
             output.push(
                 <div key={output.length} className={styles.zScore}>
@@ -220,6 +260,25 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
                     />
                 </div>
             );
+
+            if (zScoreCalculatableProfileIsSelected()) {
+                output.push(
+                    <div key={output.length} className={styles.group}>
+                        Calculate the population standard deviation using
+                        <select
+                            onChange={(
+                                event: React.SyntheticEvent<HTMLSelectElement>
+                            ) =>
+                                (this.store.mrnaPopulationGroup =
+                                    event.currentTarget.value)
+                            }
+                        >
+                            <option>the selected samples</option>
+                            {populationGroupOptions()}
+                        </select>
+                    </div>
+                );
+            }
         }
 
         if (isGroupSelected && molecularAlterationType == 'PROTEIN_LEVEL') {
@@ -240,6 +299,24 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
                     />
                 </div>
             );
+            if (zScoreCalculatableProfileIsSelected()) {
+                output.push(
+                    <div key={output.length} className={styles.group}>
+                        Calculate the population standard deviation using
+                        <select
+                            onChange={(
+                                event: React.SyntheticEvent<HTMLSelectElement>
+                            ) =>
+                                (this.store.rppaPopulationGroup =
+                                    event.currentTarget.value)
+                            }
+                        >
+                            <option>the selected samples</option>
+                            {populationGroupOptions()}
+                        </select>
+                    </div>
+                );
+            }
         }
 
         return output;

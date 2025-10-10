@@ -264,7 +264,6 @@ export default class QuerySummary extends React.Component<
                     onSubmit={this.onSubmit}
                     forkedMode={false}
                     showQuickSearchTab={false}
-                    showDownloadTab={false}
                     showAlerts={true}
                     modifyQueryParams={this.props.store.modifyQueryParams}
                     getQueryStore={() =>

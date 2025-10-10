@@ -24,7 +24,7 @@ import {
     basicAppearance,
     boxPlotTooltip,
     IAxisData,
-    IAxisLogScaleParams,
+    IAxisScaleTransformParams,
     IBoxScatterPlotPoint,
     INumberAxisData,
     isNumberData,
@@ -313,7 +313,7 @@ export default class ClinicalData extends React.Component<
     }
 
     @observable private logScale = false;
-    @observable logScaleFunction: IAxisLogScaleParams | undefined;
+    @observable logScaleFunction: IAxisScaleTransformParams | undefined;
     @observable swapAxes = false;
     @observable showPAndQ = false;
     @observable horizontalBars = false;
@@ -326,9 +326,9 @@ export default class ClinicalData extends React.Component<
             const MIN_LOG_ARGUMENT = 0.01;
             this.logScaleFunction = {
                 label: 'log2',
-                fLogScale: (x: number, offset: number) =>
+                transform: (x: number) =>
                     Math.log2(Math.max(x, MIN_LOG_ARGUMENT)),
-                fInvLogScale: (x: number) => Math.pow(2, x),
+                inverseTransform: (x: number) => Math.pow(2, x),
             };
         } else {
             this.logScaleFunction = undefined;

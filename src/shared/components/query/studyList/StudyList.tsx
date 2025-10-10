@@ -127,16 +127,14 @@ export default class StudyList extends QueryStoreComponent<
                         {indentArrow}
 
                         <span>{cancerType.name}</span>
-                        {!this.store.forDownloadTab && (
-                            <span className={styles.SelectAll}>
-                                {_.intersection(
-                                    childStudyIds,
-                                    this.store.selectableSelectedStudyIds
-                                ).length
-                                    ? 'Deselect All'
-                                    : 'Select All'}
-                            </span>
-                        )}
+                        <span className={styles.SelectAll}>
+                            {_.intersection(
+                                childStudyIds,
+                                this.store.selectableSelectedStudyIds
+                            ).length
+                                ? 'Deselect All'
+                                : 'Select All'}
+                        </span>
                     </CancerTreeCheckbox>
                 </li>
             );
