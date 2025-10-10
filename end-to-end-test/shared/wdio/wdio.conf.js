@@ -81,7 +81,13 @@ function proxyComparisonMethod(target) {
             // Access browser from the global scope where wdio exposes it
             const wdioBrowser = global.browser;
             if (wdioBrowser && typeof wdioBrowser.getUrl === 'function') {
-                const url = await wdioBrowser.getUrl();
+                let url = await wdioBrowser.getUrl();
+                // Remove localdev/localdist parameters from URL
+                url = url
+                    .replace(/[&?]localdev(=[^&]*)?(&|$)/g, '$2')
+                    .replace(/[&?]localdist(=[^&]*)?(&|$)/g, '$2');
+                // Clean up any trailing ? or & characters
+                url = url.replace(/[?&]$/, '');
                 context.test.screenshotUrl = url;
                 console.log('[URL CAPTURE] Successfully captured:', url);
 
