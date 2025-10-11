@@ -57,17 +57,17 @@ export default class GeneAssistant extends QueryStoreComponent<{}, {}> {
         this.showErrorMessage = false;
         this.pending = true;
 
-        let supportMessage = {
+        let userMessage = {
             message: this.userMessage,
         } as UserMessage;
 
         try {
             const response = await internalClient.getSupportUsingPOST({
-                supportMessage,
+                userMessage,
             });
             this.store.messages.push({
                 speaker: 'AI',
-                text: response.answer,
+                text: response.aiResponse,
             });
             this.pending = false;
         } catch (error) {

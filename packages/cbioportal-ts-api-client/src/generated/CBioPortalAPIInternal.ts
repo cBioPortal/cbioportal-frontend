@@ -8528,7 +8528,7 @@ export default class CBioPortalAPIInternal {
     getSupportUsingPOST(parameters: {
         'userMessage' ? : UserMessage,
                 $domain ? : string
-        }): Promise<{ answer: string }>
+        }): Promise<{ aiResponse: string }>
         {
             return this.getSupportUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
