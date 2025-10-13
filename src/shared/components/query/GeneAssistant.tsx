@@ -27,9 +27,10 @@ export default class GeneAssistant extends QueryStoreComponent<{}, {}> {
     @observable private showErrorMessage = false;
     @observable private errorMessage = OQLError.io;
     private examples = {
-        'Find mutations in tumor suppressor genes': 'TP53, RB1, PTEN, APC',
-        'Look for oncogene amplifications': 'MYC, ERBB2, EGFR',
-        'Find KRAS mutations excluding silent ones': 'KRAS',
+        'Find mutations in tumor suppressor genes':
+            'TP53 RB1 CDKN2A PTEN SMAD4 ARID1A...',
+        'Somatic missense mutations in PIK3CA': 'PIK3CA: MISSENSE_SOMATIC',
+        'Find KRAS mutations excluding silent ones': 'KRAS: MUT',
     };
 
     @action.bound
@@ -181,7 +182,7 @@ export default class GeneAssistant extends QueryStoreComponent<{}, {}> {
                                             background: 'none',
                                         }}
                                     >
-                                        <i className="fa-solid fa-share"></i>
+                                        <i className="fa-solid fa-right-to-bracket"></i>
                                     </button>
                                 </div>
                             )}
