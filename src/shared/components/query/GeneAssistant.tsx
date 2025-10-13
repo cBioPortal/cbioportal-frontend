@@ -1,12 +1,20 @@
 import * as React from 'react';
 import ReactMarkdown from 'react-markdown';
-import _ from 'lodash';
 import { observer } from 'mobx-react';
 import { action, observable, makeObservable } from 'mobx';
 import styles from './styles/styles.module.scss';
 import internalClient from '../../../shared/api/cbioportalInternalClientInstance';
 import { UserMessage } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 import { QueryStoreComponent } from './QueryStore';
+
+enum OQLError {
+    io = 'Something went wrong, please try again',
+    invalid = 'Please submit a valid OQL question',
+}
+
+const ErrorMessage: React.FC<{ message: string }> = ({ message }) => (
+    <div className={styles.errorMessage}>{message}</div>
+);
 
 @observer
 export default class GeneAssistant extends QueryStoreComponent<{}, {}> {
@@ -17,6 +25,7 @@ export default class GeneAssistant extends QueryStoreComponent<{}, {}> {
     @observable private userMessage = '';
     @observable private pending = false;
     @observable private showErrorMessage = false;
+    @observable private errorMessage = OQLError.io;
     private examples = {
         'Find mutations in tumor suppressor genes': 'TP53, RB1, PTEN, APC',
         'Look for oncogene amplifications': 'MYC, ERBB2, EGFR',
@@ -26,6 +35,11 @@ export default class GeneAssistant extends QueryStoreComponent<{}, {}> {
     @action.bound
     private toggleSupport() {
         this.store.showSupport = !this.store.showSupport;
+    }
+
+    @action.bound
+    private submitOQL(oql: string) {
+        this.store.geneQuery = oql;
     }
 
     @action.bound
@@ -65,14 +79,22 @@ export default class GeneAssistant extends QueryStoreComponent<{}, {}> {
             const response = await internalClient.getSupportUsingPOST({
                 userMessage,
             });
-            this.store.messages.push({
-                speaker: 'AI',
-                text: response.aiResponse,
-            });
+            const parts = response.aiResponse.split('OQL: ', 2);
+
+            if (parts.length < 2 || parts[1].trim().toUpperCase() === 'FALSE') {
+                this.showErrorMessage = true;
+                this.errorMessage = OQLError.invalid;
+            } else {
+                this.store.messages.push({
+                    speaker: 'AI',
+                    text: parts[0].trim(),
+                });
+            }
             this.pending = false;
         } catch (error) {
             this.pending = false;
             this.showErrorMessage = true;
+            this.errorMessage = OQLError.io;
         }
     }
 
@@ -117,12 +139,8 @@ export default class GeneAssistant extends QueryStoreComponent<{}, {}> {
         );
     }
 
-    renderErrorMessage() {
-        return (
-            <div className={styles.error}>
-                Something went wrong, please try again.
-            </div>
-        );
+    renderErrorMessage(error: string) {
+        return <div className={styles.errorMessage}>{error}</div>;
     }
 
     renderMessages() {
@@ -151,6 +169,22 @@ export default class GeneAssistant extends QueryStoreComponent<{}, {}> {
                                     </p>
                                 ))}
                             </div>
+                            {!isUser && index !== 0 && (
+                                <div>
+                                    <button
+                                        onClick={() => this.submitOQL(msg.text)}
+                                        style={{
+                                            fontSize: '20px',
+                                            color: '#3498db',
+                                            marginRight: '8px',
+                                            border: 0,
+                                            background: 'none',
+                                        }}
+                                    >
+                                        <i className="fa-solid fa-share"></i>
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     );
                 })}
@@ -213,7 +247,9 @@ export default class GeneAssistant extends QueryStoreComponent<{}, {}> {
                             </div>
                             {this.renderMessages()}
                             {this.pending && this.renderThinking()}
-                            {this.showErrorMessage && this.renderErrorMessage()}
+                            {this.showErrorMessage && (
+                                <ErrorMessage message={this.errorMessage} />
+                            )}
                         </div>
 
                         <div className={styles.inputarea}>
@@ -230,7 +266,6 @@ export default class GeneAssistant extends QueryStoreComponent<{}, {}> {
                                 />
                                 <button
                                     type="submit"
-                                    className="fa fa-paper-plane"
                                     aria-hidden="true"
                                     style={{
                                         fontSize: '20px',
@@ -239,7 +274,9 @@ export default class GeneAssistant extends QueryStoreComponent<{}, {}> {
                                         border: 0,
                                         background: 'none',
                                     }}
-                                />
+                                >
+                                    <i className="fa-solid fa-paper-plane"></i>
+                                </button>
                             </form>
                         </div>
                     </div>

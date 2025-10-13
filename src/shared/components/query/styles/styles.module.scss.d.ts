@@ -36,7 +36,6 @@ declare const styles: {
   readonly "dots": string;
   readonly "downloadSubmitExplanation": string;
   readonly "empty": string;
-  readonly "error": string;
   readonly "errorMessage": string;
   readonly "exampledescription": string;
   readonly "exampleitem": string;
