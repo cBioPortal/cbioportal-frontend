@@ -4280,29 +4280,12 @@ export class ResultsViewPageStore extends AnalysisStore
             invoke: async () => {
                 // we do this because get all studies (detailed projection) will be in cache
                 // for all users since it is the same for everyone
-
-                if (localStorage.getItem('my_studies')) {
-                    return JSON.parse(
-                        localStorage.getItem('my_studies')!
-                    ) as CancerStudy[];
-                } else {
-                    alert('fetching!');
-                    const allStudies = await getClient().getAllStudiesUsingGET({
-                        projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
-                    });
-                    localStorage.setItem(
-                        'my_studies',
-                        JSON.stringify(allStudies)
-                    );
-                    return allStudies;
-                }
-
-                // const allStudies = await getClient().getAllStudiesUsingGET({
-                //     projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
-                // });
-                // return allStudies.filter(study =>
-                //     this.studyIds.result!.includes(study.studyId)
-                // );
+                const allStudies = await getClient().getAllStudiesUsingGET({
+                    projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
+                });
+                return allStudies.filter(study =>
+                    this.studyIds.result!.includes(study.studyId)
+                );
             },
         },
         []

@@ -20,6 +20,7 @@ proxyColumnStore(clientColumnStore, 'getSampleInStudy');
 proxyColumnStore(clientColumnStore, 'getAllSamplesInStudy');
 proxyColumnStore(clientColumnStore, 'getAllSamplesOfPatientInStudy');
 //proxyColumnStore(clientColumnStore, 'fetchMutationsInMultipleMolecularProfiles');
+proxyColumnStore(clientColumnStore, 'getAllStudies');
 
 //proxyColumnStore(clientColumnStore, 'getAllStudies');
 
