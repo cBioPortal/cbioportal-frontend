@@ -496,6 +496,56 @@ export class PatientViewPageStore {
         default: {},
     });
 
+    readonly cnaDataByGeneThenProfile = remoteData({
+        await: () => [this.cnaProfiles],
+        invoke: async () => {
+            const cnaMap: Record<
+                number,
+                Record<string, NumericGeneMolecularData[]>
+            > = {};
+            await Promise.all(
+                this.cnaProfiles.result.map(async p => {
+                    let data = await getClient().fetchAllMolecularDataInMolecularProfileUsingPOST(
+                        {
+                            projection: 'DETAILED',
+                            molecularProfileId: p.molecularProfileId,
+                            molecularDataFilter: {
+                                sampleIds: this.sampleIds,
+                            } as MolecularDataFilter,
+                        }
+                    );
+                    data.map(d => {
+                        if (!cnaMap[d.entrezGeneId]) {
+                            cnaMap[d.entrezGeneId] = {};
+                        }
+                        if (!cnaMap[d.entrezGeneId][d.molecularProfileId]) {
+                            cnaMap[d.entrezGeneId][d.molecularProfileId] = [];
+                        }
+                        cnaMap[d.entrezGeneId][d.molecularProfileId].push(d);
+                    });
+                })
+            );
+            return cnaMap;
+        },
+        default: {},
+    });
+
+    readonly cnaProfiles = remoteData(
+        {
+            await: () => [this.molecularProfilesInStudy],
+            invoke: () => {
+                return Promise.resolve(
+                    this.molecularProfilesInStudy.result.filter(
+                        p =>
+                            p.molecularAlterationType ===
+                            'COPY_NUMBER_ALTERATION'
+                    )
+                );
+            },
+        },
+        []
+    );
+
     readonly mrnaExpressionDataByGeneThenProfile = remoteData({
         await: () => [this.mrnaExpressionProfiles],
         invoke: async () => {
