@@ -552,7 +552,8 @@ export function tabs(
                 pageComponent.patientViewPageStore.mutationData.isComplete &&
                 pageComponent.patientViewPageStore.structuralVariantData
                     .isComplete &&
-                pageComponent.patientViewPageStore.discreteCNAData.isComplete &&
+                pageComponent.patientViewPageStore.cnaDataByGeneThenProfile
+                    .isComplete &&
                 pageComponent.patientViewPageStore.allEntrezGeneIdsToGene
                     .isComplete &&
                 pageComponent.patientViewPageStore
