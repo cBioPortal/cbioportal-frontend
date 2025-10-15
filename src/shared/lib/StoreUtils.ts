@@ -2024,7 +2024,10 @@ export function prepareExpressionRowDataForTable(
     >,
     mutationData: Mutation[],
     structuralVariantData: StructuralVariant[],
-    discreteCNAData: DiscreteCopyNumberData[],
+    cnaDataByGeneThenProfile: Record<
+        string,
+        Record<string, NumericGeneMolecularData[]>
+    >,
     allEntrezGeneIdsToGene: {
         [entrezGeneId: number]: {
             hugoGeneSymbol: string;
@@ -2050,10 +2053,6 @@ export function prepareExpressionRowDataForTable(
         structuralVariantData,
         d => d.site1EntrezGeneId
     );
-    const geneToDiscreteCNADataMap = _.keyBy(
-        discreteCNAData,
-        d => d.entrezGeneId
-    );
 
     for (const entrezGeneId of entrezGeneIds) {
         let expressionRowForTable: IExpressionRow = {
@@ -2061,12 +2060,10 @@ export function prepareExpressionRowDataForTable(
             mrnaExpression: mrnaExpressionDataByGeneThenProfile[entrezGeneId],
             proteinExpression:
                 proteinExpressionDataByGeneThenProfile[entrezGeneId],
-            mutations: geneToMutationDataMap[entrezGeneId]?.keyword,
+            mutations: geneToMutationDataMap[entrezGeneId]?.proteinChange,
             structuralVariants:
                 geneToStructuralVariantDataMap[entrezGeneId]?.eventInfo,
-            cna: getAlterationString(
-                geneToDiscreteCNADataMap[entrezGeneId]?.alteration
-            ),
+            cna: cnaDataByGeneThenProfile[entrezGeneId],
         };
 
         tableData.push([expressionRowForTable]);

@@ -8,6 +8,7 @@ import { computed, makeObservable } from 'mobx';
 import { PatientViewPageStore } from '../clinicalInformation/PatientViewPageStore';
 import { prepareExpressionRowDataForTable } from 'shared/lib/StoreUtils';
 import { NumericGeneMolecularData } from 'cbioportal-ts-api-client';
+import { getAlterationString } from 'shared/lib/CopyNumberUtils';
 export interface IExpressionTableWrapperProps {
     store: PatientViewPageStore;
 }
@@ -22,7 +23,7 @@ export interface IExpressionRow {
     proteinExpression: Record<string, NumericGeneMolecularData[]>;
     mutations: string;
     structuralVariants: string;
-    cna: string;
+    cna: Record<string, NumericGeneMolecularData[]>;
 }
 
 @observer
@@ -41,7 +42,7 @@ export default class ExpressionTableWrapper extends React.Component<
             this.props.store.proteinExpressionDataByGeneThenProfile.result,
             this.props.store.mutationData.result,
             this.props.store.structuralVariantData.result,
-            this.props.store.discreteCNAData.result,
+            this.props.store.cnaDataByGeneThenProfile.result,
             this.props.store.allEntrezGeneIdsToGene.result
         );
     }
@@ -291,13 +292,89 @@ export default class ExpressionTableWrapper extends React.Component<
         if (this.props.store.discreteMolecularProfile.result) {
             columns.push({
                 name: this.props.store.discreteMolecularProfile.result.name,
-                render: (d: IExpressionRow[]) => <span>{d[0].cna}</span>,
-                download: (d: IExpressionRow[]) => d[0].cna,
-                sortBy: (d: IExpressionRow[]) => d[0].cna,
+                render: (d: IExpressionRow[]) => (
+                    <span>
+                        {d[0].cna &&
+                        d[0].cna[
+                            this.props.store.discreteMolecularProfile.result!
+                                .molecularProfileId
+                        ]
+                            ? getAlterationString(
+                                  d[0].cna[
+                                      this.props.store.discreteMolecularProfile
+                                          .result!.molecularProfileId
+                                  ][0].value
+                              )
+                            : ''}
+                    </span>
+                ),
+                download: (d: IExpressionRow[]) =>
+                    d[0].cna &&
+                    d[0].cna[
+                        this.props.store.discreteMolecularProfile.result!
+                            .molecularProfileId
+                    ]
+                        ? getAlterationString(
+                              d[0].cna[
+                                  this.props.store.discreteMolecularProfile
+                                      .result!.molecularProfileId
+                              ][0].value
+                          )
+                        : '',
+                sortBy: (d: IExpressionRow[]) => {
+                    if (
+                        d[0].cna &&
+                        d[0].cna[
+                            this.props.store.discreteMolecularProfile.result!
+                                .molecularProfileId
+                        ]
+                    ) {
+                        return d[0].cna[
+                            this.props.store.discreteMolecularProfile.result!
+                                .molecularProfileId
+                        ][0].value;
+                    } else {
+                        return null;
+                    }
+                },
                 visible: true,
                 order: 55,
             });
         }
+
+        this.props.store.cnaProfiles.result.map((p, i) => {
+            if (
+                p.molecularProfileId !==
+                this.props.store.discreteMolecularProfile.result
+                    ?.molecularProfileId
+            ) {
+                columns.push({
+                    name: p.name,
+                    render: (d: IExpressionRow[]) => (
+                        <span>
+                            {d[0].cna && d[0].cna[p.molecularProfileId]
+                                ? d[0].cna[
+                                      p.molecularProfileId
+                                  ][0].value.toFixed(2)
+                                : ''}
+                        </span>
+                    ),
+                    download: (d: IExpressionRow[]) =>
+                        d[0].cna && d[0].cna[p.molecularProfileId]
+                            ? d[0].cna[p.molecularProfileId][0].value.toFixed(2)
+                            : '',
+                    sortBy: (d: IExpressionRow[]) => {
+                        if (d[0].cna && d[0].cna[p.molecularProfileId]) {
+                            return d[0].cna[p.molecularProfileId][0].value;
+                        } else {
+                            return null;
+                        }
+                    },
+                    visible: false,
+                    order: 60,
+                });
+            }
+        });
 
         const orderedColumns = _.sortBy(
             columns,
