@@ -291,6 +291,7 @@ import {
     doesChartHaveComparisonGroupsLimit,
     getCnaData,
     getMutationData,
+    getSampleMolecularIdentifiers,
     getSvData,
     groupSvDataByGene,
 } from 'pages/studyView/StudyViewComparisonUtils';
@@ -12440,47 +12441,27 @@ export class StudyViewPageStore
         { entrezGeneId: number },
         Mutation[]
     >(q => ({
-        await: () => [
-            this.studyToMutationMolecularProfile,
-            this.studyToDataQueryFilter,
-        ],
+        await: () => [this.samples, this.mutationProfiles],
         invoke: async () => {
-            return _.flatten(
-                await Promise.all(
-                    Object.keys(
-                        this.studyToMutationMolecularProfile.result!
-                    ).map(studyId => {
-                        const molecularProfileId = this
-                            .studyToMutationMolecularProfile.result![studyId]
-                            .molecularProfileId;
-                        const dataQueryFilter = this.studyToDataQueryFilter
-                            .result![studyId];
+            const sampleMolecularIdentifiers = getSampleMolecularIdentifiers(
+                this.samples.result!,
+                this.mutationProfiles.result!
+            );
 
-                        if (
-                            !dataQueryFilter ||
-                            (_.isEmpty(dataQueryFilter.sampleIds) &&
-                                !dataQueryFilter.sampleListId)
-                        ) {
-                            return Promise.resolve([]);
-                        }
+            if (sampleMolecularIdentifiers.length === 0) {
+                return [];
+            }
 
-                        if (molecularProfileId) {
-                            return getClient().fetchMutationsInMolecularProfileUsingPOST(
-                                {
-                                    molecularProfileId,
-                                    mutationFilter: {
-                                        entrezGeneIds: [q.entrezGeneId],
-                                        ...dataQueryFilter,
-                                    } as MutationFilter,
-                                    projection:
-                                        REQUEST_ARG_ENUM.PROJECTION_DETAILED,
-                                }
-                            );
-                        } else {
-                            return Promise.resolve([]);
-                        }
-                    })
-                )
+            const mutationMultipleStudyFilter = {
+                entrezGeneIds: [q.entrezGeneId],
+                sampleMolecularIdentifiers,
+            } as MutationMultipleStudyFilter;
+
+            return getClient().fetchMutationsInMultipleMolecularProfilesUsingPOST(
+                {
+                    projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
+                    mutationMultipleStudyFilter,
+                }
             );
         },
     }));
