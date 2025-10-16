@@ -9,6 +9,12 @@ import { PatientViewPageStore } from '../clinicalInformation/PatientViewPageStor
 import { prepareExpressionRowDataForTable } from 'shared/lib/StoreUtils';
 import { NumericGeneMolecularData } from 'cbioportal-ts-api-client';
 import { getAlterationString } from 'shared/lib/CopyNumberUtils';
+import { SampleLabelHTML } from 'shared/components/sampleLabel/SampleLabel';
+import {
+    getCNAByAlteration,
+    getCNAColorByAlteration,
+} from 'pages/studyView/StudyViewUtils';
+import { getCnaTypes } from 'shared/lib/pathwayMapper/PathwayMapperHelpers';
 export interface IExpressionTableWrapperProps {
     store: PatientViewPageStore;
 }
@@ -69,6 +75,8 @@ export default class ExpressionTableWrapper extends React.Component<
 
     @computed get columns() {
         const columns: ExpressionTableColumn[] = [];
+        const hasMultipleSamples: boolean =
+            this.props.store.samples.result.length > 1;
 
         columns.push({
             name: 'Gene',
@@ -89,42 +97,120 @@ export default class ExpressionTableWrapper extends React.Component<
         if (this.defaultMrnaExpressionProfile) {
             columns.push({
                 name: this.defaultMrnaExpressionProfile.name,
-                render: (d: IExpressionRow[]) => (
-                    <span>
-                        {d[0].mrnaExpression &&
-                        d[0].mrnaExpression[
-                            this.defaultMrnaExpressionProfile!
-                                .molecularProfileId
-                        ]
-                            ? d[0].mrnaExpression[
-                                  this.defaultMrnaExpressionProfile!
-                                      .molecularProfileId
-                              ][0].value.toFixed(2)
-                            : ''}
-                    </span>
-                ),
-                download: (d: IExpressionRow[]) =>
-                    d[0].mrnaExpression &&
-                    d[0].mrnaExpression[
-                        this.defaultMrnaExpressionProfile!.molecularProfileId
-                    ]
-                        ? d[0].mrnaExpression[
-                              this.defaultMrnaExpressionProfile!
-                                  .molecularProfileId
-                          ][0].value.toFixed(2)
-                        : '',
-                sortBy: (d: IExpressionRow[]) => {
+                render: (d: IExpressionRow[]) => {
                     if (
-                        d[0].mrnaExpression &&
-                        d[0].mrnaExpression[
+                        d[0].mrnaExpression?.[
                             this.defaultMrnaExpressionProfile!
                                 .molecularProfileId
                         ]
                     ) {
-                        return d[0].mrnaExpression[
+                        if (hasMultipleSamples) {
+                            const mean = _.meanBy(
+                                d[0].mrnaExpression[
+                                    this.defaultMrnaExpressionProfile!
+                                        .molecularProfileId
+                                ],
+                                d => d.value
+                            ).toFixed(2);
+                            return (
+                                <span>
+                                    {mean} (
+                                    {d[0].mrnaExpression[
+                                        this.defaultMrnaExpressionProfile!
+                                            .molecularProfileId
+                                    ].map((data, i) => (
+                                        <span>
+                                            {data.value.toFixed(2)}{' '}
+                                            <SampleLabelHTML
+                                                label={(
+                                                    this.props.store
+                                                        .sampleManager.result!
+                                                        .sampleIndex[
+                                                        data.sampleId
+                                                    ] + 1
+                                                ).toString()}
+                                                fillOpacity={1}
+                                                color={
+                                                    this.props.store
+                                                        .sampleManager.result!
+                                                        .sampleColors[
+                                                        data.sampleId
+                                                    ]
+                                                }
+                                            />
+                                            {i <
+                                                d[0].mrnaExpression[
+                                                    this
+                                                        .defaultMrnaExpressionProfile!
+                                                        .molecularProfileId
+                                                ].length -
+                                                    1 && ', '}
+                                        </span>
+                                    ))}
+                                    )
+                                </span>
+                            );
+                        } else {
+                            return (
+                                <span>
+                                    {d[0].mrnaExpression[
+                                        this.defaultMrnaExpressionProfile!
+                                            .molecularProfileId
+                                    ][0].value.toFixed(2)}
+                                </span>
+                            );
+                        }
+                    }
+                    return <span></span>;
+                },
+                download: (d: IExpressionRow[]) => {
+                    if (
+                        d[0].mrnaExpression?.[
                             this.defaultMrnaExpressionProfile!
                                 .molecularProfileId
-                        ][0].value;
+                        ]
+                    ) {
+                        if (hasMultipleSamples) {
+                            const mean = _.meanBy(
+                                d[0].mrnaExpression[
+                                    this.defaultMrnaExpressionProfile!
+                                        .molecularProfileId
+                                ],
+                                d => d.value
+                            ).toFixed(2);
+                            return mean;
+                        } else {
+                            return d[0].mrnaExpression[
+                                this.defaultMrnaExpressionProfile!
+                                    .molecularProfileId
+                            ][0].value.toFixed(2);
+                        }
+                    } else {
+                        return '';
+                    }
+                },
+                sortBy: (d: IExpressionRow[]) => {
+                    if (
+                        d[0].mrnaExpression?.[
+                            this.defaultMrnaExpressionProfile!
+                                .molecularProfileId
+                        ]
+                    ) {
+                        if (hasMultipleSamples) {
+                            const mean = _.meanBy(
+                                d[0].mrnaExpression[
+                                    this.defaultMrnaExpressionProfile!
+                                        .molecularProfileId
+                                ],
+                                d => d.value
+                            );
+                            return mean;
+                        } else {
+                            return d[0].mrnaExpression[
+                                this.defaultMrnaExpressionProfile!
+                                    .molecularProfileId
+                            ][0].value;
+                        }
                     } else {
                         return null;
                     }
@@ -141,30 +227,92 @@ export default class ExpressionTableWrapper extends React.Component<
             ) {
                 columns.push({
                     name: p.name,
-                    render: (d: IExpressionRow[]) => (
-                        <span>
-                            {d[0].mrnaExpression &&
-                            d[0].mrnaExpression[p.molecularProfileId]
-                                ? d[0].mrnaExpression[
-                                      p.molecularProfileId
-                                  ][0].value.toFixed(2)
-                                : ''}
-                        </span>
-                    ),
-                    download: (d: IExpressionRow[]) =>
-                        d[0].mrnaExpression &&
-                        d[0].mrnaExpression[p.molecularProfileId]
-                            ? d[0].mrnaExpression[
-                                  p.molecularProfileId
-                              ][0].value.toFixed(2)
-                            : '',
+                    render: (d: IExpressionRow[]) => {
+                        if (d[0].mrnaExpression?.[p.molecularProfileId]) {
+                            if (hasMultipleSamples) {
+                                const mean = _.meanBy(
+                                    d[0].mrnaExpression[p.molecularProfileId],
+                                    d => d.value
+                                ).toFixed(2);
+                                return (
+                                    <span>
+                                        {mean} (
+                                        {d[0].mrnaExpression[
+                                            p.molecularProfileId
+                                        ].map((data, i) => (
+                                            <span>
+                                                {data.value.toFixed(2)}{' '}
+                                                <SampleLabelHTML
+                                                    label={(
+                                                        this.props.store
+                                                            .sampleManager
+                                                            .result!
+                                                            .sampleIndex[
+                                                            data.sampleId
+                                                        ] + 1
+                                                    ).toString()}
+                                                    fillOpacity={1}
+                                                    color={
+                                                        this.props.store
+                                                            .sampleManager
+                                                            .result!
+                                                            .sampleColors[
+                                                            data.sampleId
+                                                        ]
+                                                    }
+                                                />
+                                                {i <
+                                                    d[0].mrnaExpression[
+                                                        p.molecularProfileId
+                                                    ].length -
+                                                        1 && ', '}
+                                            </span>
+                                        ))}
+                                        )
+                                    </span>
+                                );
+                            } else {
+                                return (
+                                    <span>
+                                        {d[0].mrnaExpression[
+                                            p.molecularProfileId
+                                        ][0].value.toFixed(2)}
+                                    </span>
+                                );
+                            }
+                        }
+                        return <span></span>;
+                    },
+                    download: (d: IExpressionRow[]) => {
+                        if (d[0].mrnaExpression?.[p.molecularProfileId]) {
+                            if (hasMultipleSamples) {
+                                const mean = _.meanBy(
+                                    d[0].mrnaExpression[p.molecularProfileId],
+                                    d => d.value
+                                ).toFixed(2);
+                                return mean;
+                            } else {
+                                return d[0].mrnaExpression[
+                                    p.molecularProfileId
+                                ][0].value.toFixed(2);
+                            }
+                        } else {
+                            return '';
+                        }
+                    },
                     sortBy: (d: IExpressionRow[]) => {
-                        if (
-                            d[0].mrnaExpression &&
-                            d[0].mrnaExpression[p.molecularProfileId]
-                        ) {
-                            return d[0].mrnaExpression[p.molecularProfileId][0]
-                                .value;
+                        if (d[0].mrnaExpression?.[p.molecularProfileId]) {
+                            if (hasMultipleSamples) {
+                                const mean = _.meanBy(
+                                    d[0].mrnaExpression[p.molecularProfileId],
+                                    d => d.value
+                                );
+                                return mean;
+                            } else {
+                                return d[0].mrnaExpression[
+                                    p.molecularProfileId
+                                ][0].value;
+                            }
                         } else {
                             return null;
                         }
@@ -178,42 +326,120 @@ export default class ExpressionTableWrapper extends React.Component<
         if (this.defaultProteinExpressionProfile) {
             columns.push({
                 name: this.defaultProteinExpressionProfile.name,
-                render: (d: IExpressionRow[]) => (
-                    <span>
-                        {d[0].proteinExpression &&
-                        d[0].proteinExpression[
-                            this.defaultProteinExpressionProfile!
-                                .molecularProfileId
-                        ]
-                            ? d[0].proteinExpression[
-                                  this.defaultProteinExpressionProfile!
-                                      .molecularProfileId
-                              ][0].value.toFixed(2)
-                            : ''}
-                    </span>
-                ),
-                download: (d: IExpressionRow[]) =>
-                    d[0].proteinExpression &&
-                    d[0].proteinExpression[
-                        this.defaultProteinExpressionProfile!.molecularProfileId
-                    ]
-                        ? d[0].proteinExpression[
-                              this.defaultProteinExpressionProfile!
-                                  .molecularProfileId
-                          ][0].value.toFixed(2)
-                        : '',
-                sortBy: (d: IExpressionRow[]) => {
+                render: (d: IExpressionRow[]) => {
                     if (
-                        d[0].proteinExpression &&
-                        d[0].proteinExpression[
+                        d[0].mrnaExpression?.[
                             this.defaultProteinExpressionProfile!
                                 .molecularProfileId
                         ]
                     ) {
-                        return d[0].proteinExpression[
+                        if (hasMultipleSamples) {
+                            const mean = _.meanBy(
+                                d[0].proteinExpression[
+                                    this.defaultProteinExpressionProfile!
+                                        .molecularProfileId
+                                ],
+                                d => d.value
+                            ).toFixed(2);
+                            return (
+                                <span>
+                                    {mean} (
+                                    {d[0].proteinExpression[
+                                        this.defaultProteinExpressionProfile!
+                                            .molecularProfileId
+                                    ].map((data, i) => (
+                                        <span>
+                                            {data.value.toFixed(2)}{' '}
+                                            <SampleLabelHTML
+                                                label={(
+                                                    this.props.store
+                                                        .sampleManager.result!
+                                                        .sampleIndex[
+                                                        data.sampleId
+                                                    ] + 1
+                                                ).toString()}
+                                                fillOpacity={1}
+                                                color={
+                                                    this.props.store
+                                                        .sampleManager.result!
+                                                        .sampleColors[
+                                                        data.sampleId
+                                                    ]
+                                                }
+                                            />
+                                            {i <
+                                                d[0].proteinExpression[
+                                                    this
+                                                        .defaultProteinExpressionProfile!
+                                                        .molecularProfileId
+                                                ].length -
+                                                    1 && ', '}
+                                        </span>
+                                    ))}
+                                    )
+                                </span>
+                            );
+                        } else {
+                            return (
+                                <span>
+                                    {d[0].proteinExpression[
+                                        this.defaultProteinExpressionProfile!
+                                            .molecularProfileId
+                                    ][0].value.toFixed(2)}
+                                </span>
+                            );
+                        }
+                    }
+                    return <span></span>;
+                },
+                download: (d: IExpressionRow[]) => {
+                    if (
+                        d[0].proteinExpression?.[
                             this.defaultProteinExpressionProfile!
                                 .molecularProfileId
-                        ][0].value;
+                        ]
+                    ) {
+                        if (hasMultipleSamples) {
+                            const mean = _.meanBy(
+                                d[0].proteinExpression[
+                                    this.defaultProteinExpressionProfile!
+                                        .molecularProfileId
+                                ],
+                                d => d.value
+                            ).toFixed(2);
+                            return mean;
+                        } else {
+                            return d[0].proteinExpression[
+                                this.defaultProteinExpressionProfile!
+                                    .molecularProfileId
+                            ][0].value.toFixed(2);
+                        }
+                    } else {
+                        return '';
+                    }
+                },
+                sortBy: (d: IExpressionRow[]) => {
+                    if (
+                        d[0].proteinExpression?.[
+                            this.defaultProteinExpressionProfile!
+                                .molecularProfileId
+                        ]
+                    ) {
+                        if (hasMultipleSamples) {
+                            const mean = _.meanBy(
+                                d[0].proteinExpression[
+                                    this.defaultProteinExpressionProfile!
+                                        .molecularProfileId
+                                ],
+                                d => d.value
+                            );
+                            return mean;
+                        } else {
+                            return d[0].proteinExpression[
+                                this.defaultProteinExpressionProfile!
+                                    .molecularProfileId
+                            ][0].value;
+                        }
                     } else {
                         return null;
                     }
@@ -230,31 +456,98 @@ export default class ExpressionTableWrapper extends React.Component<
             ) {
                 columns.push({
                     name: p.name,
-                    render: (d: IExpressionRow[]) => (
-                        <span>
-                            {d[0].proteinExpression &&
-                            d[0].proteinExpression[p.molecularProfileId]
-                                ? d[0].proteinExpression[
-                                      p.molecularProfileId
-                                  ][0].value.toFixed(2)
-                                : ''}
-                        </span>
-                    ),
-                    download: (d: IExpressionRow[]) =>
-                        d[0].proteinExpression &&
-                        d[0].proteinExpression[p.molecularProfileId]
-                            ? d[0].proteinExpression[
-                                  p.molecularProfileId
-                              ][0].value.toFixed(2)
-                            : '',
+                    render: (d: IExpressionRow[]) => {
+                        if (d[0].proteinExpression?.[p.molecularProfileId]) {
+                            if (hasMultipleSamples) {
+                                const mean = _.meanBy(
+                                    d[0].proteinExpression[
+                                        p.molecularProfileId
+                                    ],
+                                    d => d.value
+                                ).toFixed(2);
+                                return (
+                                    <span>
+                                        {mean} (
+                                        {d[0].proteinExpression[
+                                            p.molecularProfileId
+                                        ].map((data, i) => (
+                                            <span>
+                                                {data.value.toFixed(2)}{' '}
+                                                <SampleLabelHTML
+                                                    label={(
+                                                        this.props.store
+                                                            .sampleManager
+                                                            .result!
+                                                            .sampleIndex[
+                                                            data.sampleId
+                                                        ] + 1
+                                                    ).toString()}
+                                                    fillOpacity={1}
+                                                    color={
+                                                        this.props.store
+                                                            .sampleManager
+                                                            .result!
+                                                            .sampleColors[
+                                                            data.sampleId
+                                                        ]
+                                                    }
+                                                />
+                                                {i <
+                                                    d[0].proteinExpression[
+                                                        p.molecularProfileId
+                                                    ].length -
+                                                        1 && ', '}
+                                            </span>
+                                        ))}
+                                        )
+                                    </span>
+                                );
+                            } else {
+                                return (
+                                    <span>
+                                        {d[0].proteinExpression[
+                                            p.molecularProfileId
+                                        ][0].value.toFixed(2)}
+                                    </span>
+                                );
+                            }
+                        }
+                        return <span></span>;
+                    },
+                    download: (d: IExpressionRow[]) => {
+                        if (d[0].proteinExpression?.[p.molecularProfileId]) {
+                            if (hasMultipleSamples) {
+                                const mean = _.meanBy(
+                                    d[0].proteinExpression[
+                                        p.molecularProfileId
+                                    ],
+                                    d => d.value
+                                ).toFixed(2);
+                                return mean;
+                            } else {
+                                return d[0].proteinExpression[
+                                    p.molecularProfileId
+                                ][0].value.toFixed(2);
+                            }
+                        } else {
+                            return '';
+                        }
+                    },
                     sortBy: (d: IExpressionRow[]) => {
-                        if (
-                            d[0].proteinExpression &&
-                            d[0].proteinExpression[p.molecularProfileId]
-                        ) {
-                            return d[0].proteinExpression[
-                                p.molecularProfileId
-                            ][0].value;
+                        if (d[0].proteinExpression?.[p.molecularProfileId]) {
+                            if (hasMultipleSamples) {
+                                const mean = _.meanBy(
+                                    d[0].proteinExpression[
+                                        p.molecularProfileId
+                                    ],
+                                    d => d.value
+                                );
+                                return mean;
+                            } else {
+                                return d[0].proteinExpression[
+                                    p.molecularProfileId
+                                ][0].value;
+                            }
                         } else {
                             return null;
                         }
@@ -270,7 +563,8 @@ export default class ExpressionTableWrapper extends React.Component<
                 name: this.props.store.mutationMolecularProfile.result.name,
                 render: (d: IExpressionRow[]) => <span>{d[0].mutations}</span>,
                 download: (d: IExpressionRow[]) => d[0].mutations,
-                sortBy: (d: IExpressionRow[]) => d[0].mutations,
+                sortBy: (d: IExpressionRow[]) =>
+                    d[0].mutations ? d[0].mutations : null,
                 visible: true,
                 order: 45,
             });
@@ -283,7 +577,8 @@ export default class ExpressionTableWrapper extends React.Component<
                     <span>{d[0].structuralVariants}</span>
                 ),
                 download: (d: IExpressionRow[]) => d[0].structuralVariants,
-                sortBy: (d: IExpressionRow[]) => d[0].structuralVariants,
+                sortBy: (d: IExpressionRow[]) =>
+                    d[0].structuralVariants ? d[0].structuralVariants : null,
                 visible: true,
                 order: 50,
             });
@@ -292,25 +587,39 @@ export default class ExpressionTableWrapper extends React.Component<
         if (this.props.store.discreteMolecularProfile.result) {
             columns.push({
                 name: this.props.store.discreteMolecularProfile.result.name,
-                render: (d: IExpressionRow[]) => (
-                    <span>
-                        {d[0].cna &&
-                        d[0].cna[
+                render: (d: IExpressionRow[]) => {
+                    let color = getCNAColorByAlteration(
+                        d[0].cna?.[
                             this.props.store.discreteMolecularProfile.result!
                                 .molecularProfileId
                         ]
-                            ? getAlterationString(
+                            ? getCNAByAlteration(
                                   d[0].cna[
                                       this.props.store.discreteMolecularProfile
                                           .result!.molecularProfileId
                                   ][0].value
                               )
-                            : ''}
-                    </span>
-                ),
+                            : ''
+                    );
+                    return (
+                        <span style={{ color }}>
+                            {d[0].cna?.[
+                                this.props.store.discreteMolecularProfile
+                                    .result!.molecularProfileId
+                            ]
+                                ? getCnaTypes(
+                                      d[0].cna[
+                                          this.props.store
+                                              .discreteMolecularProfile.result!
+                                              .molecularProfileId
+                                      ][0].value
+                                  )
+                                : ''}
+                        </span>
+                    );
+                },
                 download: (d: IExpressionRow[]) =>
-                    d[0].cna &&
-                    d[0].cna[
+                    d[0].cna?.[
                         this.props.store.discreteMolecularProfile.result!
                             .molecularProfileId
                     ]
@@ -323,8 +632,7 @@ export default class ExpressionTableWrapper extends React.Component<
                         : '',
                 sortBy: (d: IExpressionRow[]) => {
                     if (
-                        d[0].cna &&
-                        d[0].cna[
+                        d[0].cna?.[
                             this.props.store.discreteMolecularProfile.result!
                                 .molecularProfileId
                         ]
@@ -352,7 +660,7 @@ export default class ExpressionTableWrapper extends React.Component<
                     name: p.name,
                     render: (d: IExpressionRow[]) => (
                         <span>
-                            {d[0].cna && d[0].cna[p.molecularProfileId]
+                            {d[0].cna?.[p.molecularProfileId]
                                 ? d[0].cna[
                                       p.molecularProfileId
                                   ][0].value.toFixed(2)
@@ -360,11 +668,11 @@ export default class ExpressionTableWrapper extends React.Component<
                         </span>
                     ),
                     download: (d: IExpressionRow[]) =>
-                        d[0].cna && d[0].cna[p.molecularProfileId]
+                        d[0].cna?.[p.molecularProfileId]
                             ? d[0].cna[p.molecularProfileId][0].value.toFixed(2)
                             : '',
                     sortBy: (d: IExpressionRow[]) => {
-                        if (d[0].cna && d[0].cna[p.molecularProfileId]) {
+                        if (d[0].cna?.[p.molecularProfileId]) {
                             return d[0].cna[p.molecularProfileId][0].value;
                         } else {
                             return null;
