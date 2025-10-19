@@ -304,6 +304,7 @@ export const LegendPanel: React.FC<LegendPanelProps> = ({
 
     return (
         <div
+            data-test="embeddings-legend"
             style={{
                 position: 'absolute',
                 top: '10px',
