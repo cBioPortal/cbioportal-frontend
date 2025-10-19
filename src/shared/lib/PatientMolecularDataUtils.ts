@@ -213,14 +213,23 @@ export function createSampleIdLookupMap(
 
 /**
  * Pre-computes clinical data colors and values for fast O(1) lookup
+ * Handles both sample-level and patient-level attributes
  */
 export function preComputeClinicalDataMaps(
     clinicalData: any[],
     categoryToColor?: { [key: string]: string },
-    numericalValueToColor?: (value: number) => string
-): { colorMap: Map<string, string>; valueMap: Map<string, string> } {
+    numericalValueToColor?: (value: number) => string,
+    isPatientAttribute: boolean = false
+): {
+    colorMap: Map<string, string>;
+    valueMap: Map<string, string>;
+    patientColorMap?: Map<string, string>;
+    patientValueMap?: Map<string, string>;
+} {
     const clinicalDataColorMap = new Map<string, string>();
     const clinicalDataValueMap = new Map<string, string>();
+    const patientColorMap = new Map<string, string>();
+    const patientValueMap = new Map<string, string>();
 
     if (clinicalData) {
         clinicalData.forEach(data => {
@@ -236,14 +245,22 @@ export function preComputeClinicalDataMaps(
                 }
             }
 
-            // Store both color and value for O(1) lookup
+            // Store both color and value for O(1) lookup by sample key
             clinicalDataColorMap.set(sampleKey, color);
             clinicalDataValueMap.set(sampleKey, data.value || 'Unknown');
+
+            // For patient attributes, also store by patient ID
+            if (isPatientAttribute && data.patientId) {
+                patientColorMap.set(data.patientId, color);
+                patientValueMap.set(data.patientId, data.value || 'Unknown');
+            }
         });
     }
 
     return {
         colorMap: clinicalDataColorMap,
         valueMap: clinicalDataValueMap,
+        patientColorMap: isPatientAttribute ? patientColorMap : undefined,
+        patientValueMap: isPatientAttribute ? patientValueMap : undefined,
     };
 }

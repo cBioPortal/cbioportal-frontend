@@ -170,6 +170,8 @@ function transformPatientEmbedding(
     // Pre-compute clinical data if needed
     let clinicalDataColorMap: Map<string, string> | undefined;
     let clinicalDataValueMap: Map<string, string> | undefined;
+    let patientColorMap: Map<string, string> | undefined;
+    let patientValueMap: Map<string, string> | undefined;
 
     if (coloringOption?.info?.clinicalAttribute) {
         const clinicalDataCacheEntry = store.clinicalDataCache.get(
@@ -180,13 +182,18 @@ function transformPatientEmbedding(
             clinicalDataCacheEntry.isComplete &&
             clinicalDataCacheEntry.result
         ) {
-            const { colorMap, valueMap } = preComputeClinicalDataMaps(
+            const isPatientAttribute =
+                coloringOption.info.clinicalAttribute.patientAttribute || false;
+            const maps = preComputeClinicalDataMaps(
                 clinicalDataCacheEntry.result.data,
                 clinicalDataCacheEntry.result.categoryToColor,
-                clinicalDataCacheEntry.result.numericalValueToColor
+                clinicalDataCacheEntry.result.numericalValueToColor,
+                isPatientAttribute
             );
-            clinicalDataColorMap = colorMap;
-            clinicalDataValueMap = valueMap;
+            clinicalDataColorMap = maps.colorMap;
+            clinicalDataValueMap = maps.valueMap;
+            patientColorMap = maps.patientColorMap;
+            patientValueMap = maps.patientValueMap;
         }
     }
 
@@ -362,16 +369,27 @@ function transformPatientEmbedding(
             }
         } else if (coloringOption?.info?.clinicalAttribute && sample) {
             // Clinical attribute coloring - use pre-computed maps (O(1) lookup)
-            const sampleKey = `${sample.studyId}:${sample.sampleId}`;
-            color =
-                clinicalDataColorMap?.get(sampleKey) || DEFAULT_UNKNOWN_COLOR;
-            strokeColor = color;
+            // For patient-level attributes, use patientId lookup; for sample-level, use sampleKey
+            const isPatientAttribute =
+                coloringOption.info.clinicalAttribute.patientAttribute || false;
 
-            // Get from clinical data map OR fallback to cancer type map
-            displayLabel =
-                clinicalDataValueMap?.get(sampleKey) ||
-                patientToCancerTypeMap.get(coord.patientId) ||
-                'Unknown';
+            if (isPatientAttribute && patientColorMap && patientValueMap) {
+                // Use patient-level maps for patient attributes
+                color =
+                    patientColorMap.get(coord.patientId) ||
+                    DEFAULT_UNKNOWN_COLOR;
+                displayLabel =
+                    patientValueMap.get(coord.patientId) || 'Unknown';
+            } else {
+                // Use sample-level maps for sample attributes
+                const sampleKey = `${sample.studyId}:${sample.sampleId}`;
+                color =
+                    clinicalDataColorMap?.get(sampleKey) ||
+                    DEFAULT_UNKNOWN_COLOR;
+                displayLabel =
+                    clinicalDataValueMap?.get(sampleKey) || 'Unknown';
+            }
+            strokeColor = color;
         } else {
             // Default coloring - use pre-computed cancer type map (O(1) lookup)
             displayLabel =
@@ -424,6 +442,8 @@ function transformSampleEmbedding(
     // Pre-compute clinical data if needed
     let clinicalDataColorMap: Map<string, string> | undefined;
     let clinicalDataValueMap: Map<string, string> | undefined;
+    let patientColorMap: Map<string, string> | undefined;
+    let patientValueMap: Map<string, string> | undefined;
 
     if (coloringOption?.info?.clinicalAttribute) {
         const clinicalDataCacheEntry = store.clinicalDataCache.get(
@@ -434,13 +454,18 @@ function transformSampleEmbedding(
             clinicalDataCacheEntry.isComplete &&
             clinicalDataCacheEntry.result
         ) {
-            const { colorMap, valueMap } = preComputeClinicalDataMaps(
+            const isPatientAttribute =
+                coloringOption.info.clinicalAttribute.patientAttribute || false;
+            const maps = preComputeClinicalDataMaps(
                 clinicalDataCacheEntry.result.data,
                 clinicalDataCacheEntry.result.categoryToColor,
-                clinicalDataCacheEntry.result.numericalValueToColor
+                clinicalDataCacheEntry.result.numericalValueToColor,
+                isPatientAttribute
             );
-            clinicalDataColorMap = colorMap;
-            clinicalDataValueMap = valueMap;
+            clinicalDataColorMap = maps.colorMap;
+            clinicalDataValueMap = maps.valueMap;
+            patientColorMap = maps.patientColorMap;
+            patientValueMap = maps.patientValueMap;
         }
     }
 
@@ -684,16 +709,24 @@ function transformSampleEmbedding(
             }
         } else if (coloringOption?.info?.clinicalAttribute && sample) {
             // Clinical attribute coloring - use pre-computed maps (O(1) lookup)
-            const sampleKey = `${sample.studyId}:${sample.sampleId}`;
-            color =
-                clinicalDataColorMap?.get(sampleKey) || DEFAULT_UNKNOWN_COLOR;
-            strokeColor = color;
+            // For patient-level attributes, use patientId lookup; for sample-level, use sampleKey
+            const isPatientAttribute =
+                coloringOption.info.clinicalAttribute.patientAttribute || false;
 
-            // For sample embeddings: direct clinical data lookup, with cancer type fallback
-            displayLabel =
-                clinicalDataValueMap?.get(sampleKey) ||
-                patientToCancerTypeMap.get(patientId) ||
-                'Unknown';
+            if (isPatientAttribute && patientColorMap && patientValueMap) {
+                // Use patient-level maps for patient attributes
+                color = patientColorMap.get(patientId) || DEFAULT_UNKNOWN_COLOR;
+                displayLabel = patientValueMap.get(patientId) || 'Unknown';
+            } else {
+                // Use sample-level maps for sample attributes
+                const sampleKey = `${sample.studyId}:${sample.sampleId}`;
+                color =
+                    clinicalDataColorMap?.get(sampleKey) ||
+                    DEFAULT_UNKNOWN_COLOR;
+                displayLabel =
+                    clinicalDataValueMap?.get(sampleKey) || 'Unknown';
+            }
+            strokeColor = color;
         } else {
             // Default coloring - use pre-computed cancer type map (O(1) lookup)
             displayLabel = patientToCancerTypeMap.get(patientId) || 'Unknown';
