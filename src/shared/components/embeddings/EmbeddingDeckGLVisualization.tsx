@@ -67,6 +67,24 @@ export class EmbeddingDeckGLVisualization extends React.Component<
         window.addEventListener('resize', this.measureContainer);
     }
 
+    componentDidUpdate(prevProps: EmbeddingVisualizationProps) {
+        // Remeasure container when height or width props change
+        // This handles tab switching where the container might have been hidden
+        if (
+            prevProps.height !== this.props.height ||
+            prevProps.width !== this.props.width
+        ) {
+            this.measureContainer();
+        }
+
+        // Also remeasure after a short delay to handle tab visibility changes
+        // When switching tabs, the container might be hidden (width=0) during the update
+        // but visible shortly after, so we need to remeasure once layout is complete
+        setTimeout(() => {
+            this.measureContainer();
+        }, 0);
+    }
+
     componentWillUnmount() {
         window.removeEventListener('resize', this.measureContainer);
     }
