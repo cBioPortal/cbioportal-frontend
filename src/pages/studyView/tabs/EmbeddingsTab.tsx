@@ -125,17 +125,25 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
 
     private initializeDefaultColoring() {
         // Initialize with default coloring - URL parameters will be applied via reaction
+        const defaultOption = this.getDefaultColoringOption();
+        if (defaultOption) {
+            this.selectedColoringOption = defaultOption;
+        }
+    }
+
+    private getDefaultColoringOption(): ColoringMenuOmnibarOption | undefined {
+        // Return the default coloring option (CANCER_TYPE_DETAILED or None)
         const cancerTypeAttr = this.clinicalAttributes.find(
             attr => attr.clinicalAttributeId === 'CANCER_TYPE_DETAILED'
         );
         if (cancerTypeAttr) {
-            this.selectedColoringOption = {
+            return {
                 info: { clinicalAttribute: cancerTypeAttr },
                 label: cancerTypeAttr.displayName,
                 value: `clinical_${cancerTypeAttr.clinicalAttributeId}`,
             } as ColoringMenuOmnibarOption;
         } else {
-            this.selectedColoringOption = {
+            return {
                 label: 'None',
                 value: 'none',
                 info: {
@@ -171,7 +179,11 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             // This matches PlotsTab's encoding format exactly
             if (selectedOption.startsWith('undefined_')) {
                 const jsonPart = selectedOption.substring('undefined_'.length);
-                const clinicalInfo = JSON.parse(jsonPart);
+
+                // The JSON may have escaped quotes that need to be unescaped
+                // Replace \" with " to handle URL-encoded escaped quotes
+                const unescapedJson = jsonPart.replace(/\\"/g, '"');
+                const clinicalInfo = JSON.parse(unescapedJson);
 
                 // Find the clinical attribute by ID
                 const clinicalAttr = this.clinicalAttributes.find(
@@ -502,23 +514,8 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         const hasSelection = selectedPatientIds.length > 0;
 
         if (!hasSelection) {
-            // Even without selection, clean up "Unknown" labels to be more descriptive
-            const unknownPoints = rawPlotData.filter(
-                p => p.displayLabel === 'Unknown'
-            );
-
-            return rawPlotData.map(point => {
-                if (
-                    point.displayLabel === 'Unknown' &&
-                    point.isInCohort !== false
-                ) {
-                    return {
-                        ...point,
-                        displayLabel: 'Unspecified Cancer Type',
-                    };
-                }
-                return point;
-            });
+            // No selection - just return raw plot data without transformation
+            return rawPlotData;
         }
 
         const selectedPatientSet = new Set(selectedPatientIds);
@@ -544,14 +541,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                 };
             }
 
-            // This point is SELECTED - but if it's "Unknown", make it more descriptive
-            if (point.displayLabel === 'Unknown') {
-                return {
-                    ...point,
-                    displayLabel: 'Cancer Type Not Available',
-                };
-            }
-
+            // Point is selected - return as is
             return point;
         });
 
@@ -588,18 +578,8 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
 
         let processedData;
         if (!hasSelection) {
-            processedData = rawPlotData.map(point => {
-                if (
-                    point.displayLabel === 'Unknown' &&
-                    point.isInCohort !== false
-                ) {
-                    return {
-                        ...point,
-                        displayLabel: 'Unspecified Cancer Type',
-                    };
-                }
-                return point;
-            });
+            // No selection - use raw data without transformation
+            processedData = rawPlotData;
         } else {
             const selectedPatientSet = new Set(selectedPatientIds);
             processedData = rawPlotData.map(point => {
@@ -612,12 +592,6 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
 
                 if (!isSelected) {
                     return { ...point, displayLabel: 'Unselected' };
-                }
-                if (point.displayLabel === 'Unknown') {
-                    return {
-                        ...point,
-                        displayLabel: 'Cancer Type Not Available',
-                    };
                 }
                 return point;
             });
@@ -666,18 +640,8 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
 
         let processedData;
         if (!hasSelection) {
-            processedData = rawPlotData.map(point => {
-                if (
-                    point.displayLabel === 'Unknown' &&
-                    point.isInCohort !== false
-                ) {
-                    return {
-                        ...point,
-                        displayLabel: 'Unspecified Cancer Type',
-                    };
-                }
-                return point;
-            });
+            // No selection - use raw data without transformation
+            processedData = rawPlotData;
         } else {
             const selectedPatientSet = new Set(selectedPatientIds);
             processedData = rawPlotData.map(point => {
@@ -690,12 +654,6 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
 
                 if (!isSelected) {
                     return { ...point, displayLabel: 'Unselected' };
-                }
-                if (point.displayLabel === 'Unknown') {
-                    return {
-                        ...point,
-                        displayLabel: 'Cancer Type Not Available',
-                    };
                 }
                 return point;
             });
