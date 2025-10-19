@@ -323,6 +323,10 @@ describe('EmbeddingPlotUtils', () => {
             const embeddingData: PatientEmbeddingData = {
                 embedding_type: 'patients',
                 title: 'Test UMAP',
+                studyIds: ['study1'],
+                description: 'Test embedding',
+                totalPatients: 2,
+                sampleSize: 2,
                 data: [
                     { patientId: 'patient1', x: 1.0, y: 2.0 },
                     { patientId: 'patient_not_in_cohort', x: 3.0, y: 4.0 },
@@ -355,6 +359,10 @@ describe('EmbeddingPlotUtils', () => {
             const embeddingData: PatientEmbeddingData = {
                 embedding_type: 'patients',
                 title: 'Test UMAP',
+                studyIds: ['study1'],
+                description: 'Test embedding',
+                totalPatients: 2,
+                sampleSize: 2,
                 data: [
                     { patientId: 'patient1', x: 1.0, y: 2.0 },
                     { patientId: 'patient2', x: 3.0, y: 4.0 },
@@ -393,6 +401,10 @@ describe('EmbeddingPlotUtils', () => {
             const embeddingData: PatientEmbeddingData = {
                 embedding_type: 'patients',
                 title: 'Test UMAP',
+                studyIds: ['study1'],
+                description: 'Test embedding',
+                totalPatients: 2,
+                sampleSize: 2,
                 data: [
                     { patientId: 'patient1', x: 1.0, y: 2.0 },
                     { patientId: 'patient2', x: 3.0, y: 4.0 },
