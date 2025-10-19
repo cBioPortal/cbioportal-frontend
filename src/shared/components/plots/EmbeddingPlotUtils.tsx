@@ -153,6 +153,13 @@ function transformPatientEmbedding(
     const allSamples = store.samples.result || [];
     const patientLookupMap = createSampleLookupMap(allSamples);
 
+    // Create set of selected patients for clinical attribute filtering
+    const selectedPatientIds = new Set<string>();
+    const selectedSamples = store.selectedSamples.result || [];
+    selectedSamples.forEach(sample => {
+        selectedPatientIds.add(sample.patientId);
+    });
+
     // Use optimized approach - pre-compute cancer type lookup from store
     const patientToCancerTypeMap = new Map<string, string>();
     const filteredSamplesByDetailedCancerType =
@@ -368,28 +375,38 @@ function transformPatientEmbedding(
                 }
             }
         } else if (coloringOption?.info?.clinicalAttribute && sample) {
-            // Clinical attribute coloring - use pre-computed maps (O(1) lookup)
-            // For patient-level attributes, use patientId lookup; for sample-level, use sampleKey
-            const isPatientAttribute =
-                coloringOption.info.clinicalAttribute.patientAttribute || false;
-
-            if (isPatientAttribute && patientColorMap && patientValueMap) {
-                // Use patient-level maps for patient attributes
-                color =
-                    patientColorMap.get(coord.patientId) ||
-                    DEFAULT_UNKNOWN_COLOR;
-                displayLabel =
-                    patientValueMap.get(coord.patientId) || 'Unknown';
+            // Clinical attribute coloring - check if patient is selected first
+            // If not selected, show as "Unselected" instead of trying to look up clinical data
+            if (!selectedPatientIds.has(coord.patientId)) {
+                // Patient not in selected set - show as unselected
+                color = '#C8C8C8'; // Light gray
+                strokeColor = '#C8C8C8';
+                displayLabel = 'Unselected';
             } else {
-                // Use sample-level maps for sample attributes
-                const sampleKey = `${sample.studyId}:${sample.sampleId}`;
-                color =
-                    clinicalDataColorMap?.get(sampleKey) ||
-                    DEFAULT_UNKNOWN_COLOR;
-                displayLabel =
-                    clinicalDataValueMap?.get(sampleKey) || 'Unknown';
+                // Patient is selected - use pre-computed maps (O(1) lookup)
+                // For patient-level attributes, use patientId lookup; for sample-level, use sampleKey
+                const isPatientAttribute =
+                    coloringOption.info.clinicalAttribute.patientAttribute ||
+                    false;
+
+                if (isPatientAttribute && patientColorMap && patientValueMap) {
+                    // Use patient-level maps for patient attributes
+                    color =
+                        patientColorMap.get(coord.patientId) ||
+                        DEFAULT_UNKNOWN_COLOR;
+                    displayLabel =
+                        patientValueMap.get(coord.patientId) || 'Unknown';
+                } else {
+                    // Use sample-level maps for sample attributes
+                    const sampleKey = `${sample.studyId}:${sample.sampleId}`;
+                    color =
+                        clinicalDataColorMap?.get(sampleKey) ||
+                        DEFAULT_UNKNOWN_COLOR;
+                    displayLabel =
+                        clinicalDataValueMap?.get(sampleKey) || 'Unknown';
+                }
+                strokeColor = color;
             }
-            strokeColor = color;
         } else {
             // Default coloring - use pre-computed cancer type map (O(1) lookup)
             displayLabel =
@@ -424,6 +441,13 @@ function transformSampleEmbedding(
 ): EmbeddingPlotPoint[] {
     const allSamples = store.samples.result || [];
     const sampleLookupMap = createSampleIdLookupMap(allSamples);
+
+    // Create set of selected samples for clinical attribute filtering
+    const selectedSampleIds = new Set<string>();
+    const selectedSamples = store.selectedSamples.result || [];
+    selectedSamples.forEach(sample => {
+        selectedSampleIds.add(sample.sampleId);
+    });
 
     // Use same optimized approach - pre-compute cancer type lookup from store
     const patientToCancerTypeMap = new Map<string, string>();
@@ -708,25 +732,36 @@ function transformSampleEmbedding(
                 }
             }
         } else if (coloringOption?.info?.clinicalAttribute && sample) {
-            // Clinical attribute coloring - use pre-computed maps (O(1) lookup)
-            // For patient-level attributes, use patientId lookup; for sample-level, use sampleKey
-            const isPatientAttribute =
-                coloringOption.info.clinicalAttribute.patientAttribute || false;
-
-            if (isPatientAttribute && patientColorMap && patientValueMap) {
-                // Use patient-level maps for patient attributes
-                color = patientColorMap.get(patientId) || DEFAULT_UNKNOWN_COLOR;
-                displayLabel = patientValueMap.get(patientId) || 'Unknown';
+            // Clinical attribute coloring - check if sample is selected first
+            // If not selected, show as "Unselected" instead of trying to look up clinical data
+            if (!selectedSampleIds.has(coord.sampleId)) {
+                // Sample not in selected set - show as unselected
+                color = '#C8C8C8'; // Light gray
+                strokeColor = '#C8C8C8';
+                displayLabel = 'Unselected';
             } else {
-                // Use sample-level maps for sample attributes
-                const sampleKey = `${sample.studyId}:${sample.sampleId}`;
-                color =
-                    clinicalDataColorMap?.get(sampleKey) ||
-                    DEFAULT_UNKNOWN_COLOR;
-                displayLabel =
-                    clinicalDataValueMap?.get(sampleKey) || 'Unknown';
+                // Sample is selected - use pre-computed maps (O(1) lookup)
+                // For patient-level attributes, use patientId lookup; for sample-level, use sampleKey
+                const isPatientAttribute =
+                    coloringOption.info.clinicalAttribute.patientAttribute ||
+                    false;
+
+                if (isPatientAttribute && patientColorMap && patientValueMap) {
+                    // Use patient-level maps for patient attributes
+                    color =
+                        patientColorMap.get(patientId) || DEFAULT_UNKNOWN_COLOR;
+                    displayLabel = patientValueMap.get(patientId) || 'Unknown';
+                } else {
+                    // Use sample-level maps for sample attributes
+                    const sampleKey = `${sample.studyId}:${sample.sampleId}`;
+                    color =
+                        clinicalDataColorMap?.get(sampleKey) ||
+                        DEFAULT_UNKNOWN_COLOR;
+                    displayLabel =
+                        clinicalDataValueMap?.get(sampleKey) || 'Unknown';
+                }
+                strokeColor = color;
             }
-            strokeColor = color;
         } else {
             // Default coloring - use pre-computed cancer type map (O(1) lookup)
             displayLabel = patientToCancerTypeMap.get(patientId) || 'Unknown';
