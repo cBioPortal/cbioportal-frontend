@@ -1139,7 +1139,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         };
 
         return (
-            <div style={{ width: '100%' }}>
+            <div style={{ width: '100%' }} data-test="embeddings-visualization">
                 <EmbeddingDeckGLVisualization {...visualizationProps} />
             </div>
         );
