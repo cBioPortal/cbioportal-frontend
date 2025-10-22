@@ -1,18 +1,13 @@
-import { RecruitingStatus } from 'shared/enums/ClinicalTrialsGovRecruitingStatus';
+import {
+    RecruitingStatus,
+    recruitingStatusOptions,
+} from 'shared/enums/ClinicalTrialsGovRecruitingStatus';
 
 export var genderNames: string[] = ['Male', 'Female', 'All'];
 
-export var recruitingValueNames: RecruitingStatus[] = [
-    RecruitingStatus.ActiveNotRecruiting,
-    RecruitingStatus.Completed,
-    RecruitingStatus.EnrollingByInvitation,
-    RecruitingStatus.NotYetRecruiting,
-    RecruitingStatus.Recruiting,
-    RecruitingStatus.Suspended,
-    RecruitingStatus.Terminated,
-    RecruitingStatus.UnknownStatus,
-    RecruitingStatus.Withdrawn,
-];
+export const recruitingValueNames: RecruitingStatus[] = recruitingStatusOptions.map(
+    option => option.value
+);
 
 export var countriesGroups: { [key: string]: string[] } = {
     'European Union member states': [
