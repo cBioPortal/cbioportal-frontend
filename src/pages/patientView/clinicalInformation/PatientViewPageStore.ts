@@ -247,7 +247,10 @@ import {
     fetchFollowUpsByAlterationsUsingPOST as fetchLocalFollowUpsUsingPOST,
     fetchFollowUpsByAlterationsUsingPOST,
 } from 'shared/api/TherapyRecommendationAPI';
-import { RecruitingStatus } from 'shared/enums/ClinicalTrialsGovRecruitingStatus';
+import {
+    RecruitingStatus,
+    recruitingStatusLabel,
+} from 'shared/enums/ClinicalTrialsGovRecruitingStatus';
 import { ageAsNumber } from '../clinicalTrialMatch/utils/AgeSexConverter';
 import { City } from '../clinicalTrialMatch/ClinicalTrialMatchSelectUtil';
 
@@ -3084,14 +3087,13 @@ export class PatientViewPageStore {
                     }
 
                     for (let i = 0; i < locationModule.length; i++) {
-                        let location: Location = locationModule[i];
-                        loc.push(
-                            location.LocationCity +
-                                ': ' +
-                                location.LocationFacility +
-                                ': ' +
-                                location.LocationState
-                        );
+                        const location: Location = locationModule[i];
+                        const parts = [
+                            location.LocationFacility,
+                            location.LocationCity,
+                            location.LocationCountry,
+                        ].filter(part => !!part && part.length > 0);
+                        loc.push(parts.join(' | '));
                     }
 
                     for (let i = 0; i < interventionModule.length; i++) {
@@ -3111,8 +3113,10 @@ export class PatientViewPageStore {
                                 .BriefTitle,
                         nct: std.getStudy().ProtocolSection.IdentificationModule
                             .NCTId,
-                        status: std.getStudy().ProtocolSection.StatusModule
-                            .OverallStatus,
+                        status: recruitingStatusLabel(
+                            std.getStudy().ProtocolSection.StatusModule
+                                .OverallStatus
+                        ),
                         locations: loc,
                         interventions: inv,
                         condition_matching: false,

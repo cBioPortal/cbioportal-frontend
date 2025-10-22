@@ -859,23 +859,23 @@ export function tabs(
             </MSKTab>
         );
 
-    // tabs.push(
-    //     <MSKTab
-    //         key={43}
-    //         id={PatientViewPageTabs.ClinicalTrialsGov}
-    //         linkText="ClinicalTrialsGov"
-    //         unmountOnHide={false}
-    //     >
-    //         <ClinicalTrialMatchTable
-    //             store={pageComponent.patientViewPageStore}
-    //             clinicalTrialMatches={
-    //                 pageComponent.patientViewPageStore.clinicalTrialMatches
-    //                     .result
-    //             }
-    //             mtbTabAvailable={pageComponent.shouldShowMtbTab}
-    //         />
-    //     </MSKTab>
-    // );
+    tabs.push(
+        <MSKTab
+            key={43}
+            id={PatientViewPageTabs.ClinicalTrialsGov}
+            linkText="ClinicalTrialsGov"
+            unmountOnHide={false}
+        >
+            <ClinicalTrialMatchTable
+                store={pageComponent.patientViewPageStore}
+                clinicalTrialMatches={
+                    pageComponent.patientViewPageStore.clinicalTrialMatches
+                        .result
+                }
+                mtbTabAvailable={pageComponent.shouldShowMtbTab}
+            />
+        </MSKTab>
+    );
 
     pageComponent.resourceTabs.component &&
         /* @ts-ignore */
@@ -883,35 +883,21 @@ export function tabs(
 
     tabs.push(...buildCustomTabs(pageComponent.customTabs));
 
-    // {getServerConfig().custom_tabs &&
-    //     getServerConfig()
-    //         .custom_tabs.filter(
-    //             (tab: any) =>
-    //                 tab.location === 'PATIENT_PAGE'
-    //         )
-    //         .map((tab: any, i: number) => {
-    //             return (
-    //                 <MSKTab
-    //                     key={getPatientViewResourceTabId(
-    //                         'customTab' + i
-    //                     )}
-    //                     id={getPatientViewResourceTabId(
-    //                         'customTab' + i
-    //                     )}
-    //                     unmountOnHide={
-    //                         tab.unmountOnHide ===
-    //                         true
-    //                     }
-    //                     onTabDidMount={div => {
-    //                         this.customTabMountCallback(
-    //                             div,
-    //                             tab
-    //                         );
-    //                     }}
-    //                     linkText={tab.title}
-    //                 ></MSKTab>
-    //             );
-    //         })}
+    const patientCustomTabs = (getServerConfig().custom_tabs || [])
+        .filter((tab: any) => tab.location === 'PATIENT_PAGE')
+        .map((tab: any, i: number) => (
+            <MSKTab
+                key={getPatientViewResourceTabId('customTab' + i)}
+                id={getPatientViewResourceTabId('customTab' + i)}
+                unmountOnHide={tab.unmountOnHide === true}
+                onTabDidMount={div => {
+                    this.customTabMountCallback(div, tab);
+                }}
+                linkText={tab.title}
+            ></MSKTab>
+        ));
+
+    tabs.push(...patientCustomTabs);
 
     return tabs;
 }
