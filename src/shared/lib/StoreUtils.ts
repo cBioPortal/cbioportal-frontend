@@ -2048,8 +2048,8 @@ export function prepareExpressionRowDataForTable(
         ...proteinEntrezGeneIds,
     ]);
 
-    const geneToMutationDataMap = _.keyBy(mutationData, d => d.entrezGeneId);
-    const geneToStructuralVariantDataMap = _.keyBy(
+    const geneToMutationDataMap = _.groupBy(mutationData, d => d.entrezGeneId);
+    const geneToStructuralVariantDataMap = _.groupBy(
         structuralVariantData,
         d => d.site1EntrezGeneId
     );
@@ -2060,9 +2060,8 @@ export function prepareExpressionRowDataForTable(
             mrnaExpression: mrnaExpressionDataByGeneThenProfile[entrezGeneId],
             proteinExpression:
                 proteinExpressionDataByGeneThenProfile[entrezGeneId],
-            mutations: geneToMutationDataMap[entrezGeneId]?.proteinChange,
-            structuralVariants:
-                geneToStructuralVariantDataMap[entrezGeneId]?.eventInfo,
+            mutations: geneToMutationDataMap[entrezGeneId],
+            structuralVariants: geneToStructuralVariantDataMap[entrezGeneId],
             cna: cnaDataByGeneThenProfile[entrezGeneId],
         };
 
