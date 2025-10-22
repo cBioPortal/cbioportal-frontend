@@ -496,6 +496,20 @@ export class PatientViewPageStore {
         default: {},
     });
 
+    readonly allHugoGeneSymbolsToGene = remoteData<{
+        [hugoGeneSymbol: string]: {
+            hugoGeneSymbol: string;
+            entrezGeneId: number;
+        };
+    }>({
+        await: () => [this.allGenes],
+        invoke: () =>
+            Promise.resolve(
+                _.keyBy(this.allGenes.result, gene => gene.hugoGeneSymbol)
+            ),
+        default: {},
+    });
+
     readonly cnaDataByGeneThenProfile = remoteData({
         await: () => [this.cnaProfiles],
         invoke: async () => {

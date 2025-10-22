@@ -15,6 +15,14 @@ import {
     MutationalSignatureLabelMap,
     MutationalSignatureCount,
 } from '/shared/model/MutationalSignature';
+import {
+    CNA_COLOR_AMP,
+    CNA_COLOR_DEFAULT,
+    CNA_COLOR_GAIN,
+    CNA_COLOR_HETLOSS,
+    CNA_COLOR_HOMDEL,
+} from 'cbioportal-frontend-commons';
+import { DEFAULT_GREY } from 'shared/lib/Colors';
 
 export function getMutationalSignaturesVersionFromProfileId(
     inputProfileId: string
@@ -120,4 +128,21 @@ export function createMutationalCountsObjects(
             '',
     }));
     return result;
+}
+
+export function getCNAColorByAlteration(alteration: string): string {
+    switch (alteration) {
+        case 'HOMDEL':
+            return CNA_COLOR_HOMDEL;
+        case 'HETLOSS':
+            return '#2aced4';
+        case 'DIPLOID':
+            return DEFAULT_GREY;
+        case 'GAIN':
+            return '#ff8c9f';
+        case 'AMP':
+            return CNA_COLOR_AMP;
+        default:
+            return CNA_COLOR_DEFAULT;
+    }
 }

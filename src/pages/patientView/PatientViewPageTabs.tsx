@@ -511,12 +511,17 @@ export function tabs(
                     .isComplete &&
                 pageComponent.patientViewPageStore.allEntrezGeneIdsToGene
                     .isComplete &&
+                pageComponent.patientViewPageStore.allHugoGeneSymbolsToGene
+                    .isComplete &&
                 pageComponent.patientViewPageStore
                     .analysisMrnaExpressionProfiles.isComplete &&
                 pageComponent.patientViewPageStore
                     .analysisProteinExpressionProfiles.isComplete ? (
                     <ExpressionTableWrapper
                         store={pageComponent.patientViewPageStore}
+                        mergeOncoKbIcons={
+                            pageComponent.mergeMutationTableOncoKbIcons
+                        }
                     />
                 ) : (
                     <LoadingIndicator
