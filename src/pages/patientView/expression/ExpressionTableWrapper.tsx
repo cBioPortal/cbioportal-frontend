@@ -7,16 +7,27 @@ import { observer } from 'mobx-react';
 import { computed, makeObservable } from 'mobx';
 import { PatientViewPageStore } from '../clinicalInformation/PatientViewPageStore';
 import { prepareExpressionRowDataForTable } from 'shared/lib/StoreUtils';
-import { NumericGeneMolecularData } from 'cbioportal-ts-api-client';
+import {
+    Mutation,
+    NumericGeneMolecularData,
+    StructuralVariant,
+} from 'cbioportal-ts-api-client';
 import { getAlterationString } from 'shared/lib/CopyNumberUtils';
 import { SampleLabelHTML } from 'shared/components/sampleLabel/SampleLabel';
-import {
-    getCNAByAlteration,
-    getCNAColorByAlteration,
-} from 'pages/studyView/StudyViewUtils';
+import { getCNAByAlteration } from 'pages/studyView/StudyViewUtils';
 import { getCnaTypes } from 'shared/lib/pathwayMapper/PathwayMapperHelpers';
+import { getCNAColorByAlteration } from '../PatientViewPageUtils';
+import TumorColumnFormatter from '../mutation/column/TumorColumnFormatter';
+import ProteinChangeColumnFormatter from 'shared/components/mutationTable/column/ProteinChangeColumnFormatter';
+import AnnotationColumnFormatter from 'shared/components/mutationTable/column/AnnotationColumnFormatter';
+import {
+    calculateOncoKbContentPadding,
+    DEFAULT_ONCOKB_CONTENT_WIDTH,
+} from 'shared/lib/AnnotationColumnUtils';
+import autobind from 'autobind-decorator';
 export interface IExpressionTableWrapperProps {
     store: PatientViewPageStore;
+    mergeOncoKbIcons?: boolean;
 }
 
 class ExpressionTable extends LazyMobXTable<IExpressionRow[]> {}
@@ -27,8 +38,8 @@ export interface IExpressionRow {
     hugoGeneSymbol: string;
     mrnaExpression: Record<string, NumericGeneMolecularData[]>;
     proteinExpression: Record<string, NumericGeneMolecularData[]>;
-    mutations: string;
-    structuralVariants: string;
+    mutations: Mutation[];
+    structuralVariants: StructuralVariant[];
     cna: Record<string, NumericGeneMolecularData[]>;
 }
 
@@ -71,6 +82,30 @@ export default class ExpressionTableWrapper extends React.Component<
         ) {
             return this.props.store.proteinExpressionProfiles.result[0];
         }
+    }
+
+    @autobind
+    protected resolveTumorType(mutation: Mutation) {
+        // first, try to get it from uniqueSampleKeyToTumorType map
+        if (this.props.store.uniqueSampleKeyToTumorType) {
+            return this.props.store.uniqueSampleKeyToTumorType[
+                mutation.uniqueSampleKey
+            ];
+        }
+
+        // second, try the study cancer type
+        if (this.props.store.studyIdToStudy.result) {
+            const studyMetaData = this.props.store.studyIdToStudy.result[
+                mutation.studyId
+            ];
+
+            if (studyMetaData.cancerTypeId !== 'mixed') {
+                return studyMetaData.cancerType.name;
+            }
+        }
+
+        // return Unknown, this should not happen...
+        return 'Unknown';
     }
 
     @computed get columns() {
@@ -561,10 +596,91 @@ export default class ExpressionTableWrapper extends React.Component<
         if (this.props.store.mutationMolecularProfile.result) {
             columns.push({
                 name: this.props.store.mutationMolecularProfile.result.name,
-                render: (d: IExpressionRow[]) => <span>{d[0].mutations}</span>,
-                download: (d: IExpressionRow[]) => d[0].mutations,
+                render: (d: IExpressionRow[]) => {
+                    if (d[0]?.mutations) {
+                        return (
+                            <>
+                                <span style={{ display: 'flex' }}>
+                                    {ProteinChangeColumnFormatter.renderWithMutationStatus(
+                                        d[0].mutations,
+                                        this.props.store
+                                            .indexedVariantAnnotations
+                                    )}
+                                    {AnnotationColumnFormatter.renderFunction(
+                                        d[0].mutations,
+                                        {
+                                            oncoKbData: this.props.store
+                                                .oncoKbData,
+                                            oncoKbCancerGenes: this.props.store
+                                                .oncoKbCancerGenes,
+                                            usingPublicOncoKbInstance: this
+                                                .props.store
+                                                .usingPublicOncoKbInstance,
+                                            mergeOncoKbIcons: this.props
+                                                .mergeOncoKbIcons,
+                                            oncoKbContentPadding: calculateOncoKbContentPadding(
+                                                DEFAULT_ONCOKB_CONTENT_WIDTH
+                                            ),
+                                            enableCivic: false,
+                                            enableOncoKb: true,
+                                            enableHotspot: false,
+                                            enableRevue: false,
+                                            resolveTumorType: this
+                                                .resolveTumorType,
+                                        }
+                                    )}
+                                </span>
+                                {hasMultipleSamples &&
+                                    TumorColumnFormatter.renderFunction(
+                                        d[0].mutations,
+                                        this.props.store.sampleManager.result!,
+                                        this.props.store
+                                            .sampleToDiscreteGenePanelId.result,
+                                        this.props.store
+                                            .genePanelIdToEntrezGeneIds.result
+                                    )}
+                            </>
+                        );
+                    } else if (
+                        _.every(
+                            TumorColumnFormatter.getProfiledSamplesForGene(
+                                this.props.store.allHugoGeneSymbolsToGene
+                                    .result[d[0].hugoGeneSymbol].entrezGeneId,
+                                this.props.store.sampleIds,
+                                this.props.store.sampleToMutationGenePanelId
+                                    .result,
+                                this.props.store.genePanelIdToEntrezGeneIds
+                                    .result
+                            ),
+                            profiledStatus => !!!profiledStatus
+                        )
+                    ) {
+                        return (
+                            <svg
+                                width="12"
+                                height="12"
+                                data-test="not-profiled-icon"
+                            >
+                                <g transform="translate(0,5)">
+                                    <rect
+                                        width="12"
+                                        height="2.5"
+                                        rx="1.25"
+                                        ry="1.25"
+                                        fill={'#cccccc'}
+                                        fillOpacity={1}
+                                    />
+                                </g>
+                            </svg>
+                        );
+                    } else {
+                        return <span></span>;
+                    }
+                },
+                download: (d: IExpressionRow[]) =>
+                    d[0]?.mutations ? d[0].mutations[0].proteinChange : '',
                 sortBy: (d: IExpressionRow[]) =>
-                    d[0].mutations ? d[0].mutations : null,
+                    d[0]?.mutations ? d[0].mutations[0].proteinChange : null,
                 visible: true,
                 order: 45,
             });
@@ -573,12 +689,52 @@ export default class ExpressionTableWrapper extends React.Component<
         if (this.props.store.structuralVariantProfile.result) {
             columns.push({
                 name: this.props.store.structuralVariantProfile.result.name,
-                render: (d: IExpressionRow[]) => (
-                    <span>{d[0].structuralVariants}</span>
-                ),
-                download: (d: IExpressionRow[]) => d[0].structuralVariants,
+                render: (d: IExpressionRow[]) => {
+                    return (
+                        <>
+                            <span>
+                                {d[0]?.structuralVariants
+                                    ? d[0].structuralVariants[0].eventInfo
+                                    : ''}
+                            </span>
+                            {d[0]?.structuralVariants ? (
+                                TumorColumnFormatter.renderFunction(
+                                    d[0].structuralVariants.map(datum => {
+                                        // if both are available, return both genes in an array
+                                        // otherwise, return whichever is available
+                                        const genes =
+                                            datum.site1EntrezGeneId &&
+                                            datum.site2EntrezGeneId
+                                                ? [
+                                                      datum.site1EntrezGeneId,
+                                                      datum.site2EntrezGeneId,
+                                                  ]
+                                                : datum.site1EntrezGeneId ||
+                                                  datum.site2EntrezGeneId;
+                                        return {
+                                            sampleId: datum.sampleId,
+                                            entrezGeneId: genes,
+                                            sv: true,
+                                        };
+                                    }),
+                                    this.props.store.sampleManager.result!,
+                                    this.props.store.sampleToDiscreteGenePanelId
+                                        .result,
+                                    this.props.store.genePanelIdToEntrezGeneIds
+                                        .result
+                                )
+                            ) : (
+                                <span></span>
+                            )}
+                        </>
+                    );
+                },
+                download: (d: IExpressionRow[]) =>
+                    d[0]?.structuralVariants[0].eventInfo,
                 sortBy: (d: IExpressionRow[]) =>
-                    d[0].structuralVariants ? d[0].structuralVariants : null,
+                    d[0]?.structuralVariants
+                        ? d[0].structuralVariants[0].eventInfo
+                        : null,
                 visible: true,
                 order: 50,
             });
