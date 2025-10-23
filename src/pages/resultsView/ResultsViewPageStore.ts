@@ -4274,7 +4274,7 @@ export class ResultsViewPageStore extends AnalysisStore
         default: [],
     });
 
-    readonly studies = remoteData<CancerStudy[]>(
+    readonly studies = remoteData(
         {
             await: () => [this.studyIds],
             invoke: async () => {
