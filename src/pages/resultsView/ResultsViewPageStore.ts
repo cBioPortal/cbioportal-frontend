@@ -3068,7 +3068,7 @@ export class ResultsViewPageStore extends AnalysisStore
         {
             invoke: async () =>
                 await getClient().getAllStudiesUsingGET({
-                    projection: REQUEST_ARG_ENUM.PROJECTION_SUMMARY,
+                    projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
                 }),
         },
         []
