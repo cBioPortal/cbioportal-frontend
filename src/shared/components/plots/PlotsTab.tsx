@@ -1217,30 +1217,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     (this._dataType === undefined && dataTypeOptions.length) ||
                     selectedDataTypeDoesNotExist
                 ) {
-                    // if no queried genes, default is undefined
+                    // if no queried genes and no highlighted samples (study view plots), default is undefined
                     if (
-                        self.props.highlightedSamples &&
-                        vertical &&
-                        isAlterationTypePresent(
-                            dataTypeOptions,
-                            vertical,
-                            AlterationTypeConstants.MRNA_EXPRESSION
-                        )
+                        self.props.hasNoQueriedGenes &&
+                        !self.props.highlightedSamples
                     ) {
-                        return AlterationTypeConstants.MRNA_EXPRESSION;
-                    }
-                    if (
-                        self.props.highlightedSamples &&
-                        !vertical &&
-                        isAlterationTypePresent(
-                            dataTypeOptions,
-                            !vertical,
-                            AlterationTypeConstants.MRNA_EXPRESSION
-                        )
-                    ) {
-                        return AlterationTypeConstants.COPY_NUMBER_ALTERATION;
-                    }
-                    if (self.props.hasNoQueriedGenes) {
                         return undefined;
                     }
                     // return computed default if _dataType is undefined and if there are options to select a default value from
@@ -2110,7 +2091,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.props.handleCohortChange(option.value);
     }
 
-    @computed get selectedCohort(): MobxPromise<Sample[]> {
+    @computed get selectedCohortSamples(): MobxPromise<Sample[]> {
         if (
             this.props.cohortSelection &&
             this.props.cohortSelection === CohortOptions.CancerType &&
@@ -3467,7 +3448,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.props.structuralVariantCache,
             this.props.numericGeneMolecularDataCache,
             this.props.coverageInformation,
-            this.selectedCohort,
+            this.selectedCohortSamples,
             this.props.genesetMolecularDataCache,
             this.props.genericAssayMolecularDataCache
         );
@@ -3495,7 +3476,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.props.structuralVariantCache,
             this.props.numericGeneMolecularDataCache,
             this.props.coverageInformation,
-            this.selectedCohort,
+            this.selectedCohortSamples,
             this.props.genesetMolecularDataCache,
             this.props.genericAssayMolecularDataCache
         );
@@ -3822,12 +3803,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         const searchMutationWords = this.searchMutationWords;
         const searchHighlight = (d: IPlotSampleData) => {
             let caseMatch = false;
-            if (
-                this.props.highlightedSamples &&
-                this.props.highlightedSamples.includes(d.sampleId)
-            ) {
-                caseMatch = true;
-            }
             for (const word of searchCaseWords) {
                 caseMatch =
                     caseMatch ||
@@ -6659,7 +6634,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                             />
                             <CaseFilterWarning
                                 samples={this.props.samples!}
-                                filteredSamples={this.selectedCohort!}
+                                filteredSamples={this.selectedCohortSamples!}
                                 patients={this.props.patients!}
                                 filteredPatients={this.props.filteredPatients!}
                                 hideUnprofiledSamples={
