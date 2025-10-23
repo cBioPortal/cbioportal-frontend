@@ -213,8 +213,9 @@ import { SiteError } from 'shared/model/appMisc';
 import { AnnotatedExtendedAlteration } from 'shared/model/AnnotatedExtendedAlteration';
 import { CustomDriverNumericGeneMolecularData } from 'shared/model/CustomDriverNumericGeneMolecularData';
 import {
+    ExtendedClinicalAttribute,
     fetchPatients,
-    isRNASeqProfile,
+    getExtendsClinicalAttributesFromCustomData,
     parseGenericAssayGroups,
 } from 'pages/resultsView/ResultsViewPageStoreUtils';
 import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
@@ -231,6 +232,9 @@ import ClinicalDataCache from 'shared/cache/ClinicalDataCache';
 import GenesetMolecularDataCache from 'shared/cache/GenesetMolecularDataCache';
 import GenericAssayMolecularDataCache from 'shared/cache/GenericAssayMolecularDataCache';
 import { CohortOptions } from 'shared/components/plots/PlotsTab';
+import GenesetCache from 'shared/cache/GenesetCache';
+import ComplexKeyMap from 'shared/lib/complexKeyDataStructures/ComplexKeyMap';
+import sessionServiceClient from '../../../shared/api/sessionServiceInstance';
 
 type PageMode = 'patient' | 'sample';
 type ResourceId = string;
@@ -739,20 +743,28 @@ export class PatientViewPageStore {
         onError: () => {},
     });
 
+    readonly genesetCache = new GenesetCache();
+
+    @computed get genesetIds() {
+        return this.urlWrapper.query.geneset_list &&
+            this.urlWrapper.query.geneset_list.trim().length
+            ? this.urlWrapper.query.geneset_list.trim().split(/\s+/)
+            : [];
+    }
+
     readonly genesets = remoteData<Geneset[]>({
         invoke: () => {
-            // if (this.genesetIds && this.genesetIds.length > 0) {
-            //     return this.internalClient.fetchGenesetsUsingPOST({
-            //         genesetIds: this.genesetIds.slice(),
-            //     });
-            // } else {
-            //     return Promise.resolve([]);
-            // }
-            return Promise.resolve([]);
+            if (this.genesetIds && this.genesetIds.length > 0) {
+                return this.internalClient.fetchGenesetsUsingPOST({
+                    genesetIds: this.genesetIds.slice(),
+                });
+            } else {
+                return Promise.resolve([]);
+            }
         },
-        // onResult: (genesets: Geneset[]) => {
-        //     this.genesetCache.addData(genesets);
-        // },
+        onResult: (genesets: Geneset[]) => {
+            this.genesetCache.addData(genesets);
+        },
     });
 
     readonly genericAssayEntitiesGroupedByProfileId = remoteData<{
@@ -780,30 +792,36 @@ export class PatientViewPageStore {
         default: [],
     });
 
-    readonly customAttributes = remoteData({
-        // await: () => [this.sampleMap],
-        invoke: async () => {
-            // let ret: ExtendedClinicalAttribute[] = [];
-            // if (this.appStore.isLoggedIn) {
-            //     try {
-            //         const unknownQueriedIdsMap = stringListToSet(
-            //             this.unknownQueriedIds.result
-            //         );
-            //         //Add custom data from user profile
-            //         const customChartSessions = await sessionServiceClient.getCustomDataForStudies(
-            //             this.studyIds.filter(
-            //                 studyId => !unknownQueriedIdsMap[studyId]
-            //             )
-            //         );
+    readonly sampleMap = remoteData({
+        await: () => [this.selectedCohortSamples],
+        invoke: () => {
+            return Promise.resolve(
+                ComplexKeyMap.from(this.selectedCohortSamples.result!, s => ({
+                    studyId: s.studyId,
+                    sampleId: s.sampleId,
+                }))
+            );
+        },
+    });
 
-            //         ret = getExtendsClinicalAttributesFromCustomData(
-            //             customChartSessions,
-            //             this.sampleMap.result!
-            //         );
-            //     } catch (e) {}
-            // }
-            // return ret;
-            return Promise.resolve([]);
+    readonly customAttributes = remoteData({
+        await: () => [this.sampleMap],
+        invoke: async () => {
+            let ret: ExtendedClinicalAttribute[] = [];
+            if (this.appStore.isLoggedIn) {
+                try {
+                    //Add custom data from user profile
+                    const customChartSessions = await sessionServiceClient.getCustomDataForStudies(
+                        [this.studyId]
+                    );
+
+                    ret = getExtendsClinicalAttributesFromCustomData(
+                        customChartSessions,
+                        this.sampleMap.result!
+                    );
+                } catch (e) {}
+            }
+            return ret;
         },
     });
 
