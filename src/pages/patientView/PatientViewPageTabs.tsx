@@ -37,6 +37,7 @@ import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
 import MutationTableWrapper from './mutation/MutationTableWrapper';
 import { PatientViewPageInner } from 'pages/patientView/PatientViewPage';
 import { Else, If } from 'react-if';
+import PatientReportTab from './oncokb/PatientReportTab';
 
 export enum PatientViewPageTabs {
     Summary = 'summary',
@@ -49,6 +50,7 @@ export enum PatientViewPageTabs {
     TrialMatchTab = 'trialMatchTab',
     MutationalSignatures = 'mutationalSignatures',
     PathwayMapper = 'pathways',
+    OncoKBPatientReport = 'oncokbKBPatientReport',
 }
 
 export const PatientViewResourceTabPrefix = 'openResource_';
@@ -701,6 +703,18 @@ export function tabs(
                 />
             </MSKTab>
         );
+
+    tabs.push(
+        <MSKTab
+            key={9}
+            id={PatientViewPageTabs.OncoKBPatientReport}
+            linkText="OncoKB Patient Report"
+        >
+            <PatientReportTab
+                patientViewPageStore={pageComponent.patientViewPageStore}
+            />
+        </MSKTab>
+    );
 
     pageComponent.resourceTabs.component &&
         /* @ts-ignore */
