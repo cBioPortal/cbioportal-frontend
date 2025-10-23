@@ -3212,9 +3212,9 @@ export class ResultsViewPageStore extends AnalysisStore
     >({
         await: () => [this.genes, this.studyToMolecularProfileDiscreteCna],
         invoke: async () => {
-            // if (true || this.cnaMolecularProfileIds.length == 0) {
-            //     return [];
-            // }
+            if (this.cnaMolecularProfileIds.length == 0) {
+                return [];
+            }
 
             const entrezGeneIds = _.map(
                 this.genes.result,
@@ -3238,26 +3238,6 @@ export class ResultsViewPageStore extends AnalysisStore
                     );
                 }
             );
-
-            // const profileIds = _.values(this.studyToMolecularProfileDiscreteCna.result).map(p=>p.molecularProfileId).join(",");
-            // const sampleListIds = _.keys(this.studyToMolecularProfileDiscreteCna.result).map(k=>{
-            //    return `${k}_all`
-            // });
-            //
-            // const data = await fetch(`/api/discrete-copy-number/fetch?molecularProfileIds=${profileIds}&discreteCopyNumberEventType=HOMDEL_AND_AMP&projection=DETAILED`, {
-            //     method: 'POST',
-            //     headers: {
-            //         'Content-Type': 'application/json'
-            //     },
-            //     body: JSON.stringify({
-            //         sampleListIds: sampleListIds,
-            //         entrezGeneIds: entrezGeneIds
-            //     })
-            // })
-            //     .then(response => response.json())
-            //
-            // return data;
-
             return Promise.all(promises).then((cnaData: any[]) =>
                 _.flattenDeep(cnaData)
             );
