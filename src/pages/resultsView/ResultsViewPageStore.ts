@@ -4778,10 +4778,9 @@ export class ResultsViewPageStore extends AnalysisStore
     }>({
         await: () => [this.molecularProfilesInStudies],
         invoke: async () => {
-            return Promise.resolve({});
-            // return await fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecularProfileId(
-            //     this.molecularProfilesInStudies.result
-            // );
+            return await fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecularProfileId(
+                this.molecularProfilesInStudies.result
+            );
         },
     });
 
