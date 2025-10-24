@@ -35,7 +35,6 @@ export const DataTypeFilter: FunctionComponent<IDataTypeFilterProps> = props => 
                         className="btn-sm"
                         style={{
                             minWidth: 118,
-                            maxWidth: 118,
                             textAlign: 'right',
                             float: 'right',
                             paddingRight: 5,
