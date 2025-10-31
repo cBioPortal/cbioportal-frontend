@@ -285,39 +285,49 @@ export default class CancerStudySelector extends React.Component<
 
                             return (
                                 <div>
-                                    {this.store.resourceDefinitions
-                                        .isComplete && (
-                                        <div
-                                            data-tour="data-type-filter"
-                                            data-test="data-type-filter-test"
-                                            style={{
-                                                display: 'inline-block',
-                                                alignItems: 'center',
-                                            }}
-                                        >
-                                            <DataTypeFilter
-                                                dataFilter={
-                                                    this.store.dataTypeFilters
-                                                }
-                                                isChecked={false}
-                                                buttonText={'Data type'}
-                                                dataFilterActive={
-                                                    this.store
-                                                        .studyFilterOptions
-                                                }
-                                                store={this.store}
-                                                samplePerFilter={
-                                                    this
-                                                        .showSamplesPerFilterType
-                                                }
-                                                studyPerFilter={
-                                                    this
-                                                        .showStudiesPerFilterType
-                                                }
-                                                toggleFilter={this.toggleFilter}
-                                            />
-                                        </div>
-                                    )}
+                                    <div
+                                        data-tour="data-type-filter"
+                                        data-test="data-type-filter-test"
+                                        style={{
+                                            display: 'inline-block',
+                                            alignItems: 'center',
+                                        }}
+                                    >
+                                        <DataTypeFilter
+                                            dataFilter={
+                                                this.store.dataTypeFilters
+                                            }
+                                            isChecked={false}
+                                            buttonText={'Data type'}
+                                            dataFilterActive={
+                                                this.store.resourceDefinitions
+                                                    .isComplete
+                                                    ? this.store
+                                                          .studyFilterOptions
+                                                    : []
+                                            }
+                                            store={this.store}
+                                            samplePerFilter={
+                                                this.store.resourceDefinitions
+                                                    .isComplete
+                                                    ? this
+                                                          .showSamplesPerFilterType
+                                                    : []
+                                            }
+                                            studyPerFilter={
+                                                this.store.resourceDefinitions
+                                                    .isComplete
+                                                    ? this
+                                                          .showStudiesPerFilterType
+                                                    : []
+                                            }
+                                            toggleFilter={this.toggleFilter}
+                                            isLoading={
+                                                !this.store.resourceDefinitions
+                                                    .isComplete
+                                            }
+                                        />
+                                    </div>
                                     <div
                                         data-tour="cancer-study-search-box"
                                         style={{

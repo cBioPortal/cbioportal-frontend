@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { FunctionComponent } from 'react';
+import { FunctionComponent, useMemo, useRef } from 'react';
 import { Dropdown } from 'react-bootstrap';
 import { DropdownToggleProps } from 'react-bootstrap/lib/DropdownToggle';
 
@@ -21,9 +21,44 @@ export type IDataTypeFilterProps = {
     samplePerFilter: number[];
     studyPerFilter: number[];
     toggleFilter: (id: string) => void;
+    isLoading?: boolean;
 };
 
 export const DataTypeFilter: FunctionComponent<IDataTypeFilterProps> = props => {
+    // Capture initial counts on first render
+    const initialStudyCountsRef = useRef(props.studyPerFilter || []);
+    const initialSampleCountsRef = useRef(props.samplePerFilter || []);
+
+    // Only set initial counts once
+    if (
+        initialStudyCountsRef.current.length === 0 &&
+        props.studyPerFilter &&
+        props.studyPerFilter.length > 0
+    ) {
+        initialStudyCountsRef.current = props.studyPerFilter;
+        initialSampleCountsRef.current = props.samplePerFilter;
+    }
+
+    // Create sorted indices based on INITIAL study count (desc), then sample count (desc)
+    // This ensures the order stays stable even when filters are selected
+    const sortedIndices = useMemo(() => {
+        if (!props.dataFilterActive || props.dataFilterActive.length === 0) {
+            return [];
+        }
+        return props.dataFilterActive
+            .map((_, index) => index)
+            .sort((a, b) => {
+                const studyDiff =
+                    (initialStudyCountsRef.current[b] || 0) -
+                    (initialStudyCountsRef.current[a] || 0);
+                if (studyDiff !== 0) return studyDiff;
+                return (
+                    (initialSampleCountsRef.current[b] || 0) -
+                    (initialSampleCountsRef.current[a] || 0)
+                );
+            });
+    }, [props.dataFilterActive]);
+
     return (
         <div data-test="dropdown-data-type-filter" style={{ paddingRight: 5 }}>
             <div className="input-group input-group-sm input-group-toggle">
@@ -34,7 +69,7 @@ export const DataTypeFilter: FunctionComponent<IDataTypeFilterProps> = props => 
                         } as DropdownToggleProps)}
                         className="btn-sm"
                         style={{
-                            minWidth: 118,
+                            width: 150,
                             textAlign: 'right',
                             float: 'right',
                             paddingRight: 5,
@@ -63,109 +98,150 @@ export const DataTypeFilter: FunctionComponent<IDataTypeFilterProps> = props => 
                         {...({ bsRole: 'menu' } as DropdownMenuProps)}
                         style={{
                             paddingLeft: 10,
-                            overflow: 'auto',
-                            maxHeight: 300,
-                            whiteSpace: 'nowrap',
-                            paddingRight: 1,
-                            width: 350,
+                            paddingRight: 10,
+                            overflowY: 'auto',
+                            overflowX: 'hidden',
+                            maxHeight: 500,
+                            width: 450,
                         }}
                     >
-                        <label style={{ paddingTop: 8 }}>
+                        <div style={{ paddingTop: 8, paddingBottom: 8 }}>
                             Filter studies with selected data types
-                        </label>
-                        <label
-                            style={{
-                                color: '#3786C2',
-                                paddingTop: 5,
-                                float: 'left',
-                                width: 210,
-                            }}
-                        >
-                            Data type
-                        </label>
-                        <label
-                            style={{
-                                paddingTop: 6,
-                                paddingRight: 10,
-                                color: '#999',
-                                textAlign: 'right',
-                                float: 'left',
-                                width: 55,
-                                display: 'inline-block',
-                            }}
-                        >
-                            Studies
-                        </label>
-                        <label
-                            style={{
-                                paddingTop: 6,
-                                color: '#999',
-                                marginRight: 2,
-                                textAlign: 'right',
-                                float: 'left',
-                                width: 55,
-                                display: 'inline-block',
-                            }}
-                        >
-                            Samples
-                        </label>
-                        {props.dataFilterActive!.map((type, i) => {
-                            return (
-                                <div
-                                    style={{ clear: 'both', display: 'block' }}
-                                >
-                                    <label
-                                        style={{
-                                            paddingTop: 5,
-                                            float: 'left',
-                                            width: 210,
-                                        }}
-                                    >
-                                        <input
-                                            type="checkbox"
-                                            style={{ marginRight: 2 }}
-                                            checked={type.checked}
-                                            onClick={() => {
-                                                props.toggleFilter(type.id);
-                                                props.store.dataTypeFilters = createDataTypeUpdate(
-                                                    props.dataFilterActive!
-                                                );
+                        </div>
+                        {props.isLoading ? (
+                            <div
+                                style={{
+                                    padding: '20px',
+                                    textAlign: 'center',
+                                    color: '#999',
+                                }}
+                            >
+                                <i
+                                    className="fa fa-spinner fa-spin"
+                                    style={{ marginRight: 5 }}
+                                ></i>
+                                Loading data types...
+                            </div>
+                        ) : (
+                            <table
+                                className="table table-sm"
+                                style={{ marginBottom: 0 }}
+                            >
+                                <thead>
+                                    <tr>
+                                        <th
+                                            style={{
+                                                color: '#3786C2',
+                                                borderTop: 'none',
                                             }}
-                                        />
-                                        {}
-                                        <span style={{ paddingLeft: 5 }}>
-                                            {type.name}
-                                        </span>
-                                    </label>
-                                    <label
-                                        style={{
-                                            paddingTop: 5,
-                                            color: '#999',
-                                            paddingRight: 10,
-                                            textAlign: 'right',
-                                            float: 'left',
-                                            width: 55,
-                                            display: 'inline-block',
-                                        }}
-                                    >
-                                        {props.studyPerFilter![i]}
-                                    </label>
-                                    <label
-                                        style={{
-                                            paddingTop: 5,
-                                            float: 'left',
-                                            width: 55,
-                                            color: '#999',
-                                            marginRight: 2,
-                                            textAlign: 'right',
-                                            display: 'inline-block',
-                                        }}
-                                    >
-                                        {props.samplePerFilter![i]}
-                                    </label>
-                                </div>
-                            );
-                        })}
+                                        >
+                                            Data type
+                                        </th>
+                                        <th
+                                            style={{
+                                                textAlign: 'right',
+                                                color: '#999',
+                                                borderTop: 'none',
+                                            }}
+                                        >
+                                            Studies
+                                        </th>
+                                        <th
+                                            style={{
+                                                textAlign: 'right',
+                                                color: '#999',
+                                                borderTop: 'none',
+                                            }}
+                                        >
+                                            Samples
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {sortedIndices.map(i => {
+                                        const type = props.dataFilterActive![i];
+                                        const isZero =
+                                            props.studyPerFilter![i] === 0 &&
+                                            props.samplePerFilter![i] === 0;
+                                        return (
+                                            <tr
+                                                key={type.id}
+                                                style={
+                                                    isZero
+                                                        ? { color: '#ccc' }
+                                                        : undefined
+                                                }
+                                            >
+                                                <td
+                                                    style={{
+                                                        paddingTop: 8,
+                                                        paddingBottom: 8,
+                                                    }}
+                                                >
+                                                    <label
+                                                        style={{
+                                                            marginBottom: 0,
+                                                            fontWeight:
+                                                                'normal',
+                                                            color: isZero
+                                                                ? '#ccc'
+                                                                : undefined,
+                                                            cursor: isZero
+                                                                ? 'not-allowed'
+                                                                : 'pointer',
+                                                        }}
+                                                    >
+                                                        <input
+                                                            type="checkbox"
+                                                            style={{
+                                                                marginRight: 5,
+                                                            }}
+                                                            checked={
+                                                                type.checked
+                                                            }
+                                                            disabled={isZero}
+                                                            onClick={() => {
+                                                                props.toggleFilter(
+                                                                    type.id
+                                                                );
+                                                                props.store.dataTypeFilters = createDataTypeUpdate(
+                                                                    props.dataFilterActive!
+                                                                );
+                                                            }}
+                                                        />
+                                                        {type.name}
+                                                    </label>
+                                                </td>
+                                                <td
+                                                    style={{
+                                                        textAlign: 'right',
+                                                        color: isZero
+                                                            ? '#ccc'
+                                                            : '#999',
+                                                        paddingTop: 8,
+                                                        paddingBottom: 8,
+                                                    }}
+                                                >
+                                                    {props.studyPerFilter![i]}
+                                                </td>
+                                                <td
+                                                    style={{
+                                                        textAlign: 'right',
+                                                        color: isZero
+                                                            ? '#ccc'
+                                                            : '#999',
+                                                        paddingTop: 8,
+                                                        paddingBottom: 8,
+                                                    }}
+                                                >
+                                                    {props.samplePerFilter![i]}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        )}
                     </Dropdown.Menu>
                 </Dropdown>
             </div>
