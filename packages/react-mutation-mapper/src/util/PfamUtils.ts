@@ -7,7 +7,7 @@ export function generatePfamDomainColorMap(
         '#229e00',
         '#ff3d3d',
         '#6161ff',
-        '#ebd61d',
+        '#a3950f',
         '#ba21e0',
         '#ff9c42',
         '#ff7dff',

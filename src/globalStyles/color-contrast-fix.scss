@@ -32,3 +32,20 @@ a {
 .label-danger {
     background-color: #d4403a;
 }
+
+// Not sure if this is the right place for changing the color of the IGV buttons
+.igvContainer {
+    .igv-container {
+        .igv-navbar {
+            .igv-navbar-button {
+                color: #696969 !important;
+                border-color: #696969 !important;
+
+                &-clicked {
+                    color: #fff !important;
+                    border-color: #737373 !important;
+                }
+            }
+        }
+    }
+}

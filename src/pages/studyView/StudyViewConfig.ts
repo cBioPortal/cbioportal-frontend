@@ -291,7 +291,7 @@ const studyViewFrontEnd = {
             unselectedGroup: '#2986E2',
             selectedGroup: '#DC3912',
             clinicalFilterTitle: '#A9A9A9',
-            clinicalFilterContent: '#2986E2',
+            clinicalFilterContent: '#2f73a7',
         },
     },
 };

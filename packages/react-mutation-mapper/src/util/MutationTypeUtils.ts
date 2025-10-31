@@ -24,15 +24,15 @@ import { IProteinImpactTypeColors } from '../model/ProteinImpact';
 
 export const DEFAULT_PROTEIN_IMPACT_TYPE_COLORS: IProteinImpactTypeColors = {
     missenseColor: MUT_COLOR_MISSENSE,
-    missenseVusColor: '#53d400', // MUT_COLOR_MISSENSE_PASSENGER
+    missenseVusColor: MUT_COLOR_MISSENSE_PASSENGER,
     inframeColor: MUT_COLOR_INFRAME,
-    inframeVusColor: '#a68028', // MUT_COLOR_INFRAME_PASSENGER
+    inframeVusColor: MUT_COLOR_INFRAME_PASSENGER,
     truncatingColor: MUT_COLOR_TRUNC,
-    truncatingVusColor: '#708090', // MUT_COLOR_TRUNC_PASSENGER
-    spliceColor: '#4d61ff', // MUT_COLOR_SPLICE
-    spliceVusColor: '#f0b87b', // MUT_COLOR_SPLICE_PASSENGER
+    truncatingVusColor: MUT_COLOR_TRUNC_PASSENGER,
+    spliceColor: MUT_COLOR_SPLICE,
+    spliceVusColor: MUT_COLOR_SPLICE_PASSENGER,
     fusionColor: STRUCTURAL_VARIANT_COLOR,
-    fusionVusColor: '#ce92e8', // STRUCTURAL_VARIANT_PASSENGER_COLOR
+    fusionVusColor: STRUCTURAL_VARIANT_PASSENGER_COLOR,
     otherColor: MUT_COLOR_OTHER,
     otherVusColor: MUT_COLOR_OTHER_PASSENGER,
 };

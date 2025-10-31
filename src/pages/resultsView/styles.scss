@@ -104,3 +104,18 @@
         justify-content: left !important;
     }
 }
+
+.msk-tab.cnSegmentsMSKTab {
+    .pillTabs {
+        .nav.nav-pills li {
+            a[role='button'] {
+                color: #2e70a3;
+            }
+
+            &.active a[role='button'] {
+                background-color: #2f73a7;
+                color: white;
+            }
+        }
+    }
+}

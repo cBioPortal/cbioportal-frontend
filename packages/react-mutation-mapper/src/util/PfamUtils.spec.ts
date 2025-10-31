@@ -54,6 +54,6 @@ describe('PfamUtils', () => {
         assert.equal(colorMap['PF0001'], '#229e00');
         assert.equal(colorMap['PF0002'], '#ff3d3d');
         assert.equal(colorMap['PF0003'], '#6161ff');
-        assert.equal(colorMap['PF0004'], '#ebd61d');
+        assert.equal(colorMap['PF0004'], '#a3950f');
     });
 });

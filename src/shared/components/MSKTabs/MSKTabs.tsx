@@ -381,6 +381,11 @@ export class MSKTabs extends React.Component<IMSKTabsProps> {
 
                 let activeClass =
                     effectiveActiveTab === tab.props.id ? 'active' : '';
+                let tabTextColor = activeClass
+                    ? ''
+                    : this.props.className?.includes('pillTabs')
+                    ? '#2e70a3'
+                    : '#2f73a7';
 
                 // find out if we need to add another page
                 if (
@@ -437,11 +442,7 @@ export class MSKTabs extends React.Component<IMSKTabsProps> {
                                     href={href}
                                     style={{
                                         ...tab.props.anchorStyle,
-                                        color: activeClass
-                                            ? ''
-                                            : tab.props.id.includes('Tab')
-                                            ? '#2e70a3'
-                                            : '#2f73a7',
+                                        color: tabTextColor,
                                     }}
                                 >
                                     {tab.props.linkText}

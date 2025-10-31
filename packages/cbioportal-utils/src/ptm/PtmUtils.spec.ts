@@ -337,8 +337,8 @@ describe('PtmUtils', () => {
             );
             assert.equal(
                 ptmColor([ptmData[5]]),
-                '#EBD61D',
-                'Methylation: #EBD61D'
+                '#A3950F',
+                'Methylation: #A3950F'
             );
             assert.equal(
                 ptmColor([ptmData[7]]),
