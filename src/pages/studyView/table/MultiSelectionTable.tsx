@@ -55,10 +55,12 @@ export type MultiSelectionTableRow = OncokbCancerGene & {
 export enum MultiSelectionTableColumnKey {
     GENE = 'Gene',
     MOLECULAR_PROFILE = 'Molecular Profile', // this table has been generalized to "Data Types"
+    ANNOTATION = 'Annotation',
     CASE_LIST = 'Name',
     MUTATION_TYPE = 'Mutation Type',
     NUMBER_STRUCTURAL_VARIANTS = '# SV',
     NUMBER_MUTATIONS = '# Mut',
+    NUMBER_VARIANT_ANNOTATIONS = '# VA',
     CYTOBAND = 'Cytoband',
     CNA = 'CNA',
     NUMBER = '#',
@@ -103,11 +105,13 @@ const DEFAULT_COLUMN_WIDTH_RATIO: {
     [key in MultiSelectionTableColumnKey]: number;
 } = {
     [MultiSelectionTableColumnKey.GENE]: 0.35,
+    [MultiSelectionTableColumnKey.ANNOTATION]: 0.35,
     [MultiSelectionTableColumnKey.MOLECULAR_PROFILE]: 0.6,
     [MultiSelectionTableColumnKey.CASE_LIST]: 0.6,
     [MultiSelectionTableColumnKey.MUTATION_TYPE]: 0.35,
     [MultiSelectionTableColumnKey.NUMBER_MUTATIONS]: 0.25,
     [MultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS]: 0.2,
+    [MultiSelectionTableColumnKey.NUMBER_VARIANT_ANNOTATIONS]: 0.2,
     [MultiSelectionTableColumnKey.NUMBER]: 0.25,
     [MultiSelectionTableColumnKey.FREQ]: 0.15,
     [MultiSelectionTableColumnKey.CYTOBAND]: 0.25,
@@ -205,6 +209,39 @@ export class MultiSelectionTable extends React.Component<
                 name: columnKey,
                 headerRender: () => {
                     return <></>;
+                },
+                render: (data: MultiSelectionTableRow) => {
+                    return (
+                        <div className={styles.labelContent}>
+                            <EllipsisTextTooltip
+                                text={data.label}
+                            ></EllipsisTextTooltip>
+                        </div>
+                    );
+                },
+                sortBy: (data: MultiSelectionTableRow) => data.label,
+                defaultSortDirection: 'asc' as 'asc',
+                filter: (
+                    data: MultiSelectionTableRow,
+                    filterString: string,
+                    filterStringUpper: string
+                ) => {
+                    return data.label.toUpperCase().includes(filterStringUpper);
+                },
+                width: columnWidth,
+            },
+            [MultiSelectionTableColumnKey.ANNOTATION]: {
+                name: columnKey,
+                headerRender: () => {
+                    return (
+                        <div
+                            style={{ marginLeft: cellMargin }}
+                            className={styles.displayFlex}
+                            data-test="profile-column-header"
+                        >
+                            {columnKey}
+                        </div>
+                    );
                 },
                 render: (data: MultiSelectionTableRow) => {
                     return (
@@ -447,6 +484,39 @@ export class MultiSelectionTable extends React.Component<
                 },
                 width: columnWidth,
             },
+            [MultiSelectionTableColumnKey.NUMBER_VARIANT_ANNOTATIONS]: {
+                name: columnKey,
+                tooltip: <span>Total number of variant annotations</span>,
+                headerRender: () => {
+                    return (
+                        <div style={{ marginLeft: cellMargin }}>
+                            {
+                                MultiSelectionTableColumnKey.NUMBER_VARIANT_ANNOTATIONS
+                            }
+                        </div>
+                    );
+                },
+                render: (data: MultiSelectionTableRow) => (
+                    <span
+                        data-test={'numberOfAlterations'}
+                        className={styles.pullRight}
+                        style={{
+                            marginRight: cellMargin,
+                        }}
+                    >
+                        {data.totalCount.toLocaleString()}
+                    </span>
+                ),
+                sortBy: (data: MultiSelectionTableRow) => data.totalCount,
+                defaultSortDirection: 'desc' as 'desc',
+                filter: (
+                    data: MultiSelectionTableRow,
+                    filterString: string
+                ) => {
+                    return _.toString(data.totalCount).includes(filterString);
+                },
+                width: columnWidth,
+            },
             [MultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS]: {
                 name: columnKey,
                 tooltip: <span>Total number of structural variants</span>,
@@ -546,9 +616,16 @@ export class MultiSelectionTable extends React.Component<
         const defaults: { [key in MultiSelectionTableColumnKey]: number } = {
             [MultiSelectionTableColumnKey.GENE]: 0,
             [MultiSelectionTableColumnKey.MOLECULAR_PROFILE]: 0,
+            [MultiSelectionTableColumnKey.ANNOTATION]: 0,
             [MultiSelectionTableColumnKey.CASE_LIST]: 0,
             [MultiSelectionTableColumnKey.MUTATION_TYPE]: 0,
             [MultiSelectionTableColumnKey.NUMBER_MUTATIONS]: correctMargin(
+                getFixedHeaderNumberCellMargin(
+                    columnWidth,
+                    this.totalCountLocaleString
+                )
+            ),
+            [MultiSelectionTableColumnKey.NUMBER_VARIANT_ANNOTATIONS]: correctMargin(
                 getFixedHeaderNumberCellMargin(
                     columnWidth,
                     this.totalCountLocaleString

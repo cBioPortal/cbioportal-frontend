@@ -405,28 +405,31 @@ export default class StudyList extends QueryStoreComponent<
 
                         return content;
                     })}
-                    {study.studyId && study.readPermission === true && (
-                        <DefaultTooltip
-                            mouseEnterDelay={0}
-                            placement="top"
-                            overlay={
-                                <div className={styles.tooltip}>
-                                    View clinical and genomic data of this study
-                                </div>
-                            }
-                        >
-                            <span>
-                                <StudyLink
-                                    studyId={study.studyId}
-                                    studyName={study.name}
-                                    className={classNames(
-                                        styles.summaryIcon,
-                                        'ci ci-pie-chart'
-                                    )}
-                                />
-                            </span>
-                        </DefaultTooltip>
-                    )}
+                    {study.studyId &&
+                        (study.readPermission === true ||
+                            study.readPermission === undefined) && (
+                            <DefaultTooltip
+                                mouseEnterDelay={0}
+                                placement="top"
+                                overlay={
+                                    <div className={styles.tooltip}>
+                                        View clinical and genomic data of this
+                                        study
+                                    </div>
+                                }
+                            >
+                                <span>
+                                    <StudyLink
+                                        studyId={study.studyId}
+                                        studyName={study.name}
+                                        className={classNames(
+                                            styles.summaryIcon,
+                                            'ci ci-pie-chart'
+                                        )}
+                                    />
+                                </span>
+                            </DefaultTooltip>
+                        )}
                     {getServerConfig()
                         .skin_home_page_show_unauthorized_studies &&
                         study.studyId &&

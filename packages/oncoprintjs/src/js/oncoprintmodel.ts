@@ -617,7 +617,7 @@ export default class OncoprintModel {
                     agg: OncoprintDataGroupsByTrackId<
                         TrackProp<ColumnProp<Datum>>
                     >,
-                    label,
+                    label: string,
                     trackId: number
                 ) => {
                     // key the data by the datum UID

@@ -127,12 +127,12 @@ export default class Visualize extends React.Component<{}, {}> {
                             SE4BIO
                         </a>{' '}
                         provides software engineering and consultancy services,
-                        covering software architecture, business analysis, and the
-                        design of end-to-end solutions.
-                        SE4BIO also supports organizations in aligning cBioPortal
-                        with their broader data infrastructure, improving interoperability,
-                        streamlining workflows, and implementing custom features to meet
-                        specific research and clinical needs. Please{' '}
+                        covering software architecture, business analysis, and
+                        the design of end-to-end solutions. SE4BIO also supports
+                        organizations in aligning cBioPortal with their broader
+                        data infrastructure, improving interoperability,
+                        streamlining workflows, and implementing custom features
+                        to meet specific research and clinical needs. Please{' '}
                         <a href="https://se4.bio/contact/" target="_blank">
                             contact SE4BIO
                         </a>{' '}
@@ -150,12 +150,11 @@ export default class Visualize extends React.Component<{}, {}> {
                 <div className="alert alert-info" role="alert">
                     When using these tools in your publication,{' '}
                     <b>please cite</b>{' '}
-                    <a href={getNCBIlink('/pubmed/23550210')}>
-                        Gao et al. <i>Sci. Signal.</i> 2013
-                    </a>{' '}
-                    &amp;{' '}
-                    <a href="http://cancerdiscovery.aacrjournals.org/content/2/5/401.abstract">
-                        Cerami et al. <i>Cancer Discov.</i> 2012
+                    <a
+                        href="https://docs.cbioportal.org/user-guide/faq/#how-do-i-cite-the-cbioportal"
+                        target="_blank"
+                    >
+                        cBioPortal <i className="fa fa-book"></i>
                     </a>
                     .
                 </div>

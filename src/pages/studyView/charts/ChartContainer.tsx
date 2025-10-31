@@ -100,6 +100,7 @@ const COMPARISON_CHART_TYPES: ChartType[] = [
     ChartTypeEnum.TABLE,
     ChartTypeEnum.BAR_CHART,
     ChartTypeEnum.MUTATED_GENES_TABLE,
+    ChartTypeEnum.VARIANT_ANNOTATIONS_TABLE,
     ChartTypeEnum.CNA_GENES_TABLE,
     ChartTypeEnum.SAMPLE_TREATMENTS_TABLE,
     ChartTypeEnum.SAMPLE_TREATMENT_GROUPS_TABLE,
@@ -1045,6 +1046,62 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         />
                     );
                 };
+            }
+            case ChartTypeEnum.VARIANT_ANNOTATIONS_TABLE: {
+                return () => (
+                    <MultiSelectionTable
+                        tableType={FreqColumnTypeEnum.VA}
+                        promise={this.props.promise}
+                        width={getWidthByDimension(
+                            this.props.dimension,
+                            this.borderWidth
+                        )}
+                        height={getTableHeightByDimension(
+                            this.props.dimension,
+                            this.chartHeaderHeight
+                        )}
+                        filters={this.props.filters}
+                        onSubmitSelection={this.handlers.onValueSelection}
+                        onChangeSelectedRows={
+                            this.handlers.onChangeSelectedRows
+                        }
+                        extraButtons={
+                            this.comparisonButtonForTables && [
+                                this.comparisonButtonForTables,
+                            ]
+                        }
+                        selectedRowsKeys={this.selectedRowsKeys}
+                        cancerGeneFilterEnabled={
+                            this.props.cancerGeneFilterEnabled
+                        }
+                        filterByCancerGenes={this.props.filterByCancerGenes!}
+                        onChangeCancerGeneFilter={
+                            this.props.onChangeCancerGeneFilter!
+                        }
+                        columns={[
+                            {
+                                columnKey:
+                                    MultiSelectionTableColumnKey.ANNOTATION,
+                            },
+                            {
+                                columnKey:
+                                    MultiSelectionTableColumnKey.NUMBER_VARIANT_ANNOTATIONS,
+                            },
+                            {
+                                columnKey: MultiSelectionTableColumnKey.NUMBER,
+                            },
+                            {
+                                columnKey: MultiSelectionTableColumnKey.FREQ,
+                            },
+                        ]}
+                        defaultSortBy={MultiSelectionTableColumnKey.FREQ}
+                        setOperationsButtonText={
+                            this.props.store.hesitateUpdate
+                                ? 'Add Filters '
+                                : 'Select Samples '
+                        }
+                    />
+                );
             }
             case ChartTypeEnum.GENOMIC_PROFILES_TABLE: {
                 return () => (

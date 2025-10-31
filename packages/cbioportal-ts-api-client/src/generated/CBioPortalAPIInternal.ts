@@ -907,6 +907,78 @@ export type MutationSpectrumFilter = {
         'sampleListId': string
 
 };
+export type NamespaceAttributeCount = {
+    'outerKey': string
+
+    'innerKey': string
+
+        'count': number
+
+};
+export type NamespaceAttributeCountFilter = {
+    'sampleIdentifiers': Array < SampleIdentifier >
+
+        'namespaceAttributes': Array < NamespaceAttribute >
+
+};
+export type NamespaceComparisonFilter = {
+    'sampleIdentifiers': Array < SampleIdentifier >
+
+        'namespaceAttribute': NamespaceAttribute
+
+        'values': Array < string >
+
+};
+export type NamespaceData = {
+    'outerKey': string
+
+    'innerKey': string
+
+    'sampleId': string
+
+    'patientId': string
+
+    'studyId': string
+
+    'attrValue': Array < string >
+
+};
+export type NamespaceDataCount = {
+    'count': number
+
+        'value': string
+
+        'totalCount': number
+
+};
+export type NamespaceDataCountFilter = {
+    'attributes': Array < NamespaceDataFilter >
+
+        'studyViewFilter': StudyViewFilter
+
+};
+export type NamespaceDataCountItem = {
+    'outerKey': string
+
+        'innerKey': string
+
+        'counts': Array < NamespaceDataCount >
+
+};
+export type NamespaceDataFilter = {
+    'outerKey': string
+
+        'innerKey': string
+
+        'values': Array < Array < DataFilterValue >>
+
+};
+export type NamespaceAttribute = {
+    'innerKey': string
+
+        'outerKey': string
+
+};
 export type OredPatientTreatmentFilters = {
     'filters': Array < PatientTreatmentFilter >
 
@@ -1221,6 +1293,8 @@ export type StudyViewFilter = {
         >
 
         'mutationDataFilters': Array < MutationDataFilter >
+
+        'namespaceDataFilters': Array < NamespaceDataFilter >
 
         'patientTreatmentFilters': AndedPatientTreatmentFilters
 
@@ -1599,6 +1673,118 @@ export default class CBioPortalAPIInternal {
         let keys = Object.keys(queryParameters);
         return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
     };
+
+    /**
+     * Get counts for namespace attributes according to their data availability for selected samples/patients
+     * @method
+     * @name CBioPortalAPIInternal#getNamespaceAttributeCountsUsingPOST
+     * @param {} namespaceAttributeCountFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     */
+    getNamespaceAttributeCountsUsingPOSTWithHttpInfo(parameters: {
+        'namespaceAttributeCountFilter' ? : NamespaceAttributeCountFilter,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/api/namespace-attributes/counts/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['namespaceAttributeCountFilter'] !== undefined) {
+                body = parameters['namespaceAttributeCountFilter'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Get counts for namespace attributes according to their data availability for selected samples/patients
+     * @method
+     * @name CBioPortalAPIInternal#getNamespaceAttributeCountsUsingPOST
+     * @param {} namespaceAttributeCountFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     */
+    getNamespaceAttributeCountsUsingPOST(parameters: {
+            'namespaceAttributeCountFilter' ? : NamespaceAttributeCountFilter,
+            $queryParameters ? : any,
+                $domain ? : string
+        }): Promise < Array < NamespaceAttributeCount >
+        > {
+            return this.getNamespaceAttributeCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+
+    /**
+     * Get counts for namespace attributes according to their data availability for selected samples/patients
+     * @method
+     * @name CBioPortalAPIInternal#getNamespaceAttributeCountsUsingPOST
+     * @param {} namespaceAttributeCountFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     */
+    getNamespaceDataUsingPOSTWithHttpInfo(parameters: {
+        'namespaceComparisonFilter' ? : NamespaceComparisonFilter,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/api/namespace-data/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['namespaceComparisonFilter'] !== undefined) {
+                body = parameters['namespaceComparisonFilter'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Get counts for namespace attributes according to their data availability for selected samples/patients
+     * @method
+     * @name CBioPortalAPIInternal#getNamespaceAttributeCountsUsingPOST
+     * @param {} namespaceAttributeCountFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     */
+    getNamespaceDataUsingPOST(parameters: {
+            'namespaceComparisonFilter' ? : NamespaceComparisonFilter,
+            $queryParameters ? : any,
+                $domain ? : string
+        }): Promise < Array < NamespaceData >
+        > {
+            return this.getNamespaceDataUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
 
     /**
      * Fetch clinical data bin counts by study view filter
@@ -5703,6 +5889,62 @@ export default class CBioPortalAPIInternal {
         let keys = Object.keys(queryParameters);
         return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
     };
+
+    /**
+     * Fetch namespace data counts by study view filter
+     * @method
+     * @name CBioPortalAPIInternal#fetchNamespaceDataCountsUsingPOST
+     * @param {} namespaceDataCountFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     */
+    fetchNamespaceDataCountsUsingPOSTWithHttpInfo(parameters: {
+        'namespaceDataCountFilter' ? : NamespaceDataCountFilter,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/api/namespace-data-counts/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['namespaceDataCountFilter'] !== undefined) {
+                body = parameters['namespaceDataCountFilter'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Fetch namespace data counts by study view filter
+     * @method
+     * @name CBioPortalAPIInternal#fetchNamespaceDataCountsUsingPOST
+     * @param {} namespaceDataCountFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     */
+    fetchNamespaceDataCountsUsingPOST(parameters: {
+            'namespaceDataCountFilter' ? : NamespaceDataCountFilter,
+            $queryParameters ? : any,
+                $domain ? : string
+        }): Promise < Array < NamespaceDataCountItem >
+        > {
+            return this.fetchNamespaceDataCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
 
     /**
      * Get all reference genes

@@ -206,6 +206,10 @@ export function getComparisonParamsForTable(
             return {
                 treatmentUniqueKeys: selectedRowsKeys.slice(), // slice() gets rid of mobx wrapping which messes up API calls
             };
+        case ChartTypeEnum.VARIANT_ANNOTATIONS_TABLE:
+            return {
+                namespaceAttributeValues: selectedRowsKeys.slice(),
+            };
         default:
             return {};
     }
