@@ -78,7 +78,7 @@ export const DataTypeFilter: FunctionComponent<IDataTypeFilterProps> = props => 
                                 color: '#3786C2',
                                 paddingTop: 5,
                                 float: 'left',
-                                width: 220,
+                                width: 210,
                             }}
                         >
                             Data type
@@ -86,7 +86,7 @@ export const DataTypeFilter: FunctionComponent<IDataTypeFilterProps> = props => 
                         <label
                             style={{
                                 paddingTop: 6,
-                                paddingRight: 15,
+                                paddingRight: 10,
                                 color: '#999',
                                 textAlign: 'right',
                                 float: 'left',
@@ -111,12 +111,14 @@ export const DataTypeFilter: FunctionComponent<IDataTypeFilterProps> = props => 
                         </label>
                         {props.dataFilterActive!.map((type, i) => {
                             return (
-                                <div style={{ display: 'inline' }}>
+                                <div
+                                    style={{ clear: 'both', display: 'block' }}
+                                >
                                     <label
                                         style={{
                                             paddingTop: 5,
                                             float: 'left',
-                                            width: 220,
+                                            width: 210,
                                         }}
                                     >
                                         <input
