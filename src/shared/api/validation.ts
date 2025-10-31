@@ -342,7 +342,7 @@ export function compareCounts(clData: any, legacyData: any, label: string) {
     var legacyDataSorted = deepSort(legacyDataClone, label);
 
     // correct for messed up spearmanCorr
-    if (clDataSorted && clDataSorted.spearmanCorr) {
+    if (clDataSorted?.spearmanCorr && legacyDataSorted?.spearmanCorr) {
         clDataSorted.spearmanCorr = parseFloat(
             clDataSorted.spearmanCorr.toString()
         ).toFixed(5);
@@ -364,13 +364,13 @@ export function compareCounts(clData: any, legacyData: any, label: string) {
     // });
 
     // remove this property which is not in legacy
-    if (clDataSorted.forEach) {
+    if (clDataSorted && clDataSorted.forEach) {
         clDataSorted.forEach((n: any) => {
             delete n.numberOfAlteredCasesOnPanel;
         });
     }
 
-    if (clDataSorted.filter) {
+    if (clDataSorted && clDataSorted.filter) {
         clDataSorted = clDataSorted.filter((n: any) => {
             return (
                 !n.counts || (n.counts.length != 1 && n.counts[0].value != 'na')
@@ -378,7 +378,7 @@ export function compareCounts(clData: any, legacyData: any, label: string) {
         });
     }
 
-    if (legacyDataSorted.filter) {
+    if (legacyDataSorted && legacyDataSorted.filter) {
         legacyDataSorted = legacyDataSorted.filter((n: any) => {
             return (
                 !n.counts || (n.counts.length != 1 && n.counts[0].value != 'na')

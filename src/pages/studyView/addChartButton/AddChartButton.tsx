@@ -63,6 +63,7 @@ export interface IAddChartTabsProps {
     disableCustomTab?: boolean;
     disableGeneSpecificTab?: boolean;
     disableGenericAssayTabs?: boolean;
+    disableVariantAnnotationsTab?: boolean;
     onInfoMessageChange?: (newMessage: string) => void;
     showResetPopup: () => void;
     openShareCustomDataUrlModal: (chartIds: string[]) => void;
@@ -96,6 +97,7 @@ export enum TabNamesEnum {
     CLINICAL = 'Clinical',
     GENOMIC = 'Genomic',
     GENE_SPECIFIC = 'Gene Specific',
+    VARIANT_ANNOTATIONS = 'Variant Annotations',
 }
 
 @observer
@@ -124,6 +126,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
         disableCustomTab: false,
         disableGeneSpecificTab: false,
         disableGenericAssayTabs: false,
+        disableVariantAnnotationsTab: false,
     };
 
     constructor(props: IAddChartTabsProps, context: any) {
@@ -263,6 +266,18 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
         } else {
             return genomicDataOptions;
         }
+    }
+
+    @computed
+    get namespaceChartOptions(): ChartOption[] {
+        const namespaceDataOptions = getOptionsByChartMetaDataType(
+            this.groupedChartMetaByDataType[
+                ChartMetaDataTypeEnum.VARIANT_ANNOTATIONS
+            ] || [],
+            this.selectedAttrs,
+            _.fromPairs(this.props.store.chartsType.toJSON())
+        );
+        return namespaceDataOptions;
     }
 
     @computed
@@ -523,6 +538,28 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                 });
             }
         }
+    }
+
+    @computed
+    private get variantAnnotationsTab() {
+        return (
+            <MSKTab
+                key={4}
+                id={ChartMetaDataTypeEnum.VARIANT_ANNOTATIONS}
+                linkText={TabNamesEnum.VARIANT_ANNOTATIONS}
+                hide={this.namespaceChartOptions.length === 0}
+                className="addVariantAnnotationChartTab"
+            >
+                <AddChartByType
+                    width={this.getTabsWidth}
+                    options={this.namespaceChartOptions}
+                    freqPromise={this.dataCount}
+                    onAddAll={this.onAddAll}
+                    onClearAll={this.onClearAll}
+                    onToggleOption={this.onToggleOption}
+                />
+            </MSKTab>
+        );
     }
 
     @computed
@@ -1053,6 +1090,8 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                             )}
                         </div>
                     </MSKTab>
+                    {!this.props.disableVariantAnnotationsTab &&
+                        this.variantAnnotationsTab}
                     <MSKTab
                         id={'X_Vs_Y'}
                         linkText={
@@ -1066,7 +1105,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                                 </strong>
                             </span>
                         }
-                        key={4}
+                        key={5}
                     >
                         <div
                             style={{
@@ -1207,6 +1246,9 @@ export default class AddChartButton extends React.Component<
                         }
                         disableGenericAssayTabs={
                             this.props.disableGenericAssayTabs
+                        }
+                        disableVariantAnnotationsTab={
+                            this.props.disableVariantAnnotationsTab
                         }
                         disableCustomTab={this.props.disableCustomTab}
                         showResetPopup={this.props.showResetPopup}

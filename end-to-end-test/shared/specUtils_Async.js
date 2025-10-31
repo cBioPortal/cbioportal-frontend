@@ -408,7 +408,7 @@ function removeAllStudyViewFilters() {
 
 async function waitForStudyViewSelectedInfo() {
     await (await $("[data-test='selected-info']")).waitForDisplayed({
-        timeout: 10000,
+        timeout: 20000,
     });
     // pause to wait the animation finished
     await browser.pause(2000);

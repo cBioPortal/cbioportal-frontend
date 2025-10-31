@@ -23,6 +23,8 @@ import {
     GenomicDataCount,
     MolecularDataMultipleStudyFilter,
     MolecularProfile,
+    NamespaceAttribute,
+    NamespaceDataFilter,
     NumericGeneMolecularData,
     OredPatientTreatmentFilters,
     Patient,
@@ -148,6 +150,7 @@ export enum SpecialChartsUniqueKeyEnum {
     SELECTED_COMPARISON_GROUPS = 'SELECTED_COMPARISON_GROUPS',
     CANCER_STUDIES = 'CANCER_STUDIES',
     MUTATION_COUNT = 'MUTATION_COUNT',
+    VARIANT_ANNOTATIONS = 'VARIANT_ANNOTATIONS',
     FRACTION_GENOME_ALTERED = 'FRACTION_GENOME_ALTERED',
     GENOMIC_PROFILES_SAMPLE_COUNT = 'GENOMIC_PROFILES_SAMPLE_COUNT',
     CASE_LISTS_SAMPLE_COUNT = 'CASE_LISTS_SAMPLE_COUNT',
@@ -175,10 +178,12 @@ export enum ChartMetaDataTypeEnum {
     GENOMIC = 'Genomic',
     GENE_SPECIFIC = 'Gene_Specific',
     GENERIC_ASSAY = 'Generic_Assay',
+    VARIANT_ANNOTATIONS = 'Variant_Annotations',
 }
 
 export type ChartMeta = {
     clinicalAttribute?: ClinicalAttribute;
+    namespaceAttribute?: NamespaceAttribute;
     genericAssayType?: string;
     mutationOptionType?: string;
     uniqueKey: string;
@@ -817,6 +822,25 @@ export function getUniqueKey(attribute: ClinicalAttribute): string {
     return attribute.clinicalAttributeId;
 }
 
+export function getUniqueNamespaceKey(attribute: NamespaceAttribute): string {
+    return attribute.outerKey.concat('_', attribute.innerKey);
+}
+
+function getNamespaceChartDisplayName(
+    attribute: NamespaceAttribute,
+    namespaceAttributes: NamespaceAttribute[]
+): string {
+    const innerKey = attribute.innerKey.split('_').join(' ');
+    if (
+        namespaceAttributes.filter(item => attribute.innerKey === item.innerKey)
+            .length > 1
+    ) {
+        return `${innerKey} (${attribute.outerKey})`;
+    } else {
+        return innerKey;
+    }
+}
+
 export function getGenomicChartUniqueKey(
     hugoGeneSymbol: string,
     profileType: string,
@@ -1105,6 +1129,7 @@ export function isFiltered(
             _.isEmpty(filter.genomicProfiles) &&
             _.isEmpty(filter.genomicDataFilters) &&
             _.isEmpty(filter.mutationDataFilters) &&
+            _.isEmpty(filter.namespaceDataFilters) &&
             _.isEmpty(filter.genericAssayDataFilters) &&
             _.isEmpty(filter.caseLists) &&
             _.isEmpty(filter.customDataFilters) &&
@@ -1671,7 +1696,7 @@ export function intervalFiltersDisplayValue(
                     }
                 }}
                 numericOnly={true}
-                allowEmptyValue={true}
+                allowEmptyValue={false}
                 textFieldAppearance={true}
             />
         );
@@ -1701,7 +1726,7 @@ export function intervalFiltersDisplayValue(
                     return true;
                 }}
                 numericOnly={true}
-                allowEmptyValue={true}
+                allowEmptyValue={false}
                 textFieldAppearance={true}
             />
         );
@@ -1723,7 +1748,7 @@ export function intervalFiltersDisplayValue(
                     }
                 }}
                 numericOnly={true}
-                allowEmptyValue={true}
+                allowEmptyValue={false}
                 textFieldAppearance={true}
             />
         );
@@ -2454,6 +2479,7 @@ export function getOptionsByChartMetaDataType(
         if (isSharedCustomData) {
             chartOption.isSharedChart = isSharedCustomData(chartMeta.uniqueKey);
         }
+
         return chartOption;
     });
 }
@@ -4247,6 +4273,53 @@ export async function invokeMutationDataCount(
     return counts;
 }
 
+export async function invokeNamespaceDataCount(
+    chartMeta: ChartMeta,
+    filters: StudyViewFilter,
+    profiledCases: number
+) {
+    const params = {
+        namespaceDataCountFilter: {
+            attributes: [
+                {
+                    outerKey: chartMeta.namespaceAttribute!.outerKey,
+                    innerKey: chartMeta.namespaceAttribute!.innerKey,
+                } as NamespaceDataFilter,
+            ],
+            studyViewFilter: filters,
+        },
+    };
+
+    const result = await internalClient.fetchNamespaceDataCountsUsingPOST(
+        params
+    );
+
+    const data = result.find(
+        d =>
+            d.outerKey === chartMeta.namespaceAttribute!.outerKey &&
+            d.innerKey === chartMeta.namespaceAttribute!.innerKey
+    );
+
+    let counts: MultiSelectionTableRow[] = [];
+    if (data !== undefined) {
+        counts = data.counts.map(c => {
+            return {
+                uniqueKey: c.value,
+                label: c.value,
+                // "Altered" and "Profiled" really just mean
+                //  "numerator" and "denominator" in percent
+                //  calculation of table. Here, they mean
+                //  "# filtered samples in profile" and "# filtered samples overall"
+                numberOfAlteredCases: c.count,
+                numberOfProfiledCases: profiledCases,
+                totalCount: c.totalCount,
+            } as MultiSelectionTableRow;
+        });
+    }
+
+    return counts;
+}
+
 export async function getCustomChartDownloadData(
     chartMeta: ChartMeta,
     selectedSamples: Sample[],
@@ -4619,6 +4692,30 @@ export async function getMutationTypesDownloadData(
     } else return '';
 }
 
+export async function getVariantAnnotationTypesDownloadData(
+    promise: MobxPromise<MultiSelectionTableRow[]>
+): Promise<string> {
+    if (promise.result) {
+        let header = ['Annotation', '# VA', '#', 'Profiled Samples', 'Freq'];
+        let data = [header.join('\t')];
+        _.each(promise.result, (record: MultiSelectionTableRow) => {
+            let rowData = [
+                record.label,
+                record.totalCount,
+                record.numberOfAlteredCases,
+                record.numberOfProfiledCases,
+                getFrequencyStr(
+                    (record.numberOfAlteredCases /
+                        record.numberOfProfiledCases) *
+                        100
+                ),
+            ];
+            data.push(rowData.join('\t'));
+        });
+        return data.join('\n');
+    } else return '';
+}
+
 export function getChartMetaSet(
     customCharts: ObservableMap<string, ChartMeta>,
     molecularProfiles: MolecularProfile[],
@@ -4626,6 +4723,7 @@ export function getChartMetaSet(
     genericAssayCharts: ObservableMap<string, ChartMeta>,
     XvsYCharts: ObservableMap<string, ChartMeta>,
     clinicalAttributes: ClinicalAttribute[],
+    namespaceAttributes: NamespaceAttribute[],
     survivalPlots: SurvivalType[],
     mutationProfiles: MolecularProfile[],
     structuralVariantProfiles: MolecularProfile[],
@@ -4697,6 +4795,29 @@ export function getChartMetaSet(
         {}
     );
 
+    const namespaceAttributeChartMetaSet = _.reduce(
+        namespaceAttributes,
+        (acc: { [id: string]: ChartMeta }, attribute) => {
+            const uniqueKey = getUniqueNamespaceKey(attribute);
+            const displayName = getNamespaceChartDisplayName(
+                attribute,
+                namespaceAttributes
+            );
+            acc[uniqueKey] = {
+                displayName: displayName,
+                uniqueKey: uniqueKey,
+                dataType: ChartMetaDataTypeEnum.VARIANT_ANNOTATIONS,
+                patientAttribute: false,
+                description: `${attribute.outerKey}.${attribute.innerKey} from all profiles`,
+                priority: 99,
+                renderWhenDataChange: false,
+                namespaceAttribute: attribute,
+            };
+            return acc;
+        },
+        {}
+    );
+
     const chartMetaSet = {
         ...customChartMetaSet,
         ...geneSpecificChartMetaSet,
@@ -4704,6 +4825,7 @@ export function getChartMetaSet(
         ...XvsYChartMetaSet,
         ...clinicalAttributeChartMetaSet,
         ...survivalPlotChartMetaSet,
+        ...namespaceAttributeChartMetaSet,
     };
 
     if (shouldDisplayClinicalEventTypeCounts) {

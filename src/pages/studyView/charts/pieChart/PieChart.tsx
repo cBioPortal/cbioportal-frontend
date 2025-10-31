@@ -26,6 +26,14 @@ import {
 import { DEFAULT_NA_COLOR } from 'shared/lib/Colors';
 import ifNotDefined from '../../../../shared/lib/ifNotDefined';
 import { getTextColor } from 'pages/groupComparison/OverlapUtils';
+import numeral from 'numeral';
+
+export function formatPieChartNumber(n: number) {
+    // capitalize k and m number abbreviations
+    return numeral(n)
+        .format('0.[0]a')
+        .replace(/([km])$/, m => m.toUpperCase());
+}
 
 export interface IPieChartProps {
     width: number;
@@ -180,18 +188,18 @@ export default class PieChart extends React.Component<IPieChartProps, {}>
         // If ratio of pie is less than 0.25, do check the max length we can show the text and the text length
         // to decide if we should show the label or not
         return d.count / this.totalCount > 0.25
-            ? d.count.toLocaleString()
+            ? formatPieChartNumber(d.count)
             : this.maxLength(
                   d.count / this.totalCount,
-                  this.pieSliceRadius / 3
+                  this.pieSliceRadius / 5
               ) <
               getTextWidth(
-                  d.count.toLocaleString(),
+                  formatPieChartNumber(d.count),
                   CBIOPORTAL_VICTORY_THEME.axis.style.tickLabels.fontFamily,
                   `${CBIOPORTAL_VICTORY_THEME.axis.style.tickLabels.fontSize}px`
               )
             ? ''
-            : d.count.toLocaleString();
+            : formatPieChartNumber(d.count);
     }
 
     @autobind
@@ -231,7 +239,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}>
                 }
                 width={this.props.width}
                 height={this.chartSize}
-                labelRadius={this.pieSliceRadius / 3}
+                labelRadius={this.pieSliceRadius / 5}
                 radius={this.pieSliceRadius}
                 labels={this.label}
                 data={this.props.data}

@@ -352,12 +352,17 @@ const runTests = async (pageName, url, tabLocation) => {
 
             await browser.pause(2000);
 
-            await (await getElement('div=Second render')).waitForDisplayed();
+            // 'Second Render' doesn't exist anymore for comparison page due to the newer way we load tabs
+            if (tabLocation !== 'COMPARISON_PAGE') {
+                await (
+                    await getElement('div=Second render')
+                ).waitForDisplayed();
 
-            assert(
-                await (await getElement('div=Second render')).isDisplayed(),
-                'changing query causes custom tab to remount'
-            );
+                assert(
+                    await (await getElement('div=Second render')).isDisplayed(),
+                    'changing query causes custom tab to remount'
+                );
+            }
         });
     });
 };
