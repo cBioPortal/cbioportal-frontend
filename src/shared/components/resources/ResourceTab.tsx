@@ -13,6 +13,7 @@ import { getServerConfig } from 'config/config';
 import { CUSTOM_URL_TRANSFORMERS } from 'shared/components/resources/customResourceHelpers';
 
 export interface IResourceTabProps {
+    resourceDisplayName: string;
     resourceData: ResourceData[];
     urlWrapper: {
         setResourceUrl: (resourceUrl: string) => void;
