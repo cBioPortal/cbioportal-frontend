@@ -551,6 +551,7 @@ export default class StudyViewPage extends React.Component<
                             <ResourceTab
                                 resourceData={resourceDataById[def.resourceId]}
                                 urlWrapper={this.urlWrapper}
+                                resourceDisplayName={def.displayName}
                             />
                         </MSKTab>
                     );
@@ -742,6 +743,16 @@ export default class StudyViewPage extends React.Component<
                                     >
                                         <div>
                                             <ResourcesTab
+                                                resourceDisplayName={
+                                                    this.store
+                                                        .resourceDefinitions
+                                                        .result?.length == 1
+                                                        ? this.store
+                                                              .resourceDefinitions
+                                                              .result[0]
+                                                              .displayName
+                                                        : RESOURCES_TAB_NAME
+                                                }
                                                 store={this.store}
                                                 openResource={this.openResource}
                                             />
