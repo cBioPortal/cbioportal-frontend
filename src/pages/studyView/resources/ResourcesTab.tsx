@@ -10,6 +10,7 @@ import ResourceTable from 'shared/components/resources/ResourceTable';
 import { FilesAndLinks } from './FilesAndLinks';
 
 export interface IResourcesTabProps {
+    resourceDisplayName: string;
     store: StudyViewPageStore;
     openResource: (resource: ResourceData) => void;
 }
@@ -68,9 +69,12 @@ export default class ResourcesTab extends React.Component<
                 <div className="resourcesTab">
                     <div className="resourcesSection">
                         <h4 className="blackHeader">
-                            Patient and Sample Resources
+                            Patient and Sample {this.props.resourceDisplayName}
                         </h4>
-                        <FilesAndLinks store={this.props.store}></FilesAndLinks>
+                        <FilesAndLinks
+                            resourceDisplayName={this.props.resourceDisplayName}
+                            store={this.props.store}
+                        ></FilesAndLinks>
                     </div>
                 </div>
             </div>

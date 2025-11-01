@@ -15,7 +15,7 @@ import {
     getPatientViewUrlWithPathname,
 } from 'shared/api/urls';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
-import { isUrl, remoteData } from 'cbioportal-frontend-commons';
+import { isUrl, pluralize, remoteData } from 'cbioportal-frontend-commons';
 import { makeObservable, observable, computed } from 'mobx';
 import {
     ResourceData,
@@ -24,6 +24,7 @@ import {
 } from 'cbioportal-ts-api-client';
 
 export interface IFilesLinksTable {
+    resourceDisplayName: string;
     store: StudyViewPageStore;
 }
 
@@ -368,7 +369,11 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
                                                 this.resourceData.result
                                                     ?.totalItems
                                             }{' '}
-                                            resources
+                                            {pluralize(
+                                                this.props.resourceDisplayName,
+                                                this.resourceData.result
+                                                    ?.totalItems || 1
+                                            )}
                                         </strong>
                                     </div>
                                 }
