@@ -102,10 +102,19 @@ var config = {
         publicPath: '/',
     },
 
+    // Enable webpack persistent caching for faster rebuilds
+    cache: {
+        type: 'filesystem',
+        cacheDirectory: path.resolve(__dirname, '.webpack-cache'),
+        buildDependencies: {
+            config: [__filename],
+        },
+    },
+
     optimization: {
         minimizer: [
             new TerserPlugin({
-                parallel: false,
+                parallel: true,
             }),
         ],
     },
@@ -212,8 +221,7 @@ var config = {
                     {
                         loader: 'ts-loader',
                         options: {
-                            transpileOnly:
-                                isDev || isTest || process.env.NETLIFY,
+                            transpileOnly: true,
                         },
                     },
                 ],
@@ -469,8 +477,6 @@ if (isDev || isTest) {
         'shared/Empty.tsx'
     );
 
-    config.plugins.push(new ForkTsCheckerWebpackPlugin());
-
     // css modules for any scss matching test
     config.module.rules.push({
         test: /\.module\.scss$/,
@@ -563,6 +569,9 @@ if (isDev || isTest) {
         ],
     });
 }
+
+// Add ForkTsCheckerWebpackPlugin for all builds since we use transpileOnly
+config.plugins.push(new ForkTsCheckerWebpackPlugin());
 
 // reduce logging to optimize netlify build
 if (process.env.BUILD_REPORT_ERRORS_ONLY === 'true') {
