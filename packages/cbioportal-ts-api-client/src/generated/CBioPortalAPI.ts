@@ -60,6 +60,8 @@ export type CancerStudy = {
 
         'referenceGenome': string
 
+        'resourceCounts': Array < ResourceCount >
+
         'rppaSampleCount': number
 
         'sequencedSampleCount': number
@@ -509,6 +511,28 @@ export type PatientIdentifier = {
     'patientId': string
 
         'studyId': string
+
+};
+export type ResourceCount = {
+    'customMetaData': string
+
+    'description': string
+
+    'displayName': string
+
+    'openByDefault': boolean
+
+    'patientCount': number
+
+    'priority': string
+
+    'resourceId': string
+
+    'resourceType': "STUDY" | "SAMPLE" | "PATIENT"
+
+    'sampleCount': number
+
+    'studyId': string
 
 };
 export type Sample = {
