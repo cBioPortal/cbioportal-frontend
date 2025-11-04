@@ -3328,16 +3328,14 @@ export async function getMutationDataAsClinicalData(
             } as MutationMultipleStudyFilter,
         }
     );
-    const mutationDataSet = new ComplexKeyMap<any>();
+    const mutationDataSet = new ComplexKeyMap<string>();
     mutationDataList.forEach(datum =>
         mutationDataSet.set(
             {
                 sampleId: datum.sampleId,
                 molecularProfileId: datum.molecularProfileId,
             },
-            {
-                value: 'Mutated',
-            }
+            'Mutated'
         )
     );
     const genePanelData = await defaultClient.fetchGenePanelDataInMultipleMolecularProfilesUsingPOST(
@@ -3360,9 +3358,7 @@ export async function getMutationDataAsClinicalData(
                         sampleId: datum.sampleId,
                         molecularProfileId: datum.molecularProfileId,
                     },
-                    {
-                        value: 'Not Mutated',
-                    }
+                    'Not Mutated'
                 );
             } else {
                 mutationDataSet.set(
@@ -3370,9 +3366,7 @@ export async function getMutationDataAsClinicalData(
                         sampleId: datum.sampleId,
                         molecularProfileId: datum.molecularProfileId,
                     },
-                    {
-                        value: 'Not Profiled',
-                    }
+                    'Not Profiled'
                 );
             }
         }
@@ -3394,11 +3388,7 @@ export async function getMutationDataAsClinicalData(
             uniqueSampleKey: sample.uniqueSampleKey,
         } as any;
 
-        if (datum) {
-            clinicaData.value = `${datum.value}`;
-        } else {
-            clinicaData.value = Datalabel.NA;
-        }
+        clinicaData.value = datum ?? Datalabel.NA;
         return clinicaData;
     });
 }
