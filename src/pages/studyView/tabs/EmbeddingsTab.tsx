@@ -1237,7 +1237,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                                     styles={{
                                         container: (base: any) => ({
                                             ...base,
-                                            minWidth: '150px',
+                                            minWidth: '300px',
                                         }),
                                         control: (base: any) => ({
                                             ...base,
