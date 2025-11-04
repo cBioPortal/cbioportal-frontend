@@ -4,7 +4,9 @@ import { computed, observable, action, makeObservable, reaction } from 'mobx';
 import { remoteData } from 'cbioportal-frontend-commons';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
-import boehmData from '../../../data/boehm_2025_umap_embedding.json';
+import boehmHeData from '../../../data/boehm_2025_umap_he.json';
+import boehmGenomicData from '../../../data/boehm_2025_umap_genomic.json';
+import boehmGenomicHeData from '../../../data/boehm_2025_umap_genomic_he.json';
 import ColorSamplesByDropdown from 'shared/components/colorSamplesByDropdown/ColorSamplesByDropdown';
 import { ColoringMenuOmnibarOption } from 'shared/components/plots/PlotsTab';
 import {
@@ -36,7 +38,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     @observable private mutationTypeEnabled = true;
     @observable private copyNumberEnabled = true;
     @observable private structuralVariantEnabled = true;
-    @observable private selectedEmbeddingValue: string = 'boehm_2025';
+    @observable private selectedEmbeddingValue: string = 'boehm_2025_he';
     @observable.ref private viewState: ViewState = {
         target: [0, 0, 0],
         zoom: 0,
@@ -332,9 +334,19 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     @computed get allEmbeddingOptions(): EmbeddingDataOption[] {
         return [
             {
-                value: 'boehm_2025',
-                label: 'Boehm 2025',
-                data: boehmData as EmbeddingData,
+                value: 'boehm_2025_he',
+                label: boehmHeData.title,
+                data: boehmHeData as EmbeddingData,
+            },
+            {
+                value: 'boehm_2025_genomic',
+                label: boehmGenomicData.title,
+                data: boehmGenomicData as EmbeddingData,
+            },
+            {
+                value: 'boehm_2025_genomic_he',
+                label: boehmGenomicHeData.title,
+                data: boehmGenomicHeData as EmbeddingData,
             },
         ];
     }
