@@ -233,6 +233,11 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         return !!embeddingsColoringSelection?.selectedOption;
     }
 
+    @computed get hasExpertParameter(): boolean {
+        // Check if URL contains the 'expert' parameter for showing QC section
+        return window.location.search.includes('expert');
+    }
+
     @computed get genes(): Gene[] {
         // Use allGenes to match PlotsTab pattern exactly
         // This provides comprehensive gene search capability in StudyView
@@ -520,7 +525,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
 
         const selectedPatientSet = new Set(selectedPatientIds);
 
-        const processedData = rawPlotData.map(point => {
+        let processedData = rawPlotData.map(point => {
             // Skip non-cohort samples
             if (point.isInCohort === false) {
                 return point;
@@ -544,6 +549,13 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             // Point is selected - return as is
             return point;
         });
+
+        // Filter out "not in cohort" samples in non-expert mode
+        if (!this.hasExpertParameter) {
+            processedData = processedData.filter(
+                point => point.isInCohort !== false
+            );
+        }
 
         // Filter out hidden categories
         const filteredData = processedData.filter(
@@ -591,22 +603,29 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                     hasPatientId && selectedPatientSet.has(point.patientId!);
 
                 if (!isSelected) {
-                    return { ...point, displayLabel: 'Unselected' };
+                    return {
+                        ...point,
+                        displayLabel: 'Unselected',
+                        color: '#C8C8C8',
+                        strokeColor: '#C8C8C8',
+                    };
                 }
                 return point;
             });
         }
 
-        // Count categories - when there's a selection, exclude "Unselected" points from the count
-        // This makes the legend totals reflect the selected cohort, not the entire dataset
+        // Filter out "not in cohort" samples in non-expert mode
+        if (!this.hasExpertParameter) {
+            processedData = processedData.filter(
+                point => point.isInCohort !== false
+            );
+        }
+
+        // Count all categories including "Unselected" so they appear in the legend
         const counts = new Map<string, number>();
         processedData.forEach(point => {
             const category = point.displayLabel || '';
-            // When there's a selection, only count selected points (exclude "Unselected")
-            // When there's no selection, count all points as before
-            if (!hasSelection || category !== 'Unselected') {
-                counts.set(category, (counts.get(category) || 0) + 1);
-            }
+            counts.set(category, (counts.get(category) || 0) + 1);
         });
 
         return counts;
@@ -653,10 +672,22 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                     hasPatientId && selectedPatientSet.has(point.patientId!);
 
                 if (!isSelected) {
-                    return { ...point, displayLabel: 'Unselected' };
+                    return {
+                        ...point,
+                        displayLabel: 'Unselected',
+                        color: '#C8C8C8',
+                        strokeColor: '#C8C8C8',
+                    };
                 }
                 return point;
             });
+        }
+
+        // Filter out "not in cohort" samples in non-expert mode
+        if (!this.hasExpertParameter) {
+            processedData = processedData.filter(
+                point => point.isInCohort !== false
+            );
         }
 
         // Extract color information for each category
@@ -831,7 +862,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             return true;
         }
 
-        return this.plotData.length === 0;
+        return false;
     }
 
     @action.bound
@@ -970,26 +1001,36 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
 
     @action.bound
     private toggleAllCategories() {
+        // Define embedding configuration categories that should never be affected by Show All/Hide All
+        const embeddingConfigCategories = [
+            'Sample not in this cohort',
+            'Case not in this cohort',
+        ];
+
         if (this.hiddenCategories.size === 0) {
             // All categories are currently visible, so hide all biological categories
             // (allowing for an empty plot - only UI elements may remain)
             if (this.categoryCounts) {
-                // Hide all biological categories but preserve UI categories
+                // Hide all biological categories but preserve embedding config categories
                 this.categoryCounts.forEach((count, category) => {
-                    // Don't hide UI categories like "Sample not in this cohort" and "Unselected"
-                    const isUiCategory =
-                        category === 'Sample not in this cohort' ||
-                        category === 'Case not in this cohort' ||
-                        category === 'Unselected';
-
-                    if (!isUiCategory) {
+                    if (!embeddingConfigCategories.includes(category)) {
                         this.hiddenCategories.add(category);
                     }
                 });
             }
         } else {
-            // Some categories are hidden, so show all of them
+            // Some categories are hidden, so show all biological categories
+            // but preserve the hidden state of embedding config categories
+            const categoriesToKeepHidden = new Set<string>();
+            this.hiddenCategories.forEach(category => {
+                if (embeddingConfigCategories.includes(category)) {
+                    categoriesToKeepHidden.add(category);
+                }
+            });
             this.hiddenCategories.clear();
+            categoriesToKeepHidden.forEach(category => {
+                this.hiddenCategories.add(category);
+            });
         }
     }
 
@@ -1081,23 +1122,6 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             );
         }
 
-        const patientData = this.plotData;
-        if (patientData.length === 0) {
-            return (
-                <div
-                    style={{
-                        width: '100%',
-                        height: `${this.plotHeight}px`,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                    }}
-                >
-                    <p>No embedding data available</p>
-                </div>
-            );
-        }
-
         if (!this.selectedEmbedding) {
             return (
                 <div
@@ -1114,6 +1138,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             );
         }
 
+        const patientData = this.plotData;
         const visualizationProps = {
             data: patientData,
             title: `${this.selectedEmbedding.label} Embedding - ${this.selectedEmbedding.data.title}`,
@@ -1136,6 +1161,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             totalSampleCount: this.totalSampleCount,
             visibleCategoryCount: this.visibleCategoryCount,
             totalCategoryCount: this.totalCategoryCount,
+            showQCSection: this.hasExpertParameter,
         };
 
         return (

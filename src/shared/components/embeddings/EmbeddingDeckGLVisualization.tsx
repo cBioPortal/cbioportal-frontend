@@ -175,6 +175,7 @@ export class EmbeddingDeckGLVisualization extends React.Component<
                 totalSampleCount={this.props.totalSampleCount}
                 visibleCategoryCount={this.props.visibleCategoryCount}
                 totalCategoryCount={this.props.totalCategoryCount}
+                showQCSection={this.props.showQCSection}
             />
         );
     }
@@ -476,6 +477,24 @@ export class EmbeddingDeckGLVisualization extends React.Component<
                     {this.renderAxisLabels()}
                     {this.renderControls()}
                     {this.renderSelectionOverlay()}
+
+                    {/* Show message when no points are visible */}
+                    {this.props.data.length === 0 && (
+                        <div
+                            style={{
+                                position: 'absolute',
+                                top: '50%',
+                                left: '50%',
+                                transform: 'translate(-50%, -50%)',
+                                color: '#666',
+                                fontSize: '14px',
+                                textAlign: 'center',
+                                pointerEvents: 'none',
+                            }}
+                        >
+                            No points selected for display
+                        </div>
+                    )}
                 </div>
             </div>
         );
