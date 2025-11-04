@@ -101,7 +101,7 @@ export function getStudyCountPerFilter(
                 study.resourceCounts,
                 r => r.resourceId === filter.id
             );
-            return resource?.sampleCount > 0;
+            return resource ? resource.sampleCount > 0 : false;
         }).length;
     });
 }
