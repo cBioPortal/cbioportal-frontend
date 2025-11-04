@@ -771,14 +771,7 @@ export default class StudyViewPage extends React.Component<
                                         key={5}
                                         id={StudyViewPageTabKeyEnum.PLOTS}
                                         linkText={
-                                            <span>
-                                                {
-                                                    StudyViewPageTabDescriptions.PLOTS
-                                                }{' '}
-                                                <strong className={'beta-text'}>
-                                                    Beta!
-                                                </strong>
-                                            </span>
+                                            StudyViewPageTabDescriptions.PLOTS
                                         }
                                     >
                                         <PlotsTabWrapper
@@ -790,7 +783,14 @@ export default class StudyViewPage extends React.Component<
                                         key={6}
                                         id={StudyViewPageTabKeyEnum.EMBEDDINGS}
                                         linkText={
-                                            StudyViewPageTabDescriptions.EMBEDDINGS
+                                            <span>
+                                                {
+                                                    StudyViewPageTabDescriptions.EMBEDDINGS
+                                                }{' '}
+                                                <strong className={'beta-text'}>
+                                                    Beta!
+                                                </strong>
+                                            </span>
                                         }
                                         hide={!this.hasEmbeddingSupport}
                                     >
