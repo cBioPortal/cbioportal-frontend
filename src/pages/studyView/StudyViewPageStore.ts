@@ -6178,7 +6178,7 @@ export class StudyViewPageStore
         },
     });
 
-    readonly namespaceAttributes = remoteData({
+    readonly namespaceAttributes = remoteData<NamespaceAttribute[]>({
         await: () => [this.queriedPhysicalStudyIds],
         invoke: async () => {
             if (this.queriedPhysicalStudyIds.result.length > 0) {
