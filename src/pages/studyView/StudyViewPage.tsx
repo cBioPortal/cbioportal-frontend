@@ -17,7 +17,7 @@ import {
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { ClinicalDataTab } from './tabs/ClinicalDataTab';
 import { EmbeddingsTab } from './tabs/EmbeddingsTab';
-import boehmData from '../../data/boehm_2025_umap_embedding.json';
+import boehmData from '../../data/boehm_2025_umap_he.json';
 import { EmbeddingData } from 'shared/components/embeddings/EmbeddingTypes';
 import {
     DefaultTooltip,
