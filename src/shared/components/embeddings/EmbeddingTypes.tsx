@@ -75,6 +75,7 @@ export interface EmbeddingVisualizationProps {
     totalSampleCount?: number;
     visibleCategoryCount?: number;
     totalCategoryCount?: number;
+    showQCSection?: boolean;
 }
 
 export interface EmbeddingControlsProps {

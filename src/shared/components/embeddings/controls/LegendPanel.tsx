@@ -167,6 +167,7 @@ export interface LegendPanelProps {
     totalSampleCount?: number;
     visibleCategoryCount?: number;
     totalCategoryCount?: number;
+    showQCSection?: boolean;
 }
 
 export const LegendPanel: React.FC<LegendPanelProps> = ({
@@ -182,6 +183,7 @@ export const LegendPanel: React.FC<LegendPanelProps> = ({
     totalSampleCount,
     visibleCategoryCount,
     totalCategoryCount,
+    showQCSection = false,
 }) => {
     const [isConfigExpanded, setIsConfigExpanded] = React.useState(false);
     if (!showLegend) {
@@ -247,27 +249,30 @@ export const LegendPanel: React.FC<LegendPanelProps> = ({
         }, {} as Record<string, { fillColor: string; strokeColor: string; hasStroke: boolean }>);
     }
 
-    // Separate biological categories from UI categories
-    const uiCategories = [
+    // Separate biological categories from QC categories
+    // QC categories (only shown when showQCSection is true)
+    const qcCategories = [
         'Case not in this cohort',
         'Sample not in this cohort',
-        'Unselected',
-        // 'Not mutated' is moved to biological categories for proper display in main legend
     ];
 
     const biologicalEntries: [
         string,
         { fillColor: string; strokeColor: string; hasStroke: boolean }
     ][] = [];
-    const uiEntries: [
+    const qcEntries: [
         string,
         { fillColor: string; strokeColor: string; hasStroke: boolean }
     ][] = [];
 
     Object.entries(legendItems).forEach(([label, styling]) => {
-        if (uiCategories.includes(label)) {
-            uiEntries.push([label, styling]);
+        if (qcCategories.includes(label)) {
+            // Only include QC categories if showQCSection is true
+            if (showQCSection) {
+                qcEntries.push([label, styling]);
+            }
         } else {
+            // Everything else goes in biological section (including "Unselected")
             biologicalEntries.push([label, styling]);
         }
     });
@@ -279,13 +284,11 @@ export const LegendPanel: React.FC<LegendPanelProps> = ({
         return countB - countA; // Descending order
     });
 
-    // Sort UI entries with specific order
-    uiEntries.sort(([labelA], [labelB]) => {
+    // Sort QC entries with specific order
+    qcEntries.sort(([labelA], [labelB]) => {
         const priority = {
             'Case not in this cohort': 1,
-            'Sample not in this cohort': 1,
-            Unselected: 2,
-            'Not mutated': 3, // Place Not mutated category after the above categories
+            'Sample not in this cohort': 2,
         };
 
         const priorityA = priority[labelA as keyof typeof priority] || 999;
@@ -298,7 +301,7 @@ export const LegendPanel: React.FC<LegendPanelProps> = ({
         return labelA.localeCompare(labelB);
     });
 
-    if (biologicalEntries.length === 0 && uiEntries.length === 0) {
+    if (biologicalEntries.length === 0 && qcEntries.length === 0) {
         return null;
     }
 
@@ -449,8 +452,8 @@ export const LegendPanel: React.FC<LegendPanelProps> = ({
                 })}
             </div>
 
-            {/* Collapsible Embedding Configuration Section - Always visible at bottom */}
-            {uiEntries.length > 0 && (
+            {/* Collapsible Embedding Configuration Section - Only visible when showQCSection is true */}
+            {showQCSection && qcEntries.length > 0 && (
                 <div
                     style={{
                         borderTop: '1px solid #eee',
@@ -496,7 +499,7 @@ export const LegendPanel: React.FC<LegendPanelProps> = ({
 
                     {isConfigExpanded && (
                         <div style={{ paddingLeft: '8px' }}>
-                            {uiEntries.map(([displayLabel, styling]) => {
+                            {qcEntries.map(([displayLabel, styling]) => {
                                 const count =
                                     categoryCounts?.get(displayLabel) || 0;
                                 const isHidden =
