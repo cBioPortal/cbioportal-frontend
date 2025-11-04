@@ -475,10 +475,9 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         invoke: () => Promise.resolve(true), // Just indicate that data is ready
     });
 
-    @computed get plotData(): EmbeddingPlotPoint[] {
-        // Trigger URL parameter application if genes are loaded
-        const effectiveColoring = this.effectiveColoringOption;
-
+    // Shared raw plot data - computed once and cached by MobX
+    // Used by plotData, categoryCounts, and categoryColors to avoid redundant computation
+    @computed get rawPlotData(): EmbeddingPlotPoint[] {
         if (
             !this.props.store.samples.isComplete ||
             !this.selectedEmbedding?.data
@@ -503,8 +502,8 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             }
         }
 
-        // Pass the entire embedding data object to handle both patient and sample types
-        const rawPlotData = makeEmbeddingScatterPlotData(
+        // Call makeEmbeddingScatterPlotData ONCE - this is the expensive operation
+        return makeEmbeddingScatterPlotData(
             this.selectedEmbedding.data,
             this.props.store,
             this.selectedColoringOption,
@@ -513,6 +512,15 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             this.structuralVariantEnabled,
             this.coloringLogScale
         );
+    }
+
+    @computed get plotData(): EmbeddingPlotPoint[] {
+        // Use the shared rawPlotData computed property (cached by MobX)
+        const rawPlotData = this.rawPlotData;
+
+        if (rawPlotData.length === 0) {
+            return [];
+        }
 
         // Post-process to handle selection state - update displayLabels for better legend consistency
         const selectedPatientIds = this.selectedPatientIds;
@@ -522,7 +530,6 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             // No selection - just return raw plot data without transformation
             return rawPlotData;
         }
-
         const selectedPatientSet = new Set(selectedPatientIds);
 
         let processedData = rawPlotData.map(point => {
@@ -566,23 +573,12 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     }
 
     @computed get categoryCounts(): Map<string, number> {
-        if (
-            !this.props.store.samples.isComplete ||
-            !this.selectedEmbedding?.data
-        ) {
+        // Use the shared rawPlotData computed property (cached by MobX)
+        const rawPlotData = this.rawPlotData;
+
+        if (rawPlotData.length === 0) {
             return new Map();
         }
-
-        // Get the raw plot data without any filtering to count all categories
-        const rawPlotData = makeEmbeddingScatterPlotData(
-            this.selectedEmbedding.data,
-            this.props.store,
-            this.selectedColoringOption,
-            this.mutationTypeEnabled,
-            this.copyNumberEnabled,
-            this.structuralVariantEnabled,
-            this.coloringLogScale
-        );
 
         // Apply the same post-processing logic as plotData but without filtering
         const selectedPatientIds = this.selectedPatientIds;
@@ -635,23 +631,12 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         string,
         { fillColor: string; strokeColor: string; hasStroke: boolean }
     > {
-        if (
-            !this.props.store.samples.isComplete ||
-            !this.selectedEmbedding?.data
-        ) {
+        // Use the shared rawPlotData computed property (cached by MobX)
+        const rawPlotData = this.rawPlotData;
+
+        if (rawPlotData.length === 0) {
             return new Map();
         }
-
-        // Get the raw plot data without any filtering to get all category colors
-        const rawPlotData = makeEmbeddingScatterPlotData(
-            this.selectedEmbedding.data,
-            this.props.store,
-            this.selectedColoringOption,
-            this.mutationTypeEnabled,
-            this.copyNumberEnabled,
-            this.structuralVariantEnabled,
-            this.coloringLogScale
-        );
 
         // Apply the same post-processing logic as plotData but without filtering
         const selectedPatientIds = this.selectedPatientIds;
