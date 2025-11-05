@@ -176,6 +176,102 @@ export default class StudyListLogic {
         return map_node_filter;
     }
 
+    @cached @computed get map_node_filterByConsortia() {
+        let map_node_filter = new Map<CancerTreeNode, boolean>();
+
+        if (this.store.selectedConsortia.length === 0) {
+            // No filter applied, include all nodes
+            for (let node of this.store.treeData.map_node_meta.keys()) {
+                map_node_filter.set(node, true);
+            }
+        } else {
+            // Filter by selected consortia
+            for (let [node, meta] of this.store.treeData.map_node_meta.entries()) {
+                let matches = false;
+
+                if (!meta.isCancerType) {
+                    // This is a study
+                    const study = node as CancerStudy;
+                    if (study.groups) {
+                        const studyConsortia = study.groups.split(/[,;]/).map(g => g.trim());
+                        matches = this.store.selectedConsortia.some(selected =>
+                            studyConsortia.includes(selected)
+                        );
+                    }
+                }
+
+                map_node_filter.set(node, matches);
+
+                // Include ancestors of matching studies
+                if (matches && !meta.isCancerType) {
+                    for (let cancerTypes of [meta.ancestors, meta.priorityCategories]) {
+                        for (let cancerType of cancerTypes) {
+                            map_node_filter.set(cancerType, true);
+                        }
+                    }
+                }
+            }
+        }
+
+        return map_node_filter;
+    }
+
+    @cached @computed get map_node_filterByPublication() {
+        let map_node_filter = new Map<CancerTreeNode, boolean>();
+
+        if (this.store.selectedPublicationYears.length === 0 &&
+            this.store.selectedPublicationJournals.length === 0) {
+            // No filter applied, include all nodes
+            for (let node of this.store.treeData.map_node_meta.keys()) {
+                map_node_filter.set(node, true);
+            }
+        } else {
+            // Filter by selected publication attributes
+            for (let [node, meta] of this.store.treeData.map_node_meta.entries()) {
+                let matches = false;
+
+                if (!meta.isCancerType) {
+                    // This is a study
+                    const study = node as CancerStudy;
+                    if (study.citation) {
+                        let yearMatch = true;
+                        let journalMatch = true;
+
+                        // Check year filter
+                        if (this.store.selectedPublicationYears.length > 0) {
+                            const yearInCitation = study.citation.match(/\b(19|20)\d{2}\b/);
+                            yearMatch = yearInCitation ?
+                                this.store.selectedPublicationYears.includes(parseInt(yearInCitation[0])) :
+                                false;
+                        }
+
+                        // Check journal filter
+                        if (this.store.selectedPublicationJournals.length > 0) {
+                            const parts = study.citation.split('.');
+                            const journal = parts.length > 1 ? parts[0].trim() : '';
+                            journalMatch = this.store.selectedPublicationJournals.includes(journal);
+                        }
+
+                        matches = yearMatch && journalMatch;
+                    }
+                }
+
+                map_node_filter.set(node, matches);
+
+                // Include ancestors of matching studies
+                if (matches && !meta.isCancerType) {
+                    for (let cancerTypes of [meta.ancestors, meta.priorityCategories]) {
+                        for (let cancerType of cancerTypes) {
+                            map_node_filter.set(cancerType, true);
+                        }
+                    }
+                }
+            }
+        }
+
+        return map_node_filter;
+    }
+
     getMetadata(node: CancerTreeNode) {
         return this.store.treeData.map_node_meta.get(node) as NodeMetadata;
     }
@@ -186,6 +282,8 @@ export default class StudyListLogic {
             this.map_node_filterBySearchText,
             this.map_node_filterBySelectedCancerTypes,
             this.map_node_filtered_by_datatype,
+            this.map_node_filterByConsortia,
+            this.map_node_filterByPublication,
         ]);
     }
 
@@ -194,6 +292,8 @@ export default class StudyListLogic {
             this.map_node_filterByDepth,
             this.map_node_filterBySearchText,
             this.map_node_filtered_by_datatype,
+            this.map_node_filterByConsortia,
+            this.map_node_filterByPublication,
         ]);
     }
 
@@ -227,7 +327,9 @@ export default class StudyListLogic {
         return (
             !!this.store.searchText &&
             !!this.map_node_filterBySearchText.get(node) &&
-            !!this.map_node_filtered_by_datatype.get(node)
+            !!this.map_node_filtered_by_datatype.get(node) &&
+            !!this.map_node_filterByConsortia.get(node) &&
+            !!this.map_node_filterByPublication.get(node)
         );
     }
 }

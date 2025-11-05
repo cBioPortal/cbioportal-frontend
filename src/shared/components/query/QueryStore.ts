@@ -305,6 +305,12 @@ export class QueryStore {
 
     @observable studyFilterOptions = DEFAULT_STUDY_FILTER_OPTIONS;
 
+    @observable.ref selectedConsortia: string[] = [];
+
+    @observable.ref selectedPublicationYears: number[] = [];
+
+    @observable.ref selectedPublicationJournals: string[] = [];
+
     @computed get searchText(): string {
         return toQueryString(this.searchClauses);
     }
@@ -2316,6 +2322,45 @@ export class QueryStore {
 
     @action clearSelectedCancerType() {
         this.selectedCancerTypeIds = [];
+    }
+
+    @action toggleConsortium(consortium: string) {
+        const index = this.selectedConsortia.indexOf(consortium);
+        if (index > -1) {
+            this.selectedConsortia = this.selectedConsortia.filter(
+                c => c !== consortium
+            );
+        } else {
+            this.selectedConsortia = [...this.selectedConsortia, consortium];
+        }
+    }
+
+    @action togglePublicationYear(year: number) {
+        const index = this.selectedPublicationYears.indexOf(year);
+        if (index > -1) {
+            this.selectedPublicationYears = this.selectedPublicationYears.filter(
+                y => y !== year
+            );
+        } else {
+            this.selectedPublicationYears = [
+                ...this.selectedPublicationYears,
+                year,
+            ];
+        }
+    }
+
+    @action togglePublicationJournal(journal: string) {
+        const index = this.selectedPublicationJournals.indexOf(journal);
+        if (index > -1) {
+            this.selectedPublicationJournals = this.selectedPublicationJournals.filter(
+                j => j !== journal
+            );
+        } else {
+            this.selectedPublicationJournals = [
+                ...this.selectedPublicationJournals,
+                journal,
+            ];
+        }
     }
 
     @action replaceGene(oldSymbol: string, newSymbol: string) {

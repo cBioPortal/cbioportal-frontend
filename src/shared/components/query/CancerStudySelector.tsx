@@ -32,6 +32,8 @@ import {
     getSampleCountsPerFilter,
     getStudyCountPerFilter,
 } from 'shared/components/query/filteredSearch/StudySearchControls';
+import DashboardStats from 'shared/components/query/DashboardStats';
+import FilterPanel from 'shared/components/query/FilterPanel';
 const MIN_LIST_HEIGHT = 200;
 
 export interface ICancerStudySelectorProps {
@@ -250,6 +252,12 @@ export default class CancerStudySelector extends React.Component<
                 data-test="studyList"
                 className={styles.CancerStudySelector}
             >
+                {/* Dashboard Stats Section */}
+                <div className={styles.dashboardStatsContainer}>
+                    <DashboardStats store={this.store} />
+                </div>
+
+                {/* Header with Search */}
                 <FlexRow overflow className={styles.CancerStudySelectorHeader}>
                     <SectionHeader
                         promises={[
@@ -268,67 +276,23 @@ export default class CancerStudySelector extends React.Component<
 
                     <Observer>
                         {() => {
-                            let searchTextOptions = ServerConfigHelpers.skin_example_study_queries(
-                                getServerConfig()!.skin_example_study_queries ||
-                                    ''
-                            );
-                            if (
-                                this.store.searchText &&
-                                searchTextOptions.indexOf(
-                                    this.store.searchText
-                                ) < 0
-                            )
-                                searchTextOptions = [
-                                    this.store.searchText,
-                                ].concat(searchTextOptions as string[]);
-                            let searchTimeout: number | null = null;
-
                             return (
-                                <div>
-                                    <div
-                                        data-tour="data-type-filter"
-                                        data-test="data-type-filter-test"
-                                        style={{
-                                            display: 'inline-block',
-                                            alignItems: 'center',
-                                        }}
-                                    >
-                                        <DataTypeFilter
-                                            dataFilter={
-                                                this.store.dataTypeFilters
+                                <div
+                                    data-tour="cancer-study-search-box"
+                                    style={{
+                                        display: 'inline-block',
+                                        alignItems: 'center',
+                                    }}
+                                >
+                                    {this.store.queryParser && (
+                                        <StudySearch
+                                            parser={this.store.queryParser}
+                                            query={this.store.searchClauses}
+                                            onSearch={query =>
+                                                (this.store.searchClauses = query)
                                             }
-                                            isChecked={false}
-                                            buttonText={'Data type'}
-                                            dataFilterActive={
-                                                this.store.studyFilterOptions
-                                            }
-                                            store={this.store}
-                                            samplePerFilter={
-                                                this.showSamplesPerFilterType
-                                            }
-                                            studyPerFilter={
-                                                this.showStudiesPerFilterType
-                                            }
-                                            toggleFilter={this.toggleFilter}
                                         />
-                                    </div>
-                                    <div
-                                        data-tour="cancer-study-search-box"
-                                        style={{
-                                            display: 'inline-block',
-                                            alignItems: 'center',
-                                        }}
-                                    >
-                                        {this.store.queryParser && (
-                                            <StudySearch
-                                                parser={this.store.queryParser}
-                                                query={this.store.searchClauses}
-                                                onSearch={query =>
-                                                    (this.store.searchClauses = query)
-                                                }
-                                            />
-                                        )}
-                                    </div>
+                                    )}
                                 </div>
                             );
                         }}
@@ -337,16 +301,15 @@ export default class CancerStudySelector extends React.Component<
 
                 <If condition={this.studiesDataComplete}>
                     <FlexRow className={styles.cancerStudySelectorBody}>
-                        <If condition={this.store.maxTreeDepth > 0}>
-                            <Then>
-                                <div
-                                    className={styles.cancerTypeListContainer}
-                                    tabIndex={0}
-                                >
-                                    <this.CancerTypeList />
-                                </div>
-                            </Then>
-                        </If>
+                        {/* Left Sidebar with Filters */}
+                        <div className={styles.filterPanelContainer}>
+                            <FilterPanel
+                                store={this.store}
+                                toggleFilter={this.toggleFilter}
+                            />
+                        </div>
+
+                        {/* Main Content Area with Study List */}
                         <div
                             data-tour="cancer-study-list-container"
                             className={styles.cancerStudyListContainer}
