@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { FunctionComponent, useMemo, useRef } from 'react';
+import { FunctionComponent, useRef } from 'react';
 import { Dropdown } from 'react-bootstrap';
 import { DropdownToggleProps } from 'react-bootstrap/lib/DropdownToggle';
 
@@ -25,14 +25,12 @@ export type IDataTypeFilterProps = {
 };
 
 export const DataTypeFilter: FunctionComponent<IDataTypeFilterProps> = props => {
-    // Capture initial counts on first render
-    const initialStudyCountsRef = useRef(props.studyPerFilter || []);
-    const initialSampleCountsRef = useRef(props.samplePerFilter || []);
+    const initialStudyCountsRef = useRef<number[]>([]);
+    const initialSampleCountsRef = useRef<number[]>([]);
 
     // Only set initial counts once
     if (
         initialStudyCountsRef.current.length === 0 &&
-        props.studyPerFilter &&
         props.studyPerFilter.length > 0
     ) {
         initialStudyCountsRef.current = props.studyPerFilter;
@@ -41,11 +39,12 @@ export const DataTypeFilter: FunctionComponent<IDataTypeFilterProps> = props => 
 
     // Create sorted indices based on INITIAL study count (desc), then sample count (desc)
     // This ensures the order stays stable even when filters are selected
-    const sortedIndices = useMemo(() => {
-        if (!props.dataFilterActive || props.dataFilterActive.length === 0) {
-            return [];
-        }
-        return props.dataFilterActive
+    const sortedIndicesRef = useRef<number[]>([]);
+    if (
+        sortedIndicesRef.current.length === 0 &&
+        props.dataFilterActive?.length
+    ) {
+        sortedIndicesRef.current = props.dataFilterActive
             .map((_, index) => index)
             .sort((a, b) => {
                 const studyDiff =
@@ -57,7 +56,7 @@ export const DataTypeFilter: FunctionComponent<IDataTypeFilterProps> = props => 
                     (initialSampleCountsRef.current[a] || 0)
                 );
             });
-    }, [props.dataFilterActive]);
+    }
 
     return (
         <div data-test="dropdown-data-type-filter" style={{ paddingRight: 5 }}>
@@ -158,7 +157,7 @@ export const DataTypeFilter: FunctionComponent<IDataTypeFilterProps> = props => 
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {sortedIndices.map(i => {
+                                    {sortedIndicesRef.current.map(i => {
                                         const type = props.dataFilterActive![i];
                                         const isZero =
                                             props.studyPerFilter![i] === 0 &&
