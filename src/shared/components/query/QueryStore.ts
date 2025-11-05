@@ -10,7 +10,6 @@ import {
     reaction,
     runInAction,
     toJS,
-    when,
 } from 'mobx';
 import {
     CancerStudy,
@@ -42,12 +41,7 @@ import URL from 'url';
 import { redirectToStudyView } from '../../api/urls';
 import StudyListLogic from './StudyListLogic';
 import chunkMapReduce from 'shared/lib/chunkMapReduce';
-import {
-    categorizedSamplesCount,
-    currentQueryParams,
-    DEFAULT_STUDY_FILTER_OPTIONS,
-    getResourceFilterOptions,
-} from './QueryStoreUtils';
+import { categorizedSamplesCount, currentQueryParams } from './QueryStoreUtils';
 
 import getOverlappingStudies from '../../lib/getOverlappingStudies';
 import MolecularProfilesInStudyCache from '../../cache/MolecularProfilesInStudyCache';
@@ -155,19 +149,6 @@ export class QueryStore {
             }
         );
         this.initialize(urlWithInitialParams);
-
-        when(
-            () => this.resourceDefinitions.isComplete,
-            () => {
-                const resourceFilterOptions = getResourceFilterOptions(
-                    this.resourceDefinitions.result
-                );
-                this.setStudyFilterOptions([
-                    ...DEFAULT_STUDY_FILTER_OPTIONS,
-                    ...resourceFilterOptions,
-                ]);
-            }
-        );
     }
 
     @computed

@@ -13,6 +13,7 @@ import {
     IReactionDisposer,
     reaction,
     makeObservable,
+    when,
 } from 'mobx';
 import { expr } from 'mobx-utils';
 import memoize from 'memoize-weak-decorator';
@@ -32,6 +33,10 @@ import {
     getSampleCountsPerFilter,
     getStudyCountPerFilter,
 } from 'shared/components/query/filteredSearch/StudySearchControls';
+import {
+    DEFAULT_STUDY_FILTER_OPTIONS,
+    getResourceFilterOptions,
+} from './QueryStoreUtils';
 const MIN_LIST_HEIGHT = 200;
 
 export interface ICancerStudySelectorProps {
@@ -67,6 +72,8 @@ export default class CancerStudySelector extends React.Component<
     };
 
     public store: QueryStore;
+
+    private studyFilterOptionsReaction: IReactionDisposer;
 
     constructor(props: ICancerStudySelectorProps) {
         super(props);
@@ -220,10 +227,26 @@ export default class CancerStudySelector extends React.Component<
             },
             { fireImmediately: true }
         );
+
+        this.studyFilterOptionsReaction = when(
+            () =>
+                !!this.store.resourceDefinitions &&
+                this.store.resourceDefinitions.isComplete,
+            () => {
+                const resourceFilterOptions = getResourceFilterOptions(
+                    this.store.resourceDefinitions.result
+                );
+                this.store.setStudyFilterOptions([
+                    ...DEFAULT_STUDY_FILTER_OPTIONS,
+                    ...resourceFilterOptions,
+                ]);
+            }
+        );
     }
 
     componentWillUnmount(): void {
         this.windowSizeDisposer();
+        this.studyFilterOptionsReaction();
     }
 
     setListHeight() {
