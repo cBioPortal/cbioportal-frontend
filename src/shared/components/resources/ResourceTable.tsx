@@ -117,8 +117,18 @@ const ResourceTable = observer(
                     <span data-test={'Resource'}>{resourceColumnName}</span>
                 ),
                 render: row => (
-                    <a onClick={() => openResource(row.resource)}>
-                        {icon(row.resource)}
+                    <a
+                        onClick={() => openResource(row.resource)}
+                        style={{ fontSize: 10 }}
+                    >
+                        <i
+                            className={`fa fa-user fa-sm`}
+                            style={{
+                                marginRight: 5,
+                                color: 'black',
+                            }}
+                            title="Open in Patient View"
+                        />
                         {row.resourceName}
                     </a>
                 ),
