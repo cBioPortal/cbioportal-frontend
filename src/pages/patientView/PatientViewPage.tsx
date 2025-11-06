@@ -6,6 +6,7 @@ import { IColumnVisibilityDef } from 'shared/components/columnVisibilityControls
 import {
     DefaultTooltip,
     toggleColumnVisibility,
+    pluralize,
 } from 'cbioportal-frontend-commons';
 import {
     PatientViewPageStore,
@@ -479,15 +480,19 @@ export class PatientViewPageInner extends React.Component<
             const tabs: JSX.Element[] = sorted.reduce((list, def) => {
                 const data = resourceDataById[def.resourceId];
                 if (data && data.length > 0) {
+                    const displayName =
+                        data.length > 1
+                            ? pluralize(def.displayName, data.length)
+                            : def.displayName;
                     list.push(
                         <MSKTab
                             key={getPatientViewResourceTabId(def.resourceId)}
                             id={getPatientViewResourceTabId(def.resourceId)}
-                            linkText={def.displayName}
+                            linkText={displayName}
                             onClickClose={this.closeResourceTab}
                         >
                             <ResourceTab
-                                resourceDisplayName={def.displayName}
+                                resourceDisplayName={displayName}
                                 resourceData={resourceDataById[def.resourceId]}
                                 urlWrapper={this.urlWrapper}
                             />
