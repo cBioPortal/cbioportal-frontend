@@ -6,6 +6,7 @@ import { useLocalObservable } from 'mobx-react-lite';
 import LazyMobXTable, {
     Column,
 } from 'shared/components/lazyMobXTable/LazyMobXTable';
+import _ from 'lodash';
 
 export interface IResourceTableProps {
     resources: ResourceData[];
@@ -102,11 +103,18 @@ const ResourceTable = observer(
             });
         }
 
+        // Determine if there's only one unique resource type
+        const uniqueResourceNames = _.uniq(state.data.map(d => d.resourceName));
+        const resourceColumnName =
+            uniqueResourceNames.length === 1 && uniqueResourceNames[0]
+                ? uniqueResourceNames[0]
+                : 'Resource';
+
         columns.push(
             {
-                name: 'Resource',
+                name: resourceColumnName,
                 headerRender: () => (
-                    <span data-test={'Resource'}>{'Resource'}</span>
+                    <span data-test={'Resource'}>{resourceColumnName}</span>
                 ),
                 render: row => (
                     <a onClick={() => openResource(row.resource)}>
@@ -123,8 +131,10 @@ const ResourceTable = observer(
                         .includes(filterStringUpper ?? ''),
             },
             {
-                name: '',
-                headerRender: () => <span></span>,
+                name: 'Resource URL',
+                headerRender: () => (
+                    <span data-test={'Resource URL'}>{'Resource URL'}</span>
+                ),
                 render: row => (
                     <a
                         href={row.url}
@@ -148,11 +158,11 @@ const ResourceTable = observer(
                 headerRender: () => (
                     <span data-test={'Description'}>{'Description'}</span>
                 ),
-                render: row => <span>{row.description}</span>,
-                download: row => row.description || '',
-                sortBy: row => row.description || '',
+                render: row => <span>{row.description ?? ''}</span>,
+                download: row => row.description ?? '',
+                sortBy: row => row.description ?? '',
                 filter: (row, _filterString, filterStringUpper) =>
-                    (row.description || '')
+                    (row.description ?? '')
                         .toUpperCase()
                         .includes(filterStringUpper ?? ''),
             }

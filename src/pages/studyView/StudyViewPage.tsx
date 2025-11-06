@@ -21,6 +21,7 @@ import {
     getBrowserWindow,
     onMobxPromise,
     remoteData,
+    pluralize,
 } from 'cbioportal-frontend-commons';
 import { PageLayout } from '../../shared/components/PageLayout/PageLayout';
 import IFrameLoader from '../../shared/components/iframeLoader/IFrameLoader';
@@ -379,7 +380,10 @@ export default class StudyViewPage extends React.Component<
     }
 
     @computed get shouldShowResources() {
-        if (this.store.resourceDefinitions.isComplete) {
+        if (
+            this.store.resourceDefinitions.isComplete &&
+            this.store.resourceIdToResourceData.isComplete
+        ) {
             return this.store.resourceDefinitions.result.length > 0;
         } else {
             return false;
@@ -541,17 +545,21 @@ export default class StudyViewPage extends React.Component<
             const tabs: JSX.Element[] = sorted.reduce((list, def) => {
                 const data = resourceDataById[def.resourceId];
                 if (data && data.length > 0) {
+                    const displayName =
+                        data.length > 1
+                            ? pluralize(def.displayName, data.length)
+                            : def.displayName;
                     list.push(
                         <MSKTab
                             key={getStudyViewResourceTabId(def.resourceId)}
                             id={getStudyViewResourceTabId(def.resourceId)}
-                            linkText={def.displayName}
+                            linkText={displayName}
                             onClickClose={this.closeResourceTab}
                         >
                             <ResourceTab
                                 resourceData={resourceDataById[def.resourceId]}
                                 urlWrapper={this.urlWrapper}
-                                resourceDisplayName={def.displayName}
+                                resourceDisplayName={displayName}
                             />
                         </MSKTab>
                     );
@@ -735,8 +743,13 @@ export default class StudyViewPage extends React.Component<
                                         linkText={
                                             this.store.resourceDefinitions
                                                 .result?.length == 1
-                                                ? this.store.resourceDefinitions
-                                                      .result[0].displayName
+                                                ? pluralize(
+                                                      this.store
+                                                          .resourceDefinitions
+                                                          .result[0]
+                                                          .displayName,
+                                                      2
+                                                  )
                                                 : RESOURCES_TAB_NAME
                                         }
                                         hide={!this.shouldShowResources}
@@ -747,10 +760,13 @@ export default class StudyViewPage extends React.Component<
                                                     this.store
                                                         .resourceDefinitions
                                                         .result?.length == 1
-                                                        ? this.store
-                                                              .resourceDefinitions
-                                                              .result[0]
-                                                              .displayName
+                                                        ? pluralize(
+                                                              this.store
+                                                                  .resourceDefinitions
+                                                                  .result[0]
+                                                                  .displayName,
+                                                              2
+                                                          )
                                                         : RESOURCES_TAB_NAME
                                                 }
                                                 store={this.store}

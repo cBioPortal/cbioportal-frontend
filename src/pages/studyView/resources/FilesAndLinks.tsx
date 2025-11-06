@@ -241,6 +241,23 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
     });
 
     @computed get columns() {
+        // Determine if there's only one unique resource type
+        const uniqueResourceTypes =
+            this.resourceData.result && this.resourceData.result.data
+                ? _.uniq(
+                      this.resourceData.result.data.map(
+                          item => item.typeOfResource as string
+                      )
+                  )
+                : [];
+        const resourcesPerPatientColumnName =
+            uniqueResourceTypes.length === 1 && uniqueResourceTypes[0]
+                ? `${pluralize(
+                      uniqueResourceTypes[0] as string,
+                      2
+                  )} per Patient`
+                : 'Resources per Patient';
+
         let defaultColumns: Column<{ [id: string]: any }>[] = [
             {
                 ...this.getDefaultColumnConfig('patientId', 'Patient ID'),
@@ -293,7 +310,16 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
                                     path,
                                     data.patientId
                                 )}
+                                style={{ fontSize: 10 }}
                             >
+                                <i
+                                    className={`fa fa-user fa-sm`}
+                                    style={{
+                                        marginRight: 5,
+                                        color: 'black',
+                                    }}
+                                    title="Open in Patient View"
+                                />
                                 {data.typeOfResource}
                             </a>
                         </div>
@@ -335,7 +361,7 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
             {
                 ...this.getDefaultColumnConfig(
                     'resourcesPerPatient',
-                    'Resources per Patient',
+                    resourcesPerPatientColumnName,
                     true
                 ),
                 render: (data: { [id: string]: number }) => {
@@ -369,11 +395,7 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
                                                 this.resourceData.result
                                                     ?.totalItems
                                             }{' '}
-                                            {pluralize(
-                                                this.props.resourceDisplayName,
-                                                this.resourceData.result
-                                                    ?.totalItems || 1
-                                            )}
+                                            {this.props.resourceDisplayName}
                                         </strong>
                                     </div>
                                 }

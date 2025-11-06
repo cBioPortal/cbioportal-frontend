@@ -118,10 +118,7 @@ export default class ResourceTab extends React.Component<
             <div>
                 <div style={{ display: 'flex', alignItems: 'flex-end' }}>
                     <FeatureTitle
-                        title={
-                            this.currentResourceDatum.resourceDefinition
-                                .displayName
-                        }
+                        title={this.props.resourceDisplayName}
                         isLoading={false}
                         className="pull-left"
                         style={{ marginBottom: 10 }}
@@ -130,9 +127,10 @@ export default class ResourceTab extends React.Component<
                         {this.currentResourceDatum.sampleId
                             ? this.currentResourceDatum.sampleId
                             : this.currentResourceDatum.patientId}
-                        {this.currentResourceDatum.resourceDefinition
-                            .description &&
-                            ` | ${this.currentResourceDatum.resourceDefinition.description}`}
+                        {` | ${this.props.resourceDisplayName}`}
+                        {` | ${this.currentResourceIndex + 1} of ${
+                            this.props.resourceData.length
+                        }`}
                     </p>
                 </div>
                 <div
