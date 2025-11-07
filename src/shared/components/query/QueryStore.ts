@@ -1608,7 +1608,7 @@ export class QueryStore {
         ],
         invoke: () => {
             return getInternalClient().fetchResourceDefinitionsUsingPOST({
-                studyIds: this.selectableStudies.map(study => study.studyId),
+                studyIds: this.cancerStudies.result.map(study => study.studyId),
             });
         },
         default: [],
