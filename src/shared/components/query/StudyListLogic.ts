@@ -98,21 +98,23 @@ export default class StudyListLogic {
             if (this.store.dataTypeFilters.length == 0) {
                 map_node_dataTypeResult.set(node, true);
             } else {
-                let nodeStudy = this.store.cancerStudies.result.filter(
+                let nodeStudy = this.store.cancerStudies.result.find(
                     study => study.name === node.name
                 );
-                let filterValue: boolean[] = [];
-                const keys = Object.keys(node) as (keyof typeof node)[];
                 const filterToApply = this.store.dataTypeFilters;
-                for (const filter in filterToApply) {
-                    for (const x in keys) {
-                        if (keys[x] === filterToApply[filter]) {
-                            Object.values(node)[x]! > 0
-                                ? filterValue.push(true)
-                                : filterValue.push(false);
-                        }
+                const filterValue = filterToApply.map(typeId => {
+                    // try top-level fields like 'sequencedSampleCount'
+                    const value = (nodeStudy as any)?.[typeId];
+                    if (typeof value === 'number') {
+                        return value > 0;
                     }
-                }
+
+                    // check inside resourceCounts array otherwise
+                    const resource = nodeStudy?.resourceCounts?.find(
+                        r => r.resourceId === typeId
+                    );
+                    return (resource?.sampleCount || 0) > 0;
+                });
                 const filterBoolean =
                     filterValue.length == 0
                         ? false
