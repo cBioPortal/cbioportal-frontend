@@ -30,7 +30,9 @@ import {
     stringListToIndexSet,
     stringListToSet,
 } from 'cbioportal-frontend-commons';
-import internalClient from '../../api/cbioportalInternalClientInstance';
+import internalClient, {
+    getInternalClient,
+} from '../../api/cbioportalInternalClientInstance';
 import { SingleGeneQuery, SyntaxError } from '../../lib/oql/oql-parser';
 import { parseOQLQuery } from '../../lib/oql/oqlfilter';
 import memoize from 'memoize-weak-decorator';
@@ -39,11 +41,7 @@ import URL from 'url';
 import { redirectToStudyView } from '../../api/urls';
 import StudyListLogic from './StudyListLogic';
 import chunkMapReduce from 'shared/lib/chunkMapReduce';
-import {
-    categorizedSamplesCount,
-    currentQueryParams,
-    DEFAULT_STUDY_FILTER_OPTIONS,
-} from './QueryStoreUtils';
+import { categorizedSamplesCount, currentQueryParams } from './QueryStoreUtils';
 
 import getOverlappingStudies from '../../lib/getOverlappingStudies';
 import MolecularProfilesInStudyCache from '../../cache/MolecularProfilesInStudyCache';
@@ -303,7 +301,11 @@ export class QueryStore {
 
     @observable.ref dataTypeFilters: string[] = [];
 
-    @observable studyFilterOptions = DEFAULT_STUDY_FILTER_OPTIONS;
+    @observable _studyFilterOptions: {
+        checked: boolean;
+        id: string;
+        name: string;
+    }[];
 
     @computed get searchText(): string {
         return toQueryString(this.searchClauses);
@@ -1594,6 +1596,40 @@ export class QueryStore {
 
     @computed get selectableStudies() {
         return Array.from(this.treeData.map_studyId_cancerStudy.values());
+    }
+
+    readonly resourceDefinitions = remoteData({
+        await: () => [
+            this.cancerTypes,
+            this.cancerStudies,
+            this.cancerStudyTags,
+            this.userVirtualStudies,
+            this.publicVirtualStudies,
+        ],
+        invoke: () => {
+            return getInternalClient().fetchResourceDefinitionsUsingPOST({
+                studyIds: this.selectableStudies.map(study => study.studyId),
+            });
+        },
+        default: [],
+    });
+
+    @action.bound setStudyFilterOptions(
+        filterOptions: {
+            id: string;
+            name: string;
+            checked: boolean;
+        }[]
+    ) {
+        this._studyFilterOptions = filterOptions;
+    }
+
+    @computed get studyFilterOptions(): {
+        checked: boolean;
+        id: string;
+        name: string;
+    }[] {
+        return this._studyFilterOptions;
     }
 
     public isVirtualStudy(studyId: string): boolean {
