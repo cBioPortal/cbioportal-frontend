@@ -141,7 +141,7 @@ export default class FilterPanel extends React.Component<IFilterPanelProps, {}> 
                                     this.props.store.toggleConsortium(consortium)
                                 }
                             />
-                            <span>{consortium}</span>
+                            <span className={styles.filterItemLabel}>{consortium}</span>
                         </label>
                     );
                 })}
@@ -173,7 +173,7 @@ export default class FilterPanel extends React.Component<IFilterPanelProps, {}> 
                                             )
                                         }
                                     />
-                                    <span>{year}</span>
+                                    <span className={styles.filterItemLabel}>{year}</span>
                                 </label>
                             );
                         })}
@@ -205,7 +205,7 @@ export default class FilterPanel extends React.Component<IFilterPanelProps, {}> 
                                             )
                                         }
                                     />
-                                    <span title={journal}>
+                                    <span className={styles.filterItemLabel} title={journal}>
                                         {journal.length > 30
                                             ? journal.substring(0, 30) + '...'
                                             : journal}

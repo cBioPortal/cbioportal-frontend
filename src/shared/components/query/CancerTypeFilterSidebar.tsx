@@ -57,7 +57,7 @@ export default class CancerTypeFilterSidebar extends React.Component<
         });
 
         return (
-            <label
+            <div
                 key={cancerType.cancerTypeId}
                 className={liClassName}
                 onMouseDown={this.getCancerTypeClickHandler(cancerType)}
@@ -66,7 +66,7 @@ export default class CancerTypeFilterSidebar extends React.Component<
                     {cancerType.name}
                 </span>
                 <span className={styles.filterItemCount}>{numStudies}</span>
-            </label>
+            </div>
         );
     };
 
