@@ -1,0 +1,33 @@
+{
+  "name": "cbioportal-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server for building cBioPortal URLs",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "cbioportal-mcp-server": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js",
+    "watch": "tsc --watch"
+  },
+  "keywords": [
+    "cbioportal",
+    "mcp",
+    "model-context-protocol",
+    "url-builder"
+  ],
+  "author": "",
+  "license": "AGPL-3.0-or-later",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "cbioportal-ts-api-client": "^0.9.80"
+  },
+  "devDependencies": {
+    "tsx": "^4.7.0",
+    "typescript": "^4.0.3"
+  }
+}
