@@ -170,8 +170,10 @@ import { AnnotatedNumericGeneMolecularData } from 'shared/model/AnnotatedNumeric
 import { ExtendedAlteration } from 'shared/model/ExtendedAlteration';
 import CaseFilterWarning from '../banners/CaseFilterWarning';
 import { SelectedDataAlert } from './SelectedDataAlert';
-import PatientViewUrlWrapper from 'pages/patientView/PatientViewUrlWrapper';
 import SampleManager from 'pages/patientView/SampleManager';
+import PatientViewUrlWrapper, {
+    PatientViewUrlQuery,
+} from 'pages/patientView/PatientViewUrlWrapper';
 
 enum EventKey {
     horz_logScale,
@@ -213,12 +215,6 @@ export enum DiscreteVsDiscretePlotType {
     StackedBar = 'StackedBar',
     PercentageStackedBar = 'PercentageStackedBar',
     Table = 'Table',
-}
-
-export enum CohortOptions {
-    WholeStudy = 'WholeStudy',
-    CancerType = 'CancerType',
-    CancerTypeDetailed = 'CancerTypeDetailed',
 }
 
 export enum SortByOptions {
@@ -391,11 +387,11 @@ export interface IPlotsTabProps {
     filteredPatients?: MobxPromise<Patient[]>;
     hideUnprofiledSamples?: false | 'any' | 'totally';
     highlightedSamples?: string[];
-    samplesWithSameCancerTypeAsHighlighted?: MobxPromise<Sample[]>;
-    samplesWithSameCancerTypeDetailedAsHighlighted?: MobxPromise<Sample[]>;
-    sampleManager?: MobxPromiseUnionType<SampleManager>;
-    cohortSelection?: CohortOptions;
-    handleCohortChange?: (cohort: CohortOptions) => void;
+    additionalControls?: () => JSX.Element;
+    customSamplePointComponent?: (
+        sampleId: string,
+        mouseEvents: any
+    ) => JSX.Element;
 }
 
 export type PlotsTabDataSource = {
@@ -463,18 +459,6 @@ const discreteVsDiscretePlotTypeOptions = [
         label: '100% stacked bar chart',
     },
     { value: DiscreteVsDiscretePlotType.Table, label: 'Table' },
-];
-
-const cohortSelectOptions = [
-    { value: CohortOptions.WholeStudy, label: 'Whole Study' },
-    {
-        value: CohortOptions.CancerType,
-        label: 'Cancer Type',
-    },
-    {
-        value: CohortOptions.CancerTypeDetailed,
-        label: 'Cancer Type Detailed',
-    },
 ];
 
 @observer
@@ -1024,39 +1008,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         }
 
         components = [
-            <div style={{ display: 'flex', alignItems: 'baseline' }}>
-                {this.props.cohortSelection && this.props.handleCohortChange && (
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <label
-                            style={{ marginTop: '5px', paddingRight: '5px' }}
-                        >
-                            Cohort:{' '}
-                        </label>
-                        <div
-                            style={{
-                                width: 180,
-                                paddingRight: '5px',
-                                zIndex: 3,
-                            }}
-                        >
-                            <ReactSelect
-                                name="cohort-select"
-                                value={this.props.cohortSelection}
-                                onChange={this.setCohortSelection}
-                                options={cohortSelectOptions}
-                                clearable={false}
-                            />
-                        </div>
-                    </div>
-                )}
-                <div
-                    className="alert alert-info dataAvailabilityAlert"
-                    style={{ width: '100%' }}
-                >
-                    {mainMessage}
-                    <div data-test="dataAvailabilityAlertInfoIcon">
-                        <InfoIcon tooltip={<div>{components}</div>} />
-                    </div>
+            <div
+                className="alert alert-info dataAvailabilityAlert"
+                style={{ width: '100%' }}
+            >
+                {mainMessage}
+                <div data-test="dataAvailabilityAlertInfoIcon">
+                    <InfoIcon tooltip={<div>{components}</div>} />
                 </div>
             </div>,
         ];
@@ -1502,9 +1460,25 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 const localSelection = vertical
                     ? localStorage.getItem('vertGeneSelection')
                     : localStorage.getItem('horzGeneSelection');
-                const param = urlSelection.selectedGeneOption
-                    ? urlSelection.selectedGeneOption
-                    : localSelection;
+                // if empty, set gene selection in url to local selection if available
+                if (!urlSelection.selectedGeneOption && localSelection) {
+                    self.props.urlWrapper.updateURL(
+                        (
+                            currentParams:
+                                | ResultsViewURLQuery
+                                | StudyViewURLQuery
+                                | PatientViewUrlQuery
+                        ) => {
+                            if (vertical) {
+                                currentParams.plots_vert_selection!.selectedGeneOption = localSelection;
+                            } else {
+                                currentParams.plots_horz_selection!.selectedGeneOption = localSelection;
+                            }
+                            return currentParams;
+                        }
+                    );
+                }
+                const param = urlSelection.selectedGeneOption;
 
                 if (!param) {
                     return undefined;
@@ -1526,7 +1500,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 }
                 self.props.urlWrapper.updateURL(
                     (
-                        currentParams: ResultsViewURLQuery | StudyViewURLQuery
+                        currentParams:
+                            | ResultsViewURLQuery
+                            | StudyViewURLQuery
+                            | PatientViewUrlQuery
                     ) => {
                         if (vertical) {
                             currentParams.plots_vert_selection!.selectedGeneOption =
@@ -2086,30 +2063,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     }
 
     @action.bound
-    private setCohortSelection(option: any) {
-        this.props.handleCohortChange &&
-            this.props.handleCohortChange(option.value);
-    }
-
-    @computed get selectedCohortSamples(): MobxPromise<Sample[]> {
-        if (
-            this.props.cohortSelection &&
-            this.props.cohortSelection === CohortOptions.CancerType &&
-            this.props.samplesWithSameCancerTypeAsHighlighted
-        ) {
-            return this.props.samplesWithSameCancerTypeAsHighlighted;
-        } else if (
-            this.props.cohortSelection &&
-            this.props.cohortSelection === CohortOptions.CancerTypeDetailed &&
-            this.props.samplesWithSameCancerTypeDetailedAsHighlighted
-        ) {
-            return this.props.samplesWithSameCancerTypeDetailedAsHighlighted;
-        } else {
-            return this.props.filteredSamples;
-        }
-    }
-
-    @action.bound
     private setSearchCaseInput(e: any) {
         this.searchCaseInput = e.target.value;
         clearTimeout(this.searchCaseTimeout);
@@ -2368,6 +2321,30 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             );
         },
     });
+
+    private makeSameGeneOption(
+        vertical: boolean,
+        selection: AxisMenuSelection
+    ) {
+        if (
+            vertical &&
+            selection.dataType &&
+            this.showGeneSelectBox(
+                selection.dataType,
+                isGenericAssaySelected(selection)
+            ) &&
+            selection.selectedGeneOption &&
+            selection.selectedGeneOption.value !==
+                NONE_SELECTED_OPTION_NUMERICAL_VALUE
+        ) {
+            return [
+                {
+                    value: SAME_SELECTED_OPTION_NUMERICAL_VALUE,
+                    label: `Same gene (${selection.selectedGeneOption.label})`,
+                },
+            ];
+        }
+    }
 
     readonly clinicalAndCustomAttributes = remoteData<
         ExtendedClinicalAttribute[]
@@ -3448,7 +3425,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.props.structuralVariantCache,
             this.props.numericGeneMolecularDataCache,
             this.props.coverageInformation,
-            this.selectedCohortSamples,
+            this.props.filteredSamples,
             this.props.genesetMolecularDataCache,
             this.props.genericAssayMolecularDataCache
         );
@@ -3476,7 +3453,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.props.structuralVariantCache,
             this.props.numericGeneMolecularDataCache,
             this.props.coverageInformation,
-            this.selectedCohortSamples,
+            this.props.filteredSamples,
             this.props.genesetMolecularDataCache,
             this.props.genericAssayMolecularDataCache
         );
@@ -4446,31 +4423,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                                     this.horzGeneOptions
                                                         .isPending
                                                 }
-                                                defaultOptions={
-                                                    vertical &&
+                                                defaultOptions={this.makeSameGeneOption(
+                                                    vertical,
                                                     this.horzSelection
-                                                        .dataType &&
-                                                    this.showGeneSelectBox(
-                                                        this.horzSelection
-                                                            .dataType,
-                                                        isGenericAssaySelected(
-                                                            this.horzSelection
-                                                        )
-                                                    ) &&
-                                                    this.horzSelection
-                                                        .selectedGeneOption &&
-                                                    this.horzSelection
-                                                        .selectedGeneOption
-                                                        .value !==
-                                                        NONE_SELECTED_OPTION_NUMERICAL_VALUE
-                                                        ? [
-                                                              {
-                                                                  value: SAME_SELECTED_OPTION_NUMERICAL_VALUE,
-                                                                  label: `Same gene (${this.horzSelection.selectedGeneOption.label})`,
-                                                              },
-                                                          ]
-                                                        : undefined
-                                                }
+                                                )}
                                                 noOptionsMessage={() =>
                                                     'Search for gene'
                                                 }
@@ -5066,6 +5022,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     private controls() {
         return (
             <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <div>
+                    {this.props.additionalControls && (
+                        <Observer>{this.props.additionalControls}</Observer>
+                    )}
+                </div>
                 <div className="axisBlock">
                     <Observer>{this.getHorizontalAxisMenu}</Observer>
                 </div>
@@ -6011,7 +5972,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                     highlightedSamples={
                                         this.props.highlightedSamples
                                     }
-                                    sampleManager={this.props.sampleManager}
+                                    customSamplePointComponent={
+                                        this.props.customSamplePointComponent
+                                    }
                                 />
                             );
                             break;
@@ -6162,7 +6125,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                     highlightedSamples={
                                         this.props.highlightedSamples
                                     }
-                                    sampleManager={this.props.sampleManager}
+                                    customSamplePointComponent={
+                                        this.props.customSamplePointComponent
+                                    }
                                 />
                             );
                             break;
@@ -6634,7 +6599,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                             />
                             <CaseFilterWarning
                                 samples={this.props.samples!}
-                                filteredSamples={this.selectedCohortSamples!}
+                                filteredSamples={this.props.filteredSamples!}
                                 patients={this.props.patients!}
                                 filteredPatients={this.props.filteredPatients!}
                                 hideUnprofiledSamples={
