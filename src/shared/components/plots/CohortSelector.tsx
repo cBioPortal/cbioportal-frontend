@@ -2,11 +2,12 @@ import { observer } from 'mobx-react';
 import * as React from 'react';
 import { computed } from 'mobx';
 import ReactSelect from 'react-select1';
+import InfoIcon from '../InfoIcon';
 
 export interface ICohortSelector {
     study: string;
-    cancerType: string;
-    cancerTypeDetailed: string;
+    cancerTypes: string[];
+    cancerTypesDetailed: string[];
     cohortSelection: CohortOptions;
     handleCohortChange: (cohort: {
         value: CohortOptions;
@@ -36,11 +37,13 @@ export default class CohortSelector extends React.Component<
             },
             {
                 value: CohortOptions.CancerType,
-                label: `Samples with: ${this.props.cancerType}`,
+                label: `Samples with: ${this.props.cancerTypes.join(', ')}`,
             },
             {
                 value: CohortOptions.CancerTypeDetailed,
-                label: `Samples with: ${this.props.cancerTypeDetailed}`,
+                label: `Samples with: ${this.props.cancerTypesDetailed.join(
+                    ', '
+                )}`,
             },
         ];
     }
@@ -49,14 +52,27 @@ export default class CohortSelector extends React.Component<
         return (
             <div style={{ marginBottom: 10 }}>
                 <div className="form-group">
-                    <label>Relevant Cohort</label>
-                    <div className="cohort-select-div">
+                    <label>Reference Cohort</label>
+                    <div
+                        className="cohort-select-div"
+                        style={{ display: 'flex', alignItems: 'center' }}
+                    >
                         <ReactSelect
                             name="cohort-select"
                             value={this.props.cohortSelection}
                             onChange={this.props.handleCohortChange}
                             options={this.cohortOptions}
                             clearable={false}
+                        />
+                        <InfoIcon
+                            tooltip={
+                                <span>
+                                    Set of patients/samples displayed alongside
+                                    the current patient/sample for context
+                                </span>
+                            }
+                            tooltipPlacement="right"
+                            style={{ marginLeft: 7 }}
                         />
                     </div>
                 </div>

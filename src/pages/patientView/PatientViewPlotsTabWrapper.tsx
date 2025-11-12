@@ -19,12 +19,12 @@ export const PatientViewPlotsTabWrapper: React.FunctionComponent<{
     const cohortSelector = () => (
         <CohortSelector
             study={store.studies.result![0].name}
-            cancerType={
-                store.patientViewPlotsStore.highlightedCancerTypes.result![0]
+            cancerTypes={
+                store.patientViewPlotsStore.highlightedCancerTypes.result
             }
-            cancerTypeDetailed={
+            cancerTypesDetailed={
                 store.patientViewPlotsStore.highlightedDetailedCancerTypes
-                    .result![0]
+                    .result
             }
             cohortSelection={store.patientViewPlotsStore.cohortSelection}
             handleCohortChange={store.patientViewPlotsStore.handleCohortChange}
