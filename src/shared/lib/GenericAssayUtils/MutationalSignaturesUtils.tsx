@@ -39,7 +39,7 @@ export const RESERVED_MUTATIONAL_SIGNATURE_COLORS: {
     haloalkane: '#b91383',
     aid: '#f4359e',
     aza: '#9c5935',
-    'aid/apobec': '#aaaa11',
+    'aid/apobec': '#93930e',
     'pol-eta': '#16d620',
     mmr: '#d92b45',
     'mmr/msi': '#d92b45',

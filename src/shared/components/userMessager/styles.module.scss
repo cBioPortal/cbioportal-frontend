@@ -13,12 +13,13 @@
     }
 
     a {
-        color: lightblue;
+        font-weight: bold;
+        color: #fff;
 
         &:hover,
         &:visited {
-            color: lightblue;
-            opacity: 0.6;
+            color: #fff;
+            text-decoration: underline;
         }
     }
 }

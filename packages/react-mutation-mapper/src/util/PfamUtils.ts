@@ -4,10 +4,10 @@ export function generatePfamDomainColorMap(
     pfamDomains: PfamDomainRange[]
 ): { [pfamAccession: string]: string } {
     const colors: string[] = [
-        '#2dcf00',
-        '#ff5353',
-        '#5b5bff',
-        '#ebd61d',
+        '#229e00',
+        '#ff3d3d',
+        '#6161ff',
+        '#a3950f',
         '#ba21e0',
         '#ff9c42',
         '#ff7dff',

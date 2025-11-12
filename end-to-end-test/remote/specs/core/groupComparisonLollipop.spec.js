@@ -630,7 +630,7 @@ describe('group comparison mutations tab tests', () => {
                     'badge-splice_unknown_significance',
                     'background-color'
                 ),
-                '#f0b87b'
+                '#c25024'
             );
             // driver badge deselected
             assert.equal(

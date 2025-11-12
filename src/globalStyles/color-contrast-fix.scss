@@ -1,0 +1,51 @@
+/* The styles here are wrapped in the class "cbioportal-frontend" and overwrite the styling in the prefixed-bootstrap.min.css file. */
+a {
+    color: #2f73a7;
+    text-decoration: none;
+}
+
+.btn-primary {
+    color: #fff;
+    background-color: #2f73a7;
+    border-color: #3178ae;
+}
+
+.btn-link {
+    font-weight: 400;
+    color: #2f73a7;
+    border-radius: 0;
+}
+
+.label-primary {
+    background-color: #2f73a7;
+}
+
+.label-success {
+    background-color: #3a833a;
+}
+
+.label-warning {
+    color: #4a4a4a;
+    background-color: #f0ad4e;
+}
+
+.label-danger {
+    background-color: #d4403a;
+}
+
+// Not sure if this is the right place for changing the color of the IGV buttons
+.igvContainer {
+    .igv-container {
+        .igv-navbar {
+            .igv-navbar-button {
+                color: #696969 !important;
+                border-color: #696969 !important;
+
+                &-clicked {
+                    color: #fff !important;
+                    border-color: #737373 !important;
+                }
+            }
+        }
+    }
+}

@@ -130,7 +130,7 @@ header {
 
 #main-nav li a:link,
 #main-nav li a:visited {
-    color: #777;
+    color: #6b6b6b;
 }
 
 #main-nav li a:hover {
@@ -139,8 +139,8 @@ header {
 }
 
 #main-nav li a.selected {
-    color: #3786c2;
-    border-bottom: 2px solid #3786c2;
+    color: #2a6593;
+    border-bottom: 2px solid #2a6593;
     padding-bottom: 4px;
     text-decoration: none !important;
     cursor: text;
@@ -149,7 +149,7 @@ header {
 #footer {
     text-align: center;
     padding: 30px;
-    opacity: 0.5;
+    opacity: 1;
 }
 
 .legacy #page_wrapper {

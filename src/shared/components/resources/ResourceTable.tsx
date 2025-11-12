@@ -61,7 +61,7 @@ const ResourceTable = observer(
                     <tr>
                         {sampleId && <th>Sample ID</th>}
                         <th>Resource</th>
-                        <th></th>
+                        <th>Resource URL</th>
                         {resourceTable.data.length > 0 && <th>Description</th>}
                     </tr>
                 </thead>
@@ -86,7 +86,7 @@ const ResourceTable = observer(
                                 <td>
                                     <a
                                         href={resource.url}
-                                        style={{ fontSize: 10 }}
+                                        style={{ fontSize: 13 }}
                                         target={'_blank'}
                                     >
                                         <i
