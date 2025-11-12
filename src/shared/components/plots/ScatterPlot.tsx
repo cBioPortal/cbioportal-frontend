@@ -11,10 +11,7 @@ import {
     VictoryLine,
 } from 'victory';
 import jStat from 'jStat';
-import {
-    MobxPromiseUnionType,
-    tickFormatNumeral,
-} from 'cbioportal-frontend-commons';
+import { tickFormatNumeral } from 'cbioportal-frontend-commons';
 import {
     computeCorrelationPValue,
     makeScatterPlotSizeFunction,
@@ -43,8 +40,6 @@ import {
 import LegendDataComponent from './LegendDataComponent';
 import LegendLabelComponent from './LegendLabelComponent';
 import autobind from 'autobind-decorator';
-import SampleManager from 'pages/patientView/SampleManager';
-import { SamplePointLabel } from '../sampleLabel/SampleLabel';
 
 export interface IBaseScatterPlotData {
     x: number;
@@ -86,7 +81,10 @@ export interface IScatterPlotProps<D extends IBaseScatterPlotData> {
     fontFamily?: string;
     legendTitle?: string | string[];
     highlightedSamples?: string[];
-    sampleManager?: MobxPromiseUnionType<SampleManager>;
+    customSamplePointComponent?: (
+        sampleId: string,
+        mouseEvents: any
+    ) => JSX.Element;
 }
 // constants related to the gutter
 const GUTTER_TEXT_STYLE = {
@@ -608,17 +606,32 @@ export default class ScatterPlot<
     }
 
     @computed get data() {
-        return separateScatterDataByAppearance(
+        const [highlightedData, unHighlightedData] = _.partition(
             this.props.data,
+            d => this.props.highlightedSamples?.includes(d.sampleId)
+        );
+        const highlightedDataBuckets = separateScatterDataByAppearance<D>(
+            highlightedData,
             ifNotDefined(this.props.fill, '0x000000'),
             ifNotDefined(this.props.stroke, '0x000000'),
             ifNotDefined(this.props.strokeWidth, 0),
             ifNotDefined(this.props.strokeOpacity, 1),
             ifNotDefined(this.props.fillOpacity, 1),
             ifNotDefined(this.props.symbol, 'circle'),
-            this.props.zIndexSortBy,
-            this.props.highlightedSamples
+            this.props.zIndexSortBy
         );
+        const unHighlightedDataBuckets = separateScatterDataByAppearance<D>(
+            unHighlightedData,
+            ifNotDefined(this.props.fill, '0x000000'),
+            ifNotDefined(this.props.stroke, '0x000000'),
+            ifNotDefined(this.props.strokeWidth, 0),
+            ifNotDefined(this.props.strokeOpacity, 1),
+            ifNotDefined(this.props.fillOpacity, 1),
+            ifNotDefined(this.props.symbol, 'circle'),
+            this.props.zIndexSortBy
+        );
+        // highlighted data points should appear in front of the other data points
+        return [...unHighlightedDataBuckets, ...highlightedDataBuckets];
     }
 
     @computed private get regressionLineComputations() {
@@ -727,80 +740,45 @@ export default class ScatterPlot<
                                 label={this.axisLabelY}
                             />
                             {this.data.map(dataWithAppearance => {
-                                if (
-                                    this.props.sampleManager &&
-                                    this.props.sampleManager.result &&
-                                    this.props.highlightedSamples &&
-                                    this.props.highlightedSamples.includes(
-                                        (dataWithAppearance.data[0] as any)
-                                            .sampleId
-                                    )
-                                ) {
-                                    return (
-                                        <VictoryScatter
-                                            key={`${dataWithAppearance.fill},${dataWithAppearance.stroke},${dataWithAppearance.strokeWidth},${dataWithAppearance.strokeOpacity},${dataWithAppearance.fillOpacity},${dataWithAppearance.symbol}`}
-                                            style={{
-                                                data: {
-                                                    fill:
-                                                        dataWithAppearance.fill,
-                                                    stroke:
-                                                        dataWithAppearance.stroke,
-                                                    strokeWidth:
-                                                        dataWithAppearance.strokeWidth,
-                                                    strokeOpacity:
-                                                        dataWithAppearance.strokeOpacity,
-                                                    fillOpacity:
-                                                        dataWithAppearance.fillOpacity,
-                                                },
-                                            }}
-                                            size={this.size}
-                                            symbol={dataWithAppearance.symbol}
-                                            data={dataWithAppearance.data}
-                                            events={this.mouseEvents}
-                                            x={this.x}
-                                            y={this.y}
-                                            dataComponent={
-                                                <SamplePointLabel
-                                                    label={(
-                                                        this.props.sampleManager
-                                                            .result.sampleIndex[
-                                                            dataWithAppearance
-                                                                .data[0]
-                                                                .sampleId
-                                                        ] + 1
-                                                    ).toString()}
-                                                    events={this.mouseEvents}
-                                                />
-                                            }
-                                        />
+                                const useCustomDataComponent =
+                                    this.props.customSamplePointComponent &&
+                                    this.props.highlightedSamples?.includes(
+                                        dataWithAppearance.data[0].sampleId
                                     );
-                                } else {
-                                    return (
-                                        <VictoryScatter
-                                            key={`${dataWithAppearance.fill},${dataWithAppearance.stroke},${dataWithAppearance.strokeWidth},${dataWithAppearance.strokeOpacity},${dataWithAppearance.fillOpacity},${dataWithAppearance.symbol}`}
-                                            style={{
-                                                data: {
-                                                    fill:
-                                                        dataWithAppearance.fill,
-                                                    stroke:
-                                                        dataWithAppearance.stroke,
-                                                    strokeWidth:
-                                                        dataWithAppearance.strokeWidth,
-                                                    strokeOpacity:
-                                                        dataWithAppearance.strokeOpacity,
-                                                    fillOpacity:
-                                                        dataWithAppearance.fillOpacity,
-                                                },
-                                            }}
-                                            size={this.size}
-                                            symbol={dataWithAppearance.symbol}
-                                            data={dataWithAppearance.data}
-                                            events={this.mouseEvents}
-                                            x={this.x}
-                                            y={this.y}
-                                        />
-                                    );
-                                }
+                                return (
+                                    <VictoryScatter
+                                        key={`${dataWithAppearance.fill},${dataWithAppearance.stroke},${dataWithAppearance.strokeWidth},${dataWithAppearance.strokeOpacity},${dataWithAppearance.fillOpacity},${dataWithAppearance.symbol}`}
+                                        style={{
+                                            data: {
+                                                fill: dataWithAppearance.fill,
+                                                stroke:
+                                                    dataWithAppearance.stroke,
+                                                strokeWidth:
+                                                    dataWithAppearance.strokeWidth,
+                                                strokeOpacity:
+                                                    dataWithAppearance.strokeOpacity,
+                                                fillOpacity:
+                                                    dataWithAppearance.fillOpacity,
+                                            },
+                                        }}
+                                        size={this.size}
+                                        symbol={dataWithAppearance.symbol}
+                                        data={dataWithAppearance.data}
+                                        events={this.mouseEvents}
+                                        x={this.x}
+                                        y={this.y}
+                                        dataComponent={
+                                            useCustomDataComponent
+                                                ? this.props
+                                                      .customSamplePointComponent!(
+                                                      dataWithAppearance.data[0]
+                                                          .sampleId,
+                                                      this.mouseEvents
+                                                  )
+                                                : undefined
+                                        }
+                                    />
+                                );
                             })}
                             {this.regressionLine}
                         </VictoryChart>
