@@ -23,7 +23,7 @@ export APPLICATION_PROPERTIES_PATH=$APPLICATION_PROPERTIES_PATH
 export DOCKER_IMAGE_CBIOPORTAL=cbioportal/cbioportal:rc-7.0-clickhouse-only
 
 # cbioportal-core branch
-export CBIOPORTAL_CORE_BRANCH=main
+export APP_CBIOPORTAL_CORE_BRANCH=main
 
 # Use pre-release clickhouse for docker compose
 export DOCKER_COMPOSE_REF=$DOCKER_COMPOSE_REF
