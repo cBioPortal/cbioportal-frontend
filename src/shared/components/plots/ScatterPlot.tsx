@@ -23,6 +23,7 @@ import {
     getBottomLegendHeight,
     getMaxLegendLabelWidth,
     getLegendItemsPerRow,
+    separateScatterData,
 } from './PlotUtils';
 import { toConditionalPrecision } from '../../lib/NumberUtils';
 import {
@@ -665,7 +666,7 @@ export default class ScatterPlot<
             this.props.data,
             d => this.props.highlightedSamples?.includes(d.sampleId)
         );
-        const highlightedDataBuckets = separateScatterDataByAppearance<D>(
+        const highlightedDataBuckets = separateScatterData<D>(
             highlightedData,
             ifNotDefined(this.props.fill, '0x000000'),
             ifNotDefined(this.props.stroke, '0x000000'),

@@ -21,6 +21,7 @@ import {
     getLegendItemsPerRow,
     getMaxLegendLabelWidth,
     LegendDataWithId,
+    separateScatterData,
     separateScatterDataByAppearance,
 } from './PlotUtils';
 import { logicalAnd } from '../../lib/LogicUtils';
@@ -800,7 +801,7 @@ export default class BoxScatterPlot<
                 }
             }
         }
-        const highlightedDataBuckets = separateScatterDataByAppearance<D>(
+        const highlightedDataBuckets = separateScatterData<D>(
             highlightedData,
             ifNotDefined(this.props.fill, '0x000000'),
             ifNotDefined(this.props.stroke, '0x000000'),
