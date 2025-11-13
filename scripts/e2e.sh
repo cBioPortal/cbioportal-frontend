@@ -3,7 +3,9 @@ set -e
 set -o allexport
 
 TEST_REPO_URL="https://github.com/cBioPortal/cbioportal-test.git"
+TEST_REPO_REF="main"
 DOCKER_COMPOSE_REPO_URL="https://github.com/cBioPortal/cbioportal-docker-compose.git"
+DOCKER_COMPOSE_REF="rc-7.0-clickhouse-only"
 STUDIES='ascn_test_study study_hg38 teststudy_genepanels study_es_0 lgg_ucsf_2014_test_generic_assay'
 APPLICATION_PROPERTIES_PATH=$(cd -- "$(dirname -- "$0")" && cd .. && pwd)/end-to-end-test/local/runtime-config/portal.properties
 KEYCLOAK="true"
@@ -18,10 +20,13 @@ export DOCKER_IMAGE_MYSQL=cbioportal/mysql:8.0-database-test
 export APPLICATION_PROPERTIES_PATH=$APPLICATION_PROPERTIES_PATH
 
 # Backend image
-export DOCKER_IMAGE_CBIOPORTAL=cbioportal/cbioportal:master
+export DOCKER_IMAGE_CBIOPORTAL=cbioportal/cbioportal:rc-7.0-clickhouse-only
 
 # cbioportal-core branch
 export CBIOPORTAL_CORE_BRANCH=main
+
+# Use pre-release clickhouse for docker compose
+export DOCKER_COMPOSE_REF=$DOCKER_COMPOSE_REF
 
 # Create a temp dir and clone test repo
 ROOT_DIR=$(pwd)
@@ -29,6 +34,7 @@ TEMP_DIR=$(mktemp -d)
 git clone "$TEST_REPO_URL" "$TEMP_DIR/cbioportal-test" || exit 1
 git clone "$DOCKER_COMPOSE_REPO_URL" "$TEMP_DIR/cbioportal-docker-compose" || exit 1
 cd "$TEMP_DIR/cbioportal-test" || exit 1
+git checkout "$TEST_REPO_REF" || exit 1
 
 # Generate keycloak config
 if [ "$KEYCLOAK" = "true" ]; then
