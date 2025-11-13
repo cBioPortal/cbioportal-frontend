@@ -279,6 +279,84 @@ export function makeUniqueColorGetter(init_used_colors?: string[]) {
     };
 }
 
+export function separateScatterData<D>(
+    data: D[],
+    fill: string | ((d: D) => string),
+    stroke: string | ((d: D) => string),
+    strokeWidth: number | ((d: D) => number),
+    strokeOpacity: number | ((d: D) => number),
+    fillOpacity: number | ((d: D) => number),
+    symbol: string | ((d: D) => string),
+    zIndexSortBy?: ((d: D) => any)[] // second argument to _.sortBy
+): {
+    data: D[];
+    fill: string;
+    stroke: string;
+    strokeWidth: number;
+    strokeOpacity: number;
+    fillOpacity: number;
+    symbol: string;
+}[] {
+    let buckets: {
+        data: D[];
+        fill: string;
+        stroke: string;
+        strokeWidth: number;
+        strokeOpacity: number;
+        fillOpacity: number;
+        symbol: string;
+        sortBy: any[];
+    }[] = [];
+
+    let d_fill: string,
+        d_stroke: string,
+        d_strokeWidth: number,
+        d_strokeOpacity: number,
+        d_fillOpacity: number,
+        d_symbol: string,
+        d_sortBy: any[];
+
+    for (const datum of data) {
+        // compute appearance for datum
+        d_fill = typeof fill === 'function' ? fill(datum) : fill;
+        d_stroke = typeof stroke === 'function' ? stroke(datum) : stroke;
+        d_strokeWidth =
+            typeof strokeWidth === 'function'
+                ? strokeWidth(datum)
+                : strokeWidth;
+        d_strokeOpacity =
+            typeof strokeOpacity === 'function'
+                ? strokeOpacity(datum)
+                : strokeOpacity;
+        d_fillOpacity =
+            typeof fillOpacity === 'function'
+                ? fillOpacity(datum)
+                : fillOpacity;
+        d_symbol = typeof symbol === 'function' ? symbol(datum) : symbol;
+        d_sortBy = zIndexSortBy ? zIndexSortBy.map(f => f(datum)) : [1];
+
+        buckets.push({
+            data: [datum],
+            fill: d_fill,
+            stroke: d_stroke,
+            strokeWidth: d_strokeWidth,
+            strokeOpacity: d_strokeOpacity,
+            fillOpacity: d_fillOpacity,
+            symbol: d_symbol,
+            sortBy: d_sortBy,
+        });
+    }
+
+    if (zIndexSortBy) {
+        // sort by sortBy
+        const sortBy = zIndexSortBy.map(
+            (f, index) => (bucket: typeof buckets[0]) => bucket.sortBy[index]
+        );
+        buckets = _.sortBy<typeof buckets[0]>(buckets, sortBy);
+    }
+    return buckets;
+}
+
 export function separateScatterDataByAppearance<D>(
     data: D[],
     fill: string | ((d: D) => string),
