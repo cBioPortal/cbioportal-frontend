@@ -288,7 +288,9 @@ jobs:
       BACKEND_PORT: 8080
       FRONTEND_PORT: 3000
       DOCKER_IMAGE_MYSQL: cbioportal/mysql:8.0-database-test
-      DOCKER_IMAGE_CBIOPORTAL: cbioportal/cbioportal:master
+      DOCKER_IMAGE_CBIOPORTAL: cbioportal/cbioportal:rc-7.0-clickhouse-only
+      DOCKER_COMPOSE_REF: rc-7.0-clickhouse-only
+      APP_CBIOPORTAL_CORE_BRANCH: main
     steps:
       - attach_workspace:
           at: /tmp/repo
@@ -307,7 +309,7 @@ jobs:
             APPLICATION_PROPERTIES_PATH: '/tmp/repo/cbioportal-frontend/end-to-end-test/local/runtime-config/portal.properties'
           command: |
             cd cbioportal-test
-            nohup ./scripts/docker-compose.sh --portal_type='keycloak' >> /tmp/repo/docker-compose-logs.txt 2>&1 &
+            nohup ./scripts/docker-compose.sh --portal_type='keycloak' --compose_extensions='-f addon/clickhouse/docker-compose.clickhouse.yml'  >> /tmp/repo/docker-compose-logs.txt 2>&1 &
       - run:
           name: Check keycloak connection at localhost
           command: |
