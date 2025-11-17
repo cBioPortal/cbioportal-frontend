@@ -344,11 +344,22 @@ export function makeTrackGroupHeaders(
             } else {
                 type = 'heatmap';
             }
-            headerMap[nextEntry.trackGroupIndex] = makeTrackGroupHeader(
-                type,
+
+            let headerText =
                 molecularProfileIdToMolecularProfile[
                     nextEntry.molecularProfileId
-                ].name,
+                ].name;
+
+            if (
+                profile.molecularAlterationType ===
+                AlterationTypeConstants.MUTATION_EXTENDED
+            ) {
+                headerText = 'Variant Allele Frequency';
+            }
+
+            headerMap[nextEntry.trackGroupIndex] = makeTrackGroupHeader(
+                type,
+                headerText,
                 nextEntry.trackGroupIndex,
                 onClickDeleteCallback,
                 getClusteredTrackGroupIndex,
