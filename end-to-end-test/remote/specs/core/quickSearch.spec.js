@@ -34,35 +34,30 @@ describe('Quick Search', () => {
     });
 
     it('should give results for studies', async () => {
-        await clickElement(
-            'strong=Adrenocortical Carcinoma (TCGA, Firehose Legacy)'
-        );
-        await (
-            await getElement(
-                'h3=Adrenocortical Carcinoma (TCGA, Firehose Legacy)'
-            )
-        ).waitForExist();
+        //await browser.debug();
+
+        const SELECTOR =
+            'Adenoid Cystic Carcinoma (FMI, Am J Surg Pathl. 2014)';
+
+        await clickElement(`strong=${SELECTOR}`);
+        await (await getElement(`h3=${SELECTOR}`)).waitForExist();
 
         assert.equal(
-            await (
-                await getElement(
-                    'h3=Adrenocortical Carcinoma (TCGA, Firehose Legacy)'
-                )
-            ).isDisplayed(),
+            await (await getElement(`h3=${SELECTOR}`)).isDisplayed(),
             true,
-            'modal is visible'
+            'title is visible'
         );
     });
 
     it('should give results for genes', async () => {
-        //browser.debug();
-        await clickElement('strong=458 more genes (click to load 20 more)');
-        await (await getElement('strong=ADAM12')).waitForExist();
-        await clickElement('strong=ADAM15');
-        await (await getElement('a=ADAM15')).waitForExist({ timeout: 60000 });
+        await (await getElement('strong=ADAD1')).waitForExist();
+
+        await clickElement('strong=ADAD1');
+
+        await (await getElement('a=ADAD1')).waitForExist({ timeout: 60000 });
 
         assert.equal(
-            await (await getElement('a=ADAM15')).isDisplayed(),
+            await (await getElement('a=ADAD1')).isDisplayed(),
             true,
             'we navigated successfully to gene query'
         );
