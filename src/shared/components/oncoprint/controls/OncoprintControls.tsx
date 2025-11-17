@@ -481,7 +481,7 @@ export default class OncoprintControls extends React.Component<
                         profile.molecularAlterationType ===
                         AlterationTypeConstants.MUTATION_EXTENDED
                     ) {
-                        label = `Variant Allele Frequency`;
+                        label = `Variant Allele Frequency in Selected Mutations Profile`;
                     }
 
                     return {
