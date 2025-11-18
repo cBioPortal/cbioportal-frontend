@@ -552,7 +552,7 @@ export function percentAltered(altered: number, sequenced: number) {
     return fixed + '%';
 }
 
-function getAlterationInfoSequenced(
+function getAlterationInfo(
     sampleMode: boolean,
     oql: { gene: string } | string[],
     sequencedSampleKeysByGene: { [hugoGeneSymbol: string]: string[] },
@@ -561,9 +561,11 @@ function getAlterationInfoSequenced(
 ) {
     const geneSymbolArray = oql instanceof Array ? oql : [oql.gene];
 
-    const counts = {
+    const report = {
         sequenced: 0,
         alteredAndSequenced: 0,
+        altered: alteredKeys.size,
+        percent: '',
     };
 
     if (sampleMode) {
@@ -573,8 +575,8 @@ function getAlterationInfoSequenced(
                 symbol => sequencedSampleKeysByGene[symbol]
             )
         );
-        counts.sequenced = sequenced.length;
-        counts.alteredAndSequenced = _.intersection(
+        report.sequenced = sequenced.length;
+        report.alteredAndSequenced = _.intersection(
             sequenced,
             Array.from(alteredKeys)
         ).length;
@@ -585,28 +587,19 @@ function getAlterationInfoSequenced(
                 symbol => sequencedPatientKeysByGene[symbol]
             )
         );
-        counts.sequenced = sequenced.length;
-        counts.alteredAndSequenced = _.intersection(
+        report.sequenced = sequenced.length;
+        report.alteredAndSequenced = _.intersection(
             sequenced,
             Array.from(alteredKeys)
         ).length;
     }
 
-    // const sequenced = sampleMode
-    //     ? _.uniq(
-    //           _.flatMap(
-    //               geneSymbolArray,
-    //               symbol => sequencedSampleKeysByGene[symbol]
-    //           )
-    //       ).length
-    //     : _.uniq(
-    //           _.flatMap(
-    //               geneSymbolArray,
-    //               symbol => sequencedPatientKeysByGene[symbol]
-    //           )
-    //       ).length;
+    report.percent = percentAltered(
+        report.alteredAndSequenced,
+        report.sequenced
+    );
 
-    return counts;
+    return report;
 }
 
 export function alterationInfoForOncoprintTrackData(
@@ -625,23 +618,19 @@ export function alterationInfoForOncoprintTrackData(
         return acc;
     }, new Set<string>());
 
-    const sequenced = getAlterationInfoSequenced(
+    const info = getAlterationInfo(
         sampleMode,
         data.oql,
         sequencedSampleKeysByGene,
         sequencedPatientKeysByGene,
         alteredKeys
     );
-    const altered = alteredKeys.size;
-    const percent = percentAltered(
-        sequenced.alteredAndSequenced,
-        sequenced.sequenced
-    );
+
     return {
-        sequenced: sequenced.sequenced,
-        alteredAndSequenced: sequenced.alteredAndSequenced,
-        altered,
-        percent,
+        sequenced: info.sequenced,
+        alteredAndSequenced: info.alteredAndSequenced,
+        altered: info.altered,
+        percent: info.percent,
     };
 }
 
@@ -667,7 +656,7 @@ export function alterationInfoForCaseAggregatedDataByOQLLine(
               .map(e => e[0])
               .value();
 
-    const sequenced = getAlterationInfoSequenced(
+    const info = getAlterationInfo(
         sampleMode,
         data.oql,
         sequencedSampleKeysByGene,
@@ -675,15 +664,11 @@ export function alterationInfoForCaseAggregatedDataByOQLLine(
         new Set(alteredEntities)
     );
 
-    const altered = alteredEntities.length;
-
-    const percent = percentAltered(altered, sequenced.sequenced);
-
     return {
-        sequenced: sequenced.sequenced,
-        alteredAndSequenced: sequenced.alteredAndSequenced,
-        altered,
-        percent,
+        sequenced: info.sequenced,
+        alteredAndSequenced: info.alteredAndSequenced,
+        altered: info.altered,
+        percent: info.percent,
     };
 }
 
