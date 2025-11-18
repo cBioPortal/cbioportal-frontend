@@ -556,24 +556,57 @@ function getAlterationInfoSequenced(
     sampleMode: boolean,
     oql: { gene: string } | string[],
     sequencedSampleKeysByGene: { [hugoGeneSymbol: string]: string[] },
-    sequencedPatientKeysByGene: { [hugoGeneSymbol: string]: string[] }
+    sequencedPatientKeysByGene: { [hugoGeneSymbol: string]: string[] },
+    alteredKeys: Set<string>
 ) {
     const geneSymbolArray = oql instanceof Array ? oql : [oql.gene];
-    const sequenced = sampleMode
-        ? _.uniq(
-              _.flatMap(
-                  geneSymbolArray,
-                  symbol => sequencedSampleKeysByGene[symbol]
-              )
-          ).length
-        : _.uniq(
-              _.flatMap(
-                  geneSymbolArray,
-                  symbol => sequencedPatientKeysByGene[symbol]
-              )
-          ).length;
 
-    return sequenced;
+    const counts = {
+        sequenced: 0,
+        alteredAndSequenced: 0,
+    };
+
+    if (sampleMode) {
+        const sequenced = _.uniq(
+            _.flatMap(
+                geneSymbolArray,
+                symbol => sequencedSampleKeysByGene[symbol]
+            )
+        );
+        counts.sequenced = sequenced.length;
+        counts.alteredAndSequenced = _.intersection(
+            sequenced,
+            Array.from(alteredKeys)
+        ).length;
+    } else {
+        const sequenced = _.uniq(
+            _.flatMap(
+                geneSymbolArray,
+                symbol => sequencedPatientKeysByGene[symbol]
+            )
+        );
+        counts.sequenced = sequenced.length;
+        counts.alteredAndSequenced = _.intersection(
+            sequenced,
+            Array.from(alteredKeys)
+        ).length;
+    }
+
+    // const sequenced = sampleMode
+    //     ? _.uniq(
+    //           _.flatMap(
+    //               geneSymbolArray,
+    //               symbol => sequencedSampleKeysByGene[symbol]
+    //           )
+    //       ).length
+    //     : _.uniq(
+    //           _.flatMap(
+    //               geneSymbolArray,
+    //               symbol => sequencedPatientKeysByGene[symbol]
+    //           )
+    //       ).length;
+
+    return counts;
 }
 
 export function alterationInfoForOncoprintTrackData(
@@ -585,16 +618,28 @@ export function alterationInfoForOncoprintTrackData(
     sequencedSampleKeysByGene: { [hugoGeneSymbol: string]: string[] },
     sequencedPatientKeysByGene: { [hugoGeneSymbol: string]: string[] }
 ) {
+    const alteredKeys = data.trackData!.reduce((acc, next) => {
+        if (isAltered(next)) {
+            acc.add(next.uid);
+        }
+        return acc;
+    }, new Set<string>());
+
     const sequenced = getAlterationInfoSequenced(
         sampleMode,
         data.oql,
         sequencedSampleKeysByGene,
-        sequencedPatientKeysByGene
+        sequencedPatientKeysByGene,
+        alteredKeys
     );
-    const altered = _.sumBy(data.trackData!, d => +isAltered(d));
-    const percent = percentAltered(altered, sequenced);
+    const altered = alteredKeys.size;
+    const percent = percentAltered(
+        sequenced.alteredAndSequenced,
+        sequenced.sequenced
+    );
     return {
-        sequenced,
+        sequenced: sequenced.sequenced,
+        alteredAndSequenced: sequenced.alteredAndSequenced,
         altered,
         percent,
     };
@@ -609,22 +654,34 @@ export function alterationInfoForCaseAggregatedDataByOQLLine(
     sequencedSampleKeysByGene: { [hugoGeneSymbol: string]: string[] },
     sequencedPatientKeysByGene: { [hugoGeneSymbol: string]: string[] }
 ) {
+    // obtain a list of entity ids (samples or patients)
+    const alteredEntities = sampleMode
+        ? _(data.cases.samples)
+              .entries()
+              .filter(e => !!e[1].length)
+              .map(e => e[0])
+              .value()
+        : _(data.cases.patients)
+              .entries()
+              .filter(e => !!e[1].length)
+              .map(e => e[0])
+              .value();
+
     const sequenced = getAlterationInfoSequenced(
         sampleMode,
         data.oql,
         sequencedSampleKeysByGene,
-        sequencedPatientKeysByGene
+        sequencedPatientKeysByGene,
+        new Set(alteredEntities)
     );
-    const altered = sampleMode
-        ? Object.keys(data.cases.samples).filter(
-              k => !!data.cases.samples[k].length
-          ).length
-        : Object.keys(data.cases.patients).filter(
-              k => !!data.cases.patients[k].length
-          ).length;
-    const percent = percentAltered(altered, sequenced);
+
+    const altered = alteredEntities.length;
+
+    const percent = percentAltered(altered, sequenced.sequenced);
+
     return {
-        sequenced,
+        sequenced: sequenced.sequenced,
+        alteredAndSequenced: sequenced.alteredAndSequenced,
         altered,
         percent,
     };
