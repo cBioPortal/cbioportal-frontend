@@ -16,7 +16,7 @@ const defaultTimeoutInterval = 180000;
 
 const resultsDir = process.env.JUNIT_REPORT_PATH || './shared/results/';
 
-const retries = process.env.RETRIES || 2;
+const retries = process.env.RETRIES || 0;
 
 let screenshotRoot = process.env.SCREENSHOT_DIRECTORY;
 
