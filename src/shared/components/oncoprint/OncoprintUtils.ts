@@ -739,6 +739,7 @@ export function makeGeneticTrackWith({
             ? oql.list.map(({ gene }) => gene)
             : [oql.gene];
         const dataByCase = caseData.cases;
+
         const data = sampleMode
             ? makeGeneticTrackData(
                   dataByCase.samples,
