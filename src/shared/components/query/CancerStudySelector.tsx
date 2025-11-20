@@ -55,7 +55,8 @@ export default class CancerStudySelector extends React.Component<
         return (
             this.store.cancerTypes.isComplete &&
             this.store.cancerStudies.isComplete &&
-            this.store.userVirtualStudies.isComplete
+            this.store.userVirtualStudies.isComplete &&
+            this.store.resourceDefinitions.isComplete
         );
     }
 
@@ -211,6 +212,27 @@ export default class CancerStudySelector extends React.Component<
         return studyCount;
     }
 
+    @computed get showStudiesPerBaseFilterType() {
+        const shownStudies = this.logic.mainView.getSelectionReport()
+            .shownStudies;
+        const studyForCalculation =
+            shownStudies.length < this.store.cancerStudies.result.length
+                ? shownStudies
+                : this.store.cancerStudies.result;
+        const studyCount = getStudyCountPerFilter(
+            this.baseStudyFilterOptions,
+            studyForCalculation
+        );
+        return studyCount;
+    }
+
+    @computed get baseStudyFilterOptions() {
+        const resourceFilterOptions = getResourceFilterOptions(
+            this.store.resourceDefinitions.result
+        );
+        return [...DEFAULT_STUDY_FILTER_OPTIONS, ...resourceFilterOptions];
+    }
+
     private windowSizeDisposer: IReactionDisposer;
 
     componentDidMount(): void {
@@ -229,17 +251,12 @@ export default class CancerStudySelector extends React.Component<
         );
 
         this.studyFilterOptionsReaction = when(
-            () =>
-                !!this.store.resourceDefinitions &&
-                this.store.resourceDefinitions.isComplete,
+            () => this.store.resourceDefinitions.isComplete,
             () => {
-                const resourceFilterOptions = getResourceFilterOptions(
-                    this.store.resourceDefinitions.result
+                const filterOptions = this.baseStudyFilterOptions.filter(
+                    (_, i) => this.showStudiesPerBaseFilterType[i] > 0
                 );
-                this.store.setStudyFilterOptions([
-                    ...DEFAULT_STUDY_FILTER_OPTIONS,
-                    ...resourceFilterOptions,
-                ]);
+                this.store.setStudyFilterOptions(filterOptions);
             }
         );
     }

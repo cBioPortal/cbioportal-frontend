@@ -162,98 +162,80 @@ export const DataTypeFilter: FunctionComponent<IDataTypeFilterProps> = props => 
                                         const isZero =
                                             props.studyPerFilter![i] === 0 &&
                                             props.samplePerFilter![i] === 0;
-                                        const isInitialCountZero =
-                                            initialStudyCountsRef.current[i] ===
-                                                0 &&
-                                            initialSampleCountsRef.current[
-                                                i
-                                            ] === 0;
                                         return (
-                                            !isInitialCountZero && (
-                                                <tr
-                                                    key={type.id}
-                                                    style={
-                                                        isZero
-                                                            ? { color: '#ccc' }
-                                                            : undefined
-                                                    }
+                                            <tr
+                                                key={type.id}
+                                                style={
+                                                    isZero
+                                                        ? { color: '#ccc' }
+                                                        : undefined
+                                                }
+                                            >
+                                                <td
+                                                    style={{
+                                                        paddingTop: 8,
+                                                        paddingBottom: 8,
+                                                    }}
                                                 >
-                                                    <td
+                                                    <label
                                                         style={{
-                                                            paddingTop: 8,
-                                                            paddingBottom: 8,
+                                                            marginBottom: 0,
+                                                            fontWeight:
+                                                                'normal',
+                                                            color: isZero
+                                                                ? '#ccc'
+                                                                : undefined,
+                                                            cursor: isZero
+                                                                ? 'not-allowed'
+                                                                : 'pointer',
                                                         }}
                                                     >
-                                                        <label
+                                                        <input
+                                                            type="checkbox"
                                                             style={{
-                                                                marginBottom: 0,
-                                                                fontWeight:
-                                                                    'normal',
-                                                                color: isZero
-                                                                    ? '#ccc'
-                                                                    : undefined,
-                                                                cursor: isZero
-                                                                    ? 'not-allowed'
-                                                                    : 'pointer',
+                                                                marginRight: 5,
                                                             }}
-                                                        >
-                                                            <input
-                                                                type="checkbox"
-                                                                style={{
-                                                                    marginRight: 5,
-                                                                }}
-                                                                checked={
-                                                                    type.checked
-                                                                }
-                                                                disabled={
-                                                                    isZero
-                                                                }
-                                                                onClick={() => {
-                                                                    props.toggleFilter(
-                                                                        type.id
-                                                                    );
-                                                                    props.store.dataTypeFilters = createDataTypeUpdate(
-                                                                        props.dataFilterActive!
-                                                                    );
-                                                                }}
-                                                            />
-                                                            {type.name}
-                                                        </label>
-                                                    </td>
-                                                    <td
-                                                        style={{
-                                                            textAlign: 'right',
-                                                            color: isZero
-                                                                ? '#ccc'
-                                                                : '#999',
-                                                            paddingTop: 8,
-                                                            paddingBottom: 8,
-                                                        }}
-                                                    >
-                                                        {
-                                                            props.studyPerFilter![
-                                                                i
-                                                            ]
-                                                        }
-                                                    </td>
-                                                    <td
-                                                        style={{
-                                                            textAlign: 'right',
-                                                            color: isZero
-                                                                ? '#ccc'
-                                                                : '#999',
-                                                            paddingTop: 8,
-                                                            paddingBottom: 8,
-                                                        }}
-                                                    >
-                                                        {
-                                                            props.samplePerFilter![
-                                                                i
-                                                            ]
-                                                        }
-                                                    </td>
-                                                </tr>
-                                            )
+                                                            checked={
+                                                                type.checked
+                                                            }
+                                                            disabled={isZero}
+                                                            onClick={() => {
+                                                                props.toggleFilter(
+                                                                    type.id
+                                                                );
+                                                                props.store.dataTypeFilters = createDataTypeUpdate(
+                                                                    props.dataFilterActive!
+                                                                );
+                                                            }}
+                                                        />
+                                                        {type.name}
+                                                    </label>
+                                                </td>
+                                                <td
+                                                    style={{
+                                                        textAlign: 'right',
+                                                        color: isZero
+                                                            ? '#ccc'
+                                                            : '#999',
+                                                        paddingTop: 8,
+                                                        paddingBottom: 8,
+                                                    }}
+                                                >
+                                                    {props.studyPerFilter![i]}
+                                                </td>
+                                                <td
+                                                    style={{
+                                                        textAlign: 'right',
+                                                        color: isZero
+                                                            ? '#ccc'
+                                                            : '#999',
+                                                        paddingTop: 8,
+                                                        paddingBottom: 8,
+                                                    }}
+                                                >
+                                                    {props.samplePerFilter![i]}
+                                                </td>
+                                            </tr>
                                         );
                                     })}
                                 </tbody>
