@@ -9,6 +9,7 @@ import { QueryParser } from 'shared/lib/query/QueryParser';
 import { FilterFormField } from 'shared/components/query/filteredSearch/field/FilterFormField';
 import { CancerStudy } from 'cbioportal-ts-api-client';
 import _ from 'lodash';
+import { IFilterDef } from '../DataTypeFilter';
 
 export type FilteredSearchDropdownFormProps = {
     query: SearchClause[];
@@ -63,7 +64,7 @@ function showFilter(filter: CancerTreeSearchFilter): boolean {
 }
 
 export function getSampleCountsPerFilter(
-    studyFilters: { checked: boolean; id: string; name: string }[],
+    studyFilters: IFilterDef[],
     studies: CancerStudy[]
 ): number[] {
     return _.map(studyFilters, filter => {
@@ -85,7 +86,7 @@ export function getSampleCountsPerFilter(
 }
 
 export function getStudyCountPerFilter(
-    studyFilters: { checked: boolean; id: string; name: string }[],
+    studyFilters: IFilterDef[],
     studies: CancerStudy[]
 ): number[] {
     return _.map(studyFilters, filter => {

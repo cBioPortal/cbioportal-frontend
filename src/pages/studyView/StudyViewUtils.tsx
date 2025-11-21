@@ -15,6 +15,7 @@ import {
     Gene,
     GeneFilterQuery,
     GenePanelData,
+    GenePanelDataMultipleStudyFilter,
     GenericAssayData,
     GenericAssayDataBin,
     GenericAssayDataFilter,
@@ -23,6 +24,7 @@ import {
     GenomicDataCount,
     MolecularDataMultipleStudyFilter,
     MolecularProfile,
+    MutationMultipleStudyFilter,
     NamespaceAttribute,
     NamespaceDataFilter,
     NumericGeneMolecularData,
@@ -3289,6 +3291,106 @@ export function convertGenericAssayDataBinsToDataBins(
         specialValue: gaDataBin.specialValue,
         start: gaDataBin.start,
     }));
+}
+
+export async function getMutationDataAsClinicalData(
+    chartInfo: GenomicChart,
+    molecularProfileMap: { [id: string]: MolecularProfile[] },
+    samples: Sample[]
+): Promise<ClinicalData[]> {
+    const gene: Gene = await defaultClient.getGeneUsingGET({
+        geneId: chartInfo.hugoGeneSymbol,
+    });
+
+    const molecularProfiles = molecularProfileMap[chartInfo.profileType];
+    if (_.isEmpty(molecularProfiles)) {
+        return [];
+    }
+    const molecularProfileMapByStudyId = _.keyBy(
+        molecularProfiles,
+        molecularProfile => molecularProfile.studyId
+    );
+    // samples are coming from all studies, need to be filtered before fetching
+    const filteredSamples = samples.filter(
+        sample => sample.studyId in molecularProfileMapByStudyId
+    );
+    const sampleMolecularIdentifiers = filteredSamples.map(sample => ({
+        sampleId: sample.sampleId,
+        molecularProfileId:
+            molecularProfileMapByStudyId[sample.studyId].molecularProfileId,
+    }));
+    const mutationDataList = await defaultClient.fetchMutationsInMultipleMolecularProfilesUsingPOST(
+        {
+            projection: 'DETAILED',
+            mutationMultipleStudyFilter: {
+                entrezGeneIds: [gene.entrezGeneId],
+                sampleMolecularIdentifiers: sampleMolecularIdentifiers,
+            } as MutationMultipleStudyFilter,
+        }
+    );
+    const mutationDataSet = new ComplexKeyMap<string>();
+    mutationDataList.forEach(datum =>
+        mutationDataSet.set(
+            {
+                sampleId: datum.sampleId,
+                molecularProfileId: datum.molecularProfileId,
+            },
+            'Mutated'
+        )
+    );
+    const genePanelData = await defaultClient.fetchGenePanelDataInMultipleMolecularProfilesUsingPOST(
+        {
+            genePanelDataMultipleStudyFilter: {
+                sampleMolecularIdentifiers,
+            } as GenePanelDataMultipleStudyFilter,
+        }
+    );
+    genePanelData.forEach(datum => {
+        if (
+            !mutationDataSet.has({
+                sampleId: datum.sampleId,
+                molecularProfileId: datum.molecularProfileId,
+            })
+        ) {
+            if (datum.profiled) {
+                mutationDataSet.set(
+                    {
+                        sampleId: datum.sampleId,
+                        molecularProfileId: datum.molecularProfileId,
+                    },
+                    'Not Mutated'
+                );
+            } else {
+                mutationDataSet.set(
+                    {
+                        sampleId: datum.sampleId,
+                        molecularProfileId: datum.molecularProfileId,
+                    },
+                    'Not Profiled'
+                );
+            }
+        }
+    });
+
+    return filteredSamples.map(sample => {
+        const molecularProfileId =
+            molecularProfileMapByStudyId[sample.studyId].molecularProfileId;
+        let datum = mutationDataSet.get({
+            sampleId: sample.sampleId,
+            molecularProfileId: molecularProfileId,
+        });
+        const clinicaData: ClinicalData = {
+            clinicalAttributeId: gene.entrezGeneId + '-' + molecularProfileId,
+            patientId: sample.patientId,
+            sampleId: sample.sampleId,
+            studyId: sample.studyId,
+            uniquePatientKey: sample.uniquePatientKey,
+            uniqueSampleKey: sample.uniqueSampleKey,
+        } as any;
+
+        clinicaData.value = datum ?? Datalabel.NA;
+        return clinicaData;
+    });
 }
 
 export async function getGenomicDataAsClinicalData(
