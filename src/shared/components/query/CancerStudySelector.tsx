@@ -1,7 +1,10 @@
 import _ from 'lodash';
 import * as React from 'react';
 import ReactDOM from 'react-dom';
-import { TypeOfCancer as CancerType } from 'cbioportal-ts-api-client';
+import {
+    CancerStudy,
+    TypeOfCancer as CancerType,
+} from 'cbioportal-ts-api-client';
 import { FlexCol, FlexRow } from '../flexbox/FlexBox';
 import styles from './styles/styles.module.scss';
 import classNames from 'classnames';
@@ -28,7 +31,10 @@ import QuickSelectButtons from './QuickSelectButtons';
 import { StudySelectorStats } from 'shared/components/query/StudySelectorStats';
 import WindowStore from 'shared/components/window/WindowStore';
 import { StudySearch } from 'shared/components/query/StudySearch';
-import { DataTypeFilter } from 'shared/components/query/DataTypeFilter';
+import {
+    DataTypeFilter,
+    IFilterDef,
+} from 'shared/components/query/DataTypeFilter';
 import {
     getSampleCountsPerFilter,
     getStudyCountPerFilter,
@@ -178,52 +184,38 @@ export default class CancerStudySelector extends React.Component<
         }
     }
 
-    @computed get showSamplesPerFilterType() {
+    private computeCountsForFilterOptions(
+        options: IFilterDef[],
+        countsFn: (options: IFilterDef[], studies: CancerStudy[]) => number[]
+    ) {
         const shownStudies = this.logic.mainView.getSelectionReport()
             .shownStudies;
         const studyForCalculation =
             shownStudies.length < this.store.cancerStudies.result.length
                 ? shownStudies
                 : this.store.cancerStudies.result;
-        const filterAttributes = this.store.studyFilterOptions.filter(
-            item => item.name
-        );
-        const sampleCountsPerFilter = getSampleCountsPerFilter(
+        return countsFn(options, studyForCalculation);
+    }
+
+    @computed get showSamplesPerFilterType() {
+        return this.computeCountsForFilterOptions(
             this.store.studyFilterOptions,
-            studyForCalculation
+            getSampleCountsPerFilter
         );
-        return sampleCountsPerFilter;
     }
 
     @computed get showStudiesPerFilterType() {
-        const shownStudies = this.logic.mainView.getSelectionReport()
-            .shownStudies;
-        const studyForCalculation =
-            shownStudies.length < this.store.cancerStudies.result.length
-                ? shownStudies
-                : this.store.cancerStudies.result;
-        const filterAttributes = this.store.studyFilterOptions.filter(
-            item => item.name
-        );
-        const studyCount = getStudyCountPerFilter(
+        return this.computeCountsForFilterOptions(
             this.store.studyFilterOptions,
-            studyForCalculation
+            getStudyCountPerFilter
         );
-        return studyCount;
     }
 
     @computed get showStudiesPerBaseFilterType() {
-        const shownStudies = this.logic.mainView.getSelectionReport()
-            .shownStudies;
-        const studyForCalculation =
-            shownStudies.length < this.store.cancerStudies.result.length
-                ? shownStudies
-                : this.store.cancerStudies.result;
-        const studyCount = getStudyCountPerFilter(
+        return this.computeCountsForFilterOptions(
             this.baseStudyFilterOptions,
-            studyForCalculation
+            getStudyCountPerFilter
         );
-        return studyCount;
     }
 
     @computed get baseStudyFilterOptions() {
