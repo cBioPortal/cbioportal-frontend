@@ -219,6 +219,7 @@ function constructIndicatorQueryResp(
     let hugoSymbol = '';
     let entrezGeneId = 0;
     if ('gene' in alt) {
+        // assume mutation and copy number will always have gene field
         hugoSymbol = alt.gene.hugoGeneSymbol;
         entrezGeneId = alt.gene.entrezGeneId;
     } else if (isStructuralVariant) {
