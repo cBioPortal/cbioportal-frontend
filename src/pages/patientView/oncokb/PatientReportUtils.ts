@@ -38,6 +38,10 @@ type RelevantClinicalData = {
         | CLINICAL_ATTRIBUTE_ID_ENUM.SPECIMEN_TYPE]: string | undefined;
 };
 
+/**
+ * A function that constructs an object mimicking the response from the OncoKB sample endpoint. If annotations are not present for a given variant,
+ * an OncoKB response will be generated from the available data with default values for all evidence-related fields.
+ */
 export function getAnnotatedSamples(
     clinicalDataGroupedBySample: { id: string; clinicalData: ClinicalData[] }[],
     uniqueSampleKeyToTumorType: { [sampleId: string]: string },
