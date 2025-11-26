@@ -62,6 +62,7 @@ import ResourceTab from '../../shared/components/resources/ResourceTab';
 import StudyViewURLWrapper from './StudyViewURLWrapper';
 import ResourcesTab, { RESOURCES_TAB_NAME } from './resources/ResourcesTab';
 import { ResourceData } from 'cbioportal-ts-api-client';
+import { getResourceConfig } from 'shared/lib/ResourceUtils';
 import $ from 'jquery';
 import { StudyViewComparisonGroup } from 'pages/groupComparison/GroupComparisonUtils';
 import { parse } from 'query-string';
@@ -546,21 +547,25 @@ export default class StudyViewPage extends React.Component<
             const tabs: JSX.Element[] = sorted.reduce((list, def) => {
                 const data = resourceDataById[def.resourceId];
                 if (data && data.length > 0) {
-                    const displayName =
+                    const config = getResourceConfig(def);
+                    const originalDisplayName =
                         data.length > 1
                             ? pluralize(def.displayName, data.length)
                             : def.displayName;
+                    const customDisplayName =
+                        config.customizedDisplayName || originalDisplayName;
+
                     list.push(
                         <MSKTab
                             key={getStudyViewResourceTabId(def.resourceId)}
                             id={getStudyViewResourceTabId(def.resourceId)}
-                            linkText={displayName}
+                            linkText={originalDisplayName}
                             onClickClose={this.closeResourceTab}
                         >
                             <ResourceTab
                                 resourceData={resourceDataById[def.resourceId]}
                                 urlWrapper={this.urlWrapper}
-                                resourceDisplayName={displayName}
+                                resourceDisplayName={customDisplayName}
                             />
                         </MSKTab>
                     );
