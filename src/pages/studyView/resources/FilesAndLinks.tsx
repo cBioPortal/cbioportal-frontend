@@ -22,6 +22,7 @@ import {
     ClinicalData,
     StudyViewFilter,
 } from 'cbioportal-ts-api-client';
+import { getResourceConfig } from 'shared/lib/ResourceUtils';
 
 export interface IFilesLinksTable {
     resourceDisplayName: string;
@@ -250,13 +251,33 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
                       )
                   )
                 : [];
-        const resourcesPerPatientColumnName =
-            uniqueResourceTypes.length === 1 && uniqueResourceTypes[0]
-                ? `${pluralize(
-                      uniqueResourceTypes[0] as string,
-                      2
-                  )} per Patient`
-                : 'Resources per Patient';
+        let resourcesPerPatientColumnName = 'Resources per Patient';
+        let shouldHideResourcesPerPatientColumn = false;
+
+        if (uniqueResourceTypes.length === 1 && uniqueResourceTypes[0]) {
+            const def = this.props.store.resourceDefinitions.result?.find(
+                d => d.displayName === uniqueResourceTypes[0]
+            );
+            if (def) {
+                const config = getResourceConfig(def);
+                if (config.columnHeader) {
+                    resourcesPerPatientColumnName = config.columnHeader;
+                } else {
+                    resourcesPerPatientColumnName = `${pluralize(
+                        uniqueResourceTypes[0] as string,
+                        2
+                    )} per Patient`;
+                }
+                if (config.hideResourcesPerPatientColumn) {
+                    shouldHideResourcesPerPatientColumn = true;
+                }
+            } else {
+                resourcesPerPatientColumnName = `${pluralize(
+                    uniqueResourceTypes[0] as string,
+                    2
+                )} per Patient`;
+            }
+        }
 
         let defaultColumns: Column<{ [id: string]: any }>[] = [
             {
@@ -357,8 +378,11 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
                     return <div>{data.description}</div>;
                 },
             },
+        ];
 
-            {
+        // Conditionally add the last column if not hidden
+        if (!shouldHideResourcesPerPatientColumn) {
+            defaultColumns.push({
                 ...this.getDefaultColumnConfig(
                     'resourcesPerPatient',
                     resourcesPerPatientColumnName,
@@ -367,8 +391,8 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
                 render: (data: { [id: string]: number }) => {
                     return <div>{data.resourcesPerPatient}</div>;
                 },
-            },
-        ];
+            });
+        }
 
         return defaultColumns;
     }
@@ -388,17 +412,67 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
                         <Else>
                             <FilesLinksTableComponent
                                 initialItemsPerPage={20}
-                                headerComponent={
-                                    <div className={'positionAbsolute'}>
-                                        <strong>
-                                            {
-                                                this.resourceData.result
-                                                    ?.totalItems
-                                            }{' '}
-                                            {this.props.resourceDisplayName}
-                                        </strong>
-                                    </div>
-                                }
+                                headerComponent={(() => {
+                                    // Determine if there's only one unique resource type
+                                    const uniqueResourceTypes =
+                                        this.resourceData.result &&
+                                        this.resourceData.result.data
+                                            ? _.uniq(
+                                                  this.resourceData.result.data.map(
+                                                      item =>
+                                                          item.typeOfResource as string
+                                                  )
+                                              )
+                                            : [];
+                                    let def;
+                                    if (
+                                        uniqueResourceTypes.length === 1 &&
+                                        uniqueResourceTypes[0]
+                                    ) {
+                                        def = this.props.store.resourceDefinitions.result?.find(
+                                            d =>
+                                                d.displayName ===
+                                                uniqueResourceTypes[0]
+                                        );
+                                    }
+                                    let customName = '';
+                                    if (def) {
+                                        const config = getResourceConfig(def);
+                                        if (config.customizedDisplayName) {
+                                            customName =
+                                                config.customizedDisplayName;
+                                        }
+                                    }
+
+                                    return (
+                                        <div className={'positionAbsolute'}>
+                                            <strong>
+                                                {
+                                                    this.resourceData.result
+                                                        ?.totalItems
+                                                }{' '}
+                                                {customName ? (
+                                                    customName
+                                                ) : (
+                                                    <>
+                                                        {pluralize(
+                                                            'sample',
+                                                            this.resourceData
+                                                                .result
+                                                                ?.totalItems ||
+                                                                0
+                                                        )}{' '}
+                                                        with{' '}
+                                                        {
+                                                            this.props
+                                                                .resourceDisplayName
+                                                        }
+                                                    </>
+                                                )}
+                                            </strong>
+                                        </div>
+                                    );
+                                })()}
                                 data={this.resourceData.result?.data || []}
                                 columns={this.columns}
                                 showColumnVisibility={false}
