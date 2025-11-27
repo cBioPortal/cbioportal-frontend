@@ -203,7 +203,7 @@ export default class GeneSetSelector extends QueryStoreComponent<{}, {}> {
                     </Modal>
                 </FlexCol>
 
-                {getServerConfig().spring_ai_enabled && <GeneAssistant />}
+                {getServerConfig().assistant_enabled && <GeneAssistant />}
             </FlexRow>
         );
     }
