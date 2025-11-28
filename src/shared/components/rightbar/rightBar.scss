@@ -1,0 +1,58 @@
+/* Collapsible Right Bar - shadcn-inspired */
+.rightBarContainer {
+    position: relative;
+    transition: all 0.3s ease;
+    width: 100%;
+
+    &.collapsed {
+        width: 40px;
+    }
+}
+
+.rightBarToggle {
+    position: absolute;
+    left: -12px;
+    top: 20px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 1px solid #e5e7eb;
+    background: #ffffff;
+    color: #6b7280;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    padding: 0;
+
+    &:hover {
+        background: #f9fafb;
+        border-color: #d1d5db;
+        color: #111827;
+        box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+    }
+
+    &:active {
+        transform: scale(0.95);
+    }
+
+    i {
+        font-size: 10px;
+    }
+}
+
+.rightBarContent {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}

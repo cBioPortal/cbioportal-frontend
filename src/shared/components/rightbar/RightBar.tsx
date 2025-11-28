@@ -14,6 +14,8 @@ import { mockOrder } from 'pages/patientView/vafPlot/mockData';
 import { remoteData } from 'cbioportal-frontend-commons';
 import { sleep } from 'shared/lib/TimeUtils';
 import parseNews from 'shared/lib/parseNews';
+import { observable, action, makeObservable } from 'mobx';
+import './rightBar.scss';
 
 interface IRightBarProps {
     queryStore: QueryStore;
@@ -25,8 +27,16 @@ export default class RightBar extends React.Component<
     IRightBarProps,
     IRightBarState
 > {
+    @observable isCollapsed: boolean = false;
+
     constructor(props: IRightBarProps) {
         super(props);
+        makeObservable(this);
+    }
+
+    @action.bound
+    toggleCollapse() {
+        this.isCollapsed = !this.isCollapsed;
     }
 
     get studyStore() {
@@ -328,12 +338,23 @@ export default class RightBar extends React.Component<
 
     render() {
         return (
-            <div>
-                {this.getWhatsNew()}
-                {this.getHomePageTour()}
-                {this.getExampleSection()}
-                {this.getInstallationMap()}
-                {this.getTestimonialsSection()}
+            <div className={`rightBarContainer ${this.isCollapsed ? 'collapsed' : ''}`}>
+                <button
+                    className="rightBarToggle"
+                    onClick={this.toggleCollapse}
+                    title={this.isCollapsed ? 'Show sidebar' : 'Hide sidebar'}
+                >
+                    <i className={`fa fa-chevron-${this.isCollapsed ? 'left' : 'right'}`}></i>
+                </button>
+                {!this.isCollapsed && (
+                    <div className="rightBarContent">
+                        {this.getWhatsNew()}
+                        {this.getHomePageTour()}
+                        {this.getExampleSection()}
+                        {this.getInstallationMap()}
+                        {this.getTestimonialsSection()}
+                    </div>
+                )}
             </div>
         );
     }
