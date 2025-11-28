@@ -14,7 +14,7 @@ import { mockOrder } from 'pages/patientView/vafPlot/mockData';
 import { remoteData } from 'cbioportal-frontend-commons';
 import { sleep } from 'shared/lib/TimeUtils';
 import parseNews from 'shared/lib/parseNews';
-import { observable, action, makeObservable } from 'mobx';
+import { observable, action, makeObservable, reaction, IReactionDisposer } from 'mobx';
 import './rightBar.scss';
 
 interface IRightBarProps {
@@ -30,25 +30,38 @@ export default class RightBar extends React.Component<
     @observable isCollapsed: boolean = false;
 
     private rightBarRef: React.RefObject<HTMLDivElement> = React.createRef();
+    private collapseReaction: IReactionDisposer | null = null;
 
     constructor(props: IRightBarProps) {
         super(props);
         makeObservable(this);
     }
 
-    componentDidUpdate(prevProps: IRightBarProps, prevState: IRightBarState) {
-        // Update parent #rightColumn width when collapse state changes
-        if (this.rightBarRef.current) {
-            const rightColumn = this.rightBarRef.current.closest('#rightColumn') as HTMLElement;
-            if (rightColumn) {
-                if (this.isCollapsed) {
-                    rightColumn.style.flex = '0 0 50px';
-                    rightColumn.style.minWidth = '50px';
-                } else {
-                    rightColumn.style.flex = '0 0 325px';
-                    rightColumn.style.minWidth = '325px';
+    componentDidMount() {
+        // Set up MobX reaction to watch isCollapsed and update parent width
+        this.collapseReaction = reaction(
+            () => this.isCollapsed,
+            (isCollapsed) => {
+                if (this.rightBarRef.current) {
+                    const rightColumn = this.rightBarRef.current.closest('#rightColumn') as HTMLElement;
+                    if (rightColumn) {
+                        if (isCollapsed) {
+                            rightColumn.style.flex = '0 0 50px';
+                            rightColumn.style.minWidth = '50px';
+                        } else {
+                            rightColumn.style.flex = '0 0 325px';
+                            rightColumn.style.minWidth = '325px';
+                        }
+                    }
                 }
             }
+        );
+    }
+
+    componentWillUnmount() {
+        // Clean up the reaction
+        if (this.collapseReaction) {
+            this.collapseReaction();
         }
     }
 
