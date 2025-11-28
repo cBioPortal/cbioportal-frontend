@@ -1,12 +1,7 @@
 /* Collapsible Right Bar - shadcn-inspired */
 .rightBarContainer {
     position: relative;
-    transition: all 0.3s ease;
     width: 100%;
-
-    &.collapsed {
-        width: 40px;
-    }
 }
 
 .rightBarToggle {

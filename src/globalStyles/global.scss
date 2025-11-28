@@ -478,6 +478,7 @@ h3 {
     flex: 0 0 325px;
     border-right: 1px solid $borderColor;
     border-left: 1px solid $borderColor;
+    transition: flex 0.3s ease, min-width 0.3s ease;
 
     .rightBarSection {
         h3 {

@@ -29,9 +29,27 @@ export default class RightBar extends React.Component<
 > {
     @observable isCollapsed: boolean = false;
 
+    private rightBarRef: React.RefObject<HTMLDivElement> = React.createRef();
+
     constructor(props: IRightBarProps) {
         super(props);
         makeObservable(this);
+    }
+
+    componentDidUpdate(prevProps: IRightBarProps, prevState: IRightBarState) {
+        // Update parent #rightColumn width when collapse state changes
+        if (this.rightBarRef.current) {
+            const rightColumn = this.rightBarRef.current.closest('#rightColumn') as HTMLElement;
+            if (rightColumn) {
+                if (this.isCollapsed) {
+                    rightColumn.style.flex = '0 0 50px';
+                    rightColumn.style.minWidth = '50px';
+                } else {
+                    rightColumn.style.flex = '0 0 325px';
+                    rightColumn.style.minWidth = '325px';
+                }
+            }
+        }
     }
 
     @action.bound
@@ -338,7 +356,10 @@ export default class RightBar extends React.Component<
 
     render() {
         return (
-            <div className={`rightBarContainer ${this.isCollapsed ? 'collapsed' : ''}`}>
+            <div
+                ref={this.rightBarRef}
+                className={`rightBarContainer ${this.isCollapsed ? 'collapsed' : ''}`}
+            >
                 <button
                     className="rightBarToggle"
                     onClick={this.toggleCollapse}
