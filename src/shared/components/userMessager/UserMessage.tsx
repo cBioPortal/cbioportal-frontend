@@ -46,6 +46,11 @@ if (
         //     },
         //     id: '2024_newsletter_intro',
         // },
+        {
+            dateEnd: 1741219200000, // March 3, 2026
+            content: `Answer a 7-minute survey about how you want to improve cBioPortal: <a href="https://forms.cloud.microsoft/r/BtjA1wTwyL" target="_blank">Take Survey</a>`,
+            id: '2025_user_survey',
+        },
     ];
 
     // MSK specific messaging
