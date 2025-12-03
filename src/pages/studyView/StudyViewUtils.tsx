@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import {
+    AlterationFilter,
     BinsGeneratorConfig,
     CancerStudy,
     CBioPortalAPIInternal,
@@ -3585,6 +3586,133 @@ export function geneFilterQueryToOql(query: GeneFilterQuery): string {
         : query.hugoGeneSymbol;
 }
 
+/**
+ * Apply missing default values to GeneFilterQuery.
+ * All undefined fields will be set to their default values.
+ *
+ * @param query - The GeneFilterQuery object to apply defaults to
+ * @returns The GeneFilterQuery object with defaults applied
+ */
+export function applyGeneFilterQueryDefaults(
+    query: Partial<GeneFilterQuery>
+): GeneFilterQuery {
+    return {
+        hugoGeneSymbol: query.hugoGeneSymbol || '',
+        entrezGeneId:
+            query.entrezGeneId !== undefined ? query.entrezGeneId : 0,
+        alterations:
+            query.alterations !== undefined ? query.alterations : [],
+        includeDriver:
+            query.includeDriver !== undefined ? query.includeDriver : true,
+        includeVUS: query.includeVUS !== undefined ? query.includeVUS : true,
+        includeUnknownOncogenicity:
+            query.includeUnknownOncogenicity !== undefined
+                ? query.includeUnknownOncogenicity
+                : true,
+        includeUnknownTier:
+            query.includeUnknownTier !== undefined
+                ? query.includeUnknownTier
+                : true,
+        includeGermline:
+            query.includeGermline !== undefined ? query.includeGermline : true,
+        includeSomatic:
+            query.includeSomatic !== undefined ? query.includeSomatic : true,
+        includeUnknownStatus:
+            query.includeUnknownStatus !== undefined
+                ? query.includeUnknownStatus
+                : true,
+        tiersBooleanMap: query.tiersBooleanMap || {},
+    };
+}
+
+/**
+ * Apply missing default values to StructuralVariantFilterQuery.
+ * All undefined fields will be set to their default values.
+ *
+ * @param query - The StructuralVariantFilterQuery object to apply defaults to
+ * @returns The StructuralVariantFilterQuery object with defaults applied
+ */
+export function applyStructuralVariantFilterQueryDefaults(
+    query: Partial<StructuralVariantFilterQuery>
+): StructuralVariantFilterQuery {
+    return ({
+        ...query,
+        includeDriver:
+            query.includeDriver !== undefined ? query.includeDriver : true,
+        includeVUS: query.includeVUS !== undefined ? query.includeVUS : true,
+        includeUnknownOncogenicity:
+            query.includeUnknownOncogenicity !== undefined
+                ? query.includeUnknownOncogenicity
+                : true,
+        includeUnknownTier:
+            query.includeUnknownTier !== undefined
+                ? query.includeUnknownTier
+                : true,
+        includeGermline:
+            query.includeGermline !== undefined ? query.includeGermline : true,
+        includeSomatic:
+            query.includeSomatic !== undefined ? query.includeSomatic : true,
+        includeUnknownStatus:
+            query.includeUnknownStatus !== undefined
+                ? query.includeUnknownStatus
+                : true,
+        tiersBooleanMap: query.tiersBooleanMap || {},
+    } as unknown) as StructuralVariantFilterQuery;
+}
+
+/**
+ * Apply missing default values to AlterationFilter.
+ * All undefined fields will be set to their default values.
+ *
+ * @param filter - The AlterationFilter object to apply defaults to
+ * @returns The AlterationFilter object with defaults applied
+ */
+export function applyAlterationFilterDefaults(
+    filter: Partial<AlterationFilter>
+): AlterationFilter {
+    return ({
+        copyNumberAlterationEventTypes:
+            filter.copyNumberAlterationEventTypes !== undefined
+                ? filter.copyNumberAlterationEventTypes
+                : {
+                      AMP: true,
+                      HOMDEL: true,
+                  },
+        mutationEventTypes:
+            filter.mutationEventTypes !== undefined
+                ? filter.mutationEventTypes
+                : {
+                      any: true,
+                  },
+        structuralVariants:
+            filter.structuralVariants !== undefined
+                ? filter.structuralVariants
+                : null,
+        includeDriver:
+            filter.includeDriver !== undefined ? filter.includeDriver : true,
+        includeVUS: filter.includeVUS !== undefined ? filter.includeVUS : true,
+        includeUnknownOncogenicity:
+            filter.includeUnknownOncogenicity !== undefined
+                ? filter.includeUnknownOncogenicity
+                : true,
+        includeUnknownTier:
+            filter.includeUnknownTier !== undefined
+                ? filter.includeUnknownTier
+                : true,
+        includeGermline:
+            filter.includeGermline !== undefined
+                ? filter.includeGermline
+                : true,
+        includeSomatic:
+            filter.includeSomatic !== undefined ? filter.includeSomatic : true,
+        includeUnknownStatus:
+            filter.includeUnknownStatus !== undefined
+                ? filter.includeUnknownStatus
+                : true,
+        tiersBooleanMap: filter.tiersBooleanMap || {},
+    } as unknown) as AlterationFilter;
+}
+
 export function geneFilterQueryFromOql(
     oql: string,
     includeDriver?: boolean,
@@ -3631,18 +3759,43 @@ export function geneFilterQueryFromOql(
 export function ensureBackwardCompatibilityOfFilters(
     filters: Partial<StudyViewFilter>
 ) {
+    // Handle geneFilters
     if (filters.geneFilters && filters.geneFilters.length) {
         filters.geneFilters.forEach(f => {
             f.geneQueries = f.geneQueries.map(arr => {
                 return arr.map(inner => {
                     if (typeof inner === 'string') {
+                        // Backward compatibility: convert string to object
                         return geneFilterQueryFromOql(inner);
                     } else {
-                        return inner;
+                        // Apply GeneFilterQuery-specific defaults
+                        return applyGeneFilterQueryDefaults(inner);
                     }
                 });
             });
         });
+    }
+
+    // Handle structuralVariantFilters
+    if (
+        filters.structuralVariantFilters &&
+        filters.structuralVariantFilters.length
+    ) {
+        filters.structuralVariantFilters.forEach(f => {
+            f.structVarQueries = f.structVarQueries.map(arr => {
+                return arr.map(inner => {
+                    // Apply StructuralVariantFilterQuery-specific defaults
+                    return applyStructuralVariantFilterQueryDefaults(inner);
+                });
+            });
+        });
+    }
+
+    // Handle alterationFilter
+    if (filters.alterationFilter) {
+        filters.alterationFilter = applyAlterationFilterDefaults(
+            filters.alterationFilter
+        );
     }
 
     return filters;
