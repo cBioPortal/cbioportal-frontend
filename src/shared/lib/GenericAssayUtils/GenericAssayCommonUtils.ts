@@ -96,21 +96,18 @@ export async function fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecular
         [molecularProfileId: string]: GenericAssayMeta[];
     } = {};
 
-    const allProfileIds = genericAssayProfiles.map(
-        profile => profile.molecularProfileId
-    );
-    const allGenericAssayMeta = await fetchGenericAssayMetaByProfileIds(
-        allProfileIds
+    await Promise.all(
+        genericAssayProfiles.map(profile =>
+            fetchGenericAssayMetaByProfileIds([
+                profile.molecularProfileId,
+            ]).then(genericAssayMeta => {
+                genericAssayMetaGroupByMolecularProfileId[
+                    profile.molecularProfileId
+                ] = genericAssayMeta;
+            })
+        )
     );
 
-    // Populate each profile with the full metadata list
-    // Note: The API returns all metadata for all profiles combined,
-    // so each profile gets the same complete list
-    allProfileIds.forEach(profileId => {
-        genericAssayMetaGroupByMolecularProfileId[
-            profileId
-        ] = allGenericAssayMeta;
-    });
     return genericAssayMetaGroupByMolecularProfileId;
 }
 
