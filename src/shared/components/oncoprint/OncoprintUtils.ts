@@ -546,7 +546,8 @@ export function getCategoricalTrackRuleSetParams(
 function createHeatmapTracksData(
     query: any,
     profileType: string,
-    oncoprint: ResultsViewOncoprint
+    oncoprint: ResultsViewOncoprint,
+    useOqlFiltering: boolean = false
 ): Array<{
     uniqueSampleKey: string;
     uniquePatientKey: string;
@@ -554,33 +555,51 @@ function createHeatmapTracksData(
     thresholdType?: '>' | '<';
 }> {
     if (profileType === AlterationTypeConstants.MUTATION_EXTENDED) {
-        const mutationPromise = oncoprint.props.store.annotatedMutationCache.get(
-            {
-                entrezGeneId: query.entrezGeneId,
-            }
-        );
-
-        const mutations = mutationPromise.result;
         const samples = oncoprint.props.store.filteredSamples.result!;
         const coverageInfo = oncoprint.props.store.coverageInformation.result!;
 
-        if (mutations) {
-            const profileMutations = mutations.filter(
-                m => m.molecularProfileId === query.molecularProfileId
-            );
+        let mutations: any[] | undefined;
 
-            // Create a map of samples with mutations and their VAF values
+        if (
+            useOqlFiltering &&
+            oncoprint.props.store.oqlFilteredAlterations.isComplete
+        ) {
+            const oqlFiltered =
+                oncoprint.props.store.oqlFilteredAlterations.result;
+            if (oqlFiltered) {
+                const geneSymbol = query.hugoGeneSymbol.toUpperCase();
+                mutations = oqlFiltered.filter(
+                    (alt: any) =>
+                        alt.hugoGeneSymbol &&
+                        alt.hugoGeneSymbol.toUpperCase() === geneSymbol &&
+                        alt.molecularProfileAlterationType ===
+                            'MUTATION_EXTENDED'
+                );
+            }
+        } else {
+            const mutationPromise = oncoprint.props.store.annotatedMutationCache.get(
+                {
+                    entrezGeneId: query.entrezGeneId,
+                }
+            );
+            mutations = mutationPromise.result;
+            if (mutations) {
+                mutations = mutations.filter(
+                    m => m.molecularProfileId === query.molecularProfileId
+                );
+            }
+        }
+
+        if (mutations && mutations.length > 0) {
             const sampleMutationMap = new Map<string, number | null>();
 
-            // Process mutations to get VAF values
-            profileMutations.forEach(m => {
+            mutations.forEach(m => {
                 const vafReport = getVariantAlleleFrequency(m);
                 if (
                     vafReport &&
                     typeof vafReport.vaf === 'number' &&
                     !isNaN(vafReport.vaf)
                 ) {
-                    // Store the highest VAF if multiple mutations exist for the same sample
                     const existingVaf = sampleMutationMap.get(
                         m.uniqueSampleKey
                     );
@@ -591,14 +610,13 @@ function createHeatmapTracksData(
                         sampleMutationMap.set(m.uniqueSampleKey, vafReport.vaf);
                     }
                 } else {
-                    // Mutation exists but no valid VAF - only set if no VAF data exists yet
                     if (!sampleMutationMap.has(m.uniqueSampleKey)) {
                         sampleMutationMap.set(m.uniqueSampleKey, null);
                     }
                 }
             });
 
-            // Filter to only include profiled samples, then create data entries
+            // Filter to only include profiled samples
             return samples
                 .filter(sample => {
                     return isSampleProfiled(
@@ -1369,6 +1387,7 @@ export function makeHeatmapTracksMobxPromise(
                 oncoprint.props.store.molecularProfileIdToMolecularProfile,
                 oncoprint.props.store.geneMolecularDataCache,
                 oncoprint.props.store.coverageInformation,
+                oncoprint.props.store.oqlFilteredAlterations,
                 ...mutationQueries.map(query =>
                     oncoprint.props.store.annotatedMutationCache.get({
                         entrezGeneId: query.entrezGeneId!,
@@ -1473,10 +1492,15 @@ export function makeHeatmapTracksMobxPromise(
                     }
                 });
 
+                const useOqlFiltering =
+                    profileType === AlterationTypeConstants.MUTATION_EXTENDED &&
+                    oncoprint.useOqlFilteringForVafHeatmap;
+
                 const dataForTrack = createHeatmapTracksData(
                     query,
                     profileType,
-                    oncoprint
+                    oncoprint,
+                    useOqlFiltering
                 );
 
                 return {
