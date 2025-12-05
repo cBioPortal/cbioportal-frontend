@@ -22,13 +22,28 @@ export default class PathologyReport extends React.Component<
     constructor(props: IPathologyReportProps) {
         super(props);
 
-        this.state = { pdfUrl: this.buildPDFUrl(props.pdfs[0].url) };
+        // Set initial pdf URL safely (props may be populated asynchronously)
+        const initialUrl = props.pdfs && props.pdfs.length > 0 ? props.pdfs[0].url : '';
+        this.state = { pdfUrl: this.buildPDFUrl(initialUrl) };
 
         this.handleSelection = this.handleSelection.bind(this);
     }
 
     buildPDFUrl(url: string): string {
-        return `https://docs.google.com/viewerng/viewer?url=${url}?pid=explorer&efh=false&a=v&chrome=false&embedded=true`;
+        if (!url) return '';
+        // Ensure it's properly encoded so embedded viewer handles it.
+        const encodedUrl = encodeURIComponent(url);
+        return `https://docs.google.com/viewerng/viewer?url=${encodedUrl}&pid=explorer&efh=false&a=v&chrome=false&embedded=true`;
+    }
+
+    componentDidUpdate(prevProps: IPathologyReportProps) {
+        // If the pdf list changed (arrived asynchronously), update the displayed pdf accordingly
+        if (prevProps.pdfs !== this.props.pdfs && this.props.pdfs && this.props.pdfs.length > 0) {
+            const newUrl = this.buildPDFUrl(this.props.pdfs[0].url);
+            if (newUrl !== this.state.pdfUrl) {
+                this.setState({ pdfUrl: newUrl });
+            }
+        }
     }
 
     // shouldComponentUpdate(nextProps: IPathologyReportProps){
@@ -36,10 +51,10 @@ export default class PathologyReport extends React.Component<
     // }
 
     handleSelection() {
+        if (!this.pdfSelectList) return;
         this.setState({
             pdfUrl: this.buildPDFUrl(
-                this.pdfSelectList.options[this.pdfSelectList.selectedIndex]
-                    .value
+                this.pdfSelectList.options[this.pdfSelectList.selectedIndex].value
             ),
         });
     }
@@ -47,22 +62,25 @@ export default class PathologyReport extends React.Component<
     render() {
         return (
             <div>
-                <If condition={this.props.pdfs.length > 1}>
+                <If condition={this.props.pdfs && this.props.pdfs.length > 1}>
                     <select
                         ref={el => (this.pdfSelectList = el)}
                         style={{ marginBottom: 15 }}
                         onChange={this.handleSelection}
                     >
                         {_.map(this.props.pdfs, (pdf: PathologyReportPDF) => (
-                            <option value={pdf.url}>{pdf.name}</option>
+                            <option key={pdf.url} value={pdf.url}>
+                                {pdf.name}
+                            </option>
                         ))}
                     </select>
                 </If>
 
-                <IFrameLoader
-                    height={this.props.iframeHeight}
-                    url={this.state.pdfUrl}
-                />
+                {this.state.pdfUrl ? (
+                    <IFrameLoader height={this.props.iframeHeight} url={this.state.pdfUrl} />
+                ) : (
+                    <div>No pathology report available</div>
+                )}
             </div>
         );
     }
