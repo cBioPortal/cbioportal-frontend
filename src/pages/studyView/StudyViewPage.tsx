@@ -597,6 +597,8 @@ export default class StudyViewPage extends React.Component<
     }
 
     content() {
+        const hideClinicalTab =
+            getServerConfig().skin_hide_clinical_data_tab_study_view ?? false;
         return (
             <div className="studyView">
                 {this.showBookmarkModal && this.bookmarkModal}
@@ -670,25 +672,25 @@ export default class StudyViewPage extends React.Component<
                                             StudyViewPageTabDescriptions.SUMMARY
                                         }
                                     >
-                                        <StudySummaryTab
-                                            store={this.store}
-                                        ></StudySummaryTab>
+                                        <StudySummaryTab store={this.store} />
                                     </MSKTab>
-                                    <MSKTab
-                                        key={1}
-                                        id={
-                                            StudyViewPageTabKeyEnum.CLINICAL_DATA
-                                        }
-                                        linkText={
-                                            StudyViewPageTabDescriptions.CLINICAL_DATA
-                                        }
-                                        hide={
-                                            this.store.selectedSamples.result
-                                                .length === 0
-                                        }
-                                    >
-                                        <ClinicalDataTab store={this.store} />
-                                    </MSKTab>
+                                    {!hideClinicalTab &&
+                                        this.store.selectedSamples.result
+                                            .length > 0 && (
+                                            <MSKTab
+                                                key={1}
+                                                id={
+                                                    StudyViewPageTabKeyEnum.CLINICAL_DATA
+                                                }
+                                                linkText={
+                                                    StudyViewPageTabDescriptions.CLINICAL_DATA
+                                                }
+                                            >
+                                                <ClinicalDataTab
+                                                    store={this.store}
+                                                />
+                                            </MSKTab>
+                                        )}
                                     <MSKTab
                                         key={2}
                                         id={StudyViewPageTabKeyEnum.HEATMAPS}
