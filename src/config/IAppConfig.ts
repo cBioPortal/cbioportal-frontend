@@ -199,4 +199,5 @@ export interface IServerConfig {
     feature_study_export: boolean;
     uptime_robot_status_page_url: string | null;
     uptime_robot_api_key: string | null;
+    skin_hide_clinical_data_tab_study_view?: boolean;
 }
