@@ -468,7 +468,7 @@ export default class ScatterPlot<
             if (this.props.logY) {
                 y = y.map(d => this.props.logY!.fLogScale(d, 0));
             }
-            return Number(jStat.corrcoeff(x, y).toFixed(5));
+            return jStat.corrcoeff(x, y);
         }
     }
 
@@ -477,11 +477,7 @@ export default class ScatterPlot<
             return this.props.correlation.spearman;
         } else {
             // spearman is invariant to monotonic increasing transformations, so we dont need to check about log
-            return Number(
-                jStat
-                    .spearmancoeff(this.splitData.x, this.splitData.y)
-                    .toFixed(5)
-            );
+            return jStat.spearmancoeff(this.splitData.x, this.splitData.y);
         }
     }
 
