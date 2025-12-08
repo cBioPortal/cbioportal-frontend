@@ -79,7 +79,9 @@
   },
   "resolutions": {
     "mobx": "^6.0.0",
-    "mobx-react": "6.0.0"
+    "mobx-react": "6.0.0",
+    "formidable": "2.1.2",
+    "@noble/hashes": "1.2.0"
   },
   "author": "",
   "license": "AGPL-3.0-or-later",
