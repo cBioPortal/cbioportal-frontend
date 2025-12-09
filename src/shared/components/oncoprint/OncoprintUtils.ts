@@ -557,6 +557,12 @@ function createHeatmapTracksData(
     if (profileType === AlterationTypeConstants.MUTATION_EXTENDED) {
         const samples = oncoprint.props.store.filteredSamples.result!;
         const coverageInfo = oncoprint.props.store.coverageInformation.result!;
+        const queriedGenes = oncoprint.props.store.genes.result || [];
+        const isGeneInQuery = queriedGenes.some(
+            g =>
+                g.hugoGeneSymbol.toUpperCase() ===
+                query.hugoGeneSymbol.toUpperCase()
+        );
 
         let mutations: any[] | undefined;
 
@@ -617,8 +623,12 @@ function createHeatmapTracksData(
             });
 
             // Filter to only include profiled samples
+            // Skip filter if gene is not in query
             return samples
                 .filter(sample => {
+                    if (!isGeneInQuery) {
+                        return true;
+                    }
                     return isSampleProfiled(
                         sample.uniqueSampleKey,
                         query.molecularProfileId,
@@ -640,6 +650,9 @@ function createHeatmapTracksData(
             // No mutations data available - return null values for profiled samples only
             return samples
                 .filter(sample => {
+                    if (!isGeneInQuery) {
+                        return true;
+                    }
                     return isSampleProfiled(
                         sample.uniqueSampleKey,
                         query.molecularProfileId,
