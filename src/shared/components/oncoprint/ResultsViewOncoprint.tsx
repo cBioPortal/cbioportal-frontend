@@ -290,9 +290,7 @@ export default class ResultsViewOncoprint extends React.Component<
     @observable showClinicalTrackLegends: boolean = true;
     @observable _onlyShowClinicalLegendForAlteredCases = false;
     @observable showOqlInLabels = false;
-
-    // OQL filter state for VAF heatmap - controls whether to show only mutations matching OQL query
-    @observable useOqlFilteringForVafHeatmap: boolean = false;
+    @observable useOqlFilteringForVafHeatmap: boolean = true;
 
     @computed get onlyShowClinicalLegendForAlteredCases() {
         return (
