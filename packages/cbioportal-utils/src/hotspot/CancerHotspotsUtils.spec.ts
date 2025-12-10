@@ -1,6 +1,6 @@
 import { assert } from 'chai';
 
-import { IHotspotIndex } from '../model/CancerHotspot';
+import { AggregatedHotspots, IHotspotIndex } from '../model/CancerHotspot';
 import { Mutation } from '../model/Mutation';
 import {
     indexHotspots,
@@ -15,7 +15,7 @@ import {
 } from './CancerHotspotsUtils';
 
 describe('CancerHotspotsUtils', () => {
-    const hotspots = [
+    const hotspots: AggregatedHotspots[] = [
         {
             genomicLocation: {
                 chromosome: '17',
@@ -24,30 +24,18 @@ describe('CancerHotspotsUtils', () => {
                 referenceAllele: 'A',
                 variantAllele: 'T',
             },
-            transcriptId: '',
-            proteinLocation: {
-                transcriptId: '',
-                start: 0,
-                end: 0,
-                mutationType: '',
-            },
-            variant: '17:g.66A>T',
             hotspots: [
                 {
                     type: 'single residue',
                     transcriptId: 'ENST00002',
                     tumorCount: 1,
-                    tumorTypeCount: 1,
                     inframeCount: 0,
                     missenseCount: 1,
                     spliceCount: 0,
                     truncatingCount: 0,
                     hugoSymbol: 'TP53',
                     residue: 'R273',
-                    aminoAcidPosition: {
-                        start: 273,
-                        end: 273,
-                    },
+                    transcriptIdVersion: '',
                 },
             ],
         },
@@ -59,19 +47,10 @@ describe('CancerHotspotsUtils', () => {
                 referenceAllele: 'G',
                 variantAllele: 'CAT',
             },
-            transcriptId: '',
-            proteinLocation: {
-                transcriptId: '',
-                start: 0,
-                end: 0,
-                mutationType: '',
-            },
-            variant: '3:g.666G>CAT',
             hotspots: [
                 {
                     type: 'in-frame indel',
                     tumorCount: 1,
-                    tumorTypeCount: 1,
                     inframeCount: 1,
                     missenseCount: 0,
                     spliceCount: 0,
@@ -79,10 +58,7 @@ describe('CancerHotspotsUtils', () => {
                     transcriptId: 'ENST00003',
                     hugoSymbol: 'PIK3CA',
                     residue: '38-40',
-                    aminoAcidPosition: {
-                        start: 38,
-                        end: 40,
-                    },
+                    transcriptIdVersion: '',
                 },
             ],
         },
@@ -94,19 +70,10 @@ describe('CancerHotspotsUtils', () => {
                 referenceAllele: 'T',
                 variantAllele: 'C',
             },
-            transcriptId: '',
-            proteinLocation: {
-                transcriptId: '',
-                start: 0,
-                end: 0,
-                mutationType: '',
-            },
-            variant: '4:g.111T>C',
             hotspots: [
                 {
                     type: '3d',
                     tumorCount: 1,
-                    tumorTypeCount: 1,
                     inframeCount: 0,
                     missenseCount: 1,
                     spliceCount: 0,
@@ -114,10 +81,7 @@ describe('CancerHotspotsUtils', () => {
                     transcriptId: 'ENST00005',
                     hugoSymbol: 'SMURF1',
                     residue: 'R101',
-                    aminoAcidPosition: {
-                        start: 101,
-                        end: 101,
-                    },
+                    transcriptIdVersion: '',
                 },
             ],
         },
@@ -129,19 +93,11 @@ describe('CancerHotspotsUtils', () => {
                 referenceAllele: 'A',
                 variantAllele: 'T',
             },
-            transcriptId: '',
-            proteinLocation: {
-                transcriptId: '',
-                start: 0,
-                end: 0,
-                mutationType: '',
-            },
-            variant: '1:g.2>T',
             hotspots: [],
         },
     ];
 
-    const hotspots3d = [
+    const hotspots3d: AggregatedHotspots[] = [
         {
             genomicLocation: {
                 chromosome: '4',
@@ -150,19 +106,10 @@ describe('CancerHotspotsUtils', () => {
                 referenceAllele: 'T',
                 variantAllele: 'C',
             },
-            transcriptId: '',
-            proteinLocation: {
-                transcriptId: '',
-                start: 0,
-                end: 0,
-                mutationType: '',
-            },
-            variant: '4:g.111T>C',
             hotspots: [
                 {
                     type: '3d',
                     tumorCount: 1,
-                    tumorTypeCount: 1,
                     inframeCount: 0,
                     missenseCount: 1,
                     spliceCount: 0,
@@ -170,16 +117,13 @@ describe('CancerHotspotsUtils', () => {
                     transcriptId: 'ENST00005',
                     hugoSymbol: 'SMURF1',
                     residue: 'R101',
-                    aminoAcidPosition: {
-                        start: 101,
-                        end: 101,
-                    },
+                    transcriptIdVersion: '',
                 },
             ],
         },
     ];
 
-    const hotspotSplice = [
+    const hotspotSplice: AggregatedHotspots[] = [
         {
             genomicLocation: {
                 chromosome: '7',
@@ -188,14 +132,6 @@ describe('CancerHotspotsUtils', () => {
                 referenceAllele: 'T',
                 variantAllele: 'C',
             },
-            transcriptId: '',
-            proteinLocation: {
-                transcriptId: '',
-                start: 0,
-                end: 0,
-                mutationType: '',
-            },
-            variant: '7:g.111T>C',
             hotspots: [
                 {
                     hugoSymbol: 'MET',
@@ -207,6 +143,7 @@ describe('CancerHotspotsUtils', () => {
                     truncatingCount: 0,
                     inframeCount: 0,
                     spliceCount: 19,
+                    transcriptIdVersion: '',
                 },
             ],
         },
