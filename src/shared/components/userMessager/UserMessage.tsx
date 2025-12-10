@@ -30,7 +30,9 @@ if (
         'www.cbioportal.org',
         'cbioportal.mskcc.org',
         'genie.cbioportal.org',
-    ].includes(getBrowserWindow().location.hostname)
+        'localhost',
+    ].includes(getBrowserWindow().location.hostname) ||
+    getBrowserWindow().location.hostname.endsWith('.preview.cbioportal.org')
 ) {
     MESSAGE_DATA = [
         // ADD MESSAGE IN FOLLOWING FORMAT
@@ -50,13 +52,12 @@ if (
             dateEnd: 1772755200000, // March 6, 2026
             content: (
                 <>
-                    Answer a 7-minute survey about how you want to improve
-                    cBioPortal{' '}
+                    Help us improve cBioPortal by taking a 5-minute survey
                     <a
                         href="https://forms.cloud.microsoft/r/BtjA1wTwyL"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className={styles.infoMessageButton}
+                        className="btn btn-sm"
                     >
                         Take Survey
                     </a>
