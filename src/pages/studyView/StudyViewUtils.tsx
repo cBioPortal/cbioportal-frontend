@@ -3587,6 +3587,70 @@ export function geneFilterQueryToOql(query: GeneFilterQuery): string {
 }
 
 /**
+ * Default values for GeneFilterQuery.
+ * These defaults are used in both URL construction (geneFilterQueryFromOql)
+ * and URL parsing (applyGeneFilterQueryDefaults) to ensure consistency.
+ */
+export const GENE_FILTER_QUERY_DEFAULTS = {
+    entrezGeneId: 0,
+    alterations: [] as (
+        | 'HOMDEL'
+        | 'AMP'
+        | 'GAIN'
+        | 'DIPLOID'
+        | 'HETLOSS'
+    )[],
+    includeDriver: true,
+    includeVUS: true,
+    includeUnknownOncogenicity: true,
+    includeUnknownTier: true,
+    includeGermline: true,
+    includeSomatic: true,
+    includeUnknownStatus: true,
+    tiersBooleanMap: {} as { [tier: string]: boolean },
+} as const;
+
+/**
+ * Default values for StructuralVariantFilterQuery.
+ * These defaults are used in URL parsing (applyStructuralVariantFilterQueryDefaults)
+ * to ensure consistency.
+ */
+export const STRUCTURAL_VARIANT_FILTER_QUERY_DEFAULTS = {
+    includeDriver: true,
+    includeVUS: true,
+    includeUnknownOncogenicity: true,
+    includeUnknownTier: true,
+    includeGermline: true,
+    includeSomatic: true,
+    includeUnknownStatus: true,
+    tiersBooleanMap: {} as { [tier: string]: boolean },
+} as const;
+
+/**
+ * Default values for AlterationFilter.
+ * These defaults are used in URL parsing (applyAlterationFilterDefaults)
+ * to ensure consistency.
+ */
+export const ALTERATION_FILTER_DEFAULTS = {
+    copyNumberAlterationEventTypes: {
+        AMP: true,
+        HOMDEL: true,
+    },
+    mutationEventTypes: {
+        any: true,
+    },
+    structuralVariants: null,
+    includeDriver: true,
+    includeVUS: true,
+    includeUnknownOncogenicity: true,
+    includeUnknownTier: true,
+    includeGermline: true,
+    includeSomatic: true,
+    includeUnknownStatus: true,
+    tiersBooleanMap: {} as { [tier: string]: boolean },
+} as const;
+
+/**
  * Apply missing default values to GeneFilterQuery.
  * All undefined fields will be set to their default values.
  *
@@ -3599,29 +3663,43 @@ export function applyGeneFilterQueryDefaults(
     return {
         hugoGeneSymbol: query.hugoGeneSymbol || '',
         entrezGeneId:
-            query.entrezGeneId !== undefined ? query.entrezGeneId : 0,
+            query.entrezGeneId !== undefined
+                ? query.entrezGeneId
+                : GENE_FILTER_QUERY_DEFAULTS.entrezGeneId,
         alterations:
-            query.alterations !== undefined ? query.alterations : [],
+            query.alterations !== undefined
+                ? query.alterations
+                : GENE_FILTER_QUERY_DEFAULTS.alterations,
         includeDriver:
-            query.includeDriver !== undefined ? query.includeDriver : true,
-        includeVUS: query.includeVUS !== undefined ? query.includeVUS : true,
+            query.includeDriver !== undefined
+                ? query.includeDriver
+                : GENE_FILTER_QUERY_DEFAULTS.includeDriver,
+        includeVUS:
+            query.includeVUS !== undefined
+                ? query.includeVUS
+                : GENE_FILTER_QUERY_DEFAULTS.includeVUS,
         includeUnknownOncogenicity:
             query.includeUnknownOncogenicity !== undefined
                 ? query.includeUnknownOncogenicity
-                : true,
+                : GENE_FILTER_QUERY_DEFAULTS.includeUnknownOncogenicity,
         includeUnknownTier:
             query.includeUnknownTier !== undefined
                 ? query.includeUnknownTier
-                : true,
+                : GENE_FILTER_QUERY_DEFAULTS.includeUnknownTier,
         includeGermline:
-            query.includeGermline !== undefined ? query.includeGermline : true,
+            query.includeGermline !== undefined
+                ? query.includeGermline
+                : GENE_FILTER_QUERY_DEFAULTS.includeGermline,
         includeSomatic:
-            query.includeSomatic !== undefined ? query.includeSomatic : true,
+            query.includeSomatic !== undefined
+                ? query.includeSomatic
+                : GENE_FILTER_QUERY_DEFAULTS.includeSomatic,
         includeUnknownStatus:
             query.includeUnknownStatus !== undefined
                 ? query.includeUnknownStatus
-                : true,
-        tiersBooleanMap: query.tiersBooleanMap || {},
+                : GENE_FILTER_QUERY_DEFAULTS.includeUnknownStatus,
+        tiersBooleanMap:
+            query.tiersBooleanMap || GENE_FILTER_QUERY_DEFAULTS.tiersBooleanMap,
     };
 }
 
@@ -3638,25 +3716,36 @@ export function applyStructuralVariantFilterQueryDefaults(
     return ({
         ...query,
         includeDriver:
-            query.includeDriver !== undefined ? query.includeDriver : true,
-        includeVUS: query.includeVUS !== undefined ? query.includeVUS : true,
+            query.includeDriver !== undefined
+                ? query.includeDriver
+                : STRUCTURAL_VARIANT_FILTER_QUERY_DEFAULTS.includeDriver,
+        includeVUS:
+            query.includeVUS !== undefined
+                ? query.includeVUS
+                : STRUCTURAL_VARIANT_FILTER_QUERY_DEFAULTS.includeVUS,
         includeUnknownOncogenicity:
             query.includeUnknownOncogenicity !== undefined
                 ? query.includeUnknownOncogenicity
-                : true,
+                : STRUCTURAL_VARIANT_FILTER_QUERY_DEFAULTS.includeUnknownOncogenicity,
         includeUnknownTier:
             query.includeUnknownTier !== undefined
                 ? query.includeUnknownTier
-                : true,
+                : STRUCTURAL_VARIANT_FILTER_QUERY_DEFAULTS.includeUnknownTier,
         includeGermline:
-            query.includeGermline !== undefined ? query.includeGermline : true,
+            query.includeGermline !== undefined
+                ? query.includeGermline
+                : STRUCTURAL_VARIANT_FILTER_QUERY_DEFAULTS.includeGermline,
         includeSomatic:
-            query.includeSomatic !== undefined ? query.includeSomatic : true,
+            query.includeSomatic !== undefined
+                ? query.includeSomatic
+                : STRUCTURAL_VARIANT_FILTER_QUERY_DEFAULTS.includeSomatic,
         includeUnknownStatus:
             query.includeUnknownStatus !== undefined
                 ? query.includeUnknownStatus
-                : true,
-        tiersBooleanMap: query.tiersBooleanMap || {},
+                : STRUCTURAL_VARIANT_FILTER_QUERY_DEFAULTS.includeUnknownStatus,
+        tiersBooleanMap:
+            query.tiersBooleanMap ||
+            STRUCTURAL_VARIANT_FILTER_QUERY_DEFAULTS.tiersBooleanMap,
     } as unknown) as StructuralVariantFilterQuery;
 }
 
@@ -3674,42 +3763,45 @@ export function applyAlterationFilterDefaults(
         copyNumberAlterationEventTypes:
             filter.copyNumberAlterationEventTypes !== undefined
                 ? filter.copyNumberAlterationEventTypes
-                : {
-                      AMP: true,
-                      HOMDEL: true,
-                  },
+                : ALTERATION_FILTER_DEFAULTS.copyNumberAlterationEventTypes,
         mutationEventTypes:
             filter.mutationEventTypes !== undefined
                 ? filter.mutationEventTypes
-                : {
-                      any: true,
-                  },
+                : ALTERATION_FILTER_DEFAULTS.mutationEventTypes,
         structuralVariants:
             filter.structuralVariants !== undefined
                 ? filter.structuralVariants
-                : null,
+                : ALTERATION_FILTER_DEFAULTS.structuralVariants,
         includeDriver:
-            filter.includeDriver !== undefined ? filter.includeDriver : true,
-        includeVUS: filter.includeVUS !== undefined ? filter.includeVUS : true,
+            filter.includeDriver !== undefined
+                ? filter.includeDriver
+                : ALTERATION_FILTER_DEFAULTS.includeDriver,
+        includeVUS:
+            filter.includeVUS !== undefined
+                ? filter.includeVUS
+                : ALTERATION_FILTER_DEFAULTS.includeVUS,
         includeUnknownOncogenicity:
             filter.includeUnknownOncogenicity !== undefined
                 ? filter.includeUnknownOncogenicity
-                : true,
+                : ALTERATION_FILTER_DEFAULTS.includeUnknownOncogenicity,
         includeUnknownTier:
             filter.includeUnknownTier !== undefined
                 ? filter.includeUnknownTier
-                : true,
+                : ALTERATION_FILTER_DEFAULTS.includeUnknownTier,
         includeGermline:
             filter.includeGermline !== undefined
                 ? filter.includeGermline
-                : true,
+                : ALTERATION_FILTER_DEFAULTS.includeGermline,
         includeSomatic:
-            filter.includeSomatic !== undefined ? filter.includeSomatic : true,
+            filter.includeSomatic !== undefined
+                ? filter.includeSomatic
+                : ALTERATION_FILTER_DEFAULTS.includeSomatic,
         includeUnknownStatus:
             filter.includeUnknownStatus !== undefined
                 ? filter.includeUnknownStatus
-                : true,
-        tiersBooleanMap: filter.tiersBooleanMap || {},
+                : ALTERATION_FILTER_DEFAULTS.includeUnknownStatus,
+        tiersBooleanMap:
+            filter.tiersBooleanMap || ALTERATION_FILTER_DEFAULTS.tiersBooleanMap,
     } as unknown) as AlterationFilter;
 }
 
@@ -3729,7 +3821,7 @@ export function geneFilterQueryFromOql(
     const hugoGeneSymbol = part1.trim();
     return {
         hugoGeneSymbol,
-        entrezGeneId: 0,
+        entrezGeneId: GENE_FILTER_QUERY_DEFAULTS.entrezGeneId,
         alterations: alterations as (
             | 'HOMDEL'
             | 'AMP'
@@ -3737,22 +3829,39 @@ export function geneFilterQueryFromOql(
             | 'DIPLOID'
             | 'HETLOSS'
         )[],
-        includeDriver: includeDriver === undefined ? true : includeDriver,
-        includeVUS: includeVUS === undefined ? true : includeVUS,
+        includeDriver:
+            includeDriver === undefined
+                ? GENE_FILTER_QUERY_DEFAULTS.includeDriver
+                : includeDriver,
+        includeVUS:
+            includeVUS === undefined
+                ? GENE_FILTER_QUERY_DEFAULTS.includeVUS
+                : includeVUS,
         includeUnknownOncogenicity:
             includeUnknownOncogenicity === undefined
-                ? true
+                ? GENE_FILTER_QUERY_DEFAULTS.includeUnknownOncogenicity
                 : includeUnknownOncogenicity,
         tiersBooleanMap:
-            selectedDriverTiers || ({} as { [tier: string]: boolean }),
+            selectedDriverTiers ||
+            (GENE_FILTER_QUERY_DEFAULTS.tiersBooleanMap as {
+                [tier: string]: boolean;
+            }),
         includeUnknownTier:
             includeUnknownDriverTier === undefined
-                ? true
+                ? GENE_FILTER_QUERY_DEFAULTS.includeUnknownTier
                 : includeUnknownDriverTier,
-        includeGermline: includeGermline === undefined ? true : includeGermline,
-        includeSomatic: includeSomatic === undefined ? true : includeSomatic,
+        includeGermline:
+            includeGermline === undefined
+                ? GENE_FILTER_QUERY_DEFAULTS.includeGermline
+                : includeGermline,
+        includeSomatic:
+            includeSomatic === undefined
+                ? GENE_FILTER_QUERY_DEFAULTS.includeSomatic
+                : includeSomatic,
         includeUnknownStatus:
-            includeUnknownStatus === undefined ? true : includeUnknownStatus,
+            includeUnknownStatus === undefined
+                ? GENE_FILTER_QUERY_DEFAULTS.includeUnknownStatus
+                : includeUnknownStatus,
     };
 }
 
