@@ -10,6 +10,8 @@ export type AggregatedHotspots = {
 
         'transcriptId': string
 
+        'transcriptIdVersion': string
+
         'variant': string
 
 };
@@ -259,6 +261,8 @@ export type Hotspot = {
         'spliceCount': number
 
         'transcriptId': string
+
+        'transcriptIdVersion': string
 
         'truncatingCount': number
 
@@ -564,6 +568,8 @@ export type TranscriptConsequenceSummary = {
 
         'transcriptId': string
 
+        'transcriptIdVersion': string
+
         'uniprotId': string
 
         'variantClassification': string
@@ -734,7 +740,7 @@ export default class GenomeNexusAPIInternal {
      * @method
      * @name GenomeNexusAPIInternal#fetchVariantAnnotationSummaryPOST
      * @param {} variants - List of variants. For example ["X:g.66937331T>A","17:g.41242962_41242963insGA"] (GRCh37) or ["1:g.182712A>C", "2:g.265023C>T", "3:g.319781del", "19:g.110753dup", "1:g.1385015_1387562del"] (GRCh38)
-     * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
+     * @param {string} isoformOverrideSource - Isoform override source. For example mskcc
      * @param {string} projection - Indicates whether to return summary for all transcripts or only for canonical transcript
      */
     fetchVariantAnnotationSummaryPOSTWithHttpInfo(parameters: {
@@ -790,7 +796,7 @@ export default class GenomeNexusAPIInternal {
      * @method
      * @name GenomeNexusAPIInternal#fetchVariantAnnotationSummaryPOST
      * @param {} variants - List of variants. For example ["X:g.66937331T>A","17:g.41242962_41242963insGA"] (GRCh37) or ["1:g.182712A>C", "2:g.265023C>T", "3:g.319781del", "19:g.110753dup", "1:g.1385015_1387562del"] (GRCh38)
-     * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
+     * @param {string} isoformOverrideSource - Isoform override source. For example mskcc
      * @param {string} projection - Indicates whether to return summary for all transcripts or only for canonical transcript
      */
     fetchVariantAnnotationSummaryPOST(parameters: {
@@ -838,7 +844,7 @@ export default class GenomeNexusAPIInternal {
      * @method
      * @name GenomeNexusAPIInternal#fetchVariantAnnotationSummaryGET
      * @param {string} variant - Variant. For example 17:g.41242962_41242963insGA
-     * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
+     * @param {string} isoformOverrideSource - Isoform override source. For example mskcc
      * @param {string} projection - Indicates whether to return summary for all transcripts or only for canonical transcript
      */
     fetchVariantAnnotationSummaryGETWithHttpInfo(parameters: {
@@ -892,7 +898,7 @@ export default class GenomeNexusAPIInternal {
      * @method
      * @name GenomeNexusAPIInternal#fetchVariantAnnotationSummaryGET
      * @param {string} variant - Variant. For example 17:g.41242962_41242963insGA
-     * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
+     * @param {string} isoformOverrideSource - Isoform override source. For example mskcc
      * @param {string} projection - Indicates whether to return summary for all transcripts or only for canonical transcript
      */
     fetchVariantAnnotationSummaryGET(parameters: {

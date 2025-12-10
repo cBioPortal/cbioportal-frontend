@@ -336,7 +336,7 @@ export const OncoKbCardBody: React.FunctionComponent<OncoKbCardBodyProps> = prop
     function getOncogenicity() {
         let oncogenicity = props.indicator?.oncogenic;
         if (!oncogenicity || oncogenicity === UNKNOWN) {
-            oncogenicity = 'Unknown Oncogenic Effect';
+            oncogenicity = 'Unknown';
         }
         return oncogenicity;
     }
@@ -344,7 +344,7 @@ export const OncoKbCardBody: React.FunctionComponent<OncoKbCardBodyProps> = prop
     function getMutationEffect() {
         let mutationEffect = props.indicator?.mutationEffect.knownEffect;
         if (!mutationEffect || mutationEffect === UNKNOWN) {
-            mutationEffect = 'Unknown Biological Effect';
+            mutationEffect = 'Unknown';
         }
         return mutationEffect;
     }

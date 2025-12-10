@@ -77,6 +77,7 @@ import {
     SampleIdentifier,
     SampleMolecularIdentifier,
     SampleTreatmentRow,
+    PatientTreatmentRow,
     StructuralVariant,
     StructuralVariantFilter,
     StructuralVariantFilterQuery,
@@ -1541,7 +1542,7 @@ export class StudyViewPageStore
                 ) => {
                     const treatmentKeysMap = _.keyBy(treatmentUniqueKeys);
                     const desiredTreatments = sampleTreatments.treatments.filter(
-                        t =>
+                        (t: SampleTreatmentRow | PatientTreatmentRow) =>
                             treatmentUniqueKey(t, isPatientType) in
                             treatmentKeysMap
                     );
@@ -1557,12 +1558,17 @@ export class StudyViewPageStore
                         treatmentRows => {
                             const selectedSampleIdentifiers = _.flatMap(
                                 treatmentRows,
-                                treatmentRow => {
-                                    return treatmentRow.samples.filter(s =>
-                                        selectedSampleSet.has(s, [
-                                            'sampleId',
-                                            'studyId',
-                                        ])
+                                (
+                                    treatmentRow:
+                                        | SampleTreatmentRow
+                                        | PatientTreatmentRow
+                                ) => {
+                                    return treatmentRow.samples.filter(
+                                        (s: SampleIdentifier) =>
+                                            selectedSampleSet.has(s, [
+                                                'sampleId',
+                                                'studyId',
+                                            ])
                                     );
                                 }
                             ).map(s => ({
@@ -1755,7 +1761,7 @@ export class StudyViewPageStore
                     values,
                 } as NamespaceComparisonFilter;
 
-                const namespaceData = await this.internalClient.getNamespaceDataUsingPOST(
+                const namespaceData = await this.internalClient.getNamespaceDataForComparisonUsing(
                     {
                         namespaceComparisonFilter,
                     }
@@ -6184,7 +6190,7 @@ export class StudyViewPageStore
         invoke: async () => {
             if (this.queriedPhysicalStudyIds.result.length > 0) {
                 return [];
-                // return await getClient().fetchNamespaceAttributesUsingPOST({
+                // return await getClient().fetchNamespaceUsing({
                 //     studyIds: this.queriedPhysicalStudyIds.result,
                 // });
             }
@@ -6309,7 +6315,11 @@ export class StudyViewPageStore
         await: () => [this.oncokbGenes],
         invoke: async () => {
             return this.oncokbGenes.result
-                .filter(gene => gene.oncogene)
+                .filter(
+                    gene =>
+                        gene.geneType === 'ONCOGENE' ||
+                        gene.geneType === 'ONCOGENE_AND_TSG'
+                )
                 .map(gene => gene.entrezGeneId);
         },
         default: [],
@@ -6319,7 +6329,11 @@ export class StudyViewPageStore
         await: () => [this.oncokbGenes],
         invoke: async () => {
             return this.oncokbGenes.result
-                .filter(gene => gene.tsg)
+                .filter(
+                    gene =>
+                        gene.geneType === 'TSG' ||
+                        gene.geneType === 'ONCOGENE_AND_TSG'
+                )
                 .map(gene => gene.entrezGeneId);
         },
         default: [],
@@ -9758,7 +9772,7 @@ export class StudyViewPageStore
                 };
             });
             let namespaceAttributes = this.namespaceAttributes.result.map(
-                namespaceAttribute => {
+                (namespaceAttribute: NamespaceAttribute) => {
                     return {
                         innerKey: namespaceAttribute.innerKey,
                         outerKey: namespaceAttribute.outerKey,
@@ -9770,7 +9784,7 @@ export class StudyViewPageStore
                 sampleIdentifiers,
                 namespaceAttributes,
             } as NamespaceAttributeCountFilter;
-            return this.internalClient.getNamespaceAttributeCountsUsingPOST({
+            return this.internalClient.getNamespaceAttributeCountsUsing({
                 namespaceAttributeCountFilter,
             });
         },
@@ -9813,12 +9827,15 @@ export class StudyViewPageStore
 
                 // Add counts for namespace data
                 if (!_.isEmpty(this.namespaceAttributesCounts.result)) {
-                    _.each(this.namespaceAttributesCounts.result, countData => {
-                        const { outerKey, innerKey, count } = countData;
-                        const uniqueKey = `${outerKey}_${innerKey}`;
-                        ret[uniqueKey] = ret[uniqueKey] || 0;
-                        ret[uniqueKey] += count;
-                    });
+                    _.each(
+                        this.namespaceAttributesCounts.result,
+                        (countData: NamespaceAttributeCount) => {
+                            const { outerKey, innerKey, count } = countData;
+                            const uniqueKey = `${outerKey}_${innerKey}`;
+                            ret[uniqueKey] = ret[uniqueKey] || 0;
+                            ret[uniqueKey] += count;
+                        }
+                    );
                 }
 
                 _.each(
@@ -10835,11 +10852,15 @@ export class StudyViewPageStore
         invoke: async () => {
             if (this.shouldDisplaySampleTreatments.result) {
                 if (isClickhouseMode()) {
-                    return await this.internalClient.fetchSampleTreatmentCountsUsingPOST(
+                    // TODO: fetchSampleTreatmentCountsUsingPOST no longer exists in API
+                    // Using getAllSampleTreatmentsUsingPOST as alternative
+                    const treatments = await this.internalClient.getAllSampleTreatmentsUsingPOST(
                         {
                             studyViewFilter: this.filters,
                         }
                     );
+                    // Transform to SampleTreatmentReport format if needed
+                    return treatments as any;
                 } else {
                     // we need to transform old response into new SampleTreatmentReport
                     return await getSampleTreatmentReport(
@@ -10862,16 +10883,18 @@ export class StudyViewPageStore
     >({
         invoke: async () => {
             if (isClickhouseMode()) {
-                // @ts-ignore
-                return await this.internalClient.fetchSampleTreatmentCountsUsingPOST(
+                // TODO: fetchSampleTreatmentCountsUsingPOST no longer exists in API
+                // Using getAllSampleTreatmentsUsingPOST as alternative
+                const treatments = await this.internalClient.getAllSampleTreatmentsUsingPOST(
                     {
                         studyViewFilter: this.filters,
-                        // @ts-ignore
                         $queryParameters: {
                             projection: 'DETAILED',
                         },
                     }
                 );
+                // Transform to SampleTreatmentReport format if needed
+                return treatments as any;
             } else {
                 // we need to transform old response into new SampleTreatmentReport
                 return await getSampleTreatmentReport(
