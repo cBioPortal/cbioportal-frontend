@@ -62,7 +62,7 @@
     "waitForNetlifyPreview": "node scripts/wait_for_netlify_preview.js",
     "findNetlifyDeployId": "node scripts/find_netlify_deploy_id.js",
     "prettierFixCurrentChanges": "STAGED_AND_CHANGED_FILES=$(git diff HEAD --name-only --cached --diff-filter=d) && ([ -z \"$STAGED_AND_CHANGED_FILES\" ] && echo \"Nothing to prettify\" || (yarn run prettier --write $(echo $STAGED_AND_CHANGED_FILES) && git add -f $(echo $STAGED_AND_CHANGED_FILES)))",
-    "prettierCheckCircleCI": "./scripts/env_vars.sh && eval \"$(./scripts/env_vars.sh)\" && git remote add cbio-repo https://github.com/cBioPortal/cbioportal-frontend.git && git fetch cbio-repo $(echo $BRANCH_ENV) && CHANGED_FILES=$(git diff cbio-repo/$(echo $BRANCH_ENV) --name-only --diff-filter=d) && [ ! -z \"$CHANGED_FILES\" ] && yarn run prettier -c $(echo $CHANGED_FILES) && git remote remove cbio-repo",
+    "prettierCheckCircleCI": "./scripts/env_vars.sh && eval \"$(./scripts/env_vars.sh)\" && git remote add cbio-repo https://github.com/cBioPortal/cbioportal-frontend.git 2>/dev/null || true && git fetch cbio-repo $(echo $BRANCH_ENV) && CHANGED_FILES=$(git diff cbio-repo/$(echo $BRANCH_ENV)...HEAD --name-only --diff-filter=d) && [ ! -z \"$CHANGED_FILES\" ] && yarn run prettier -c $(echo $CHANGED_FILES) && git remote remove cbio-repo 2>/dev/null || true",
     "prettierFixLocal": "CHANGED_FILES=$(git diff $(echo $BRANCH_ENV) --name-only --diff-filter=d) && ([ ! -z \"$CHANGED_FILES\" ] && yarn run prettier --write $(echo $CHANGED_FILES) || echo \"Nothing to prettify\")",
     "prettierAll": "yarn run prettier --write $(git ls-files | grep '\\(.js\\|.ts\\|.scss\\|.css\\)')",
     "checkIncorrectImportStatements": "./scripts/check_incorrect_import_statements.sh",
