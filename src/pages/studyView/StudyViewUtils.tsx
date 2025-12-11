@@ -3587,19 +3587,12 @@ export function geneFilterQueryToOql(query: GeneFilterQuery): string {
 }
 
 /**
- * Default values for GeneFilterQuery.
- * These defaults are used in both URL construction (geneFilterQueryFromOql)
- * and URL parsing (applyGeneFilterQueryDefaults) to ensure consistency.
+ * Default values for GeneFilterQuery optional parameters.
+ * Used in both construction (geneFilterQueryFromOql) and parsing (ensureBackwardCompatibilityOfFilters).
+ * Required fields like hugoGeneSymbol and alterations must be provided by caller.
  */
 export const GENE_FILTER_QUERY_DEFAULTS = {
     entrezGeneId: 0,
-    alterations: [] as (
-        | 'HOMDEL'
-        | 'AMP'
-        | 'GAIN'
-        | 'DIPLOID'
-        | 'HETLOSS'
-    )[],
     includeDriver: true,
     includeVUS: true,
     includeUnknownOncogenicity: true,
@@ -3607,13 +3600,13 @@ export const GENE_FILTER_QUERY_DEFAULTS = {
     includeGermline: true,
     includeSomatic: true,
     includeUnknownStatus: true,
-    tiersBooleanMap: {} as { [tier: string]: boolean },
-} as const;
+    tiersBooleanMap: {},
+};
 
 /**
- * Default values for StructuralVariantFilterQuery.
- * These defaults are used in URL parsing (applyStructuralVariantFilterQueryDefaults)
- * to ensure consistency.
+ * Default values for StructuralVariantFilterQuery optional parameters.
+ * Used in both construction (StructuralVariantFilterQueryFromOql) and parsing (ensureBackwardCompatibilityOfFilters).
+ * Required fields like gene1Query and gene2Query must be provided by caller.
  */
 export const STRUCTURAL_VARIANT_FILTER_QUERY_DEFAULTS = {
     includeDriver: true,
@@ -3623,15 +3616,15 @@ export const STRUCTURAL_VARIANT_FILTER_QUERY_DEFAULTS = {
     includeGermline: true,
     includeSomatic: true,
     includeUnknownStatus: true,
-    tiersBooleanMap: {} as { [tier: string]: boolean },
-} as const;
+    tiersBooleanMap: {},
+};
 
 /**
  * Default values for AlterationFilter.
- * These defaults are used in URL parsing (applyAlterationFilterDefaults)
- * to ensure consistency.
+ * Used in both construction and parsing (ensureBackwardCompatibilityOfFilters).
+ * All fields have defaults, no required fields need to be provided.
  */
-export const ALTERATION_FILTER_DEFAULTS = {
+export const ALTERATION_FILTER_DEFAULTS: AlterationFilter = ({
     copyNumberAlterationEventTypes: {
         AMP: true,
         HOMDEL: true,
@@ -3647,163 +3640,8 @@ export const ALTERATION_FILTER_DEFAULTS = {
     includeGermline: true,
     includeSomatic: true,
     includeUnknownStatus: true,
-    tiersBooleanMap: {} as { [tier: string]: boolean },
-} as const;
-
-/**
- * Apply missing default values to GeneFilterQuery.
- * All undefined fields will be set to their default values.
- *
- * @param query - The GeneFilterQuery object to apply defaults to
- * @returns The GeneFilterQuery object with defaults applied
- */
-export function applyGeneFilterQueryDefaults(
-    query: Partial<GeneFilterQuery>
-): GeneFilterQuery {
-    return {
-        hugoGeneSymbol: query.hugoGeneSymbol || '',
-        entrezGeneId:
-            query.entrezGeneId !== undefined
-                ? query.entrezGeneId
-                : GENE_FILTER_QUERY_DEFAULTS.entrezGeneId,
-        alterations:
-            query.alterations !== undefined
-                ? query.alterations
-                : GENE_FILTER_QUERY_DEFAULTS.alterations,
-        includeDriver:
-            query.includeDriver !== undefined
-                ? query.includeDriver
-                : GENE_FILTER_QUERY_DEFAULTS.includeDriver,
-        includeVUS:
-            query.includeVUS !== undefined
-                ? query.includeVUS
-                : GENE_FILTER_QUERY_DEFAULTS.includeVUS,
-        includeUnknownOncogenicity:
-            query.includeUnknownOncogenicity !== undefined
-                ? query.includeUnknownOncogenicity
-                : GENE_FILTER_QUERY_DEFAULTS.includeUnknownOncogenicity,
-        includeUnknownTier:
-            query.includeUnknownTier !== undefined
-                ? query.includeUnknownTier
-                : GENE_FILTER_QUERY_DEFAULTS.includeUnknownTier,
-        includeGermline:
-            query.includeGermline !== undefined
-                ? query.includeGermline
-                : GENE_FILTER_QUERY_DEFAULTS.includeGermline,
-        includeSomatic:
-            query.includeSomatic !== undefined
-                ? query.includeSomatic
-                : GENE_FILTER_QUERY_DEFAULTS.includeSomatic,
-        includeUnknownStatus:
-            query.includeUnknownStatus !== undefined
-                ? query.includeUnknownStatus
-                : GENE_FILTER_QUERY_DEFAULTS.includeUnknownStatus,
-        tiersBooleanMap:
-            query.tiersBooleanMap || GENE_FILTER_QUERY_DEFAULTS.tiersBooleanMap,
-    };
-}
-
-/**
- * Apply missing default values to StructuralVariantFilterQuery.
- * All undefined fields will be set to their default values.
- *
- * @param query - The StructuralVariantFilterQuery object to apply defaults to
- * @returns The StructuralVariantFilterQuery object with defaults applied
- */
-export function applyStructuralVariantFilterQueryDefaults(
-    query: Partial<StructuralVariantFilterQuery>
-): StructuralVariantFilterQuery {
-    return ({
-        ...query,
-        includeDriver:
-            query.includeDriver !== undefined
-                ? query.includeDriver
-                : STRUCTURAL_VARIANT_FILTER_QUERY_DEFAULTS.includeDriver,
-        includeVUS:
-            query.includeVUS !== undefined
-                ? query.includeVUS
-                : STRUCTURAL_VARIANT_FILTER_QUERY_DEFAULTS.includeVUS,
-        includeUnknownOncogenicity:
-            query.includeUnknownOncogenicity !== undefined
-                ? query.includeUnknownOncogenicity
-                : STRUCTURAL_VARIANT_FILTER_QUERY_DEFAULTS.includeUnknownOncogenicity,
-        includeUnknownTier:
-            query.includeUnknownTier !== undefined
-                ? query.includeUnknownTier
-                : STRUCTURAL_VARIANT_FILTER_QUERY_DEFAULTS.includeUnknownTier,
-        includeGermline:
-            query.includeGermline !== undefined
-                ? query.includeGermline
-                : STRUCTURAL_VARIANT_FILTER_QUERY_DEFAULTS.includeGermline,
-        includeSomatic:
-            query.includeSomatic !== undefined
-                ? query.includeSomatic
-                : STRUCTURAL_VARIANT_FILTER_QUERY_DEFAULTS.includeSomatic,
-        includeUnknownStatus:
-            query.includeUnknownStatus !== undefined
-                ? query.includeUnknownStatus
-                : STRUCTURAL_VARIANT_FILTER_QUERY_DEFAULTS.includeUnknownStatus,
-        tiersBooleanMap:
-            query.tiersBooleanMap ||
-            STRUCTURAL_VARIANT_FILTER_QUERY_DEFAULTS.tiersBooleanMap,
-    } as unknown) as StructuralVariantFilterQuery;
-}
-
-/**
- * Apply missing default values to AlterationFilter.
- * All undefined fields will be set to their default values.
- *
- * @param filter - The AlterationFilter object to apply defaults to
- * @returns The AlterationFilter object with defaults applied
- */
-export function applyAlterationFilterDefaults(
-    filter: Partial<AlterationFilter>
-): AlterationFilter {
-    return ({
-        copyNumberAlterationEventTypes:
-            filter.copyNumberAlterationEventTypes !== undefined
-                ? filter.copyNumberAlterationEventTypes
-                : ALTERATION_FILTER_DEFAULTS.copyNumberAlterationEventTypes,
-        mutationEventTypes:
-            filter.mutationEventTypes !== undefined
-                ? filter.mutationEventTypes
-                : ALTERATION_FILTER_DEFAULTS.mutationEventTypes,
-        structuralVariants:
-            filter.structuralVariants !== undefined
-                ? filter.structuralVariants
-                : ALTERATION_FILTER_DEFAULTS.structuralVariants,
-        includeDriver:
-            filter.includeDriver !== undefined
-                ? filter.includeDriver
-                : ALTERATION_FILTER_DEFAULTS.includeDriver,
-        includeVUS:
-            filter.includeVUS !== undefined
-                ? filter.includeVUS
-                : ALTERATION_FILTER_DEFAULTS.includeVUS,
-        includeUnknownOncogenicity:
-            filter.includeUnknownOncogenicity !== undefined
-                ? filter.includeUnknownOncogenicity
-                : ALTERATION_FILTER_DEFAULTS.includeUnknownOncogenicity,
-        includeUnknownTier:
-            filter.includeUnknownTier !== undefined
-                ? filter.includeUnknownTier
-                : ALTERATION_FILTER_DEFAULTS.includeUnknownTier,
-        includeGermline:
-            filter.includeGermline !== undefined
-                ? filter.includeGermline
-                : ALTERATION_FILTER_DEFAULTS.includeGermline,
-        includeSomatic:
-            filter.includeSomatic !== undefined
-                ? filter.includeSomatic
-                : ALTERATION_FILTER_DEFAULTS.includeSomatic,
-        includeUnknownStatus:
-            filter.includeUnknownStatus !== undefined
-                ? filter.includeUnknownStatus
-                : ALTERATION_FILTER_DEFAULTS.includeUnknownStatus,
-        tiersBooleanMap:
-            filter.tiersBooleanMap || ALTERATION_FILTER_DEFAULTS.tiersBooleanMap,
-    } as unknown) as AlterationFilter;
-}
+    tiersBooleanMap: {},
+} as any) as AlterationFilter;
 
 export function geneFilterQueryFromOql(
     oql: string,
@@ -3817,52 +3655,31 @@ export function geneFilterQueryFromOql(
     includeUnknownStatus?: boolean
 ): GeneFilterQuery {
     const [part1, part2]: string[] = oql.split(':');
-    const alterations = part2 ? part2.trim().split(' ') : [];
-    const hugoGeneSymbol = part1.trim();
-    return {
-        hugoGeneSymbol,
-        entrezGeneId: GENE_FILTER_QUERY_DEFAULTS.entrezGeneId,
-        alterations: alterations as (
-            | 'HOMDEL'
-            | 'AMP'
-            | 'GAIN'
-            | 'DIPLOID'
-            | 'HETLOSS'
-        )[],
-        includeDriver:
-            includeDriver === undefined
-                ? GENE_FILTER_QUERY_DEFAULTS.includeDriver
-                : includeDriver,
-        includeVUS:
-            includeVUS === undefined
-                ? GENE_FILTER_QUERY_DEFAULTS.includeVUS
-                : includeVUS,
-        includeUnknownOncogenicity:
-            includeUnknownOncogenicity === undefined
-                ? GENE_FILTER_QUERY_DEFAULTS.includeUnknownOncogenicity
-                : includeUnknownOncogenicity,
-        tiersBooleanMap:
-            selectedDriverTiers ||
-            (GENE_FILTER_QUERY_DEFAULTS.tiersBooleanMap as {
-                [tier: string]: boolean;
-            }),
-        includeUnknownTier:
-            includeUnknownDriverTier === undefined
-                ? GENE_FILTER_QUERY_DEFAULTS.includeUnknownTier
-                : includeUnknownDriverTier,
-        includeGermline:
-            includeGermline === undefined
-                ? GENE_FILTER_QUERY_DEFAULTS.includeGermline
-                : includeGermline,
-        includeSomatic:
-            includeSomatic === undefined
-                ? GENE_FILTER_QUERY_DEFAULTS.includeSomatic
-                : includeSomatic,
-        includeUnknownStatus:
-            includeUnknownStatus === undefined
-                ? GENE_FILTER_QUERY_DEFAULTS.includeUnknownStatus
-                : includeUnknownStatus,
-    };
+
+    return _.mergeWith(
+        {},
+        GENE_FILTER_QUERY_DEFAULTS,
+        {
+            hugoGeneSymbol: part1.trim(),
+            alterations: (part2 ? part2.trim().split(' ') : []) as (
+                | 'HOMDEL'
+                | 'AMP'
+                | 'GAIN'
+                | 'DIPLOID'
+                | 'HETLOSS'
+            )[],
+            includeDriver,
+            includeVUS,
+            includeUnknownOncogenicity,
+            tiersBooleanMap: selectedDriverTiers,
+            includeUnknownTier: includeUnknownDriverTier,
+            includeGermline,
+            includeSomatic,
+            includeUnknownStatus,
+        },
+        (defaultValue, providedValue) =>
+            providedValue !== undefined ? providedValue : defaultValue
+    );
 }
 
 export function ensureBackwardCompatibilityOfFilters(
@@ -3877,8 +3694,16 @@ export function ensureBackwardCompatibilityOfFilters(
                         // Backward compatibility: convert string to object
                         return geneFilterQueryFromOql(inner);
                     } else {
-                        // Apply GeneFilterQuery-specific defaults
-                        return applyGeneFilterQueryDefaults(inner);
+                        // Merge with defaults: defaults first, then overrides from parsed object
+                        return _.mergeWith(
+                            {},
+                            GENE_FILTER_QUERY_DEFAULTS,
+                            inner,
+                            (defaultValue, providedValue) =>
+                                providedValue !== undefined
+                                    ? providedValue
+                                    : defaultValue
+                        );
                     }
                 });
             });
@@ -3892,18 +3717,31 @@ export function ensureBackwardCompatibilityOfFilters(
     ) {
         filters.structuralVariantFilters.forEach(f => {
             f.structVarQueries = f.structVarQueries.map(arr => {
-                return arr.map(inner => {
-                    // Apply StructuralVariantFilterQuery-specific defaults
-                    return applyStructuralVariantFilterQueryDefaults(inner);
-                });
+                return arr.map(inner =>
+                    // Merge with defaults: defaults first, then overrides from parsed object
+                    _.mergeWith(
+                        {},
+                        STRUCTURAL_VARIANT_FILTER_QUERY_DEFAULTS,
+                        inner,
+                        (defaultValue, providedValue) =>
+                            providedValue !== undefined
+                                ? providedValue
+                                : defaultValue
+                    )
+                );
             });
         });
     }
 
     // Handle alterationFilter
     if (filters.alterationFilter) {
-        filters.alterationFilter = applyAlterationFilterDefaults(
-            filters.alterationFilter
+        // Merge with defaults: defaults first, then overrides from parsed object
+        filters.alterationFilter = _.mergeWith(
+            {},
+            ALTERATION_FILTER_DEFAULTS,
+            filters.alterationFilter,
+            (defaultValue, providedValue) =>
+                providedValue !== undefined ? providedValue : defaultValue
         );
     }
 
