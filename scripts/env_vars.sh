@@ -20,13 +20,34 @@ if [[ "$CIRCLECI" ]] || [[ "$NETLIFY" ]]; then
     # on circle ci determine env variables based on branch or in case of PR
     # what branch the PR is pointing to
     if [[ "$PR_NUMBER" ]] && ! [[ $PR_BRANCH == "release-"* ]]; then
-        BRANCH=$(curl "https://github.com/cBioPortal/cbioportal-frontend/pull/${PR_NUMBER}" | grep -oE 'title="cBioPortal/cbioportal-frontend:[^"]*' | cut -d: -f2 | head -1)
+        # Use GitHub API to get the target branch (base.ref) from the PR
+        BRANCH=$(curl -s "https://api.github.com/repos/cBioPortal/cbioportal-frontend/pulls/${PR_NUMBER}" | sed -n 's/.*"base"[^}]*"ref"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -1)
+        # Fallback to HTML scraping if API fails
+        if [[ -z "$BRANCH" ]]; then
+            BRANCH=$(curl -s "https://github.com/cBioPortal/cbioportal-frontend/pull/${PR_NUMBER}" | grep -oE 'title="cBioPortal/cbioportal-frontend:[^"]*' | cut -d: -f2 | head -1)
+            echo "# DEBUG: Using HTML scraping fallback for PR ${PR_NUMBER}, detected branch: ${BRANCH}" >&2
+        else
+            echo "# DEBUG: Using GitHub API for PR ${PR_NUMBER}, detected branch: ${BRANCH}" >&2
+        fi
     elif [[ "$PR_URL" ]] && ! [[ $PR_BRANCH == "release-"* ]]; then
-        BRANCH=$(curl "${PR_URL}" | grep -oE 'title="cBioPortal/cbioportal-frontend:[^"]*' | cut -d: -f2 | head -1)
+        # Extract PR number from URL and use GitHub API
+        PR_NUM=$(echo "$PR_URL" | grep -oE '[0-9]+$')
+        if [[ -n "$PR_NUM" ]]; then
+            BRANCH=$(curl -s "https://api.github.com/repos/cBioPortal/cbioportal-frontend/pulls/${PR_NUM}" | sed -n 's/.*"base"[^}]*"ref"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -1)
+        fi
+        # Fallback to HTML scraping if API fails
+        if [[ -z "$BRANCH" ]]; then
+            BRANCH=$(curl -s "${PR_URL}" | grep -oE 'title="cBioPortal/cbioportal-frontend:[^"]*' | cut -d: -f2 | head -1)
+            echo "# DEBUG: Using HTML scraping fallback for PR URL ${PR_URL}, detected branch: ${BRANCH}" >&2
+        else
+            echo "# DEBUG: Using GitHub API for PR URL ${PR_URL}, detected branch: ${BRANCH}" >&2
+        fi
     elif [[ "$MANUAL_TRIGGER_BRANCH_ENV" ]]; then
         BRANCH=$MANUAL_TRIGGER_BRANCH_ENV
+        echo "# DEBUG: Using MANUAL_TRIGGER_BRANCH_ENV: ${BRANCH}" >&2
     else
         BRANCH=$PR_BRANCH
+        echo "# DEBUG: Using PR_BRANCH: ${BRANCH}" >&2
     fi
     if test -f "$SCRIPT_DIR/../env/${BRANCH}.sh"; then
         cat $SCRIPT_DIR/../env/${BRANCH}.sh
