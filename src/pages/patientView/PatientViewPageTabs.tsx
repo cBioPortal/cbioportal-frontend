@@ -584,8 +584,8 @@ export function tabs(
                 <PathologyReport
                     iframeHeight={WindowStore.size.height - 220}
                     pdfs={
-                        pageComponent.patientViewPageStore.pathologyReport
-                            .result
+                        pageComponent.patientViewPageStore
+                            .pathologyReportsWithViewerURLs
                     }
                 />
             </div>
