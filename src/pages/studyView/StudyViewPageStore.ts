@@ -112,6 +112,7 @@ import {
 import { PatientSurvival } from 'shared/model/PatientSurvival';
 import { getPatientSurvivals } from 'pages/resultsView/SurvivalStoreHelper';
 import {
+    ALTERATION_FILTER_DEFAULTS,
     AnalysisGroup,
     annotationFilterActive,
     buildSelectedDriverTiersMap,
@@ -312,10 +313,6 @@ import {
     initializeCustomDriverAnnotationSettings,
 } from 'shared/alterationFiltering/AnnotationFilteringSettings';
 import { ISettingsMenuButtonVisible } from 'shared/components/driverAnnotations/SettingsMenuButton';
-import {
-    CopyNumberEnrichmentEventType,
-    MutationEnrichmentEventType,
-} from 'shared/lib/comparison/ComparisonStoreUtils';
 import { getServerConfig, isClickhouseMode } from 'config/config';
 import {
     ChartUserSetting,
@@ -2481,29 +2478,23 @@ export class StudyViewPageStore
                 driverAnnotationSettings.customTiersDefault
             );
 
-            studyViewFilter.alterationFilter = ({
-                // select all CNA types
-                copyNumberAlterationEventTypes: {
-                    [CopyNumberEnrichmentEventType.AMP]: true,
-                    [CopyNumberEnrichmentEventType.HOMDEL]: true,
+            studyViewFilter.alterationFilter = _.mergeWith(
+                {},
+                ALTERATION_FILTER_DEFAULTS,
+                {
+                    includeDriver: driverAnnotationSettings.includeDriver,
+                    includeVUS: driverAnnotationSettings.includeVUS,
+                    includeUnknownOncogenicity:
+                        driverAnnotationSettings.includeUnknownOncogenicity,
+                    includeUnknownTier:
+                        driverAnnotationSettings.includeUnknownTier,
+                    tiersBooleanMap: this.selectedDriverTiersMap.isComplete
+                        ? this.selectedDriverTiersMap.result!
+                        : {},
                 },
-                // select all mutation types
-                mutationEventTypes: {
-                    [MutationEnrichmentEventType.any]: true,
-                },
-                structuralVariants: null,
-                includeDriver: driverAnnotationSettings.includeDriver,
-                includeVUS: driverAnnotationSettings.includeVUS,
-                includeUnknownOncogenicity:
-                    driverAnnotationSettings.includeUnknownOncogenicity,
-                includeUnknownTier: driverAnnotationSettings.includeUnknownTier,
-                includeGermline: true,
-                includeSomatic: true,
-                includeUnknownStatus: true,
-                tiersBooleanMap: this.selectedDriverTiersMap.isComplete
-                    ? this.selectedDriverTiersMap.result!
-                    : {},
-            } as unknown) as AlterationFilter;
+                (defaultValue, providedValue) =>
+                    providedValue !== undefined ? providedValue : defaultValue
+            );
         }
 
         //studyViewFilter can only have studyIds or sampleIdentifiers
@@ -4468,30 +4459,26 @@ export class StudyViewPageStore
             }
         }
 
-        filters.alterationFilter = ({
-            // select all CNA types
-            copyNumberAlterationEventTypes: {
-                [CopyNumberEnrichmentEventType.AMP]: true,
-                [CopyNumberEnrichmentEventType.HOMDEL]: true,
+        filters.alterationFilter = _.mergeWith(
+            {},
+            ALTERATION_FILTER_DEFAULTS,
+            {
+                includeDriver: this.driverAnnotationSettings.includeDriver,
+                includeVUS: this.driverAnnotationSettings.includeVUS,
+                includeUnknownOncogenicity: this.driverAnnotationSettings
+                    .includeUnknownOncogenicity,
+                includeUnknownTier: this.driverAnnotationSettings
+                    .includeUnknownTier,
+                includeGermline: this.includeGermlineMutations,
+                includeSomatic: this.includeSomaticMutations,
+                includeUnknownStatus: this.includeUnknownStatusMutations,
+                tiersBooleanMap: this.selectedDriverTiersMap.isComplete
+                    ? this.selectedDriverTiersMap.result!
+                    : {},
             },
-            // select all mutation types
-            mutationEventTypes: {
-                [MutationEnrichmentEventType.any]: true,
-            },
-            structuralVariants: null,
-            includeDriver: this.driverAnnotationSettings.includeDriver,
-            includeVUS: this.driverAnnotationSettings.includeVUS,
-            includeUnknownOncogenicity: this.driverAnnotationSettings
-                .includeUnknownOncogenicity,
-            includeUnknownTier: this.driverAnnotationSettings
-                .includeUnknownTier,
-            includeGermline: this.includeGermlineMutations,
-            includeSomatic: this.includeSomaticMutations,
-            includeUnknownStatus: this.includeUnknownStatusMutations,
-            tiersBooleanMap: this.selectedDriverTiersMap.isComplete
-                ? this.selectedDriverTiersMap.result!
-                : {},
-        } as unknown) as AlterationFilter;
+            (defaultValue, providedValue) =>
+                providedValue !== undefined ? providedValue : defaultValue
+        );
 
         return filters as StudyViewFilter;
     }
