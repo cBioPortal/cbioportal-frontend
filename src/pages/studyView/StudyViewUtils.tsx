@@ -3587,12 +3587,14 @@ export function geneFilterQueryToOql(query: GeneFilterQuery): string {
 }
 
 /**
- * Default values for GeneFilterQuery optional parameters.
+ * Default values for all GeneFilterQuery parameters.
  * Used in both construction (geneFilterQueryFromOql) and parsing (ensureBackwardCompatibilityOfFilters).
- * Required fields like hugoGeneSymbol and alterations must be provided by caller.
+ * Provides complete defaults for all fields to ensure type safety.
  */
 export const GENE_FILTER_QUERY_DEFAULTS = {
+    hugoGeneSymbol: '',
     entrezGeneId: 0,
+    alterations: [] as ('HOMDEL' | 'AMP' | 'GAIN' | 'DIPLOID' | 'HETLOSS')[],
     includeDriver: true,
     includeVUS: true,
     includeUnknownOncogenicity: true,
@@ -3604,11 +3606,21 @@ export const GENE_FILTER_QUERY_DEFAULTS = {
 };
 
 /**
- * Default values for StructuralVariantFilterQuery optional parameters.
+ * Default values for all StructuralVariantFilterQuery parameters.
  * Used in both construction (StructuralVariantFilterQueryFromOql) and parsing (ensureBackwardCompatibilityOfFilters).
- * Required fields like gene1Query and gene2Query must be provided by caller.
+ * Provides complete defaults for all fields to ensure type safety.
  */
 export const STRUCTURAL_VARIANT_FILTER_QUERY_DEFAULTS = {
+    gene1Query: {
+        hugoSymbol: '',
+        entrezId: 0,
+        specialValue: 'NO_GENE' as 'ANY_GENE' | 'NO_GENE',
+    },
+    gene2Query: {
+        hugoSymbol: '',
+        entrezId: 0,
+        specialValue: 'NO_GENE' as 'ANY_GENE' | 'NO_GENE',
+    },
     includeDriver: true,
     includeVUS: true,
     includeUnknownOncogenicity: true,
@@ -3622,7 +3634,7 @@ export const STRUCTURAL_VARIANT_FILTER_QUERY_DEFAULTS = {
 /**
  * Default values for AlterationFilter.
  * Used in both construction and parsing (ensureBackwardCompatibilityOfFilters).
- * All fields have defaults, no required fields need to be provided.
+ * Provides complete defaults for all fields to ensure type safety.
  */
 export const ALTERATION_FILTER_DEFAULTS: AlterationFilter = ({
     copyNumberAlterationEventTypes: {
