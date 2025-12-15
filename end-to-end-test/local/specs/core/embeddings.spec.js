@@ -14,7 +14,7 @@ describe('embeddings tab interaction tests', function() {
 
     describe('legend interactions', () => {
         it('allows toggling category visibility by clicking legend items', async () => {
-            const url = `${CBIOPORTAL_URL}/study/embeddings?id=msk_chord_2024`;
+            const url = `${CBIOPORTAL_URL}/study/embeddings?id=msk_chord_2024&featureFlags=EMBEDDINGS`;
             await goToUrlAndSetLocalStorage(url, true);
             await waitForNetworkQuiet();
             await browser.pause(2000);
@@ -57,7 +57,7 @@ describe('embeddings tab interaction tests', function() {
         });
 
         it('shows/hides all categories with Show All/Hide All button', async () => {
-            const url = `${CBIOPORTAL_URL}/study/embeddings?id=msk_chord_2024`;
+            const url = `${CBIOPORTAL_URL}/study/embeddings?id=msk_chord_2024&featureFlags=EMBEDDINGS`;
             await goToUrlAndSetLocalStorage(url, true);
             await waitForNetworkQuiet();
             await browser.pause(2000);
@@ -96,7 +96,7 @@ describe('embeddings tab interaction tests', function() {
         });
 
         it('displays sample counts for each category', async () => {
-            const url = `${CBIOPORTAL_URL}/study/embeddings?id=msk_chord_2024`;
+            const url = `${CBIOPORTAL_URL}/study/embeddings?id=msk_chord_2024&featureFlags=EMBEDDINGS`;
             await goToUrlAndSetLocalStorage(url, true);
             await waitForNetworkQuiet();
             await browser.pause(2000);
@@ -120,7 +120,7 @@ describe('embeddings tab interaction tests', function() {
 
     describe('coloring menu interactions', () => {
         it('allows switching between cancer type and gene coloring', async () => {
-            const url = `${CBIOPORTAL_URL}/study/embeddings?id=msk_chord_2024`;
+            const url = `${CBIOPORTAL_URL}/study/embeddings?id=msk_chord_2024&featureFlags=EMBEDDINGS`;
             await goToUrlAndSetLocalStorage(url, true);
             await waitForNetworkQuiet();
             await browser.pause(2000);
@@ -146,7 +146,7 @@ describe('embeddings tab interaction tests', function() {
 
     describe('viewport controls', () => {
         it('allows exporting plot to PNG', async () => {
-            const url = `${CBIOPORTAL_URL}/study/embeddings?id=msk_chord_2024`;
+            const url = `${CBIOPORTAL_URL}/study/embeddings?id=msk_chord_2024&featureFlags=EMBEDDINGS`;
             await goToUrlAndSetLocalStorage(url, true);
             await waitForNetworkQuiet();
             await browser.pause(2000);
@@ -167,7 +167,7 @@ describe('embeddings tab interaction tests', function() {
         });
 
         it('allows centering the view', async () => {
-            const url = `${CBIOPORTAL_URL}/study/embeddings?id=msk_chord_2024`;
+            const url = `${CBIOPORTAL_URL}/study/embeddings?id=msk_chord_2024&featureFlags=EMBEDDINGS`;
             await goToUrlAndSetLocalStorage(url, true);
             await waitForNetworkQuiet();
             await browser.pause(2000);
@@ -199,7 +199,7 @@ describe('embeddings tab interaction tests', function() {
                 })
             );
 
-            const url = `${CBIOPORTAL_URL}/study?id=msk_chord_2024&filterJson=${filterJson}`;
+            const url = `${CBIOPORTAL_URL}/study?id=msk_chord_2024&filterJson=${filterJson}&featureFlags=EMBEDDINGS`;
             await goToUrlAndSetLocalStorage(url, true);
             await waitForNetworkQuiet();
 
@@ -219,7 +219,7 @@ describe('embeddings tab interaction tests', function() {
         });
 
         it('preserves selection when switching between tabs', async () => {
-            const url = `${CBIOPORTAL_URL}/study?id=msk_chord_2024`;
+            const url = `${CBIOPORTAL_URL}/study?id=msk_chord_2024&featureFlags=EMBEDDINGS`;
             await goToUrlAndSetLocalStorage(url, true);
             await waitForNetworkQuiet();
 
@@ -234,7 +234,7 @@ describe('embeddings tab interaction tests', function() {
                     ],
                 })
             );
-            const filterUrl = `${CBIOPORTAL_URL}/study?id=msk_chord_2024&filterJson=${filterJson}`;
+            const filterUrl = `${CBIOPORTAL_URL}/study?id=msk_chord_2024&filterJson=${filterJson}&featureFlags=EMBEDDINGS`;
             await goToUrlAndSetLocalStorage(filterUrl, false);
             await waitForNetworkQuiet();
 
@@ -280,7 +280,7 @@ describe('embeddings tab interaction tests', function() {
                     colorBySv: 'true',
                 })
             );
-            const url = `${CBIOPORTAL_URL}/study/embeddings?id=msk_chord_2024&embeddings_coloring_selection=${coloringParam}`;
+            const url = `${CBIOPORTAL_URL}/study/embeddings?id=msk_chord_2024&embeddings_coloring_selection=${coloringParam}&featureFlags=EMBEDDINGS`;
             await goToUrlAndSetLocalStorage(url, true);
             await waitForNetworkQuiet();
             await browser.pause(2000);
@@ -318,7 +318,7 @@ describe('embeddings tab interaction tests', function() {
                 })
             );
 
-            const url = `${CBIOPORTAL_URL}/study/embeddings?id=msk_chord_2024&embeddings_coloring_selection=${coloringParam}`;
+            const url = `${CBIOPORTAL_URL}/study/embeddings?id=msk_chord_2024&embeddings_coloring_selection=${coloringParam}&featureFlags=EMBEDDINGS`;
             await goToUrlAndSetLocalStorage(url, true);
             await waitForNetworkQuiet();
             await browser.pause(2000);
