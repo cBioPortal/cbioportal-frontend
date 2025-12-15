@@ -4,9 +4,6 @@ import { computed, observable, action, makeObservable, reaction } from 'mobx';
 import { remoteData } from 'cbioportal-frontend-commons';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
-import boehmHeData from '../../../data/boehm_2025_umap_he.json';
-import boehmGenomicData from '../../../data/boehm_2025_umap_genomic.json';
-import boehmGenomicHeData from '../../../data/boehm_2025_umap_genomic_he.json';
 import ColorSamplesByDropdown from 'shared/components/colorSamplesByDropdown/ColorSamplesByDropdown';
 import { ColoringMenuOmnibarOption } from 'shared/components/plots/PlotsTab';
 import {
@@ -31,6 +28,47 @@ export interface IEmbeddingsTabProps {
     store: StudyViewPageStore;
 }
 
+// Base URL for embedding data
+const EMBEDDING_BASE_URL =
+    'https://datahub.assets.cbioportal.org/embeddings/msk_mosaic_2026';
+
+// Module-level singleton remote data loaders for embeddings
+// These are shared across all component instances to prevent duplicate fetches
+const boehmHeData = remoteData<EmbeddingData>({
+    await: () => [], // No dependencies - invoke once immediately and cache
+    invoke: async () => {
+        const response = await fetch(`${EMBEDDING_BASE_URL}/umap_he.json`);
+        if (!response.ok) {
+            throw new Error('Failed to load H&E embedding data');
+        }
+        return response.json();
+    },
+});
+
+const boehmGenomicData = remoteData<EmbeddingData>({
+    await: () => [], // No dependencies - invoke once immediately and cache
+    invoke: async () => {
+        const response = await fetch(`${EMBEDDING_BASE_URL}/umap_genomic.json`);
+        if (!response.ok) {
+            throw new Error('Failed to load genomic embedding data');
+        }
+        return response.json();
+    },
+});
+
+const boehmGenomicHeData = remoteData<EmbeddingData>({
+    await: () => [], // No dependencies - invoke once immediately and cache
+    invoke: async () => {
+        const response = await fetch(
+            `${EMBEDDING_BASE_URL}/umap_genomic_he.json`
+        );
+        if (!response.ok) {
+            throw new Error('Failed to load genomic+H&E embedding data');
+        }
+        return response.json();
+    },
+});
+
 @observer
 export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     @observable private selectedColoringOption?: ColoringMenuOmnibarOption;
@@ -38,7 +76,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     @observable private mutationTypeEnabled = true;
     @observable private copyNumberEnabled = true;
     @observable private structuralVariantEnabled = true;
-    @observable private selectedEmbeddingValue: string = 'boehm_2025_he';
+    @observable private selectedEmbeddingValue: string = 'msk_mosaic_2026_he';
     @observable.ref private viewState: ViewState = {
         target: [0, 0, 0],
         zoom: 0,
@@ -49,6 +87,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     @observable private hiddenCategories = new Set<string>();
     private urlParameterReactionDisposer?: () => void;
     private urlSyncReactionDisposer?: () => void;
+    private viewStateInitialized = false;
 
     constructor(props: IEmbeddingsTabProps) {
         super(props);
@@ -57,11 +96,28 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         // Initialize default coloring
         this.initializeDefaultColoring();
 
-        // Initialize view state based on initial data
-        this.initializeViewState();
-
         // Listen for window resize events
         this.handleResize = this.handleResize.bind(this);
+
+        // Initialize view state when plot data is computed
+        // Watch the actual rendered data, not the raw embedding data
+        reaction(
+            () => this.plotData,
+            plotData => {
+                // Only initialize ONCE when data first becomes available
+                if (
+                    plotData &&
+                    plotData.length > 0 &&
+                    !this.viewStateInitialized
+                ) {
+                    // Small delay to ensure DeckGL is fully initialized
+                    setTimeout(() => {
+                        this.centerView(); // Use the action method
+                        this.viewStateInitialized = true; // Mark as initialized
+                    }, 100);
+                }
+            }
+        );
 
         // Set up single URL-driven reaction for state management
         this.urlParameterReactionDisposer = reaction(
@@ -209,21 +265,6 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         }
     }
 
-    private initializeViewState() {
-        // Calculate initial view state when component loads
-        if (this.selectedEmbedding?.data) {
-            const bounds = calculateDataBounds(
-                this.selectedEmbedding.data.data as EmbeddingPoint[]
-            );
-            this.viewState = {
-                target: [bounds.centerX, bounds.centerY, 0],
-                zoom: bounds.zoom,
-                minZoom: -5,
-                maxZoom: 10,
-            };
-        }
-    }
-
     @computed get clinicalAttributes() {
         return this.props.store.clinicalAttributes.result || [];
     }
@@ -332,23 +373,34 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     }
 
     @computed get allEmbeddingOptions(): EmbeddingDataOption[] {
-        return [
-            {
-                value: 'boehm_2025_he',
-                label: boehmHeData.title,
-                data: boehmHeData as EmbeddingData,
-            },
-            {
-                value: 'boehm_2025_genomic',
-                label: boehmGenomicData.title,
-                data: boehmGenomicData as EmbeddingData,
-            },
-            {
-                value: 'boehm_2025_genomic_he',
-                label: boehmGenomicHeData.title,
-                data: boehmGenomicHeData as EmbeddingData,
-            },
-        ];
+        const options: EmbeddingDataOption[] = [];
+
+        // Only return options for data that has been successfully loaded
+        if (boehmHeData.isComplete && boehmHeData.result) {
+            options.push({
+                value: 'msk_mosaic_2026_he',
+                label: boehmHeData.result.title,
+                data: boehmHeData.result,
+            });
+        }
+
+        if (boehmGenomicData.isComplete && boehmGenomicData.result) {
+            options.push({
+                value: 'msk_mosaic_2026_genomic',
+                label: boehmGenomicData.result.title,
+                data: boehmGenomicData.result,
+            });
+        }
+
+        if (boehmGenomicHeData.isComplete && boehmGenomicHeData.result) {
+            options.push({
+                value: 'msk_mosaic_2026_genomic_he',
+                label: boehmGenomicHeData.result.title,
+                data: boehmGenomicHeData.result,
+            });
+        }
+
+        return options;
     }
 
     @computed get currentStudyIds(): string[] {
@@ -366,6 +418,14 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             this.currentStudyIds.some(studyId =>
                 option.data.studyIds.includes(studyId)
             )
+        );
+    }
+
+    @computed get isEmbeddingDataLoading(): boolean {
+        return (
+            boehmHeData.isPending ||
+            boehmGenomicData.isPending ||
+            boehmGenomicHeData.isPending
         );
     }
 
@@ -831,6 +891,15 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     }
 
     @computed get isLoading(): boolean {
+        // Check if embedding data is still loading
+        if (
+            boehmHeData.isPending ||
+            boehmGenomicData.isPending ||
+            boehmGenomicHeData.isPending
+        ) {
+            return true;
+        }
+
         if (
             !this.props.store.samples.isComplete ||
             !this.props.store.selectedSamples.isComplete
@@ -969,15 +1038,9 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             if (embeddingOption) {
                 this.selectedEmbeddingValue = selectedOption.value;
                 // Reset view state when embedding type changes
-                const bounds = calculateDataBounds(
-                    embeddingOption.data.data as EmbeddingPoint[]
-                );
-                this.viewState = {
-                    target: [bounds.centerX, bounds.centerY, 0],
-                    zoom: bounds.zoom,
-                    minZoom: -5,
-                    maxZoom: 10,
-                };
+                this.centerView(); // Use the action method
+                // Mark as initialized after manual embedding change
+                this.viewStateInitialized = true;
             }
         }
     }
@@ -985,6 +1048,21 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     @action.bound
     private onViewStateChange(newViewState: ViewState) {
         this.viewState = newViewState;
+    }
+
+    @action.bound
+    private centerView() {
+        if (this.plotData && this.plotData.length > 0) {
+            const bounds = calculateDataBounds(
+                this.plotData as EmbeddingPoint[]
+            );
+            this.viewState = {
+                target: [bounds.centerX, bounds.centerY, 0],
+                zoom: bounds.zoom,
+                minZoom: -5,
+                maxZoom: 10,
+            };
+        }
     }
 
     @action.bound
@@ -1179,6 +1257,12 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             );
         }
 
+        // Show loading while embedding data is being fetched
+        if (this.isEmbeddingDataLoading) {
+            return <LoadingIndicator isLoading={true} />;
+        }
+
+        // Only show "not available" message if data is loaded but not for this study
         if (!this.hasEmbeddingSupport) {
             const studyText =
                 this.currentStudyIds.length === 1

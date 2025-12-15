@@ -17,7 +17,6 @@ import {
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { ClinicalDataTab } from './tabs/ClinicalDataTab';
 import { EmbeddingsTab } from './tabs/EmbeddingsTab';
-import boehmData from '../../data/boehm_2025_umap_he.json';
 import { EmbeddingData } from 'shared/components/embeddings/EmbeddingTypes';
 import {
     DefaultTooltip,
@@ -25,6 +24,7 @@ import {
     onMobxPromise,
     remoteData,
 } from 'cbioportal-frontend-commons';
+import { FeatureFlagEnum } from 'shared/featureFlags';
 import { PageLayout } from '../../shared/components/PageLayout/PageLayout';
 import IFrameLoader from '../../shared/components/iframeLoader/IFrameLoader';
 import { StudySummaryTab } from 'pages/studyView/tabs/SummaryTab';
@@ -391,18 +391,23 @@ export default class StudyViewPage extends React.Component<
     }
 
     @computed get hasEmbeddingSupport() {
+        // Check if EMBEDDINGS feature flag is enabled
+        if (
+            !this.props.appStore.featureFlagStore.has(
+                FeatureFlagEnum.EMBEDDINGS
+            )
+        ) {
+            return false;
+        }
+
         // Check if we have any studies
         if (this.store.studyIds.length === 0) {
             return false;
         }
 
-        // Check if the Boehm embedding dataset supports ANY of the current studies
-        // This allows embeddings to show up if at least one study is supported
-        const boehmEmbeddingData = boehmData as EmbeddingData;
-
-        return this.store.studyIds.some(studyId =>
-            boehmEmbeddingData.studyIds.includes(studyId)
-        );
+        // Embeddings tab itself will handle checking if the remote data
+        // supports the current studies, so we just enable the tab here
+        return true;
     }
 
     @computed get isLoading() {
