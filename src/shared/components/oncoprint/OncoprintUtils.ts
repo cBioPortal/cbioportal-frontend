@@ -25,7 +25,11 @@ import {
 } from './geneticrules';
 import { AlterationTypeConstants } from 'shared/constants';
 import { CoverageInformation } from '../../lib/GenePanelUtils';
-import { MobxPromise, remoteData } from 'cbioportal-frontend-commons';
+import {
+    MobxPromise,
+    remoteData,
+    toPromise,
+} from 'cbioportal-frontend-commons';
 import {
     makeCategoricalTrackData,
     makeClinicalTrackData,
@@ -218,7 +222,7 @@ export function getHeatmapTrackRuleSetParams(
             value_range = [0, 1];
             legend_label = trackSpec.legendLabel || 'VAF Heatmap';
             null_legend_label = 'Not mutated/no VAF data';
-            na_legend_label = 'Not sequenced';
+            na_legend_label = 'Not profiled';
             value_stop_points = [0, 1];
             colors = [
                 [241, 242, 181, 1],
@@ -566,8 +570,10 @@ function createHeatmapTracksData(
 
         let mutations: any[] | undefined;
 
+        // OQL filtering if the gene is in the query
         if (
             useOqlFiltering &&
+            isGeneInQuery &&
             oncoprint.props.store.oqlFilteredAlterations.isComplete
         ) {
             const oqlFiltered =
@@ -582,12 +588,24 @@ function createHeatmapTracksData(
                             'MUTATION_EXTENDED'
                 );
             }
-        } else {
+        } else if (isGeneInQuery) {
+            // Gene is in query - use annotatedMutationCache (has driver annotations)
             const mutationPromise = oncoprint.props.store.annotatedMutationCache.get(
                 {
                     entrezGeneId: query.entrezGeneId,
                 }
             );
+            mutations = mutationPromise.result;
+            if (mutations) {
+                mutations = mutations.filter(
+                    m => m.molecularProfileId === query.molecularProfileId
+                );
+            }
+        } else {
+            // Gene is NOT in query - use mutationCache directly (raw mutations)
+            const mutationPromise = oncoprint.props.store.mutationCache.get({
+                entrezGeneId: query.entrezGeneId,
+            });
             mutations = mutationPromise.result;
             if (mutations) {
                 mutations = mutations.filter(
@@ -623,7 +641,6 @@ function createHeatmapTracksData(
             });
 
             // Filter to only include profiled samples
-            // Skip filter if gene is not in query
             return samples
                 .filter(sample => {
                     if (!isGeneInQuery) {
@@ -1456,6 +1473,35 @@ export function makeHeatmapTracksMobxPromise(
                 );
             }
 
+            const mutationQueries = cacheQueries.filter(query => {
+                const profileType =
+                    molecularProfileIdToMolecularProfile[
+                        query.molecularProfileId
+                    ].molecularAlterationType;
+                return (
+                    profileType === AlterationTypeConstants.MUTATION_EXTENDED
+                );
+            });
+
+            const queriedGeneSymbols = new Set(
+                (oncoprint.props.store.genes.result || []).map(g =>
+                    g.hugoGeneSymbol.toUpperCase()
+                )
+            );
+
+            // Await mutationCache for genes NOT in the query
+            for (const query of mutationQueries) {
+                if (
+                    !queriedGeneSymbols.has(query.hugoGeneSymbol.toUpperCase())
+                ) {
+                    await toPromise(
+                        oncoprint.props.store.mutationCache.get({
+                            entrezGeneId: query.entrezGeneId,
+                        })
+                    );
+                }
+            }
+
             const samples = oncoprint.props.store.filteredSamples.result!;
             const patients = oncoprint.props.store.filteredPatients.result!;
 
@@ -1505,15 +1551,11 @@ export function makeHeatmapTracksMobxPromise(
                     }
                 });
 
-                const useOqlFiltering =
-                    profileType === AlterationTypeConstants.MUTATION_EXTENDED &&
-                    oncoprint.useOqlFilteringForVafHeatmap;
-
                 const dataForTrack = createHeatmapTracksData(
                     query,
                     profileType,
                     oncoprint,
-                    useOqlFiltering
+                    false
                 );
 
                 return {

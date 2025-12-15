@@ -1814,6 +1814,11 @@ export default class ResultsViewOncoprint extends React.Component<
         const isSampleMode =
             this.oncoprintAnalysisCaseType === OncoprintAnalysisCaseType.SAMPLE;
 
+        const queriedGenes = this.props.store.genes.result || [];
+        const queriedGeneSymbols = new Set(
+            queriedGenes.map(g => g.hugoGeneSymbol.toUpperCase())
+        );
+
         return tracks.map(track => {
             if (
                 track.molecularAlterationType !==
@@ -1823,6 +1828,10 @@ export default class ResultsViewOncoprint extends React.Component<
             }
 
             const geneSymbol = track.label.toUpperCase();
+
+            if (!queriedGeneSymbols.has(geneSymbol)) {
+                return track;
+            }
 
             const oqlMatchingCaseKeys = new Set<string>();
             oqlFilteredAlterations.forEach((alt: any) => {
