@@ -13,7 +13,7 @@ describe('embeddings tab screenshot tests', function() {
 
     describe('basic embedding visualization', () => {
         it('renders embeddings tab with default cancer type coloring', async () => {
-            const url = `${CBIOPORTAL_URL}/study/embeddings?id=msk_chord_2024`;
+            const url = `${CBIOPORTAL_URL}/study/embeddings?id=msk_chord_2024&featureFlags=EMBEDDINGS`;
             await goToUrlAndSetLocalStorage(url, true);
             await waitForNetworkQuiet();
             // Allow time for deck.gl to render
@@ -28,7 +28,7 @@ describe('embeddings tab screenshot tests', function() {
         });
 
         it('shows legend with correct category counts', async () => {
-            const url = `${CBIOPORTAL_URL}/study/embeddings?id=msk_chord_2024`;
+            const url = `${CBIOPORTAL_URL}/study/embeddings?id=msk_chord_2024&featureFlags=EMBEDDINGS`;
             await goToUrlAndSetLocalStorage(url, true);
             await waitForNetworkQuiet();
             await browser.pause(2000);
@@ -51,7 +51,7 @@ describe('embeddings tab screenshot tests', function() {
                     colorBySv: 'true',
                 })
             );
-            const url = `${CBIOPORTAL_URL}/study/embeddings?id=msk_chord_2024&embeddings_coloring_selection=${coloringParam}`;
+            const url = `${CBIOPORTAL_URL}/study/embeddings?id=msk_chord_2024&embeddings_coloring_selection=${coloringParam}&featureFlags=EMBEDDINGS`;
             await goToUrlAndSetLocalStorage(url, true);
             await waitForNetworkQuiet();
             await browser.pause(2000);
@@ -73,7 +73,7 @@ describe('embeddings tab screenshot tests', function() {
                     colorBySv: 'true',
                 })
             );
-            const url = `${CBIOPORTAL_URL}/study/embeddings?id=msk_chord_2024&embeddings_coloring_selection=${coloringParam}`;
+            const url = `${CBIOPORTAL_URL}/study/embeddings?id=msk_chord_2024&embeddings_coloring_selection=${coloringParam}&featureFlags=EMBEDDINGS`;
             await goToUrlAndSetLocalStorage(url, true);
             await waitForNetworkQuiet();
             await browser.pause(2000);
@@ -95,7 +95,7 @@ describe('embeddings tab screenshot tests', function() {
                     colorBySv: 'true',
                 })
             );
-            const url = `${CBIOPORTAL_URL}/study/embeddings?id=msk_chord_2024&embeddings_coloring_selection=${coloringParam}`;
+            const url = `${CBIOPORTAL_URL}/study/embeddings?id=msk_chord_2024&embeddings_coloring_selection=${coloringParam}&featureFlags=EMBEDDINGS`;
             await goToUrlAndSetLocalStorage(url, true);
             await waitForNetworkQuiet();
             await browser.pause(2000);
@@ -127,7 +127,7 @@ describe('embeddings tab screenshot tests', function() {
                 })
             );
 
-            const url = `${CBIOPORTAL_URL}/study/embeddings?id=msk_chord_2024&embeddings_coloring_selection=${coloringParam}`;
+            const url = `${CBIOPORTAL_URL}/study/embeddings?id=msk_chord_2024&embeddings_coloring_selection=${coloringParam}&featureFlags=EMBEDDINGS`;
             await goToUrlAndSetLocalStorage(url, true);
             await waitForNetworkQuiet();
             await browser.pause(2000);
@@ -156,7 +156,7 @@ describe('embeddings tab screenshot tests', function() {
                 })
             );
 
-            const url = `${CBIOPORTAL_URL}/study/embeddings?id=msk_chord_2024&embeddings_coloring_selection=${coloringParam}`;
+            const url = `${CBIOPORTAL_URL}/study/embeddings?id=msk_chord_2024&embeddings_coloring_selection=${coloringParam}&featureFlags=EMBEDDINGS`;
             await goToUrlAndSetLocalStorage(url, true);
             await waitForNetworkQuiet();
             await browser.pause(2000);
@@ -183,7 +183,7 @@ describe('embeddings tab screenshot tests', function() {
                 })
             );
 
-            const url = `${CBIOPORTAL_URL}/study?id=msk_chord_2024&filterJson=${filterJson}`;
+            const url = `${CBIOPORTAL_URL}/study?id=msk_chord_2024&filterJson=${filterJson}&featureFlags=EMBEDDINGS`;
             await goToUrlAndSetLocalStorage(url, true);
             await waitForNetworkQuiet();
 
@@ -212,7 +212,7 @@ describe('embeddings tab screenshot tests', function() {
                 })
             );
 
-            const url = `${CBIOPORTAL_URL}/study?id=msk_chord_2024&filterJson=${filterJson}`;
+            const url = `${CBIOPORTAL_URL}/study?id=msk_chord_2024&filterJson=${filterJson}&featureFlags=EMBEDDINGS`;
             await goToUrlAndSetLocalStorage(url, true);
             await waitForNetworkQuiet();
 
@@ -230,7 +230,7 @@ describe('embeddings tab screenshot tests', function() {
 
     describe('viewport and layout', () => {
         it('maintains full width after switching tabs', async () => {
-            const url = `${CBIOPORTAL_URL}/study?id=msk_chord_2024`;
+            const url = `${CBIOPORTAL_URL}/study?id=msk_chord_2024&featureFlags=EMBEDDINGS`;
             await goToUrlAndSetLocalStorage(url, true);
             await waitForNetworkQuiet();
 
@@ -249,7 +249,7 @@ describe('embeddings tab screenshot tests', function() {
                     ],
                 })
             );
-            const filterUrl = `${CBIOPORTAL_URL}/study?id=msk_chord_2024&filterJson=${filterJson}`;
+            const filterUrl = `${CBIOPORTAL_URL}/study?id=msk_chord_2024&filterJson=${filterJson}&featureFlags=EMBEDDINGS`;
             await goToUrlAndSetLocalStorage(filterUrl, false);
             await waitForNetworkQuiet();
 
