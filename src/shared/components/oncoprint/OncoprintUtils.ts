@@ -53,7 +53,9 @@ import {
     Sample,
     Gene,
     NumericGeneMolecularData,
+    Mutation,
 } from 'cbioportal-ts-api-client';
+import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
 import {
     clinicalAttributeIsPROFILEDIN,
     MUTATION_SPECTRUM_CATEGORIES,
@@ -559,6 +561,7 @@ function createHeatmapTracksData(
     thresholdType?: '>' | '<';
 }> {
     if (profileType === AlterationTypeConstants.MUTATION_EXTENDED) {
+        const PROFILED_BUT_NOT_MUTATED = null;
         const samples = oncoprint.props.store.filteredSamples.result!;
         const coverageInfo = oncoprint.props.store.coverageInformation.result!;
         const queriedGenes = oncoprint.props.store.genes.result || [];
@@ -568,7 +571,7 @@ function createHeatmapTracksData(
                 query.hugoGeneSymbol.toUpperCase()
         );
 
-        let mutations: any[] | undefined;
+        let mutations: Mutation[] | AnnotatedMutation[] | undefined;
 
         // OQL filtering if the gene is in the query
         if (
@@ -635,7 +638,10 @@ function createHeatmapTracksData(
                     }
                 } else {
                     if (!sampleMutationMap.has(m.uniqueSampleKey)) {
-                        sampleMutationMap.set(m.uniqueSampleKey, null);
+                        sampleMutationMap.set(
+                            m.uniqueSampleKey,
+                            PROFILED_BUT_NOT_MUTATED
+                        );
                     }
                 }
             });
@@ -660,7 +666,10 @@ function createHeatmapTracksData(
                     return {
                         uniqueSampleKey: sample.uniqueSampleKey,
                         uniquePatientKey: sample.uniquePatientKey,
-                        value: vafValue !== undefined ? vafValue : null, // null for profiled but not mutated
+                        value:
+                            vafValue !== undefined
+                                ? vafValue
+                                : PROFILED_BUT_NOT_MUTATED,
                     };
                 });
         } else {
@@ -680,7 +689,7 @@ function createHeatmapTracksData(
                 .map(sample => ({
                     uniqueSampleKey: sample.uniqueSampleKey,
                     uniquePatientKey: sample.uniquePatientKey,
-                    value: null,
+                    value: PROFILED_BUT_NOT_MUTATED,
                 }));
         }
     } else {
