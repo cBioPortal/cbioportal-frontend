@@ -198,7 +198,8 @@ function formatGeneticTrackOql(
 }
 
 export function getHeatmapTrackRuleSetParams(
-    trackSpec: IHeatmapTrackSpec
+    trackSpec: IHeatmapTrackSpec,
+    isWhiteBackgroundForGlyphsEnabled?: boolean
 ): RuleSetParams {
     let value_range: [number, number];
     let legend_label: string;
@@ -209,7 +210,6 @@ export function getHeatmapTrackRuleSetParams(
     switch (trackSpec.molecularAlterationType) {
         case AlterationTypeConstants.GENERIC_ASSAY:
             return getGenericAssayTrackRuleSetParams(trackSpec);
-            break;
         case AlterationTypeConstants.METHYLATION:
             value_range = [0, 1];
             legend_label = trackSpec.legendLabel || 'Methylation Heatmap';
@@ -250,10 +250,15 @@ export function getHeatmapTrackRuleSetParams(
         value_range,
         colors,
         value_stop_points,
-        null_color: [224, 224, 224, 1],
+        null_color: isWhiteBackgroundForGlyphsEnabled
+            ? [255, 255, 255, 1]
+            : [224, 224, 224, 1],
         null_legend_label,
         na_legend_label,
         na_shapes: trackSpec.customNaShapes,
+        legend_base_color: isWhiteBackgroundForGlyphsEnabled
+            ? hexToRGBA(ASCN_WHITE)
+            : undefined,
     };
 }
 

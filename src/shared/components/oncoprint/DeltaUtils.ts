@@ -1507,7 +1507,10 @@ export function transitionHeatmapTrack(
     } else if (nextSpec && !prevSpec) {
         // Add track
         const heatmapTrackParams = {
-            rule_set_params: getHeatmapTrackRuleSetParams(nextSpec),
+            rule_set_params: getHeatmapTrackRuleSetParams(
+                nextSpec,
+                nextProps.isWhiteBackgroundForGlyphsEnabled
+            ),
             data: nextSpec.data,
             data_id_key: 'uid',
             has_column_spacing: ifNotDefined(nextSpec.hasColumnSpacing, false),
@@ -1623,6 +1626,33 @@ export function transitionHeatmapTrack(
             nextSpec.movable !== undefined
         ) {
             oncoprint.setTrackMovable(trackId, nextSpec.movable);
+        }
+        // Rule set when white background flag changes for mutation (VAF) heatmap tracks
+        if (
+            nextSpec.molecularAlterationType ===
+                AlterationTypeConstants.MUTATION_EXTENDED &&
+            nextProps.isWhiteBackgroundForGlyphsEnabled !==
+                (prevProps as Partial<IOncoprintProps>)
+                    .isWhiteBackgroundForGlyphsEnabled
+        ) {
+            if (
+                typeof trackIdForRuleSetSharing.mutation !== 'undefined' &&
+                trackIdForRuleSetSharing.mutation !== trackId
+            ) {
+                oncoprint.shareRuleSet(
+                    trackIdForRuleSetSharing.mutation,
+                    trackId
+                );
+            } else {
+                oncoprint.setRuleSet(
+                    trackId,
+                    getHeatmapTrackRuleSetParams(
+                        nextSpec,
+                        nextProps.isWhiteBackgroundForGlyphsEnabled
+                    )
+                );
+            }
+            trackIdForRuleSetSharing.mutation = trackId;
         }
         // generic assay profile tracks always are associated with the last added added track id
         if (
