@@ -5022,11 +5022,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     private controls() {
         return (
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <div>
-                    {this.props.additionalControls && (
-                        <Observer>{this.props.additionalControls}</Observer>
-                    )}
-                </div>
                 <div className="axisBlock">
                     <Observer>{this.getHorizontalAxisMenu}</Observer>
                 </div>
@@ -5599,6 +5594,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         return (
             this.dataTypeOptions.isComplete &&
             this.dataTypeToDataSourceOptions.isComplete &&
+            this.props.coverageInformation.isComplete &&
             (!this.horzSelection.dataType || !this.vertSelection.dataType)
         );
     }
@@ -5607,6 +5603,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         return (
             this.dataTypeOptions.isComplete &&
             this.dataTypeToDataSourceOptions.isComplete &&
+            this.horzGeneOptions.isComplete &&
+            this.vertGeneOptions.isComplete &&
             ((this.horzSelection.dataType &&
                 this.showGeneSelectBox(
                     this.horzSelection.dataType,
@@ -5709,6 +5707,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.genericEntitiesGroupByEntityId,
             this.horzGenericAssayOptions,
             this.props.studies,
+            this.dataTypeOptions,
+            this.dataTypeToDataSourceOptions,
         ];
         if (this.coloringClinicalDataPromise) {
             promises.push(this.coloringClinicalDataPromise);
@@ -5721,33 +5721,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             isPercentage ||
             this.discreteVsDiscretePlotType ===
                 DiscreteVsDiscretePlotType.StackedBar;
-
-        if (this.showNoGenericAssaySelectedWarning) {
-            return (
-                <div>
-                    <i className="fa fa-exclamation-triangle text-danger" />
-                    &nbsp;
-                    <span>
-                        To visualize selected generic assay data, you must
-                        ensure you have already imported related data and select
-                        an entity.
-                    </span>
-                </div>
-            );
-        }
-
-        if (this.shouldShowNoDataTypesSelectedWarning) {
-            return (
-                <div className={'alert alert-info'}>
-                    Please select datatype(s).
-                </div>
-            );
-        }
-        if (this.shouldShowNoGenesSelectedWarning) {
-            return (
-                <div className={'alert alert-info'}>Please select gene(s).</div>
-            );
-        }
 
         // options for coloring ***
         const defaultOptions = this.coloringMenuOmnibarOptions.result
@@ -5796,6 +5769,48 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
 
         switch (groupStatus) {
             case 'pending':
+                if (this.shouldShowNoDataTypesSelectedWarning) {
+                    return (
+                        <div
+                            className="borderedChart posRelative"
+                            style={{ backgroundColor: '#eee' }}
+                        >
+                            <div
+                                style={{
+                                    width: PLOT_SIDELENGTH,
+                                    height: PLOT_SIDELENGTH,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '32px',
+                                }}
+                            >
+                                ← Please select datatype(s).
+                            </div>
+                        </div>
+                    );
+                }
+                if (this.shouldShowNoGenesSelectedWarning) {
+                    return (
+                        <div
+                            className="borderedChart posRelative"
+                            style={{ backgroundColor: '#eee' }}
+                        >
+                            <div
+                                style={{
+                                    width: PLOT_SIDELENGTH,
+                                    height: PLOT_SIDELENGTH,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '20px',
+                                }}
+                            >
+                                ← Please select gene(s).
+                            </div>
+                        </div>
+                    );
+                }
                 return (
                     <LoadingIndicator
                         isLoading={true}
@@ -5806,6 +5821,19 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             case 'error':
                 return <span>Error loading plot data.</span>;
             default:
+                if (this.showNoGenericAssaySelectedWarning) {
+                    return (
+                        <div>
+                            <i className="fa fa-exclamation-triangle text-danger" />
+                            &nbsp;
+                            <span>
+                                To visualize selected generic assay data, you
+                                must ensure you have already imported related
+                                data and select an entity.
+                            </span>
+                        </div>
+                    );
+                }
                 if (!this.showPlot) {
                     return (
                         <div
@@ -6614,6 +6642,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                         <strong className="quickPlotsTitle">Examples: </strong>
                         {this.quickPlotButtons}
                     </div>
+                    {this.props.additionalControls &&
+                        this.props.additionalControls()}
                     <div style={{ display: 'flex' }}>
                         <div className="leftColumn">
                             {this.dataTypeOptions.isComplete &&
