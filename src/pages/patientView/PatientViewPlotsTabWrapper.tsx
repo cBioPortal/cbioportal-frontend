@@ -18,6 +18,8 @@ export const PatientViewPlotsTabWrapper: React.FunctionComponent<{
 }> = observer(function({ store, urlWrapper }) {
     const cohortSelector = () => (
         <CohortSelector
+            includeNavCohortOption={store.patientIdsInCohort.length > 0}
+            samplesInCohort={store.patientViewPlotsStore.samplesInCohort.result}
             study={store.studies.result![0].name}
             cancerTypes={
                 store.patientViewPlotsStore.highlightedCancerTypes.result
@@ -45,8 +47,8 @@ export const PatientViewPlotsTabWrapper: React.FunctionComponent<{
             filteredSamplesByDetailedCancerType={
                 store.patientViewPlotsStore.filteredSamplesByDetailedCancerType
             }
-            mutations={store.mutationData}
-            studies={store.studies}
+            mutations={store.patientViewPlotsStore.mutations}
+            studies={store.patientViewPlotsStore.cohortStudies}
             molecularProfileIdSuffixToMolecularProfiles={
                 store.patientViewPlotsStore
                     .molecularProfileIdSuffixToMolecularProfiles
@@ -54,7 +56,9 @@ export const PatientViewPlotsTabWrapper: React.FunctionComponent<{
             entrezGeneIdToGene={
                 store.patientViewPlotsStore.entrezGeneIdToGeneAll
             }
-            sampleKeyToSample={store.patientViewPlotsStore.sampleSetByKey}
+            sampleKeyToSample={
+                store.patientViewPlotsStore.selectedReferenceCohortSampleMap
+            }
             genes={store.patientViewPlotsStore.allGenes}
             clinicalAttributes={store.patientViewPlotsStore.clinicalAttributes}
             genesets={store.patientViewPlotsStore.genesets}
@@ -63,9 +67,13 @@ export const PatientViewPlotsTabWrapper: React.FunctionComponent<{
                     .genericAssayEntitiesGroupedByProfileId
             }
             customAttributes={store.patientViewPlotsStore.customAttributes}
-            studyIds={store.patientViewPlotsStore.queriedPhysicalStudyIds}
-            molecularProfilesWithData={store.molecularProfilesInStudy}
-            molecularProfilesInStudies={store.molecularProfilesInStudy}
+            studyIds={store.patientViewPlotsStore.cohortStudyIds}
+            molecularProfilesWithData={
+                store.patientViewPlotsStore.molecularProfilesInCohortStudies
+            }
+            molecularProfilesInStudies={
+                store.patientViewPlotsStore.molecularProfilesInCohortStudies
+            }
             annotatedCnaCache={store.patientViewPlotsStore.annotatedCnaCache}
             annotatedMutationCache={
                 store.patientViewPlotsStore.annotatedMutationCache
@@ -87,9 +95,11 @@ export const PatientViewPlotsTabWrapper: React.FunctionComponent<{
                 store.patientViewPlotsStore.numericGeneMolecularDataCache
             }
             coverageInformation={
-                store.patientViewPlotsStore.coverageInformationForAllSamples
+                store.patientViewPlotsStore.coverageInformation
             }
-            filteredSamples={store.patientViewPlotsStore.selectedCohortSamples}
+            filteredSamples={
+                store.patientViewPlotsStore.selectedReferenceCohortSamples
+            }
             genesetMolecularDataCache={
                 store.patientViewPlotsStore.genesetMolecularDataCache
             }
@@ -103,8 +113,12 @@ export const PatientViewPlotsTabWrapper: React.FunctionComponent<{
             driverAnnotationSettings={
                 store.patientViewPlotsStore.driverAnnotationSettings
             }
-            studyIdToStudy={store.studyIdToStudy.result}
-            structuralVariants={store.structuralVariantData.result}
+            studyIdToStudy={
+                store.patientViewPlotsStore.cohortStudyIdsToStudy.result
+            }
+            structuralVariants={
+                store.patientViewPlotsStore.structuralVariants.result
+            }
             hugoGeneSymbols={
                 store.patientViewPlotsStore.allHugoGeneSymbols.result
             }
@@ -113,14 +127,14 @@ export const PatientViewPlotsTabWrapper: React.FunctionComponent<{
                     .selectedGenericAssayEntitiesGroupByMolecularProfileId
             }
             molecularProfileIdToMolecularProfile={
-                store.molecularProfileIdToMolecularProfile
+                store.patientViewPlotsStore.molecularProfileIdToMolecularProfile
             }
             urlWrapper={urlWrapper}
             hasNoQueriedGenes={true}
             genePanelDataForAllProfiles={
                 store.patientViewPlotsStore.genePanelDataForAllProfiles.result
             }
-            patients={store.patientViewPlotsStore.allPatientsInStudy}
+            patients={store.patientViewPlotsStore.patientsInCohort}
             highlightedSamples={store.sampleIds}
             additionalControls={cohortSelector}
             customSamplePointComponent={customSamplePointComponent}

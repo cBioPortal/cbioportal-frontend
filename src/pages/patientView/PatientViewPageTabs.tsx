@@ -493,10 +493,19 @@ export function tabs(
 
     tabs.push(
         <MSKTab key={9} id={PatientViewPageTabs.Plots} linkText="Plots">
-            <PatientViewPlotsTabWrapper
-                store={pageComponent.patientViewPageStore}
-                urlWrapper={urlWrapper}
-            />
+            {pageComponent.patientViewPageStore.patientViewPlotsStore
+                .samplesInCohort.isComplete &&
+            pageComponent.patientViewPageStore.patientViewPlotsStore
+                .highlightedCancerTypes.isComplete &&
+            pageComponent.patientViewPageStore.patientViewPlotsStore
+                .highlightedDetailedCancerTypes.isComplete ? (
+                <PatientViewPlotsTabWrapper
+                    store={pageComponent.patientViewPageStore}
+                    urlWrapper={urlWrapper}
+                />
+            ) : (
+                <LoadingIndicator isLoading={true} size={'big'} center={true} />
+            )}
         </MSKTab>
     );
 
