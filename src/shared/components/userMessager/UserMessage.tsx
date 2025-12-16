@@ -52,9 +52,9 @@ if (
             dateEnd: 1772755200000, // March 6, 2026
             content: (
                 <>
-                    Help us improve cBioPortal by taking a 5-minute survey
+                    Help us improve cBioPortal by taking a 7-minute survey
                     <a
-                        href="https://forms.cloud.microsoft/r/BtjA1wTwyL"
+                        href="https://forms.microsoft.com/Pages/ResponsePage.aspx?id=tfzFk_YtUEWaEM018oXPfMGEYSmyAP5Pn3gtQdn_2L5URUU5WlUzREVYQlo1Q09HV1I1VU1NRjdYVi4u"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="btn btn-sm"
