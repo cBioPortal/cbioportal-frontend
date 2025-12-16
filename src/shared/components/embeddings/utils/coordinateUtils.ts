@@ -21,15 +21,28 @@ export function dataToScreen(
 }
 
 /**
- * Converts hex color to RGB array
+ * Converts color string to RGB array
+ * Supports both hex format (#RRGGBB) and rgb format (rgb(r, g, b))
+ * Note: D3's color interpolation functions (like interpolateReds) return RGB format by default
  */
-export function hexToRgb(hex: string): [number, number, number] {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result
+export function colorToRgb(color: string): [number, number, number] {
+    // Handle rgb(r, g, b) format
+    const rgbMatch = /^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/i.exec(color);
+    if (rgbMatch) {
+        return [
+            parseInt(rgbMatch[1], 10),
+            parseInt(rgbMatch[2], 10),
+            parseInt(rgbMatch[3], 10),
+        ];
+    }
+
+    // Handle hex format
+    const hexMatch = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(color);
+    return hexMatch
         ? [
-              parseInt(result[1], 16),
-              parseInt(result[2], 16),
-              parseInt(result[3], 16),
+              parseInt(hexMatch[1], 16),
+              parseInt(hexMatch[2], 16),
+              parseInt(hexMatch[3], 16),
           ]
         : [204, 204, 204]; // Default gray
 }

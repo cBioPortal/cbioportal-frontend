@@ -574,6 +574,16 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             }
         }
 
+        // If we're coloring by a clinical attribute, wait for clinical data to be loaded
+        if (this.selectedColoringOption?.info?.clinicalAttribute) {
+            const clinicalDataCacheEntry = this.props.store.clinicalDataCache.get(
+                this.selectedColoringOption.info.clinicalAttribute
+            );
+            if (!clinicalDataCacheEntry?.isComplete) {
+                return [];
+            }
+        }
+
         // Call makeEmbeddingScatterPlotData ONCE - this is the expensive operation
         return makeEmbeddingScatterPlotData(
             this.selectedEmbedding.data,
@@ -778,6 +788,64 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         });
 
         return colors;
+    }
+
+    @computed get isNumericClinicalAttribute(): boolean {
+        // Check if the current coloring option is a numeric clinical attribute
+        if (this.selectedColoringOption?.info?.clinicalAttribute) {
+            return (
+                this.selectedColoringOption.info.clinicalAttribute.datatype ===
+                'NUMBER'
+            );
+        }
+        return false;
+    }
+
+    @computed get numericalValueRange(): [number, number] | undefined {
+        // Get the numeric range for the current clinical attribute coloring
+        if (
+            this.selectedColoringOption?.info?.clinicalAttribute &&
+            this.isNumericClinicalAttribute
+        ) {
+            const clinicalDataCacheEntry = this.props.store.clinicalDataCache.get(
+                this.selectedColoringOption.info.clinicalAttribute
+            );
+
+            if (
+                clinicalDataCacheEntry.isComplete &&
+                clinicalDataCacheEntry.result
+            ) {
+                return clinicalDataCacheEntry.result.numericalValueRange;
+            }
+        }
+        return undefined;
+    }
+
+    @computed get numericalValueToColor(): ((x: number) => string) | undefined {
+        // Get the color function for the current numeric clinical attribute
+        if (
+            this.selectedColoringOption?.info?.clinicalAttribute &&
+            this.isNumericClinicalAttribute
+        ) {
+            const clinicalDataCacheEntry = this.props.store.clinicalDataCache.get(
+                this.selectedColoringOption.info.clinicalAttribute
+            );
+
+            if (
+                clinicalDataCacheEntry.isComplete &&
+                clinicalDataCacheEntry.result
+            ) {
+                if (
+                    this.coloringLogScale &&
+                    clinicalDataCacheEntry.result.logScaleNumericalValueToColor
+                ) {
+                    return clinicalDataCacheEntry.result
+                        .logScaleNumericalValueToColor;
+                }
+                return clinicalDataCacheEntry.result.numericalValueToColor;
+            }
+        }
+        return undefined;
     }
 
     @computed get visibleSampleCount(): number {
@@ -1237,6 +1305,9 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             visibleCategoryCount: this.visibleCategoryCount,
             totalCategoryCount: this.totalCategoryCount,
             showQCSection: this.hasExpertParameter,
+            isNumericAttribute: this.isNumericClinicalAttribute,
+            numericalValueRange: this.numericalValueRange,
+            numericalValueToColor: this.numericalValueToColor,
         };
 
         return (

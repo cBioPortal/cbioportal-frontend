@@ -160,6 +160,12 @@ function transformPatientEmbedding(
         selectedPatientIds.add(sample.patientId);
     });
 
+    // Determine if there's an active selection (user has explicitly selected a subset)
+    // If selectedSamples is empty or equals all samples, there's no active selection
+    const hasActiveSelection =
+        selectedSamples.length > 0 &&
+        selectedSamples.length < (store.samples.result || []).length;
+
     // Use optimized approach - pre-compute cancer type lookup from store
     const patientToCancerTypeMap = new Map<string, string>();
     const filteredSamplesByDetailedCancerType =
@@ -179,6 +185,8 @@ function transformPatientEmbedding(
     let clinicalDataValueMap: Map<string, string> | undefined;
     let patientColorMap: Map<string, string> | undefined;
     let patientValueMap: Map<string, string> | undefined;
+    let isNumericClinicalAttribute = false;
+    let clinicalAttributeDisplayName: string | undefined;
 
     if (coloringOption?.info?.clinicalAttribute) {
         const clinicalDataCacheEntry = store.clinicalDataCache.get(
@@ -191,9 +199,20 @@ function transformPatientEmbedding(
         ) {
             const isPatientAttribute =
                 coloringOption.info.clinicalAttribute.patientAttribute || false;
+
+            // Check if this is a numeric clinical attribute
+            isNumericClinicalAttribute =
+                coloringOption.info.clinicalAttribute.datatype === 'NUMBER';
+            clinicalAttributeDisplayName =
+                coloringOption.info.clinicalAttribute.displayName;
+
+            // For numeric attributes, pass null for categoryToColor to force continuous coloring
+            // For categorical attributes, use the categoryToColor mapping
             const maps = preComputeClinicalDataMaps(
                 clinicalDataCacheEntry.result.data,
-                clinicalDataCacheEntry.result.categoryToColor,
+                isNumericClinicalAttribute
+                    ? null
+                    : clinicalDataCacheEntry.result.categoryToColor,
                 clinicalDataCacheEntry.result.numericalValueToColor,
                 isPatientAttribute
             );
@@ -375,9 +394,12 @@ function transformPatientEmbedding(
                 }
             }
         } else if (coloringOption?.info?.clinicalAttribute && sample) {
-            // Clinical attribute coloring - check if patient is selected first
-            // If not selected, show as "Unselected" instead of trying to look up clinical data
-            if (!selectedPatientIds.has(coord.patientId)) {
+            // Clinical attribute coloring
+            // Only show "Unselected" if there's an active selection AND this patient is not in it
+            if (
+                hasActiveSelection &&
+                !selectedPatientIds.has(coord.patientId)
+            ) {
                 // Patient not in selected set - show as unselected
                 color = '#C8C8C8'; // Light gray
                 strokeColor = '#C8C8C8';
@@ -391,19 +413,38 @@ function transformPatientEmbedding(
 
                 if (isPatientAttribute && patientColorMap && patientValueMap) {
                     // Use patient-level maps for patient attributes
-                    color =
-                        patientColorMap.get(coord.patientId) ||
-                        DEFAULT_UNKNOWN_COLOR;
-                    displayLabel =
-                        patientValueMap.get(coord.patientId) || 'Unknown';
+                    const retrievedColor = patientColorMap.get(coord.patientId);
+                    color = retrievedColor || DEFAULT_UNKNOWN_COLOR;
+
+                    // For numeric attributes, use a generic label so all values share one legend category
+                    // For categorical attributes, use the actual value as the label
+                    if (
+                        isNumericClinicalAttribute &&
+                        clinicalAttributeDisplayName
+                    ) {
+                        displayLabel = clinicalAttributeDisplayName;
+                    } else {
+                        displayLabel =
+                            patientValueMap.get(coord.patientId) || 'Unknown';
+                    }
                 } else {
                     // Use sample-level maps for sample attributes
                     const sampleKey = `${sample.studyId}:${sample.sampleId}`;
                     color =
                         clinicalDataColorMap?.get(sampleKey) ||
                         DEFAULT_UNKNOWN_COLOR;
-                    displayLabel =
-                        clinicalDataValueMap?.get(sampleKey) || 'Unknown';
+
+                    // For numeric attributes, use a generic label so all values share one legend category
+                    // For categorical attributes, use the actual value as the label
+                    if (
+                        isNumericClinicalAttribute &&
+                        clinicalAttributeDisplayName
+                    ) {
+                        displayLabel = clinicalAttributeDisplayName;
+                    } else {
+                        displayLabel =
+                            clinicalDataValueMap?.get(sampleKey) || 'Unknown';
+                    }
                 }
                 strokeColor = color;
             }
@@ -449,6 +490,12 @@ function transformSampleEmbedding(
         selectedSampleIds.add(sample.sampleId);
     });
 
+    // Determine if there's an active selection (user has explicitly selected a subset)
+    // If selectedSamples is empty or equals all samples, there's no active selection
+    const hasActiveSelection =
+        selectedSamples.length > 0 &&
+        selectedSamples.length < (store.samples.result || []).length;
+
     // Use same optimized approach - pre-compute cancer type lookup from store
     const patientToCancerTypeMap = new Map<string, string>();
     const filteredSamplesByDetailedCancerType =
@@ -468,6 +515,8 @@ function transformSampleEmbedding(
     let clinicalDataValueMap: Map<string, string> | undefined;
     let patientColorMap: Map<string, string> | undefined;
     let patientValueMap: Map<string, string> | undefined;
+    let isNumericClinicalAttribute = false;
+    let clinicalAttributeDisplayName: string | undefined;
 
     if (coloringOption?.info?.clinicalAttribute) {
         const clinicalDataCacheEntry = store.clinicalDataCache.get(
@@ -480,9 +529,20 @@ function transformSampleEmbedding(
         ) {
             const isPatientAttribute =
                 coloringOption.info.clinicalAttribute.patientAttribute || false;
+
+            // Check if this is a numeric clinical attribute
+            isNumericClinicalAttribute =
+                coloringOption.info.clinicalAttribute.datatype === 'NUMBER';
+            clinicalAttributeDisplayName =
+                coloringOption.info.clinicalAttribute.displayName;
+
+            // For numeric attributes, pass null for categoryToColor to force continuous coloring
+            // For categorical attributes, use the categoryToColor mapping
             const maps = preComputeClinicalDataMaps(
                 clinicalDataCacheEntry.result.data,
-                clinicalDataCacheEntry.result.categoryToColor,
+                isNumericClinicalAttribute
+                    ? null
+                    : clinicalDataCacheEntry.result.categoryToColor,
                 clinicalDataCacheEntry.result.numericalValueToColor,
                 isPatientAttribute
             );
@@ -555,7 +615,7 @@ function transformSampleEmbedding(
         sampleMolecularDataMap = sampleKeyToMolecularData;
     }
 
-    return embeddingData.data.map(coord => {
+    const result = embeddingData.data.map(coord => {
         const sample = sampleLookupMap.get(coord.sampleId);
         const patientId = sample?.patientId || coord.sampleId;
         const isInCohort = !!sample;
@@ -732,9 +792,9 @@ function transformSampleEmbedding(
                 }
             }
         } else if (coloringOption?.info?.clinicalAttribute && sample) {
-            // Clinical attribute coloring - check if sample is selected first
-            // If not selected, show as "Unselected" instead of trying to look up clinical data
-            if (!selectedSampleIds.has(coord.sampleId)) {
+            // Clinical attribute coloring
+            // Only show "Unselected" if there's an active selection AND this sample is not in it
+            if (hasActiveSelection && !selectedSampleIds.has(coord.sampleId)) {
                 // Sample not in selected set - show as unselected
                 color = '#C8C8C8'; // Light gray
                 strokeColor = '#C8C8C8';
@@ -748,17 +808,38 @@ function transformSampleEmbedding(
 
                 if (isPatientAttribute && patientColorMap && patientValueMap) {
                     // Use patient-level maps for patient attributes
-                    color =
-                        patientColorMap.get(patientId) || DEFAULT_UNKNOWN_COLOR;
-                    displayLabel = patientValueMap.get(patientId) || 'Unknown';
+                    const retrievedColor = patientColorMap.get(patientId);
+                    color = retrievedColor || DEFAULT_UNKNOWN_COLOR;
+
+                    // For numeric attributes, use a generic label so all values share one legend category
+                    // For categorical attributes, use the actual value as the label
+                    if (
+                        isNumericClinicalAttribute &&
+                        clinicalAttributeDisplayName
+                    ) {
+                        displayLabel = clinicalAttributeDisplayName;
+                    } else {
+                        displayLabel =
+                            patientValueMap.get(patientId) || 'Unknown';
+                    }
                 } else {
                     // Use sample-level maps for sample attributes
                     const sampleKey = `${sample.studyId}:${sample.sampleId}`;
                     color =
                         clinicalDataColorMap?.get(sampleKey) ||
                         DEFAULT_UNKNOWN_COLOR;
-                    displayLabel =
-                        clinicalDataValueMap?.get(sampleKey) || 'Unknown';
+
+                    // For numeric attributes, use a generic label so all values share one legend category
+                    // For categorical attributes, use the actual value as the label
+                    if (
+                        isNumericClinicalAttribute &&
+                        clinicalAttributeDisplayName
+                    ) {
+                        displayLabel = clinicalAttributeDisplayName;
+                    } else {
+                        displayLabel =
+                            clinicalDataValueMap?.get(sampleKey) || 'Unknown';
+                    }
                 }
                 strokeColor = color;
             }
@@ -781,4 +862,6 @@ function transformSampleEmbedding(
             isInCohort: true,
         };
     });
+
+    return result;
 }

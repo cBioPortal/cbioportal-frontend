@@ -16,7 +16,7 @@ import { AxisLabels } from './overlays/AxisLabels';
 import { SelectionOverlay } from './overlays/SelectionOverlay';
 
 // Import utility functions
-import { dataToScreen, hexToRgb } from './utils/coordinateUtils';
+import { dataToScreen, colorToRgb } from './utils/coordinateUtils';
 import { calculateDataBounds } from './utils/dataUtils';
 import { createScatterplotLayer } from './utils/layerUtils';
 import { performRectangleSelection } from './utils/selectionUtils';
@@ -176,6 +176,9 @@ export class EmbeddingDeckGLVisualization extends React.Component<
                 visibleCategoryCount={this.props.visibleCategoryCount}
                 totalCategoryCount={this.props.totalCategoryCount}
                 showQCSection={this.props.showQCSection}
+                isNumericAttribute={this.props.isNumericAttribute}
+                numericalValueRange={this.props.numericalValueRange}
+                numericalValueToColor={this.props.numericalValueToColor}
             />
         );
     }

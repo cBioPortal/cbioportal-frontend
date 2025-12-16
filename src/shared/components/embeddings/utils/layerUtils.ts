@@ -1,6 +1,6 @@
 import { ScatterplotLayer } from '@deck.gl/layers';
 import { EmbeddingPoint } from '../EmbeddingTypes';
-import { hexToRgb } from './coordinateUtils';
+import { colorToRgb } from './coordinateUtils';
 
 /**
  * Create the scatterplot layer for the embedding visualization
@@ -37,7 +37,7 @@ export function createScatterplotLayer(
             // Non-cohort samples always show their dark gray color
             if (d.isInCohort === false) {
                 const color = d.color || '#666666';
-                const rgb = hexToRgb(color);
+                const rgb = colorToRgb(color);
                 return [rgb[0], rgb[1], rgb[2], 255];
             }
 
@@ -52,14 +52,14 @@ export function createScatterplotLayer(
 
             // Default: show actual color (keep the fill color)
             const color = d.color || '#CCCCCC';
-            const rgb = hexToRgb(color);
+            const rgb = colorToRgb(color);
             return [rgb[0], rgb[1], rgb[2], 255];
         },
         getLineColor: (d: EmbeddingPoint) => {
             // Non-cohort samples always show their dark gray color
             if (d.isInCohort === false) {
                 const color = d.color || '#666666';
-                return hexToRgb(color); // Use same color for stroke and fill for consistency
+                return colorToRgb(color); // Use same color for stroke and fill for consistency
             }
 
             const isSelected =
@@ -73,7 +73,7 @@ export function createScatterplotLayer(
 
             // Use strokeColor when provided (for copy number and structural variants), otherwise use fill color
             const color = d.strokeColor || d.color || '#CCCCCC';
-            return hexToRgb(color);
+            return colorToRgb(color);
         },
         getLineWidth: (d: EmbeddingPoint) => {
             const isSelected =

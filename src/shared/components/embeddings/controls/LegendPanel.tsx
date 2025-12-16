@@ -151,6 +151,84 @@ const renderLegendItem = (
     );
 };
 
+// Helper function to render a gradient legend for numeric attributes
+const renderGradientLegend = (
+    numericalValueRange: [number, number],
+    numericalValueToColor: (x: number) => string,
+    displayLabel: string
+) => {
+    const [min, max] = numericalValueRange;
+    const GRADIENT_MESH = 30;
+    const gradientStops = [];
+
+    for (let i = 0; i < GRADIENT_MESH; i++) {
+        const fraction = i / GRADIENT_MESH;
+        const value = fraction * max + (1 - fraction) * min;
+        const color = numericalValueToColor(value);
+        gradientStops.push(
+            <stop
+                key={i}
+                offset={`${(fraction * 100).toFixed(0)}%`}
+                stopColor={color}
+            />
+        );
+    }
+
+    const gradientId = `gradient-${displayLabel.replace(/\s+/g, '-')}`;
+
+    return (
+        <div style={{ marginTop: '8px' }}>
+            <div
+                style={{
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    marginBottom: '6px',
+                    color: '#333',
+                }}
+            >
+                {displayLabel}
+            </div>
+            <svg width="100%" height="60">
+                <defs>
+                    <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="0">
+                        {gradientStops}
+                    </linearGradient>
+                </defs>
+                <rect
+                    x="0"
+                    y="5"
+                    width="100%"
+                    height="20"
+                    fill={`url(#${gradientId})`}
+                    stroke="#ccc"
+                    strokeWidth="1"
+                />
+                <text x="0" y="40" fontSize="11" fill="#666" textAnchor="start">
+                    {min.toFixed(2)}
+                </text>
+                <text
+                    x="50%"
+                    y="40"
+                    fontSize="11"
+                    fill="#666"
+                    textAnchor="middle"
+                >
+                    {((min + max) / 2).toFixed(2)}
+                </text>
+                <text
+                    x="100%"
+                    y="40"
+                    fontSize="11"
+                    fill="#666"
+                    textAnchor="end"
+                >
+                    {max.toFixed(2)}
+                </text>
+            </svg>
+        </div>
+    );
+};
+
 export interface LegendPanelProps {
     data: EmbeddingPoint[];
     showLegend?: boolean;
@@ -168,6 +246,9 @@ export interface LegendPanelProps {
     visibleCategoryCount?: number;
     totalCategoryCount?: number;
     showQCSection?: boolean;
+    isNumericAttribute?: boolean;
+    numericalValueRange?: [number, number];
+    numericalValueToColor?: (x: number) => string;
 }
 
 export const LegendPanel: React.FC<LegendPanelProps> = ({
@@ -184,6 +265,9 @@ export const LegendPanel: React.FC<LegendPanelProps> = ({
     visibleCategoryCount,
     totalCategoryCount,
     showQCSection = false,
+    isNumericAttribute = false,
+    numericalValueRange,
+    numericalValueToColor,
 }) => {
     const [isConfigExpanded, setIsConfigExpanded] = React.useState(false);
     if (!showLegend) {
@@ -424,7 +508,7 @@ export const LegendPanel: React.FC<LegendPanelProps> = ({
                     })()}
             </div>
 
-            {/* Scrollable area for biological categories */}
+            {/* Scrollable area for biological categories OR gradient legend for numeric attributes */}
             <div
                 style={{
                     overflowY: 'auto',
@@ -433,23 +517,43 @@ export const LegendPanel: React.FC<LegendPanelProps> = ({
                     flexGrow: 1,
                 }}
             >
-                {/* Biological Categories (sorted by count) */}
-                {biologicalEntries.map(([displayLabel, styling]) => {
-                    const count = categoryCounts?.get(displayLabel) || 0;
-                    const isHidden =
-                        hiddenCategories?.has(displayLabel) || false;
-                    const isClickable =
-                        onToggleCategoryVisibility !== undefined;
+                {(() => {
+                    /* Show gradient legend for numeric attributes */
+                    if (
+                        isNumericAttribute &&
+                        numericalValueRange &&
+                        numericalValueToColor &&
+                        biologicalEntries.length > 0
+                    ) {
+                        return renderGradientLegend(
+                            numericalValueRange,
+                            numericalValueToColor,
+                            biologicalEntries[0][0] // Use the first entry's display label (e.g., "Current Age")
+                        );
+                    } else {
+                        /* Biological Categories (sorted by count) */
+                        return biologicalEntries.map(
+                            ([displayLabel, styling]) => {
+                                const count =
+                                    categoryCounts?.get(displayLabel) || 0;
+                                const isHidden =
+                                    hiddenCategories?.has(displayLabel) ||
+                                    false;
+                                const isClickable =
+                                    onToggleCategoryVisibility !== undefined;
 
-                    return renderLegendItem(
-                        displayLabel,
-                        styling,
-                        count,
-                        isHidden,
-                        isClickable,
-                        onToggleCategoryVisibility
-                    );
-                })}
+                                return renderLegendItem(
+                                    displayLabel,
+                                    styling,
+                                    count,
+                                    isHidden,
+                                    isClickable,
+                                    onToggleCategoryVisibility
+                                );
+                            }
+                        );
+                    }
+                })()}
             </div>
 
             {/* Collapsible Embedding Configuration Section - Only visible when showQCSection is true */}
