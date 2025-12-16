@@ -217,7 +217,7 @@ export function createSampleIdLookupMap(
  */
 export function preComputeClinicalDataMaps(
     clinicalData: any[],
-    categoryToColor?: { [key: string]: string },
+    categoryToColor?: { [key: string]: string } | null,
     numericalValueToColor?: (value: number) => string,
     isPatientAttribute: boolean = false
 ): {

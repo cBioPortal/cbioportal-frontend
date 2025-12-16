@@ -169,6 +169,65 @@ describe('embeddings tab screenshot tests', function() {
         });
     });
 
+    describe('numeric clinical attribute coloring', () => {
+        it('colors embedding by numeric clinical attribute with gradient (CURRENT_AGE)', async () => {
+            const clinicalAttrJson = JSON.stringify({
+                clinicalAttributeId: 'CURRENT_AGE',
+                patientAttribute: true,
+                studyId: 'msk_chord_2024',
+            });
+
+            const coloringParam = encodeURIComponent(
+                JSON.stringify({
+                    selectedOption: `undefined_${clinicalAttrJson}`,
+                    colorByMutationType: 'false',
+                    colorByCopyNumber: 'false',
+                    colorBySv: 'false',
+                })
+            );
+
+            const url = `${CBIOPORTAL_URL}/study/embeddings?id=msk_chord_2024&embeddings_coloring_selection=${coloringParam}&featureFlags=EMBEDDINGS`;
+            await goToUrlAndSetLocalStorage(url, true);
+            await waitForNetworkQuiet();
+            await browser.pause(2000);
+
+            const res = await checkElementWithMouseDisabled(
+                '[data-test="embeddings-visualization"]',
+                0,
+                { hide: ['.qtip', '.dropdown-menu'] }
+            );
+            assertScreenShotMatch(res);
+        });
+
+        it('shows gradient legend for numeric clinical attribute', async () => {
+            const clinicalAttrJson = JSON.stringify({
+                clinicalAttributeId: 'CURRENT_AGE',
+                patientAttribute: true,
+                studyId: 'msk_chord_2024',
+            });
+
+            const coloringParam = encodeURIComponent(
+                JSON.stringify({
+                    selectedOption: `undefined_${clinicalAttrJson}`,
+                    colorByMutationType: 'false',
+                    colorByCopyNumber: 'false',
+                    colorBySv: 'false',
+                })
+            );
+
+            const url = `${CBIOPORTAL_URL}/study/embeddings?id=msk_chord_2024&embeddings_coloring_selection=${coloringParam}&featureFlags=EMBEDDINGS`;
+            await goToUrlAndSetLocalStorage(url, true);
+            await waitForNetworkQuiet();
+            await browser.pause(2000);
+
+            const res = await checkElementWithMouseDisabled(
+                '[data-test="embeddings-legend"]',
+                0
+            );
+            assertScreenShotMatch(res);
+        });
+    });
+
     describe('selection and filtering', () => {
         it('shows unselected samples as gray when filtering by cancer type', async () => {
             // Navigate to study view with a cancer type filter
