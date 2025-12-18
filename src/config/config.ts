@@ -397,8 +397,5 @@ export function initializeAppStore(appStore: AppStore) {
 }
 
 export function isClickhouseMode() {
-    return (
-        !/legacy=1/.test(getBrowserWindow().location.search) &&
-        getServerConfig().clickhouse_mode === true
-    );
+    return true;
 }
