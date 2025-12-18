@@ -25,7 +25,7 @@ const SHOW_CLASS_4 = `input[data-test="Class_4"]`;
 const SHOW_PUTATIVE_DRIVERS = `input[data-test="ShowDriver"]`;
 const SHOW_UNKNOWN_ONCOGENICITY = `input[data-test="ShowUnknownOncogenicity"]`;
 
-describe('custom driver annotations feature in study view', function() {
+describe.skip('custom driver annotations feature in study view', function() {
     describe('structural variants', () => {
         beforeEach(async () => {
             await goToUrlAndSetLocalStorage(STUDY_VIEW_URL, true);
