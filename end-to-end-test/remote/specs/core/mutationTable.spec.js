@@ -337,4 +337,72 @@ describe('Mutation Table', function() {
             );
         });
     });
+
+    describe('Test Functional Impact column', () => {
+        before(async () => {
+            await goToUrlAndSetLocalStorage(RESULTS_MUTATION_TABLE_URL);
+            // mutations table should be visible after oncokb icon shows up,
+            // also need to wait for mutations to be sorted properly
+            await (
+                await getElement(
+                    'tr:nth-child(1) [data-test=oncogenic-icon-image]'
+                )
+            ).waitForDisplayed({ timeout: 30000 });
+        });
+
+        it('should show 4 dots in Functional Impact column and display tooltip on hover', async () => {
+            // click on column button
+            await clickElement('button*=Columns');
+            // scroll down to activate "Functional Impact" selection
+            await browser.execute(
+                'document.getElementsByClassName("ReactVirtualized__Grid")[0].scroll(1000, 1000)'
+            );
+            // wait for checkbox to appear
+            await browser.pause(2000);
+            // click "Functional Impact"
+            await clickElement('//*[text()="Functional Impact"]');
+
+            // wait for the dots to appear in the column
+            let res;
+            await browser.waitUntil(
+                async () => {
+                    res = await executeInBrowser(
+                        () => $('i.fa.fa-circle').length
+                    );
+                    return res >= 4;
+                },
+                60000,
+                `Failed: Expected at least 4 dots in Functional Impact column (${res} found)`
+            );
+
+            // verify there are 4 dots
+            const dotsCount = await executeInBrowser(
+                () => $('i.fa.fa-circle').length
+            );
+            assert(
+                dotsCount >= 4,
+                `Expected at least 4 dots, found ${dotsCount}`
+            );
+
+            // hover over the first dot to trigger tooltip
+            const firstDot = await getElement(
+                'span[class*="annotation-item-text"][class*="ma-medium"]'
+            );
+            await firstDot.moveTo();
+
+            // wait for tooltip to appear
+            await (
+                await getElement('div.rc-tooltip.rc-tooltip-placement-right')
+            ).waitForDisplayed({ timeout: 10000 });
+
+            // verify tooltip is displayed
+            const tooltip = await getElement(
+                'div.rc-tooltip.rc-tooltip-placement-right'
+            );
+            assert(
+                await tooltip.isDisplayed(),
+                'Mutation Assessor Tooltip should be displayed when hovering over the first dot'
+            );
+        });
+    });
 });
