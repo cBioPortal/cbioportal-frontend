@@ -8,14 +8,10 @@ export default function parseNews(html: string) {
 
     contentItems.each((i, el) => {
         // Set target="_blank" for all links
-        $(el)
-            .find('a')
-            .attr('target', '_blank');
+        $(el).find('a').attr('target', '_blank');
 
         // Remove or hide tables as they don't render well in the news feed
-        $(el)
-            .find('table')
-            .remove();
+        $(el).find('table').remove();
 
         // Truncate long paragraphs to improve readability
         $(el)
@@ -30,7 +26,5 @@ export default function parseNews(html: string) {
             });
     });
 
-    return $('<div/>')
-        .append(contentItems)
-        .html();
+    return $('<div/>').append(contentItems).html();
 }

@@ -47,8 +47,8 @@ export default class RightBar extends React.Component<
     public newsContent = remoteData(async () => {
         await sleep(3000);
         return fetch('https://docs.cbioportal.org/news/')
-            .then(d => d.text())
-            .then(d => {
+            .then((d) => d.text())
+            .then((d) => {
                 return parseNews(d);
             });
     });
@@ -66,7 +66,7 @@ export default class RightBar extends React.Component<
     private CancerTypeDescendantStudies(cancerList: CancerType[]) {
         return cancerList
             .filter(
-                cancer =>
+                (cancer) =>
                     cancer.cancerTypeId !== 'other' &&
                     cancer.cancerTypeId !== 'mixed'
             )
@@ -145,13 +145,19 @@ export default class RightBar extends React.Component<
                                         __html: this.newsContent.result!,
                                     }}
                                 ></div>
-                                <div style={{ textAlign: 'center', marginTop: 10 }}>
+                                <div
+                                    style={{
+                                        textAlign: 'center',
+                                        marginTop: 10,
+                                    }}
+                                >
                                     <a
                                         href="https://docs.cbioportal.org/news/"
                                         target="_blank"
                                         className="btn btn-default btn-sm"
                                     >
-                                        Read full news <i className="fa fa-external-link"></i>
+                                        Read full news{' '}
+                                        <i className="fa fa-external-link"></i>
                                     </a>
                                 </div>
                             </>
