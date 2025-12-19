@@ -15,6 +15,13 @@ export default function parseNews(html: string) {
         // Remove or hide tables as they don't render well in the news feed
         $(el).find('table').remove();
 
+        // Add "Read more" link to each news item (h2 headers with date IDs)
+        if (/^...-\d{1,2}-\d\d\d\d/.test(el.id)) {
+            const newsUrl = `https://docs.cbioportal.org/news/#${el.id}`;
+            const readMoreLink = `<div style="text-align: right; margin-top: 5px; font-size: 12px;"><a href="${newsUrl}" target="_blank" style="color: #2986e2;">(Read more)</a></div>`;
+            $(el).append(readMoreLink);
+        }
+
         // Truncate long paragraphs to improve readability
         $(el)
             .find('p')
