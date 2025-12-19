@@ -1,3 +1,5 @@
+const MAX_PARAGRAPH_LENGTH = 300;
+
 export default function parseNews(html: string) {
     const contentItems = $(html)
         .find('#docs-content')
@@ -19,9 +21,22 @@ export default function parseNews(html: string) {
             .each((j, p) => {
                 const $p = $(p);
                 const text = $p.text();
-                if (text.length > 300) {
-                    // Truncate and add ellipsis
-                    $p.text(text.substring(0, 300) + '...');
+                if (text.length > MAX_PARAGRAPH_LENGTH) {
+                    // Truncate text content only, preserving simple HTML structure
+                    const html = $p.html() || '';
+                    if (html.length > MAX_PARAGRAPH_LENGTH) {
+                        // Simple truncation - remove complex elements but preserve links
+                        const truncated = text.substring(
+                            0,
+                            MAX_PARAGRAPH_LENGTH
+                        );
+                        const lastSpace = truncated.lastIndexOf(' ');
+                        const finalText =
+                            lastSpace > 0
+                                ? truncated.substring(0, lastSpace)
+                                : truncated;
+                        $p.text(finalText + '...');
+                    }
                 }
             });
     });

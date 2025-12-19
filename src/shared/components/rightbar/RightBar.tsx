@@ -114,7 +114,7 @@ export default class RightBar extends React.Component<
                                     ></i>
                                 </a>
                                 <a
-                                    href="http://www.twitter.com/cbioportal"
+                                    href="https://www.twitter.com/cbioportal"
                                     target="_blank"
                                     style={{ marginLeft: 10 }}
                                     title="Follow us on Twitter"
