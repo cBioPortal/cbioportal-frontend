@@ -21,6 +21,17 @@ export default function parseNews(html: string) {
         // Remove images as they show "image" text and don't render well
         $(el).find('img').remove();
 
+        // Also remove any paragraph or element that contains only "image" text
+        $(el)
+            .find('p, div, span')
+            .each((k, elem) => {
+                const $elem = $(elem);
+                const text = $elem.text().trim().toLowerCase();
+                if (text === 'image') {
+                    $elem.remove();
+                }
+            });
+
         // Add "Read more" link only for items that had tables (since they're now removed)
         if (hasTables && /^...-\d{1,2}-\d\d\d\d/.test(el.id)) {
             const newsUrl = `https://docs.cbioportal.org/news/#${el.id}`;
