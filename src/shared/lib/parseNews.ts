@@ -12,16 +12,19 @@ export default function parseNews(html: string) {
         // Set target="_blank" for all links
         $(el).find('a').attr('target', '_blank');
 
+        // Check if this item has tables before removing them
+        const hasTables = $(el).find('table').length > 0;
+
         // Remove or hide tables as they don't render well in the news feed
         $(el).find('table').remove();
 
         // Remove images as they show "image" text and don't render well
         $(el).find('img').remove();
 
-        // Add "Read more" link to each news item (h2 headers with date IDs)
-        if (/^...-\d{1,2}-\d\d\d\d/.test(el.id)) {
+        // Add "Read more" link only for items that had tables (since they're now removed)
+        if (hasTables && /^...-\d{1,2}-\d\d\d\d/.test(el.id)) {
             const newsUrl = `https://docs.cbioportal.org/news/#${el.id}`;
-            const readMoreLink = `<p style="text-align: right; margin: 8px 0 0 0; font-size: 12px; line-height: 1;"><a href="${newsUrl}" target="_blank" style="color: #2986e2; text-decoration: none;">(Read more)</a></p>`;
+            const readMoreLink = `<p style="margin: 10px 0 0 0; font-size: 12px;"><a href="${newsUrl}" target="_blank" style="color: #2986e2; text-decoration: none;">(Read more)</a></p>`;
             $(el).append(readMoreLink);
         }
 

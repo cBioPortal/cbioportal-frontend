@@ -100,21 +100,22 @@ export default class RightBar extends React.Component<
                         style={{ paddingBottom: 20 }}
                     >
                         <h3 style={{ borderBottom: 0 }}>
-                            What's New
+                            <a
+                                href="https://docs.cbioportal.org/news/"
+                                target="_blank"
+                                style={{
+                                    color: '#2986e2',
+                                    textDecoration: 'none',
+                                }}
+                                title="View all news"
+                            >
+                                What's New{' '}
+                                <i
+                                    className="fa-solid fa-arrow-up-right-from-square"
+                                    style={{ fontSize: '14px' }}
+                                ></i>
+                            </a>
                             <span className="pull-right">
-                                <a
-                                    href="https://docs.cbioportal.org/news/"
-                                    target="_blank"
-                                    style={{
-                                        fontSize: '12px',
-                                        fontWeight: 'normal',
-                                        marginRight: 15,
-                                    }}
-                                    title="Read full news"
-                                >
-                                    Full news{' '}
-                                    <i className="fa-solid fa-external-link"></i>
-                                </a>
                                 <a
                                     href="https://bsky.app/profile/cbioportal.bsky.social"
                                     target="_blank"
@@ -124,6 +125,7 @@ export default class RightBar extends React.Component<
                                     <i
                                         className="fa-brands fa-bluesky"
                                         aria-hidden="true"
+                                        style={{ color: '#0085ff' }}
                                     ></i>
                                 </a>
                                 <a
@@ -135,6 +137,7 @@ export default class RightBar extends React.Component<
                                     <i
                                         className="fa-brands fa-twitter"
                                         aria-hidden="true"
+                                        style={{ color: '#1DA1F2' }}
                                     ></i>
                                 </a>
                             </span>
