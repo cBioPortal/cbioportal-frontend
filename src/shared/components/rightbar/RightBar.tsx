@@ -101,16 +101,30 @@ export default class RightBar extends React.Component<
                     >
                         <h3 style={{ borderBottom: 0 }}>
                             What's New
-                            <a
-                                href="http://www.twitter.com/cbioportal"
-                                className="pull-right"
-                            >
-                                @cbioportal{' '}
-                                <i
-                                    className="fa fa-twitter"
-                                    aria-hidden="true"
-                                ></i>
-                            </a>
+                            <span className="pull-right">
+                                <a
+                                    href="https://bsky.app/profile/cbioportal.bsky.social"
+                                    target="_blank"
+                                    style={{ marginLeft: 10 }}
+                                    title="Follow us on Bluesky"
+                                >
+                                    <i
+                                        className="fa fa-cloud"
+                                        aria-hidden="true"
+                                    ></i>
+                                </a>
+                                <a
+                                    href="http://www.twitter.com/cbioportal"
+                                    target="_blank"
+                                    style={{ marginLeft: 10 }}
+                                    title="Follow us on Twitter"
+                                >
+                                    <i
+                                        className="fa fa-twitter"
+                                        aria-hidden="true"
+                                    ></i>
+                                </a>
+                            </span>
                         </h3>
 
                         {this.newsContent.isPending && (
@@ -124,12 +138,23 @@ export default class RightBar extends React.Component<
                         )}
 
                         {this.newsContent.isComplete && (
-                            <div
-                                className={'newsContent'}
-                                dangerouslySetInnerHTML={{
-                                    __html: this.newsContent.result!,
-                                }}
-                            ></div>
+                            <>
+                                <div
+                                    className={'newsContent'}
+                                    dangerouslySetInnerHTML={{
+                                        __html: this.newsContent.result!,
+                                    }}
+                                ></div>
+                                <div style={{ textAlign: 'center', marginTop: 10 }}>
+                                    <a
+                                        href="https://docs.cbioportal.org/news/"
+                                        target="_blank"
+                                        className="btn btn-default btn-sm"
+                                    >
+                                        Read full news <i className="fa fa-external-link"></i>
+                                    </a>
+                                </div>
+                            </>
                         )}
 
                         <div
