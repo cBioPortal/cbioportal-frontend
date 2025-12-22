@@ -40,6 +40,7 @@ export default class MutationAssessor extends React.Component<
             const maData = this.props.mutationAssessor;
             maContent = (
                 <span
+                    data-test="mutation-assessor-dot"
                     className={classNames(
                         annotationStyles['annotation-item-text'],
                         (mutationAssessorColumn as any)[

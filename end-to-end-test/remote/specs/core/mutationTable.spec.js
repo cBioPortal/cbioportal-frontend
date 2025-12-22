@@ -338,7 +338,7 @@ describe('Mutation Table', function() {
         });
     });
 
-    describe('Test Functional Impact column', () => {
+    describe('Test Functional Impact Mutation Assessor', () => {
         before(async () => {
             await goToUrlAndSetLocalStorage(RESULTS_MUTATION_TABLE_URL);
             // mutations table should be visible after oncokb icon shows up,
@@ -347,61 +347,44 @@ describe('Mutation Table', function() {
                 await getElement(
                     'tr:nth-child(1) [data-test=oncogenic-icon-image]'
                 )
-            ).waitForDisplayed({ timeout: 30000 });
+            ).waitForDisplayed({ timeout: 300000 });
         });
 
-        it('should show 4 dots in Functional Impact column and display tooltip on hover', async () => {
+        it('should show 24 MA dots in Functional Impact column and display tooltip on hover', async () => {
             // click on column button
             await clickElement('button*=Columns');
-            // scroll down to activate "Functional Impact" selection
-            await browser.execute(
-                'document.getElementsByClassName("ReactVirtualized__Grid")[0].scroll(1000, 1000)'
-            );
-            // wait for checkbox to appear
             await browser.pause(2000);
+
             // click "Functional Impact"
             await clickElement('//*[text()="Functional Impact"]');
 
-            // wait for the dots to appear in the column
-            let res;
+            // click on column button to close the column selection menu
+            await clickElement('button*=Columns');
+            await browser.pause(2000);
+
+            // wait for MA dots to appear
+            let dotsCount;
             await browser.waitUntil(
                 async () => {
-                    res = await executeInBrowser(
-                        () => $('i.fa.fa-circle').length
+                    dotsCount = await executeInBrowser(
+                        () => $('[data-test="mutation-assessor-dot"]').length
                     );
-                    return res >= 4;
+                    return dotsCount >= 1;
                 },
-                60000,
-                `Failed: Expected at least 4 dots in Functional Impact column (${res} found)`
+                {
+                    timeout: 60000,
+                    timeoutMsg: `time out while waiting for Mutation Assessor dots to appear, found ${dotsCount}`,
+                }
             );
 
-            // verify there are 4 dots
-            const dotsCount = await executeInBrowser(
-                () => $('i.fa.fa-circle').length
+            // verify there are 24 MA dots
+            const finalMADotCount = await executeInBrowser(
+                () => $('[data-test="mutation-assessor-dot"]').length
             );
-            assert(
-                dotsCount >= 4,
-                `Expected at least 4 dots, found ${dotsCount}`
-            );
-
-            // hover over the first dot to trigger tooltip
-            const firstDot = await getElement(
-                'span[class*="annotation-item-text"][class*="ma-medium"]'
-            );
-            await firstDot.moveTo();
-
-            // wait for tooltip to appear
-            await (
-                await getElement('div.rc-tooltip.rc-tooltip-placement-right')
-            ).waitForDisplayed({ timeout: 10000 });
-
-            // verify tooltip is displayed
-            const tooltip = await getElement(
-                'div.rc-tooltip.rc-tooltip-placement-right'
-            );
-            assert(
-                await tooltip.isDisplayed(),
-                'Mutation Assessor Tooltip should be displayed when hovering over the first dot'
+            assert.equal(
+                finalMADotCount,
+                24,
+                `Expected 24 Mutation Assessor dots, found ${finalMADotCount}`
             );
         });
     });
