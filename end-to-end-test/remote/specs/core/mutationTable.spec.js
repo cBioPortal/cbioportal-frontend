@@ -337,4 +337,55 @@ describe('Mutation Table', function() {
             );
         });
     });
+
+    describe('Test Functional Impact Mutation Assessor', () => {
+        before(async () => {
+            await goToUrlAndSetLocalStorage(RESULTS_MUTATION_TABLE_URL);
+            // mutations table should be visible after oncokb icon shows up,
+            // also need to wait for mutations to be sorted properly
+            await (
+                await getElement(
+                    'tr:nth-child(1) [data-test=oncogenic-icon-image]'
+                )
+            ).waitForDisplayed({ timeout: 300000 });
+        });
+
+        it('should show 24 MA dots in Functional Impact column and display tooltip on hover', async () => {
+            // click on column button
+            await clickElement('button*=Columns');
+            await browser.pause(2000);
+
+            // click "Functional Impact"
+            await clickElement('//*[text()="Functional Impact"]');
+
+            // click on column button to close the column selection menu
+            await clickElement('button*=Columns');
+            await browser.pause(2000);
+
+            // wait for MA dots to appear
+            let dotsCount;
+            await browser.waitUntil(
+                async () => {
+                    dotsCount = await executeInBrowser(
+                        () => $('[data-test="mutation-assessor-dot"]').length
+                    );
+                    return dotsCount >= 1;
+                },
+                {
+                    timeout: 60000,
+                    timeoutMsg: `time out while waiting for Mutation Assessor dots to appear, found ${dotsCount}`,
+                }
+            );
+
+            // verify there are 24 MA dots
+            const finalMADotCount = await executeInBrowser(
+                () => $('[data-test="mutation-assessor-dot"]').length
+            );
+            assert.equal(
+                finalMADotCount,
+                24,
+                `Expected 24 Mutation Assessor dots, found ${finalMADotCount}`
+            );
+        });
+    });
 });
