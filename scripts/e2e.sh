@@ -5,7 +5,7 @@ set -o allexport
 TEST_REPO_URL="https://github.com/cBioPortal/cbioportal-test.git"
 TEST_REPO_REF="main"
 DOCKER_COMPOSE_REPO_URL="https://github.com/cBioPortal/cbioportal-docker-compose.git"
-DOCKER_COMPOSE_REF="rc-7.0-clickhouse-only"
+DOCKER_COMPOSE_REF="use-env-vars-in-healthcheck"
 STUDIES='ascn_test_study study_hg38 teststudy_genepanels study_es_0 lgg_ucsf_2014_test_generic_assay'
 APPLICATION_PROPERTIES_PATH=$(cd -- "$(dirname -- "$0")" && cd .. && pwd)/end-to-end-test/local/runtime-config/portal.properties
 KEYCLOAK="true"
