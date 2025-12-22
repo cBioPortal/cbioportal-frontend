@@ -1,4 +1,4 @@
-FROM circleci/node:15.2.1-browsers
+FROM cimg/node:18.20.8-browsers
 MAINTAINER Pim van Nierop <pim@thehyve.nl>
 LABEL Description="End-2-end test image for cBioPortal frontend"
 USER root

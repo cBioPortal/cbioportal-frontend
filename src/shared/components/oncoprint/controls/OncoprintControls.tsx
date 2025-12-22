@@ -444,7 +444,7 @@ export default class OncoprintControls extends React.Component<
             case EVENT_KEY.viewNGCHM:
                 if (
                     this.props.state.ngchmButtonActive &&
-                    this.props.handlers.onClickNGCHM
+                    typeof this.props.handlers.onClickNGCHM === 'function'
                 ) {
                     this.showConfirmNgchmModal = true;
                 }

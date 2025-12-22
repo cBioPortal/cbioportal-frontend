@@ -116,7 +116,7 @@ export function toNumericValue(words: string) {
         .toLocaleLowerCase()
         .split('')
         .map(c => Math.min(c.charCodeAt(0), 127))
-        .filter(num => num !== NaN)
+        .filter(num => !isNaN(num))
         .reduce((acc, v, i) => {
             return acc + v / Math.pow(128, i + 1);
         }, 0);

@@ -26,7 +26,8 @@ export default class MobxPromiseCache<Query, Result> {
         private queryToMobxPromiseInput: (
             q: Query
         ) => MobxPromiseInputParams<Result>,
-        private queryToKey: (q: Query) => string = stringifyObjectUnique
+        private queryToKey: (q: Query) => string = q =>
+            stringifyObjectUnique(q as any)
     ) {
         this.cache = {};
     }

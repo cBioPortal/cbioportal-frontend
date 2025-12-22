@@ -1,7 +1,7 @@
 import * as $ from 'jquery';
 import _ from 'underscore';
 import * as React from 'react';
-import * as styleConsts from './clinicalAttributesStyleConsts.ts';
+import * as styleConsts from './clinicalAttributesStyleConsts';
 import { getServerConfig, ServerConfigHelpers } from 'config/config';
 
 /**

@@ -13,7 +13,10 @@ function createValidator<O>(
         key: string,
         componentName: string
     ): Error | null {
-        if (key in object && object[key as keyof T] instanceof classDef)
+        if (
+            key in (object as object) &&
+            (object as any)[key] instanceof classDef
+        )
             return null;
         return new Error(
             `Expecting ${componentName} to receive {${JSON.stringify(key)}: ${
