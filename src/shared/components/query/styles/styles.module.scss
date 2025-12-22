@@ -674,3 +674,240 @@ div.submitRow {
     margin-right: 10px;
     display: inline-block;
 }
+
+// Gene Assistant
+.supportContainer {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+}
+
+.chatWindow {
+    position: fixed;
+    top: 50%;
+    right: 2%;
+    transform: translateY(-50%);
+    z-index: 9999;
+    width: 380px;
+    height: 700px;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+    display: flex;
+    flex-direction: column;
+    background-color: #fff;
+    margin-bottom: 8px;
+    animation: fadeInRight 0.2s ease-out forwards;
+}
+
+@keyframes fadeInRight {
+    from {
+        transform: translate(100%, -50%);
+    }
+    to {
+        transform: translate(0, -50%);
+    }
+}
+
+.titlearea {
+    background-color: #3498db;
+    color: white;
+    font-weight: bold;
+    font-size: 20px;
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: row;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.titleIcon {
+    width: 32px;
+    height: 32px;
+    margin-right: 16px;
+    margin-left: 6px;
+}
+
+.examplesarea {
+    height: 30%;
+    display: flex;
+    flex-direction: column;
+    padding: 8px 12px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.examplestext {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.exampleitem {
+    padding: 6px 8px;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    transition: background-color 0.2s ease;
+}
+
+.exampleitem:hover {
+    background-color: $lightBlue;
+    cursor: pointer;
+}
+
+.exampletitle {
+    font-weight: 600;
+    font-size: 14px;
+    color: #333333;
+}
+
+.exampledescription {
+    font-size: 13px;
+    color: #555555;
+    line-height: 1.4;
+}
+
+.textarea {
+    height: 84%;
+    padding: 8px 10px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.textheader {
+    padding: 8px 10px;
+    font-size: 11px;
+    text-align: center;
+    color: rgba(0, 0, 0, 0.65);
+}
+
+.messageRow {
+    display: flex;
+    margin-bottom: 8px;
+    width: 100%;
+    justify-content: flex-start;
+}
+
+.messageRowRight {
+    justify-content: flex-end;
+}
+
+.message,
+.question {
+    display: inline-block;
+    max-width: 70%;
+    min-width: 32px;
+    margin: 0 6px;
+    padding: 8px 12px;
+    border-radius: 12px;
+    font-size: 14px;
+    line-height: 1.25;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    box-sizing: border-box;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.03) inset;
+}
+
+/* AI answers (left) */
+.message {
+    background-color: rgba(100, 100, 100, 0.08);
+    color: #1f2933;
+    text-align: left;
+}
+
+/* User questions (right) */
+.question {
+    background-color: rgba(52, 152, 219, 0.18);
+    color: #0b2140;
+    text-align: left;
+}
+
+.messageLine {
+    margin: 0 0 6px 0;
+}
+.messageLine:last-child {
+    margin-bottom: 0;
+}
+
+.inputarea {
+    height: 8%;
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    background-color: #ffffff;
+    border-top: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.form {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: 8px;
+}
+
+.input {
+    flex: 1 1 auto;
+    height: 36px;
+    font-size: 14px;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    padding: 0 14px;
+    border-radius: 20px;
+    color: rgba(0, 0, 0, 0.85);
+    background: #fff;
+    outline: none;
+}
+
+/* Animations */
+.thinking {
+    display: flex;
+    padding: 12px 12px;
+}
+
+.dots {
+    display: flex;
+    gap: 6px;
+}
+
+.dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #555;
+    transform: scale(0.6);
+    animation: bubble-bounce 1s infinite ease-in-out;
+}
+
+.dot:nth-of-type(1) {
+    animation-delay: 0s;
+}
+.dot:nth-of-type(2) {
+    animation-delay: 0.15s;
+}
+.dot:nth-of-type(3) {
+    animation-delay: 0.3s;
+}
+
+@keyframes bubble-bounce {
+    0%,
+    80%,
+    100% {
+        transform: scale(0.6);
+        opacity: 0.35;
+    }
+    40% {
+        transform: scale(1);
+        opacity: 0.9;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dot {
+        animation: none;
+        opacity: 0.5;
+        transform: none;
+    }
+}

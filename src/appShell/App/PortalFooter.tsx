@@ -187,9 +187,9 @@ export default class PortalFooter extends React.Component<
                                         <li>
                                             <a
                                                 target="_blank"
-                                                href="https://www.twitter.com/cbioportal"
+                                                href="https://www.x.com/cbioportal"
                                             >
-                                                Twitter
+                                                X
                                             </a>
                                         </li>
                                     </If>

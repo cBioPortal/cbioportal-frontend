@@ -188,6 +188,7 @@ export interface IServerConfig {
     skin_study_view_show_sv_table: boolean; // this has a default
     enable_study_tags: boolean;
     clickhouse_mode: boolean;
+    assistant_enabled: boolean;
     download_custom_buttons_json: string;
     feature_study_export: boolean;
 }

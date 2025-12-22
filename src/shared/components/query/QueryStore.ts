@@ -593,6 +593,14 @@ export class QueryStore {
     @observable genesetQueryErrorDisplayStatus = Focus.Unfocused;
     @observable showMutSigPopup = false;
     @observable showGisticPopup = false;
+    @observable showSupport = false;
+    @observable public messages = [
+        {
+            speaker: 'AI',
+            text:
+                'Hi there!\nThis is your place to get help with gene symbols and OQL query construction 🤖',
+        },
+    ];
     @observable showGenesetsHierarchyPopup = false;
     @observable showGenesetsVolcanoPopup = false;
     @observable priorityStudies = ServerConfigHelpers.parseConfigFormat(
