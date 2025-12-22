@@ -24,6 +24,7 @@ import ComparisonVsIcon from 'shared/components/ComparisonVsIcon';
 import { getComparisonParamsForTable } from 'pages/studyView/StudyViewComparisonUtils';
 import { DownloadControlOption } from 'cbioportal-frontend-commons';
 import { getServerConfig } from 'config/config';
+import { ChartTitleTooltip } from './ChartTitleTooltip';
 
 export interface IChartHeaderProps {
     chartMeta: ChartMeta;
@@ -701,7 +702,10 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
             >
                 <div className={classnames(styles.name, styles.draggable)}>
                     {!this.props.hideLabel && (
-                        <span className="chartTitle">{this.props.title}</span>
+                        <span className="chartTitle">
+                            {this.props.title}
+                            <ChartTitleTooltip chartProps={this.props} />
+                        </span>
                     )}
                 </div>
                 {this.active && (
