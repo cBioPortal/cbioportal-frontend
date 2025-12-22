@@ -58,6 +58,7 @@ export default class HomePage extends React.Component<
                 noMargin={true}
                 rightBar={<RightBar queryStore={this.queryStore} />}
             >
+                Hellow world
                 <div
                     className={'headBlock'}
                     dangerouslySetInnerHTML={{
