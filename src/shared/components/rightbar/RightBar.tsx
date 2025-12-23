@@ -47,8 +47,8 @@ export default class RightBar extends React.Component<
     public newsContent = remoteData(async () => {
         await sleep(3000);
         return fetch('https://docs.cbioportal.org/news/')
-            .then(d => d.text())
-            .then(d => {
+            .then((d) => d.text())
+            .then((d) => {
                 return parseNews(d);
             });
     });
@@ -66,7 +66,7 @@ export default class RightBar extends React.Component<
     private CancerTypeDescendantStudies(cancerList: CancerType[]) {
         return cancerList
             .filter(
-                cancer =>
+                (cancer) =>
                     cancer.cancerTypeId !== 'other' &&
                     cancer.cancerTypeId !== 'mixed'
             )
@@ -100,17 +100,47 @@ export default class RightBar extends React.Component<
                         style={{ paddingBottom: 20 }}
                     >
                         <h3 style={{ borderBottom: 0 }}>
-                            What's New
                             <a
-                                href="http://www.twitter.com/cbioportal"
-                                className="pull-right"
+                                href="https://docs.cbioportal.org/news/"
+                                target="_blank"
+                                style={{
+                                    color: '#2986e2',
+                                    textDecoration: 'none',
+                                }}
+                                title="View all news"
                             >
-                                @cbioportal{' '}
+                                What's New{' '}
                                 <i
-                                    className="fa fa-twitter"
-                                    aria-hidden="true"
+                                    className="fa-solid fa-arrow-up-right-from-square"
+                                    style={{ fontSize: '14px' }}
                                 ></i>
                             </a>
+                            <span className="pull-right">
+                                <a
+                                    href="https://bsky.app/profile/cbioportal.bsky.social"
+                                    target="_blank"
+                                    style={{ marginLeft: 10 }}
+                                    title="Follow us on Bluesky"
+                                >
+                                    <i
+                                        className="fa-brands fa-bluesky"
+                                        aria-hidden="true"
+                                        style={{ color: '#0085ff' }}
+                                    ></i>
+                                </a>
+                                <a
+                                    href="https://www.twitter.com/cbioportal"
+                                    target="_blank"
+                                    style={{ marginLeft: 10 }}
+                                    title="Follow us on Twitter"
+                                >
+                                    <i
+                                        className="fa-brands fa-twitter"
+                                        aria-hidden="true"
+                                        style={{ color: '#1DA1F2' }}
+                                    ></i>
+                                </a>
+                            </span>
                         </h3>
 
                         {this.newsContent.isPending && (
