@@ -140,6 +140,18 @@ export default class RightBar extends React.Component<
                                         style={{ color: '#1DA1F2' }}
                                     ></i>
                                 </a>
+                                <a
+                                    href="https://linkedin.com/company/cbioportal"
+                                    target="_blank"
+                                    style={{ marginLeft: 10 }}
+                                    title="Follow us on LinkedIn"
+                                >
+                                    <i
+                                        className="fa-brands fa-linkedin"
+                                        aria-hidden="true"
+                                        style={{ color: '#0A66C2' }}
+                                    ></i>
+                                </a>
                             </span>
                         </h3>
 
