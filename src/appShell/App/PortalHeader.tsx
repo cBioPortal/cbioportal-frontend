@@ -76,13 +76,21 @@ export default class PortalHeader extends React.Component<
                 internal: true,
                 hide: () => getServerConfig().skin_show_tools_tab === false,
             },
-
+                
             {
                 id: 'about',
                 text: 'About',
                 address: 'https://about.cbioportal.org/',
                 internal: false,
                 hide: () => getServerConfig().skin_show_about_tab === false,
+            },
+
+            {
+                id: 'roadmap',
+                text: 'Roadmap',
+                address: 'https://about.cbioportal.org/roadmap',
+                internal: false,
+                hide: () => getServerConfig().skin_show_roadmap_tab === false,
             },
 
             {
