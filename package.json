@@ -74,7 +74,7 @@
     "localChromeDriver": "chromedriver"
   },
   "engines": {
-    "node": "15.2.1",
+    "node": ">=16",
     "yarn": "1.22.5"
   },
   "resolutions": {
