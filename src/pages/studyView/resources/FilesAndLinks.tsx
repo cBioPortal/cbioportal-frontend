@@ -7,7 +7,6 @@ import { observer } from 'mobx-react';
 import _ from 'lodash';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
 import { Else, If, Then } from 'react-if';
-import { WindowWidthBox } from '../../../shared/components/WindowWidthBox/WindowWidthBox';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import {
     getResourceViewUrlWithPathname,
@@ -254,21 +253,22 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
         let resourcesPerPatientColumnName = 'Resources per Patient';
         let shouldHideResourcesPerPatientColumn = false;
 
+        // Get config for single resource type (if applicable)
+        let config: any = {};
         if (uniqueResourceTypes.length === 1 && uniqueResourceTypes[0]) {
             const def = this.props.store.resourceDefinitions.result?.find(
                 d => d.displayName === uniqueResourceTypes[0]
             );
+
             if (def) {
-                const config = getResourceConfig(def);
-                if (config.columnHeader) {
-                    resourcesPerPatientColumnName = config.columnHeader;
-                } else {
-                    resourcesPerPatientColumnName = `${pluralize(
-                        uniqueResourceTypes[0] as string,
-                        2
-                    )} per Patient`;
-                }
-                if (config.hideResourcesPerPatientColumn) {
+                config = getResourceConfig(def);
+                // Set default column name for single resource type
+                resourcesPerPatientColumnName = `${pluralize(
+                    uniqueResourceTypes[0] as string,
+                    2
+                )} per Patient`;
+
+                if (config.hidePerPatientColumn) {
                     shouldHideResourcesPerPatientColumn = true;
                 }
             } else {
@@ -278,6 +278,13 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
                 )} per Patient`;
             }
         }
+
+        // Apply customizations (only active for single resource type with config)
+        const typeOfResourceColumnName =
+            config.columnNameMapping?.['Type Of Resource'] ||
+            'Type Of Resource';
+        const hideUrlColumn = !!config.hideUrlColumn;
+        const openInNewTab = !!config.openInNewTab;
 
         let defaultColumns: Column<{ [id: string]: any }>[] = [
             {
@@ -319,19 +326,21 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
             {
                 ...this.getDefaultColumnConfig(
                     'typeOfResource',
-                    'Type Of Resource'
+                    typeOfResourceColumnName
                 ),
                 render: (data: { [id: string]: string }) => {
                     const path = `patient/openResource_${data.resourceId}`;
+                    const href = getResourceViewUrlWithPathname(
+                        data.studyId,
+                        path,
+                        data.patientId
+                    );
                     return (
                         <div>
                             <a
-                                href={getResourceViewUrlWithPathname(
-                                    data.studyId,
-                                    path,
-                                    data.patientId
-                                )}
+                                href={href}
                                 style={{ fontSize: 10 }}
+                                target={openInNewTab ? '_blank' : undefined}
                             >
                                 <i
                                     className={`fa fa-user fa-sm`}
@@ -347,8 +356,10 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
                     );
                 },
             },
+        ];
 
-            {
+        if (!hideUrlColumn) {
+            defaultColumns.push({
                 ...this.getDefaultColumnConfig('url', 'Resource URL'),
                 render: (data: { [id: string]: string }) => {
                     return (
@@ -370,15 +381,15 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
                         </div>
                     );
                 },
-            },
+            });
+        }
 
-            {
-                ...this.getDefaultColumnConfig('description', 'Description'),
-                render: (data: { [id: string]: string }) => {
-                    return <div>{data.description}</div>;
-                },
+        defaultColumns.push({
+            ...this.getDefaultColumnConfig('description', 'Description'),
+            render: (data: { [id: string]: string }) => {
+                return <div>{data.description}</div>;
             },
-        ];
+        });
 
         // Conditionally add the last column if not hidden
         if (!shouldHideResourcesPerPatientColumn) {
@@ -400,94 +411,79 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
     public render() {
         return (
             <span data-test="files-links-data-content">
-                <WindowWidthBox offset={60}>
-                    <If condition={this.resourceData.isPending}>
-                        <Then>
-                            <LoadingIndicator
-                                isLoading={true}
-                                size={'big'}
-                                center={true}
-                            />
-                        </Then>
-                        <Else>
-                            <FilesLinksTableComponent
-                                initialItemsPerPage={20}
-                                headerComponent={(() => {
-                                    // Determine if there's only one unique resource type
-                                    const uniqueResourceTypes =
-                                        this.resourceData.result &&
-                                        this.resourceData.result.data
-                                            ? _.uniq(
-                                                  this.resourceData.result.data.map(
-                                                      item =>
-                                                          item.typeOfResource as string
-                                                  )
+                <If condition={this.resourceData.isPending}>
+                    <Then>
+                        <LoadingIndicator
+                            isLoading={true}
+                            size={'big'}
+                            center={true}
+                        />
+                    </Then>
+                    <Else>
+                        <FilesLinksTableComponent
+                            initialItemsPerPage={20}
+                            headerComponent={(() => {
+                                // Determine if there's only one unique resource type
+                                const uniqueResourceTypes =
+                                    this.resourceData.result &&
+                                    this.resourceData.result.data
+                                        ? _.uniq(
+                                              this.resourceData.result.data.map(
+                                                  item =>
+                                                      item.typeOfResource as string
                                               )
-                                            : [];
-                                    let def;
-                                    if (
-                                        uniqueResourceTypes.length === 1 &&
-                                        uniqueResourceTypes[0]
-                                    ) {
-                                        def = this.props.store.resourceDefinitions.result?.find(
-                                            d =>
-                                                d.displayName ===
-                                                uniqueResourceTypes[0]
-                                        );
-                                    }
-                                    let customName = '';
-                                    if (def) {
-                                        const config = getResourceConfig(def);
-                                        if (config.customizedDisplayName) {
-                                            customName =
-                                                config.customizedDisplayName;
-                                        }
-                                    }
-
-                                    return (
-                                        <div className={'positionAbsolute'}>
-                                            <strong>
-                                                {
-                                                    this.resourceData.result
-                                                        ?.totalItems
-                                                }{' '}
-                                                {customName ? (
-                                                    customName
-                                                ) : (
-                                                    <>
-                                                        {pluralize(
-                                                            'sample',
-                                                            this.resourceData
-                                                                .result
-                                                                ?.totalItems ||
-                                                                0
-                                                        )}{' '}
-                                                        with{' '}
-                                                        {
-                                                            this.props
-                                                                .resourceDisplayName
-                                                        }
-                                                    </>
-                                                )}
-                                            </strong>
-                                        </div>
+                                          )
+                                        : [];
+                                let def;
+                                if (
+                                    uniqueResourceTypes.length === 1 &&
+                                    uniqueResourceTypes[0]
+                                ) {
+                                    def = this.props.store.resourceDefinitions.result?.find(
+                                        d =>
+                                            d.displayName ===
+                                            uniqueResourceTypes[0]
                                     );
-                                })()}
-                                data={this.resourceData.result?.data || []}
-                                columns={this.columns}
-                                showColumnVisibility={false}
-                                showCountHeader={false}
-                                showFilterClearButton={false}
-                                showCopyDownload={true}
-                                copyDownloadProps={{
-                                    showCopy: false,
-                                }}
-                                initialSortColumn={'resourcesPerPatient'}
-                                initialSortDirection={'desc'}
-                            />
-                        </Else>
-                    </If>
-                </WindowWidthBox>
+                                }
+                                let customName = '';
+                                if (def) {
+                                    const config = getResourceConfig(def);
+                                    if (config.customizedDisplayName) {
+                                        customName =
+                                            config.customizedDisplayName;
+                                    }
+                                }
+
+                                return (
+                                    <div className={'positionAbsolute'}>
+                                        <strong>
+                                            {
+                                                this.resourceData.result
+                                                    ?.totalItems
+                                            }{' '}
+                                            {customName
+                                                ? customName
+                                                : 'resources'}
+                                        </strong>
+                                    </div>
+                                );
+                            })()}
+                            data={this.resourceData.result?.data || []}
+                            columns={this.columns}
+                            showColumnVisibility={false}
+                            showCountHeader={false}
+                            // when header component is null, we might want to also ensure no extra spacing or issues occur.
+                            // but LazyMobXTable should handle null headerComponent gracefully.
+                            showFilterClearButton={false}
+                            showCopyDownload={true}
+                            copyDownloadProps={{
+                                showCopy: false,
+                            }}
+                            initialSortColumn={'resourcesPerPatient'}
+                            initialSortDirection={'desc'}
+                        />
+                    </Else>
+                </If>
             </span>
         );
     }

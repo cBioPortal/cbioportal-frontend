@@ -68,9 +68,6 @@ export default class ResourcesTab extends React.Component<
                 </div>
                 <div className="resourcesTab">
                     <div className="resourcesSection">
-                        <h4 className="blackHeader">
-                            Patient and Sample {this.props.resourceDisplayName}
-                        </h4>
                         <FilesAndLinks
                             resourceDisplayName={this.props.resourceDisplayName}
                             store={this.props.store}
