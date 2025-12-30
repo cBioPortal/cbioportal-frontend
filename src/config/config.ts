@@ -397,5 +397,6 @@ export function initializeAppStore(appStore: AppStore) {
 }
 
 export function isClickhouseMode() {
-    return true;
+    //TODO: when we fix the clients this will go away
+    return typeof jest === 'undefined';
 }
