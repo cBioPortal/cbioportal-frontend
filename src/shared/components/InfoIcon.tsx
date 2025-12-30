@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
+import { RiInformation2Fill } from 'react-icons/ri';
 
 export interface IInfoIconProps {
     tooltip: JSX.Element;
@@ -16,8 +17,7 @@ export default class InfoIcon extends React.Component<IInfoIconProps, {}> {
                 placement={this.props.tooltipPlacement || 'right'}
             >
                 <div style={this.props.divStyle}>
-                    <i
-                        className="fa fa-info-circle"
+                    <RiInformation2Fill
                         style={Object.assign(
                             {},
                             {
