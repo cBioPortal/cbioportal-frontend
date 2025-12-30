@@ -17,17 +17,17 @@ export default class InfoIcon extends React.Component<IInfoIconProps, {}> {
                 placement={this.props.tooltipPlacement || 'right'}
             >
                 <div style={this.props.divStyle}>
-                    <RiInformation2Fill
-                        style={Object.assign(
+                    {React.createElement(RiInformation2Fill as any, {
+                        style: Object.assign(
                             {},
                             {
                                 color: '#000000',
                                 cursor: 'pointer',
                             },
                             this.props.style || {}
-                        )}
-                        data-test="infoIcon"
-                    />
+                        ),
+                        'data-test': 'infoIcon',
+                    })}
                 </div>
             </DefaultTooltip>
         );
