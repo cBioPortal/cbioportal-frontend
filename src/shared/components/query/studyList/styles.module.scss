@@ -250,11 +250,14 @@ li.Study {
         font-size: 12px;
 
         .StudyLinks {
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
             min-width: 57px;
 
             > * {
                 margin-left: 3px;
+                display: flex;
+                align-items: center;
             }
 
             span.summaryIcon {
@@ -269,16 +272,16 @@ li.Study {
                 color: #555;
             }
 
-            a > span.icon {
+            .icon {
                 color: #1982b8;
             }
 
-            a > span.trashIcon {
+            .trashIcon {
                 color: #808080;
             }
 
-            a > span.infoCircleIcon {
-                color: #555;
+            .infoCircleIcon {
+                color: #555 !important;
             }
         }
     }

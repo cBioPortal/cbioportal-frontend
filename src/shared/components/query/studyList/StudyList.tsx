@@ -8,6 +8,8 @@ import { observer, Observer } from 'mobx-react';
 import { computed, makeObservable } from 'mobx';
 import _ from 'lodash';
 import { getPubMedUrl } from '../../../api/urls';
+import { BiSolidBook } from 'react-icons/bi';
+import { RiInformation2Fill } from 'react-icons/ri';
 import { QueryStoreComponent } from '../QueryStore';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { FilteredCancerTreeView } from '../StudyListLogic';
@@ -326,19 +328,41 @@ export default class StudyList extends QueryStoreComponent<
             return (
                 <span className={styles.StudyLinks}>
                     {links.map((link, i) => {
-                        let content = (
-                            <FontAwesome
-                                key={i}
-                                name={link.icon}
-                                className={classNames({
+                        let content;
+                        if (link.icon === 'info-circle') {
+                            content = React.createElement(
+                                RiInformation2Fill as any,
+                                {
+                                    key: i,
+                                    className: classNames({
+                                        [styles.icon]: true,
+                                        [styles.iconWithTooltip]: !!link.tooltip,
+                                        [styles.infoCircleIcon]: true,
+                                    }),
+                                }
+                            );
+                        } else if (link.icon === 'book') {
+                            content = React.createElement(BiSolidBook as any, {
+                                key: i,
+                                className: classNames({
                                     [styles.icon]: true,
                                     [styles.iconWithTooltip]: !!link.tooltip,
-                                    [styles.trashIcon]: link.icon === 'trash',
-                                    [styles.infoCircleIcon]:
-                                        link.icon === 'info-circle',
-                                })}
-                            />
-                        );
+                                }),
+                            });
+                        } else {
+                            content = (
+                                <FontAwesome
+                                    key={i}
+                                    name={link.icon}
+                                    className={classNames({
+                                        [styles.icon]: true,
+                                        [styles.iconWithTooltip]: !!link.tooltip,
+                                        [styles.trashIcon]:
+                                            link.icon === 'trash',
+                                    })}
+                                />
+                            );
+                        }
 
                         if (link.onClick) {
                             let anchorProps: any = {

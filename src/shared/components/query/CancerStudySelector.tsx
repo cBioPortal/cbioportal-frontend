@@ -5,6 +5,7 @@ import {
     CancerStudy,
     TypeOfCancer as CancerType,
 } from 'cbioportal-ts-api-client';
+import { BiSolidBook } from 'react-icons/bi';
 import { FlexCol, FlexRow } from '../flexbox/FlexBox';
 import styles from './styles/styles.module.scss';
 import classNames from 'classnames';
@@ -407,7 +408,10 @@ export default class CancerStudySelector extends React.Component<
                                     }
                                     target={'_blank'}
                                 >
-                                    Help <i className={'fa fa-book'}></i>
+                                    Help{' '}
+                                    {React.createElement(BiSolidBook as any, {
+                                        style: { verticalAlign: 'text-bottom' },
+                                    })}
                                 </a>
                             </div>
 
