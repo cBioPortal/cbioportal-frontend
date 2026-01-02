@@ -1,4 +1,4 @@
-﻿import * as React from 'react';
+import * as React from 'react';
 import { PathologyReportPDF } from '../clinicalInformation/PatientViewPageStore';
 import { If, Then, Else } from 'react-if';
 import _ from 'lodash';
@@ -34,14 +34,40 @@ export default class PathologyReport extends React.Component<
     }
 
     componentDidUpdate(prevProps: IPathologyReportProps) {
-        // Handle async pdf list arrival: update URL if pdfs changed from empty to populated
+        const hasCurrentPdfs =
+            this.props.pdfs && this.props.pdfs.length > 0;
+        const hadPrevPdfs =
+            prevProps.pdfs && prevProps.pdfs.length > 0;
+
+        // If PDFs were removed, clear the URL
+        if (!hasCurrentPdfs) {
+            if (this.state.pdfUrl) {
+                this.setState({ pdfUrl: '' });
+            }
+            return;
+        }
+
+        const newFirstUrl = this.props.pdfs[0].url;
+        const newFirstBuiltUrl = this.buildPDFUrl(newFirstUrl);
+
+        // If there were no previous PDFs or no URL yet, initialize from the first PDF
+        if (!hadPrevPdfs || !this.state.pdfUrl) {
+            if (this.state.pdfUrl !== newFirstBuiltUrl) {
+                this.setState({ pdfUrl: newFirstBuiltUrl });
+            }
+            return;
+        }
+
+        // If the current URL corresponds to the previous first PDF, and that first PDF changed,
+        // update to the new first PDF. This preserves user selection when they picked another PDF.
+        const prevFirstUrl = prevProps.pdfs[0].url;
+        const prevFirstBuiltUrl = this.buildPDFUrl(prevFirstUrl);
+
         if (
-            this.props.pdfs &&
-            this.props.pdfs.length > 0 &&
-            (!prevProps.pdfs || prevProps.pdfs.length === 0) &&
-            !this.state.pdfUrl
+            this.state.pdfUrl === prevFirstBuiltUrl &&
+            prevFirstBuiltUrl !== newFirstBuiltUrl
         ) {
-            this.setState({ pdfUrl: this.buildPDFUrl(this.props.pdfs[0].url) });
+            this.setState({ pdfUrl: newFirstBuiltUrl });
         }
     }
 
