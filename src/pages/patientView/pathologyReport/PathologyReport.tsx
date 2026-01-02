@@ -1,4 +1,4 @@
-﻿import * as React from 'react';
+import * as React from 'react';
 import { PathologyReportPDF } from '../clinicalInformation/PatientViewPageStore';
 import { If, Then, Else } from 'react-if';
 import _ from 'lodash';
