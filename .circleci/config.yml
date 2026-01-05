@@ -289,6 +289,8 @@ jobs:
       FRONTEND_PORT: 3000
       DOCKER_IMAGE_MYSQL: cbioportal/mysql:8.0-database-test
       DOCKER_IMAGE_CBIOPORTAL: cbioportal/cbioportal:master
+      DOCKER_COMPOSE_REF: master
+      APP_CBIOPORTAL_CORE_BRANCH: main
     steps:
       - attach_workspace:
           at: /tmp/repo
@@ -307,7 +309,7 @@ jobs:
             APPLICATION_PROPERTIES_PATH: '/tmp/repo/cbioportal-frontend/end-to-end-test/local/runtime-config/portal.properties'
           command: |
             cd cbioportal-test
-            nohup ./scripts/docker-compose.sh --portal_type='keycloak' >> /tmp/repo/docker-compose-logs.txt 2>&1 &
+            nohup ./scripts/docker-compose.sh --portal_type='keycloak' --compose_extensions='-f addon/clickhouse/docker-compose.clickhouse.yml'  >> /tmp/repo/docker-compose-logs.txt 2>&1 &
       - run:
           name: Check keycloak connection at localhost
           command: |
@@ -317,7 +319,7 @@ jobs:
           name: Check backend connection at localhost
           command: |
             cd cbioportal-test
-            ./utils/check-connection.sh --url=localhost:${BACKEND_PORT} --max_retries=50
+            ./utils/check-connection.sh --url=localhost:${BACKEND_PORT} --max_retries=250
       - run:
           name: Run e2e localdb tests
           environment:

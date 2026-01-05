@@ -3,10 +3,13 @@ set -e
 set -o allexport
 
 TEST_REPO_URL="https://github.com/cBioPortal/cbioportal-test.git"
+TEST_REPO_REF="main"
 DOCKER_COMPOSE_REPO_URL="https://github.com/cBioPortal/cbioportal-docker-compose.git"
+DOCKER_COMPOSE_REF="master"
 STUDIES='ascn_test_study study_hg38 teststudy_genepanels study_es_0 lgg_ucsf_2014_test_generic_assay'
 APPLICATION_PROPERTIES_PATH=$(cd -- "$(dirname -- "$0")" && cd .. && pwd)/end-to-end-test/local/runtime-config/portal.properties
 KEYCLOAK="true"
+CLICKHOUSE="true"
 RUN_FRONTEND="false" # Set to "true" if you want to build and run frontend at localhost:3000
 RUN_TESTS="false" # Set to "true" if you want to run all e2e:local tests
 
@@ -19,12 +22,19 @@ export APPLICATION_PROPERTIES_PATH=$APPLICATION_PROPERTIES_PATH
 # Backend image
 export DOCKER_IMAGE_CBIOPORTAL=cbioportal/cbioportal:master
 
+# cbioportal-core branch
+export APP_CBIOPORTAL_CORE_BRANCH=main
+
+# Use pre-release clickhouse for docker compose
+export DOCKER_COMPOSE_REF=$DOCKER_COMPOSE_REF
+
 # Create a temp dir and clone test repo
 ROOT_DIR=$(pwd)
 TEMP_DIR=$(mktemp -d)
 git clone "$TEST_REPO_URL" "$TEMP_DIR/cbioportal-test" || exit 1
 git clone "$DOCKER_COMPOSE_REPO_URL" "$TEMP_DIR/cbioportal-docker-compose" || exit 1
 cd "$TEMP_DIR/cbioportal-test" || exit 1
+git checkout "$TEST_REPO_REF" || exit 1
 
 # Generate keycloak config
 if [ "$KEYCLOAK" = "true" ]; then
@@ -34,7 +44,13 @@ fi
 
 # Start backend
 if [ "$KEYCLOAK" = "true" ]; then
-  ./scripts/docker-compose.sh --portal_type='keycloak' --docker_args='-d'
+  if [ "$CLICKHOUSE" = "true" ]; then
+    COMPOSE_EXTENSIONS='-f addon/clickhouse/docker-compose.clickhouse.yml'
+  else
+    COMPOSE_EXTENSIONS=''
+  fi
+
+  ./scripts/docker-compose.sh --portal_type='keycloak' --compose_extensions="$COMPOSE_EXTENSIONS" --docker_args='-d'
 
   # Check keycloak connection at localhost:8081
   ./utils/check-connection.sh --url=localhost:8081 --max_retries=50
