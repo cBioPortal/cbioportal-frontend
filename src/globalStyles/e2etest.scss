@@ -50,13 +50,4 @@
     .e2eHide {
         display: none;
     }
-
-    .oncoprintContainer {
-        opacity: 1 !important;
-        max-width: none !important;
-        width: 1500px !important;
-        &.fadeIn {
-            opacity: 1 !important;
-        }
-    }
 }
