@@ -50,10 +50,30 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
     - run:
         name: Install Google Chrome
         command: |
-          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
-          echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
-          sudo apt-get update
-          sudo apt-get install -y google-chrome-stable
+          set -e
+          
+          # Add Google signing key
+          wget -qO /usr/share/keyrings/google-linux-signing-keyring.gpg \
+          https://dl.google.com/linux/linux_signing_key.pub
+          
+          # Add Chrome repository
+          echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-linux-signing-keyring.gpg] \
+          http://dl.google.com/linux/chrome/deb/ stable main" \
+          | sudo tee /etc/apt/sources.list.d/google-chrome.list
+
+        # Update package list
+          sudo apt update
+          
+          # Install latest Chrome 139.x specifically
+          sudo apt install -y google-chrome-stable=$(
+          apt-cache madison google-chrome-stable \
+          | awk '$3 ~ /^139\./ { print $3; exit }'
+          )
+          
+          # Hold the version so it doesn't auto-upgrade
+          sudo apt-mark hold google-chrome-stable
+          
+          # Verify
           google-chrome --version
 
     # Install ChromeDriver
