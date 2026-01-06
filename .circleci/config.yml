@@ -463,10 +463,10 @@ workflows:
       - build_frontend:
           requires:
             - checkout
-#      - e2e_localdb_tests:
-#          requires:
-#            - pull_cbioportal_test_codebase
-#            - build_frontend
+      - e2e_localdb_tests:
+          requires:
+            - pull_cbioportal_test_codebase
+            - build_frontend
       - e2e_tests:
           requires:
             - pull_cbioportal_test_codebase
