@@ -309,7 +309,7 @@ jobs:
             APPLICATION_PROPERTIES_PATH: '/tmp/repo/cbioportal-frontend/end-to-end-test/local/runtime-config/portal.properties'
           command: |
             cd cbioportal-test
-            nohup ./scripts/docker-compose.sh --portal_type='keycloak' --compose_extensions='-f addon/clickhouse/docker-compose.clickhouse.yml'  >> /tmp/repo/docker-compose-logs.txt 2>&1 &
+            nohup ./scripts/docker-compose.sh --portal_type='keycloak' --compose_extensions='-f addon/clickhouse/docker-compose.remote.clickhouse.yml'  >> /tmp/repo/docker-compose-logs.txt 2>&1 &
       - run:
           name: Check keycloak connection at localhost
           command: |
