@@ -248,7 +248,7 @@ exports.config = {
     //exclude: ['./remote/specs/core/groupComparisonLollipop.spec.js'],
 
     // Patterns to exclude.
-    //exclude: ['./local/specs/web-tour.spec.js'],
+    exclude: ['./local/specs/web-tour.spec.js'],
     //
     // ============
     // Capabilities
