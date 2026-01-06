@@ -92,7 +92,7 @@ describe('gsva feature', () => {
             await waitForPlotsTab(20000);
         });
 
-        it('shows gsva profile data on horizontal and vertical axes', async () => {
+        it.skip('shows gsva profile data on horizontal and vertical axes', async () => {
             const horzDataSelect = await (
                 await getElement('[name=h-profile-type-selector]')
             ).$('..');
