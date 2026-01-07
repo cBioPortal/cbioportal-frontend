@@ -417,7 +417,7 @@ async function waitForStudyView() {
     await browser.waitUntil(
         async () => (await $$('.sk-spinner')).length === 0,
         {
-            timeout: 100000,
+            timeout: 10000,
         }
     );
 }
