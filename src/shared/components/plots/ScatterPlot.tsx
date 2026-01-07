@@ -4,6 +4,7 @@ import { observer, Observer } from 'mobx-react';
 import { computed, makeObservable, observable } from 'mobx';
 import {
     VictoryChart,
+    VictorySelectionContainer,
     VictoryAxis,
     VictoryScatter,
     VictoryLegend,
@@ -40,6 +41,7 @@ import {
 import LegendDataComponent from './LegendDataComponent';
 import LegendLabelComponent from './LegendLabelComponent';
 import autobind from 'autobind-decorator';
+import { submitToStudyViewPage } from 'pages/resultsView/querySummary/QuerySummaryUtils';
 
 export interface IBaseScatterPlotData {
     x: number;
@@ -79,6 +81,9 @@ export interface IScatterPlotProps<D extends IBaseScatterPlotData> {
     axisLabelY?: string;
     fontFamily?: string;
     legendTitle?: string | string[];
+    onDataSelection?: (selectedSampleData: D[]) => void;
+    onDataSelectionCleared?: () => void;
+    selectedData?: IPlotSampleData[];
 }
 // constants related to the gutter
 const GUTTER_TEXT_STYLE = {
@@ -148,7 +153,7 @@ export default class ScatterPlot<
                         fontFamily: this.fontFamily,
                         textAnchor: 'middle',
                     }}
-                    x={this.props.chartWidth / 2}
+                    x={this.props.chartWidth / 2 + this.leftPadding}
                     y="1.2em"
                     text={text}
                 />
@@ -246,6 +251,8 @@ export default class ScatterPlot<
                             childName: 'all',
                             target: ['data', 'labels'],
                             eventHandlers: {
+                                onMouseDown: (evt: any) =>
+                                    evt.stopPropagation(), // allows click legend item for highlighting
                                 onClick: () => [
                                     {
                                         target: 'data',
@@ -276,7 +283,11 @@ export default class ScatterPlot<
                             : LEGEND_COLUMN_PADDING
                     }
                     data={legendData}
-                    x={this.legendLocation === 'right' ? this.sideLegendX : 0}
+                    x={
+                        this.legendLocation === 'right'
+                            ? this.sideLegendX + this.leftPadding
+                            : this.leftPadding
+                    }
                     y={
                         this.legendLocation === 'right'
                             ? this.sideLegendY
@@ -309,7 +320,7 @@ export default class ScatterPlot<
         return (
             <g>
                 <VictoryLabel
-                    x={x + LEGEND_TEXT_WIDTH}
+                    x={x + LEGEND_TEXT_WIDTH + this.leftPadding}
                     y={CORRELATION_INFO_Y}
                     textAnchor="end"
                     text={`Spearman: ${this.spearmanCorr.toFixed(2)}`}
@@ -317,7 +328,7 @@ export default class ScatterPlot<
                 />
                 {this.spearmanPval !== null && (
                     <VictoryLabel
-                        x={x + LEGEND_TEXT_WIDTH}
+                        x={x + LEGEND_TEXT_WIDTH + this.leftPadding}
                         y={CORRELATION_INFO_Y}
                         textAnchor="end"
                         dy="2"
@@ -330,7 +341,7 @@ export default class ScatterPlot<
                     />
                 )}
                 <VictoryLabel
-                    x={x + LEGEND_TEXT_WIDTH}
+                    x={x + LEGEND_TEXT_WIDTH + this.leftPadding}
                     y={CORRELATION_INFO_Y}
                     textAnchor="end"
                     dy="5"
@@ -339,7 +350,7 @@ export default class ScatterPlot<
                 />
                 {this.pearsonPval !== null && (
                     <VictoryLabel
-                        x={x + LEGEND_TEXT_WIDTH}
+                        x={x + LEGEND_TEXT_WIDTH + this.leftPadding}
                         y={CORRELATION_INFO_Y}
                         textAnchor="end"
                         dy="7"
@@ -371,9 +382,14 @@ export default class ScatterPlot<
                 <line
                     stroke={REGRESSION_STROKE}
                     strokeWidth={REGRESSION_STROKE_WIDTH}
-                    x1={this.sideLegendX + legendPadding}
+                    x1={this.sideLegendX + legendPadding + this.leftPadding}
                     y1={REGRESSION_EQUATION_Y}
-                    x2={this.sideLegendX + legendPadding + lineLength}
+                    x2={
+                        this.sideLegendX +
+                        legendPadding +
+                        lineLength +
+                        this.leftPadding
+                    }
                     y2={REGRESSION_EQUATION_Y}
                     dy="0"
                 />
@@ -382,7 +398,8 @@ export default class ScatterPlot<
                         this.sideLegendX +
                         legendPadding +
                         lineLength +
-                        linePadding
+                        linePadding +
+                        this.leftPadding
                     }
                     y={REGRESSION_EQUATION_Y}
                     dy="0"
@@ -395,7 +412,8 @@ export default class ScatterPlot<
                         this.sideLegendX +
                         legendPadding +
                         lineLength +
-                        linePadding
+                        linePadding +
+                        this.leftPadding
                     }
                     y={REGRESSION_EQUATION_Y}
                     dy="2"
@@ -665,6 +683,67 @@ export default class ScatterPlot<
         }
     }
 
+    protected handleSelection(points: any, bounds: any, props: any) {
+        this.props.onDataSelection &&
+            this.props.onDataSelection(
+                _.flatMap(points, (p: { data: D }) => p.data)
+            );
+    }
+
+    @autobind
+    protected handleSelectionCleared() {
+        this.props.onDataSelectionCleared &&
+            this.props.onDataSelectionCleared();
+    }
+
+    private get selectedDataAlert() {
+        if (this.props.selectedData && this.props.selectedData.length > 0) {
+            // we don't want to count non data-points like the regression line
+            const data = this.props.selectedData.filter(d => !!d.sampleId);
+            if (data.length === 0) {
+                return null;
+            }
+            const studies = _(this.props.data)
+                .uniqBy('studyId')
+                .map((d: D & { studyId: string }) => ({ studyId: d.studyId }))
+                .value();
+            const sampleIdentifiers = data.map(d => ({
+                sampleId: d.sampleId,
+                studyId: d.studyId,
+            }));
+            return (
+                <div
+                    data-test="selected-data-alert"
+                    style={{
+                        position: 'absolute',
+                        zIndex: 1,
+                        paddingTop: 50,
+                        marginLeft: this.leftPadding + 50,
+                        width: this.props.chartWidth - 100,
+                        textAlign: 'center',
+                    }}
+                >
+                    <strong>
+                        {`Selecting `}
+                        <a
+                            onClick={() => {
+                                submitToStudyViewPage(
+                                    studies,
+                                    sampleIdentifiers,
+                                    true
+                                );
+                            }}
+                        >
+                            {`${data.length} sample(s)`}
+                        </a>
+                    </strong>
+                </div>
+            );
+        } else {
+            return null;
+        }
+    }
+
     @autobind
     private getChart() {
         return (
@@ -672,80 +751,96 @@ export default class ScatterPlot<
                 ref={this.containerRef}
                 style={{ width: this.svgWidth, height: this.svgHeight }}
             >
-                <svg
-                    id={this.props.svgId || ''}
-                    ref={this.props.svgRef}
-                    style={{
-                        width: this.svgWidth,
-                        height: this.svgHeight,
-                        pointerEvents: 'all',
+                {this.selectedDataAlert}
+                <VictoryChart
+                    containerComponent={
+                        this.props.selectedData && (
+                            <VictorySelectionContainer
+                                containerRef={this.props.svgRef}
+                                activateSelectedData={false}
+                                onSelection={(
+                                    points: any,
+                                    bounds: any,
+                                    props: any
+                                ) =>
+                                    this.handleSelection(points, bounds, props)
+                                }
+                                responsive={true}
+                                onSelectionCleared={this.handleSelectionCleared}
+                            />
+                        )
+                    }
+                    padding={{
+                        left: this.leftPadding + 50,
+                        bottom:
+                            this.legendLocation === 'right'
+                                ? 50 + this.axisLabelXHeight
+                                : this.bottomLegendHeight +
+                                  50 +
+                                  this.axisLabelXHeight,
+                        top: 50,
+                        right:
+                            this.svgWidth -
+                            this.props.chartWidth +
+                            50 -
+                            this.leftPadding,
                     }}
+                    theme={CBIOPORTAL_VICTORY_THEME}
                     height={this.svgHeight}
                     width={this.svgWidth}
-                    role="img"
-                    viewBox={`0 0 ${this.svgWidth} ${this.svgHeight}`}
+                    domainPadding={PLOT_DATA_PADDING_PIXELS}
+                    singleQuadrantDomainPadding={false}
                 >
-                    <g transform={`translate(${this.leftPadding},0)`}>
-                        <VictoryChart
-                            theme={CBIOPORTAL_VICTORY_THEME}
-                            width={this.props.chartWidth}
-                            height={this.props.chartHeight}
-                            standalone={false}
-                            domainPadding={PLOT_DATA_PADDING_PIXELS}
-                            singleQuadrantDomainPadding={false}
-                        >
-                            {this.title}
-                            {this.legend}
-                            <VictoryAxis
-                                domain={this.plotDomain.x}
-                                orientation="bottom"
-                                offsetY={50}
-                                crossAxis={false}
-                                tickCount={NUM_AXIS_TICKS}
-                                tickFormat={this.tickFormatX}
-                                axisLabelComponent={<VictoryLabel dy={25} />}
-                                label={this.axisLabelX}
-                            />
-                            <VictoryAxis
-                                domain={this.plotDomain.y}
-                                offsetX={50}
-                                orientation="left"
-                                crossAxis={false}
-                                tickCount={NUM_AXIS_TICKS}
-                                tickFormat={this.tickFormatY}
-                                dependentAxis={true}
-                                axisLabelComponent={<VictoryLabel dy={-35} />}
-                                label={this.axisLabelY}
-                            />
-                            {this.data.map(dataWithAppearance => (
-                                <VictoryScatter
-                                    key={`${dataWithAppearance.fill},${dataWithAppearance.stroke},${dataWithAppearance.strokeWidth},${dataWithAppearance.strokeOpacity},${dataWithAppearance.fillOpacity},${dataWithAppearance.symbol}`}
-                                    style={{
-                                        data: {
-                                            fill: dataWithAppearance.fill,
-                                            stroke: dataWithAppearance.stroke,
-                                            strokeWidth:
-                                                dataWithAppearance.strokeWidth,
-                                            strokeOpacity:
-                                                dataWithAppearance.strokeOpacity,
-                                            fillOpacity:
-                                                dataWithAppearance.fillOpacity,
-                                        },
-                                    }}
-                                    size={this.size}
-                                    symbol={dataWithAppearance.symbol}
-                                    data={dataWithAppearance.data}
-                                    events={this.mouseEvents}
-                                    x={this.x}
-                                    y={this.y}
-                                />
-                            ))}
-                            {this.regressionLine}
-                        </VictoryChart>
-                        {this.correlationInfo}
-                        {this.regressionLineEquation}
-                    </g>
-                </svg>
+                    {this.title}
+                    {this.legend}
+                    <VictoryAxis
+                        domain={this.plotDomain.x}
+                        orientation="bottom"
+                        offsetY={
+                            50 + this.bottomLegendHeight + this.axisLabelXHeight
+                        }
+                        crossAxis={false}
+                        tickCount={NUM_AXIS_TICKS}
+                        tickFormat={this.tickFormatX}
+                        axisLabelComponent={<VictoryLabel dy={25} />}
+                        label={this.axisLabelX}
+                    />
+                    <VictoryAxis
+                        domain={this.plotDomain.y}
+                        offsetX={50 + this.leftPadding}
+                        orientation="left"
+                        crossAxis={false}
+                        tickCount={NUM_AXIS_TICKS}
+                        tickFormat={this.tickFormatY}
+                        dependentAxis={true}
+                        axisLabelComponent={<VictoryLabel dy={-35} />}
+                        label={this.axisLabelY}
+                    />
+                    {this.data.map(dataWithAppearance => (
+                        <VictoryScatter
+                            key={`${dataWithAppearance.fill},${dataWithAppearance.stroke},${dataWithAppearance.strokeWidth},${dataWithAppearance.strokeOpacity},${dataWithAppearance.fillOpacity},${dataWithAppearance.symbol}`}
+                            style={{
+                                data: {
+                                    fill: dataWithAppearance.fill,
+                                    stroke: dataWithAppearance.stroke,
+                                    strokeWidth: dataWithAppearance.strokeWidth,
+                                    strokeOpacity:
+                                        dataWithAppearance.strokeOpacity,
+                                    fillOpacity: dataWithAppearance.fillOpacity,
+                                },
+                            }}
+                            size={this.size}
+                            symbol={dataWithAppearance.symbol}
+                            data={dataWithAppearance.data}
+                            events={this.mouseEvents}
+                            x={this.x}
+                            y={this.y}
+                        />
+                    ))}
+                    {this.regressionLine}
+                    {this.correlationInfo}
+                    {this.regressionLineEquation}
+                </VictoryChart>
             </div>
         );
     }
@@ -762,7 +857,7 @@ export default class ScatterPlot<
                         container={this.container}
                         targetHovered={this.pointHovered}
                         targetCoords={{
-                            x: this.tooltipModel.x + BASE_LEFT_PADDING,
+                            x: this.tooltipModel.x,
                             y: this.tooltipModel.y,
                         }}
                         overlay={this.props.tooltip(this.tooltipModel.datum)}
