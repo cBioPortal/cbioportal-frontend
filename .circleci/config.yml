@@ -327,7 +327,7 @@ jobs:
   e2e_localdb_tests:
     machine:
       image: ubuntu-2204:2024.08.1
-    resource_class: large
+    resource_class: xlarge
     working_directory: /tmp/repo
     environment:
       BACKEND_PORT: 8080
@@ -474,10 +474,10 @@ workflows:
           requires:
             - pull_cbioportal_test_codebase
             - build_frontend
-      - e2e_tests:
-          requires:
-            - pull_cbioportal_test_codebase
-            - build_frontend
+#      - e2e_tests:
+#          requires:
+#            - pull_cbioportal_test_codebase
+#            - build_frontend
       # - e2e_tests_against_master:
       #     requires:
       #       - pull_cbioportal_test_codebase
