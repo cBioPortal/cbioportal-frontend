@@ -475,6 +475,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
 
     @observable searchCase: string = '';
     @observable searchMutation: string = '';
+    @observable.ref selectedData: IPlotSampleData[] = [];
     @observable highlightedLegendItems = observable.map<
         string,
         LegendDataWithId
@@ -499,6 +500,16 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         } else {
             this.highlightedLegendItems.set(ld.highlighting!.uid, ld);
         }
+    }
+
+    @action.bound
+    private onDataSelection(data: IPlotSampleData[]) {
+        this.selectedData = data;
+    }
+
+    @action.bound
+    private onDataSelectionCleared() {
+        this.selectedData = [];
     }
 
     @action.bound
@@ -1856,9 +1867,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         switch (parseInt((event.target as HTMLInputElement).value, 10)) {
             case EventKey.horz_logScale:
                 this.horzSelection.logScale = !this.horzSelection.logScale;
+                this.onDataSelectionCleared();
                 break;
             case EventKey.vert_logScale:
                 this.vertSelection.logScale = !this.vertSelection.logScale;
+                this.onDataSelectionCleared();
                 break;
             case EventKey.utilities_showRegressionLine:
                 this.showRegressionLine = !this.showRegressionLine;
@@ -2037,6 +2050,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         this.viewLimitValues = true;
         this.selectionHistory.updateVerticalFromSelection(this.vertSelection);
         this.autoChooseColoringMenuGene();
+        this.onDataSelectionCleared();
     }
 
     @action.bound
@@ -2045,6 +2059,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         this.viewLimitValues = true;
         this.selectionHistory.updateHorizontalFromSelection(this.horzSelection);
         this.autoChooseColoringMenuGene();
+        this.onDataSelectionCleared();
     }
 
     @action.bound
@@ -2067,6 +2082,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         this.vertSelection.selectedGenesetOption = option;
         this.viewLimitValues = true;
         this.selectionHistory.updateVerticalFromSelection(this.vertSelection);
+        this.onDataSelectionCleared();
     }
 
     @action.bound
@@ -2074,6 +2090,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         this.horzSelection.selectedGenesetOption = option;
         this.viewLimitValues = true;
         this.selectionHistory.updateHorizontalFromSelection(this.horzSelection);
+        this.onDataSelectionCleared();
     }
 
     @action.bound
@@ -2081,6 +2098,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         this.vertSelection.selectedGenericAssayOption = option;
         this.viewLimitValues = true;
         this.selectionHistory.updateVerticalFromSelection(this.vertSelection);
+        this.onDataSelectionCleared();
     }
 
     @action.bound
@@ -2088,11 +2106,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         this.horzSelection.selectedGenericAssayOption = option;
         this.viewLimitValues = true;
         this.selectionHistory.updateHorizontalFromSelection(this.horzSelection);
+        this.onDataSelectionCleared();
     }
 
     @action.bound
     private onColoringMenuOptionSelect(option: any) {
         this.coloringMenuSelection.selectedOption = option;
+        this.onDataSelectionCleared();
     }
 
     public test__selectGeneOption(vertical: boolean, optionValue: any) {
@@ -2849,6 +2869,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         this.vertSelection.selectedCategories = [];
 
         this.autoChooseColoringMenuGene();
+
+        this.onDataSelectionCleared();
     }
 
     @action.bound
@@ -2886,6 +2908,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         this.horzSelection.selectedCategories = [];
 
         this.autoChooseColoringMenuGene();
+
+        this.onDataSelectionCleared();
     }
 
     @action.bound
@@ -2897,6 +2921,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         this.selectionHistory.updateVerticalFromSelection(this.vertSelection);
         maybeSetLogScale(this.vertSelection);
         this.autoChooseColoringMenuGene();
+        this.onDataSelectionCleared();
     }
 
     @action.bound
@@ -2908,6 +2933,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         this.selectionHistory.updateHorizontalFromSelection(this.horzSelection);
         maybeSetLogScale(this.horzSelection);
         this.autoChooseColoringMenuGene();
+        this.onDataSelectionCleared();
     }
 
     @computed get hasMolecularProfile() {
@@ -2965,6 +2991,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         this.vertSelection.mutationCountBy = option.value;
         this.viewLimitValues = true;
         this.autoChooseColoringMenuGene();
+        this.onDataSelectionCleared();
     }
 
     @action.bound
@@ -2972,6 +2999,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         this.horzSelection.mutationCountBy = option.value;
         this.viewLimitValues = true;
         this.autoChooseColoringMenuGene();
+        this.onDataSelectionCleared();
     }
 
     @action.bound
@@ -2979,6 +3007,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         this.vertSelection.structuralVariantCountBy = option.value;
         this.viewLimitValues = true;
         this.autoChooseColoringMenuGene();
+        this.onDataSelectionCleared();
     }
 
     @action.bound
@@ -2986,6 +3015,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         this.horzSelection.structuralVariantCountBy = option.value;
         this.viewLimitValues = true;
         this.autoChooseColoringMenuGene();
+        this.onDataSelectionCleared();
     }
 
     @action.bound
@@ -3664,8 +3694,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             }
             return caseMatch || mutationMatch;
         };
+        const dataSelectionHighlight = (d: IPlotSampleData) => {
+            return this.selectedData.some(data => d.sampleId === data.sampleId);
+        };
         const highlightFunctions = [
             searchHighlight,
+            dataSelectionHighlight,
             ...Array.from(this.highlightedLegendItems.values()).map(
                 x => x.highlighting!.isDatumHighlighted
             ),
@@ -5761,6 +5795,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                         this.onClickLegendItem
                                     )}
                                     legendTitle={this.legendTitle}
+                                    onDataSelection={this.onDataSelection}
+                                    onDataSelectionCleared={
+                                        this.onDataSelectionCleared
+                                    }
+                                    selectedData={this.selectedData}
                                 />
                             );
                             break;
