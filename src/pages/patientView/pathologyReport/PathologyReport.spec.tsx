@@ -16,9 +16,9 @@ describe('PathologyReport Component', () => {
                 <PathologyReport pdfs={[]} iframeHeight={600} />
             );
 
-            assert.isTrue(wrapper.find('.alert.alert-info').exists());
+            assert.isTrue(wrapper.find('.alert').exists());
             assert.include(wrapper.text(), 'No pathology report available');
-            assert.isFalse(wrapper.find('iframe').exists());
+            assert.isFalse(wrapper.find('IFrameLoader').exists());
         });
 
         it('renders fallback when pdfs prop is undefined', () => {
@@ -26,20 +26,20 @@ describe('PathologyReport Component', () => {
                 <PathologyReport pdfs={undefined as any} iframeHeight={600} />
             );
 
-            assert.isTrue(wrapper.find('.alert.alert-info').exists());
+            assert.isTrue(wrapper.find('.alert').exists());
             assert.include(wrapper.text(), 'No pathology report available');
-            assert.isFalse(wrapper.find('iframe').exists());
+            assert.isFalse(wrapper.find('IFrameLoader').exists());
         });
     });
 
     describe('Normal rendering with PDFs', () => {
-        it('renders iframe when PDF is available', () => {
+        it('renders IFrameLoader when PDF is available', () => {
             const wrapper = shallow(
                 <PathologyReport pdfs={[mockPdf]} iframeHeight={600} />
             );
 
-            assert.isTrue(wrapper.find('iframe').exists());
-            assert.isFalse(wrapper.find('.alert.alert-info').exists());
+            assert.isTrue(wrapper.find('IFrameLoader').exists());
+            assert.isFalse(wrapper.find('.alert').exists());
         });
 
         it('uses correct iframe height', () => {
@@ -69,7 +69,8 @@ describe('PathologyReport Component', () => {
                 <PathologyReport pdfs={pdfs} iframeHeight={600} />
             );
 
-            assert.isTrue(wrapper.find('select').exists());
+            const select = wrapper.find('select');
+            assert.isTrue(select.exists());
             const options = wrapper.find('option');
             assert.equal(options.length, 2);
             assert.equal(options.at(0).prop('value'), pdfs[0].url);
@@ -120,7 +121,7 @@ describe('PathologyReport Component', () => {
                 <PathologyReport pdfs={[]} iframeHeight={600} />
             );
 
-            assert.isTrue(wrapper.find('.alert.alert-info').exists());
+            assert.isTrue(wrapper.find('.alert').exists());
             assert.equal(
                 (wrapper.instance() as PathologyReport).state.pdfUrl,
                 ''
@@ -129,8 +130,8 @@ describe('PathologyReport Component', () => {
             wrapper.setProps({ pdfs: [mockPdf] });
             wrapper.update();
 
-            assert.isFalse(wrapper.find('.alert.alert-info').exists());
-            assert.isTrue(wrapper.find('iframe').exists());
+            assert.isFalse(wrapper.find('.alert').exists());
+            assert.isTrue(wrapper.find('IFrameLoader').exists());
             assert.notEqual(
                 (wrapper.instance() as PathologyReport).state.pdfUrl,
                 ''
@@ -146,13 +147,13 @@ describe('PathologyReport Component', () => {
                 <PathologyReport pdfs={undefined as any} iframeHeight={600} />
             );
 
-            assert.isTrue(wrapper.find('.alert.alert-info').exists());
+            assert.isTrue(wrapper.find('.alert').exists());
 
             wrapper.setProps({ pdfs: [mockPdf] });
             wrapper.update();
 
-            assert.isFalse(wrapper.find('.alert.alert-info').exists());
-            assert.isTrue(wrapper.find('iframe').exists());
+            assert.isFalse(wrapper.find('.alert').exists());
+            assert.isTrue(wrapper.find('IFrameLoader').exists());
         });
 
         it('does not update state when pdfs remain empty', () => {
