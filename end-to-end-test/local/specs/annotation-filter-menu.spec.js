@@ -27,15 +27,15 @@ const SV_COUNTS_SORT_DESC_10 = {
     TTN: '4',
     NCOA4: '3',
     AGAP3: '2',
-    TMPRSS2: '2',
-    EML4: '2',
     CDK5RAP2: '2',
+    EML4: '2',
+    MKRN1: '2',
 };
 
 /**
  * For filtering of Structural Variants, see also: custom-driver-annotations-in-study-view.spec.js
  */
-describe.skip('alteration filter menu', function() {
+describe('alteration filter menu', function() {
     describe('study view', () => {
         describe('filtering of gene tables', () => {
             beforeEach(async () => {
@@ -490,11 +490,11 @@ describe.skip('alteration filter menu', function() {
                         BRAF: '36',
                         SND1: '10',
                         AGK: '4',
-                        ALK: '3',
                         TTN: '4',
-                        MKRN1: '2',
+                        ALK: '3',
                         AGAP3: '2',
                         CDK5RAP2: '2',
+                        MKRN1: '2',
                     }
                 );
                 assert.deepStrictEqual(
@@ -783,9 +783,15 @@ const clickCheckBoxStudyView = async name => {
 };
 
 const sortDescLimit = (entryCounts, limit = 10) => {
+    // First sort by alteration count descending,
+    // and then alphabetically by gene name
     return Object.fromEntries(
         Object.entries(entryCounts)
-            .sort((e1, e2) => e1[1] < e2[1])
+            .sort((e1, e2) =>
+                e1[1] !== e2[1]
+                    ? parseInt(e2[1]) - parseInt(e1[1])
+                    : e1[0].localeCompare(e2[0])
+            )
             .slice(0, limit)
     );
 };
