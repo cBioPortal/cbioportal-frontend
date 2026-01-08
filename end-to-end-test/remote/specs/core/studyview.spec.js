@@ -124,6 +124,11 @@ describe('study laml_tcga tests', () => {
         ).waitForDisplayed({
             timeout: WAIT_FOR_VISIBLE_TIMEOUT,
         });
+        // by default the table is sorted by frequency, but all the frequencies are the same for all samples.
+        // sort the table by sample id instead to make sure a stable element order
+        await clickElement(
+            "[data-test='chart-container-OTHER_SAMPLE_ID'] [aria-label='Category']"
+        );
         const res = await browser.checkElement(
             "[data-test='chart-container-OTHER_SAMPLE_ID']"
         );
