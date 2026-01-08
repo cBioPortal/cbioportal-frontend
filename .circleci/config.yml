@@ -398,14 +398,14 @@ jobs:
           path: /tmp/repo/cbioportal-frontend/end-to-end-test/local/screenshots/screen
           destination: /screenshots/screen
       - store_artifacts:
+          path: /tmp/repo/cbioportal-frontend/end-to-end-test/local/screenshots/error
+          destination: /screenshots/error
+      - store_artifacts:
           path: /tmp/repo/cbioportal-frontend/end-to-end-test/local/screenshots/reference
           destination: /screenshots/reference
       - store_artifacts:
           path: /tmp/repo/cbioportal-frontend/end-to-end-test/shared/image-compare
           destination: /image-compare
-      - store_artifacts:
-          path: /tmp/repo/cbioportal-frontend/end-to-end-test/local/errorShots
-          destination: /errorShots
       - store_test_results:
           path: /tmp/repo/cbioportal-frontend/end-to-end-test/local/junit
       - store_artifacts:
