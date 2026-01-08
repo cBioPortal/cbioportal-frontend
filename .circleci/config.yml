@@ -393,13 +393,13 @@ jobs:
           path: /tmp/repo/docker-compose-logs.txt
       - store_artifacts:
           path: /tmp/repo/cbioportal-frontend/end-to-end-test/local/screenshots/diff
-          destination: /screenshots
+          destination: /screenshots/diff
       - store_artifacts:
           path: /tmp/repo/cbioportal-frontend/end-to-end-test/local/screenshots/screen
-          destination: /screen
+          destination: /screenshots/screen
       - store_artifacts:
           path: /tmp/repo/cbioportal-frontend/end-to-end-test/local/screenshots/reference
-          destination: /reference
+          destination: /screenshots/reference
       - store_artifacts:
           path: /tmp/repo/cbioportal-frontend/end-to-end-test/shared/image-compare
           destination: /image-compare
