@@ -5547,6 +5547,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                         </a>
                     </strong>
                     <button
+                        className="btn btn-default btn-xs"
                         style={{ cursor: 'pointer', marginLeft: 6 }}
                         onClick={this.onDataSelectionCleared}
                     >
