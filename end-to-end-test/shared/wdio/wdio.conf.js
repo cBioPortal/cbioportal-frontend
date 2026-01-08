@@ -249,18 +249,20 @@ exports.config = {
 
     specs: [
         './local/specs/SurvivalChart.screenshot.spec.js',
-        './local/specs/annotation-filter-menu.spec.js',
-        // './local/specs/core/comparison-alterations-tab.spec.js',
-        // './local/specs/core/comparisonTab.screenshot.spec.js',
-        // './local/specs/core/groupComparison.screenshot.spec.js',
+        './local/specs/core/resultsview.screenshot.spec.js',
+        './local/specs/core/plotstab.screenshot.spec.js',
         // './local/specs/core/oncoprint.screenshot.spec.js',
         // './local/specs/core/patientview.screenshot.spec.js',
+        // './local/specs/core/comparison-alterations-tab.spec.js',
+        //'./local/specs/annotation-filter-menu.spec.js',
+        // './local/specs/core/comparisonTab.screenshot.spec.js',
+        // './local/specs/core/groupComparison.screenshot.spec.js',
         // './local/specs/core/patientview.spec.js',
-        // './local/specs/core/plotstab.screenshot.spec.js',
+
         // './local/specs/core/plotstab.spec.js',
         // './local/specs/core/postedquery.spec.js',
         // './local/specs/core/querypage.spec.js',
-        // './local/specs/core/resultsview.screenshot.spec.js',
+
         // './local/specs/core/resultsviewDisabledTabs.spec.js',
         // './local/specs/core/settings-menu.spec.js',
         // './local/specs/core/studyview.screenshot.spec.js',
