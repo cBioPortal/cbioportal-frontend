@@ -398,8 +398,8 @@ jobs:
           path: /tmp/repo/cbioportal-frontend/end-to-end-test/local/screenshots/screen
           destination: /screenshots/screen
       - store_artifacts:
-          path: /tmp/repo/cbioportal-frontend/end-to-end-test/local/screenshots/error
-          destination: /screenshots/error
+          path: /tmp/repo/cbioportal-frontend/end-to-end-test/local/screenshots/errors
+          destination: /screenshots/errors
       - store_artifacts:
           path: /tmp/repo/cbioportal-frontend/end-to-end-test/local/screenshots/reference
           destination: /screenshots/reference
