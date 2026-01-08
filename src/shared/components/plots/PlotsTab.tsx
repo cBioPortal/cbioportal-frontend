@@ -168,7 +168,7 @@ import { FilteredAndAnnotatedMutationsReport } from 'shared/lib/comparison/Analy
 import { AnnotatedNumericGeneMolecularData } from 'shared/model/AnnotatedNumericGeneMolecularData';
 import { ExtendedAlteration } from 'shared/model/ExtendedAlteration';
 import CaseFilterWarning from '../banners/CaseFilterWarning';
-import { submitToStudyViewPage } from 'pages/resultsView/querySummary/QuerySummaryUtils';
+import { SelectedDataAlert } from './SelectedDataAlert';
 
 enum EventKey {
     horz_logScale,
@@ -5511,55 +5511,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         );
     }
 
-    private get selectedDataAlert() {
-        if (this.selectedData.length > 0) {
-            const studies = _(this.scatterPlotData.result)
-                .uniqBy('studyId')
-                .map(d => ({ studyId: d.studyId }))
-                .value();
-            const sampleIdentifiers = this.selectedData.map(d => ({
-                sampleId: d.sampleId,
-                studyId: d.studyId,
-            }));
-            return (
-                <div
-                    data-test="selected-data-alert"
-                    style={{
-                        position: 'absolute',
-                        zIndex: 1,
-                        paddingTop: 30,
-                        width: this.plotElementWidth,
-                        textAlign: 'center',
-                    }}
-                >
-                    <strong>
-                        {`Selecting `}
-                        <a
-                            onClick={() => {
-                                submitToStudyViewPage(
-                                    studies,
-                                    sampleIdentifiers,
-                                    true
-                                );
-                            }}
-                        >
-                            {`${this.selectedData.length} sample(s)`}
-                        </a>
-                    </strong>
-                    <button
-                        className="btn btn-default btn-xs"
-                        style={{ cursor: 'pointer', marginLeft: 6 }}
-                        onClick={this.onDataSelectionCleared}
-                    >
-                        Clear Selection
-                    </button>
-                </div>
-            );
-        } else {
-            return null;
-        }
-    }
-
     @computed get plot() {
         const promises: MobxPromise<any>[] = [
             this.plotType,
@@ -6299,7 +6250,18 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                 }}
                             </Observer>
 
-                            {this.selectedDataAlert}
+                            {this.selectedData.length > 0 && (
+                                <SelectedDataAlert
+                                    selectedData={this.selectedData}
+                                    scatterPlotData={
+                                        this.scatterPlotData.result!
+                                    }
+                                    plotElementWidth={this.plotElementWidth}
+                                    onDataSelectionCleared={
+                                        this.onDataSelectionCleared
+                                    }
+                                />
+                            )}
 
                             <ScrollWrapper
                                 plotElementWidth={this.plotElementWidth}
