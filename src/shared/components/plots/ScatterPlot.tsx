@@ -41,7 +41,6 @@ import {
 import LegendDataComponent from './LegendDataComponent';
 import LegendLabelComponent from './LegendLabelComponent';
 import autobind from 'autobind-decorator';
-import { submitToStudyViewPage } from 'pages/resultsView/querySummary/QuerySummaryUtils';
 
 export interface IBaseScatterPlotData {
     x: number;
@@ -82,7 +81,6 @@ export interface IScatterPlotProps<D extends IBaseScatterPlotData> {
     fontFamily?: string;
     legendTitle?: string | string[];
     onDataSelection?: (selectedSampleData: D[]) => void;
-    onDataSelectionCleared?: () => void;
     selectedData?: IPlotSampleData[];
 }
 // constants related to the gutter
@@ -684,64 +682,14 @@ export default class ScatterPlot<
     }
 
     protected handleSelection(points: any, bounds: any, props: any) {
+        // we don't want to select non data-points like the regression line
+        // so we filter for data with a sampleId
         this.props.onDataSelection &&
             this.props.onDataSelection(
-                _.flatMap(points, (p: { data: D }) => p.data)
+                _.flatMap(points, (p: { data: D }) => p.data).filter(
+                    (d: any) => d.sampleId
+                )
             );
-    }
-
-    @autobind
-    protected handleSelectionCleared() {
-        this.props.onDataSelectionCleared &&
-            this.props.onDataSelectionCleared();
-    }
-
-    private get selectedDataAlert() {
-        if (this.props.selectedData && this.props.selectedData.length > 0) {
-            // we don't want to count non data-points like the regression line
-            const data = this.props.selectedData.filter(d => !!d.sampleId);
-            if (data.length === 0) {
-                return null;
-            }
-            const studies = _(this.props.data)
-                .uniqBy('studyId')
-                .map((d: D & { studyId: string }) => ({ studyId: d.studyId }))
-                .value();
-            const sampleIdentifiers = data.map(d => ({
-                sampleId: d.sampleId,
-                studyId: d.studyId,
-            }));
-            return (
-                <div
-                    data-test="selected-data-alert"
-                    style={{
-                        position: 'absolute',
-                        zIndex: 1,
-                        paddingTop: 50,
-                        marginLeft: this.leftPadding + 50,
-                        width: this.props.chartWidth - 100,
-                        textAlign: 'center',
-                    }}
-                >
-                    <strong>
-                        {`Selecting `}
-                        <a
-                            onClick={() => {
-                                submitToStudyViewPage(
-                                    studies,
-                                    sampleIdentifiers,
-                                    true
-                                );
-                            }}
-                        >
-                            {`${data.length} sample(s)`}
-                        </a>
-                    </strong>
-                </div>
-            );
-        } else {
-            return null;
-        }
     }
 
     @autobind
@@ -751,7 +699,6 @@ export default class ScatterPlot<
                 ref={this.containerRef}
                 style={{ width: this.svgWidth, height: this.svgHeight }}
             >
-                {this.selectedDataAlert}
                 <VictoryChart
                     containerComponent={
                         this.props.selectedData && (
@@ -766,7 +713,6 @@ export default class ScatterPlot<
                                     this.handleSelection(points, bounds, props)
                                 }
                                 responsive={true}
-                                onSelectionCleared={this.handleSelectionCleared}
                             />
                         )
                     }
