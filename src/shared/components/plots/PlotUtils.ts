@@ -279,6 +279,7 @@ export function makeUniqueColorGetter(init_used_colors?: string[]) {
     };
 }
 
+// separate each scatter data into its own bucket
 export function separateScatterData<D>(
     data: D[],
     fill: string | ((d: D) => string),

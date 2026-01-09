@@ -2,47 +2,9 @@ import URLWrapper from '../../shared/lib/URLWrapper';
 import { StudyViewPageTabKey, StudyViewURLQuery } from './StudyViewPageStore';
 import { PagePath } from '../../shared/enums/PagePaths';
 import { computed, makeObservable } from 'mobx';
-import { PatientViewPageTabs } from '../patientView/PatientViewPageTabs';
 import { StudyViewPageTabKeyEnum } from './StudyViewPageTabs';
 import ExtendedRouterStore from '../../shared/lib/ExtendedRouterStore';
-
-export type PlotsSelectionParam = {
-    selectedGeneOption?: string;
-    selectedGenesetOption?: string;
-    selectedGenericAssayOption?: string;
-    dataType?: string;
-    selectedDataSourceOption?: string;
-    mutationCountBy?: string;
-    structuralVariantCountBy?: string;
-    logScale?: string;
-};
-
-const PlotsSelectionParamProps: Required<PlotsSelectionParam> = {
-    selectedGeneOption: '',
-    selectedGenesetOption: '',
-    selectedGenericAssayOption: '',
-    dataType: '',
-    selectedDataSourceOption: '',
-    mutationCountBy: '',
-    structuralVariantCountBy: '',
-    logScale: '',
-};
-
-export type PlotsColoringParam = {
-    selectedOption?: string;
-    logScale?: string;
-    colorByMutationType?: string;
-    colorByCopyNumber?: string;
-    colorBySv?: string;
-};
-
-const PlotsColoringParamProps: Required<PlotsColoringParam> = {
-    selectedOption: '',
-    logScale: '',
-    colorByMutationType: '',
-    colorByCopyNumber: '',
-    colorBySv: '',
-};
+import { PLOTS_TAB_URL_PARAMS } from 'shared/components/plots/PlotsTabUrlParameters';
 
 export default class StudyViewURLWrapper extends URLWrapper<
     Pick<
@@ -60,18 +22,7 @@ export default class StudyViewURLWrapper extends URLWrapper<
         super(routing, {
             tab: { isSessionProp: false },
             resourceUrl: { isSessionProp: false },
-            plots_horz_selection: {
-                isSessionProp: false,
-                nestedObjectProps: PlotsSelectionParamProps,
-            },
-            plots_vert_selection: {
-                isSessionProp: false,
-                nestedObjectProps: PlotsSelectionParamProps,
-            },
-            plots_coloring_selection: {
-                isSessionProp: false,
-                nestedObjectProps: PlotsColoringParamProps,
-            },
+            ...PLOTS_TAB_URL_PARAMS,
             geneset_list: { isSessionProp: true },
             generic_assay_groups: { isSessionProp: false },
         });
