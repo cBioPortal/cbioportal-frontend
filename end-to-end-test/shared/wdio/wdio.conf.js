@@ -283,9 +283,9 @@ exports.config = {
         // './local/specs/treatment.spec.js',
         // './local/specs/user-display-name.spec.js',
         // THESE BREAK THE TESTS
-        './local/specs/virtual-study.spec.js',
-        './local/specs/hide-download-controls.spec.js',
-        // './local/specs/hide-login-button.spec.js',
+        //'./local/specs/virtual-study.spec.js',
+        // THIS ONE BREWAKS './local/specs/hide-download-controls.spec.js',
+        './local/specs/hide-login-button.spec.js',
     ],
 
     //exclude: ['./remote/specs/core/groupComparisonLollipop.spec.js'],
