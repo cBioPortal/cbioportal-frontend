@@ -34,7 +34,10 @@ export default class UsageAgreement extends React.Component<
     constructor(props: IUsageAgreement) {
         super(props);
         makeObservable(this);
-        if (props.displayImmediately) {
+    }
+
+    componentDidMount() {
+        if (this.props.displayImmediately) {
             this.modalShow = true;
         }
     }
