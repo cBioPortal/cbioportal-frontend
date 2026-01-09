@@ -6,7 +6,7 @@ import InfoIcon from '../InfoIcon';
 import _ from 'lodash';
 import { Sample } from 'cbioportal-ts-api-client';
 
-export interface ICohortSelector {
+export interface IPlotsCohortSelector {
     includeNavCohortOption: boolean;
     samplesInCohort: Sample[];
     study: string;
@@ -28,7 +28,7 @@ export enum CohortOptions {
 
 @observer
 export default class CohortSelector extends React.Component<
-    ICohortSelector,
+    IPlotsCohortSelector,
     {}
 > {
     @computed get defaultOptions(): {
