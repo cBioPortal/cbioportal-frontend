@@ -293,7 +293,7 @@ exports.config = {
     // Patterns to exclude.
     exclude: [
         './local/specs/web-tour.spec.js',
-        './local/specs/virtual-study.spec.js',
+        //   './local/specs/virtual-study.spec.js',
     ],
     //
     // ============
