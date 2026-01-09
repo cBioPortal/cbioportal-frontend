@@ -248,10 +248,10 @@ exports.config = {
     //specs: [SPEC_FILE_PATTERN],
 
     specs: [
-        './local/specs/SurvivalChart.screenshot.spec.js',
-        './local/specs/core/resultsview.screenshot.spec.js',
-        './local/specs/core/plotstab.screenshot.spec.js',
-        './local/specs/core/oncoprint.screenshot.spec.js',
+        // './local/specs/SurvivalChart.screenshot.spec.js',
+        // './local/specs/core/resultsview.screenshot.spec.js',
+        // './local/specs/core/plotstab.screenshot.spec.js',
+        // './local/specs/core/oncoprint.screenshot.spec.js',
         // './local/specs/core/patientview.screenshot.spec.js',
         // './local/specs/core/comparison-alterations-tab.spec.js',
         // './local/specs/annotation-filter-menu.spec.js',
@@ -283,8 +283,7 @@ exports.config = {
         // './local/specs/treatment.spec.js',
         // './local/specs/user-display-name.spec.js',
         // THESE BREAK THE TESTS
-        // './local/specs/virtual-study.spec.js',
-        // './local/specs/web-tour.spec.js',
+        './local/specs/virtual-study.spec.js',
         // './local/specs/hide-download-controls.spec.js',
         // './local/specs/hide-login-button.spec.js',
     ],
