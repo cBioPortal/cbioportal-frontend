@@ -25,6 +25,10 @@ import {
     StudyAgreement,
 } from 'appShell/App/usageAgreements/StudyAgreement';
 import {
+    shouldShowTempoWarning,
+    TempoAgreement,
+} from 'appShell/App/usageAgreements/TempoAgreement';
+import {
     GenieAgreement,
     shouldShowGenieWarning,
 } from 'appShell/App/usageAgreements/GenieAgreement';
@@ -116,6 +120,8 @@ export default class Container extends React.Component<IContainerProps, {}> {
                             {shouldShowStudyViewWarning() && <StudyAgreement />}
 
                             {shouldShowGenieWarning() && <GenieAgreement />}
+
+                            {shouldShowTempoWarning() && <TempoAgreement />}
 
                             <div className="contentWidth">
                                 <PortalHeader appStore={this.appStore} />
