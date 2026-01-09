@@ -6,7 +6,7 @@ import expiredStorage from 'expired-storage';
 
 const TEMPO_STUDY_WARNING_PERSISTENCE_KEY = 'tempo-study-usage-agreement';
 
-export function shouldShowTempoWarning(studyIds: string[] | undefined) {
+export function shouldShowTempoWarning(studyIds: string[]) {
     // Detect whether we are viewing the TEMPO study
     // TODO: how should we handle aggregate study views?
     const isTempoStudy = studyIds?.length === 1 && studyIds[0] === 'tempo_msk';
@@ -16,17 +16,15 @@ export function shouldShowTempoWarning(studyIds: string[] | undefined) {
         !getBrowserWindow().isMSKCIS &&
         isTempoStudy;
 
-    // return (
-    //     showTempoWarning &&
-    //     new expiredStorage().getItem(TEMPO_STUDY_WARNING_PERSISTENCE_KEY) !==
-    //         'true'
-    // );
-
-    console.log(studyIds + '');
-    return true;
+    return (
+        showTempoWarning &&
+        new expiredStorage().getItem(TEMPO_STUDY_WARNING_PERSISTENCE_KEY) !==
+            'true'
+    );
 }
 
 export const TempoAgreement: React.FunctionComponent<{}> = function({}) {
+    // TODO: replace with actual usage agreement for TEMPO
     return (
         <UsageAgreement
             displayImmediately={true}
