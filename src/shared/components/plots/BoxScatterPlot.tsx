@@ -784,42 +784,37 @@ export default class BoxScatterPlot<
         for (let i = 0; i < this.props.data.length; i++) {
             const categoryCoord = this.categoryCoord(i);
             for (const d of this.props.data[i].data) {
+                const dataPoint = Object.assign({}, d, {
+                    [dataAxis]: d.value,
+                    [categoryAxis]: categoryCoord,
+                } as { x: number; y: number });
+
                 if (this.props.highlightedSamples?.includes(d.sampleId)) {
-                    highlightedData.push(
-                        Object.assign({}, d, {
-                            [dataAxis]: d.value,
-                            [categoryAxis]: categoryCoord,
-                        } as { x: number; y: number })
-                    );
+                    highlightedData.push(dataPoint);
                 } else {
-                    data.push(
-                        Object.assign({}, d, {
-                            [dataAxis]: d.value,
-                            [categoryAxis]: categoryCoord,
-                        } as { x: number; y: number })
-                    );
+                    data.push(dataPoint);
                 }
             }
         }
-        const highlightedDataBuckets = separateScatterData<D>(
-            highlightedData,
+        const sharedArgs = [
             ifNotDefined(this.props.fill, '0x000000'),
             ifNotDefined(this.props.stroke, '0x000000'),
             ifNotDefined(this.props.strokeWidth, 0),
             ifNotDefined(this.props.strokeOpacity, 1),
             ifNotDefined(this.props.fillOpacity, 1),
             ifNotDefined(this.props.symbol, 'circle'),
-            this.props.zIndexSortBy
+            this.props.zIndexSortBy,
+        ] as const;
+        // both data accept the same styling props
+        // the difference is that highlighted data are larger in size and have unique labels
+        // because of this, we separate each highlighted data point into its own bucket
+        const highlightedDataBuckets = separateScatterData<D>(
+            highlightedData,
+            ...sharedArgs
         );
         const unHighlightedDataBuckets = separateScatterDataByAppearance<D>(
             data,
-            ifNotDefined(this.props.fill, '0x000000'),
-            ifNotDefined(this.props.stroke, '0x000000'),
-            ifNotDefined(this.props.strokeWidth, 0),
-            ifNotDefined(this.props.strokeOpacity, 1),
-            ifNotDefined(this.props.fillOpacity, 1),
-            ifNotDefined(this.props.symbol, 'circle'),
-            this.props.zIndexSortBy
+            ...sharedArgs
         );
         // highlighted data points should appear in front of the other data points
         return [...unHighlightedDataBuckets, ...highlightedDataBuckets];

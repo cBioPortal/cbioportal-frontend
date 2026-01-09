@@ -119,7 +119,6 @@ import Pluralize from 'pluralize';
 import LastPlotsTabSelectionForDatatype from './LastPlotsTabSelectionForDatatype';
 import { generateQuickPlots } from './QuickPlots';
 import ResultsViewURLWrapper, {
-    PlotsSelectionParam,
     ResultsViewURLQuery,
 } from 'pages/resultsView/ResultsViewURLWrapper';
 import ClinicalDataCache, {
@@ -174,6 +173,7 @@ import SampleManager from 'pages/patientView/SampleManager';
 import PatientViewUrlWrapper, {
     PatientViewUrlQuery,
 } from 'pages/patientView/PatientViewUrlWrapper';
+import { PlotsSelectionParam } from './PlotsTabUrlParameters';
 
 enum EventKey {
     horz_logScale,
@@ -202,6 +202,11 @@ export enum PotentialColoringType {
 }
 
 export type SelectedColoringTypes = Partial<{ [c in ColoringType]: any }>;
+
+export type PlotsTabURLQuery =
+    | ResultsViewURLQuery
+    | StudyViewURLQuery
+    | PatientViewUrlQuery;
 
 export enum PlotType {
     ScatterPlot,
@@ -749,7 +754,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     }
 
     @computed get showPlot(): boolean {
-        return this.plotDataExistsForTwoAxes || this.waterfallPlotIsShown;
+        return this.plotDataExistsForTwoAxes || this.shouldShowWaterfallPlot;
     }
 
     @computed get dataAvailability(): JSX.Element[] {
@@ -1458,27 +1463,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                         : self.props.urlWrapper.query.plots_horz_selection) ||
                     {};
                 const localSelection = vertical
-                    ? localStorage.getItem('vertGeneSelection')
-                    : localStorage.getItem('horzGeneSelection');
-                // if empty, set gene selection in url to local selection if available
-                if (!urlSelection.selectedGeneOption && localSelection) {
-                    self.props.urlWrapper.updateURL(
-                        (
-                            currentParams:
-                                | ResultsViewURLQuery
-                                | StudyViewURLQuery
-                                | PatientViewUrlQuery
-                        ) => {
-                            if (vertical) {
-                                currentParams.plots_vert_selection!.selectedGeneOption = localSelection;
-                            } else {
-                                currentParams.plots_horz_selection!.selectedGeneOption = localSelection;
-                            }
-                            return currentParams;
-                        }
-                    );
-                }
-                const param = urlSelection.selectedGeneOption;
+                    ? localStorage.getItem('plotsVertGeneSelection')
+                    : localStorage.getItem('plotsHorzGeneSelection');
+                const param = urlSelection.selectedGeneOption || localSelection;
 
                 if (!param) {
                     return undefined;
@@ -1494,17 +1481,18 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             },
             set _selectedGeneOption(o: any) {
                 if (vertical) {
-                    localStorage.setItem('vertGeneSelection', o && o.value);
+                    localStorage.setItem(
+                        'plotsVertGeneSelection',
+                        o && o.value
+                    );
                 } else {
-                    localStorage.setItem('horzGeneSelection', o && o.value);
+                    localStorage.setItem(
+                        'plotsHorzGeneSelection',
+                        o && o.value
+                    );
                 }
                 self.props.urlWrapper.updateURL(
-                    (
-                        currentParams:
-                            | ResultsViewURLQuery
-                            | StudyViewURLQuery
-                            | PatientViewUrlQuery
-                    ) => {
+                    (currentParams: PlotsTabURLQuery) => {
                         if (vertical) {
                             currentParams.plots_vert_selection!.selectedGeneOption =
                                 o && o.value;
@@ -1538,9 +1526,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             },
             set _selectedGenesetOption(o: any) {
                 self.props.urlWrapper.updateURL(
-                    (
-                        currentParams: ResultsViewURLQuery | StudyViewURLQuery
-                    ) => {
+                    (currentParams: PlotsTabURLQuery) => {
                         if (vertical) {
                             currentParams.plots_vert_selection!.selectedGenesetOption =
                                 o && o.value;
@@ -1574,9 +1560,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             },
             set _selectedGenericAssayOption(o: any) {
                 self.props.urlWrapper.updateURL(
-                    (
-                        currentParams: ResultsViewURLQuery | StudyViewURLQuery
-                    ) => {
+                    (currentParams: PlotsTabURLQuery) => {
                         if (vertical) {
                             currentParams.plots_vert_selection!.selectedGenericAssayOption =
                                 o && o.value;
@@ -1619,9 +1603,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             },
             set _selectedDataSourceOption(o: any) {
                 self.props.urlWrapper.updateURL(
-                    (
-                        currentParams: ResultsViewURLQuery | StudyViewURLQuery
-                    ) => {
+                    (currentParams: PlotsTabURLQuery) => {
                         if (vertical) {
                             currentParams.plots_vert_selection!.selectedDataSourceOption =
                                 o && o.value;
@@ -1644,9 +1626,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             },
             set _dataType(d: string | undefined) {
                 self.props.urlWrapper.updateURL(
-                    (
-                        currentParams: ResultsViewURLQuery | StudyViewURLQuery
-                    ) => {
+                    (currentParams: PlotsTabURLQuery) => {
                         if (vertical) {
                             (currentParams.plots_vert_selection as Partial<
                                 PlotsSelectionParam
@@ -1671,9 +1651,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             },
             set _mutationCountBy(c: MutationCountBy) {
                 self.props.urlWrapper.updateURL(
-                    (
-                        currentParams: ResultsViewURLQuery | StudyViewURLQuery
-                    ) => {
+                    (currentParams: PlotsTabURLQuery) => {
                         if (vertical) {
                             currentParams.plots_vert_selection!.mutationCountBy = c;
                         } else {
@@ -1694,9 +1672,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             },
             set _structuralVariantCountBy(c: StructuralVariantCountBy) {
                 self.props.urlWrapper.updateURL(
-                    (
-                        currentParams: ResultsViewURLQuery | StudyViewURLQuery
-                    ) => {
+                    (currentParams: PlotsTabURLQuery) => {
                         if (vertical) {
                             currentParams.plots_vert_selection!.structuralVariantCountBy = c;
                         } else {
@@ -1718,9 +1694,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             },
             set _logScale(l: boolean) {
                 self.props.urlWrapper.updateURL(
-                    (
-                        currentParams: ResultsViewURLQuery | StudyViewURLQuery
-                    ) => {
+                    (currentParams: PlotsTabURLQuery) => {
                         if (vertical) {
                             currentParams.plots_vert_selection!.logScale = l.toString();
                         } else {
@@ -1826,11 +1800,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             set _selectedOptionValue(v: string | undefined) {
                 runInAction(() => {
                     self.props.urlWrapper.updateURL(
-                        (
-                            currentQuery:
-                                | ResultsViewURLQuery
-                                | StudyViewURLQuery
-                        ) => {
+                        (currentQuery: PlotsTabURLQuery) => {
                             currentQuery.plots_coloring_selection!.selectedOption = v;
                             return currentQuery;
                         }
@@ -1848,7 +1818,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             },
             set logScale(s: boolean) {
                 self.props.urlWrapper.updateURL(
-                    (currentQuery: ResultsViewURLQuery | StudyViewURLQuery) => {
+                    (currentQuery: PlotsTabURLQuery) => {
                         currentQuery.plots_coloring_selection!.logScale = s.toString();
                         return currentQuery;
                     }
@@ -1906,34 +1876,28 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
 
     @action
     setColorByMutationType(s: boolean) {
-        this.props.urlWrapper.updateURL(
-            (currentQuery: ResultsViewURLQuery | StudyViewURLQuery) => {
-                currentQuery.plots_coloring_selection!.colorByMutationType = s.toString();
-                return currentQuery;
-            }
-        );
+        this.props.urlWrapper.updateURL((currentQuery: PlotsTabURLQuery) => {
+            currentQuery.plots_coloring_selection!.colorByMutationType = s.toString();
+            return currentQuery;
+        });
         // reset highlights
         this.highlightedLegendItems.clear();
     }
     @action
     setColorByCopyNumber(s: boolean) {
-        this.props.urlWrapper.updateURL(
-            (currentQuery: ResultsViewURLQuery | StudyViewURLQuery) => {
-                currentQuery.plots_coloring_selection!.colorByCopyNumber = s.toString();
-                return currentQuery;
-            }
-        );
+        this.props.urlWrapper.updateURL((currentQuery: PlotsTabURLQuery) => {
+            currentQuery.plots_coloring_selection!.colorByCopyNumber = s.toString();
+            return currentQuery;
+        });
         // reset highlights
         this.highlightedLegendItems.clear();
     }
     @action
     setColorByStructuralVariant(s: boolean) {
-        this.props.urlWrapper.updateURL(
-            (currentQuery: ResultsViewURLQuery | StudyViewURLQuery) => {
-                currentQuery.plots_coloring_selection!.colorBySv = s.toString();
-                return currentQuery;
-            }
-        );
+        this.props.urlWrapper.updateURL((currentQuery: PlotsTabURLQuery) => {
+            currentQuery.plots_coloring_selection!.colorBySv = s.toString();
+            return currentQuery;
+        });
         // reset highlights
         this.highlightedLegendItems.clear();
     }
@@ -2322,6 +2286,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         },
     });
 
+    // adds option to use same gene as the one in horizontal axis selection
     private makeSameGeneOption(
         vertical: boolean,
         selection: AxisMenuSelection
@@ -2709,7 +2674,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     }
 
     private showSortOrderButton(onVerticalAxis: boolean): boolean {
-        if (this.waterfallPlotIsShown) {
+        if (this.shouldShowWaterfallPlot) {
             if (onVerticalAxis) {
                 return !this.isHorizontalWaterfallPlot;
             } else {
@@ -2719,7 +2684,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         return false;
     }
 
-    @computed get waterfallPlotIsShown(): boolean {
+    @computed get shouldShowWaterfallPlot(): boolean {
         if (
             this.horzAxisDataPromise.isComplete &&
             this.vertAxisDataPromise.isComplete
@@ -3831,7 +3796,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         let showMessage = false;
         if (
             this.searchMutationWords.length > 0 &&
-            this.waterfallPlotIsShown &&
+            this.shouldShowWaterfallPlot &&
             this.waterfallPlotData.isComplete
         ) {
             showMessage = true;
@@ -5624,7 +5589,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         return (
             this.plotType.isComplete &&
             this.plotType.result !== PlotType.DiscreteVsDiscrete &&
-            (this.plotDataExistsForTwoAxes || this.waterfallPlotIsShown)
+            (this.plotDataExistsForTwoAxes || this.shouldShowWaterfallPlot)
         );
     }
 
@@ -6331,7 +6296,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                                     }
                                                     inputProps={{
                                                         type: this
-                                                            .waterfallPlotIsShown
+                                                            .shouldShowWaterfallPlot
                                                             ? 'radio'
                                                             : 'checkbox',
                                                         style: { marginTop: 4 },
@@ -6356,7 +6321,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                                     }
                                                     inputProps={{
                                                         type: this
-                                                            .waterfallPlotIsShown
+                                                            .shouldShowWaterfallPlot
                                                             ? 'radio'
                                                             : 'checkbox',
                                                         style: { marginTop: 4 },
@@ -6381,7 +6346,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                                     }
                                                     inputProps={{
                                                         type: this
-                                                            .waterfallPlotIsShown
+                                                            .shouldShowWaterfallPlot
                                                             ? 'radio'
                                                             : 'checkbox',
                                                         style: { marginTop: 4 },
@@ -6393,7 +6358,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                                 </LabeledCheckbox>
                                             )}
                                         {this.coloringByGene &&
-                                        this.waterfallPlotIsShown && // Show a "None" radio button only on waterfall plots
+                                        this.shouldShowWaterfallPlot && // Show a "None" radio button only on waterfall plots
                                             (this.canColorByMutationData ||
                                                 this.canColorByCnaData) && (
                                                 <LabeledCheckbox
