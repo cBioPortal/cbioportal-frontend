@@ -59,6 +59,10 @@ export default class Container extends React.Component<IContainerProps, {}> {
         return getBrowserWindow().routingStore;
     }
 
+    private getCurrentStudyIds(): string[] | undefined {
+        return getBrowserWindow().studyViewPageStore?.studyIds || [];
+    }
+
     private get appStore() {
         return getBrowserWindow().globalStores.appStore;
     }
@@ -121,7 +125,9 @@ export default class Container extends React.Component<IContainerProps, {}> {
 
                             {shouldShowGenieWarning() && <GenieAgreement />}
 
-                            {shouldShowTempoWarning() && <TempoAgreement />}
+                            {shouldShowTempoWarning(
+                                this.getCurrentStudyIds()
+                            ) && <TempoAgreement />}
 
                             <div className="contentWidth">
                                 <PortalHeader appStore={this.appStore} />

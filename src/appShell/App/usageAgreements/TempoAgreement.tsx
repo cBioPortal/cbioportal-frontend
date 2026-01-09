@@ -6,31 +6,14 @@ import expiredStorage from 'expired-storage';
 
 const TEMPO_STUDY_WARNING_PERSISTENCE_KEY = 'tempo-study-usage-agreement';
 
-export function shouldShowTempoWarning() {
-    // Detect whether we are on the study view page
-    const routingStore = getBrowserWindow().routingStore;
-    const pathname = routingStore?.location?.pathname || '';
-    const isStudyViewPage = pathname.startsWith('/study');
-
+export function shouldShowTempoWarning(studyIds: string[] | undefined) {
     // Detect whether we are viewing the TEMPO study
-    // TODO: should we cover an aggregate study view (TEMPO + another study) too?
-    const query = routingStore?.query || {};
-    const rawStudyId =
-        (query.id as string | string[] | undefined) ||
-        (query.studyId as string | string[] | undefined) ||
-        (query.cancer_study_id as string | string[] | undefined);
-    const studyIds = Array.isArray(rawStudyId)
-        ? rawStudyId.reduce<string[]>(
-              (acc, id) => acc.concat(id.split(',')),
-              []
-          )
-        : (rawStudyId || '').split(',');
+    // TODO: how should we handle aggregate study views?
     const isTempoStudy = studyIds.length === 1 && studyIds[0] === 'tempo_msk';
 
     const showTempoWarning =
         ['mskcc-portal'].includes(getServerConfig().app_name!) &&
         !getBrowserWindow().isMSKCIS &&
-        isStudyViewPage &&
         isTempoStudy;
 
     return (
