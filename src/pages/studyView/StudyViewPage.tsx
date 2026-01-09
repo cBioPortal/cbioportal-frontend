@@ -70,6 +70,10 @@ import { CustomChartData } from 'shared/api/session-service/sessionServiceModels
 import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
 import StudyViewPageSettingsMenu from 'pages/studyView/menu/StudyViewPageSettingsMenu';
+import {
+    shouldShowTempoWarning,
+    TempoAgreement,
+} from 'appShell/App/usageAgreements/TempoAgreement';
 import { Tour } from 'tours';
 import QueryString from 'qs';
 import setWindowVariable from 'shared/lib/setWindowVariable';
@@ -1145,12 +1149,17 @@ export default class StudyViewPage extends React.Component<
     }
 
     render() {
+        const shouldShowTempoAgreement =
+            this.store.queriedPhysicalStudyIds.isComplete &&
+            shouldShowTempoWarning(this.store.queriedPhysicalStudyIds.result);
+
         return (
             <PageLayout
                 noMargin={true}
                 hideFooter={true}
                 className={'subhead-dark'}
             >
+                {shouldShowTempoAgreement && <TempoAgreement />}
                 <LoadingIndicator
                     size={'big'}
                     isLoading={this.isLoading}

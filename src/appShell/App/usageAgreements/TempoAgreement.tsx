@@ -16,11 +16,14 @@ export function shouldShowTempoWarning(studyIds: string[] | undefined) {
         !getBrowserWindow().isMSKCIS &&
         isTempoStudy;
 
-    return (
-        showTempoWarning &&
-        new expiredStorage().getItem(TEMPO_STUDY_WARNING_PERSISTENCE_KEY) !==
-            'true'
-    );
+    // return (
+    //     showTempoWarning &&
+    //     new expiredStorage().getItem(TEMPO_STUDY_WARNING_PERSISTENCE_KEY) !==
+    //         'true'
+    // );
+
+    console.log(studyIds + '');
+    return true;
 }
 
 export const TempoAgreement: React.FunctionComponent<{}> = function({}) {
