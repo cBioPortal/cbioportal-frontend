@@ -193,7 +193,7 @@ function saveErrorImage(
 ) {
     if (error) {
         if (!fs.existsSync(errorDir)) {
-            fs.mkdirSync(errorDir, 0o744);
+            fs.mkdirSync(errorDir, 0o755);
         }
         const title = test.title.trim().replace(/\s/g, '_');
         const img = `${errorDir}${title}.png`;
