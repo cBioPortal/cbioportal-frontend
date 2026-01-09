@@ -292,8 +292,7 @@ jobs:
           name: Download dependencies
           command: |
             cd cbioportal-frontend
-            yarn
-            yarn buildModules
+            (ls node_modules && ls packages/cbioportal-frontend-commons/dist) || (yarn && yarn buildModules)
       - save_cache:
           name: Save dependency cache
           key: v11-dependencies-{{ checksum "cbioportal-frontend/yarn.lock" }}
@@ -319,6 +318,7 @@ jobs:
             - cbioportal-frontend/node_modules
             - cbioportal-frontend/dist
             - cbioportal-frontend/common-dist
+            - cbioportal-frontend/packages/*/dist
       - persist_to_workspace:
           root: /tmp/repo
           paths:
