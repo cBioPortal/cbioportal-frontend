@@ -284,7 +284,7 @@ exports.config = {
         // './local/specs/user-display-name.spec.js',
         // THESE BREAK THE TESTS
         './local/specs/virtual-study.spec.js',
-        // './local/specs/hide-download-controls.spec.js',
+        './local/specs/hide-download-controls.spec.js',
         // './local/specs/hide-login-button.spec.js',
     ],
 
