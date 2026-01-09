@@ -42,23 +42,7 @@ export function shouldShowTempoWarning() {
 export const TempoAgreement: React.FunctionComponent<{}> = function({}) {
     return (
         <UsageAgreement
-            alertMessage={
-                <>
-                    <span style={{ color: 'red' }}>Attention:</span>
-                    &nbsp;Please read and follow the{' '}
-                    <a
-                        target="_blank"
-                        href={
-                            'https://mskcc.sharepoint.com/sites/pub-ResearchDG/SitePages/Home.aspx?ga=1'
-                        }
-                    >
-                        rules about usage of MSK clinical sequencing data in
-                        manuscripts
-                    </a>
-                    .
-                </>
-            }
-            dismissButtonText={'Acknowledge'}
+            displayImmediately={true}
             persistenceKey={TEMPO_STUDY_WARNING_PERSISTENCE_KEY}
             expirationInDays={90}
             clauses={[

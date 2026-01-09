@@ -10,12 +10,13 @@ import _ from 'lodash';
 const SECONDS_IN_DAY = 86400;
 
 interface IUsageAgreement {
-    alertMessage: JSX.Element;
+    alertMessage?: JSX.Element;
     persistenceKey: string;
     clauses: JSX.Element[];
     useCheckboxes?: boolean;
     expirationInDays?: number;
     dismissButtonText?: string;
+    displayImmediately?: boolean;
 }
 
 @observer
@@ -33,6 +34,9 @@ export default class UsageAgreement extends React.Component<
     constructor(props: IUsageAgreement) {
         super(props);
         makeObservable(this);
+        if (props.displayImmediately) {
+            this.modalShow = true;
+        }
     }
 
     @computed get expirationInSeconds() {
@@ -93,28 +97,31 @@ export default class UsageAgreement extends React.Component<
     }
 
     render() {
+        const displayImmediately = this.props.displayImmediately === true;
         if (this.show) {
             return (
                 <>
-                    <Alert
-                        bsStyle="warning"
-                        style={{
-                            position: 'absolute',
-                            zIndex: 999,
-                            width: '100%',
-                            textAlign: 'center',
-                        }}
-                    >
-                        {this.props.alertMessage}
-                        <ButtonGroup style={{ marginLeft: '10px' }}>
-                            <Button
-                                bsSize="xsmall"
-                                onClick={this.handleModalShow}
-                            >
-                                {this.props.dismissButtonText || 'Dismiss'}
-                            </Button>
-                        </ButtonGroup>
-                    </Alert>
+                    {!displayImmediately && (
+                        <Alert
+                            bsStyle="warning"
+                            style={{
+                                position: 'absolute',
+                                zIndex: 999,
+                                width: '100%',
+                                textAlign: 'center',
+                            }}
+                        >
+                            {this.props.alertMessage}
+                            <ButtonGroup style={{ marginLeft: '10px' }}>
+                                <Button
+                                    bsSize="xsmall"
+                                    onClick={this.handleModalShow}
+                                >
+                                    {this.props.dismissButtonText || 'Dismiss'}
+                                </Button>
+                            </ButtonGroup>
+                        </Alert>
+                    )}
 
                     <Modal
                         show={this.modalShow}
