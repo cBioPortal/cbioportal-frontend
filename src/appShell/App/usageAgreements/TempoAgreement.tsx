@@ -8,9 +8,29 @@ const TEMPO_VIEW_WARNING_PERSISTENCE_KEY =
     'tempo_private_study_link_warning_dismissed';
 
 export function shouldShowTempoWarning() {
+    // Detect whether we are on the study view page
+    const routingStore = getBrowserWindow().routingStore;
+    const pathname = routingStore?.location?.pathname || '';
+    const isStudyViewPage = pathname.startsWith('/study');
+
+    // Detect whether we are viewing the TEMPO study
+    // TODO: should we cover an aggregate study view (TEMPO + another study) too?
+    const query = routingStore?.query || {};
+    const rawStudyId =
+        (query.id as string | string[] | undefined) ||
+        (query.studyId as string | string[] | undefined) ||
+        (query.cancer_study_id as string | string[] | undefined);
+    const studyIds = Array.isArray(rawStudyId)
+        ? rawStudyId.flatMap(id => id.split(','))
+        : (rawStudyId || '').split(',');
+    const isTempoStudy =
+        studyIds.length === 1 && studyIds[0] === 'tempo_msk';
+
     const showTempoWarning =
         ['tempo-portal'].includes(getServerConfig().app_name!) &&
-        !getBrowserWindow().isMSKCIS;
+        !getBrowserWindow().isMSKCIS &&
+        isStudyViewPage &&
+        isTempoStudy;
 
     return (
         showTempoWarning &&
