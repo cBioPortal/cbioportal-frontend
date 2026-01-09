@@ -4,8 +4,7 @@ import { getServerConfig } from 'config/config';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
 import expiredStorage from 'expired-storage';
 
-const TEMPO_STUDY_WARNING_PERSISTENCE_KEY =
-    'tempo-study-usage-agreement';
+const TEMPO_STUDY_WARNING_PERSISTENCE_KEY = 'tempo-study-usage-agreement';
 
 export function shouldShowTempoWarning() {
     // Detect whether we are on the study view page
@@ -21,10 +20,12 @@ export function shouldShowTempoWarning() {
         (query.studyId as string | string[] | undefined) ||
         (query.cancer_study_id as string | string[] | undefined);
     const studyIds = Array.isArray(rawStudyId)
-        ? rawStudyId.flatMap(id => id.split(','))
+        ? rawStudyId.reduce<string[]>(
+              (acc, id) => acc.concat(id.split(',')),
+              []
+          )
         : (rawStudyId || '').split(',');
-    const isTempoStudy =
-        studyIds.length === 1 && studyIds[0] === 'tempo_msk';
+    const isTempoStudy = studyIds.length === 1 && studyIds[0] === 'tempo_msk';
 
     const showTempoWarning =
         ['mskcc-portal'].includes(getServerConfig().app_name!) &&
