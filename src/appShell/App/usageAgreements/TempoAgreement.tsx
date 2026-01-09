@@ -4,8 +4,8 @@ import { getServerConfig } from 'config/config';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
 import expiredStorage from 'expired-storage';
 
-const TEMPO_VIEW_WARNING_PERSISTENCE_KEY =
-    'tempo_private_study_link_warning_dismissed';
+const TEMPO_STUDY_WARNING_PERSISTENCE_KEY =
+    'tempo-study-usage-agreement';
 
 export function shouldShowTempoWarning() {
     // Detect whether we are on the study view page
@@ -27,14 +27,14 @@ export function shouldShowTempoWarning() {
         studyIds.length === 1 && studyIds[0] === 'tempo_msk';
 
     const showTempoWarning =
-        ['tempo-portal'].includes(getServerConfig().app_name!) &&
+        ['mskcc-portal'].includes(getServerConfig().app_name!) &&
         !getBrowserWindow().isMSKCIS &&
         isStudyViewPage &&
         isTempoStudy;
 
     return (
         showTempoWarning &&
-        new expiredStorage().getItem(TEMPO_VIEW_WARNING_PERSISTENCE_KEY) !==
+        new expiredStorage().getItem(TEMPO_STUDY_WARNING_PERSISTENCE_KEY) !==
             'true'
     );
 }
@@ -59,7 +59,7 @@ export const TempoAgreement: React.FunctionComponent<{}> = function({}) {
                 </>
             }
             dismissButtonText={'Acknowledge'}
-            persistenceKey={TEMPO_VIEW_WARNING_PERSISTENCE_KEY}
+            persistenceKey={TEMPO_STUDY_WARNING_PERSISTENCE_KEY}
             expirationInDays={90}
             clauses={[
                 <>
