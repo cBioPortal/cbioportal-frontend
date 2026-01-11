@@ -27,9 +27,9 @@ const SV_COUNTS_SORT_DESC_10 = {
     TTN: '4',
     NCOA4: '3',
     AGAP3: '2',
-    TMPRSS2: '2',
-    EML4: '2',
     CDK5RAP2: '2',
+    EML4: '2',
+    MKRN1: '2',
 };
 
 /**
@@ -207,17 +207,17 @@ describe('alteration filter menu', function() {
                 assert.deepStrictEqual(
                     await geneTableCounts('mutations-table'),
                     {
-                        BRCA2: '12',
                         ACP3: '5',
-                        BRCA1: '3',
-                        PIEZO1: '1',
-                        ATM: '2',
-                        TP53: '2',
                         ADAMTS20: '1',
-                        TMEM247: '1',
+                        ATM: '2',
+                        BRCA1: '3',
+                        BRCA2: '12',
                         DTNB: '1',
                         MSH3: '1',
                         MYB: '1',
+                        PIEZO1: '1',
+                        TMEM247: '1',
+                        TP53: '2',
                     }
                 );
 
@@ -490,11 +490,11 @@ describe('alteration filter menu', function() {
                         BRAF: '36',
                         SND1: '10',
                         AGK: '4',
-                        ALK: '3',
                         TTN: '4',
-                        MKRN1: '2',
+                        ALK: '3',
                         AGAP3: '2',
                         CDK5RAP2: '2',
+                        MKRN1: '2',
                     }
                 );
                 assert.deepStrictEqual(
@@ -783,9 +783,15 @@ const clickCheckBoxStudyView = async name => {
 };
 
 const sortDescLimit = (entryCounts, limit = 10) => {
+    // First sort by alteration count descending,
+    // and then alphabetically by gene name
     return Object.fromEntries(
         Object.entries(entryCounts)
-            .sort((e1, e2) => e1[1] < e2[1])
+            .sort((e1, e2) =>
+                e1[1] !== e2[1]
+                    ? parseInt(e2[1]) - parseInt(e1[1])
+                    : e1[0].localeCompare(e2[0])
+            )
             .slice(0, limit)
     );
 };

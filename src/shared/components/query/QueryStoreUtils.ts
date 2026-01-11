@@ -7,6 +7,7 @@ import { ResourceDefinition, SampleList } from 'cbioportal-ts-api-client';
 import _ from 'lodash';
 import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
 import { VirtualStudy } from 'shared/api/session-service/sessionServiceModels';
+import { IFilterDef } from './DataTypeFilter';
 
 export enum MutationProfilesEnum {
     mutations = 'mutations',
@@ -366,15 +367,11 @@ export function getMolecularProfileOptions(molecularProfileIdSet: {
 
 export function getResourceFilterOptions(
     resourceDefinitions: ResourceDefinition[]
-): {
-    checked: boolean;
-    id: string;
-    name: string;
-}[] {
+): IFilterDef[] {
     const resourceIds = new Set<string>();
     return _.reduce(
         resourceDefinitions,
-        (acc: { checked: boolean; id: string; name: string }[], rd) => {
+        (acc: IFilterDef[], rd) => {
             if (
                 rd.resourceId !== 'CHROMOSCOPE' &&
                 rd.resourceId !== 'FIGURES' &&

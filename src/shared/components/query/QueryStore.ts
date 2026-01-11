@@ -75,6 +75,7 @@ import { QueryParser } from 'shared/lib/query/QueryParser';
 import { AppStore } from 'AppStore';
 import { ResultsViewTab } from 'pages/resultsView/ResultsViewPageHelpers';
 import { CaseSetId } from 'shared/components/query/CaseSetSelectorUtils';
+import { IFilterDef } from './DataTypeFilter';
 
 // interface for communicating
 export type CancerStudyQueryUrlParams = {
@@ -301,11 +302,7 @@ export class QueryStore {
 
     @observable.ref dataTypeFilters: string[] = [];
 
-    @observable _studyFilterOptions: {
-        checked: boolean;
-        id: string;
-        name: string;
-    }[];
+    @observable _studyFilterOptions: IFilterDef[];
 
     @computed get searchText(): string {
         return toQueryString(this.searchClauses);
@@ -1614,21 +1611,11 @@ export class QueryStore {
         default: [],
     });
 
-    @action.bound setStudyFilterOptions(
-        filterOptions: {
-            id: string;
-            name: string;
-            checked: boolean;
-        }[]
-    ) {
+    @action.bound setStudyFilterOptions(filterOptions: IFilterDef[]) {
         this._studyFilterOptions = filterOptions;
     }
 
-    @computed get studyFilterOptions(): {
-        checked: boolean;
-        id: string;
-        name: string;
-    }[] {
+    @computed get studyFilterOptions(): IFilterDef[] {
         return this._studyFilterOptions;
     }
 
