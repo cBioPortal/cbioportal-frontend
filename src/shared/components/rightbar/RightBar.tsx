@@ -106,10 +106,20 @@ export default class RightBar extends React.Component<
                                 className="pull-right"
                             >
                                 @cbioportal{' '}
-                                <i
-                                    className="fa fa-twitter"
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 24 24"
+                                    width="14"
+                                    height="14"
+                                    style={{
+                                        marginLeft: 4,
+                                        verticalAlign: 'middle',
+                                        fill: 'currentColor',
+                                    }}
                                     aria-hidden="true"
-                                ></i>
+                                >
+                                    <path d="M18.244 2H21.9l-8.01 9.162L23.3 22h-7.22l-5.66-7.39L4.06 22H.4l8.57-9.8L.7 2h7.4l5.1 6.72L18.24 2z" />
+                                </svg>
                             </a>
                         </h3>
 
