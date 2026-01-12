@@ -1,7 +1,7 @@
 {
   "name": "cbioportal-frontend-commons",
   "description": "cBioPortal Frontend Modules",
-  "version": "0.5.76",
+  "version": "0.5.77",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
   "jsnext:main": "dist/index.es.js",
@@ -38,11 +38,11 @@
   },
   "dependencies": {
     "autobind-decorator": "^2.1.0",
-    "cbioportal-utils": "^0.3.48",
+    "cbioportal-utils": "^0.3.49",
     "classnames": "^2.2.5",
     "jquery": "^3.2.1",
     "juice": "^10.0.0",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.21",
     "measure-text": "0.0.4",
     "numeral": "^2.0.6",
     "object-sizeof": "^1.2.0",

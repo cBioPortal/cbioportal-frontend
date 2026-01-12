@@ -38,6 +38,7 @@ import { handleLongUrls } from 'shared/lib/handleLongUrls';
 import 'shared/polyfill/canvasToBlob';
 import { setCurrentURLHeader } from 'shared/lib/extraHeader';
 import Container from 'appShell/App/Container';
+import '@fortawesome/fontawesome-free/css/all.min.css';
 import { IServerConfig } from 'config/IAppConfig';
 import { initializeGenericAssayServerConfig } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
 import { FeatureFlagStore } from 'shared/FeatureFlagStore';

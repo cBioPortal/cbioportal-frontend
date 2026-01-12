@@ -47,7 +47,7 @@ describe('color chooser for groups menu in study view', function() {
 
     it('shows no icon color for new group', async () => {
         // select GB on the oncotree pie chart
-        const cancertypeGbPie = await getNthElements(oncotreePies, 1);
+        const cancertypeGbPie = await getNthElements(oncotreePies, 2);
         await cancertypeGbPie.click();
 
         // open group menu and create group from selected samples
@@ -95,11 +95,12 @@ describe('color chooser for groups menu in study view', function() {
         await closeGroupsMenu();
 
         // unselect previous oncotree code and select another
-        await (await getNthElements(oncotreePies, 1)).click();
         await (await getNthElements(oncotreePies, 2)).click();
+        await (await getNthElements(oncotreePies, 1)).click();
 
         // create a group for it
         openGroupsMenu();
+
         await clickElement(createNewGroupButton);
         await clickElement(finalizeGroupButton);
 
@@ -158,7 +159,8 @@ describe('color chooser for groups menu in study view', function() {
     it('shows undefined color when two groups with predefined colors are selected', async () => {
         // select living on overall survival chart (female is already selected from previous test)
         await clickElement(groupsMenuButton);
-        const survivalLivingPie = await getNthElements(survivalPies, 0);
+        const survivalLivingPie = await getNthElements(survivalPies, 1);
+
         await survivalLivingPie.click();
         // create living female group and check there is no color
         await openGroupsMenu();

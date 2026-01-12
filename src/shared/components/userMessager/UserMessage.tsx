@@ -30,7 +30,9 @@ if (
         'www.cbioportal.org',
         'cbioportal.mskcc.org',
         'genie.cbioportal.org',
-    ].includes(getBrowserWindow().location.hostname)
+        'localhost',
+    ].includes(getBrowserWindow().location.hostname) ||
+    getBrowserWindow().location.hostname.endsWith('.preview.cbioportal.org')
 ) {
     MESSAGE_DATA = [
         // ADD MESSAGE IN FOLLOWING FORMAT
@@ -46,6 +48,23 @@ if (
         //     },
         //     id: '2024_newsletter_intro',
         // },
+        {
+            dateEnd: 1772755200000, // March 6, 2026
+            content: (
+                <>
+                    Help us improve cBioPortal by taking a 7-minute survey
+                    <a
+                        href="https://forms.microsoft.com/Pages/ResponsePage.aspx?id=tfzFk_YtUEWaEM018oXPfMGEYSmyAP5Pn3gtQdn_2L5URUU5WlUzREVYQlo1Q09HV1I1VU1NRjdYVi4u"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn btn-sm"
+                    >
+                        Take Survey
+                    </a>
+                </>
+            ),
+            id: '2025_user_survey',
+        },
     ];
 
     // MSK specific messaging

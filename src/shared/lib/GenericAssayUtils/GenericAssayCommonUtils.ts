@@ -107,6 +107,7 @@ export async function fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecular
             })
         )
     );
+
     return genericAssayMetaGroupByMolecularProfileId;
 }
 

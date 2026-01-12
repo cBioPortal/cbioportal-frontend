@@ -198,6 +198,7 @@ import {
     getPatientTreatmentReport,
     getSampleTreatmentReport,
     getUniqueNamespaceKey,
+    getMutationDataAsClinicalData,
 } from './StudyViewUtils';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import autobind from 'autobind-decorator';
@@ -6178,13 +6179,14 @@ export class StudyViewPageStore
         },
     });
 
-    readonly namespaceAttributes = remoteData({
+    readonly namespaceAttributes = remoteData<NamespaceAttribute[]>({
         await: () => [this.queriedPhysicalStudyIds],
         invoke: async () => {
             if (this.queriedPhysicalStudyIds.result.length > 0) {
-                return await getClient().fetchNamespaceAttributesUsingPOST({
-                    studyIds: this.queriedPhysicalStudyIds.result,
-                });
+                return [];
+                // return await getClient().fetchNamespaceAttributesUsingPOST({
+                //     studyIds: this.queriedPhysicalStudyIds.result,
+                // });
             }
             return [];
         },
@@ -9020,6 +9022,9 @@ export class StudyViewPageStore
                     return count > 0;
                 });
         },
+        onError: () => {
+            // fail silently
+        },
     });
 
     readonly selectedDriverTiers = remoteData<string[]>({
@@ -9190,11 +9195,23 @@ export class StudyViewPageStore
 
         let clinicalDataList: ClinicalData[] = [];
         if (this.isGeneSpecificChart(chartMeta.uniqueKey)) {
-            clinicalDataList = await getGenomicDataAsClinicalData(
-                this._geneSpecificChartMap.get(chartMeta.uniqueKey)!,
-                this.molecularProfileMapByType,
-                this.selectedSamples.result
-            );
+            if (
+                this._geneSpecificChartMap.get(chartMeta.uniqueKey)!
+                    .profileType ===
+                MolecularAlterationType_filenameSuffix.MUTATION_EXTENDED
+            ) {
+                clinicalDataList = await getMutationDataAsClinicalData(
+                    this._geneSpecificChartMap.get(chartMeta.uniqueKey)!,
+                    this.molecularProfileMapByType,
+                    this.selectedSamples.result
+                );
+            } else {
+                clinicalDataList = await getGenomicDataAsClinicalData(
+                    this._geneSpecificChartMap.get(chartMeta.uniqueKey)!,
+                    this.molecularProfileMapByType,
+                    this.selectedSamples.result
+                );
+            }
         } else if (this.isGenericAssayChart(chartMeta.uniqueKey)) {
             clinicalDataList = await getGenericAssayDataAsClinicalData(
                 this._genericAssayChartMap.get(chartMeta.uniqueKey)!,
