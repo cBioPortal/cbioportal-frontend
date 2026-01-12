@@ -9,7 +9,7 @@ const TEMPO_STUDY_WARNING_PERSISTENCE_KEY = 'tempo-study-usage-agreement';
 export function shouldShowTempoWarning(studyIds: string[]) {
     // Detect whether we are viewing the TEMPO study
     // TODO: how should we handle aggregate study views?
-    const isTempoStudy = studyIds?.length === 1 && studyIds[0] === 'tempo_msk';
+    const isTempoStudy = studyIds?.length === 1 && (studyIds[0] === 'msk_tempo' || studyIds[0] === 'msk_impact_2017');
 
     const showTempoWarning =
         ['mskcc-portal'].includes(getServerConfig().app_name!) &&
