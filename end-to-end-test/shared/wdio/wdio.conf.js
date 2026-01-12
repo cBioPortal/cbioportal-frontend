@@ -265,25 +265,31 @@ exports.config = {
         './local/specs/core/settings-menu.spec.js',
         './local/specs/core/studyview.screenshot.spec.js',
         './local/specs/core/version.spec.js',
+
+        './local/specs/group-color-chooser.spec.js',
+
+        './local/specs/init-columns-in-cna-tables.spec.js',
+        './local/specs/init-columns-in-mutation-tables.spec.js',
+        './local/specs/init-columns-in-struct-var-tables.spec.js',
+        './local/specs/namespace-columns-in-cna-tables.spec.js',
+        './local/specs/namespace-columns-in-mutation-tables.spec.js',
+        './local/specs/namespace-columns-in-struct-var-tables.spec.js',
+        './local/specs/struct-var-table.spec.js',
+        './local/specs/study-view-custom-bins.screenshot.spec.js',
+        './local/specs/study-view-filters-autocommit-toggle.spec.js',
+        './local/specs/treatment.screenshot.spec.js',
+        './local/specs/treatment.spec.js',
+        './local/specs/user-display-name.spec.js',
+        './local/specs/hide-login-button.spec.js',
+        './local/specs/virtual-study.spec.js',
+
+        // THESE BREAK:
+
         // './local/specs/custom-driver-annotations-in-result-view.spec.js',
         // './local/specs/custom-driver-annotations-in-study-view.spec.js',
-        './local/specs/group-color-chooser.spec.js',
         // './local/specs/gsva.screenshot.spec.js',
         // './local/specs/gsva.spec.js',
-        // './local/specs/init-columns-in-cna-tables.spec.js',
-        // './local/specs/init-columns-in-mutation-tables.spec.js',
-        // './local/specs/init-columns-in-struct-var-tables.spec.js',
-        // './local/specs/namespace-columns-in-cna-tables.spec.js',
-        // './local/specs/namespace-columns-in-mutation-tables.spec.js',
-        // './local/specs/namespace-columns-in-struct-var-tables.spec.js',
-        // './local/specs/struct-var-table.spec.js',
-        './local/specs/study-view-custom-bins.screenshot.spec.js',
-        // './local/specs/study-view-filters-autocommit-toggle.spec.js',
-        // './local/specs/treatment.screenshot.spec.js',
-        // './local/specs/treatment.spec.js',
-        // './local/specs/user-display-name.spec.js',
-        // './local/specs/hide-login-button.spec.js',
-        // './local/specs/virtual-study.spec.js',
+
         // THESE BREAK THE TESTS
 
         // THIS ONE BREWAKS './local/specs/hide-download-controls.spec.js',
