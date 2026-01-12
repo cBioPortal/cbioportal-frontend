@@ -3,10 +3,11 @@ import {
     normalizeQuery,
     QueryStore,
 } from './QueryStore';
-import { MolecularProfile, SampleList } from 'cbioportal-ts-api-client';
+import { ResourceDefinition, SampleList } from 'cbioportal-ts-api-client';
 import _ from 'lodash';
 import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
 import { VirtualStudy } from 'shared/api/session-service/sessionServiceModels';
+import { IFilterDef } from './DataTypeFilter';
 
 export enum MutationProfilesEnum {
     mutations = 'mutations',
@@ -362,4 +363,29 @@ export function getMolecularProfileOptions(molecularProfileIdSet: {
     }
 
     return molecularProfileOptions;
+}
+
+export function getResourceFilterOptions(
+    resourceDefinitions: ResourceDefinition[]
+): IFilterDef[] {
+    const resourceIds = new Set<string>();
+    return _.reduce(
+        resourceDefinitions,
+        (acc: IFilterDef[], rd) => {
+            if (
+                rd.resourceId !== 'CHROMOSCOPE' &&
+                rd.resourceId !== 'FIGURES' &&
+                !resourceIds.has(rd.resourceId)
+            ) {
+                resourceIds.add(rd.resourceId);
+                acc.push({
+                    id: rd.resourceId,
+                    name: rd.displayName,
+                    checked: false,
+                });
+            }
+            return acc;
+        },
+        []
+    );
 }

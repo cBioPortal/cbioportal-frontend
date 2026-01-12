@@ -151,7 +151,10 @@ export default class ClinicalData extends React.Component<
 
     readonly tabUI = MakeMobxView({
         await: () => {
-            const ret: any[] = [this.props.store.activeGroups];
+            const ret: any[] = [
+                this.props.store.activeGroups,
+                this.props.store._activeGroupsNotOverlapRemoved,
+            ];
             if (
                 this.props.store.activeGroups.isComplete &&
                 this.props.store.activeGroups.result.length < 2

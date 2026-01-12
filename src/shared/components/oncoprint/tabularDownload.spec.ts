@@ -129,7 +129,120 @@ describe('getTabularDownloadData', () => {
     it('downloads counts map tracks successfully, patient mode', () => {
         assert.deepEqual(
             getTabularDownloadData(
-                [],
+                [
+                    {
+                        key: 'GENETICTRACK_0',
+                        label: 'TP53',
+                        sublabel: ': MUT',
+                        oql: 'TP53: MUT',
+                        info: '',
+                        data: [
+                            {
+                                disp_mut: 'trunc_rec',
+                                disp_germ: false,
+                                patient: 'sample1',
+                                uid: 'sample1',
+                                not_profiled_in: [],
+                                study_id: 'study1',
+                                trackLabel: 'TP53',
+                                data: [
+                                    {
+                                        alterationSubType: 'frameshift',
+                                        alterationType: 'MUTATION_EXTENDED',
+                                        entrezGeneId: 7157,
+                                        hugoGeneSymbol: 'TP53',
+                                        isHotspot: false,
+                                        molecularProfileAlterationType:
+                                            'MUTATION_EXTENDED',
+                                        mutationStatus: '.',
+                                        mutationType: 'Frame_Shift_Del',
+                                        oncoKbOncogenic: 'Likely Oncogenic',
+                                        proteinChange: 'H168Cfs*8',
+                                        putativeDriver: true,
+                                        driverFilter: '',
+                                        driverFilterAnnotation: '',
+                                        driverTiersFilter: '',
+                                        driverTiersFilterAnnotation: '',
+                                        eventInfo: '',
+                                        value: 0,
+                                    },
+                                ],
+                            },
+                            {
+                                patient: 'sample2',
+                                uid: 'sample2',
+                                not_profiled_in: [],
+                                study_id: 'study1',
+                                trackLabel: 'TP53',
+                                data: [],
+                            },
+                            {
+                                patient: 'sample3',
+                                uid: 'sample3',
+                                not_profiled_in: [],
+                                study_id: 'study1',
+                                trackLabel: 'TP53',
+                                data: [],
+                            },
+                        ],
+                    },
+                    {
+                        key: 'GENETICTRACK_1',
+                        label: 'TP53',
+                        sublabel: ': HOMDEL',
+                        oql: 'TP53: HOMDEL',
+                        info: '',
+                        data: [
+                            {
+                                patient: 'sample1',
+                                uid: 'sample1',
+                                not_profiled_in: [],
+                                study_id: 'study1',
+                                trackLabel: 'TP53',
+                                data: [],
+                            },
+                            {
+                                disp_cna: 'homdel_rec',
+                                patient: 'sample2',
+                                uid: 'sample2',
+                                not_profiled_in: [],
+                                study_id: 'study1',
+                                trackLabel: 'TP53',
+                                data: [
+                                    {
+                                        alterationSubType: 'homdel',
+                                        alterationType:
+                                            'COPY_NUMBER_ALTERATION',
+                                        entrezGeneId: 7157,
+                                        hugoGeneSymbol: 'TP53',
+                                        molecularProfileAlterationType:
+                                            'COPY_NUMBER_ALTERATION',
+                                        oncoKbOncogenic: 'Likely Oncogenic',
+                                        putativeDriver: true,
+                                        value: -2,
+                                        proteinChange: '',
+                                        driverFilter: '',
+                                        driverFilterAnnotation: '',
+                                        driverTiersFilter: '',
+                                        driverTiersFilterAnnotation: '',
+                                        mutationType: '',
+                                        isHotspot: false,
+                                        mutationStatus: '',
+                                        eventInfo: '',
+                                    },
+                                ],
+                            },
+                            {
+                                patient: 'sample3',
+                                uid: 'sample3',
+                                not_profiled_in: [],
+                                study_id: 'study1',
+                                trackLabel: 'TP53',
+                                data: [],
+                            },
+                        ],
+                    },
+                ],
                 [
                     {
                         key: '',
@@ -247,7 +360,12 @@ describe('getTabularDownloadData', () => {
                 'mutation spectrum (T>C)\tCLINICAL\t12\t18\t126\n' +
                 'mutation spectrum (T>G)\tCLINICAL\t50\t110\t26\n' +
                 `other counts (a)\tCLINICAL\t82\t\t134\n` +
-                'other counts (b)\tCLINICAL\t8\t\t46\n'
+                'other counts (b)\tCLINICAL\t8\t\t46\n' +
+                'TP53\tCNA\t\thomdel_rec\t\n' +
+                'TP53\tMUTATIONS\tTruncating mutation\t\t\n' +
+                'TP53\tMRNA\t\t\t\n' +
+                'TP53\tPROTEIN\t\t\t\n' +
+                'TP53\tSTRUCTURAL_VARIANT\t\t\t\n'
         );
     });
 });

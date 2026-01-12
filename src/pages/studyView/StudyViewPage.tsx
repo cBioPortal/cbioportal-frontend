@@ -811,6 +811,20 @@ export default class StudyViewPage extends React.Component<
                                                         <Then>
                                                             {summary}
                                                             {buttons}
+                                                            {
+                                                                // this is hidden, it's just to eagerly load
+                                                            }
+                                                            <div
+                                                                className={
+                                                                    'hide'
+                                                                }
+                                                            >
+                                                                {
+                                                                    this.store
+                                                                        .dataWithCount
+                                                                        .isComplete
+                                                                }
+                                                            </div>
                                                         </Then>
                                                         <Else>
                                                             <LoadingIndicator

@@ -76,6 +76,79 @@ function proxyComparisonMethod(target) {
         // add it to test data in case it's needed later
         context.test.referenceExists = referenceExists;
 
+        // Capture the current URL where the screenshot was taken
+        try {
+            // Access browser from the global scope where wdio exposes it
+            const wdioBrowser = global.browser;
+            if (wdioBrowser && typeof wdioBrowser.getUrl === 'function') {
+                let url = await wdioBrowser.getUrl();
+                // Remove localdev/localdist parameters from URL
+                url = url
+                    .replace(/[&?]localdev(=[^&]*)?(&|$)/g, '$2')
+                    .replace(/[&?]localdist(=[^&]*)?(&|$)/g, '$2');
+                // Clean up any trailing ? or & characters
+                url = url.replace(/[?&]$/, '');
+                context.test.screenshotUrl = url;
+                console.log('[URL CAPTURE] Successfully captured:', url);
+
+                // Store URL in a separate file for the image comparison report
+                // Normalize the screenshot directory path (remove leading ./)
+                const normalizedScreenshotRoot = screenshotRoot.replace(
+                    /^\.\//,
+                    ''
+                );
+                const urlsFilePath = path.join(
+                    process.cwd(),
+                    normalizedScreenshotRoot,
+                    'screenshot-urls.json'
+                );
+                console.log('[URL CAPTURE] Writing to path:', urlsFilePath);
+
+                let urlsData = {};
+                if (fs.existsSync(urlsFilePath)) {
+                    try {
+                        urlsData = JSON.parse(
+                            fs.readFileSync(urlsFilePath, 'utf8')
+                        );
+                    } catch (e) {
+                        console.log(
+                            '[URL CAPTURE] Could not read existing URLs file:',
+                            e.message
+                        );
+                    }
+                }
+                // Use test title as key
+                const testName = context.test.title
+                    .replace(/\s/g, '_')
+                    .toLowerCase();
+                urlsData[testName] = url;
+
+                // Ensure directory exists
+                const urlsDir = path.dirname(urlsFilePath);
+                if (!fs.existsSync(urlsDir)) {
+                    console.log('[URL CAPTURE] Creating directory:', urlsDir);
+                    fs.mkdirSync(urlsDir, { recursive: true });
+                }
+
+                fs.writeFileSync(
+                    urlsFilePath,
+                    JSON.stringify(urlsData, null, 2)
+                );
+                console.log(
+                    '[URL CAPTURE] Wrote URL to file for test:',
+                    testName,
+                    'at path:',
+                    urlsFilePath
+                );
+            } else {
+                console.log(
+                    '[URL CAPTURE] Browser not available in global scope'
+                );
+            }
+        } catch (e) {
+            console.log('[URL CAPTURE] Error:', e.message);
+        }
+
         const resp = await oldProcessScreenshot.apply(this, arguments);
 
         // process screenshot will create a reference screenshot

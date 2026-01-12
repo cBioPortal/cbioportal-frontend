@@ -40,6 +40,7 @@ export default class MutationAssessor extends React.Component<
             const maData = this.props.mutationAssessor;
             maContent = (
                 <span
+                    data-test="mutation-assessor-dot"
                     className={classNames(
                         annotationStyles['annotation-item-text'],
                         (mutationAssessorColumn as any)[
@@ -105,6 +106,28 @@ export default class MutationAssessor extends React.Component<
                                             2
                                         )}
                                     </b>
+                                </td>
+                            </tr>
+                        )}
+                        {maData.msa && (
+                            <tr>
+                                <td>Multiple sequence alignment file: </td>
+                                <td>
+                                    <a
+                                        href={`https://projects.sanderlab.org/av/?url=https://genome-nexus-static-data.s3.us-east-1.amazonaws.com/mutationassessor-v4-multiple-sequence-alignment-files-uncompressed/${maData.msa}.fa`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
+                                        View
+                                    </a>
+                                    {' | '}
+                                    <a
+                                        href={`https://genome-nexus-static-data.s3.us-east-1.amazonaws.com/mutationassessor-v4-multiple-sequence-alignment-files-uncompressed/${maData.msa}.fa`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
+                                        Download
+                                    </a>
                                 </td>
                             </tr>
                         )}

@@ -4599,6 +4599,12 @@
             "type": "integer",
             "format": "int32"
           },
+          "resourceCounts": {
+            "items": {
+              "$ref": "#/components/schemas/ResourceCount"
+            },
+            "type": "array"
+          },
           "rppaSampleCount": {
             "type": "integer",
             "format": "int32"
@@ -4814,6 +4820,54 @@
             "type": "string"
           }
         }
+      },
+      "ResourceCount": {
+        "properties": {
+          "customMetaData": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "openByDefault": {
+            "type": "boolean"
+          },
+          "patientCount": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "priority": {
+            "type": "string"
+          },
+          "resourceId": {
+            "type": "string"
+          },
+          "resourceType": {
+            "enum": [
+              "STUDY",
+              "SAMPLE",
+              "PATIENT"
+            ],
+            "type": "string"
+          },
+          "sampleCount": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "studyId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "displayName",
+          "resourceId",
+          "resourceType",
+          "studyId"
+        ],
+        "type": "object"
       },
       "Patient": {
         "required": [

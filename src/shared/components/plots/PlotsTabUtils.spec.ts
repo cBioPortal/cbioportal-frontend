@@ -486,6 +486,8 @@ describe('PlotsTabUtils', () => {
             | 'proteinChange'
             | 'mutationType'
             | 'putativeDriver'
+            | 'tumorAltCount'
+            | 'tumorRefCount'
         >[];
         let coverageInformation: CoverageInformation;
         let samples: Pick<Sample, 'uniqueSampleKey'>[];
@@ -499,30 +501,40 @@ describe('PlotsTabUtils', () => {
                     proteinChange: '',
                     mutationType: 'missense',
                     putativeDriver: true,
+                    tumorAltCount: 12,
+                    tumorRefCount: 88,
                 },
                 {
                     uniqueSampleKey: 'sample1',
                     proteinChange: '',
                     mutationType: 'missense',
                     putativeDriver: true,
+                    tumorAltCount: 10,
+                    tumorRefCount: 90,
                 },
                 {
                     uniqueSampleKey: 'sample2',
                     proteinChange: '',
                     mutationType: 'in_frame_del',
                     putativeDriver: false,
+                    tumorAltCount: 5,
+                    tumorRefCount: 95,
                 },
                 {
                     uniqueSampleKey: 'sample2',
                     proteinChange: '',
                     mutationType: 'nonsense',
                     putativeDriver: true,
+                    tumorAltCount: 8,
+                    tumorRefCount: 92,
                 },
                 {
                     uniqueSampleKey: 'sample3',
                     proteinChange: '',
                     mutationType: 'missense',
                     putativeDriver: false,
+                    tumorAltCount: 15,
+                    tumorRefCount: 85,
                 },
             ];
             coverageInformation = {
@@ -679,6 +691,42 @@ describe('PlotsTabUtils', () => {
                     hugoGeneSymbol: 'BRCA1',
                     datatype: 'string',
                     categoryOrder: mutDriverVsVUSCategoryOrder,
+                }
+            );
+        });
+        it('gives the correct result for variant allele frequency', () => {
+            assert.deepEqual(
+                makeAxisDataPromise_Molecular_MakeMutationData(
+                    [molecularProfileId],
+                    'BRCA1',
+                    mutations,
+                    coverageInformation,
+                    MutationCountBy.VariantAlleleFrequency,
+                    samples
+                ),
+                {
+                    data: [
+                        {
+                            uniqueSampleKey: 'sample1',
+                            value: [
+                                12 / (12 + 88), // 0.12
+                                10 / (10 + 90), // 0.10
+                            ],
+                        },
+                        {
+                            uniqueSampleKey: 'sample2',
+                            value: [
+                                5 / (5 + 95), // 0.05
+                                8 / (8 + 92), // 0.08
+                            ],
+                        },
+                        {
+                            uniqueSampleKey: 'sample3',
+                            value: [15 / (15 + 85)], // 0.15
+                        },
+                    ],
+                    hugoGeneSymbol: 'BRCA1',
+                    datatype: 'number',
                 }
             );
         });
