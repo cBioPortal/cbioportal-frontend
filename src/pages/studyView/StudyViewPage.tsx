@@ -93,6 +93,24 @@ export interface IStudyViewPageProps {
 export const MAX_URL_LENGTH = 300000;
 
 @observer
+class StudySpecificAgreements extends React.Component<{
+    store: StudyViewPageStore;
+}> {
+    render() {
+        const { store } = this.props;
+        const shouldShowTempoAgreement =
+            store.queriedPhysicalStudyIds.isComplete &&
+            shouldShowTempoWarning(store.queriedPhysicalStudyIds.result);
+
+        if (!shouldShowTempoAgreement) {
+            return null;
+        }
+
+        return <TempoAgreement />;
+    }
+}
+
+@observer
 export class StudyResultsSummary extends React.Component<
     { store: StudyViewPageStore; appStore: AppStore; loadingComplete: boolean },
     {}
@@ -1149,17 +1167,13 @@ export default class StudyViewPage extends React.Component<
     }
 
     render() {
-        const shouldShowTempoAgreement =
-            this.store.queriedPhysicalStudyIds.isComplete &&
-            shouldShowTempoWarning(this.store.queriedPhysicalStudyIds.result);
-
         return (
             <PageLayout
                 noMargin={true}
                 hideFooter={true}
                 className={'subhead-dark'}
             >
-                {shouldShowTempoAgreement && <TempoAgreement />}
+                <StudySpecificAgreements store={this.store} />
                 <LoadingIndicator
                     size={'big'}
                     isLoading={this.isLoading}
