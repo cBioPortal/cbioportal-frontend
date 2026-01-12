@@ -390,11 +390,11 @@ jobs:
             done;
             ls screenshots_not_tracked > /dev/null 2> /dev/null && exit 1 || exit 0
 
-      - run:
-          name: Fix artifact permissions for errors folder
-          command: |
-              sudo chown -R circleci:circleci /tmp/repo/cbioportal-frontend/end-to-end-test/local/screenshots/errors
-              sudo chmod -R a+rX /tmp/repo/cbioportal-frontend/end-to-end-test/local/screenshots/errors
+#      - run:
+#          name: Fix artifact permissions for errors folder
+#          command: |
+#              sudo chown -R circleci:circleci /tmp/repo/cbioportal-frontend/end-to-end-test/local/screenshots/errors
+#              sudo chmod -R a+rX /tmp/repo/cbioportal-frontend/end-to-end-test/local/screenshots/errors
       - store_artifacts:
           path: /tmp/repo/docker-compose-logs.txt
       - store_artifacts:
