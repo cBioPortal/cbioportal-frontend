@@ -10844,15 +10844,12 @@ export class StudyViewPageStore
         invoke: async () => {
             if (this.shouldDisplaySampleTreatments.result) {
                 if (isClickhouseMode()) {
-                    // TODO: fetchSampleTreatmentCountsUsingPOST no longer exists in API
-                    // Using getAllSampleTreatmentsUsingPOST as alternative
-                    const treatments = await this.internalClient.getAllSampleTreatmentsUsingPOST(
+                    // @ts-ignore
+                    return await this.internalClient.fetchSampleTreatmentCountsUsingPOST(
                         {
                             studyViewFilter: this.filters,
                         }
                     );
-                    // Transform to SampleTreatmentReport format if needed
-                    return treatments as any;
                 } else {
                     // we need to transform old response into new SampleTreatmentReport
                     return await getSampleTreatmentReport(
@@ -10875,18 +10872,16 @@ export class StudyViewPageStore
     >({
         invoke: async () => {
             if (isClickhouseMode()) {
-                // TODO: fetchSampleTreatmentCountsUsingPOST no longer exists in API
-                // Using getAllSampleTreatmentsUsingPOST as alternative
-                const treatments = await this.internalClient.getAllSampleTreatmentsUsingPOST(
+                // @ts-ignore
+                return await this.internalClient.fetchSampleTreatmentCountsUsingPOST(
                     {
                         studyViewFilter: this.filters,
+                        // @ts-ignore
                         $queryParameters: {
                             projection: 'DETAILED',
                         },
                     }
                 );
-                // Transform to SampleTreatmentReport format if needed
-                return treatments as any;
             } else {
                 // we need to transform old response into new SampleTreatmentReport
                 return await getSampleTreatmentReport(
