@@ -376,6 +376,11 @@ jobs:
             TEST_HOME: /tmp/repo/cbioportal-frontend/end-to-end-test/local
             CHROMEDRIVER_CUSTOM_PATH: /usr/local/bin/chromedriver
           command: |
+            if [[ $(netstat -tnlp | grep -F 'circleci-agent') ]]; then
+              echo "SSH detected! Skipping automatic test run for manual debugging."
+              echo "test runner can be found at $TEST_HOME/docker_compose/test.sh"
+              exit 0
+            fi
             cd $PORTAL_SOURCE_DIR
             $TEST_HOME/docker_compose/test.sh
       - run:
