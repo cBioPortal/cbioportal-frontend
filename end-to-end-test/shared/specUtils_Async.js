@@ -723,21 +723,23 @@ async function openGroupComparison(studyViewUrl, chartDataTest, timeout) {
     await closeOtherTabs();
 
     const chart = '[data-test=' + chartDataTest + ']';
+
     await waitForElementDisplayed(chart, { timeout: timeout || 10000 });
+
+    await $(chart).scrollIntoView();
+
     await jsApiHover(chart);
 
-    await browser.waitUntil(
-        async () => {
-            return await getElement(chart + ' .controls', {
-                waitForExist: true,
-            });
-        },
-        { timeout: timeout || 10000 }
-    );
+    await getElement(chart + ' .controls', {
+        waitForExist: true,
+    });
+
+    await $(chart + ' .controls').waitForClickable();
+    //await browser.pause(5000);
 
     // move to hamburger icon
     const hamburgerIcon = '[data-test=chart-header-hamburger-icon]';
-    await jsApiHover(hamburgerIcon);
+    await $(hamburgerIcon).moveTo();
 
     // wait for the menu available
     await waitForElementDisplayed(hamburgerIcon, { timeout: timeout || 10000 });
