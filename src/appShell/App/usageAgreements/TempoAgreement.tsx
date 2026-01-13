@@ -12,7 +12,7 @@ export function shouldShowTempoWarning(studyIds: string[]) {
     const isTempoStudy = studyIds?.includes('msk_tempo');
 
     const showTempoWarning =
-        ['triage-portal', 'mskcc-portal'].includes(getServerConfig().app_name!) &&
+        ['eks-triage', 'mskcc-portal'].includes(getServerConfig().app_name!) &&
         !getBrowserWindow().isMSKCIS &&
         isTempoStudy;
 
