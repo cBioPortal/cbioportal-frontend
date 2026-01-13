@@ -376,17 +376,8 @@ jobs:
             TEST_HOME: /tmp/repo/cbioportal-frontend/end-to-end-test/local
             CHROMEDRIVER_CUSTOM_PATH: /usr/local/bin/chromedriver
           command: |
-            if [ -n "$SSH_AUTH_SOCK" ]; then
-                echo "===================================================="
-                echo "MANUAL DEBUG MODE DETECTED (SSH)"
-                echo "Skipping automatic tests. Log in and run them yourself."
-                echo "===================================================="
-                exit 0
-            else
-                echo "no ssh agent detected, so running tests automatically"
-                cd $PORTAL_SOURCE_DIR
-                $TEST_HOME/docker_compose/test.sh
-            fi
+            cd $PORTAL_SOURCE_DIR
+            $TEST_HOME/docker_compose/test.sh
       - run:
           environment:
             TEST_HOME: /tmp/repo/cbioportal-frontend/end-to-end-test/local
