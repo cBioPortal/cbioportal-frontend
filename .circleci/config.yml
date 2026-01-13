@@ -50,7 +50,7 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
     - run:
         name: Install Google Chrome
         command: |
-          CHROME_VERSION="139.0.7258.154"
+          CHROME_VERSION="143.0.7499.193"
           wget https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_${CHROME_VERSION}-1_amd64.deb
           sudo apt-get update
           sudo apt-get install -y ./google-chrome-stable_${CHROME_VERSION}-1_amd64.deb
@@ -60,7 +60,7 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
     - run:
         name: Install ChromeDriver
         command: |
-          CHROME_VERSION=139.0.7258.154
+          CHROME_VERSION=143.0.7499.193
           wget -q "https://storage.googleapis.com/chrome-for-testing-public/${CHROME_VERSION}/linux64/chromedriver-linux64.zip"
           unzip -q chromedriver-linux64.zip
           sudo mv chromedriver-linux64/chromedriver /usr/local/bin/
