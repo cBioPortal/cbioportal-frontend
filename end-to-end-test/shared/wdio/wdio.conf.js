@@ -26,15 +26,33 @@ let screenshotRoot = process.env.SCREENSHOT_DIRECTORY;
 // correct if screenshot directory has trailing slash
 screenshotRoot = screenshotRoot.replace(/\/$/, '');
 
+// const chromeArgs = [
+//     '--disable-composited-antialiasing',
+//     '--allow-insecure-localhost',
+// ].concat(
+//     (function() {
+//         return process.env.HEADLESS_CHROME === 'true'
+//             ? [
+//                 '--headless',
+//                 '--no-sandbox',
+//                 '--disable-setuid-sandbox',
+//                 '--in-process-gpu',
+//                 '--use-gl=angle',
+//             ]
+//             : [];
+//     })()
+// );
+
 const chromeArgs = [
-    //'--headless=new',
+    '--headless=new',
     '--no-sandbox',
+    '--disable-composited-antialiasing',
     '--disable-setuid-sandbox',
     '--allow-insecure-localhost',
     '--window-size=1600,1000',
-    // '--disable-dev-shm-usage',
+    '--disable-dev-shm-usage',
     // '--disable-software-rasterizer',
-    // '--disable-extensions',
+    '--disable-extensions',
     // '--disable-background-timer-throttling',
     // '--disable-renderer-backgrounding',
     // '--disable-backgrounding-occluded-windows',
