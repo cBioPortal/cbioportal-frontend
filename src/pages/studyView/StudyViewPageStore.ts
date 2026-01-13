@@ -10845,7 +10845,7 @@ export class StudyViewPageStore
             if (this.shouldDisplaySampleTreatments.result) {
                 if (isClickhouseMode()) {
                     // @ts-ignore
-                    return await this.internalClient.fetchSampleTreatmentCountsUsingPOST(
+                    return await this.internalClient.fetchSampleTreatmentCountsUsing(
                         {
                             studyViewFilter: this.filters,
                         }
@@ -10873,7 +10873,7 @@ export class StudyViewPageStore
         invoke: async () => {
             if (isClickhouseMode()) {
                 // @ts-ignore
-                return await this.internalClient.fetchSampleTreatmentCountsUsingPOST(
+                return await this.internalClient.fetchSampleTreatmentCountsUsing(
                     {
                         studyViewFilter: this.filters,
                         // @ts-ignore
@@ -10921,7 +10921,7 @@ export class StudyViewPageStore
             if (this.shouldDisplayPatientTreatments.result) {
                 if (isClickhouseMode()) {
                     // @ts-ignore (will be available when go live with Clickhouse for all portals)
-                    return await this.internalClient.fetchPatientTreatmentCountsUsingPOST(
+                    return await this.internalClient.fetchPatientTreatmentCountsUsing(
                         {
                             studyViewFilter: this.filters,
                         }
@@ -10989,7 +10989,7 @@ export class StudyViewPageStore
             if (this.shouldDisplayPatientTreatmentGroups.result) {
                 if (isClickhouseMode()) {
                     // @ts-ignore (will be available when go live with Clickhouse for all portals)
-                    return this.internalClient.fetchPatientTreatmentCountsUsingPOST(
+                    return this.internalClient.fetchPatientTreatmentCountsUsing(
                         {
                             studyViewFilter: this.filters,
                             tier: 'AgentClass',
@@ -11062,7 +11062,7 @@ export class StudyViewPageStore
             invoke: async () => {
                 if (isClickhouseMode()) {
                     // @ts-ignore (will be available when go live with Clickhouse for all portals)
-                    return await this.internalClient.fetchPatientTreatmentCountsUsingPOST(
+                    return await this.internalClient.fetchPatientTreatmentCountsUsing(
                         {
                             studyViewFilter: this.filters,
                             tier: 'AgentTarget',

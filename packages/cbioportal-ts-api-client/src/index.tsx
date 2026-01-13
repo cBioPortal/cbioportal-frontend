@@ -105,7 +105,9 @@ export {
     OredPatientTreatmentFilters,
     OredSampleTreatmentFilters,
     PatientIdentifier,
+    PatientTreatment,
     PatientTreatmentFilter,
+    PatientTreatmentReport,
     PatientTreatmentRow,
     ReferenceGenomeGene,
     ResourceData,
@@ -115,6 +117,7 @@ export {
     SampleIdentifier,
     SampleMolecularIdentifier,
     SampleTreatmentFilter,
+    SampleTreatmentReport,
     SampleTreatmentRow,
     StructuralVariant,
     StructuralVariantFilter,
@@ -128,16 +131,3 @@ export {
     VariantCountIdentifier,
     default as CBioPortalAPIInternal,
 } from './generated/CBioPortalAPIInternal';
-
-// Type aliases for treatment reports (wrapper types not in generated API)
-// These types wrap the API response arrays into report objects
-export type PatientTreatment = import('./generated/CBioPortalAPIInternal').PatientTreatmentRow;
-export type PatientTreatmentReport = {
-    patientTreatments: import('./generated/CBioPortalAPIInternal').PatientTreatmentRow[];
-    totalSamples: number;
-    totalPatients: number;
-};
-export type SampleTreatmentReport = {
-    treatments: import('./generated/CBioPortalAPIInternal').SampleTreatmentRow[];
-    totalSamples: number;
-};
