@@ -50,6 +50,7 @@ const chromeArgs = [
     '--disable-setuid-sandbox',
     '--allow-insecure-localhost',
     '--window-size=1600,1000',
+    '--disable-features=SafeBrowsing,PasswordLeakToggleMove',
     '--disable-dev-shm-usage',
     // '--disable-software-rasterizer',
     '--disable-extensions',
