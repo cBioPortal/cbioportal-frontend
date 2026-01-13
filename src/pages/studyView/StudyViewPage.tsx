@@ -548,18 +548,14 @@ export default class StudyViewPage extends React.Component<
                 const data = resourceDataById[def.resourceId];
                 if (data && data.length > 0) {
                     const config = getResourceConfig(def);
-                    const originalDisplayName =
-                        data.length > 1
-                            ? pluralize(def.displayName, data.length)
-                            : def.displayName;
                     const customDisplayName =
-                        config.customizedDisplayName || originalDisplayName;
+                        config.customizedDisplayName || def.displayName;
 
                     list.push(
                         <MSKTab
                             key={getStudyViewResourceTabId(def.resourceId)}
                             id={getStudyViewResourceTabId(def.resourceId)}
-                            linkText={originalDisplayName}
+                            linkText={def.displayName}
                             onClickClose={this.closeResourceTab}
                         >
                             <ResourceTab
@@ -741,13 +737,8 @@ export default class StudyViewPage extends React.Component<
                                         linkText={
                                             this.store.resourceDefinitions
                                                 .result?.length == 1
-                                                ? pluralize(
-                                                      this.store
-                                                          .resourceDefinitions
-                                                          .result[0]
-                                                          .displayName,
-                                                      2
-                                                  )
+                                                ? this.store.resourceDefinitions
+                                                      .result[0].displayName
                                                 : RESOURCES_TAB_NAME
                                         }
                                         hide={!this.shouldShowResources}
@@ -758,13 +749,10 @@ export default class StudyViewPage extends React.Component<
                                                     this.store
                                                         .resourceDefinitions
                                                         .result?.length == 1
-                                                        ? pluralize(
-                                                              this.store
-                                                                  .resourceDefinitions
-                                                                  .result[0]
-                                                                  .displayName,
-                                                              2
-                                                          )
+                                                        ? this.store
+                                                              .resourceDefinitions
+                                                              .result[0]
+                                                              .displayName
                                                         : RESOURCES_TAB_NAME
                                                 }
                                                 store={this.store}

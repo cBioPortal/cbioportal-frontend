@@ -480,19 +480,15 @@ export class PatientViewPageInner extends React.Component<
             const tabs: JSX.Element[] = sorted.reduce((list, def) => {
                 const data = resourceDataById[def.resourceId];
                 if (data && data.length > 0) {
-                    const displayName =
-                        data.length > 1
-                            ? pluralize(def.displayName, data.length)
-                            : def.displayName;
                     list.push(
                         <MSKTab
                             key={getPatientViewResourceTabId(def.resourceId)}
                             id={getPatientViewResourceTabId(def.resourceId)}
-                            linkText={displayName}
+                            linkText={def.displayName}
                             onClickClose={this.closeResourceTab}
                         >
                             <ResourceTab
-                                resourceDisplayName={displayName}
+                                resourceDisplayName={def.displayName}
                                 resourceData={resourceDataById[def.resourceId]}
                                 urlWrapper={this.urlWrapper}
                             />
