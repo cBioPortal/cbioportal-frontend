@@ -292,6 +292,9 @@ jobs:
           name: Download dependencies
           command: |
             cd cbioportal-frontend
+            echo "Check if node_modules and dist folders exist. If so, skip dependency installation."
+            echo ls node_modules 
+            echo ls packages/*/dist
             (ls node_modules && ls packages/cbioportal-frontend-commons/dist) || (yarn && yarn buildModules)
       - save_cache:
           name: Save dependency cache
@@ -459,9 +462,9 @@ workflows:
 #      - unit_tests_packages:
 #          requires:
 #            - build_frontend
-#      - unit_tests_main:
-#          requires:
-#            - build_frontend
+      - unit_tests_main:
+          requires:
+            - build_frontend
 
 
   nightly:
