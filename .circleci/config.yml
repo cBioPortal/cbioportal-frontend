@@ -293,9 +293,7 @@ jobs:
           command: |
             cd cbioportal-frontend
             echo "Check if node_modules and dist folders exist. If so, skip dependency installation."
-            echo ls node_modules 
-            echo ls packages/*/dist
-            (ls node_modules && ls packages/cbioportal-frontend-commons/dist) || (yarn && yarn buildModules)
+            (ls node_modules && ls packages/*/dist) || (yarn && yarn buildModules)
       - save_cache:
           name: Save dependency cache
           key: v11-dependencies-{{ checksum "cbioportal-frontend/yarn.lock" }}
