@@ -1093,9 +1093,9 @@ export class QueryStore {
                 this.profileFilterSet = undefined;
 
                 // default profile selection when profiles are loaded
-                const defaultMrnaProfile = this.defaultMrnaProfileToSelect;
-                if (defaultMrnaProfile) {
-                    this.selectMolecularProfile(defaultMrnaProfile, true);
+                const defaultProfile = this.defaultProfileToSelect;
+                if (defaultProfile) {
+                    this.selectMolecularProfile(defaultProfile, true);
                 }
             }
         },
@@ -1795,18 +1795,13 @@ export class QueryStore {
         );
     }
 
-    @computed get filteredMrnaProfiles() {
-        return this.getFilteredProfiles('MRNA_EXPRESSION');
-    }
-
-    @computed get shouldSelectDefaultMrnaProfile() {
-        // select default mRNA profile if no profiles are currently selected
-
+    @computed get shouldSelectDefaultProfile() {
+        // select default profile if no profiles are currently selected
         if (Object.keys(this.selectedProfileIdSet).length > 0) {
             return false;
         }
 
-        // how many profile types are available
+        // count how many profile types are available
         let profileTypeCount = 0;
         Object.values(AlterationTypeConstants).forEach(profileType => {
             if (this.getFilteredProfiles(profileType as any).length > 0) {
@@ -1814,27 +1809,37 @@ export class QueryStore {
             }
         });
 
-        // if only one profile type available,  use it
+        // if only one profile type available, use it
         if (profileTypeCount === 1) {
-            return this.filteredMrnaProfiles.length > 0;
+            return true;
         }
 
-        // fall back (original) logic for multiple profile types
+        // fallback: if multiple profile types exist but no mutation profiles, auto select mRNA profile if available
         const hasMutationProfile =
             this.getFilteredProfiles(
                 AlterationTypeConstants.MUTATION_EXTENDED as any
             ).length > 0;
-        const hasMrnaProfile = this.filteredMrnaProfiles.length > 0;
+        const hasMrnaProfile =
+            this.getFilteredProfiles(
+                AlterationTypeConstants.MRNA_EXPRESSION as any
+            ).length > 0;
 
         return !hasMutationProfile && hasMrnaProfile;
     }
 
-    @computed get defaultMrnaProfileToSelect() {
-        if (this.shouldSelectDefaultMrnaProfile) {
-            return this.filteredMrnaProfiles.length > 0
-                ? this.filteredMrnaProfiles[0]
-                : undefined;
+    @computed get defaultProfileToSelect() {
+        if (!this.shouldSelectDefaultProfile) {
+            return undefined;
         }
+
+        // find the profile type to auto-select
+        for (const profileType of Object.values(AlterationTypeConstants)) {
+            const profiles = this.getFilteredProfiles(profileType as any);
+            if (profiles.length > 0) {
+                return profiles[0];
+            }
+        }
+
         return undefined;
     }
 
