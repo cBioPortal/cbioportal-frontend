@@ -67,6 +67,10 @@ describe('namespace columns in mutation tables', function() {
             ).waitForDisplayed();
         });
         it('filters rows when using numerical filter menu', async () => {
+            await clickElement("//span[text() = 'Zygosity Code']");
+            await (
+                await filterIconOfHeader("//span[text() = 'Zygosity Code']")
+            ).waitForDisplayed();
             await (
                 await filterIconOfHeader("//span[text() = 'Zygosity Code']")
             ).click();
@@ -94,6 +98,10 @@ describe('namespace columns in mutation tables', function() {
             );
         });
         it('filters rows when using categorical filter menu', async () => {
+            await clickElement("//span[text() = 'Zygosity Name']");
+            await (
+                await filterIconOfHeader("//span[text() = 'Zygosity Name']")
+            ).waitForDisplayed();
             await (
                 await filterIconOfHeader("//span[text() = 'Zygosity Name']")
             ).click();

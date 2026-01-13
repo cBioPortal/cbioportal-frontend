@@ -34,7 +34,7 @@
     "@wdio/local-runner": "7",
     "@wdio/mocha-framework": "7",
     "@wdio/spec-reporter": "7",
-    "chromedriver": "^87.0.1",
+    "chromedriver": "^143.0.4",
     "wdio-chromedriver-service": "7",
     "wdio-json-reporter": "^2.0.0"
   }
