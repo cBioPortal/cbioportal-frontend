@@ -7,6 +7,7 @@ import LazyMobXTable, {
     Column,
 } from 'shared/components/lazyMobXTable/LazyMobXTable';
 import _ from 'lodash';
+import { hasNonEmptyDescriptionInResources } from 'shared/lib/ResourceUtils';
 
 export interface IResourceTableProps {
     resources: ResourceData[];
@@ -162,8 +163,12 @@ const ResourceTable = observer(
                 sortBy: row => row.url,
                 filter: (row, _filterString, filterStringUpper) =>
                     row.url.toUpperCase().includes(filterStringUpper ?? ''),
-            },
-            {
+            }
+        );
+
+        // Only show Description column if at least one resource has a non-empty description
+        if (hasNonEmptyDescriptionInResources(resources)) {
+            columns.push({
                 name: 'Description',
                 headerRender: () => (
                     <span data-test={'Description'}>{'Description'}</span>
@@ -175,8 +180,8 @@ const ResourceTable = observer(
                     (row.description ?? '')
                         .toUpperCase()
                         .includes(filterStringUpper ?? ''),
-            }
-        );
+            });
+        }
 
         return (
             <ResourceMobXTable
