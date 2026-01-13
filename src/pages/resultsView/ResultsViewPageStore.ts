@@ -174,6 +174,7 @@ import { annotateAlterationTypes } from '../../shared/lib/oql/annotateAlteration
 import sessionServiceClient from '../../shared/api/sessionServiceInstance';
 import comparisonClient from '../../shared/api/comparisonGroupClientInstance';
 import { AppStore } from '../../AppStore';
+import { DEFAULT_Z_SCORE_THRESHOLD } from 'shared/constants';
 import { getNumSamples } from '../groupComparison/GroupComparisonUtils';
 import {
     ChartMeta,
@@ -304,7 +305,6 @@ type Optional<T> =
     | { isApplicable: false; value?: undefined };
 
 const DEFAULT_RPPA_THRESHOLD = 2;
-const DEFAULT_Z_SCORE_THRESHOLD = 2;
 
 export enum SampleListCategoryType {
     'w_mut' = 'w_mut',
