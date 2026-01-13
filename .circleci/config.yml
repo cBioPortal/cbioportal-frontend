@@ -293,6 +293,8 @@ jobs:
           command: |
             cd cbioportal-frontend
             echo "Check if node_modules and dist folders exist. If so, skip dependency installation."
+            if [ -d "node_modules" ]; then echo "node_modules exists" fi
+            if [ -d "packages/*/dist" ]; then echo "dist exists" fi
             (ls node_modules && ls packages/*/dist) || (yarn && yarn buildModules)
       - save_cache:
           name: Save dependency cache
