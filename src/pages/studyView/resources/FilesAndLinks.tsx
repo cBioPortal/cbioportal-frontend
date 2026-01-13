@@ -21,7 +21,8 @@ import {
     ClinicalData,
     StudyViewFilter,
 } from 'cbioportal-ts-api-client';
-import { getResourceConfig } from 'shared/lib/ResourceUtils';
+import { getResourceConfig } from 'shared/lib/ResourceConfig';
+import { hasNonEmptyDescriptionInDefinitions } from 'shared/lib/ResourceUtils';
 
 export interface IFilesLinksTable {
     resourceDisplayName: string;
@@ -384,12 +385,19 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
             });
         }
 
-        defaultColumns.push({
-            ...this.getDefaultColumnConfig('description', 'Description'),
-            render: (data: { [id: string]: string }) => {
-                return <div>{data.description}</div>;
-            },
-        });
+        // Only show Description column if at least one resource definition has a non-empty description
+        if (
+            hasNonEmptyDescriptionInDefinitions(
+                this.props.store.resourceDefinitions.result
+            )
+        ) {
+            defaultColumns.push({
+                ...this.getDefaultColumnConfig('description', 'Description'),
+                render: (data: { [id: string]: string }) => {
+                    return <div>{data.description}</div>;
+                },
+            });
+        }
 
         // Conditionally add the last column if not hidden
         if (!shouldHideResourcesPerPatientColumn) {

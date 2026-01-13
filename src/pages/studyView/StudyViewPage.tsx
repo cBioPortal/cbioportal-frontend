@@ -62,7 +62,7 @@ import ResourceTab from '../../shared/components/resources/ResourceTab';
 import StudyViewURLWrapper from './StudyViewURLWrapper';
 import ResourcesTab, { RESOURCES_TAB_NAME } from './resources/ResourcesTab';
 import { ResourceData } from 'cbioportal-ts-api-client';
-import { getResourceConfig } from 'shared/lib/ResourceUtils';
+import { getResourceConfig } from 'shared/lib/ResourceConfig';
 import $ from 'jquery';
 import { StudyViewComparisonGroup } from 'pages/groupComparison/GroupComparisonUtils';
 import { parse } from 'query-string';
