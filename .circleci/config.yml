@@ -301,7 +301,6 @@ jobs:
           key: v11-dependencies-{{ checksum "cbioportal-frontend/yarn.lock" }}
           paths:
             - cbioportal-frontend/node_modules
-            - cbioportal-frontend/packages/*/dist
       - run:
           name: Build frontend application
           environment:
@@ -322,7 +321,7 @@ jobs:
             - cbioportal-frontend/node_modules
             - cbioportal-frontend/dist
             - cbioportal-frontend/common-dist
-            - cbioportal-frontend/packages/*/dist
+            - cbioportal-frontend/packages
       - persist_to_workspace:
           root: /tmp/repo
           paths:
