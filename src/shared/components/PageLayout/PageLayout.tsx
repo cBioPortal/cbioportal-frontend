@@ -7,6 +7,7 @@ import { RFC80Test } from 'shared/components/rfc80Tester';
 
 interface IPageLayout {
     rightBar?: any;
+    aiSidebar?: any;
     className?: string;
     noMargin?: boolean;
     appStore?: AppStore;
@@ -17,6 +18,8 @@ interface IPageLayout {
 export class PageLayout extends React.Component<IPageLayout, {}> {
     render() {
         const noMargin = this.props.noMargin ? 'noMargin' : '';
+        const aiSidebarVisible = this.props.appStore?.aiSidebarVisible;
+        const aiSidebarWidth = this.props.appStore?.aiSidebarWidth || 400;
 
         return (
             <div className={'mainContainer'}>
@@ -26,6 +29,11 @@ export class PageLayout extends React.Component<IPageLayout, {}> {
                         this.props.className,
                         noMargin
                     )}
+                    style={
+                        aiSidebarVisible
+                            ? { marginRight: `${aiSidebarWidth}px` }
+                            : undefined
+                    }
                 >
                     <div id="mainColumn" data-tour="mainColumn">
                         <div>{this.props.children}</div>
@@ -40,6 +48,8 @@ export class PageLayout extends React.Component<IPageLayout, {}> {
                 )}
 
                 {localStorage.rfc80 && <RFC80Test />}
+
+                {this.props.aiSidebar && this.props.aiSidebar}
             </div>
         );
     }
