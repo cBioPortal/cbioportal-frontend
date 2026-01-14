@@ -20,7 +20,7 @@ export DOCKER_IMAGE_MYSQL=cbioportal/mysql:8.0-database-test
 export APPLICATION_PROPERTIES_PATH=$APPLICATION_PROPERTIES_PATH
 
 # Backend image
-export DOCKER_IMAGE_CBIOPORTAL=cbioportal/cbioportal:master
+export DOCKER_IMAGE_CBIOPORTAL=cbioportal/cbioportal-dev:04409eb99f05b04b7f1a8602217b1c5d62e26adc-web-shenandoah
 
 # cbioportal-core branch
 export APP_CBIOPORTAL_CORE_BRANCH=main
