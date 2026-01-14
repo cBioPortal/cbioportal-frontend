@@ -300,7 +300,9 @@ describe('patient view page', function() {
         async function clickOnGenePanelLinks() {
             const el = await $('.rc-tooltip td a');
             await el.waitForDisplayed();
-            await el.click();
+            await browser.execute(function(e) {
+                e.click();
+            }, el);
         }
 
         beforeEach(async () => {
