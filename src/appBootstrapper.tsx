@@ -39,6 +39,7 @@ import 'shared/polyfill/canvasToBlob';
 import { setCurrentURLHeader } from 'shared/lib/extraHeader';
 import Container from 'appShell/App/Container';
 import '@fortawesome/fontawesome-free/css/all.min.css';
+import '../src/globalStyles/aiDesignTokens.css';
 import { IServerConfig } from 'config/IAppConfig';
 import { initializeGenericAssayServerConfig } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
 import { FeatureFlagStore } from 'shared/FeatureFlagStore';
@@ -46,6 +47,7 @@ import eventBus from 'shared/events/eventBus';
 import { SiteError } from 'shared/model/appMisc';
 import load from 'little-loader';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
+import { librechatClient } from 'shared/api/librechatClient';
 
 export interface ICBioWindow {
     globalStores: {
@@ -385,4 +387,7 @@ $(document).ready(async () => {
     render();
 
     stores.appStore.setAppReady();
+
+    // Expose LibreChat client for testing via browser console
+    (getBrowserWindow() as any).librechatClient = librechatClient;
 });

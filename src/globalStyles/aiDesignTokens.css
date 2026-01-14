@@ -1,0 +1,89 @@
+/* LibreChat Design Tokens - Replicated for AI Sidebar */
+/* This file contains the exact color system and design tokens from LibreChat */
+
+:root {
+  /* Gray Scale Palette */
+  --gray-20: #ececf1;
+  --gray-50: #f7f7f8;
+  --gray-100: #ececec;
+  --gray-200: #e3e3e3;
+  --gray-300: #cdcdcd;
+  --gray-400: #999696;
+  --gray-500: #595959;
+  --gray-600: #424242;
+  --gray-700: #2f2f2f;
+  --gray-800: #212121;
+  --gray-850: #171717;
+  --gray-900: #0d0d0d;
+
+  /* Base Colors */
+  --white: #ffffff;
+  --black: #000000;
+  --green-700: #15803d;
+  --green-600: #16a34a;
+
+  /* Light Mode Semantic Tokens */
+  --brand-purple: #ab68ff;
+
+  --text-primary: var(--gray-800);
+  --text-secondary: var(--gray-600);
+  --text-tertiary: var(--gray-500);
+
+  --surface-primary: var(--white);
+  --surface-secondary: var(--gray-50);
+  --surface-tertiary: var(--gray-100);
+  --surface-hover: var(--gray-200);
+  --surface-chat: var(--white);
+  --surface-submit: var(--green-700);
+  --surface-submit-hover: var(--green-600);
+
+  --border-light: var(--gray-200);
+  --border-medium: var(--gray-300);
+  --border-heavy: var(--gray-400);
+
+  --radius: 0.5rem;
+}
+
+/* Dark Mode */
+.dark {
+  --text-primary: var(--gray-100);
+  --text-secondary: var(--gray-300);
+  --text-tertiary: var(--gray-400);
+
+  --surface-primary: var(--gray-900);
+  --surface-secondary: var(--gray-800);
+  --surface-tertiary: var(--gray-700);
+  --surface-hover: var(--gray-600);
+  --surface-chat: var(--gray-700);
+
+  --border-light: var(--gray-700);
+  --border-medium: var(--gray-600);
+  --border-heavy: var(--gray-500);
+}
+
+/* Utility Classes from LibreChat */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hover::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scrollbar-hover::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-hover::-webkit-scrollbar-thumb {
+  background: var(--gray-300);
+  border-radius: 4px;
+}
+
+.scrollbar-hover::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-400);
+}
