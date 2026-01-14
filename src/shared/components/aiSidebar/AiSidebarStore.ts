@@ -197,12 +197,24 @@ export class AiSidebarStore {
         try {
             const messagesData = await librechatClient.getMessages(conversationId);
             if (Array.isArray(messagesData)) {
-                this.messages = messagesData.map((m: any) => ({
-                    id: m.messageId || `msg_${Date.now()}_${Math.random()}`,
-                    text: m.text || '',
-                    sender: m.isCreatedByUser ? 'user' : 'ai',
-                    timestamp: new Date(m.createdAt || Date.now()),
-                }));
+                this.messages = messagesData.map((m: any) => {
+                    // Extract text - check direct text field first, then content array
+                    let text = m.text || '';
+                    if (!text && Array.isArray(m.content)) {
+                        // LibreChat AI responses store text in content array
+                        // Format: [{type: "text", text: "..."}, {type: "think", think: "..."}]
+                        const textParts = m.content
+                            .filter((c: any) => c.type === 'text' && c.text)
+                            .map((c: any) => c.text);
+                        text = textParts.join('\n');
+                    }
+                    return {
+                        id: m.messageId || `msg_${Date.now()}_${Math.random()}`,
+                        text,
+                        sender: m.isCreatedByUser ? 'user' : 'ai',
+                        timestamp: new Date(m.createdAt || Date.now()),
+                    };
+                });
             }
         } catch (e) {
             console.error('Failed to load messages for conversation', e);

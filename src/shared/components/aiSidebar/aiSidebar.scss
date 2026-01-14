@@ -178,6 +178,29 @@
                         text-overflow: ellipsis;
                         white-space: nowrap;
                     }
+
+                    .conversation-external-link {
+                        opacity: 0;
+                        background: none;
+                        border: none;
+                        padding: 4px;
+                        cursor: pointer;
+                        color: var(--text-tertiary);
+                        transition: opacity 0.2s, color 0.2s;
+                        flex-shrink: 0;
+
+                        &:hover {
+                            color: var(--brand-purple);
+                        }
+
+                        i {
+                            font-size: 11px;
+                        }
+                    }
+
+                    &:hover .conversation-external-link {
+                        opacity: 1;
+                    }
                 }
             }
         }
