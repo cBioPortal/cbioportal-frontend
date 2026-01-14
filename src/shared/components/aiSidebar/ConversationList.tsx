@@ -17,6 +17,11 @@ export class ConversationList extends React.Component<IConversationListProps, {}
         this.props.store.selectConversation(conversationId);
     };
 
+    handleOpenInLibreChat = (e: React.MouseEvent, conversationId: string) => {
+        e.stopPropagation(); // Prevent selecting the conversation
+        window.open(`https://chat.cbioportal.org/c/${conversationId}`, '_blank');
+    };
+
     truncateTitle(title: string, maxLength: number = 30): string {
         if (title.length <= maxLength) return title;
         return title.substring(0, maxLength) + '...';
@@ -37,6 +42,13 @@ export class ConversationList extends React.Component<IConversationListProps, {}
                 <span className="conversation-title">
                     {this.truncateTitle(conversation.title)}
                 </span>
+                <button
+                    className="conversation-external-link"
+                    onClick={(e) => this.handleOpenInLibreChat(e, conversation.conversationId)}
+                    title="Open in LibreChat"
+                >
+                    <i className="fa-solid fa-arrow-up-right-from-square"></i>
+                </button>
             </div>
         );
     }
