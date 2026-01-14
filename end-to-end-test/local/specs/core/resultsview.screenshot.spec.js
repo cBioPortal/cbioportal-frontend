@@ -37,7 +37,7 @@ describe('results view mutation table', function() {
         );
 
         await browser.execute(function() {
-            $('th').css({ color: 'red' });
+            $('th.multilineHeader').css({ color: 'red' });
         });
 
         const res = await browser.checkElement(
