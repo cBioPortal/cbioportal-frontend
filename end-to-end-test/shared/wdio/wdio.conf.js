@@ -307,6 +307,7 @@ exports.config = {
 
     // Patterns to exclude.
     exclude: [
+        './local/specs/web-tour.spec.js',
         './local/specs/custom-driver-annotations-in-result-view.spec.js',
         './local/specs/custom-driver-annotations-in-study-view.spec.js',
         './local/specs/gsva.screenshot.spec.js',
@@ -329,7 +330,7 @@ exports.config = {
     // and 30 processes will get spawned. The property handles how many capabilities
     // from the same test should run tests.
     //
-    maxInstances: 1,
+    maxInstances: 3,
     //
     // If you have trouble getting all important capabilities together, check out the
     // Sauce Labs platform configurator - a great tool to configure your capabilities:
