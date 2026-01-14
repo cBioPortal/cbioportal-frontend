@@ -386,7 +386,15 @@ export class LibreChatClient {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
-            return await response.json();
+            const result = await response.json();
+
+            // LibreChat returns conversations in a {conversations: [...]} format
+            if (result && result.conversations && Array.isArray(result.conversations)) {
+                return result.conversations;
+            }
+
+            // Fallback if it's already an array
+            return Array.isArray(result) ? result : [];
         } catch (error) {
             console.error('Failed to fetch conversations:', error);
             return [];
