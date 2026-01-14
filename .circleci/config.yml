@@ -204,19 +204,19 @@ jobs:
             cd cbioportal-frontend
             yarn run checkIncorrectImportStatements
 
-#  e2e_tests:
-#    machine:
-#      image: ubuntu-2204:2024.08.1
-#    resource_class: large
-#    working_directory: /tmp/repo
-#    environment:
-#      MANUAL_TRIGGER_BRANCH_ENV: << pipeline.parameters.manual_trigger_branch_env >>
-#      SPEC_FILE_PATTERN: << pipeline.parameters.remote_spec_pattern >>
-#      JUNIT_REPORT_PATH: ./remote/junit/
-#      SCREENSHOT_DIRECTORY: ./remote/screenshots
-#      CBIOPORTAL_URL: https://www.cbioportal.org
-#      CHROMEDRIVER_CUSTOM_PATH: /usr/local/bin/chromedriver
-#    <<: *run_e2e_and_save_artifacts
+  e2e_tests:
+    machine:
+      image: ubuntu-2204:2024.08.1
+    resource_class: xlarge
+    working_directory: /tmp/repo
+    environment:
+      MANUAL_TRIGGER_BRANCH_ENV: << pipeline.parameters.manual_trigger_branch_env >>
+      SPEC_FILE_PATTERN: << pipeline.parameters.remote_spec_pattern >>
+      JUNIT_REPORT_PATH: ./remote/junit/
+      SCREENSHOT_DIRECTORY: ./remote/screenshots
+      CBIOPORTAL_URL: https://www.cbioportal.org
+      CHROMEDRIVER_CUSTOM_PATH: /usr/local/bin/chromedriver
+    <<: *run_e2e_and_save_artifacts
 
   e2e_tests_against_master:
     <<: *defaults
@@ -452,10 +452,10 @@ workflows:
           requires:
             - pull_cbioportal_test_codebase
             - build_frontend
-#      - e2e_tests:
-#          requires:
-#            - pull_cbioportal_test_codebase
-#            - build_frontend
+      - e2e_tests:
+          requires:
+            - pull_cbioportal_test_codebase
+            - build_frontend
 #      - api_sync:
 #          requires:
 #            - build_frontend
