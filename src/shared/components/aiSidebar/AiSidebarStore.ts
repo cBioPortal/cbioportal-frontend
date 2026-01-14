@@ -1,4 +1,5 @@
 import { action, observable, makeObservable, computed } from 'mobx';
+import { librechatClient } from '../../api/librechatClient';
 
 export interface Message {
     id: string;
@@ -15,6 +16,18 @@ export interface Agent {
     avatar?: { filepath?: string };
 }
 
+export interface Conversation {
+    conversationId: string;
+    title: string;
+    createdAt: Date;
+    updatedAt: Date;
+    endpoint?: string;
+}
+
+export interface GroupedConversations {
+    [key: string]: Conversation[];
+}
+
 export class AiSidebarStore {
     @observable messages: Message[] = [];
     @observable isLoading: boolean = false;
@@ -23,14 +36,50 @@ export class AiSidebarStore {
     @observable agents: Agent[] = [];
     @observable selectedAgentId: string | null = null;
 
+    // Conversation management
+    @observable conversations: Conversation[] = [];
+    @observable currentConversationId: string | null = null;
+    @observable conversationsExpanded: boolean = false;
+    @observable conversationsLoading: boolean = false;
+
     constructor() {
         makeObservable(this);
         this.loadMessagesFromStorage();
         this.loadAgentSelectionFromStorage();
+        this.loadCurrentConversationFromStorage();
     }
 
     @computed get selectedAgent(): Agent | null {
         return this.agents.find(a => a.id === this.selectedAgentId) || null;
+    }
+
+    @computed get groupedConversations(): GroupedConversations {
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const yesterday = new Date(today.getTime() - 86400000);
+        const weekAgo = new Date(today.getTime() - 7 * 86400000);
+
+        const groups: GroupedConversations = {
+            'Today': [],
+            'Yesterday': [],
+            'Previous 7 Days': [],
+            'Older': [],
+        };
+
+        for (const convo of this.conversations) {
+            const updatedAt = convo.updatedAt;
+            if (updatedAt >= today) {
+                groups['Today'].push(convo);
+            } else if (updatedAt >= yesterday) {
+                groups['Yesterday'].push(convo);
+            } else if (updatedAt >= weekAgo) {
+                groups['Previous 7 Days'].push(convo);
+            } else {
+                groups['Older'].push(convo);
+            }
+        }
+
+        return groups;
     }
 
     @computed get allMessages(): Message[] {
@@ -106,6 +155,72 @@ export class AiSidebarStore {
         this.saveAgentSelectionToStorage();
     }
 
+    // Conversation management actions
+    @action
+    public setConversationsExpanded(expanded: boolean) {
+        this.conversationsExpanded = expanded;
+    }
+
+    @action
+    public setCurrentConversationId(conversationId: string | null) {
+        this.currentConversationId = conversationId;
+        this.saveCurrentConversationToStorage();
+    }
+
+    @action
+    public async loadConversations() {
+        this.conversationsLoading = true;
+        try {
+            const convos = await librechatClient.getConversations();
+            this.conversations = (convos || []).map((c: any) => ({
+                conversationId: c.conversationId,
+                title: c.title || 'New Chat',
+                createdAt: new Date(c.createdAt),
+                updatedAt: new Date(c.updatedAt),
+                endpoint: c.endpoint,
+            })).sort((a: Conversation, b: Conversation) =>
+                b.updatedAt.getTime() - a.updatedAt.getTime()
+            );
+        } catch (e) {
+            console.error('Failed to load conversations', e);
+        } finally {
+            this.conversationsLoading = false;
+        }
+    }
+
+    @action
+    public async selectConversation(conversationId: string) {
+        this.setCurrentConversationId(conversationId);
+        this.isLoading = true;
+        this.messages = [];
+
+        try {
+            const messagesData = await librechatClient.getMessages(conversationId);
+            if (Array.isArray(messagesData)) {
+                this.messages = messagesData.map((m: any) => ({
+                    id: m.messageId || `msg_${Date.now()}_${Math.random()}`,
+                    text: m.text || '',
+                    sender: m.isCreatedByUser ? 'user' : 'ai',
+                    timestamp: new Date(m.createdAt || Date.now()),
+                }));
+            }
+        } catch (e) {
+            console.error('Failed to load messages for conversation', e);
+            this.error = 'Failed to load conversation messages';
+        } finally {
+            this.isLoading = false;
+        }
+    }
+
+    @action
+    public startNewConversation() {
+        this.currentConversationId = null;
+        this.messages = [];
+        this.streamingMessage = '';
+        this.error = null;
+        this.saveCurrentConversationToStorage();
+    }
+
     private saveMessagesToStorage() {
         try {
             localStorage.setItem(
@@ -155,6 +270,29 @@ export class AiSidebarStore {
             }
         } catch (e) {
             console.error('Failed to load agent selection from localStorage', e);
+        }
+    }
+
+    private saveCurrentConversationToStorage() {
+        try {
+            if (this.currentConversationId) {
+                localStorage.setItem('aiSidebarCurrentConversationId', this.currentConversationId);
+            } else {
+                localStorage.removeItem('aiSidebarCurrentConversationId');
+            }
+        } catch (e) {
+            console.error('Failed to save current conversation to localStorage', e);
+        }
+    }
+
+    private loadCurrentConversationFromStorage() {
+        try {
+            const stored = localStorage.getItem('aiSidebarCurrentConversationId');
+            if (stored) {
+                this.currentConversationId = stored;
+            }
+        } catch (e) {
+            console.error('Failed to load current conversation from localStorage', e);
         }
     }
 }
