@@ -7,6 +7,7 @@ import { AiSidebarStore } from './AiSidebarStore';
 import { MessageList } from './MessageList';
 import { ChatInput } from './ChatInput';
 import { AgentSelector } from './AgentSelector';
+import { ConversationList } from './ConversationList';
 import { librechatClient } from '../../api/librechatClient';
 import './aiDesignTokens.css';
 import './aiSidebar.scss';
@@ -34,9 +35,6 @@ export class AiSidebar extends React.Component<IAiSidebarProps, {}> {
         document.addEventListener('mousemove', this.handleMouseMove);
         document.addEventListener('mouseup', this.handleMouseUp);
 
-        // Start a new conversation (don't clear messages - they persist in localStorage)
-        this.props.appStore!.setCurrentConversationId(null);
-
         // Initialize LibreChat authentication
         const authenticated = await librechatClient.initialize();
         if (!authenticated) {
@@ -49,6 +47,16 @@ export class AiSidebar extends React.Component<IAiSidebarProps, {}> {
             console.log('LibreChat agents:', agents);
             if (agents && agents.length > 0) {
                 this.sidebarStore.setAgents(agents);
+            }
+
+            // Load conversations
+            await this.sidebarStore.loadConversations();
+
+            // If we have a stored conversation ID, load its messages
+            if (this.sidebarStore.currentConversationId) {
+                await this.sidebarStore.selectConversation(
+                    this.sidebarStore.currentConversationId
+                );
             }
         }
     }
@@ -83,7 +91,7 @@ export class AiSidebar extends React.Component<IAiSidebarProps, {}> {
         librechatClient.sendMessage(
             {
                 text: message,
-                conversationId: this.props.appStore!.currentConversationId || undefined,
+                conversationId: this.sidebarStore.currentConversationId || undefined,
                 endpoint: 'agents',  // Always use agents endpoint
                 agent_id: selectedAgent.id,
             },
@@ -95,11 +103,11 @@ export class AiSidebar extends React.Component<IAiSidebarProps, {}> {
             (response) => {
                 this.sidebarStore.finalizeStreamingMessage();
                 this.sidebarStore.setLoading(false);
-                // Update conversation ID
-                if (response.conversationId) {
-                    this.props.appStore!.setCurrentConversationId(
-                        response.conversationId
-                    );
+                // Update conversation ID if this was a new conversation
+                if (response.conversationId && !this.sidebarStore.currentConversationId) {
+                    this.sidebarStore.setCurrentConversationId(response.conversationId);
+                    // Reload conversations to include the new one
+                    this.sidebarStore.loadConversations();
                 }
             },
             // On error
@@ -127,8 +135,13 @@ export class AiSidebar extends React.Component<IAiSidebarProps, {}> {
             confirm('Are you sure you want to clear this conversation?')
         ) {
             this.sidebarStore.clearMessages();
-            this.props.appStore!.setCurrentConversationId(null);
+            this.sidebarStore.setCurrentConversationId(null);
         }
+    }
+
+    @autobind
+    handleNewChat() {
+        this.sidebarStore.startNewConversation();
     }
 
     @autobind
@@ -185,6 +198,13 @@ export class AiSidebar extends React.Component<IAiSidebarProps, {}> {
                     <div className="header-actions">
                         <button
                             className="icon-button"
+                            onClick={this.handleNewChat}
+                            title="New conversation"
+                        >
+                            <i className="fa-solid fa-plus"></i>
+                        </button>
+                        <button
+                            className="icon-button"
                             onClick={this.handleClearChat}
                             title="Clear conversation"
                         >
@@ -199,6 +219,8 @@ export class AiSidebar extends React.Component<IAiSidebarProps, {}> {
                         </button>
                     </div>
                 </div>
+
+                <ConversationList store={this.sidebarStore} />
 
                 <div className="ai-sidebar-content">
                     {this.sidebarStore.error && (
