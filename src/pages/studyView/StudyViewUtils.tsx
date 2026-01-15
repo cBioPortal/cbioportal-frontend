@@ -4394,7 +4394,9 @@ export async function invokeNamespaceDataCount(
         },
     };
 
-    const result = await internalClient.fetchNamespaceDataCountsUsing(params);
+    const result = await internalClient.fetchNamespaceDataCountsUsingPOST(
+        params
+    );
 
     const data = result.find(
         (d: NamespaceDataCountItem) =>

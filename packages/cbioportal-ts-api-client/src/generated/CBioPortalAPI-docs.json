@@ -2075,7 +2075,7 @@
           "Namespace Attributes"
         ],
         "description": "Fetch namespace attributes",
-        "operationId": "fetchNamespaceUsing"
+        "operationId": "fetchNamespaceUsingPOST"
       }
     },
     "/api/patients": {

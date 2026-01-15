@@ -669,7 +669,7 @@
           "columnar-store-study-view-controller"
         ],
         "description": "Get all patient level treatments",
-        "operationId": "fetchPatientTreatmentCountsUsing"
+        "operationId": "fetchPatientTreatmentCountsUsingPOST"
       }
     },
     "/api/column-store/treatments/sample-counts/fetch": {
@@ -726,7 +726,7 @@
         "tags": [
           "columnar-store-study-view-controller"
         ],
-        "operationId": "fetchSampleTreatmentCountsUsing"
+        "operationId": "fetchSampleTreatmentCountsUsingPOST"
       }
     },
     "/api/custom-data-bin-counts/fetch": {
@@ -2198,7 +2198,7 @@
           "Namespace Attributes Count"
         ],
         "description": "Get counts for namespace attributes according to their data availability for selected samples/patients",
-        "operationId": "getNamespaceAttributeCountsUsing"
+        "operationId": "getNamespaceAttributeCountsUsingPOST"
       }
     },
     "/api/namespace-data-counts/fetch": {
@@ -2233,7 +2233,7 @@
           "Study View"
         ],
         "description": "Fetch namespace data counts by study view filter",
-        "operationId": "fetchNamespaceDataCountsUsing"
+        "operationId": "fetchNamespaceDataCountsUsingPOST"
       }
     },
     "/api/namespace-data/fetch": {
@@ -2268,7 +2268,7 @@
           "Namespace Data"
         ],
         "description": "Get namespace data for comparison page for the selected samples and values",
-        "operationId": "getNamespaceDataForComparisonUsing"
+        "operationId": "getNamespaceDataForComparisonUsingPOST"
       }
     },
     "/api/reference-genome-genes/{genomeName}": {

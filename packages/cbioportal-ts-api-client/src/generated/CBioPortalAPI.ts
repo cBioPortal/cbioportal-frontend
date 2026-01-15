@@ -4105,7 +4105,7 @@ export default class CBioPortalAPI {
                 return response.body;
             });
         };
-    fetchNamespaceUsingURL(parameters: {
+    fetchNamespaceUsingPOSTURL(parameters: {
         'studyIds': Array < string > ,
         $queryParameters ? : any
     }): string {
@@ -4125,10 +4125,10 @@ export default class CBioPortalAPI {
     /**
      * Fetch namespace attributes
      * @method
-     * @name CBioPortalAPI#fetchNamespaceUsing
+     * @name CBioPortalAPI#fetchNamespaceUsingPOST
      * @param {} studyIds - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      */
-    fetchNamespaceUsingWithHttpInfo(parameters: {
+    fetchNamespaceUsingPOSTWithHttpInfo(parameters: {
         'studyIds': Array < string > ,
         $queryParameters ? : any,
         $domain ? : string
@@ -4169,16 +4169,16 @@ export default class CBioPortalAPI {
     /**
      * Fetch namespace attributes
      * @method
-     * @name CBioPortalAPI#fetchNamespaceUsing
+     * @name CBioPortalAPI#fetchNamespaceUsingPOST
      * @param {} studyIds - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      */
-    fetchNamespaceUsing(parameters: {
+    fetchNamespaceUsingPOST(parameters: {
             'studyIds': Array < string > ,
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < NamespaceAttribute >
         > {
-            return this.fetchNamespaceUsingWithHttpInfo(parameters).then(function(response: request.Response) {
+            return this.fetchNamespaceUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };

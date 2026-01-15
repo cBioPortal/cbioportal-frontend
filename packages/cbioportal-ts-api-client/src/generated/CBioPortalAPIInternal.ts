@@ -2618,7 +2618,7 @@ export default class CBioPortalAPIInternal {
                 return response.body;
             });
         };
-    fetchPatientTreatmentCountsUsingURL(parameters: {
+    fetchPatientTreatmentCountsUsingPOSTURL(parameters: {
         'tier' ? : "Agent" | "AgentClass" | "AgentTarget",
         'studyViewFilter' ? : StudyViewFilter,
         $queryParameters ? : any
@@ -2642,11 +2642,11 @@ export default class CBioPortalAPIInternal {
     /**
      * Get all patient level treatments
      * @method
-     * @name CBioPortalAPIInternal#fetchPatientTreatmentCountsUsing
+     * @name CBioPortalAPIInternal#fetchPatientTreatmentCountsUsingPOST
      * @param {string} tier - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      * @param {} studyViewFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      */
-    fetchPatientTreatmentCountsUsingWithHttpInfo(parameters: {
+    fetchPatientTreatmentCountsUsingPOSTWithHttpInfo(parameters: {
         'tier' ? : "Agent" | "AgentClass" | "AgentTarget",
         'studyViewFilter' ? : StudyViewFilter,
         $queryParameters ? : any,
@@ -2687,21 +2687,21 @@ export default class CBioPortalAPIInternal {
     /**
      * Get all patient level treatments
      * @method
-     * @name CBioPortalAPIInternal#fetchPatientTreatmentCountsUsing
+     * @name CBioPortalAPIInternal#fetchPatientTreatmentCountsUsingPOST
      * @param {string} tier - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      * @param {} studyViewFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      */
-    fetchPatientTreatmentCountsUsing(parameters: {
+    fetchPatientTreatmentCountsUsingPOST(parameters: {
         'tier' ? : "Agent" | "AgentClass" | "AgentTarget",
         'studyViewFilter' ? : StudyViewFilter,
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < PatientTreatmentReport > {
-        return this.fetchPatientTreatmentCountsUsingWithHttpInfo(parameters).then(function(response: request.Response) {
+        return this.fetchPatientTreatmentCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
             return response.body;
         });
     };
-    fetchSampleTreatmentCountsUsingURL(parameters: {
+    fetchSampleTreatmentCountsUsingPOSTURL(parameters: {
         'tier' ? : "Agent" | "AgentClass" | "AgentTarget",
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'studyViewFilter' ? : StudyViewFilter,
@@ -2730,12 +2730,12 @@ export default class CBioPortalAPIInternal {
     /**
      * 
      * @method
-     * @name CBioPortalAPIInternal#fetchSampleTreatmentCountsUsing
+     * @name CBioPortalAPIInternal#fetchSampleTreatmentCountsUsingPOST
      * @param {string} tier - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      * @param {string} projection - Level of detail of the response
      * @param {} studyViewFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      */
-    fetchSampleTreatmentCountsUsingWithHttpInfo(parameters: {
+    fetchSampleTreatmentCountsUsingPOSTWithHttpInfo(parameters: {
         'tier' ? : "Agent" | "AgentClass" | "AgentTarget",
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'studyViewFilter' ? : StudyViewFilter,
@@ -2781,19 +2781,19 @@ export default class CBioPortalAPIInternal {
     /**
      * 
      * @method
-     * @name CBioPortalAPIInternal#fetchSampleTreatmentCountsUsing
+     * @name CBioPortalAPIInternal#fetchSampleTreatmentCountsUsingPOST
      * @param {string} tier - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      * @param {string} projection - Level of detail of the response
      * @param {} studyViewFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      */
-    fetchSampleTreatmentCountsUsing(parameters: {
+    fetchSampleTreatmentCountsUsingPOST(parameters: {
         'tier' ? : "Agent" | "AgentClass" | "AgentTarget",
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'studyViewFilter' ? : StudyViewFilter,
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < SampleTreatmentReport > {
-        return this.fetchSampleTreatmentCountsUsingWithHttpInfo(parameters).then(function(response: request.Response) {
+        return this.fetchSampleTreatmentCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
             return response.body;
         });
     };
@@ -5700,7 +5700,7 @@ export default class CBioPortalAPIInternal {
                 return response.body;
             });
         };
-    getNamespaceAttributeCountsUsingURL(parameters: {
+    getNamespaceAttributeCountsUsingPOSTURL(parameters: {
         'namespaceAttributeCountFilter' ? : NamespaceAttributeCountFilter,
         $queryParameters ? : any
     }): string {
@@ -5720,10 +5720,10 @@ export default class CBioPortalAPIInternal {
     /**
      * Get counts for namespace attributes according to their data availability for selected samples/patients
      * @method
-     * @name CBioPortalAPIInternal#getNamespaceAttributeCountsUsing
+     * @name CBioPortalAPIInternal#getNamespaceAttributeCountsUsingPOST
      * @param {} namespaceAttributeCountFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      */
-    getNamespaceAttributeCountsUsingWithHttpInfo(parameters: {
+    getNamespaceAttributeCountsUsingPOSTWithHttpInfo(parameters: {
         'namespaceAttributeCountFilter' ? : NamespaceAttributeCountFilter,
         $queryParameters ? : any,
             $domain ? : string
@@ -5759,20 +5759,20 @@ export default class CBioPortalAPIInternal {
     /**
      * Get counts for namespace attributes according to their data availability for selected samples/patients
      * @method
-     * @name CBioPortalAPIInternal#getNamespaceAttributeCountsUsing
+     * @name CBioPortalAPIInternal#getNamespaceAttributeCountsUsingPOST
      * @param {} namespaceAttributeCountFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      */
-    getNamespaceAttributeCountsUsing(parameters: {
+    getNamespaceAttributeCountsUsingPOST(parameters: {
             'namespaceAttributeCountFilter' ? : NamespaceAttributeCountFilter,
             $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < NamespaceAttributeCount >
         > {
-            return this.getNamespaceAttributeCountsUsingWithHttpInfo(parameters).then(function(response: request.Response) {
+            return this.getNamespaceAttributeCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
-    fetchNamespaceDataCountsUsingURL(parameters: {
+    fetchNamespaceDataCountsUsingPOSTURL(parameters: {
         'namespaceDataCountFilter' ? : NamespaceDataCountFilter,
         $queryParameters ? : any
     }): string {
@@ -5792,10 +5792,10 @@ export default class CBioPortalAPIInternal {
     /**
      * Fetch namespace data counts by study view filter
      * @method
-     * @name CBioPortalAPIInternal#fetchNamespaceDataCountsUsing
+     * @name CBioPortalAPIInternal#fetchNamespaceDataCountsUsingPOST
      * @param {} namespaceDataCountFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      */
-    fetchNamespaceDataCountsUsingWithHttpInfo(parameters: {
+    fetchNamespaceDataCountsUsingPOSTWithHttpInfo(parameters: {
         'namespaceDataCountFilter' ? : NamespaceDataCountFilter,
         $queryParameters ? : any,
             $domain ? : string
@@ -5831,20 +5831,20 @@ export default class CBioPortalAPIInternal {
     /**
      * Fetch namespace data counts by study view filter
      * @method
-     * @name CBioPortalAPIInternal#fetchNamespaceDataCountsUsing
+     * @name CBioPortalAPIInternal#fetchNamespaceDataCountsUsingPOST
      * @param {} namespaceDataCountFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      */
-    fetchNamespaceDataCountsUsing(parameters: {
+    fetchNamespaceDataCountsUsingPOST(parameters: {
             'namespaceDataCountFilter' ? : NamespaceDataCountFilter,
             $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < NamespaceDataCountItem >
         > {
-            return this.fetchNamespaceDataCountsUsingWithHttpInfo(parameters).then(function(response: request.Response) {
+            return this.fetchNamespaceDataCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
-    getNamespaceDataForComparisonUsingURL(parameters: {
+    getNamespaceDataForComparisonUsingPOSTURL(parameters: {
         'namespaceComparisonFilter' ? : NamespaceComparisonFilter,
         $queryParameters ? : any
     }): string {
@@ -5864,10 +5864,10 @@ export default class CBioPortalAPIInternal {
     /**
      * Get namespace data for comparison page for the selected samples and values
      * @method
-     * @name CBioPortalAPIInternal#getNamespaceDataForComparisonUsing
+     * @name CBioPortalAPIInternal#getNamespaceDataForComparisonUsingPOST
      * @param {} namespaceComparisonFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      */
-    getNamespaceDataForComparisonUsingWithHttpInfo(parameters: {
+    getNamespaceDataForComparisonUsingPOSTWithHttpInfo(parameters: {
         'namespaceComparisonFilter' ? : NamespaceComparisonFilter,
         $queryParameters ? : any,
             $domain ? : string
@@ -5903,16 +5903,16 @@ export default class CBioPortalAPIInternal {
     /**
      * Get namespace data for comparison page for the selected samples and values
      * @method
-     * @name CBioPortalAPIInternal#getNamespaceDataForComparisonUsing
+     * @name CBioPortalAPIInternal#getNamespaceDataForComparisonUsingPOST
      * @param {} namespaceComparisonFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      */
-    getNamespaceDataForComparisonUsing(parameters: {
+    getNamespaceDataForComparisonUsingPOST(parameters: {
             'namespaceComparisonFilter' ? : NamespaceComparisonFilter,
             $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < NamespaceData >
         > {
-            return this.getNamespaceDataForComparisonUsingWithHttpInfo(parameters).then(function(response: request.Response) {
+            return this.getNamespaceDataForComparisonUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
