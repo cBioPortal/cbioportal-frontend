@@ -44,7 +44,7 @@ screenshotRoot = screenshotRoot.replace(/\/$/, '');
 // );
 
 const chromeArgs = [
-    '--headless=new',
+    //'--headless=new',
     '--no-sandbox',
     '--disable-composited-antialiasing',
     '--disable-setuid-sandbox',
@@ -57,19 +57,21 @@ const chromeArgs = [
     // '--disable-renderer-backgrounding',
     // '--disable-backgrounding-occluded-windows',
     // '--remote-debugging-port=9222',
-].concat(
-    (function() {
-        return process.env.HEADLESS_CHROME === 'true'
-            ? [
-                  //  '--headless',
-                  '--no-sandbox',
-                  '--disable-setuid-sandbox',
-                  '--in-process-gpu',
-                  '--use-gl=angle',
-              ]
-            : [];
-    })()
-);
+];
+
+//     .concat(
+//     (function() {
+//         return process.env.HEADLESS_CHROME === 'true'
+//             ? [
+//                   //  '--headless',
+//                   '--no-sandbox',
+//                   '--disable-setuid-sandbox',
+//                   '--in-process-gpu',
+//                   '--use-gl=angle',
+//               ]
+//             : [];
+//     })()
+// );
 
 var diffDir = path.join(process.cwd(), `${screenshotRoot}/diff/`);
 var refDir = path.join(process.cwd(), `${screenshotRoot}/reference/`);
