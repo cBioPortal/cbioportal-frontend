@@ -93,7 +93,7 @@ describe('Toggling of study view filters autosubmit', function() {
             'pending'
         );
         assert(isFilterQueued);
-        const isFilterDeleted = hasFilterClass(
+        const isFilterDeleted = await hasFilterClass(
             submittedFilterInHeader,
             'pendingDelete'
         );
@@ -127,29 +127,31 @@ describe('Toggling of study view filters autosubmit', function() {
 });
 
 async function selectMutationProfile(index = 0) {
-    await (
-        await (await getElement(GENOMIC_PROFILES_SAMPLE_COUNT_TABLE)).$$(
-            'input'
-        )
-    )[index].click();
+    await clickElement(
+        (
+            await (await getElement(GENOMIC_PROFILES_SAMPLE_COUNT_TABLE)).$$(
+                'input'
+            )
+        )[index]
+    );
 }
 
 async function queueFilter() {
-    await (
+    await clickElement(
         await getNestedElement([
             GENOMIC_PROFILES_SAMPLE_COUNT_TABLE,
             ADD_FILTERS_BUTTON,
         ])
-    ).click();
+    );
 }
 
 async function selectSamples() {
-    await (
+    await clickElement(
         await getNestedElement([
             GENOMIC_PROFILES_SAMPLE_COUNT_TABLE,
             SELECT_SAMPLES_BUTTON,
         ])
-    ).click();
+    );
 }
 
 /**

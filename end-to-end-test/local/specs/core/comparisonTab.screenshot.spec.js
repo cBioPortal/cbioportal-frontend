@@ -3,7 +3,6 @@ const {
     goToUrlAndSetLocalStorage,
     waitForNetworkQuiet,
     setInputText,
-    setDropdownOpen,
     getElement,
     clickElement,
 } = require('../../../shared/specUtils_Async');
@@ -189,9 +188,5 @@ describe('results view comparison tab screenshot tests', function() {
 });
 
 async function openGeneSelectorMenu() {
-    await setDropdownOpen(
-        true,
-        '[data-test="selectGenes"]',
-        'input[data-test=numberOfGenes]'
-    );
+    await clickElement('[data-test="selectGenes"]');
 }
