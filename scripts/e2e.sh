@@ -45,7 +45,7 @@ fi
 # Start backend
 if [ "$KEYCLOAK" = "true" ]; then
   if [ "$CLICKHOUSE" = "true" ]; then
-    COMPOSE_EXTENSIONS='-f addon/clickhouse/docker-compose.remote.clickhouse.yml'
+    COMPOSE_EXTENSIONS='-f addon/clickhouse/docker-compose.remote.clickhouse.yml -f addon/redis/docker-compose.redis.yml'
   else
     COMPOSE_EXTENSIONS=''
   fi
