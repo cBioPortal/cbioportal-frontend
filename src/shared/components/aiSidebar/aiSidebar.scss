@@ -490,10 +490,61 @@
             }
         }
 
-        .send-button {
+        .input-actions {
             position: absolute;
             right: 8px;
             bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+
+            @media (min-width: 640px) {
+                right: 12px;
+                bottom: 12px;
+            }
+        }
+
+        .screenshot-toggle {
+            background: none;
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            min-width: 32px;
+            min-height: 32px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            color: var(--text-tertiary);
+
+            &:hover:not(:disabled) {
+                background-color: var(--surface-hover);
+                color: var(--text-secondary);
+            }
+
+            &.active {
+                background-color: var(--brand-purple);
+                color: #ffffff;
+
+                &:hover:not(:disabled) {
+                    background-color: var(--brand-purple-hover, #7c3aed);
+                }
+            }
+
+            &:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+
+            i {
+                font-size: 14px;
+            }
+        }
+
+        .send-button {
             background-color: var(--surface-submit);
             color: #ffffff;
             border: none;
@@ -526,11 +577,6 @@
 
             i {
                 font-size: 14px;
-            }
-
-            @media (min-width: 640px) {
-                right: 12px;
-                bottom: 12px;
             }
         }
     }
@@ -571,7 +617,12 @@
     white-space: normal;
 
     /* Headings */
-    h1, h2, h3, h4, h5, h6 {
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
         font-weight: 600;
         margin: 0.75em 0 0.5em 0;
         line-height: 1.3;
@@ -582,10 +633,18 @@
         }
     }
 
-    h1 { font-size: 1.4em; }
-    h2 { font-size: 1.25em; }
-    h3 { font-size: 1.1em; }
-    h4 { font-size: 1em; }
+    h1 {
+        font-size: 1.4em;
+    }
+    h2 {
+        font-size: 1.25em;
+    }
+    h3 {
+        font-size: 1.1em;
+    }
+    h4 {
+        font-size: 1em;
+    }
 
     /* Paragraphs */
     p {
@@ -610,7 +669,8 @@
     }
 
     /* Lists */
-    ul, ol {
+    ul,
+    ol {
         margin: 0.5em 0;
         padding-left: 1.5em;
     }
@@ -773,7 +833,8 @@
         display: block;
     }
 
-    th, td {
+    th,
+    td {
         border: 1px solid var(--border-medium);
         padding: 8px 12px;
         text-align: left;
@@ -802,7 +863,7 @@
     }
 
     /* Task lists */
-    input[type="checkbox"] {
+    input[type='checkbox'] {
         margin-right: 0.5em;
     }
 }

@@ -23,6 +23,7 @@ export interface LibreChatMessage {
     endpoint?: string;
     model?: string;
     agent_id?: string;  // Required when using agents endpoint
+    imageData?: string; // Base64-encoded image data for screenshot attachments
 }
 
 export interface LibreChatResponse {

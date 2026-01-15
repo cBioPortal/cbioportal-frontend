@@ -42,11 +42,15 @@ export class AiSidebarStore {
     @observable conversationsExpanded: boolean = false;
     @observable conversationsLoading: boolean = false;
 
+    // Screenshot attachment
+    @observable screenshotEnabled: boolean = false;
+
     constructor() {
         makeObservable(this);
         this.loadMessagesFromStorage();
         this.loadAgentSelectionFromStorage();
         this.loadCurrentConversationFromStorage();
+        this.loadScreenshotPreference();
     }
 
     @computed get selectedAgent(): Agent | null {
@@ -55,15 +59,19 @@ export class AiSidebarStore {
 
     @computed get groupedConversations(): GroupedConversations {
         const now = new Date();
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const today = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate()
+        );
         const yesterday = new Date(today.getTime() - 86400000);
         const weekAgo = new Date(today.getTime() - 7 * 86400000);
 
         const groups: GroupedConversations = {
-            'Today': [],
-            'Yesterday': [],
+            Today: [],
+            Yesterday: [],
             'Previous 7 Days': [],
-            'Older': [],
+            Older: [],
         };
 
         for (const convo of this.conversations) {
@@ -155,6 +163,13 @@ export class AiSidebarStore {
         this.saveAgentSelectionToStorage();
     }
 
+    // Screenshot toggle
+    @action
+    public setScreenshotEnabled(enabled: boolean) {
+        this.screenshotEnabled = enabled;
+        this.saveScreenshotPreference();
+    }
+
     // Conversation management actions
     @action
     public setConversationsExpanded(expanded: boolean) {
@@ -172,15 +187,18 @@ export class AiSidebarStore {
         this.conversationsLoading = true;
         try {
             const convos = await librechatClient.getConversations();
-            this.conversations = (convos || []).map((c: any) => ({
-                conversationId: c.conversationId,
-                title: c.title || 'New Chat',
-                createdAt: new Date(c.createdAt),
-                updatedAt: new Date(c.updatedAt),
-                endpoint: c.endpoint,
-            })).sort((a: Conversation, b: Conversation) =>
-                b.updatedAt.getTime() - a.updatedAt.getTime()
-            );
+            this.conversations = (convos || [])
+                .map((c: any) => ({
+                    conversationId: c.conversationId,
+                    title: c.title || 'New Chat',
+                    createdAt: new Date(c.createdAt),
+                    updatedAt: new Date(c.updatedAt),
+                    endpoint: c.endpoint,
+                }))
+                .sort(
+                    (a: Conversation, b: Conversation) =>
+                        b.updatedAt.getTime() - a.updatedAt.getTime()
+                );
         } catch (e) {
             console.error('Failed to load conversations', e);
         } finally {
@@ -195,7 +213,9 @@ export class AiSidebarStore {
         this.messages = [];
 
         try {
-            const messagesData = await librechatClient.getMessages(conversationId);
+            const messagesData = await librechatClient.getMessages(
+                conversationId
+            );
             if (Array.isArray(messagesData)) {
                 this.messages = messagesData.map((m: any) => {
                     // Extract text - check direct text field first, then content array
@@ -267,7 +287,10 @@ export class AiSidebarStore {
     private saveAgentSelectionToStorage() {
         try {
             if (this.selectedAgentId) {
-                localStorage.setItem('aiSidebarSelectedAgentId', this.selectedAgentId);
+                localStorage.setItem(
+                    'aiSidebarSelectedAgentId',
+                    this.selectedAgentId
+                );
             }
         } catch (e) {
             console.error('Failed to save agent selection to localStorage', e);
@@ -281,30 +304,72 @@ export class AiSidebarStore {
                 this.selectedAgentId = stored;
             }
         } catch (e) {
-            console.error('Failed to load agent selection from localStorage', e);
+            console.error(
+                'Failed to load agent selection from localStorage',
+                e
+            );
         }
     }
 
     private saveCurrentConversationToStorage() {
         try {
             if (this.currentConversationId) {
-                localStorage.setItem('aiSidebarCurrentConversationId', this.currentConversationId);
+                localStorage.setItem(
+                    'aiSidebarCurrentConversationId',
+                    this.currentConversationId
+                );
             } else {
                 localStorage.removeItem('aiSidebarCurrentConversationId');
             }
         } catch (e) {
-            console.error('Failed to save current conversation to localStorage', e);
+            console.error(
+                'Failed to save current conversation to localStorage',
+                e
+            );
         }
     }
 
     private loadCurrentConversationFromStorage() {
         try {
-            const stored = localStorage.getItem('aiSidebarCurrentConversationId');
+            const stored = localStorage.getItem(
+                'aiSidebarCurrentConversationId'
+            );
             if (stored) {
                 this.currentConversationId = stored;
             }
         } catch (e) {
-            console.error('Failed to load current conversation from localStorage', e);
+            console.error(
+                'Failed to load current conversation from localStorage',
+                e
+            );
+        }
+    }
+
+    private saveScreenshotPreference() {
+        try {
+            localStorage.setItem(
+                'aiSidebarScreenshotEnabled',
+                String(this.screenshotEnabled)
+            );
+        } catch (e) {
+            console.error(
+                'Failed to save screenshot preference to localStorage',
+                e
+            );
+        }
+    }
+
+    private loadScreenshotPreference() {
+        try {
+            const stored = localStorage.getItem('aiSidebarScreenshotEnabled');
+            if (stored === 'true') {
+                this.screenshotEnabled = true;
+            }
+        } catch (e) {
+            console.error(
+                'Failed to load screenshot preference from localStorage',
+                e
+            );
         }
     }
 }

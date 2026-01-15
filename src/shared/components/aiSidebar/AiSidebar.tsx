@@ -5,7 +5,7 @@ import autobind from 'autobind-decorator';
 import { AppStore } from '../../../AppStore';
 import { AiSidebarStore } from './AiSidebarStore';
 import { MessageList } from './MessageList';
-import { ChatInput } from './ChatInput';
+import { ChatInput, ChatMessageData } from './ChatInput';
 import { AgentSelector } from './AgentSelector';
 import { ConversationList } from './ConversationList';
 import { librechatClient } from '../../api/librechatClient';
@@ -68,10 +68,12 @@ export class AiSidebar extends React.Component<IAiSidebarProps, {}> {
     }
 
     @autobind
-    handleSendMessage(message: string) {
+    handleSendMessage(data: ChatMessageData) {
+        const { text, imageData } = data;
+
         // Add user message to store
         this.sidebarStore.addMessage({
-            text: message,
+            text: text,
             sender: 'user',
         });
 
@@ -87,31 +89,47 @@ export class AiSidebar extends React.Component<IAiSidebarProps, {}> {
             return;
         }
 
+        // TODO: Handle imageData upload to LibreChat
+        if (imageData) {
+            console.log(
+                'Screenshot captured, size:',
+                Math.round(imageData.length / 1024),
+                'KB'
+            );
+        }
+
         // Send to LibreChat API
         librechatClient.sendMessage(
             {
-                text: message,
-                conversationId: this.sidebarStore.currentConversationId || undefined,
-                endpoint: 'agents',  // Always use agents endpoint
+                text: text,
+                conversationId:
+                    this.sidebarStore.currentConversationId || undefined,
+                endpoint: 'agents', // Always use agents endpoint
                 agent_id: selectedAgent.id,
+                imageData, // Pass imageData to API client
             },
             // On stream update
             (text: string) => {
                 this.sidebarStore.updateStreamingMessage(text);
             },
             // On complete
-            (response) => {
+            response => {
                 this.sidebarStore.finalizeStreamingMessage();
                 this.sidebarStore.setLoading(false);
                 // Update conversation ID if this was a new conversation
-                if (response.conversationId && !this.sidebarStore.currentConversationId) {
-                    this.sidebarStore.setCurrentConversationId(response.conversationId);
+                if (
+                    response.conversationId &&
+                    !this.sidebarStore.currentConversationId
+                ) {
+                    this.sidebarStore.setCurrentConversationId(
+                        response.conversationId
+                    );
                     // Reload conversations to include the new one
                     this.sidebarStore.loadConversations();
                 }
             },
             // On error
-            (error) => {
+            error => {
                 this.sidebarStore.setLoading(false);
                 this.sidebarStore.setError(error.message);
                 console.error('LibreChat error:', error);
@@ -131,9 +149,7 @@ export class AiSidebar extends React.Component<IAiSidebarProps, {}> {
 
     @autobind
     handleClearChat() {
-        if (
-            confirm('Are you sure you want to clear this conversation?')
-        ) {
+        if (confirm('Are you sure you want to clear this conversation?')) {
             this.sidebarStore.clearMessages();
             this.sidebarStore.setCurrentConversationId(null);
         }
@@ -142,6 +158,11 @@ export class AiSidebar extends React.Component<IAiSidebarProps, {}> {
     @autobind
     handleNewChat() {
         this.sidebarStore.startNewConversation();
+    }
+
+    @autobind
+    handleScreenshotToggle(enabled: boolean) {
+        this.sidebarStore.setScreenshotEnabled(enabled);
     }
 
     @autobind
@@ -237,6 +258,8 @@ export class AiSidebar extends React.Component<IAiSidebarProps, {}> {
                     <ChatInput
                         onSend={this.handleSendMessage}
                         isLoading={this.sidebarStore.isLoading}
+                        screenshotEnabled={this.sidebarStore.screenshotEnabled}
+                        onScreenshotToggle={this.handleScreenshotToggle}
                     />
                 </div>
             </div>
