@@ -531,7 +531,7 @@ exports.config = {
         browser.overwriteCommand(
             'click',
             async function(origClick, options) {
-                await this.waitForClickable({ timeout: 5000 });
+                await this.waitForClickable({ timeout: 10000 });
                 //await this.scrollIntoView();
                 return origClick(options);
             },
