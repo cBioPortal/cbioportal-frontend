@@ -23,6 +23,7 @@ export interface TMessage {
     unfinished?: boolean;
     createdAt?: string;
     updatedAt?: string;
+    files?: Partial<TFile>[];
 }
 
 export interface TConversation {
@@ -61,7 +62,21 @@ export interface TPayload extends Omit<TMessage, 'conversationId'> {
     editedContent?: any;
     isContinued?: boolean;
     ephemeralAgent?: any;
+    files?: Partial<TFile>[];
     [key: string]: any;
+}
+
+// File type for attachments
+export interface TFile {
+    file_id: string;
+    temp_file_id?: string;
+    filepath: string;
+    filename: string;
+    type: string;
+    width?: number;
+    height?: number;
+    source?: string;
+    embedded?: boolean;
 }
 
 // Model endpoint enum

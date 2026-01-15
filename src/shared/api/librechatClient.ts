@@ -11,8 +11,22 @@ import type {
     TEndpointOption,
     TSubmission,
     TPayload,
+    TFile,
 } from './librechat/types';
 import createPayload from './librechat/createPayload';
+
+// File upload response type
+interface FileUploadResponse {
+    file_id: string;
+    temp_file_id: string;
+    filepath: string;
+    filename: string;
+    type: string;
+    width?: number;
+    height?: number;
+    source?: string;
+    embedded?: boolean;
+}
 
 const LIBRECHAT_BASE_URL = 'https://chat.cbioportal.org';
 
@@ -104,10 +118,91 @@ export class LibreChatClient {
         return await this.refreshToken();
     }
 
+    // Convert base64 data URL to Blob
+    private dataURLtoBlob(dataURL: string): Blob {
+        const arr = dataURL.split(',');
+        const mime = arr[0].match(/:(.*?);/)?.[1] || 'image/jpeg';
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while (n--) {
+            u8arr[n] = bstr.charCodeAt(n);
+        }
+        return new Blob([u8arr], { type: mime });
+    }
+
+    // Upload an image to LibreChat
+    async uploadImage(
+        imageData: string,
+        endpoint: string,
+        agentId?: string
+    ): Promise<FileUploadResponse | null> {
+        try {
+            if (!this.token) {
+                const refreshed = await this.refreshToken();
+                if (!refreshed) {
+                    throw new Error('Authentication required');
+                }
+            }
+
+            // Convert base64 to blob
+            const blob = this.dataURLtoBlob(imageData);
+            const tempFileId = generateId();
+
+            // Create an image to get dimensions
+            const img = new Image();
+            const dimensionsPromise = new Promise<{ width: number; height: number }>((resolve) => {
+                img.onload = () => {
+                    resolve({ width: img.width, height: img.height });
+                };
+                img.onerror = () => {
+                    resolve({ width: 800, height: 600 }); // Default fallback
+                };
+                img.src = imageData;
+            });
+            const dimensions = await dimensionsPromise;
+
+            // Build FormData
+            const formData = new FormData();
+            formData.append('endpoint', endpoint);
+            formData.append('file', blob, `screenshot-${tempFileId}.jpg`);
+            formData.append('file_id', tempFileId);
+            formData.append('width', dimensions.width.toString());
+            formData.append('height', dimensions.height.toString());
+            formData.append('message_file', 'true');
+            if (agentId) {
+                formData.append('agent_id', agentId);
+            }
+
+            // Upload to /api/files/images
+            const response = await fetch(`${this.baseUrl}/api/files/images`, {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${this.token}`,
+                },
+                credentials: 'include',
+                body: formData,
+            });
+
+            if (!response.ok) {
+                console.error('Image upload failed:', response.status, await response.text());
+                return null;
+            }
+
+            const result = await response.json();
+            console.log('Image uploaded successfully:', result);
+            return result as FileUploadResponse;
+        } catch (error) {
+            console.error('Failed to upload image:', error);
+            return null;
+        }
+    }
+
     // Build a TSubmission payload following LibreChat's format
     private buildSubmission(
         message: LibreChatMessage,
-        messages: TMessage[] = []
+        messages: TMessage[] = [],
+        files?: Partial<TFile>[]
     ): TSubmission {
         const messageId = generateId();
         const conversationId = message.conversationId || null;
@@ -130,6 +225,7 @@ export class LibreChatClient {
             text: message.text,
             sender: 'user',
             isCreatedByUser: true,
+            files: files,
         };
 
         const conversation: Partial<TConversation> = {
@@ -177,17 +273,51 @@ export class LibreChatClient {
             // Close any existing SSE connection
             this.closeSSE();
 
-            // Build submission
-            const submission = this.buildSubmission(message);
+            // Upload image if provided
+            let files: Partial<TFile>[] | undefined;
+            if (message.imageData) {
+                console.log('Uploading screenshot...');
+                const uploadResult = await this.uploadImage(
+                    message.imageData,
+                    message.endpoint || 'agents',
+                    message.agent_id
+                );
+                if (uploadResult) {
+                    files = [
+                        {
+                            file_id: uploadResult.file_id,
+                            temp_file_id: uploadResult.temp_file_id,
+                            filepath: uploadResult.filepath,
+                            filename: uploadResult.filename,
+                            type: uploadResult.type,
+                            width: uploadResult.width,
+                            height: uploadResult.height,
+                            source: uploadResult.source,
+                        },
+                    ];
+                    console.log('Screenshot uploaded, file_id:', uploadResult.file_id);
+                } else {
+                    console.warn('Screenshot upload failed, sending message without image');
+                }
+            }
+
+            // Build submission with files
+            const submission = this.buildSubmission(message, [], files);
 
             // Create payload using official LibreChat createPayload function
             const payloadData = createPayload(submission);
             const server = this.baseUrl + payloadData.server;
             const payload = removeNullishValues(payloadData.payload) as TPayload;
 
+            // Ensure files are included in payload
+            if (files && files.length > 0) {
+                payload.files = files;
+            }
+
             console.log('LibreChat SSE Request:', {
                 server,
                 payload,
+                hasFiles: !!files,
             });
 
             // Track streaming state
