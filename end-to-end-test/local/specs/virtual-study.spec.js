@@ -26,7 +26,9 @@ describe('Virtual Study life cycle', function() {
     });
     it('Provide the title and save', async function() {
         const modalDialog = await getElement('.modal-dialog');
-        await modalDialog.waitForDisplayed();
+        await modalDialog.waitForDisplayed({
+            timeout: 5000,
+        });
         const titleInput = await modalDialog.$('input#sniglet');
         await titleInput.setValue(vsTitle);
         const saveBtn = await modalDialog.$(
