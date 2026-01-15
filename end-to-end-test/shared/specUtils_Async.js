@@ -881,7 +881,8 @@ async function clickElement(selector, options = {}) {
         typeof selector === 'string' ? await getElement(selector) : selector;
 
     if (options?.moveTo) await el.moveTo();
-    await el.waitForDisplayed(options);
+    //await el.waitForDisplayed(options);
+    await el.waitForClickable();
     await el.click();
 }
 
