@@ -100,6 +100,7 @@ describe('results view comparison tab screenshot tests', function() {
             await getElement('div[data-test="GeneBarPlotDiv"]', {
                 timeout: 30000,
             });
+            await (await getElement('body')).scrollIntoView();
             await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
             const res = await browser.checkElement(
                 'div[data-test="GeneBarPlotDiv"]',
@@ -128,6 +129,7 @@ describe('results view comparison tab screenshot tests', function() {
             await getElement('div[data-test="GeneBarPlotDiv"]', {
                 timeout: 30000,
             });
+            await (await getElement('body')).scrollIntoView();
             await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
             const res = await browser.checkElement(
                 'div[data-test="GeneBarPlotDiv"]',
@@ -152,6 +154,7 @@ describe('results view comparison tab screenshot tests', function() {
             await getElement('div[data-test="GeneBarPlotDiv"]', {
                 timeout: 30000,
             });
+            await (await getElement('body')).scrollIntoView();
             await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
             const res = await browser.checkElement(
                 'div[data-test="GeneBarPlotDiv"]',
