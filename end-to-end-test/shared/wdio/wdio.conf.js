@@ -532,7 +532,7 @@ exports.config = {
             'click',
             async function(origClick, options) {
                 await this.waitForClickable({ timeout: 5000 });
-                await this.scrollIntoView();
+                //await this.scrollIntoView();
                 return origClick(options);
             },
             true // element scope
