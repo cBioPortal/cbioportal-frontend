@@ -336,7 +336,8 @@ jobs:
       BACKEND_PORT: 8080
       FRONTEND_PORT: 3000
       DOCKER_IMAGE_MYSQL: cbioportal/mysql:8.0-database-test
-      DOCKER_IMAGE_CBIOPORTAL: cbioportal/cbioportal-dev:04409eb99f05b04b7f1a8602217b1c5d62e26adc
+      DOCKER_IMAGE_CBIOPORTAL: cbioportal/cbioportal:master
+      #DOCKER_IMAGE_CBIOPORTAL: cbioportal/cbioportal-dev:04409eb99f05b04b7f1a8602217b1c5d62e26adc
       DOCKER_COMPOSE_REF: master
       APP_CBIOPORTAL_CORE_BRANCH: main
     steps:
