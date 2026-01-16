@@ -320,6 +320,7 @@ exports.config = {
         './local/specs/custom-driver-annotations-in-study-view.spec.js',
         './local/specs/gsva.screenshot.spec.js',
         './local/specs/gsva.spec.js',
+        './local/specs/hide-download-controls.spec.js',
     ],
     //
     // ============
