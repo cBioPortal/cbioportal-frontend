@@ -45,30 +45,6 @@ const boehmHeData = remoteData<EmbeddingData>({
     },
 });
 
-const boehmGenomicData = remoteData<EmbeddingData>({
-    await: () => [], // No dependencies - invoke once immediately and cache
-    invoke: async () => {
-        const response = await fetch(`${EMBEDDING_BASE_URL}/umap_genomic.json`);
-        if (!response.ok) {
-            throw new Error('Failed to load genomic embedding data');
-        }
-        return response.json();
-    },
-});
-
-const boehmGenomicHeData = remoteData<EmbeddingData>({
-    await: () => [], // No dependencies - invoke once immediately and cache
-    invoke: async () => {
-        const response = await fetch(
-            `${EMBEDDING_BASE_URL}/umap_genomic_he.json`
-        );
-        if (!response.ok) {
-            throw new Error('Failed to load genomic+H&E embedding data');
-        }
-        return response.json();
-    },
-});
-
 @observer
 export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     @observable private selectedColoringOption?: ColoringMenuOmnibarOption;
@@ -379,22 +355,6 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             });
         }
 
-        if (boehmGenomicData.isComplete && boehmGenomicData.result) {
-            options.push({
-                value: 'msk_mosaic_2026_genomic',
-                label: boehmGenomicData.result.title,
-                data: boehmGenomicData.result,
-            });
-        }
-
-        if (boehmGenomicHeData.isComplete && boehmGenomicHeData.result) {
-            options.push({
-                value: 'msk_mosaic_2026_genomic_he',
-                label: boehmGenomicHeData.result.title,
-                data: boehmGenomicHeData.result,
-            });
-        }
-
         return options;
     }
 
@@ -417,11 +377,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     }
 
     @computed get isEmbeddingDataLoading(): boolean {
-        return (
-            boehmHeData.isPending ||
-            boehmGenomicData.isPending ||
-            boehmGenomicHeData.isPending
-        );
+        return boehmHeData.isPending;
     }
 
     @computed get hasEmbeddingSupport(): boolean {
@@ -934,11 +890,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
 
     @computed get isLoading(): boolean {
         // Check if embedding data is still loading
-        if (
-            boehmHeData.isPending ||
-            boehmGenomicData.isPending ||
-            boehmGenomicHeData.isPending
-        ) {
+        if (boehmHeData.isPending) {
             return true;
         }
 
