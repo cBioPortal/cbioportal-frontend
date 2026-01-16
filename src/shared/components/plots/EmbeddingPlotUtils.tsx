@@ -36,7 +36,7 @@ import {
 import {
     getColorForProteinImpactType,
     DEFAULT_PROTEIN_IMPACT_TYPE_COLORS,
-} from '../../../../packages/react-mutation-mapper/src/util/MutationTypeUtils';
+} from 'react-mutation-mapper';
 
 // Constants for non-cohort sample styling
 const NON_COHORT_COLOR = '#666666'; // Dark gray
