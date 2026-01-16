@@ -245,7 +245,6 @@ export interface LegendPanelProps {
     totalSampleCount?: number;
     visibleCategoryCount?: number;
     totalCategoryCount?: number;
-    showQCSection?: boolean;
     isNumericAttribute?: boolean;
     numericalValueRange?: [number, number];
     numericalValueToColor?: (x: number) => string;
@@ -264,7 +263,6 @@ export const LegendPanel: React.FC<LegendPanelProps> = ({
     totalSampleCount,
     visibleCategoryCount,
     totalCategoryCount,
-    showQCSection = false,
     isNumericAttribute = false,
     numericalValueRange,
     numericalValueToColor,
@@ -333,8 +331,7 @@ export const LegendPanel: React.FC<LegendPanelProps> = ({
         }, {} as Record<string, { fillColor: string; strokeColor: string; hasStroke: boolean }>);
     }
 
-    // Separate biological categories from QC categories
-    // QC categories (only shown when showQCSection is true)
+    // Separate biological categories from QC categories (non-cohort samples)
     const qcCategories = [
         'Case not in this cohort',
         'Sample not in this cohort',
@@ -351,10 +348,7 @@ export const LegendPanel: React.FC<LegendPanelProps> = ({
 
     Object.entries(legendItems).forEach(([label, styling]) => {
         if (qcCategories.includes(label)) {
-            // Only include QC categories if showQCSection is true
-            if (showQCSection) {
-                qcEntries.push([label, styling]);
-            }
+            qcEntries.push([label, styling]);
         } else {
             // Everything else goes in biological section (including "Unselected")
             biologicalEntries.push([label, styling]);
@@ -556,8 +550,8 @@ export const LegendPanel: React.FC<LegendPanelProps> = ({
                 })()}
             </div>
 
-            {/* Collapsible Embedding Configuration Section - Only visible when showQCSection is true */}
-            {showQCSection && qcEntries.length > 0 && (
+            {/* Collapsible Configuration Section for non-cohort samples */}
+            {qcEntries.length > 0 && (
                 <div
                     style={{
                         borderTop: '1px solid #eee',
@@ -598,7 +592,7 @@ export const LegendPanel: React.FC<LegendPanelProps> = ({
                         <span style={{ marginRight: '4px', fontSize: '10px' }}>
                             {isConfigExpanded ? '▼' : '▶'}
                         </span>
-                        Embedding Configuration
+                        Configuration
                     </div>
 
                     {isConfigExpanded && (

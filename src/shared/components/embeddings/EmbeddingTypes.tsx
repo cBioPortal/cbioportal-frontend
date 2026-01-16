@@ -75,7 +75,6 @@ export interface EmbeddingVisualizationProps {
     totalSampleCount?: number;
     visibleCategoryCount?: number;
     totalCategoryCount?: number;
-    showQCSection?: boolean;
     isNumericAttribute?: boolean;
     numericalValueRange?: [number, number];
     numericalValueToColor?: (x: number) => string;
