@@ -276,11 +276,6 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         return !!embeddingsColoringSelection?.selectedOption;
     }
 
-    @computed get hasExpertParameter(): boolean {
-        // Check if URL contains the 'expert' parameter for showing QC section
-        return window.location.search.includes('expert');
-    }
-
     @computed get genes(): Gene[] {
         // Use allGenes to match PlotsTab pattern exactly
         // This provides comprehensive gene search capability in StudyView
@@ -639,13 +634,6 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             return point;
         });
 
-        // Filter out "not in cohort" samples in non-expert mode
-        if (!this.hasExpertParameter) {
-            processedData = processedData.filter(
-                point => point.isInCohort !== false
-            );
-        }
-
         // Filter out hidden categories
         const filteredData = processedData.filter(
             point => !this.hiddenCategories.has(point.displayLabel || '')
@@ -690,13 +678,6 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                 }
                 return point;
             });
-        }
-
-        // Filter out "not in cohort" samples in non-expert mode
-        if (!this.hasExpertParameter) {
-            processedData = processedData.filter(
-                point => point.isInCohort !== false
-            );
         }
 
         // Count all categories including "Unselected" so they appear in the legend
@@ -748,13 +729,6 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                 }
                 return point;
             });
-        }
-
-        // Filter out "not in cohort" samples in non-expert mode
-        if (!this.hasExpertParameter) {
-            processedData = processedData.filter(
-                point => point.isInCohort !== false
-            );
         }
 
         // Extract color information for each category
@@ -1304,7 +1278,6 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             totalSampleCount: this.totalSampleCount,
             visibleCategoryCount: this.visibleCategoryCount,
             totalCategoryCount: this.totalCategoryCount,
-            showQCSection: this.hasExpertParameter,
             isNumericAttribute: this.isNumericClinicalAttribute,
             numericalValueRange: this.numericalValueRange,
             numericalValueToColor: this.numericalValueToColor,

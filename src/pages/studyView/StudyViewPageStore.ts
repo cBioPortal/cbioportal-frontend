@@ -409,7 +409,7 @@ export enum StudyViewPageTabDescriptions {
     HEATMAPS = 'Heatmaps',
     CN_SEGMENTS = 'CN Segments',
     PLOTS = 'Plots',
-    EMBEDDINGS = 'Embeddings',
+    EMBEDDINGS = 'Similarity Maps',
 }
 
 const DEFAULT_CHART_NAME = 'Custom Data';
