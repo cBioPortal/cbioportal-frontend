@@ -175,7 +175,6 @@ export class EmbeddingDeckGLVisualization extends React.Component<
                 totalSampleCount={this.props.totalSampleCount}
                 visibleCategoryCount={this.props.visibleCategoryCount}
                 totalCategoryCount={this.props.totalCategoryCount}
-                showQCSection={this.props.showQCSection}
                 isNumericAttribute={this.props.isNumericAttribute}
                 numericalValueRange={this.props.numericalValueRange}
                 numericalValueToColor={this.props.numericalValueToColor}
