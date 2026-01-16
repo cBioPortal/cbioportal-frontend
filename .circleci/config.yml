@@ -452,10 +452,10 @@ workflows:
           requires:
             - pull_cbioportal_test_codebase
             - build_frontend
-#      - e2e_tests:
-#          requires:
-#            - pull_cbioportal_test_codebase
-#            - build_frontend
+      - e2e_tests:
+          requires:
+            - pull_cbioportal_test_codebase
+            - build_frontend
 #      - api_sync:
 #          requires:
 #            - build_frontend
