@@ -11758,9 +11758,10 @@ export class StudyViewPageStore
             await: () => [
                 this.studyToCustomSampleList,
                 this.studyToSampleListId,
+                this.queriedPhysicalStudyIds,
             ],
             invoke: () => {
-                const studies = this.studyIds;
+                const studies = this.queriedPhysicalStudyIds.result!;
                 const ret: { [studyId: string]: IDataQueryFilter } = {};
                 for (const studyId of studies) {
                     ret[studyId] = generateDataQueryFilter(
