@@ -37,7 +37,7 @@ export const SelectionControls: React.FC<SelectionControlsProps> = ({
                 }}
             >
                 <i
-                    className="fa fa-hand-paper-o"
+                    className="fa-regular fa-hand"
                     style={{ marginRight: '4px', fontSize: '11px' }}
                 ></i>
                 Pan
