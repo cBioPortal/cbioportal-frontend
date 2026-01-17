@@ -65,7 +65,7 @@ export class StudySummaryRecord extends React.Component<CancerStudy, {}> {
                             href={getStudySummaryUrl(this.props.studyId)}
                         >
                             <i
-                                className="fa fa-external-link"
+                                className="fa-solid fa-arrow-up-right-from-square"
                                 aria-hidden="true"
                             ></i>
                         </a>
