@@ -99,7 +99,9 @@ export class StudyResultsSummary extends React.Component<
     render() {
         return (
             <div className={styles.selectedInfo} data-test="selected-info">
-                <strong>Selected:&nbsp;</strong>
+                {this.props.store.chartsAreFiltered && (
+                    <strong>Selected:&nbsp;</strong>
+                )}
                 <strong data-test="selected-patients">
                     {this.props.store.selectedPatients.length.toLocaleString()}
                 </strong>
