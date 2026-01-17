@@ -347,7 +347,7 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
                                 target={'_blank'}
                             >
                                 <i
-                                    className={`fa fa-external-link fa-sm`}
+                                    className={`fa-solid fa-arrow-up-right-from-square fa-sm`}
                                     style={{
                                         marginRight: 5,
                                         color: 'black',

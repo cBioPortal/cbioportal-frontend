@@ -16,6 +16,7 @@ import {
 } from 'shared/components/embeddings';
 import Select from 'react-select';
 import { Gene } from 'cbioportal-ts-api-client';
+import { addCancerStudyAttribute } from 'shared/lib/ClinicalAttributeUtils';
 
 import {
     EmbeddingData,
@@ -242,7 +243,8 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     }
 
     @computed get clinicalAttributes() {
-        return this.props.store.clinicalAttributes.result || [];
+        const baseAttributes = this.props.store.clinicalAttributes.result || [];
+        return addCancerStudyAttribute(baseAttributes);
     }
 
     @computed get hasExistingURLParameters(): boolean {
