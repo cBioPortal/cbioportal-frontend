@@ -64,6 +64,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     @observable private hiddenCategories = new Set<string>();
     private urlParameterReactionDisposer?: () => void;
     private urlSyncReactionDisposer?: () => void;
+    private viewStateReactionDisposer?: () => void;
     private viewStateInitialized = false;
 
     constructor(props: IEmbeddingsTabProps) {
@@ -78,7 +79,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
 
         // Initialize view state when plot data is computed
         // Watch the actual rendered data, not the raw embedding data
-        reaction(
+        this.viewStateReactionDisposer = reaction(
             () => this.plotData,
             plotData => {
                 // Only initialize ONCE when data first becomes available
@@ -145,6 +146,9 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         window.removeEventListener('resize', this.handleResize);
 
         // Clean up reactions
+        if (this.viewStateReactionDisposer) {
+            this.viewStateReactionDisposer();
+        }
         if (this.urlParameterReactionDisposer) {
             this.urlParameterReactionDisposer();
         }
