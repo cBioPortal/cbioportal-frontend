@@ -65,6 +65,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     private urlParameterReactionDisposer?: () => void;
     private urlSyncReactionDisposer?: () => void;
     private viewStateReactionDisposer?: () => void;
+    private driverAnnotationReactionDisposer?: () => void;
     private viewStateInitialized = false;
 
     constructor(props: IEmbeddingsTabProps) {
@@ -136,6 +137,29 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             },
             { fireImmediately: true }
         );
+
+        // Reaction to enable driver annotations when a gene is selected for coloring
+        // This replaces the side effect that was previously in the driverAnnotationsEnabled computed
+        this.driverAnnotationReactionDisposer = reaction(
+            () => ({
+                entrezGeneId: this.selectedColoringOption?.info?.entrezGeneId,
+                driversAnnotated: this.props.store.driverAnnotationSettings
+                    ?.driversAnnotated,
+            }),
+            ({ entrezGeneId, driversAnnotated }) => {
+                // Enable driver annotations when a gene is selected (not "Cancer Type" which is -3)
+                // and annotations aren't already enabled
+                if (
+                    entrezGeneId &&
+                    entrezGeneId !== -3 &&
+                    entrezGeneId !== -10000 && // "None" option
+                    !driversAnnotated
+                ) {
+                    this.enableDriverAnnotations();
+                }
+            },
+            { fireImmediately: true }
+        );
     }
 
     componentDidMount() {
@@ -154,6 +178,9 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         }
         if (this.urlSyncReactionDisposer) {
             this.urlSyncReactionDisposer();
+        }
+        if (this.driverAnnotationReactionDisposer) {
+            this.driverAnnotationReactionDisposer();
         }
     }
 
@@ -501,7 +528,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
 
             return toAwait;
         },
-        invoke: () => Promise.resolve(true), // Just indicate that data is ready
+        invoke: () => Promise.resolve(true),
     });
 
     // Shared raw plot data - computed once and cached by MobX
@@ -514,8 +541,10 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             return [];
         }
 
-        // Ensure driver annotations are enabled (this will trigger reactive updates)
-        const driverAnnotationsEnabled = this.driverAnnotationsEnabled;
+        // Access driverAnnotationsEnabled to establish MobX reactive dependency
+        // This ensures rawPlotData re-computes when driver annotation state changes
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const _ = this.driverAnnotationsEnabled;
 
         // If we're coloring by a gene, wait for molecular data to be loaded
         if (
@@ -858,24 +887,10 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     }
 
     @computed get driverAnnotationsEnabled(): boolean {
-        // This computed property ensures driver annotations are enabled when needed
-        // and triggers reactive updates when the settings change
+        // Pure computed property - no side effects
+        // The reaction in the constructor handles enabling driver annotations when needed
         if (this.props.store.driverAnnotationSettings) {
-            const settings = this.props.store.driverAnnotationSettings;
-
-            // If not already annotated and we're coloring by a gene, enable them
-            if (
-                !settings.driversAnnotated &&
-                this.selectedColoringOption?.info?.entrezGeneId &&
-                this.selectedColoringOption.info.entrezGeneId !== -3
-            ) {
-                // Use MobX action to ensure proper reactivity
-                this.enableDriverAnnotations();
-
-                return true;
-            }
-
-            return settings.driversAnnotated;
+            return this.props.store.driverAnnotationSettings.driversAnnotated;
         }
         return false;
     }
@@ -888,9 +903,6 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             this.props.store.driverAnnotationSettings.customBinary = true;
             this.props.store.driverAnnotationSettings.includeDriver = true;
             this.props.store.driverAnnotationSettings.includeVUS = true;
-
-            // MobX should automatically invalidate getMutationPutativeDriverInfo and
-            // annotatedMutationCache when driverAnnotationSettings change
         }
     }
 
