@@ -127,6 +127,9 @@ export default class StudyViewPage extends React.Component<
         StudyViewPageTabKeyEnum.SUMMARY,
         StudyViewPageTabKeyEnum.CLINICAL_DATA,
         StudyViewPageTabKeyEnum.CN_SEGMENTS,
+        StudyViewPageTabKeyEnum.FILES_AND_LINKS,
+        StudyViewPageTabKeyEnum.PLOTS,
+        StudyViewPageTabKeyEnum.EMBEDDINGS,
     ];
     private enableAddChartInTabs = [
         StudyViewPageTabKeyEnum.SUMMARY,
