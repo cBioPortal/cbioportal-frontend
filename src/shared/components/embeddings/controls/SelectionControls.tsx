@@ -1,8 +1,8 @@
 import * as React from 'react';
 
 export interface SelectionControlsProps {
-    selectionMode: 'none' | 'rectangle';
-    onSelectionModeChange: (mode: 'none' | 'rectangle') => void;
+    selectionMode: 'none' | 'lasso';
+    onSelectionModeChange: (mode: 'none' | 'lasso') => void;
 }
 
 export const SelectionControls: React.FC<SelectionControlsProps> = ({
@@ -35,6 +35,7 @@ export const SelectionControls: React.FC<SelectionControlsProps> = ({
                     color: selectionMode === 'none' ? 'white' : '#333',
                     transition: 'all 0.2s ease',
                 }}
+                title="Pan and zoom the visualization"
             >
                 <i
                     className="fa-regular fa-hand"
@@ -43,7 +44,7 @@ export const SelectionControls: React.FC<SelectionControlsProps> = ({
                 Pan
             </button>
             <button
-                onClick={() => onSelectionModeChange('rectangle')}
+                onClick={() => onSelectionModeChange('lasso')}
                 style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -53,14 +54,26 @@ export const SelectionControls: React.FC<SelectionControlsProps> = ({
                     borderRadius: '3px',
                     cursor: 'pointer',
                     backgroundColor:
-                        selectionMode === 'rectangle'
-                            ? '#007bff'
-                            : 'transparent',
-                    color: selectionMode === 'rectangle' ? 'white' : '#333',
+                        selectionMode === 'lasso' ? '#007bff' : 'transparent',
+                    color: selectionMode === 'lasso' ? 'white' : '#333',
                     transition: 'all 0.2s ease',
                 }}
+                title="Draw a freeform lasso to select points"
             >
-                <span style={{ marginRight: '4px', fontSize: '12px' }}>⬚</span>
+                <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeDasharray="4,4"
+                    style={{ marginRight: '4px' }}
+                >
+                    <path d="M3 8c0-3 2-5 6-5s8 2 10 6c2 4 1 8-2 10s-7 2-10 0S1 13 3 8Z" />
+                </svg>
                 Select
             </button>
         </div>

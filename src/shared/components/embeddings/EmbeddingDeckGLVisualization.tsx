@@ -19,21 +19,13 @@ import { SelectionOverlay } from './overlays/SelectionOverlay';
 import { dataToScreen, colorToRgb } from './utils/coordinateUtils';
 import { calculateDataBounds } from './utils/dataUtils';
 import { createScatterplotLayer } from './utils/layerUtils';
-import { performRectangleSelection } from './utils/selectionUtils';
 
 interface EmbeddingDeckGLVisualizationState {
     hoveredPoint: EmbeddingPoint | null;
     selectedPoints: EmbeddingPoint[];
-    selectionMode: 'none' | 'rectangle';
+    selectionMode: 'none' | 'lasso';
     isSelecting: boolean;
-    selectionBounds?: {
-        minX: number;
-        maxX: number;
-        minY: number;
-        maxY: number;
-    };
-    selectionStart?: { x: number; y: number };
-    selectionEnd?: { x: number; y: number };
+    selectionPath: Array<{ x: number; y: number }>;
     actualWidth: number;
     actualHeight: number;
 }
@@ -57,6 +49,7 @@ export class EmbeddingDeckGLVisualization extends React.Component<
             selectedPoints: [],
             selectionMode: 'none',
             isSelecting: false,
+            selectionPath: [],
             actualWidth: props.width || 800,
             actualHeight: props.height || 600,
         };
@@ -225,13 +218,11 @@ export class EmbeddingDeckGLVisualization extends React.Component<
         }
     };
 
-    private onSelectionModeChange = (mode: 'none' | 'rectangle') => {
+    private onSelectionModeChange = (mode: 'none' | 'lasso') => {
         this.setState({
             selectionMode: mode,
-            selectionBounds: undefined,
             isSelecting: false,
-            selectionStart: undefined,
-            selectionEnd: undefined,
+            selectionPath: [],
         });
     };
 
@@ -244,8 +235,7 @@ export class EmbeddingDeckGLVisualization extends React.Component<
 
         this.setState({
             isSelecting: true,
-            selectionStart: { x, y },
-            selectionEnd: { x, y },
+            selectionPath: [{ x, y }],
         });
     };
 
@@ -257,82 +247,115 @@ export class EmbeddingDeckGLVisualization extends React.Component<
         const x = event.clientX - rect.left;
         const y = event.clientY - rect.top;
 
-        if (this.state.selectionMode === 'rectangle') {
-            this.setState({ selectionEnd: { x, y } });
+        // Throttle point collection - only add if moved at least 3 pixels
+        const lastPoint =
+            this.state.selectionPath[this.state.selectionPath.length - 1];
+        if (lastPoint) {
+            const dx = x - lastPoint.x;
+            const dy = y - lastPoint.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            if (distance < 3) return;
         }
+
+        this.setState(prevState => ({
+            selectionPath: [...prevState.selectionPath, { x, y }],
+        }));
     };
 
     private handleMouseUp = (event: React.MouseEvent) => {
         if (!this.state.isSelecting || this.state.selectionMode === 'none')
             return;
 
-        // Convert screen coordinates to data coordinates and perform selection
-        this.performSelection();
+        // Perform lasso selection
+        this.performLassoSelection();
 
         // Clear selection state and return to pan mode
         this.setState({
             isSelecting: false,
             selectionMode: 'none',
-            selectionStart: undefined,
-            selectionEnd: undefined,
+            selectionPath: [],
         });
     };
 
-    private performSelection = () => {
-        const { selectionMode, selectionStart, selectionEnd } = this.state;
+    /**
+     * Point-in-polygon test using ray casting algorithm
+     */
+    private isPointInPolygon(
+        point: { x: number; y: number },
+        polygon: Array<{ x: number; y: number }>
+    ): boolean {
+        if (polygon.length < 3) return false;
 
-        if (selectionMode === 'rectangle') {
-            this.performRectangleSelection();
+        let inside = false;
+        for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+            const xi = polygon[i].x,
+                yi = polygon[i].y;
+            const xj = polygon[j].x,
+                yj = polygon[j].y;
+
+            if (
+                yi > point.y !== yj > point.y &&
+                point.x < ((xj - xi) * (point.y - yi)) / (yj - yi) + xi
+            ) {
+                inside = !inside;
+            }
         }
-    };
+        return inside;
+    }
 
-    private performRectangleSelection = () => {
-        const { selectionStart, selectionEnd } = this.state;
+    private performLassoSelection = () => {
+        const { selectionPath } = this.state;
 
-        if (!this.deckRef.current || !selectionStart || !selectionEnd) {
+        if (!this.deckRef.current || selectionPath.length < 3) {
             return;
         }
 
-        // Calculate rectangle bounds
-        const left = Math.min(selectionStart.x, selectionEnd.x);
-        const top = Math.min(selectionStart.y, selectionEnd.y);
-        const width = Math.abs(selectionEnd.x - selectionStart.x);
-        const height = Math.abs(selectionEnd.y - selectionStart.y);
+        // Calculate bounding box of the lasso path for initial filtering
+        let minX = Infinity,
+            maxX = -Infinity,
+            minY = Infinity,
+            maxY = -Infinity;
+        for (const point of selectionPath) {
+            minX = Math.min(minX, point.x);
+            maxX = Math.max(maxX, point.x);
+            minY = Math.min(minY, point.y);
+            maxY = Math.max(maxY, point.y);
+        }
+
+        const width = maxX - minX;
+        const height = maxY - minY;
 
         try {
-            // Access the underlying deck instance
             const deck = this.deckRef.current.deck as any;
             if (!deck) {
-                console.warn('Deck instance not available');
                 return;
             }
 
-            // Use deck.gl's built-in picking for accurate selection
-            // Try pickObjects first, fallback to pickMultipleObjects if needed
+            // Use deck.gl's built-in picking to get objects in bounding box
             let pickedObjects: any[] = [];
 
             if (typeof deck.pickObjects === 'function') {
                 pickedObjects = deck.pickObjects({
-                    x: left,
-                    y: top,
+                    x: minX,
+                    y: minY,
                     width,
                     height,
                     layerIds: ['embedding-scatter'],
                 });
             } else if (typeof deck.pickMultipleObjects === 'function') {
                 pickedObjects = deck.pickMultipleObjects({
-                    x: left,
-                    y: top,
+                    x: minX,
+                    y: minY,
                     width,
                     height,
                     layerIds: ['embedding-scatter'],
                 });
             } else {
-                // Fallback: sample multiple points within the rectangle
+                // Fallback: sample multiple points within the bounding box
                 const samplePoints: any[] = [];
-                const stepSize = 5; // Sample every 5 pixels
-                for (let x = left; x < left + width; x += stepSize) {
-                    for (let y = top; y < top + height; y += stepSize) {
+                const stepSize = 5;
+                for (let x = minX; x < maxX; x += stepSize) {
+                    for (let y = minY; y < maxY; y += stepSize) {
                         if (typeof deck.pickObject === 'function') {
                             const picked = deck.pickObject({
                                 x,
@@ -348,19 +371,43 @@ export class EmbeddingDeckGLVisualization extends React.Component<
                 pickedObjects = samplePoints;
             }
 
-            const selectedPoints: EmbeddingPoint[] = pickedObjects
-                .map((info: any) => info.object)
-                .filter((obj: any) => obj != null); // Filter out any null objects
+            // Get the viewport for coordinate projection
+            const viewports = deck.getViewports();
+            const viewport = viewports && viewports[0];
 
-            this.setState({ selectedPoints });
+            // Filter picked objects using point-in-polygon test
+            const selectedPoints: EmbeddingPoint[] = pickedObjects
+                .filter((info: any) => {
+                    if (!info || !info.object) return false;
+                    const point = info.object as EmbeddingPoint;
+
+                    // Use viewport.project for accurate screen coordinates
+                    let screenPoint;
+                    if (viewport && viewport.project) {
+                        const projected = viewport.project([point.x, point.y, 0]);
+                        screenPoint = { x: projected[0], y: projected[1] };
+                    } else {
+                        screenPoint = this.dataToScreen(point.x, point.y);
+                    }
+
+                    return this.isPointInPolygon(screenPoint, selectionPath);
+                })
+                .map((info: any) => info.object);
+
+            // Remove duplicates (in case same point picked multiple times)
+            const uniquePoints = Array.from(
+                new Map(
+                    selectedPoints.map(p => [p.patientId || p.sampleId, p])
+                ).values()
+            );
+
+            this.setState({ selectedPoints: uniquePoints });
 
             // Notify parent component of selection
-            if (this.props.onPointSelection && selectedPoints.length > 0) {
-                this.props.onPointSelection(selectedPoints);
+            if (this.props.onPointSelection && uniquePoints.length > 0) {
+                this.props.onPointSelection(uniquePoints);
             }
         } catch (error) {
-            console.warn('Rectangle selection failed:', error);
-            // Fallback to empty selection
             this.setState({ selectedPoints: [] });
         }
     };
@@ -408,19 +455,13 @@ export class EmbeddingDeckGLVisualization extends React.Component<
     }
 
     private renderSelectionOverlay() {
-        const {
-            isSelecting,
-            selectionMode,
-            selectionStart,
-            selectionEnd,
-        } = this.state;
+        const { isSelecting, selectionMode, selectionPath } = this.state;
 
         return (
             <SelectionOverlay
                 isSelecting={isSelecting}
                 selectionMode={selectionMode}
-                selectionStart={selectionStart}
-                selectionEnd={selectionEnd}
+                selectionPath={selectionPath}
             />
         );
     }
@@ -468,7 +509,7 @@ export class EmbeddingDeckGLVisualization extends React.Component<
                         style={{
                             backgroundColor: 'white',
                             cursor:
-                                this.state.selectionMode === 'rectangle'
+                                this.state.selectionMode === 'lasso'
                                     ? 'crosshair'
                                     : 'grab',
                         }}
