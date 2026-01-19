@@ -578,13 +578,17 @@ export default class AlterationEnrichmentContainer extends React.Component<
                         <GeneBarPlot
                             data={this.data}
                             isTwoGroupAnalysis={this.isTwoGroupAnalysis}
-                            groupOrder={this.props.groups.map(
-                                group => group.name
-                            )}
+                            groupOrder={this.props.groups.map(group => group.name)}
                             yAxisLabel={this.geneBarplotYAxislabel}
                             showCNAInTable={this.props.showCNAInTable}
                             categoryToColor={this.categoryToColor}
                             dataStore={this.dataStore}
+                            chartControls={{
+                                showComparisonPageIcon: true,
+                            }}
+                            openComparisonPage={params =>
+                                this.props.store?.openComparisonPage(params)
+                            }
                         />
                     </div>
                 </div>
