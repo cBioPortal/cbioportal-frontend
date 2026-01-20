@@ -33,6 +33,12 @@ export interface ResourceCustomConfig {
      * Used in: Study View (Files & Links tab)
      */
     openInNewTab?: boolean;
+
+    /**
+     * Custom error message to show when iframe fails to load
+     * Used in: Patient View (resource iframe)
+     */
+    iframeErrorMessage?: string;
 }
 
 export const RESOURCE_CUSTOM_CONFIGS: Record<string, ResourceCustomConfig> = {
@@ -42,6 +48,8 @@ export const RESOURCE_CUSTOM_CONFIGS: Record<string, ResourceCustomConfig> = {
         columnNameMapping: { 'Type Of Resource': 'View' },
         hideUrlColumn: true,
         openInNewTab: true,
+        iframeErrorMessage:
+            'This resource requires VPN access. Please connect to VPN and refresh the page.',
     },
 };
 
