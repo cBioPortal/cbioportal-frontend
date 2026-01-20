@@ -316,8 +316,6 @@ exports.config = {
     // Patterns to exclude.
     exclude: [
         './local/specs/web-tour.spec.js',
-        './local/specs/custom-driver-annotations-in-result-view.spec.js',
-        './local/specs/custom-driver-annotations-in-study-view.spec.js',
         './local/specs/gsva.screenshot.spec.js',
         './local/specs/gsva.spec.js',
         './local/specs/hide-download-controls.spec.js',
