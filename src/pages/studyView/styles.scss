@@ -98,7 +98,6 @@ iframe.mdacc-heatmap-iframe {
 
 .resourcesTab {
     .resourcesSection {
-        @include dashed-border-section;
         margin-bottom: 30px;
 
         &:last-child {
