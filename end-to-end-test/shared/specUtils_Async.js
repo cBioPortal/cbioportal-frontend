@@ -726,6 +726,7 @@ async function openGroupComparison(studyViewUrl, chartDataTest, timeout) {
 
     await waitForElementDisplayed(chart, { timeout: timeout || 10000 });
 
+    await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
     await $(chart).scrollIntoView();
 
     await jsApiHover(chart);
