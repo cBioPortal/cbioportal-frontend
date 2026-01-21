@@ -390,7 +390,7 @@ async function toStudyViewClinicalDataTab() {
     const clinicalDataTab = '#studyViewTabs a.tabAnchor_clinicalData';
     const clinicalDataContent = "[data-test='clinical-data-tab-content']";
     if (!(await (await $(clinicalDataContent)).isDisplayedInViewport())) {
-        (await $(clinicalDataTab)).waitForDisplayed({ timeout: 10000 });
+        await (await $(clinicalDataTab)).waitForDisplayed({ timeout: 10000 });
         await clickElement(clinicalDataTab);
         await (await $(clinicalDataContent)).waitForDisplayed({
             timeout: 10000,
@@ -398,10 +398,10 @@ async function toStudyViewClinicalDataTab() {
     }
 }
 
-function removeAllStudyViewFilters() {
+async function removeAllStudyViewFilters() {
     const clearAllFilter = "[data-test='clear-all-filters']";
-    if ($(clearAllFilter).isDisplayedInViewport()) {
-        $(clearAllFilter).click();
+    if (await (await $(clearAllFilter)).isDisplayedInViewport()) {
+        await (await $(clearAllFilter)).click();
     }
 }
 
@@ -472,17 +472,17 @@ async function reactSelectOption(parent, optionText, loose = false) {
     return await parent.$('.Select-option=' + optionText);
 }
 
-function selectCheckedOption(parent, optionText, loose = false) {
-    parent.$('.default-checked-select').click();
+async function selectCheckedOption(parent, optionText, loose = false) {
+    await (await parent.$('.default-checked-select')).click();
     if (loose) {
-        return parent.$('.checked-select-option*=' + optionText);
+        return await parent.$('.checked-select-option*=' + optionText);
     }
-    return parent.$('.checked-select-option=' + optionText);
+    return await parent.$('.checked-select-option=' + optionText);
 }
 
-function getSelectCheckedOptions(parent) {
-    parent.$('.default-checked-select').click();
-    return parent.$$('.checked-select-option');
+async function getSelectCheckedOptions(parent) {
+    await (await parent.$('.default-checked-select')).click();
+    return await parent.$$('.checked-select-option');
 }
 
 async function pasteToElement(elementSelector, text) {
