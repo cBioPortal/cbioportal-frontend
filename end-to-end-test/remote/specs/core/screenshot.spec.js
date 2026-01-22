@@ -70,8 +70,8 @@ function runResultsTestSuite(prefix, options = {}) {
 
     it(`${prefix} mutation tab`, async function() {
         await clickElement('a.tabAnchor_mutations');
+        await waitForNetworkQuiet();
         await waitForElementDisplayed('.borderedChart svg', { timeout: 20000 });
-        await waitForNetworkQuiet(5000);
         const res = await browser.checkElement(
             '[data-test="mutationsTabDiv"]',
             ''

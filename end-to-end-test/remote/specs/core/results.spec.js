@@ -11,6 +11,7 @@ const {
     getText,
     isDisplayed,
     waitForElementDisplayed,
+    waitForNetworkQuiet,
 } = require('../../../shared/specUtils_Async');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
@@ -198,7 +199,7 @@ describe('Results Page', () => {
             it('handles change to sample total threshold', async () => {
                 setInputText("[data-test='sampleTotalThresholdInput']", 312);
                 await browser.keys('Enter');
-                await browser.pause(1000);
+                await waitForNetworkQuiet();
                 const res = await browser.checkElement(
                     '[data-test="cancerTypeSummaryWrapper"]',
                     '',
