@@ -325,9 +325,10 @@ export class UnfilteredClinicalDataCache extends MobxPromiseCache<
                         coverageInformationPromise.result!,
                         customChartClinicalAttributes.result!
                     );
+                    const coloring = getClinicalAttributeColoring(data, q.datatype);
                     return {
                         data,
-                        ...getClinicalAttributeColoring(data, q.datatype),
+                        ...coloring,
                     };
                 },
             }),

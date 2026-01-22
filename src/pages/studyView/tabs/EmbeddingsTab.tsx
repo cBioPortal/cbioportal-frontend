@@ -48,7 +48,11 @@ const boehmHeData = remoteData<EmbeddingData>({
 
 @observer
 export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
-    @observable private selectedColoringOption?: ColoringMenuOmnibarOption;
+    // Use @observable.ref to only track reference changes, not deep changes
+    // This prevents MobX from trying to deeply traverse the object, which could cause
+    // issues with circular references in custom attributes (the 'data' property contains
+    // ClinicalData items that reference back to the parent attribute)
+    @observable.ref private selectedColoringOption?: ColoringMenuOmnibarOption;
     @observable private coloringLogScale = false;
     @observable private mutationTypeEnabled = true;
     @observable private copyNumberEnabled = true;
@@ -125,6 +129,16 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
 
                 if (urlOption) {
                     // URL parameters exist - apply them
+                    // GUARD: Don't update if we already have the same logical value
+                    // This prevents infinite loops when URL sync creates new object references
+                    const currentAttrId = this.selectedColoringOption?.info?.clinicalAttribute?.clinicalAttributeId;
+                    const currentGeneId = this.selectedColoringOption?.info?.entrezGeneId;
+                    const urlAttrId = urlOption.info?.clinicalAttribute?.clinicalAttributeId;
+                    const urlGeneId = urlOption.info?.entrezGeneId;
+
+                    if (currentAttrId === urlAttrId && currentGeneId === urlGeneId) {
+                        return;
+                    }
                     this.selectedColoringOption = urlOption;
                 } else if (!hasUrlParams) {
                     // No URL parameters - set default and sync to URL
@@ -275,7 +289,8 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
 
     @computed get clinicalAttributes() {
         const baseAttributes = this.props.store.clinicalAttributes.result || [];
-        return addCancerStudyAttribute(baseAttributes);
+        const customAttributes = this.props.store.customAttributes.result || [];
+        return addCancerStudyAttribute([...baseAttributes, ...customAttributes]);
     }
 
     @computed get hasExistingURLParameters(): boolean {
@@ -946,8 +961,6 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     @action.bound
     private onColoringSelectionChange(option?: ColoringMenuOmnibarOption) {
         this.selectedColoringOption = option;
-
-        // Sync to URL parameter
         this.syncColoringSelectionToURL(option);
     }
 
