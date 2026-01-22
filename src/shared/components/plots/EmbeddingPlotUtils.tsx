@@ -265,7 +265,7 @@ function transformPatientEmbedding(
         // Use optimized approach - simple O(1) lookups
         let color = DEFAULT_UNKNOWN_COLOR;
         let strokeColor = DEFAULT_UNKNOWN_COLOR;
-        let displayLabel = 'Unknown';
+        let displayLabel = 'No data';
 
         if (
             coloringOption?.info?.entrezGeneId &&
@@ -425,7 +425,7 @@ function transformPatientEmbedding(
                         displayLabel = clinicalAttributeDisplayName;
                     } else {
                         displayLabel =
-                            patientValueMap.get(coord.patientId) || 'Unknown';
+                            patientValueMap.get(coord.patientId) || 'No data';
                     }
                 } else {
                     // Use sample-level maps for sample attributes
@@ -443,7 +443,7 @@ function transformPatientEmbedding(
                         displayLabel = clinicalAttributeDisplayName;
                     } else {
                         displayLabel =
-                            clinicalDataValueMap?.get(sampleKey) || 'Unknown';
+                            clinicalDataValueMap?.get(sampleKey) || 'No data';
                     }
                 }
                 strokeColor = color;
@@ -451,7 +451,7 @@ function transformPatientEmbedding(
         } else {
             // Default coloring - use pre-computed cancer type map (O(1) lookup)
             displayLabel =
-                patientToCancerTypeMap.get(coord.patientId) || 'Unknown';
+                patientToCancerTypeMap.get(coord.patientId) || 'No data';
             color = DEFAULT_UNKNOWN_COLOR;
             strokeColor = color;
         }
@@ -636,7 +636,7 @@ function transformSampleEmbedding(
         // Use optimized approach - simple O(1) lookups
         let color = DEFAULT_UNKNOWN_COLOR;
         let strokeColor = DEFAULT_UNKNOWN_COLOR;
-        let displayLabel = 'Unknown';
+        let displayLabel = 'No data';
 
         if (
             coloringOption?.info?.entrezGeneId &&
@@ -820,7 +820,7 @@ function transformSampleEmbedding(
                         displayLabel = clinicalAttributeDisplayName;
                     } else {
                         displayLabel =
-                            patientValueMap.get(patientId) || 'Unknown';
+                            patientValueMap.get(patientId) || 'No data';
                     }
                 } else {
                     // Use sample-level maps for sample attributes
@@ -838,14 +838,14 @@ function transformSampleEmbedding(
                         displayLabel = clinicalAttributeDisplayName;
                     } else {
                         displayLabel =
-                            clinicalDataValueMap?.get(sampleKey) || 'Unknown';
+                            clinicalDataValueMap?.get(sampleKey) || 'No data';
                     }
                 }
                 strokeColor = color;
             }
         } else {
             // Default coloring - use pre-computed cancer type map (O(1) lookup)
-            displayLabel = patientToCancerTypeMap.get(patientId) || 'Unknown';
+            displayLabel = patientToCancerTypeMap.get(patientId) || 'No data';
             color = DEFAULT_UNKNOWN_COLOR;
             strokeColor = color;
         }
