@@ -198,6 +198,7 @@ describe('Results Page', () => {
             it('handles change to sample total threshold', async () => {
                 setInputText("[data-test='sampleTotalThresholdInput']", 312);
                 await browser.keys('Enter');
+                await browser.pause(1000);
                 const res = await browser.checkElement(
                     '[data-test="cancerTypeSummaryWrapper"]',
                     '',
