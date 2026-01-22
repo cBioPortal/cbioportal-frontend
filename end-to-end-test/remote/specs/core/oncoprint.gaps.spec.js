@@ -33,6 +33,7 @@ describe('oncoprint gap screenshot tests', () => {
 
         await clickElement('.oncoprint__zoom-controls .fa-search-minus');
         await clickElement('.oncoprint__zoom-controls .fa-search-minus');
+        await clickElement('.oncoprint__zoom-controls .fa-search-minus');
 
         await browser.pause(100); // give time to rezoom
 
