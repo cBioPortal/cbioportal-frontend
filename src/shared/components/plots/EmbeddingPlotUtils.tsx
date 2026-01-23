@@ -3,6 +3,8 @@ import {
     IPlotSampleData,
     makeScatterPlotPointAppearance,
 } from './PlotsTabUtils';
+import { makeUniqueColorGetter } from './PlotUtils';
+import { interpolateReds } from 'd3-scale-chromatic';
 import { StudyViewPageStore } from '../../../pages/studyView/StudyViewPageStore';
 import { Sample, ClinicalAttribute } from 'cbioportal-ts-api-client';
 import {
@@ -73,6 +75,140 @@ function rgbaArrayToHex(rgba: number[]): string {
 }
 
 const MIXED_COLOR_HEX = rgbaArrayToHex(DEFAULT_MIXED_COLOR);
+
+// Prefix for synthetic clinical attributes derived from embedding JSON data fields
+export const EMBEDDING_DATA_PREFIX = 'EMBEDDING_DATA_';
+
+/**
+ * Scans embedding data to discover available per-point data fields and infers their types.
+ * Returns synthetic ClinicalAttribute objects that can be used in the coloring dropdown.
+ */
+export function getEmbeddingDataFields(
+    embeddingData: EmbeddingData
+): ClinicalAttribute[] {
+    const fieldTypes = new Map<string, 'STRING' | 'NUMBER'>();
+
+    // Scan all points to discover keys and infer types
+    for (const point of embeddingData.data) {
+        if (!point.data) continue;
+        for (const [key, value] of Object.entries(point.data)) {
+            if (value === null || value === undefined) continue;
+            if (!fieldTypes.has(key)) {
+                // First non-null value determines initial type guess
+                fieldTypes.set(
+                    key,
+                    typeof value === 'number' ? 'NUMBER' : 'STRING'
+                );
+            } else if (fieldTypes.get(key) === 'NUMBER') {
+                // If any value is not a number, downgrade to STRING
+                if (typeof value !== 'number') {
+                    fieldTypes.set(key, 'STRING');
+                }
+            }
+        }
+    }
+
+    // Convert to synthetic ClinicalAttribute objects
+    const attributes: ClinicalAttribute[] = [];
+    fieldTypes.forEach((datatype, key) => {
+        attributes.push({
+            clinicalAttributeId: `${EMBEDDING_DATA_PREFIX}${key}`,
+            displayName: key,
+            datatype,
+            patientAttribute: embeddingData.embedding_type === 'patients',
+            description: `Embedding data field: ${key}`,
+            priority: '0',
+            studyId: embeddingData.studyIds[0] || '',
+        } as ClinicalAttribute);
+    });
+
+    return attributes;
+}
+
+/**
+ * Pre-computes color assignments for an embedding data field across all points.
+ * Returns maps from patientId/sampleId to color and display value.
+ */
+export function preComputeEmbeddingDataColors(
+    embeddingData: EmbeddingData,
+    fieldName: string,
+    isNumeric: boolean
+): {
+    colorMap: Map<string, string>;
+    valueMap: Map<string, string>;
+    numericalRange?: [number, number];
+    numericalColorFn?: (x: number) => string;
+} {
+    const colorMap = new Map<string, string>();
+    const valueMap = new Map<string, string>();
+
+    if (isNumeric) {
+        // Compute min/max for numeric range
+        let min = Infinity;
+        let max = -Infinity;
+        for (const point of embeddingData.data) {
+            const val = point.data?.[fieldName];
+            if (typeof val === 'number' && !isNaN(val)) {
+                min = Math.min(min, val);
+                max = Math.max(max, val);
+            }
+        }
+
+        if (min === Infinity || max === -Infinity) {
+            // No valid numeric values
+            return { colorMap, valueMap };
+        }
+
+        const range = max - min || 1; // Avoid division by zero
+        const numericalColorFn = (x: number) =>
+            interpolateReds((x - min) / range);
+
+        const idKey =
+            embeddingData.embedding_type === 'patients'
+                ? 'patientId'
+                : 'sampleId';
+
+        for (const point of embeddingData.data) {
+            const id = (point as any)[idKey];
+            const val = point.data?.[fieldName];
+            if (typeof val === 'number' && !isNaN(val)) {
+                colorMap.set(id, numericalColorFn(val));
+                valueMap.set(id, fieldName); // Use field name as label for numeric
+            }
+        }
+
+        return {
+            colorMap,
+            valueMap,
+            numericalRange: [min, max],
+            numericalColorFn,
+        };
+    } else {
+        // Categorical: assign unique colors
+        const colorGetter = makeUniqueColorGetter();
+        const categoryColors = new Map<string, string>();
+
+        const idKey =
+            embeddingData.embedding_type === 'patients'
+                ? 'patientId'
+                : 'sampleId';
+
+        for (const point of embeddingData.data) {
+            const id = (point as any)[idKey];
+            const val = point.data?.[fieldName];
+            if (val === null || val === undefined) continue;
+
+            const strVal = String(val);
+            if (!categoryColors.has(strVal)) {
+                categoryColors.set(strVal, colorGetter());
+            }
+            colorMap.set(id, categoryColors.get(strVal)!);
+            valueMap.set(id, strVal);
+        }
+
+        return { colorMap, valueMap };
+    }
+}
 
 export interface PatientEmbeddingCoordinate {
     x: number;
@@ -180,7 +316,38 @@ function transformPatientEmbedding(
         }
     }
 
-    // Pre-compute clinical data if needed
+    // Pre-compute embedding data field colors if coloring by an embedding data field
+    let embeddingDataColorMap: Map<string, string> | undefined;
+    let embeddingDataValueMap: Map<string, string> | undefined;
+    let isEmbeddingDataField = false;
+    let isNumericEmbeddingField = false;
+    let embeddingFieldDisplayName: string | undefined;
+
+    if (
+        coloringOption?.info?.clinicalAttribute?.clinicalAttributeId?.startsWith(
+            EMBEDDING_DATA_PREFIX
+        )
+    ) {
+        isEmbeddingDataField = true;
+        const fieldName =
+            coloringOption.info.clinicalAttribute.clinicalAttributeId.substring(
+                EMBEDDING_DATA_PREFIX.length
+            );
+        isNumericEmbeddingField =
+            coloringOption.info.clinicalAttribute.datatype === 'NUMBER';
+        embeddingFieldDisplayName =
+            coloringOption.info.clinicalAttribute.displayName;
+
+        const result = preComputeEmbeddingDataColors(
+            embeddingData,
+            fieldName,
+            isNumericEmbeddingField
+        );
+        embeddingDataColorMap = result.colorMap;
+        embeddingDataValueMap = result.valueMap;
+    }
+
+    // Pre-compute clinical data if needed (skip for embedding data fields)
     let clinicalDataColorMap: Map<string, string> | undefined;
     let clinicalDataValueMap: Map<string, string> | undefined;
     let patientColorMap: Map<string, string> | undefined;
@@ -188,7 +355,7 @@ function transformPatientEmbedding(
     let isNumericClinicalAttribute = false;
     let clinicalAttributeDisplayName: string | undefined;
 
-    if (coloringOption?.info?.clinicalAttribute) {
+    if (coloringOption?.info?.clinicalAttribute && !isEmbeddingDataField) {
         const clinicalDataCacheEntry = store.clinicalDataCache.get(
             coloringOption.info.clinicalAttribute
         );
@@ -393,6 +560,29 @@ function transformPatientEmbedding(
                     strokeColor = color; // Same as fill color
                 }
             }
+        } else if (isEmbeddingDataField && embeddingDataColorMap) {
+            // Embedding data field coloring - use pre-computed maps (O(1) lookup)
+            if (
+                hasActiveSelection &&
+                !selectedPatientIds.has(coord.patientId)
+            ) {
+                color = '#C8C8C8';
+                strokeColor = '#C8C8C8';
+                displayLabel = 'Unselected';
+            } else {
+                const retrievedColor = embeddingDataColorMap.get(
+                    coord.patientId
+                );
+                color = retrievedColor || DEFAULT_UNKNOWN_COLOR;
+
+                if (isNumericEmbeddingField && embeddingFieldDisplayName) {
+                    displayLabel = embeddingFieldDisplayName;
+                } else {
+                    displayLabel =
+                        embeddingDataValueMap?.get(coord.patientId) || 'No data';
+                }
+                strokeColor = color;
+            }
         } else if (coloringOption?.info?.clinicalAttribute && sample) {
             // Clinical attribute coloring
             // Only show "Unselected" if there's an active selection AND this patient is not in it
@@ -510,7 +700,38 @@ function transformSampleEmbedding(
         }
     }
 
-    // Pre-compute clinical data if needed
+    // Pre-compute embedding data field colors if coloring by an embedding data field
+    let embeddingDataColorMap: Map<string, string> | undefined;
+    let embeddingDataValueMap: Map<string, string> | undefined;
+    let isEmbeddingDataField = false;
+    let isNumericEmbeddingField = false;
+    let embeddingFieldDisplayName: string | undefined;
+
+    if (
+        coloringOption?.info?.clinicalAttribute?.clinicalAttributeId?.startsWith(
+            EMBEDDING_DATA_PREFIX
+        )
+    ) {
+        isEmbeddingDataField = true;
+        const fieldName =
+            coloringOption.info.clinicalAttribute.clinicalAttributeId.substring(
+                EMBEDDING_DATA_PREFIX.length
+            );
+        isNumericEmbeddingField =
+            coloringOption.info.clinicalAttribute.datatype === 'NUMBER';
+        embeddingFieldDisplayName =
+            coloringOption.info.clinicalAttribute.displayName;
+
+        const result = preComputeEmbeddingDataColors(
+            embeddingData,
+            fieldName,
+            isNumericEmbeddingField
+        );
+        embeddingDataColorMap = result.colorMap;
+        embeddingDataValueMap = result.valueMap;
+    }
+
+    // Pre-compute clinical data if needed (skip for embedding data fields)
     let clinicalDataColorMap: Map<string, string> | undefined;
     let clinicalDataValueMap: Map<string, string> | undefined;
     let patientColorMap: Map<string, string> | undefined;
@@ -518,7 +739,7 @@ function transformSampleEmbedding(
     let isNumericClinicalAttribute = false;
     let clinicalAttributeDisplayName: string | undefined;
 
-    if (coloringOption?.info?.clinicalAttribute) {
+    if (coloringOption?.info?.clinicalAttribute && !isEmbeddingDataField) {
         const clinicalDataCacheEntry = store.clinicalDataCache.get(
             coloringOption.info.clinicalAttribute
         );
@@ -790,6 +1011,26 @@ function transformSampleEmbedding(
                     displayLabel = 'Not mutated';
                     strokeColor = color; // Same as fill color
                 }
+            }
+        } else if (isEmbeddingDataField && embeddingDataColorMap) {
+            // Embedding data field coloring - use pre-computed maps (O(1) lookup)
+            if (hasActiveSelection && !selectedSampleIds.has(coord.sampleId)) {
+                color = '#C8C8C8';
+                strokeColor = '#C8C8C8';
+                displayLabel = 'Unselected';
+            } else {
+                const retrievedColor = embeddingDataColorMap.get(
+                    coord.sampleId
+                );
+                color = retrievedColor || DEFAULT_UNKNOWN_COLOR;
+
+                if (isNumericEmbeddingField && embeddingFieldDisplayName) {
+                    displayLabel = embeddingFieldDisplayName;
+                } else {
+                    displayLabel =
+                        embeddingDataValueMap?.get(coord.sampleId) || 'No data';
+                }
+                strokeColor = color;
             }
         } else if (coloringOption?.info?.clinicalAttribute && sample) {
             // Clinical attribute coloring

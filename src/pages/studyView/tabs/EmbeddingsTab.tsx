@@ -5,10 +5,16 @@ import { remoteData } from 'cbioportal-frontend-commons';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import ColorSamplesByDropdown from 'shared/components/colorSamplesByDropdown/ColorSamplesByDropdown';
-import { ColoringMenuOmnibarOption } from 'shared/components/plots/PlotsTab';
+import {
+    ColoringMenuOmnibarOption,
+    ColoringMenuOmnibarGroup,
+} from 'shared/components/plots/PlotsTab';
 import {
     makeEmbeddingScatterPlotData,
     EmbeddingPlotPoint,
+    getEmbeddingDataFields,
+    EMBEDDING_DATA_PREFIX,
+    preComputeEmbeddingDataColors,
 } from 'shared/components/plots/EmbeddingPlotUtils';
 import {
     EmbeddingDeckGLVisualization,
@@ -38,7 +44,7 @@ const EMBEDDING_BASE_URL =
 const boehmHeData = remoteData<EmbeddingData>({
     await: () => [], // No dependencies - invoke once immediately and cache
     invoke: async () => {
-        const response = await fetch(`${EMBEDDING_BASE_URL}/umap_he.json`);
+        const response = await fetch(`${EMBEDDING_BASE_URL}/umap_he.json?v=2`);
         if (!response.ok) {
             throw new Error('Failed to load H&E embedding data');
         }
@@ -265,8 +271,14 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                 const unescapedJson = jsonPart.replace(/\\"/g, '"');
                 const clinicalInfo = JSON.parse(unescapedJson);
 
-                // Find the clinical attribute by ID
-                const clinicalAttr = this.clinicalAttributes.find(
+                // Find the clinical attribute by ID (check both clinical attributes and embedding data fields)
+                const embeddingFields = this.selectedEmbedding?.data
+                    ? getEmbeddingDataFields(this.selectedEmbedding.data)
+                    : [];
+                const clinicalAttr = [
+                    ...this.clinicalAttributes,
+                    ...embeddingFields,
+                ].find(
                     attr =>
                         attr.clinicalAttributeId ===
                         clinicalInfo.clinicalAttributeId
@@ -290,7 +302,31 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     @computed get clinicalAttributes() {
         const baseAttributes = this.props.store.clinicalAttributes.result || [];
         const customAttributes = this.props.store.customAttributes.result || [];
-        return addCancerStudyAttribute([...baseAttributes, ...customAttributes]);
+        return addCancerStudyAttribute([
+            ...baseAttributes,
+            ...customAttributes,
+        ]);
+    }
+
+    @computed get embeddingDataGroups(): ColoringMenuOmnibarGroup[] {
+        const embeddingDataFields = this.selectedEmbedding?.data
+            ? getEmbeddingDataFields(this.selectedEmbedding.data)
+            : [];
+        if (embeddingDataFields.length === 0) {
+            return [];
+        }
+        return [
+            {
+                label: 'Map Attributes',
+                options: embeddingDataFields.map(attr => ({
+                    label: attr.displayName,
+                    value: `clinical_${attr.clinicalAttributeId}`,
+                    info: {
+                        clinicalAttribute: attr,
+                    },
+                })),
+            },
+        ];
     }
 
     @computed get hasExistingURLParameters(): boolean {
@@ -576,7 +612,13 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         }
 
         // If we're coloring by a clinical attribute, wait for clinical data to be loaded
-        if (this.selectedColoringOption?.info?.clinicalAttribute) {
+        // (skip for embedding data fields which don't use the clinical data cache)
+        if (
+            this.selectedColoringOption?.info?.clinicalAttribute &&
+            !this.selectedColoringOption.info.clinicalAttribute.clinicalAttributeId.startsWith(
+                EMBEDDING_DATA_PREFIX
+            )
+        ) {
             const clinicalDataCacheEntry = this.props.store.clinicalDataCache.get(
                 this.selectedColoringOption.info.clinicalAttribute
             );
@@ -782,11 +824,25 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     }
 
     @computed get numericalValueRange(): [number, number] | undefined {
-        // Get the numeric range for the current clinical attribute coloring
+        // Get the numeric range for the current coloring option
         if (
             this.selectedColoringOption?.info?.clinicalAttribute &&
             this.isNumericClinicalAttribute
         ) {
+            // Handle embedding data fields
+            const attrId = this.selectedColoringOption.info.clinicalAttribute
+                .clinicalAttributeId;
+            if (attrId.startsWith(EMBEDDING_DATA_PREFIX) && this.selectedEmbedding?.data) {
+                const fieldName = attrId.substring(EMBEDDING_DATA_PREFIX.length);
+                const result = preComputeEmbeddingDataColors(
+                    this.selectedEmbedding.data,
+                    fieldName,
+                    true
+                );
+                return result.numericalRange;
+            }
+
+            // Handle regular clinical attributes
             const clinicalDataCacheEntry = this.props.store.clinicalDataCache.get(
                 this.selectedColoringOption.info.clinicalAttribute
             );
@@ -802,11 +858,25 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     }
 
     @computed get numericalValueToColor(): ((x: number) => string) | undefined {
-        // Get the color function for the current numeric clinical attribute
+        // Get the color function for the current numeric coloring option
         if (
             this.selectedColoringOption?.info?.clinicalAttribute &&
             this.isNumericClinicalAttribute
         ) {
+            // Handle embedding data fields
+            const attrId = this.selectedColoringOption.info.clinicalAttribute
+                .clinicalAttributeId;
+            if (attrId.startsWith(EMBEDDING_DATA_PREFIX) && this.selectedEmbedding?.data) {
+                const fieldName = attrId.substring(EMBEDDING_DATA_PREFIX.length);
+                const result = preComputeEmbeddingDataColors(
+                    this.selectedEmbedding.data,
+                    fieldName,
+                    true
+                );
+                return result.numericalColorFn;
+            }
+
+            // Handle regular clinical attributes
             const clinicalDataCacheEntry = this.props.store.clinicalDataCache.get(
                 this.selectedColoringOption.info.clinicalAttribute
             );
@@ -934,7 +1004,12 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             return true;
         }
 
-        if (this.selectedColoringOption?.info?.clinicalAttribute) {
+        if (
+            this.selectedColoringOption?.info?.clinicalAttribute &&
+            !this.selectedColoringOption.info.clinicalAttribute.clinicalAttributeId.startsWith(
+                EMBEDDING_DATA_PREFIX
+            )
+        ) {
             const cacheEntry = this.props.store.clinicalDataCache.get(
                 this.selectedColoringOption.info.clinicalAttribute
             );
@@ -1337,7 +1412,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                                         fontSize: '14px',
                                     }}
                                 >
-                                    Embedding:
+                                    Map:
                                 </label>
                                 <Select
                                     name="embedding-select"
@@ -1383,6 +1458,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                             <ColorSamplesByDropdown
                                 genes={this.genes}
                                 clinicalAttributes={this.clinicalAttributes}
+                                additionalGroups={this.embeddingDataGroups}
                                 selectedOption={this.effectiveColoringOption}
                                 logScale={this.coloringLogScale}
                                 hasNoQueriedGenes={true}

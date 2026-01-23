@@ -43,6 +43,9 @@ export interface ColorSamplesByDropdownProps {
     onCopyNumberToggle?: (enabled: boolean) => void;
     onStructuralVariantToggle?: (enabled: boolean) => void;
 
+    // Additional option groups to insert before Clinical Attributes
+    additionalGroups?: ColoringMenuOmnibarGroup[];
+
     // Optional styling
     className?: string;
     style?: React.CSSProperties;
@@ -85,6 +88,11 @@ export class ColorSamplesByDropdown extends React.Component<
                         } as any)
                 ),
             });
+        }
+
+        // Add additional groups (e.g., "Map Attributes") before Clinical Attributes
+        if (this.props.additionalGroups) {
+            allOptions.push(...this.props.additionalGroups);
         }
 
         // Add clinical attributes

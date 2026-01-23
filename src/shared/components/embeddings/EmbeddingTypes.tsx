@@ -13,12 +13,22 @@ interface BaseEmbeddingData {
 
 export interface PatientEmbeddingData extends BaseEmbeddingData {
     embedding_type: 'patients';
-    data: { patientId: string; x: number; y: number }[];
+    data: {
+        patientId: string;
+        x: number;
+        y: number;
+        data?: Record<string, any>;
+    }[];
 }
 
 export interface SampleEmbeddingData extends BaseEmbeddingData {
     embedding_type: 'samples';
-    data: { sampleId: string; x: number; y: number }[];
+    data: {
+        sampleId: string;
+        x: number;
+        y: number;
+        data?: Record<string, any>;
+    }[];
 }
 
 export type EmbeddingData = PatientEmbeddingData | SampleEmbeddingData;
