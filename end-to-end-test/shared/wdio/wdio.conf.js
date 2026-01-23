@@ -81,6 +81,8 @@ var errorDir = path.join(process.cwd(), `${screenshotRoot}/errors/`);
 
 console.log(`TEST TYPE: ${TEST_TYPE}`);
 
+console.log(`HEADLESS_CHROME: ${process.env.HEADLESS_CHROME}`);
+
 console.log(`ENV SCREENSHOT_DIRECTORY: ${process.env.SCREENSHOT_DIRECTORY}`);
 console.log(`ENV JUNIT_REPORT_PATH PATH: ${process.env.JUNIT_REPORT_PATH}`);
 console.log(`ENV JUNIT_REPORT_PATH PATH: ${process.env.JUNIT_REPORT_PATH}`);
