@@ -58,6 +58,7 @@ export class EmbeddingDeckGLVisualization extends React.Component<
     componentDidMount() {
         this.measureContainer();
         window.addEventListener('resize', this.measureContainer);
+        window.addEventListener('keydown', this.handleKeyDown);
     }
 
     componentDidUpdate(prevProps: EmbeddingVisualizationProps) {
@@ -80,6 +81,7 @@ export class EmbeddingDeckGLVisualization extends React.Component<
 
     componentWillUnmount() {
         window.removeEventListener('resize', this.measureContainer);
+        window.removeEventListener('keydown', this.handleKeyDown);
     }
 
     private measureContainer = () => {
@@ -126,12 +128,32 @@ export class EmbeddingDeckGLVisualization extends React.Component<
 
     private onClick = (info: any) => {
         const { object } = info;
-        if (object && this.props.onPointSelection) {
-            // Don't allow selection of non-cohort samples
+        if (object) {
             if (object.isInCohort === false) {
                 return;
             }
-            this.props.onPointSelection([object]);
+            // Pin the tooltip via parent state (survives component remount)
+            if (this.props.onPinPoint) {
+                this.props.onPinPoint({ ...object });
+            }
+            // Also trigger selection
+            if (this.props.onPointSelection) {
+                this.props.onPointSelection([object]);
+            }
+        }
+    };
+
+    private handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape' && this.props.pinnedPoint) {
+            if (this.props.onUnpinPoint) {
+                this.props.onUnpinPoint();
+            }
+        }
+    };
+
+    private onUnpin = () => {
+        if (this.props.onUnpinPoint) {
+            this.props.onUnpinPoint();
         }
     };
 
@@ -143,10 +165,16 @@ export class EmbeddingDeckGLVisualization extends React.Component<
     };
 
     private renderTooltip() {
+        const pinnedPoint = this.props.pinnedPoint;
+        const { hoveredPoint } = this.state;
+        const isPinned = !!pinnedPoint;
+        const displayedPoint = pinnedPoint || hoveredPoint;
         return (
             <TooltipDisplay
-                hoveredPoint={this.state.hoveredPoint}
+                hoveredPoint={displayedPoint}
                 embeddingType={this.props.embeddingType}
+                isPinned={isPinned}
+                onUnpin={this.onUnpin}
             />
         );
     }
@@ -248,8 +276,9 @@ export class EmbeddingDeckGLVisualization extends React.Component<
         const y = event.clientY - rect.top;
 
         // Throttle point collection - only add if moved at least 3 pixels
-        const lastPoint =
-            this.state.selectionPath[this.state.selectionPath.length - 1];
+        const lastPoint = this.state.selectionPath[
+            this.state.selectionPath.length - 1
+        ];
         if (lastPoint) {
             const dx = x - lastPoint.x;
             const dy = y - lastPoint.y;
@@ -384,7 +413,11 @@ export class EmbeddingDeckGLVisualization extends React.Component<
                     // Use viewport.project for accurate screen coordinates
                     let screenPoint;
                     if (viewport && viewport.project) {
-                        const projected = viewport.project([point.x, point.y, 0]);
+                        const projected = viewport.project([
+                            point.x,
+                            point.y,
+                            0,
+                        ]);
                         screenPoint = { x: projected[0], y: projected[1] };
                     } else {
                         screenPoint = this.dataToScreen(point.x, point.y);
