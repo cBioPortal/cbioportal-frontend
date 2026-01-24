@@ -88,6 +88,9 @@ export interface EmbeddingVisualizationProps {
     isNumericAttribute?: boolean;
     numericalValueRange?: [number, number];
     numericalValueToColor?: (x: number) => string;
+    pinnedPoint?: EmbeddingPoint | null;
+    onPinPoint?: (point: EmbeddingPoint) => void;
+    onUnpinPoint?: () => void;
 }
 
 export interface EmbeddingControlsProps {

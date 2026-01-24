@@ -72,10 +72,12 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     };
     @observable private windowHeight = window.innerHeight;
     @observable private hiddenCategories = new Set<string>();
+    @observable.ref private pinnedPoint: EmbeddingPoint | null = null;
     private urlParameterReactionDisposer?: () => void;
     private urlSyncReactionDisposer?: () => void;
     private viewStateReactionDisposer?: () => void;
     private driverAnnotationReactionDisposer?: () => void;
+    private filterChangeReactionDisposer?: () => void;
     private viewStateInitialized = false;
 
     constructor(props: IEmbeddingsTabProps) {
@@ -137,12 +139,18 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                     // URL parameters exist - apply them
                     // GUARD: Don't update if we already have the same logical value
                     // This prevents infinite loops when URL sync creates new object references
-                    const currentAttrId = this.selectedColoringOption?.info?.clinicalAttribute?.clinicalAttributeId;
-                    const currentGeneId = this.selectedColoringOption?.info?.entrezGeneId;
-                    const urlAttrId = urlOption.info?.clinicalAttribute?.clinicalAttributeId;
+                    const currentAttrId = this.selectedColoringOption?.info
+                        ?.clinicalAttribute?.clinicalAttributeId;
+                    const currentGeneId = this.selectedColoringOption?.info
+                        ?.entrezGeneId;
+                    const urlAttrId =
+                        urlOption.info?.clinicalAttribute?.clinicalAttributeId;
                     const urlGeneId = urlOption.info?.entrezGeneId;
 
-                    if (currentAttrId === urlAttrId && currentGeneId === urlGeneId) {
+                    if (
+                        currentAttrId === urlAttrId &&
+                        currentGeneId === urlGeneId
+                    ) {
                         return;
                     }
                     this.selectedColoringOption = urlOption;
@@ -180,6 +188,16 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             },
             { fireImmediately: true }
         );
+
+        // Clear pinned tooltip when all filters are cleared (selection count drops to 0)
+        this.filterChangeReactionDisposer = reaction(
+            () => this.props.store.numberOfSelectedSamplesInCustomSelection,
+            count => {
+                if (count === 0) {
+                    this.pinnedPoint = null;
+                }
+            }
+        );
     }
 
     componentDidMount() {
@@ -201,6 +219,9 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         }
         if (this.driverAnnotationReactionDisposer) {
             this.driverAnnotationReactionDisposer();
+        }
+        if (this.filterChangeReactionDisposer) {
+            this.filterChangeReactionDisposer();
         }
     }
 
@@ -832,8 +853,13 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             // Handle embedding data fields
             const attrId = this.selectedColoringOption.info.clinicalAttribute
                 .clinicalAttributeId;
-            if (attrId.startsWith(EMBEDDING_DATA_PREFIX) && this.selectedEmbedding?.data) {
-                const fieldName = attrId.substring(EMBEDDING_DATA_PREFIX.length);
+            if (
+                attrId.startsWith(EMBEDDING_DATA_PREFIX) &&
+                this.selectedEmbedding?.data
+            ) {
+                const fieldName = attrId.substring(
+                    EMBEDDING_DATA_PREFIX.length
+                );
                 const result = preComputeEmbeddingDataColors(
                     this.selectedEmbedding.data,
                     fieldName,
@@ -866,8 +892,13 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             // Handle embedding data fields
             const attrId = this.selectedColoringOption.info.clinicalAttribute
                 .clinicalAttributeId;
-            if (attrId.startsWith(EMBEDDING_DATA_PREFIX) && this.selectedEmbedding?.data) {
-                const fieldName = attrId.substring(EMBEDDING_DATA_PREFIX.length);
+            if (
+                attrId.startsWith(EMBEDDING_DATA_PREFIX) &&
+                this.selectedEmbedding?.data
+            ) {
+                const fieldName = attrId.substring(
+                    EMBEDDING_DATA_PREFIX.length
+                );
                 const result = preComputeEmbeddingDataColors(
                     this.selectedEmbedding.data,
                     fieldName,
@@ -1166,6 +1197,16 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     }
 
     @action.bound
+    private pinPoint(point: EmbeddingPoint) {
+        this.pinnedPoint = point;
+    }
+
+    @action.bound
+    private unpinPoint() {
+        this.pinnedPoint = null;
+    }
+
+    @action.bound
     private toggleCategoryVisibility(category: string) {
         if (this.hiddenCategories.has(category)) {
             this.hiddenCategories.delete(category);
@@ -1339,6 +1380,9 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             isNumericAttribute: this.isNumericClinicalAttribute,
             numericalValueRange: this.numericalValueRange,
             numericalValueToColor: this.numericalValueToColor,
+            pinnedPoint: this.pinnedPoint,
+            onPinPoint: this.pinPoint,
+            onUnpinPoint: this.unpinPoint,
         };
 
         return (

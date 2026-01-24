@@ -329,10 +329,9 @@ function transformPatientEmbedding(
         )
     ) {
         isEmbeddingDataField = true;
-        const fieldName =
-            coloringOption.info.clinicalAttribute.clinicalAttributeId.substring(
-                EMBEDDING_DATA_PREFIX.length
-            );
+        const fieldName = coloringOption.info.clinicalAttribute.clinicalAttributeId.substring(
+            EMBEDDING_DATA_PREFIX.length
+        );
         isNumericEmbeddingField =
             coloringOption.info.clinicalAttribute.datatype === 'NUMBER';
         embeddingFieldDisplayName =
@@ -579,7 +578,8 @@ function transformPatientEmbedding(
                     displayLabel = embeddingFieldDisplayName;
                 } else {
                     displayLabel =
-                        embeddingDataValueMap?.get(coord.patientId) || 'No data';
+                        embeddingDataValueMap?.get(coord.patientId) ||
+                        'No data';
                 }
                 strokeColor = color;
             }
@@ -650,6 +650,7 @@ function transformPatientEmbedding(
             x: coord.x,
             y: coord.y,
             patientId: coord.patientId,
+            sampleId: sample?.sampleId,
             color,
             strokeColor,
             displayLabel,
@@ -713,10 +714,9 @@ function transformSampleEmbedding(
         )
     ) {
         isEmbeddingDataField = true;
-        const fieldName =
-            coloringOption.info.clinicalAttribute.clinicalAttributeId.substring(
-                EMBEDDING_DATA_PREFIX.length
-            );
+        const fieldName = coloringOption.info.clinicalAttribute.clinicalAttributeId.substring(
+            EMBEDDING_DATA_PREFIX.length
+        );
         isNumericEmbeddingField =
             coloringOption.info.clinicalAttribute.datatype === 'NUMBER';
         embeddingFieldDisplayName =
