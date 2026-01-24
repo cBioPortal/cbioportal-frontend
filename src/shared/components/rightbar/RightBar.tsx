@@ -137,7 +137,7 @@ export default class RightBar extends React.Component<
                                     <i
                                         className="fa-brands fa-x-twitter"
                                         aria-hidden="true"
-                                        style={{ color: '#0085ff' }}
+                                        style={{ color: '#000000' }}
                                     ></i>
                                 </a>
                                 <a
