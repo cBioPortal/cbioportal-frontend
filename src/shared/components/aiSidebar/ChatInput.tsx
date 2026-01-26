@@ -57,21 +57,35 @@ export class ChatInput extends React.Component<
     @autobind
     async handleSend() {
         const message = this.state.message.trim();
+        console.log(
+            '[ChatInput] handleSend called, screenshotEnabled:',
+            this.props.screenshotEnabled
+        );
+
         if (message && !this.props.isLoading && !this.state.isCapturing) {
             let imageData: string | undefined;
 
             // Capture screenshot if enabled
             if (this.props.screenshotEnabled) {
+                console.log('[ChatInput] Capturing screenshot...');
                 try {
                     this.setState({ isCapturing: true });
                     imageData = await capturePageScreenshot();
+                    console.log(
+                        '[ChatInput] Screenshot captured, length:',
+                        imageData?.length
+                    );
                 } catch (e) {
-                    console.error('Failed to capture screenshot:', e);
+                    console.error('[ChatInput] Failed to capture screenshot:', e);
                 } finally {
                     this.setState({ isCapturing: false });
                 }
             }
 
+            console.log(
+                '[ChatInput] Calling onSend with imageData:',
+                !!imageData
+            );
             this.props.onSend({ text: message, imageData });
             this.setState({ message: '' });
             // Reset textarea height

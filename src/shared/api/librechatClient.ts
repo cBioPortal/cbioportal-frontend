@@ -148,10 +148,20 @@ export class LibreChatClient {
             // Convert base64 to blob
             const blob = this.dataURLtoBlob(imageData);
             const tempFileId = generateId();
+            const filename = `screenshot-${tempFileId}.jpg`;
+
+            // Create a File object from the Blob (more similar to native file uploads)
+            const file = new File([blob], filename, {
+                type: 'image/jpeg',
+                lastModified: Date.now(),
+            });
 
             // Create an image to get dimensions
             const img = new Image();
-            const dimensionsPromise = new Promise<{ width: number; height: number }>((resolve) => {
+            const dimensionsPromise = new Promise<{
+                width: number;
+                height: number;
+            }>(resolve => {
                 img.onload = () => {
                     resolve({ width: img.width, height: img.height });
                 };
@@ -162,13 +172,25 @@ export class LibreChatClient {
             });
             const dimensions = await dimensionsPromise;
 
-            // Build FormData
+            console.log('[uploadImage] File details:', {
+                name: file.name,
+                type: file.type,
+                size: file.size,
+                dimensions,
+            });
+
+            // Build FormData matching LibreChat's frontend format
             const formData = new FormData();
             formData.append('endpoint', endpoint);
-            formData.append('file', blob, `screenshot-${tempFileId}.jpg`);
+            formData.append('original_endpoint', endpoint);
+            formData.append('file', file, encodeURIComponent(filename));
             formData.append('file_id', tempFileId);
-            formData.append('width', dimensions.width.toString());
-            formData.append('height', dimensions.height.toString());
+            if (dimensions.width > 0) {
+                formData.append('width', dimensions.width.toString());
+            }
+            if (dimensions.height > 0) {
+                formData.append('height', dimensions.height.toString());
+            }
             formData.append('message_file', 'true');
             if (agentId) {
                 formData.append('agent_id', agentId);
