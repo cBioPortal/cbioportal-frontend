@@ -542,11 +542,6 @@ export class StudySummaryTab extends React.Component<
                 onChangeCancerGeneFilter: this.store
                     .updateMutatedGenesTableByCancerGenesFilter,
             }),
-            [ChartTypeEnum.O2GL_DEMO_TABLE]: () => ({
-                filters: [],
-                promise: this.store.o2glDemoRows,
-                title: chartMeta.displayName,
-            }),
             [ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE]: () => ({
                 filters: this.store.getGeneFiltersByUniqueKey(
                     chartMeta.uniqueKey

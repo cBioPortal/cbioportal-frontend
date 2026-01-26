@@ -160,7 +160,6 @@ import {
     MolecularProfileOption,
     MUTATION_COUNT_PLOT_DOMAIN,
     NumericalGroupComparisonType,
-    O2glDemoRow,
     pickNewColorForClinicData,
     RectangleBounds,
     shouldShowChart,
@@ -384,65 +383,13 @@ export enum StudyViewPageTabDescriptions {
 const DEFAULT_CHART_NAME = 'Custom Data';
 export const SELECTED_ANALYSIS_GROUP_VALUE = 'Selected';
 export const UNSELECTED_ANALYSIS_GROUP_VALUE = 'Unselected';
-type O2glDemoDemoRow = {
-    gene: string;
-    oncotree: string;
-    alteration: string;
-    count: number;
-};
-
-type O2glDemoDemoData = {
-    studyId?: string;
-    oncotreeCode?: string;
-    sampleCount?: number;
-    rows?: O2glDemoDemoRow[];
-};
-
-type O2glDemoValidationData = {
-    [oncotreeCode: string]: {
-        [gene: string]: unknown;
-    };
-};
 
 type O2glGeneMap = {
     [oncotreeCode: string]: string[];
 };
 
-type O2glDemoDataBundle = {
-    demoData: O2glDemoDemoData;
-    validationData: O2glDemoValidationData;
-};
-
-type O2glDemoConfig = {
-    demoDataUrl?: string;
-    validationDataUrl?: string;
-};
-
-const O2GL_DEMO_FALLBACK_DEMO_DATA: O2glDemoDemoData = require('pages/studyView/oncotree2genes/oncotree2genes_llm_demo.json');
-const O2GL_DEMO_FALLBACK_VALIDATION_DATA: O2glDemoValidationData = require('pages/studyView/oncotree2genes/merged_VALID.json');
 const O2GL_GENE_MAP: O2glGeneMap = require('pages/studyView/oncotree2genes/o2gl.json');
-const O2GL_DEMO_SHORT_LABELS = [
-    'mrna_hi',
-    'mrna_lo',
-    'prot_hi',
-    'prot_lo',
-    'mut_mis_put_pass',
-    'mut_mis_put_driv',
-    'mut_inframe_put_pass',
-    'mut_inframe_put_driv',
-    'mut_trun_put_pass',
-    'mut_trun_put_driv',
-    'amp',
-    'deep_del',
-    'homdel_rec',
-    'amp_rec',
-    'sv',
-    'sv_rec',
-    'splice',
-];
-const DEFAULT_O2GL_DEMO_STUDY_ID = 'lung_smc_2016';
 const ONCOTREE_CODE_ATTRIBUTE_ID = 'ONCOTREE_CODE';
-let o2glDemoDataPromise: Promise<O2glDemoDataBundle> | null = null;
 
 function getO2glGeneSetForCodes(
     oncotreeCodes: string[],
@@ -460,63 +407,6 @@ function getO2glGeneSetForCodes(
         }
     });
     return genes;
-}
-
-async function loadO2glDemoData(): Promise<O2glDemoDataBundle> {
-    if (o2glDemoDataPromise) {
-        return o2glDemoDataPromise;
-    }
-
-    o2glDemoDataPromise = (async () => {
-        const config = (getBrowserWindow() as any).o2glDemoConfig as
-            | O2glDemoConfig
-            | undefined;
-        if (config?.demoDataUrl && config?.validationDataUrl) {
-            try {
-                const [demoData, validationData] = await Promise.all([
-                    fetch(config.demoDataUrl, {
-                        credentials: 'same-origin',
-                    }).then(response => {
-                        if (!response.ok) {
-                            throw new Error(
-                                `Unable to fetch O2GL-DEMO demo data: ${response.status}`
-                            );
-                        }
-                        return response.json();
-                    }),
-                    fetch(config.validationDataUrl, {
-                        credentials: 'same-origin',
-                    }).then(response => {
-                        if (!response.ok) {
-                            throw new Error(
-                                `Unable to fetch O2GL-DEMO validation data: ${response.status}`
-                            );
-                        }
-                        return response.json();
-                    }),
-                ]);
-
-                return {
-                    demoData: demoData as O2glDemoDemoData,
-                    validationData: validationData as O2glDemoValidationData,
-                };
-            } catch (error) {
-                if (console && console.warn) {
-                    console.warn(
-                        'Failed to load O2GL-DEMO data from URLs, using bundled demo data.',
-                        error
-                    );
-                }
-            }
-        }
-
-        return {
-            demoData: O2GL_DEMO_FALLBACK_DEMO_DATA,
-            validationData: O2GL_DEMO_FALLBACK_VALIDATION_DATA,
-        };
-    })();
-
-    return o2glDemoDataPromise;
 }
 
 export type SurvivalType = {
@@ -7212,8 +7102,7 @@ export class StudyViewPageStore
             this.shouldDisplaySampleTreatmentGroups.result,
             this.shouldDisplayPatientTreatmentGroups.result,
             this.shouldDisplaySampleTreatmentTarget.result,
-            this.shouldDisplayPatientTreatmentTarget.result,
-            this.shouldDisplayO2glDemo.result
+            this.shouldDisplayPatientTreatmentTarget.result
         );
         return chartMetaSet;
     }
@@ -7242,8 +7131,7 @@ export class StudyViewPageStore
             this.shouldDisplaySampleTreatmentGroups.result,
             this.shouldDisplayPatientTreatmentGroups.result,
             this.shouldDisplaySampleTreatmentTarget.result,
-            this.shouldDisplayPatientTreatmentTarget.result,
-            this.shouldDisplayO2glDemo.result
+            this.shouldDisplayPatientTreatmentTarget.result
         );
         return chartMetaSet;
     }
@@ -7270,8 +7158,7 @@ export class StudyViewPageStore
             this.shouldDisplaySampleTreatmentGroups.result,
             this.shouldDisplayPatientTreatmentGroups.result,
             this.shouldDisplaySampleTreatmentTarget.result,
-            this.shouldDisplayPatientTreatmentTarget.result,
-            this.shouldDisplayO2glDemo.result
+            this.shouldDisplayPatientTreatmentTarget.result
         );
         return chartMetaSet;
     }
@@ -7988,21 +7875,6 @@ export class StudyViewPageStore
                 SpecialChartsUniqueKeyEnum.SAMPLE_TREATMENT_TARGET,
                 ChartTypeEnum.SAMPLE_TREATMENT_TARGET_TABLE
             );
-        }
-
-        if (this.shouldDisplayO2glDemo.result) {
-            const uniqueKey = SpecialChartsUniqueKeyEnum.O2GL_DEMO;
-            const chartMeta = this.chartMetaSet[uniqueKey];
-            this.chartsType.set(uniqueKey, ChartTypeEnum.O2GL_DEMO_TABLE);
-            this.chartsDimension.set(
-                uniqueKey,
-                STUDY_VIEW_CONFIG.layout.dimensions[
-                    ChartTypeEnum.O2GL_DEMO_TABLE
-                ]
-            );
-            if (chartMeta && chartMeta.priority !== 0) {
-                this.changeChartVisibility(uniqueKey, true);
-            }
         }
 
         if (!_.isEmpty(this.mutationProfiles.result)) {
@@ -10910,57 +10782,6 @@ export class StudyViewPageStore
                 ).length > 0
             );
         },
-    });
-
-    public readonly shouldDisplayO2glDemo = remoteData<boolean>({
-        await: () => [this.queriedPhysicalStudyIds],
-        invoke: async () => {
-            const studyIds = this.queriedPhysicalStudyIds.result || [];
-            const { demoData } = await loadO2glDemoData();
-            const studyId = demoData.studyId || DEFAULT_O2GL_DEMO_STUDY_ID;
-            return Promise.resolve(studyIds.includes(studyId));
-        },
-        default: false,
-    });
-
-    public readonly o2glDemoRows = remoteData<O2glDemoRow[]>({
-        await: () => [this.queriedPhysicalStudyIds],
-        invoke: async () => {
-            const studyIds = this.queriedPhysicalStudyIds.result || [];
-            const { demoData, validationData } = await loadO2glDemoData();
-            const studyId = demoData.studyId || DEFAULT_O2GL_DEMO_STUDY_ID;
-            if (!studyIds.includes(studyId)) {
-                return [];
-            }
-            const oncotreeCode = demoData.oncotreeCode || '';
-            const validationMap = oncotreeCode
-                ? validationData[oncotreeCode] || {}
-                : {};
-            const sampleCount = demoData.sampleCount || 0;
-            const rows = Array.isArray(demoData.rows) ? demoData.rows : [];
-            return rows
-                .filter(row => {
-                    return (
-                        row.oncotree === oncotreeCode &&
-                        validationMap[row.gene] &&
-                        O2GL_DEMO_SHORT_LABELS.indexOf(row.alteration) !== -1
-                    );
-                })
-                .map(row => {
-                    const freq = sampleCount
-                        ? (row.count / sampleCount) * 100
-                        : 0;
-                    return {
-                        gene: row.gene,
-                        oncotree: row.oncotree,
-                        alteration: row.alteration,
-                        count: row.count,
-                        freq,
-                        uniqueKey: `${row.gene}_${row.oncotree}_${row.alteration}`,
-                    };
-                });
-        },
-        default: [],
     });
 
     @action.bound
