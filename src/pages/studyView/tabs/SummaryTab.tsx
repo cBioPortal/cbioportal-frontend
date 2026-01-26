@@ -477,6 +477,36 @@ export class StudySummaryTab extends React.Component<
                     .skin_show_settings_menu,
                 filterAlterations: this.store.isGlobalMutationFilterActive,
             }),
+            [ChartTypeEnum.ONCOTREE2GENES_LLM_TABLE]: () => ({
+                filters: this.store.getGeneFiltersByUniqueKey(
+                    chartMeta.uniqueKey
+                ),
+                promise: this.store.oncotree2GenesTableRowData,
+                onValueSelection: this.store.addGeneFilters,
+                onResetSelection: () =>
+                    this.store.resetGeneFilter(chartMeta.uniqueKey),
+                selectedGenes: this.store.selectedGenes,
+                onGeneSelect: this.store.onCheckGene,
+                id: 'oncotree2genes-llm-table',
+                title: this.store.getChartTitle(
+                    ChartTypeEnum.ONCOTREE2GENES_LLM_TABLE,
+                    props.title
+                ),
+                getData: () =>
+                    getMutatedGenesDownloadData(
+                        this.store.oncotree2GenesTableRowData,
+                        this.store.oncokbCancerGeneFilterEnabled
+                    ),
+                genePanelCache: this.store.genePanelCache,
+                downloadTypes: ['Data'],
+                filterByCancerGenes: this.store
+                    .filterMutatedGenesTableByCancerGenes,
+                onChangeCancerGeneFilter: this.store
+                    .updateMutatedGenesTableByCancerGenesFilter,
+                alterationFilterEnabled: getServerConfig()
+                    .skin_show_settings_menu,
+                filterAlterations: this.store.isGlobalMutationFilterActive,
+            }),
             [ChartTypeEnum.VARIANT_ANNOTATIONS_TABLE]: () => ({
                 filters: this.store.getNamespaceDataFiltersByUniqueKey(
                     chartMeta.uniqueKey
@@ -511,6 +541,11 @@ export class StudySummaryTab extends React.Component<
                 downloadTypes: ['Data'],
                 onChangeCancerGeneFilter: this.store
                     .updateMutatedGenesTableByCancerGenesFilter,
+            }),
+            [ChartTypeEnum.O2GL_DEMO_TABLE]: () => ({
+                filters: [],
+                promise: this.store.o2glDemoRows,
+                title: chartMeta.displayName,
             }),
             [ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE]: () => ({
                 filters: this.store.getGeneFiltersByUniqueKey(

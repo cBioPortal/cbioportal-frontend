@@ -76,6 +76,7 @@ import { PatientSurvival } from 'shared/model/PatientSurvival';
 import ClinicalEventTypeCountTable, {
     ClinicalEventTypeCountColumnKey,
 } from 'pages/studyView/table/ClinicalEventTypeCountTable';
+import O2glDemoTable from 'pages/studyView/table/O2glDemoTable';
 import {
     StructuralVariantMultiSelectionTable,
     StructVarMultiSelectionTableColumn,
@@ -636,6 +637,22 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     </>
                 );
             }
+            case ChartTypeEnum.O2GL_DEMO_TABLE: {
+                return () => (
+                    <O2glDemoTable
+                        data={this.props.promise.result}
+                        width={getWidthByDimension(
+                            this.props.dimension,
+                            this.borderWidth
+                        )}
+                        height={getTableHeightByDimension(
+                            this.props.dimension,
+                            this.chartHeaderHeight
+                        )}
+                    />
+                );
+            }
+            case ChartTypeEnum.ONCOTREE2GENES_LLM_TABLE:
             case ChartTypeEnum.MUTATED_GENES_TABLE: {
                 return () => {
                     const numColumn: MultiSelectionTableColumn = {

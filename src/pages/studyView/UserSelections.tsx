@@ -1037,6 +1037,7 @@ export default class UserSelections extends React.Component<
     ): string {
         switch (chartMeta.chartType) {
             case ChartTypeEnum.MUTATED_GENES_TABLE:
+            case ChartTypeEnum.ONCOTREE2GENES_LLM_TABLE:
                 return MUT_COLOR_MISSENSE;
             case ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE:
             case ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE:
