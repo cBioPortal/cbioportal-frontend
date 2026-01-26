@@ -16,6 +16,7 @@ import {
 } from 'pages/studyView/StudyViewPageTabs';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { ClinicalDataTab } from './tabs/ClinicalDataTab';
+import { VitessceTab, hasZarrResources } from './tabs/VitessceTab';
 import {
     DefaultTooltip,
     getBrowserWindow,
@@ -758,6 +759,27 @@ export default class StudyViewPage extends React.Component<
                                             store={this.store}
                                             urlWrapper={this.urlWrapper}
                                         />
+                                    </MSKTab>
+                                    <MSKTab
+                                        key={6}
+                                        id={StudyViewPageTabKeyEnum.VITESSCE}
+                                        linkText={
+                                            StudyViewPageTabDescriptions.VITESSCE
+                                        }
+                                        hide={
+                                            // @ts-ignore __NODE_ENV__ is defined in webpack.config.js
+                                            __NODE_ENV__ !== 'development' &&
+                                            (this.store.studyResourceData
+                                                .isPending ||
+                                                !this.store.studyResourceData
+                                                    .isComplete ||
+                                                !hasZarrResources(
+                                                    this.store.studyResourceData
+                                                        .result
+                                                ))
+                                        }
+                                    >
+                                        <VitessceTab store={this.store} />
                                     </MSKTab>
 
                                     {this.resourceTabs.component}
