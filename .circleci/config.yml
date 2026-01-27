@@ -216,6 +216,7 @@ jobs:
       SCREENSHOT_DIRECTORY: ./remote/screenshots
       CBIOPORTAL_URL: https://www.cbioportal.org
       CHROMEDRIVER_CUSTOM_PATH: /usr/local/bin/chromedriver
+      HEADLESS_CHROME: true
     <<: *run_e2e_and_save_artifacts
 
   e2e_tests_against_master:
