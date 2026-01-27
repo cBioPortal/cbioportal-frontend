@@ -261,7 +261,8 @@ exports.config = {
     //
     //
 
-    specs: [SPEC_FILE_PATTERN],
+    //    specs: [SPEC_FILE_PATTERN],
+    specs: ['./local/specs/core/oncoprint.screenshot.spec.js'],
 
     // specs: [
     //     './local/specs/SurvivalChart.screenshot.spec.js',
