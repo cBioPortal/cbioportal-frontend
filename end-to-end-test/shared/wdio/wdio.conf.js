@@ -40,6 +40,8 @@ const chromeArgs = [
     })()
 );
 
+console.log(`chrome args: ${chromeArgs}`);
+
 var diffDir = path.join(process.cwd(), `${screenshotRoot}/diff/`);
 var refDir = path.join(process.cwd(), `${screenshotRoot}/reference/`);
 var screenDir = path.join(process.cwd(), `${screenshotRoot}/screen/`);
