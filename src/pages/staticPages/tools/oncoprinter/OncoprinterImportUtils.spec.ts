@@ -176,7 +176,7 @@ describe('OncoprinterImportUtils', () => {
                     'sample1  gene2  promoter  PROMOTER  label2\n' +
                     'sample1  gene2  GAIN  CNA  label2\n' +
                     'sample1  gene2  LOW  EXP  label2\n' +
-                    'sample2  gene1  gene1-gene2  FUSION  label2\n' +
+                    'sample2  gene1-gene2  gene1-gene2  FUSION  label2\n' +
                     'sample2\n' +
                     'sample2  gene2  LOW  PROT  label2\n' +
                     'sample1\nsample2'
@@ -198,10 +198,81 @@ describe('OncoprinterImportUtils', () => {
                     'patient1  gene2  promoter  PROMOTER  label2\n' +
                     'patient1  gene2  GAIN  CNA  label2\n' +
                     'patient1  gene2  LOW  EXP  label2\n' +
-                    'patient2  gene1  gene1-gene2  FUSION  label2\n' +
+                    'patient2  gene1-gene2  gene1-gene2  FUSION  label2\n' +
                     'patient2\n' +
                     'patient2  gene2  LOW  PROT  label2\n' +
                     'patient1\npatient2'
+            );
+        });
+        it('handles structural variants with driver annotation correctly', () => {
+            const svData: any[] = [
+                {
+                    label: 'BAP1',
+                    data: [
+                        {
+                            sample: 'TCGA-LK-A4O5',
+                            patient: 'TCGA-LK-A4O5',
+                            data: [
+                                {
+                                    molecularProfileAlterationType:
+                                        AlterationTypeConstants.STRUCTURAL_VARIANT,
+                                    site1HugoSymbol: 'ACY1',
+                                    site2HugoSymbol: 'BAP1',
+                                    eventInfo: 'ACY1-BAP1 fusion',
+                                    variantClass: 'FUSION',
+                                    alterationType:
+                                        AlterationTypeConstants.STRUCTURAL_VARIANT,
+                                    driverFilter: PUTATIVE_DRIVER,
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ];
+            const result = getOncoprinterGeneticInput(
+                svData,
+                ['TCGA-LK-A4O5'],
+                'sample'
+            );
+            // Should combine both gene symbols and preserve eventInfo with spaces
+            assert.equal(
+                result,
+                'TCGA-LK-A4O5  ACY1-BAP1  ACY1-BAP1_fusion  FUSION  BAP1\nTCGA-LK-A4O5'
+            );
+        });
+        it('handles intragenic structural variants correctly', () => {
+            const svData: any[] = [
+                {
+                    label: 'EGFR',
+                    data: [
+                        {
+                            sample: 'sample1',
+                            patient: 'patient1',
+                            data: [
+                                {
+                                    molecularProfileAlterationType:
+                                        AlterationTypeConstants.STRUCTURAL_VARIANT,
+                                    site1HugoSymbol: 'EGFR',
+                                    site2HugoSymbol: undefined,
+                                    eventInfo: 'EGFR truncation',
+                                    variantClass: 'DELETION',
+                                    alterationType:
+                                        AlterationTypeConstants.STRUCTURAL_VARIANT,
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ];
+            const result = getOncoprinterGeneticInput(
+                svData,
+                ['sample1'],
+                'sample'
+            );
+            // For intragenic SVs (only one gene), should use that single gene
+            assert.equal(
+                result,
+                'sample1  EGFR  EGFR_truncation  FUSION  EGFR\nsample1'
             );
         });
     });
