@@ -140,7 +140,7 @@ describe('OncoprinterImportUtils', () => {
                                 site1HugoSymbol: 'gene1',
                                 site2HugoSymbol: 'gene2',
                                 eventInfo: 'gene1-gene2',
-                                variantClass: 'Fusion',
+                                variantClass: 'FUSION',
                                 comments: 'gene1 gene1-gene2',
                             },
                             {

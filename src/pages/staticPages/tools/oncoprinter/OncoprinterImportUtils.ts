@@ -73,14 +73,16 @@ function getOncoprinterParsedGeneticInputLine(
         const oncoprinterInput: Partial<OncoprinterGeneticInputLineType2> = {};
         oncoprinterInput.sampleId = caseId;
 
-        if (d.molecularProfileAlterationType === AlterationTypeConstants.STRUCTURAL_VARIANT) {
+        if (
+            d.molecularProfileAlterationType ===
+            AlterationTypeConstants.STRUCTURAL_VARIANT
+        ) {
             // For structural variants, combine both gene symbols if available
             // This ensures proper OncoKB annotation for fusions
             const genes = [];
             if (d.site1HugoSymbol) genes.push(d.site1HugoSymbol);
             if (d.site2HugoSymbol) genes.push(d.site2HugoSymbol);
-            oncoprinterInput.hugoGeneSymbol /* @ts-ignore */ =
-                genes.length > 0 ? genes.join('-') : d.site1HugoSymbol || d.site2HugoSymbol;
+            oncoprinterInput.hugoGeneSymbol /* @ts-ignore */ = genes.join('-');
         } else {
             oncoprinterInput.hugoGeneSymbol = d.hugoGeneSymbol;
         }
