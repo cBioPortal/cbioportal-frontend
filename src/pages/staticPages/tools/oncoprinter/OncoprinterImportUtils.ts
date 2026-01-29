@@ -25,6 +25,7 @@ import {
     SpecialAttribute,
 } from '../../../../shared/cache/ClinicalDataCache';
 import { PUTATIVE_DRIVER } from 'shared/lib/StoreUtils';
+import { ONCOKB_ONCOGENIC_LOWERCASE } from 'pages/resultsView/ResultsViewPageStoreUtils';
 
 const geneticAlterationToDataType: {
     [alterationType in OncoprinterGeneticInputLineType2['alteration']]: string;
@@ -92,8 +93,17 @@ function getOncoprinterParsedGeneticInputLine(
         oncoprinterInput.proteinChange = d.proteinChange;
         oncoprinterInput.eventInfo = d.eventInfo;
         oncoprinterInput.isGermline = !isNotGermlineMutation(d);
+        // Check for driver status from multiple sources:
+        // 1. driverFilter for custom driver annotations on mutations
+        // 2. putativeDriver boolean computed during annotation
+        // 3. oncoKbOncogenic for OncoKB-annotated drivers (especially for SVs)
+        const isOncoKbDriver =
+            d.oncoKbOncogenic &&
+            ONCOKB_ONCOGENIC_LOWERCASE.includes(d.oncoKbOncogenic.toLowerCase());
         oncoprinterInput.isCustomDriver =
-            d.driverFilter === PUTATIVE_DRIVER || d.putativeDriver === true;
+            d.driverFilter === PUTATIVE_DRIVER ||
+            d.putativeDriver === true ||
+            isOncoKbDriver;
         return oncoprinterInput as OncoprinterGeneticInputLineType2;
     } else {
         return { sampleId: caseId };
