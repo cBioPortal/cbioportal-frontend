@@ -43,19 +43,38 @@ screenshotRoot = screenshotRoot.replace(/\/$/, '');
 //     })()
 // );
 
+// const chromeArgs = [
+//     '--disable-composited-antialiasing',
+//     '--disable-setuid-sandbox',
+//     '--allow-insecure-localhost',
+//     '--window-size=1600,1000',
+//     '--disable-dev-shm-usage',
+//     '--disable-extensions',
+// ].concat(
+//     (function() {
+//         return process.env.HEADLESS_CHROME === 'true' ||
+//             process.env.HEADLESS_CHROME == true
+//             ? [
+//                   '--headless=new',
+//                   '--no-sandbox',
+//                   '--disable-setuid-sandbox',
+//                   '--in-process-gpu',
+//                   '--use-gl=angle',
+//               ]
+//             : [];
+//     })()
+// );
+
 const chromeArgs = [
     '--disable-composited-antialiasing',
-    '--disable-setuid-sandbox',
     '--allow-insecure-localhost',
     '--window-size=1600,1000',
-    '--disable-dev-shm-usage',
-    '--disable-extensions',
 ].concat(
     (function() {
         return process.env.HEADLESS_CHROME === 'true' ||
             process.env.HEADLESS_CHROME == true
             ? [
-                  '--headless=new',
+                  '--headless',
                   '--no-sandbox',
                   '--disable-setuid-sandbox',
                   '--in-process-gpu',
@@ -261,8 +280,8 @@ exports.config = {
     //
     //
 
-    //    specs: [SPEC_FILE_PATTERN],
-    specs: ['./local/specs/core/oncoprint.screenshot.spec.js'],
+    specs: [SPEC_FILE_PATTERN],
+    //specs: ['./local/specs/core/oncoprint.screenshot.spec.js'],
 
     // specs: [
     //     './local/specs/SurvivalChart.screenshot.spec.js',
