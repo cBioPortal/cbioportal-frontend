@@ -234,10 +234,10 @@ describe('OncoprinterImportUtils', () => {
                 ['TCGA-LK-A4O5'],
                 'sample'
             );
-            // Should combine both gene symbols and preserve eventInfo with spaces
+            // Should combine both gene symbols and include FUSION_DRIVER for driver annotations
             assert.equal(
                 result,
-                'TCGA-LK-A4O5  ACY1-BAP1  ACY1-BAP1_fusion  FUSION  BAP1\nTCGA-LK-A4O5'
+                'TCGA-LK-A4O5  ACY1-BAP1  ACY1-BAP1_fusion  FUSION_DRIVER  BAP1\nTCGA-LK-A4O5'
             );
         });
         it('handles intragenic structural variants correctly', () => {

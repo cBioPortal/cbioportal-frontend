@@ -158,7 +158,7 @@ function getOncoprinterGeneticInputLine(parsed: OncoprinterGeneticInputLine) {
                 break;
             case AlterationTypeConstants.STRUCTURAL_VARIANT:
                 line.push(parsed.eventInfo || 'structural_variant');
-                line.push('FUSION');
+                line.push('FUSION' + (parsed.isCustomDriver ? '_DRIVER' : ''));
                 break;
         }
         if (parsed.trackName) {
