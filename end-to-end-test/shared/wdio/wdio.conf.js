@@ -89,8 +89,6 @@ console.log(`chrome args: ${chromeArgs}`);
 var diffDir = path.join(process.cwd(), `${screenshotRoot}/diff/`);
 var refDir = path.join(process.cwd(), `${screenshotRoot}/reference/`);
 var screenDir = path.join(process.cwd(), `${screenshotRoot}/screen/`);
-// var errorDir =
-//     (process.env.JUNIT_REPORT_PATH || './shared/results/') + 'errors/';
 
 var errorDir = path.join(process.cwd(), `${screenshotRoot}/errors/`);
 
