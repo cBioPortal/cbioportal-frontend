@@ -98,7 +98,7 @@ function getOncoprinterParsedGeneticInputLine(
         // 2. putativeDriver boolean computed during annotation
         // 3. oncoKbOncogenic for OncoKB-annotated drivers (especially for SVs)
         const isOncoKbDriver =
-            d.oncoKbOncogenic &&
+            !!d.oncoKbOncogenic &&
             ONCOKB_ONCOGENIC_LOWERCASE.includes(d.oncoKbOncogenic.toLowerCase());
         oncoprinterInput.isCustomDriver =
             d.driverFilter === PUTATIVE_DRIVER ||
