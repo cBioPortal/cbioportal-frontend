@@ -26,61 +26,15 @@ let screenshotRoot = process.env.SCREENSHOT_DIRECTORY;
 // correct if screenshot directory has trailing slash
 screenshotRoot = screenshotRoot.replace(/\/$/, '');
 
-// const chromeArgs = [
-//     '--disable-composited-antialiasing',
-//     '--allow-insecure-localhost',
-// ].concat(
-//     (function() {
-//         return process.env.HEADLESS_CHROME === 'true'
-//             ? [
-//                 '--headless',
-//                 '--no-sandbox',
-//                 '--disable-setuid-sandbox',
-//                 '--in-process-gpu',
-//                 '--use-gl=angle',
-//             ]
-//             : [];
-//     })()
-// );
-
-// const chromeArgs = [
-//     '--disable-composited-antialiasing',
-//     '--disable-setuid-sandbox',
-//     '--allow-insecure-localhost',
-//     '--window-size=1600,1000',
-//     '--disable-dev-shm-usage',
-//     '--disable-extensions',
-// ].concat(
-//     (function() {
-//         return process.env.HEADLESS_CHROME === 'true' ||
-//             process.env.HEADLESS_CHROME == true
-//             ? [
-//                   '--headless=new',
-//                   '--no-sandbox',
-//                   '--disable-setuid-sandbox',
-//                   '--in-process-gpu',
-//                   '--use-gl=angle',
-//               ]
-//             : [];
-//     })()
-// );
-
 const chromeArgs = [
     '--disable-composited-antialiasing',
     '--allow-insecure-localhost',
     '--window-size=1600,1000',
-    '--no-sandbox',
 ].concat(
     (function() {
         return process.env.HEADLESS_CHROME === 'true' ||
             process.env.HEADLESS_CHROME == true
-            ? [
-                  '--headless=true',
-                  // '--no-sandbox',
-                  // '--disable-setuid-sandbox',
-                  // '--in-process-gpu',
-                  // '--use-gl=angle',
-              ]
+            ? ['--headless=true', '--no-sandbox']
             : [];
     })()
 );
