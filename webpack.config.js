@@ -212,7 +212,7 @@ var config = {
                     {
                         loader: 'ts-loader',
                         options: {
-                            transpileOnly: true,
+                            transpileOnly: false,
                         },
                     },
                 ],

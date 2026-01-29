@@ -79,7 +79,8 @@
   },
   "resolutions": {
     "mobx": "^6.0.0",
-    "mobx-react": "6.0.0"
+    "mobx-react": "6.0.0",
+    "@types/express-serve-static-core": "4.19.8"
   },
   "author": "",
   "license": "AGPL-3.0-or-later",
@@ -330,11 +331,11 @@
     "svg2pdf.js": "github:cbioportal/svg2pdf.js#v1.3.3-cbio-patch-1",
     "svgsaver": "0.9.0",
     "swagger-client": "^3.8.22",
-    "ts-loader": "4.0.0",
-    "tslib": "^1.11.1",
+    "ts-loader": "9.5.1",
+    "tslib": "^2.6.0",
     "typed-css-modules": "^0.6.4",
     "typed-css-modules-webpack-plugin": "^0.2.0",
-    "typescript": "4.0.3",
+    "typescript": "4.9.5",
     "underscore": "^1.8.3",
     "url": "^0.11.0",
     "url-loader": "^4.1.1",
