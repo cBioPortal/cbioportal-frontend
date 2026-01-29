@@ -74,11 +74,11 @@ const chromeArgs = [
         return process.env.HEADLESS_CHROME === 'true' ||
             process.env.HEADLESS_CHROME == true
             ? [
-                  '--headless',
-                  '--no-sandbox',
-                  '--disable-setuid-sandbox',
-                  '--in-process-gpu',
-                  '--use-gl=angle',
+                  // '--headless=true',
+                  // '--no-sandbox',
+                  // '--disable-setuid-sandbox',
+                  // '--in-process-gpu',
+                  // '--use-gl=angle',
               ]
             : [];
     })()
