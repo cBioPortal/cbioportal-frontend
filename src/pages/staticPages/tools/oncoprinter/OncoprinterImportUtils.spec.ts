@@ -240,6 +240,39 @@ describe('OncoprinterImportUtils', () => {
                 'TCGA-LK-A4O5  ACY1-BAP1  ACY1-BAP1_fusion  FUSION_DRIVER  BAP1\nTCGA-LK-A4O5'
             );
         });
+        it('exports structural variants with putativeDriver flag correctly', () => {
+            const svData: any[] = [
+                {
+                    label: 'BAP1',
+                    data: [
+                        {
+                            sample: 'TCGA-LK-A4O5',
+                            patient: 'TCGA-LK-A4O5',
+                            data: [
+                                {
+                                    molecularProfileAlterationType:
+                                        AlterationTypeConstants.STRUCTURAL_VARIANT,
+                                    site1HugoSymbol: 'ACY1',
+                                    site2HugoSymbol: 'BAP1',
+                                    eventInfo: 'ACY1-BAP1 fusion',
+                                    putativeDriver: true,
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ];
+            const result = getOncoprinterGeneticInput(
+                svData,
+                ['TCGA-LK-A4O5'],
+                'sample'
+            );
+            // Should detect driver from putativeDriver boolean flag
+            assert.equal(
+                result,
+                'TCGA-LK-A4O5  ACY1-BAP1  ACY1-BAP1_fusion  FUSION_DRIVER  BAP1\nTCGA-LK-A4O5'
+            );
+        });
         it('handles intragenic structural variants correctly', () => {
             const svData: any[] = [
                 {

@@ -92,7 +92,8 @@ function getOncoprinterParsedGeneticInputLine(
         oncoprinterInput.proteinChange = d.proteinChange;
         oncoprinterInput.eventInfo = d.eventInfo;
         oncoprinterInput.isGermline = !isNotGermlineMutation(d);
-        oncoprinterInput.isCustomDriver = d.driverFilter === PUTATIVE_DRIVER;
+        oncoprinterInput.isCustomDriver =
+            d.driverFilter === PUTATIVE_DRIVER || d.putativeDriver === true;
         return oncoprinterInput as OncoprinterGeneticInputLineType2;
     } else {
         return { sampleId: caseId };
