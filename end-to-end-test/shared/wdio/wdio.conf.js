@@ -69,6 +69,7 @@ const chromeArgs = [
     '--disable-composited-antialiasing',
     '--allow-insecure-localhost',
     '--window-size=1600,1000',
+    '--no-sandbox',
 ].concat(
     (function() {
         return process.env.HEADLESS_CHROME === 'true' ||
