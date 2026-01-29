@@ -88,7 +88,7 @@ export interface IOncoprintControlsHandlers
     onClickAddGenericAssays?: (info: GenericAssayTrackInfo[]) => void;
     onSelectHeatmapProfile?: (molecularProfileId: string) => void;
     onChangeHeatmapGeneInputValue?: (value: string) => void;
-    onClickNGCHM: () => void;
+    onClickNGCHM?: () => void;
     onSetHorzZoom: (z: number) => void;
     onClickZoomIn: () => void;
     onClickZoomOut: () => void;
@@ -442,7 +442,10 @@ export default class OncoprintControls extends React.Component<
                     this.props.handlers.onClickDownload('jupyterNoteBook');
                 break;
             case EVENT_KEY.viewNGCHM:
-                if (this.props.state.ngchmButtonActive) {
+                if (
+                    this.props.state.ngchmButtonActive &&
+                    this.props.handlers.onClickNGCHM
+                ) {
                     this.showConfirmNgchmModal = true;
                 }
                 break;
