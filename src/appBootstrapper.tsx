@@ -336,7 +336,7 @@ async function loadCustomJs() {
     return Promise.all(
         Object.values(customJsFiles).map(
             (customJsFileUrl: string) =>
-                new Promise((resolve, reject) => {
+                new Promise<void>((resolve, reject) => {
                     load(customJsFileUrl, (err: any) => {
                         if (err) {
                             reject(err);
