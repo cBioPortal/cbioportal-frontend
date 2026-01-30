@@ -1274,11 +1274,13 @@ export default class OncoprintControls extends React.Component<
                     <this.DownloadMenu />
                     <this.HorzZoomControls />
                     {this.minimapButton}
-                    <ConfirmNgchmModal
-                        show={this.showConfirmNgchmModal}
-                        onHide={() => (this.showConfirmNgchmModal = false)}
-                        openNgchmWindow={this.props.handlers.onClickNGCHM}
-                    />
+                    {this.props.handlers.onClickNGCHM && (
+                        <ConfirmNgchmModal
+                            show={this.showConfirmNgchmModal}
+                            onHide={() => (this.showConfirmNgchmModal = false)}
+                            openNgchmWindow={this.props.handlers.onClickNGCHM}
+                        />
+                    )}
                 </ButtonGroup>
             </div>
         );
