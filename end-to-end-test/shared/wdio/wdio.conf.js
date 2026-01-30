@@ -17,7 +17,7 @@ const defaultTimeoutInterval = 180000;
 const resultsDir = process.env.JUNIT_REPORT_PATH || './shared/results/';
 
 const chromedriverCustomPath =
-    process.env.CHROMEDRIVER_CUSTOM_PATH || '/opt/homebrew/bin/chromedriver';
+    process.env.CHROMEDRIVER_CUSTOM_PATH || require('chromedriver').path;
 
 const retries = 1;
 
@@ -29,6 +29,9 @@ screenshotRoot = screenshotRoot.replace(/\/$/, '');
 const chromeArgs = [
     '--disable-composited-antialiasing',
     '--allow-insecure-localhost',
+    '--ignore-certificate-errors',
+    '--ignore-certificate-errors-spki-list',
+    '--disable-web-security',
     '--window-size=1600,1000',
 ].concat(
     (function() {
@@ -358,7 +361,7 @@ exports.config = {
         ],
     ],
 
-    //port: 58508,
+    // port: 54472,
 
     // Framework you want to run your specs with.
     // The following are supported: Mocha, Jasmine, and Cucumber

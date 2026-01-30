@@ -394,7 +394,7 @@ var config = {
             },
         },
         server: 'https',
-        host: 'localhost',
+        host: devHost,
         headers: { 'Access-Control-Allow-Origin': '*' },
         allowedHosts: 'all',
         devMiddleware: {
