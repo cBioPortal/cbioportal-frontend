@@ -204,6 +204,17 @@ jobs:
             cd cbioportal-frontend
             yarn run checkIncorrectImportStatements
 
+  check_typescript:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: /tmp/repo
+      - run:
+          name: "Run TypeScript type checking"
+          command: |
+            cd cbioportal-frontend
+            yarn run checkTS
+
   e2e_tests:
     machine:
       image: ubuntu-2204:2024.08.1
@@ -467,6 +478,9 @@ workflows:
       - unit_tests_main:
           requires:
             - build_frontend
+      - check_typescript:
+          requires:
+            - checkout
 
 
   nightly:
