@@ -276,6 +276,7 @@ jobs:
     working_directory: /tmp/repo
     environment:
       BRANCH_ENV: master
+      TRANSPILE_ONLY: true
     steps:
       - attach_workspace:
           at: /tmp/repo
