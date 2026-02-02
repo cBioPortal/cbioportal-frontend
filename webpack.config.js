@@ -63,6 +63,12 @@ const imgPath = 'reactapp/images/[hash].[ext]';
 
 const babelCacheFolder = process.env.BABEL_CACHE_FOLDER || false;
 
+console.log(`process.env.TRANSPILE_ONLY`, process.env.TRANSPILE_ONLY);
+
+let transpileOnly = process.env.TRANSPILE_ONLY;
+
+transpileOnly = true;
+
 // we don't need sourcemaps on circleci
 const sourceMap = process.env.DISABLE_SOURCEMAP ? false : 'source-map';
 
@@ -212,7 +218,7 @@ var config = {
                     {
                         loader: 'ts-loader',
                         options: {
-                            transpileOnly: false,
+                            transpileOnly: transpileOnly === true,
                         },
                     },
                 ],
