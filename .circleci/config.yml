@@ -218,7 +218,7 @@ jobs:
   e2e_tests:
     machine:
       image: ubuntu-2204:2024.08.1
-    resource_class: large
+    resource_class: xlarge
     working_directory: /tmp/repo
     environment:
       MANUAL_TRIGGER_BRANCH_ENV: << pipeline.parameters.manual_trigger_branch_env >>
@@ -284,6 +284,7 @@ jobs:
 
   build_frontend:
     <<: *defaults
+    resource_class: xlarge
     working_directory: /tmp/repo
     environment:
       BRANCH_ENV: master
@@ -343,7 +344,7 @@ jobs:
   e2e_localdb_tests:
     machine:
       image: ubuntu-2204:2024.08.1
-    resource_class: large
+    resource_class: xlarge
     working_directory: /tmp/repo
     environment:
       BACKEND_PORT: 8080
