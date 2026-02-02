@@ -26,6 +26,7 @@
     "buildMain": "yarn run clean && yarn run compileOqlParser && yarn run buildDLL:prod && cross-env NODE_ENV=production NODE_OPTIONS=--openssl-legacy-provider --max-old-space-size=4096 webpack",
     "buildModules": "lerna run build --ignore=cbioportal-frontend --stream",
     "publishModules": "lerna publish from-git --yes",
+    "checkTS": "npx tsc --noEmit --skipLibCheck; for config in packages/*/tsconfig.json; do echo \"Checking $config\"; npx tsc --noEmit --skipLibCheck -p \"$config\"; done",
     "buildDLL:prod": "yarn run clean && cross-env NODE_ENV=production webpack --config vendor-bundles.webpack.config.js",
     "buildDLL:dev": "yarn run clean && cross-env NODE_ENV=development webpack --config vendor-bundles.webpack.config.js",
     "build:size": "yarn run clean && yarn run buildDLL:prod && cross-env NODE_ENV=production webpack --json > stats.json",
