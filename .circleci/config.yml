@@ -480,7 +480,7 @@ workflows:
             - build_frontend
       - check_typescript:
           requires:
-            - checkout
+            - build_frontend
 
 
   nightly:
