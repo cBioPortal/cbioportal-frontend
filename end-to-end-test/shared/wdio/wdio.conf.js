@@ -26,6 +26,11 @@ let screenshotRoot = process.env.SCREENSHOT_DIRECTORY;
 // correct if screenshot directory has trailing slash
 screenshotRoot = screenshotRoot.replace(/\/$/, '');
 
+let headless =
+    process.env.HEADLESS_CHROME === true || process.env.HEADLESS_CHROME == true;
+
+headless = true;
+
 const chromeArgs = [
     '--disable-composited-antialiasing',
     '--allow-insecure-localhost',
@@ -35,10 +40,7 @@ const chromeArgs = [
     '--window-size=1600,1000',
 ].concat(
     (function() {
-        return process.env.HEADLESS_CHROME === 'true' ||
-            process.env.HEADLESS_CHROME == true
-            ? ['--headless=true', '--no-sandbox']
-            : [];
+        return headless ? ['--headless=true', '--no-sandbox'] : [];
     })()
 );
 
