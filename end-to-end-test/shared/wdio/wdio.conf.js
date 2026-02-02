@@ -192,6 +192,24 @@ function saveErrorImage(
         const img = `${errorDir}${title}.png`;
         console.log('ERROR SHOT PATH: ' + img);
         browser.saveScreenshot(img);
+
+        // log failed network requests
+        if (Object.keys(networkLog).length) {
+            const errorLogs = Object.values(networkLog).filter(
+                log => !log.status || log.status >= 400
+            );
+            if (errorLogs.length) {
+                console.log(`[network] Failed requests for '${title}':`);
+                for (const log of errorLogs) {
+                    console.log(
+                        `[network] ${log.status ?? '-'} ${log.type ??
+                            '-'} (${log.duration?.toFixed(0) ?? '-'}ms) ${
+                            log.url
+                        }${log.errorText ? ` (${log.errorText})` : ''}`
+                    );
+                }
+            }
+        }
     }
 }
 
@@ -460,7 +478,86 @@ exports.config = {
      * @param {Array.<String>} specs        List of spec file paths that are to be run
      * @param {Object}         browser      instance of created browser/device session
      */
-    before: function(capabilities, specs) {},
+    before: async function(capabilities, specs) {
+        // clear network log
+        this.networkLog = {};
+
+        // Enable network tracking via Puppeteer CDP session
+        try {
+            const puppeteer = await browser.getPuppeteer();
+            const pages = await puppeteer.pages();
+            if (!pages.length) {
+                return;
+            }
+            const page = pages[0];
+            const cdpSession = await page.target().createCDPSession();
+            await cdpSession.send('Network.enable');
+
+            const requestData = {};
+
+            // capture url and start time
+            cdpSession.on('Network.requestWillBeSent', params => {
+                if (!['Document', 'XHR', 'Fetch'].includes(params.type)) return;
+                requestData[params.requestId] = {
+                    url: params.request.url,
+                    startTime: params.timestamp,
+                    type: params.type,
+                };
+            });
+
+            // capture status
+            cdpSession.on('Network.responseReceived', params => {
+                if (requestData[params.requestId]) {
+                    requestData[params.requestId].status =
+                        params.response.status;
+                }
+            });
+
+            // capture requests that fail before completion
+            cdpSession.on('Network.loadingFailed', params => {
+                if (requestData[params.requestId]) {
+                    const data = requestData[params.requestId];
+                    const duration =
+                        data.startTime != null
+                            ? (params.timestamp - data.startTime) * 1000
+                            : undefined;
+                    this.networkLog[params.requestId] = {
+                        url: data.url,
+                        status: null,
+                        type: data.type || null,
+                        duration: duration,
+                        errorText: params.errorText,
+                    };
+                    delete requestData[params.requestId];
+                }
+            });
+
+            // calculate duration
+            cdpSession.on('Network.loadingFinished', params => {
+                if (requestData[params.requestId]) {
+                    const data = requestData[params.requestId];
+                    const duration =
+                        data.startTime !== undefined && data.startTime !== null
+                            ? (params.timestamp - data.startTime) * 1000
+                            : undefined;
+
+                    this.networkLog[params.requestId] = {
+                        url: data.url,
+                        status: data.status,
+                        type: data.type,
+                        duration: duration,
+                    };
+
+                    delete requestData[params.requestId];
+                }
+            });
+        } catch (e) {
+            console.log(
+                '[network] CDP network tracking not available:',
+                e.message
+            );
+        }
+    },
     /**
      * Runs before a WebdriverIO command gets executed.
      * @param {String} commandName hook command name
