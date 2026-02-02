@@ -13,8 +13,6 @@ import { CSSProperties } from 'react';
 import { isPromiseLike } from 'cbioportal-utils';
 import juice from 'juice';
 
-const moo: string = 123;
-
 type ButtonSpec = {
     key: string;
     content: JSX.Element;
