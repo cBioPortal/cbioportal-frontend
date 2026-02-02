@@ -67,6 +67,8 @@ console.log(`process.env.TRANSPILE_ONLY`, process.env.TRANSPILE_ONLY);
 
 let transpileOnly = process.env.TRANSPILE_ONLY === 'true';
 
+console.log('transpileOnly', transpileOnly);
+
 // we don't need sourcemaps on circleci
 const sourceMap = process.env.DISABLE_SOURCEMAP ? false : 'source-map';
 
@@ -216,7 +218,7 @@ var config = {
                     {
                         loader: 'ts-loader',
                         options: {
-                            transpileOnly: false,
+                            transpileOnly: transpileOnly,
                         },
                     },
                 ],
