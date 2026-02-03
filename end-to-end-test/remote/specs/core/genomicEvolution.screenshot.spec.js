@@ -184,7 +184,7 @@ describe('Patient View Genomic Evolution tab screenshot tests', () => {
         assertScreenShotMatch(res);
     });
     it('pvge heatmap hide labels', async () => {
-        await clickElement('input[data-test="HeatmapTranspose"]');
+        await setCheckboxChecked(false, 'input[data-test="HeatmapTranspose"]');
         await browser.pause(2000); // give time to untranspose
 
         const res = await checkElementWithMouseDisabled(
