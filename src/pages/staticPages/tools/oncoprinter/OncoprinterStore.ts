@@ -1,5 +1,12 @@
 import { DriverAnnotationSettings } from '../../../../shared/alterationFiltering/AnnotationFilteringSettings';
-import { action, computed, makeObservable, observable } from 'mobx';
+import {
+    action,
+    computed,
+    makeObservable,
+    observable,
+    reaction,
+    runInAction,
+} from 'mobx';
 import { getServerConfig } from 'config/config';
 import {
     annotateGeneticTrackData,
@@ -82,9 +89,22 @@ export default class OncoprinterStore {
         };
     } = {};
 
+    @observable parsedGeneticInputLinesResult: {
+        error: any;
+        result: any[] | null;
+    } = { error: null, result: [] };
+    @observable isParsingGeneticInputLines: boolean = false;
+
     constructor() {
         makeObservable(this);
         this.initialize();
+
+        reaction(
+            () => this._geneticDataInput,
+            () => {
+                this._getParsedGeneticInput();
+            }
+        );
 
         const clinicalTracksColorConfig = localStorage.getItem(
             ONCOPRINTER_COLOR_CONFIG
@@ -221,25 +241,48 @@ export default class OncoprinterStore {
         if (this._studyIds) return JSON.parse(this._studyIds);
     }
 
-    @computed get parsedGeneticInputLines() {
-        if (!this._geneticDataInput) {
+    @computed
+    get parsedGeneticInputLines() {
+        if (!this._geneticDataInput || this.isParsingGeneticInputLines) {
             return {
                 error: null,
                 result: [],
             };
         }
+        return this.parsedGeneticInputLinesResult;
+    }
+    @action
+    async _getParsedGeneticInput() {
+        if (this.isParsingGeneticInputLines) return;
 
-        const parsed = parseGeneticInput(this._geneticDataInput);
-        if (!parsed.parseSuccess) {
-            return {
-                error: parsed.error,
+        runInAction(() => {
+            this.isParsingGeneticInputLines = true;
+        });
+
+        try {
+            const parsed = await parseGeneticInput(
+                this._geneticDataInput ?? ''
+            );
+            if (!parsed.parseSuccess) {
+                this.parsedGeneticInputLinesResult = {
+                    error: parsed.error,
+                    result: null,
+                };
+            } else {
+                this.parsedGeneticInputLinesResult = {
+                    error: null,
+                    result: parsed.result,
+                };
+            }
+        } catch (error) {
+            this.parsedGeneticInputLinesResult = {
+                error: error,
                 result: null,
             };
-        } else {
-            return {
-                error: null,
-                result: parsed.result,
-            };
+        } finally {
+            runInAction(() => {
+                this.isParsingGeneticInputLines = false;
+            });
         }
     }
 
