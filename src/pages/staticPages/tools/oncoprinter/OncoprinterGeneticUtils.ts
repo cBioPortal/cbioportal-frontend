@@ -398,17 +398,14 @@ export function makeGeneticTrackDatum_Data(
             break;
         case OncoprintMutationTypeEnum.STRUCTURAL_VARIANT:
             // Parse fusion partner genes from combined gene symbol (e.g., "BAP1-TCEA3")
-            const geneSymbol = oncoprinterInputLine.hugoGeneSymbol;
-            const geneParts = geneSymbol.includes('-')
-                ? geneSymbol.split('-')
-                : [geneSymbol];
+            const geneParts = oncoprinterInputLine.hugoGeneSymbol.split('-');
             ret = Object.assign(ret, {
                 molecularProfileAlterationType:
                     AlterationTypeConstants.STRUCTURAL_VARIANT,
                 mutationType: 'structuralVariant',
                 variantClass: 'FUSION',
-                site1HugoSymbol: geneParts[0] || '',
-                site2HugoSymbol: geneParts[1] || '',
+                site1HugoSymbol: geneParts[0] ?? '',
+                site2HugoSymbol: geneParts[1] ?? '',
             });
             break;
         case OncoprintMutationTypeEnum.PROMOTER:
