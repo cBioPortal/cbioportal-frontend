@@ -15,7 +15,7 @@ export function loadCustomTabDeps(tab: any) {
     if (tab.pathsToJs) {
         const proms: Promise<any>[] = [];
         tab.pathsToJs.forEach((str: string) => {
-            const p = new Promise(function(resolve, reject) {
+            const p = new Promise<void>(function(resolve, reject) {
                 load(str, (err: any) => {
                     if (err) {
                         reject(err);
