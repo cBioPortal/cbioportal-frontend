@@ -360,6 +360,7 @@
     "es-abstract": "1.18.0-next.2",
     "expect": "^1.20.2",
     "expect-jsx": "5.0.0",
+    "glob": "7.2.0",
     "http-server": "0.11.1",
     "identity-obj-proxy": "^3.0.0",
     "jasmine-core": "^3.9.0",
