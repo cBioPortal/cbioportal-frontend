@@ -69,7 +69,7 @@ export default class TableHeaderControls extends React.Component<
     ITableHeaderControlsProps,
     {}
 > {
-    private searchTimeout: any;
+    private searchTimeout: number | null;
 
     private _copyButton: HTMLElement;
 

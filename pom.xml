@@ -51,8 +51,8 @@
                         </goals>
 
                         <configuration>
-                            <nodeVersion>v22.18.0</nodeVersion>
-                            <yarnVersion>v1.22.22</yarnVersion>
+                            <nodeVersion>v15.2.1</nodeVersion>
+                            <yarnVersion>v1.22.5</yarnVersion>
                         </configuration>
 
                         <!-- optional: default phase is "generate-resources" -->

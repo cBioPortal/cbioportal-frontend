@@ -13,7 +13,6 @@ const {
     waitForElementDisplayed,
     clickElement,
     getNthElements,
-    waitForNetworkQuiet,
 } = require('../../shared/specUtils_Async');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
@@ -246,9 +245,11 @@ describe('hide download controls feature', function() {
             describe('comparison/survival', () => {
                 before(async () => {
                     await clickElement('.tabAnchor_comparison');
-                    await waitForNetworkQuiet();
                 });
                 it('covers all tabs with download control tests', async () => {
+                    await (
+                        await getElement('.tabAnchor_overlap')
+                    ).waitForExist();
                     const expectedTabNames = [
                         'Overlap',
                         'Survival',
@@ -489,7 +490,7 @@ describe('hide download controls feature', function() {
                 await waitForTabs(expectedTabNames.length);
             });
             it('covers all tabs with download control tests', async () => {
-                const tabElements = await $$('.tabAnchor');
+                const tabElements = $$('.tabAnchor');
                 const displayedTabs = await Promise.all(
                     tabElements.map(async a =>
                         (await a.isDisplayed()) ? a : null
@@ -709,6 +710,7 @@ describe('hide download controls feature', function() {
                 await openGroupComparison(
                     `${CBIOPORTAL_URL}/study/summary?id=study_es_0`,
                     'chart-container-OS_STATUS',
+                    true,
                     30000
                 );
                 await openAndSetProperty(await browser.getUrl(), {
@@ -716,10 +718,10 @@ describe('hide download controls feature', function() {
                 });
                 await waitForTabs(expectedTabNames.length);
             });
-            it('covers all tabs with download control tests', async () => {
-                const observedTabNames = await $$('.tabAnchor')
-                    .filter(async a => await a.isDisplayed())
-                    .map(async a => await a.getText());
+            it('covers all tabs with download control tests', () => {
+                const observedTabNames = $$('.tabAnchor')
+                    .filter(a => a.isDisplayed())
+                    .map(a => a.getText());
                 assert.deepStrictEqual(
                     expectedTabNames,
                     observedTabNames,
@@ -778,12 +780,9 @@ describe('hide download controls feature', function() {
             describe('mRNA tab', () => {
                 it('global check for icon and occurrence of "Download" as a word', async () => {
                     await clickElement('.tabAnchor_mrna');
-                    await getElement(
-                        '[data-test=GroupComparisonMRNAEnrichments]',
-                        {
-                            waitForExist: true,
-                        }
-                    );
+                    getElement('[data-test=GroupComparisonMRNAEnrichments]', {
+                        waitForExist: true,
+                    });
                     await (
                         await getNthElements(
                             '[data-test=GroupComparisonMRNAEnrichments] tbody tr b',

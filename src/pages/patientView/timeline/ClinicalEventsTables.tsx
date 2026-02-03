@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { ClinicalEvent } from 'cbioportal-ts-api-client';
-import { groupTimelineData } from 'pages/patientView/timeline/timelineDataUtils';
+import { groupTimelineData } from 'pages/patientView/timeline/timelineDataUtils.ts';
 import LazyMobXTable from 'shared/components/lazyMobXTable/LazyMobXTable';
 import _ from 'lodash';
 import { DownloadControlOption } from 'cbioportal-frontend-commons';

@@ -336,7 +336,7 @@ async function loadCustomJs() {
     return Promise.all(
         Object.values(customJsFiles).map(
             (customJsFileUrl: string) =>
-                new Promise<void>((resolve, reject) => {
+                new Promise((resolve, reject) => {
                     load(customJsFileUrl, (err: any) => {
                         if (err) {
                             reject(err);
@@ -370,6 +370,15 @@ $(document).ready(async () => {
     initializeAPIClients();
 
     initializeAppStore(stores.appStore);
+
+    // if (
+    //     ['genie-public-portal', 'public-portal'].includes(
+    //         stores.appStore.serverConfig.app_name!
+    //     ) &&
+    //     !isWebdriver()
+    // ) {
+    //     enableDataDogTracking(stores.appStore);
+    // }
 
     await loadCustomJs();
 

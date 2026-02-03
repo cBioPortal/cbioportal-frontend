@@ -309,9 +309,7 @@ describe('patient view page', function() {
         });
 
         it('toggles gene panel modal from patient header', async () => {
-            await (
-                await $('[data-test="patientSamplesClinicalSpans"] svg')
-            ).moveTo();
+            await (await $('.patientSamples .clinical-spans svg')).moveTo();
 
             await clickOnGenePanelLinks();
 

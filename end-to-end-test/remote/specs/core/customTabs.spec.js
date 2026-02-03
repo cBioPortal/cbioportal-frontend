@@ -42,7 +42,7 @@ const customTabBase = location => {
 
 const goToUrlWithCustomTabConfig = async (url, custom_tabs) => {
     await browser.url(`${CBIOPORTAL_URL}/blank`);
-    await setServerConfiguration({ custom_tabs });
+    setServerConfiguration({ custom_tabs });
     await goToUrlAndSetLocalStorage(url);
 };
 

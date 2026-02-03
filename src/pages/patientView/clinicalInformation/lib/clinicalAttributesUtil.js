@@ -255,9 +255,9 @@ function getSpanElementsFromCleanData(clinicalAttributesCleanDerived) {
                     color: styleConsts.calculateColor(value, key, config),
                 }}
             >
-                <span style={{ color: '#333333' }}>{prefix}</span>
+                <span class="dark-comma">{prefix}</span>
                 {middle}
-                <span style={{ color: '#333333' }}>{suffix}</span>
+                <span class="dark-comma">{suffix}</span>
             </span>
         );
     });

@@ -8,7 +8,7 @@ import withContext from 'recompose/withContext';
 function createValidator<O>(
     classDef: new (...args: any[]) => any
 ): React.Validator<O> {
-    return function validator<T extends object>(
+    return function validator<T>(
         object: T,
         key: string,
         componentName: string

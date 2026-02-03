@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { fromPairs } from 'lodash';
+import { OverlayTrigger, Popover } from 'react-bootstrap';
 
 import ClinicalInformationPatientTable from '../clinicalInformation/ClinicalInformationPatientTable';
 import { getSpanElements } from '../clinicalInformation/lib/clinicalAttributesUtil.js';
@@ -8,8 +9,6 @@ import {
     placeArrowBottomLeft,
 } from 'cbioportal-frontend-commons';
 import SampleManager from '../SampleManager';
-
-import styles from './style/clinicalAttributes.module.scss';
 
 export type IPatientHeaderProps = {
     patient: any;
@@ -109,10 +108,7 @@ export default class PatientHeader extends React.Component<
                     destroyTooltipOnHide={true}
                     onPopupAlign={placeArrowBottomLeft}
                 >
-                    <span
-                        className={styles['clinical-spans']}
-                        id="patient-attributes"
-                    >
+                    <span className="clinical-spans" id="patient-attributes">
                         <a
                             href="javascript:void(0)"
                             onClick={() =>

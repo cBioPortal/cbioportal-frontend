@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { CancerStudy } from 'cbioportal-ts-api-client';
-import styles_any from './styles.module.scss';
+import * as styles_any from './styles.module.scss';
 import classNames from 'classnames';
 import FontAwesome from 'react-fontawesome';
 import LabeledCheckbox from '../../labeledCheckbox/LabeledCheckbox';

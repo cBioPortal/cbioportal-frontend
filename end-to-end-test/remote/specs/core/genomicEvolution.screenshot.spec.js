@@ -24,7 +24,7 @@ describe('Patient View Genomic Evolution tab screenshot tests', () => {
             timeout: 20000,
         });
         await clickElement('a.tabAnchor_lineChart');
-        //await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
+        await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
         await (
             await getElement('[data-test=VAFChartWrapper]')
         ).waitForDisplayed({ timeout: 5000 });
@@ -74,7 +74,7 @@ describe('Patient View Genomic Evolution tab screenshot tests', () => {
 
     it('pvge switch to sequential mode', async () => {
         await setCheckboxChecked(true, 'input[data-test="VAFSequentialMode"]');
-        //await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
+        await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
         const res = await browser.checkElement('[data-test=VAFChartWrapper]');
         assertScreenShotMatch(res);
     });
@@ -82,13 +82,13 @@ describe('Patient View Genomic Evolution tab screenshot tests', () => {
     it('pvge only show highlighted in line chart', async () => {
         await setCheckboxChecked(false, 'input[data-test="VAFSequentialMode"]');
         await setCheckboxChecked(true, 'input[data-test="VAFOnlyHighlighted"]');
-        //await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
+        await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
         const res = await browser.checkElement('[data-test=VAFChartWrapper]');
         assertScreenShotMatch(res);
     });
     it('pvge line chart log scale', async () => {
         await setCheckboxChecked(true, 'input[data-test="VAFLogScale"]');
-        //await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
+        await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
 
         const res = await browser.checkElement('[data-test=VAFChartWrapper]');
         assertScreenShotMatch(res);
@@ -103,7 +103,7 @@ describe('Patient View Genomic Evolution tab screenshot tests', () => {
         await clickElement(
             'div[data-test="GenomicEvolutionMutationTable"] table tbody > tr:nth-child(2)'
         );
-        //await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
+        await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
         const res = await browser.checkElement('[data-test=VAFChartWrapper]');
         assertScreenShotMatch(res);
     });
@@ -132,14 +132,11 @@ describe('Patient View Genomic Evolution tab screenshot tests', () => {
         assertScreenShotMatch(res);
     });
     it('pvge hover a mutation with heatmap', async () => {
-        const el = await getElement(
-            'div[data-test="GenomicEvolutionMutationTable"] table tbody > tr:nth-child(9)'
-        );
-
-        await el.scrollIntoView();
-
-        await el.moveTo();
-
+        await (
+            await getElement(
+                'div[data-test="GenomicEvolutionMutationTable"] table tbody > tr:nth-child(9)'
+            )
+        ).moveTo();
         const res = await browser.checkElement(
             'div[data-test="GenomicEvolutionTab"]',
             '',

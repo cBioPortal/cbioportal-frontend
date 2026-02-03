@@ -1,5 +1,5 @@
 import * as request from 'superagent';
-import { ITrial, ITrialMatch } from 'shared/model/MatchMiner';
+import { ITrial, ITrialMatch } from 'shared/model/MatchMiner.ts';
 import { buildCBioPortalAPIUrl } from './urls';
 
 /**

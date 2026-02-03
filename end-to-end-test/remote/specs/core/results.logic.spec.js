@@ -264,7 +264,7 @@ describe('case set selection in modify query form', function() {
     const selectedCaseSet_sel =
         'div[data-test="CaseSetSelector"] span.Select-value-label[aria-selected="true"]';
 
-    //this.retries(2);
+    this.retries(2);
 
     beforeEach(async function() {
         const url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_rppa&gene_list=KRAS%2520NRAS%2520BRAF&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`;
@@ -554,7 +554,7 @@ describe('genetic profile selection in modify query form', () => {
 });
 
 describe('invalid query from url', function() {
-    //this.retries(1);
+    this.retries(1);
 
     it('show invalid query alert when url contains invalid gene', async () => {
         //go to cbioportal with a url that contains an invalid gene symbol RB:
@@ -574,9 +574,9 @@ describe('invalid query from url', function() {
         // correct to valid gene symbol RB1
         await (await getElement('[data-test="geneSet"]')).setValue('RB1');
 
-        await $('[data-test="queryButton"]').waitForEnabled();
-
-        await clickElement('[data-test="queryButton"]', { timeout: 15000 });
+        await getElement('[data-test="queryButton"]', { timeout: 15000 });
+        await clickElement('[data-test="queryButton"]');
+        await browser.pause(2000);
 
         await (await getElement('#modifyQueryBtn')).waitForExist({
             timeout: 6000,

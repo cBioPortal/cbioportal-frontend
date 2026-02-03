@@ -16,45 +16,37 @@ const defaultTimeoutInterval = 180000;
 
 const resultsDir = process.env.JUNIT_REPORT_PATH || './shared/results/';
 
-const chromedriverCustomPath =
-    process.env.CHROMEDRIVER_CUSTOM_PATH || require('chromedriver').path;
-
-const retries = 1;
+const retries = process.env.RETRIES || 2;
 
 let screenshotRoot = process.env.SCREENSHOT_DIRECTORY;
 
 // correct if screenshot directory has trailing slash
 screenshotRoot = screenshotRoot.replace(/\/$/, '');
 
-let headless = process.env.HEADLESS_CHROME === 'true';
-
-console.log('headless var', headless);
-
 const chromeArgs = [
     '--disable-composited-antialiasing',
     '--allow-insecure-localhost',
-    '--ignore-certificate-errors',
-    '--ignore-certificate-errors-spki-list',
-    '--disable-web-security',
-    '--window-size=1600,1000',
 ].concat(
     (function() {
-        return headless ? ['--headless=true', '--no-sandbox'] : [];
+        return process.env.HEADLESS_CHROME === 'true'
+            ? [
+                  '--headless',
+                  '--no-sandbox',
+                  '--disable-setuid-sandbox',
+                  '--in-process-gpu',
+                  '--use-gl=angle',
+              ]
+            : [];
     })()
 );
-
-console.log(`chrome args: ${chromeArgs}`);
 
 var diffDir = path.join(process.cwd(), `${screenshotRoot}/diff/`);
 var refDir = path.join(process.cwd(), `${screenshotRoot}/reference/`);
 var screenDir = path.join(process.cwd(), `${screenshotRoot}/screen/`);
-
-var errorDir = path.join(process.cwd(), `${screenshotRoot}/errors/`);
+var errorDir =
+    (process.env.JUNIT_REPORT_PATH || './shared/results/') + 'errors/';
 
 console.log(`TEST TYPE: ${TEST_TYPE}`);
-
-console.log(`HEADLESS_CHROME: ${process.env.HEADLESS_CHROME}`);
-console.log(`HEADLESS_CHROME TYPE: ${typeof process.env.HEADLESS_CHROME}`);
 
 console.log(`ENV SCREENSHOT_DIRECTORY: ${process.env.SCREENSHOT_DIRECTORY}`);
 console.log(`ENV JUNIT_REPORT_PATH PATH: ${process.env.JUNIT_REPORT_PATH}`);
@@ -186,30 +178,23 @@ function saveErrorImage(
 ) {
     if (error) {
         if (!fs.existsSync(errorDir)) {
-            fs.mkdirSync(errorDir, 0o755);
+            fs.mkdirSync(errorDir, 0744);
         }
         const title = test.title.trim().replace(/\s/g, '_');
         const img = `${errorDir}${title}.png`;
         console.log('ERROR SHOT PATH: ' + img);
         browser.saveScreenshot(img);
 
-        // log failed network requests
-        if (Object.keys(networkLog).length) {
-            const errorLogs = Object.values(networkLog).filter(
-                log => !log.status || log.status >= 400
-            );
-            if (errorLogs.length) {
-                console.log(`[network] Failed requests for '${title}':`);
-                for (const log of errorLogs) {
-                    console.log(
-                        `[network] ${log.status ?? '-'} ${log.type ??
-                            '-'} (${log.duration?.toFixed(0) ?? '-'}ms) ${
-                            log.url
-                        }${log.errorText ? ` (${log.errorText})` : ''}`
-                    );
-                }
-            }
-        }
+        networkLog[title.trim()] = browser.execute(function() {
+            Object.keys(window.ajaxRequests).forEach(key => {
+                window.ajaxRequests[key].end = Date.now();
+                window.ajaxRequests[key].duration =
+                    window.ajaxRequests[key].end -
+                    window.ajaxRequests[key].started;
+            });
+
+            return JSON.stringify(window.ajaxRequests);
+        });
     }
 }
 
@@ -233,9 +218,6 @@ SPEC_FILE_PATTERN = SPEC_FILE_PATTERN.includes('/')
     ? SPEC_FILE_PATTERN
     : `${TEST_TYPE}/specs/**/${SPEC_FILE_PATTERN}`;
 
-console.log(`ENV SPEC_FILE_PATTERN: ` + process.env.SPEC_FILE_PATTERN);
-console.log(`active spec file pattern: ` + SPEC_FILE_PATTERN);
-
 exports.config = {
     //
     // ====================
@@ -257,15 +239,11 @@ exports.config = {
     //
 
     specs: [SPEC_FILE_PATTERN],
-    //specs: ['./local/specs/core/oncoprint.screenshot.spec.js'],
 
-    //exclude: ['./remote/specs/core/groupComparisonLollipop.spec.js'],
+    exclude: ['./local/specs/web-tour.spec.js'],
 
     // Patterns to exclude.
-    exclude: [
-        './local/specs/gsva.screenshot.spec.js',
-        './local/specs/gsva.spec.js',
-    ],
+    //exclude: ['./local/specs/web-tour.spec.js'],
     //
     // ============
     // Capabilities
@@ -275,14 +253,14 @@ exports.config = {
     // sessions. Within your capabilities you can overwrite the spec and exclude options in
     // order to group specific specs to a specific capability.
     //
-    // First, you can define how mfany instances should be started at the same time. Let's
+    // First, you can define how many instances should be started at the same time. Let's
     // say you have 3 different capabilities (Chrome, Firefox, and Safari) and you have
     // set maxInstances to 1; wdio will spawn 3 processes. Therefore, if you have 10 spec
     // files and you set maxInstances to 10, all spec files will get tested at the same time
     // and 30 processes will get spawned. The property handles how many capabilities
     // from the same test should run tests.
     //
-    maxInstances: 2,
+    maxInstances: debug ? 1 : defaultMaxInstances,
     //
     // If you have trouble getting all important capabilities together, check out the
     // Sauce Labs platform configurator - a great tool to configure your capabilities:
@@ -293,12 +271,12 @@ exports.config = {
             // maxInstances can get overwritten per capability. So if you have an in-house Selenium
             // grid with only 5 firefox instances available you can make sure that not more than
             // 5 instances get started at a time.
+            maxInstances: 5,
             //
             browserName: 'chrome',
             'goog:chromeOptions': {
                 args: chromeArgs,
             },
-            'goog:loggingPrefs': { browser: 'SEVERE' },
             acceptInsecureCerts: true,
             //acceptSslCerts: true,
             // If outputDir is provided WebdriverIO can capture driver session logs
@@ -356,32 +334,49 @@ exports.config = {
     // Services take over a specific job you don't want to take care of. They enhance
     // your test setup with almost no effort. Unlike plugins, they don't add new
     // commands. Instead, they hook themselves up into the test process.
-
-    //automationProtocol: 'devtools',
-
     services: [
-        [
-            'chromedriver',
-            {
-                logLevel: 'info',
-                outputDir: './driver-logs',
-                chromedriverCustomPath,
-            },
-        ],
-        // ['devtools'],
         [
             'novus-visual-regression',
             {
                 compare: LocalCompare,
                 viewportChangePause: 300,
                 viewports: [{ width: 1600, height: 1000 }],
-                orientations: ['landscape'],
-                after: () => {},
+                orientations: ['landscape', 'portrait'],
             },
         ],
     ],
 
-    // port: 54472,
+    //port: 53171,
+    // FROM OLD webdriver config
+    // capabilities: [
+    //     {
+    //         //browserName: 'chrome',
+    //         chromeOptions: {
+    //             args: [
+    //                 '--disable-composited-antialiasing',
+    //                 '--allow-insecure-localhost',
+    //             ],
+    //         },
+    //
+    //         os: 'OS X',
+    //         os_version: 'High Sierra',
+    //         browser: 'Chrome',
+    //         browser_version: '74.0 beta',
+    //         resolution: '1600x1200',
+    //     },
+    // ],
+    //
+    // IECapabilties: [
+    //     {
+    //         os: 'Windows',
+    //         os_version: '10',
+    //         browser: 'IE',
+    //         browser_version: '11.0',
+    //         'browserstack.selenium_version': '3.5.2',
+    //         resolution: '1600x1200',
+    //         'browserstack.local': true,
+    //     },
+    // ],
 
     // Framework you want to run your specs with.
     // The following are supported: Mocha, Jasmine, and Cucumber
@@ -478,86 +473,7 @@ exports.config = {
      * @param {Array.<String>} specs        List of spec file paths that are to be run
      * @param {Object}         browser      instance of created browser/device session
      */
-    before: async function(capabilities, specs) {
-        // clear network log
-        this.networkLog = {};
-
-        // Enable network tracking via Puppeteer CDP session
-        try {
-            const puppeteer = await browser.getPuppeteer();
-            const pages = await puppeteer.pages();
-            if (!pages.length) {
-                return;
-            }
-            const page = pages[0];
-            const cdpSession = await page.target().createCDPSession();
-            await cdpSession.send('Network.enable');
-
-            const requestData = {};
-
-            // capture url and start time
-            cdpSession.on('Network.requestWillBeSent', params => {
-                if (!['Document', 'XHR', 'Fetch'].includes(params.type)) return;
-                requestData[params.requestId] = {
-                    url: params.request.url,
-                    startTime: params.timestamp,
-                    type: params.type,
-                };
-            });
-
-            // capture status
-            cdpSession.on('Network.responseReceived', params => {
-                if (requestData[params.requestId]) {
-                    requestData[params.requestId].status =
-                        params.response.status;
-                }
-            });
-
-            // capture requests that fail before completion
-            cdpSession.on('Network.loadingFailed', params => {
-                if (requestData[params.requestId]) {
-                    const data = requestData[params.requestId];
-                    const duration =
-                        data.startTime != null
-                            ? (params.timestamp - data.startTime) * 1000
-                            : undefined;
-                    this.networkLog[params.requestId] = {
-                        url: data.url,
-                        status: null,
-                        type: data.type || null,
-                        duration: duration,
-                        errorText: params.errorText,
-                    };
-                    delete requestData[params.requestId];
-                }
-            });
-
-            // calculate duration
-            cdpSession.on('Network.loadingFinished', params => {
-                if (requestData[params.requestId]) {
-                    const data = requestData[params.requestId];
-                    const duration =
-                        data.startTime !== undefined && data.startTime !== null
-                            ? (params.timestamp - data.startTime) * 1000
-                            : undefined;
-
-                    this.networkLog[params.requestId] = {
-                        url: data.url,
-                        status: data.status,
-                        type: data.type,
-                        duration: duration,
-                    };
-
-                    delete requestData[params.requestId];
-                }
-            });
-        } catch (e) {
-            console.log(
-                '[network] CDP network tracking not available:',
-                e.message
-            );
-        }
-    },
+    before: function(capabilities, specs) {},
     /**
      * Runs before a WebdriverIO command gets executed.
      * @param {String} commandName hook command name

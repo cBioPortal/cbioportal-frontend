@@ -23,7 +23,7 @@ describe('plots tab expression data with rule configuration', function() {
     before(async () => {
         await goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
-        await setServerConfiguration({
+        setServerConfiguration({
             enable_cross_study_expression: `
                 (studies)=>studies.filter(s=>/pan_can_atlas/.test(s.studyId) === false).length === 0
             `,
@@ -96,7 +96,7 @@ describe('plots tab expression data without rule configuration', function() {
     before(async () => {
         await goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
-        await setServerConfiguration({
+        setServerConfiguration({
             enable_cross_study_expression: undefined,
         });
     });
@@ -129,7 +129,7 @@ describe('expression data in query form', function() {
     beforeEach(async () => {
         await goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
-        await setServerConfiguration({
+        setServerConfiguration({
             enable_cross_study_expression: `
                 (studies)=>studies.filter(s=>/pan_can_atlas/.test(s.studyId) === false).length === 0
             `,
@@ -138,8 +138,8 @@ describe('expression data in query form', function() {
         await waitForNetworkQuiet();
     });
 
-    after(async () => {
-        await setServerConfiguration({});
+    after(() => {
+        setServerConfiguration({});
     });
 
     it('For single study with expression data, we can see expression data', async () => {
@@ -196,11 +196,10 @@ describe('cross study expression data without configuration rule', () => {
 describe('custom expression comparison rule', () => {
     beforeEach(async () => {
         await goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
-        await setServerConfiguration({
+        setServerConfiguration({
             enable_cross_study_expression:
                 '(studies)=>studies.filter(s=>/gbm_cptac_2021/.test(s.studyId)).length > 0',
         });
-        await browser.refresh();
     });
 
     it('with all pancan, expression NOT available', async () => {

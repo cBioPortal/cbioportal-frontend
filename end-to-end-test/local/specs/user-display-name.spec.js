@@ -17,7 +17,7 @@ describe('displays appropriate user name/email', function() {
             await getText(
                 '#dat-dropdown.btn-sm.dropdown-toggle.btn.btn-default'
             ),
-            'Logged in as ' + userEmailAddress
+            'Logged in as ' + userEmailAddress + ' '
         );
     });
 

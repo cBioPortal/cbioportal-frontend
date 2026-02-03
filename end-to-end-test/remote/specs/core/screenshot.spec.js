@@ -28,7 +28,7 @@ async function waitForAndCheckPlotsTab() {
 function runResultsTestSuite(prefix, options = {}) {
     it(`${prefix} render the oncoprint`, async function() {
         await waitForOncoprint();
-        //await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 }); // move mouse out of the way
+        await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 }); // move mouse out of the way
         browser.pause(100);
         const res = await checkElementWithMouseDisabled('.oncoprintContainer');
         assertScreenShotMatch(res);
@@ -70,9 +70,7 @@ function runResultsTestSuite(prefix, options = {}) {
 
     it(`${prefix} mutation tab`, async function() {
         await clickElement('a.tabAnchor_mutations');
-        await waitForElementDisplayed('div[data-test="LollipopPlot"]', {
-            timeout: 20000,
-        });
+        await waitForElementDisplayed('.borderedChart svg', { timeout: 20000 });
         const res = await browser.checkElement(
             '[data-test="mutationsTabDiv"]',
             ''
@@ -151,7 +149,7 @@ function runResultsTestSuite(prefix, options = {}) {
             await getElement('div[data-test="GroupComparisonMRNAEnrichments"]')
         ).waitForDisplayed();
         await clickElement(options.mrnaEnrichmentsRowSelector || 'b=ETV5');
-        //await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
+        await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
         await waitForElementDisplayed('div[data-test="MiniBoxPlot"]');
         const res = await browser.checkElement(
             'div[data-test="ComparisonTabDiv"]'
@@ -361,7 +359,7 @@ describe('enrichments tab screenshot tests', function() {
             'div[data-test="GroupComparisonMRNAEnrichments"]'
         );
         await clickElement('b=MERTK');
-        //await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
+        await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
         await waitForElementDisplayed('div[data-test="MiniBoxPlot"]');
 
         const res = await browser.checkElement(
