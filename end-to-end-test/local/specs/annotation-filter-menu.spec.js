@@ -603,6 +603,7 @@ describe('alteration filter menu', function() {
                         'button=Select Samples',
                     ])
                 ).click();
+                await waitForStudyView();
                 assert.deepStrictEqual(
                     await geneTableCounts('mutations-table'),
                     {
