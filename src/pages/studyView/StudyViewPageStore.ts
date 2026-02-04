@@ -186,6 +186,8 @@ import {
     transformSampleDataToSelectedSampleClinicalData,
     updateCustomIntervalFilter,
     invokeGenomicDataCount,
+    invokeGenomicDataCountIncludeSampleid,
+    groupSamplesByMutationStatus,
     invokeMutationDataCount,
     invokeNamespaceDataCount,
     invokeGenericAssayDataCount,
@@ -1635,6 +1637,79 @@ export class StudyViewPageStore
         });
     }
 
+    private createGeneSpecificComparisonSession(
+        chartMeta: ChartMeta,
+        clinicalAttributeValues: ClinicalDataCountSummary[],
+        statusCallback: (phase: LoadingPhase) => void
+    ): Promise<string> {
+        statusCallback(LoadingPhase.DOWNLOADING_GROUPS);
+
+        return new Promise<string>(resolve => {
+            onMobxPromise([this.selectedSamples], async () => {
+                const chartInfo = this._geneSpecificChartMap.get(
+                    chartMeta.uniqueKey
+                );
+                if (!chartInfo || !this.hasFilteredSamples) return;
+
+                const data: any[] = await invokeGenomicDataCountIncludeSampleid(
+                    chartInfo,
+                    this.filters,
+                    true
+                );
+
+                const lcValueToColor = _.keyBy(clinicalAttributeValues, d =>
+                    d.value.toLowerCase()
+                );
+
+                /**
+                 * Step 1:
+                 * Normalize counts into { group, sampleId } pairs
+                 */
+                const groupedSamples = groupSamplesByMutationStatus(data);
+
+                /**
+                 * Step 2:
+                 * Build SessionGroupData objects for each group, using the sample ids from step 1
+                 */
+                const groups: SessionGroupData[] = _.chain(
+                    clinicalAttributeValues
+                )
+                    .map(attrVal => {
+                        const sampleIds = groupedSamples[attrVal.value];
+                        if (!sampleIds?.length) return null;
+
+                        return getGroupParameters(
+                            attrVal.value,
+                            sampleIds.map(id => ({
+                                sampleId: id,
+                                studyId: this.studyIds[0],
+                            })),
+                            this.studyIds,
+                            lcValueToColor[attrVal.value.toLowerCase()]?.color
+                        );
+                    })
+                    .compact()
+                    .slice(
+                        0,
+                        doesChartHaveComparisonGroupsLimit(chartMeta)
+                            ? MAX_GROUPS_IN_SESSION
+                            : undefined
+                    )
+                    .value();
+
+                statusCallback(LoadingPhase.CREATING_SESSION);
+
+                const { id } = await comparisonClient.addComparisonSession({
+                    groups,
+                    clinicalAttributeName: chartMeta.displayName,
+                    origin: this.studyIds,
+                });
+
+                resolve(id);
+            });
+        });
+    }
+
     private createCnaGeneComparisonSession(
         chartMeta: ChartMeta,
         hugoGeneSymbols: string[],
@@ -2069,13 +2144,9 @@ export class StudyViewPageStore
                     chartMeta.uniqueKey
                 );
                 if (isGeneSpecificChart) {
-                    const chartInfo = this._geneSpecificChartMap.get(
-                        chartMeta.uniqueKey
-                    )!;
-
-                    comparisonId = await this.createCnaGeneComparisonSession(
+                    comparisonId = await this.createGeneSpecificComparisonSession(
                         chartMeta,
-                        [chartInfo.hugoGeneSymbol],
+                        params.clinicalAttributeValues!,
                         statusCallback
                     );
                 } else {

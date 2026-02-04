@@ -66,6 +66,7 @@ import {
     updateCustomIntervalFilter,
     updateGeneQuery,
     updateSavedUserPreferenceChartIds,
+    groupSamplesByMutationStatus,
 } from 'pages/studyView/StudyViewUtils';
 import {
     CancerStudy,
@@ -3653,6 +3654,69 @@ describe('StudyViewUtils', () => {
                 ] as VirtualStudy[]),
                 true
             );
+        });
+    });
+
+    describe('groupSamplesByMutationStatus', () => {
+        const data = [
+            {
+                counts: [
+                    {
+                        value: 'NOT_PROFILED',
+                        sampleIds: ['ignore_me_001'],
+                    },
+                ],
+            },
+            {
+                counts: [
+                    {
+                        value: 'Missense_Mutation',
+                        sampleIds: ['study_ABC_123', 'study_DEF_456'],
+                    },
+                ],
+            },
+            {
+                counts: [
+                    {
+                        value: 'NOT_MUTATED',
+                        sampleIds: ['study_GHI_789'],
+                    },
+                ],
+            },
+        ] as any;
+
+        it('groups and trims sample ids by mutation status correctly', () => {
+            const result = groupSamplesByMutationStatus(data);
+            assert.deepEqual(result, {
+                MUTATED: ['123', '456'],
+                NOT_MUTATED: ['789'],
+            });
+        });
+
+        it('handles missing or empty counts safely', () => {
+            const emptyData = [{}, { counts: [] }];
+            expect(groupSamplesByMutationStatus(emptyData)).toEqual({});
+        });
+
+        it('deduplicates sample IDs across mutation entries', () => {
+            const duplicateData = [
+                {
+                    counts: [
+                        {
+                            value: 'Missense_Mutation',
+                            sampleIds: ['study_X_001', 'study_X_002'],
+                        },
+                        {
+                            value: 'Nonsense_Mutation',
+                            sampleIds: ['study_X_001'],
+                        },
+                    ],
+                },
+            ];
+
+            expect(groupSamplesByMutationStatus(duplicateData)).toEqual({
+                MUTATED: ['001', '002'],
+            });
         });
     });
 
