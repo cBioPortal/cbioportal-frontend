@@ -51,6 +51,11 @@ export class AppStore {
 
     @observable.ref authMethod: string | undefined = undefined;
 
+    // AI Sidebar state
+    @observable aiSidebarVisible: boolean = false;
+    @observable aiSidebarWidth: number = 400;
+    @observable.ref currentConversationId: string | null = null;
+
     @computed get isLoggedIn() {
         return _.isString(this.userName) && this.userName !== 'anonymousUser';
     }
@@ -94,6 +99,21 @@ export class AppStore {
                 this.siteErrors.push(err);
             }
         }
+    }
+
+    @action
+    public toggleAiSidebar() {
+        this.aiSidebarVisible = !this.aiSidebarVisible;
+    }
+
+    @action
+    public setAiSidebarWidth(width: number) {
+        this.aiSidebarWidth = Math.max(300, Math.min(800, width));
+    }
+
+    @action
+    public setCurrentConversationId(id: string | null) {
+        this.currentConversationId = id;
     }
 
     @action
