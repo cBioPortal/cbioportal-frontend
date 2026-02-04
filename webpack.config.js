@@ -390,13 +390,32 @@ var config = {
             },
         },
         https: false,
-        host: 'localhost',
+        host: '0.0.0.0',
         headers: { 'Access-Control-Allow-Origin': '*' },
         allowedHosts: 'all',
         devMiddleware: {
             publicPath: '/',
             stats: 'errors-only',
         },
+        proxy: process.env.CBIOPORTAL_URL
+            ? {
+                  '/api': {
+                      target: process.env.CBIOPORTAL_URL,
+                      changeOrigin: true,
+                      secure: true,
+                  },
+                  '/config_service': {
+                      target: process.env.CBIOPORTAL_URL,
+                      changeOrigin: true,
+                      secure: true,
+                  },
+                  '/proxy': {
+                      target: process.env.CBIOPORTAL_URL,
+                      changeOrigin: true,
+                      secure: true,
+                  },
+              }
+            : undefined,
     },
 };
 

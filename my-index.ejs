@@ -8,7 +8,32 @@
 
         window.devContext = true;
         window.frontendConfig = {
+            apiRoot: window.location.origin + '/',
+            baseUrl: window.location.host
         }
+
+        // Visible error display for mobile debugging
+        window.onerror = function(msg, url, line, col, error) {
+            var errorDiv = document.getElementById('mobileErrorLog');
+            if (!errorDiv) {
+                errorDiv = document.createElement('div');
+                errorDiv.id = 'mobileErrorLog';
+                errorDiv.style.cssText = 'position:fixed;bottom:0;left:0;right:0;max-height:40vh;overflow:auto;background:#ff000099;color:white;padding:10px;font-size:12px;z-index:99999;font-family:monospace;';
+                document.body.appendChild(errorDiv);
+            }
+            errorDiv.innerHTML += '<div style="border-bottom:1px solid white;padding:5px 0;">' + msg + '<br>at ' + url + ':' + line + '</div>';
+            return false;
+        };
+        window.addEventListener('unhandledrejection', function(e) {
+            var errorDiv = document.getElementById('mobileErrorLog');
+            if (!errorDiv) {
+                errorDiv = document.createElement('div');
+                errorDiv.id = 'mobileErrorLog';
+                errorDiv.style.cssText = 'position:fixed;bottom:0;left:0;right:0;max-height:40vh;overflow:auto;background:#ff000099;color:white;padding:10px;font-size:12px;z-index:99999;font-family:monospace;';
+                document.body.appendChild(errorDiv);
+            }
+            errorDiv.innerHTML += '<div style="border-bottom:1px solid white;padding:5px 0;">Promise: ' + (e.reason ? e.reason.message || e.reason : 'unknown') + '</div>';
+        });
 
         /* REMOVED: This is an example of how to add custom tabs to the patient page. Enabling this will clobber localStorage.frontendConfig that is set through the browser console
         localStorage.frontendConfig = JSON.stringify(
