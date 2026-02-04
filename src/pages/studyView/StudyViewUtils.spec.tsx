@@ -69,6 +69,7 @@ import {
     updateCustomIntervalFilter,
     updateGeneQuery,
     updateSavedUserPreferenceChartIds,
+    groupSamplesByMutationStatus,
 } from 'pages/studyView/StudyViewUtils';
 import {
     CancerStudy,
@@ -3656,6 +3657,64 @@ describe('StudyViewUtils', () => {
                 ] as VirtualStudy[]),
                 true
             );
+        });
+    });
+
+    describe.only('groupSamplesByMutationStatus', () => {
+        const data = [
+            {
+                counts: [
+                    {
+                        value: 'NOT_PROFILED',
+                        sampleIds: ['ignore_me_001'],
+                    },
+                ],
+            },
+            {
+                counts: [
+                    {
+                        value: 'Missense_Mutation',
+                        sampleIds: ['study_ABC_123', 'study_DEF_456'],
+                    },
+                ],
+            },
+            {
+                counts: [
+                    {
+                        value: 'NOT_MUTATED',
+                        sampleIds: ['study_GHI_789'],
+                    },
+                ],
+            },
+        ] as any;
+
+        const studyId: string[] = ['study_ABC', 'study_DEF', 'study_GHI'];
+
+        it('groups and creates SampleIdeifier  by mutation status correctly', () => {
+            const result = groupSamplesByMutationStatus(data, studyId);
+            assert.deepEqual(result, {
+                MUTATED: [
+                    {
+                        studyId: 'study_ABC',
+                        sampleId: '123',
+                    },
+                    {
+                        studyId: 'study_DEF',
+                        sampleId: '456',
+                    },
+                ],
+                NOT_MUTATED: [
+                    {
+                        studyId: 'study_GHI',
+                        sampleId: '789',
+                    },
+                ],
+            });
+        });
+
+        it('handles missing or empty counts safely', () => {
+            const emptyData = [{}, { counts: [] }];
+            expect(groupSamplesByMutationStatus(emptyData, [])).toEqual({});
         });
     });
 
