@@ -89,18 +89,11 @@ export default class TumorColumnFormatter {
                         )
                     ) : (
                         // Sample is not profiled
-                        <SampleInline
+                        <SampleLabelNotProfiled
                             sample={sample}
-                            extraTooltipText={extraTooltipText}
                             onSelectGenePanel={onSelectGenePanel}
                             disableTooltip={disableTooltip}
-                        >
-                            <SampleLabelNotProfiled
-                                sample={sample}
-                                onSelectGenePanel={onSelectGenePanel}
-                                disableTooltip={disableTooltip}
-                            />
-                        </SampleInline>
+                        />
                     )}
                 </li>
             );

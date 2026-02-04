@@ -32,7 +32,7 @@ describe('Virtual Study Tour', () => {
 
     it('Click the entry to start tour.', async () => {
         // There should be a tour entry for virtual study, with the content `Create a Virtual Study`
-        const virtualStudyTourEntry = getElement(
+        const virtualStudyTourEntry = await getElement(
             'div[data-type="virtual-study-tour"]'
         );
         await virtualStudyTourEntry.waitForDisplayed();
@@ -66,7 +66,7 @@ describe('Virtual Study Tour', () => {
             'Skip All'
         );
         const nextStepBtn = await tourModal.$(NEXT_STEP_BTN);
-        assert.equal(nextStepBtn.getText(), 'Next Step');
+        assert.equal(await nextStepBtn.getText(), 'Next Step');
 
         // There should be a search box on the homepage, the value should be `glioma`
         const cancerStudySearchBox = await getElement(
@@ -80,7 +80,7 @@ describe('Virtual Study Tour', () => {
         // and select two studies
         await browser.pause(2000);
         await waitForElementDisplayed('[data-test="clearStudyFilter"]');
-        clickElement('[data-test="clearStudyFilter"]');
+        await clickElement('[data-test="clearStudyFilter"]');
         await browser.pause(2000);
 
         // Click on the `Next Step` button, the tour should go to the next step
@@ -150,8 +150,8 @@ describe('Virtual Study Tour', () => {
         assert.equal(step, 2);
 
         // There should be a tour modal
-        const tourModal = getElement(VIRTUAL_STUDY_TOUR_MODAL);
-        tourModal.waitForExist();
+        const tourModal = await getElement(VIRTUAL_STUDY_TOUR_MODAL);
+        await tourModal.waitForExist();
 
         // On the modal, the title of the content should be `Click the Explore button`
         assert.equal(
@@ -293,7 +293,7 @@ describe('Virtual Study Tour', () => {
         assert.equal(step, 6);
 
         // There should be a tour modal
-        const tourModal = getElement(VIRTUAL_STUDY_TOUR_MODAL, {
+        const tourModal = await getElement(VIRTUAL_STUDY_TOUR_MODAL, {
             waitForExist: true,
         });
 
@@ -328,7 +328,7 @@ describe('Virtual Study Tour', () => {
         assert.equal(step, 7);
 
         // There should be a tour modal
-        const tourModal = getElement(VIRTUAL_STUDY_TOUR_MODAL, {
+        const tourModal = await getElement(VIRTUAL_STUDY_TOUR_MODAL, {
             waitForExist: true,
         });
 
@@ -378,7 +378,7 @@ describe('Virtual Study Tour', () => {
             await (await tourModal.$(SKIP_ALL_BTN)).getText(),
             'Finish guidance'
         );
-        const nextStepBtn = tourModal.$(NEXT_STEP_BTN);
+        const nextStepBtn = await tourModal.$(NEXT_STEP_BTN);
         assert.equal(await nextStepBtn.getText(), 'Help me find it');
 
         // There should be a link panel [data-tour="virtual-study-summary-panel"]
@@ -462,7 +462,7 @@ describe('Group Comparison Tour', function() {
         assert.equal(step, 0);
 
         // There should be a tour modal
-        const tourModal = getElement(GROUP_COMPARISON_TOUR_MODAL, {
+        const tourModal = await getElement(GROUP_COMPARISON_TOUR_MODAL, {
             waitForExist: true,
         });
 
@@ -709,7 +709,7 @@ describe('Group Comparison Tour', function() {
         assert.equal(step, 6);
 
         // There should be a tour modal
-        const tourModal = getElement(GROUP_COMPARISON_TOUR_MODAL, {
+        const tourModal = await getElement(GROUP_COMPARISON_TOUR_MODAL, {
             waitForExist: true,
         });
 
