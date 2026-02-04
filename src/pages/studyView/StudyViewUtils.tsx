@@ -125,6 +125,7 @@ import { MultiSelectionTableRow } from './table/MultiSelectionTable';
 import Survival from 'pages/groupComparison/Survival';
 import { StructVarMultiSelectionTableRow } from './table/StructuralVariantMultiSelectionTable';
 import { ObservableMap } from 'mobx';
+import { boolean } from 'yargs';
 
 // Cannot use ClinicalDataTypeEnum here for the strong type. The model in the type is not strongly typed
 export enum ClinicalDataTypeEnum {
@@ -4250,6 +4251,33 @@ export async function invokeGenericAssayDataCount(
     }
 
     return undefined;
+}
+
+export async function invokeGenomicDataCountIncludeSampleid(
+    chartInfo: GenomicChart,
+    filters: StudyViewFilter,
+    includeSampleIds: boolean
+) {
+    let result = [];
+    let params = {
+        genomicDataCountFilter: {
+            genomicDataFilters: [
+                {
+                    hugoGeneSymbol: chartInfo.hugoGeneSymbol,
+                    profileType: chartInfo.profileType,
+                } as GenomicDataFilter,
+            ],
+            studyViewFilter: filters,
+        },
+        $queryParameters: {
+            projection: 'DETAILED',
+            includeSampleIds,
+        },
+    } as any;
+
+    result = await getInternalClient().fetchMutationDataCountsUsingPOST(params);
+
+    return result;
 }
 
 export async function invokeGenomicDataCount(

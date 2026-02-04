@@ -186,6 +186,7 @@ import {
     transformSampleDataToSelectedSampleClinicalData,
     updateCustomIntervalFilter,
     invokeGenomicDataCount,
+    invokeGenomicDataCountIncludeSampleid,
     invokeMutationDataCount,
     invokeNamespaceDataCount,
     invokeGenericAssayDataCount,
@@ -1635,6 +1636,128 @@ export class StudyViewPageStore
         });
     }
 
+    private createGeneSpecificComparisonSession(
+        chartMeta: ChartMeta,
+        clinicalAttributeValues: ClinicalDataCountSummary[],
+        statusCallback: (phase: LoadingPhase) => void
+    ): Promise<string> {
+        statusCallback(LoadingPhase.DOWNLOADING_GROUPS);
+
+        //  will come back to this
+        const promises: any = [this.selectedSamples];
+
+        return new Promise<string>(resolve => {
+            onMobxPromise<any>(
+                promises,
+                async (
+                    selectedSamples: Sample[] // do we need to await this because the backend produces the sample set
+                ) => {
+                    const chartInfo = this._geneSpecificChartMap.get(
+                        chartMeta.uniqueKey
+                    );
+                    // TODO: Replace `any` with GenomicDataCountItem[]
+                    let data: any[] = [];
+                    // take a look at this function invokeGenomicDataCount() inStudyViewUtils
+
+                    if (!chartInfo || !this.hasFilteredSamples) {
+                        return;
+                    }
+                    //TODO change the method name to something more generic
+                    data = await invokeGenomicDataCountIncludeSampleid(
+                        chartInfo,
+                        this.filters,
+                        true
+                    );
+
+                    const SKIP_VALUES = new Set(['NOT_PROFILED']);
+                    const NON_MUTATION_VALUES = new Set(['NOT_MUTATED']);
+
+                    // flat extrat all the counts
+                    const allCounts = _.chain(data)
+                        .flatMap(item => item.counts ?? [])
+                        .value();
+
+                    const grouped = new Map<string, Set<string>>();
+                    const lcValueToColor = _.keyBy(clinicalAttributeValues, d =>
+                        d.value.toLowerCase()
+                    );
+
+                    // group them into mutated, not_mutated, not_profiled
+                    for (const count of allCounts) {
+                        const sampleIds: string[] = count.sampleIds ?? [];
+                        if (
+                            sampleIds.length === 0 ||
+                            SKIP_VALUES.has(count.value)
+                        )
+                            continue; // case of no samples
+
+                        const key = NON_MUTATION_VALUES.has(count.value)
+                            ? count.value
+                            : 'MUTATED';
+
+                        if (!grouped.has(key)) {
+                            grouped.set(key, new Set());
+                        }
+
+                        const sampleIdSet = grouped.get(key)!;
+                        for (const rawId of sampleIds) {
+                            const id = rawId.substring(
+                                rawId.lastIndexOf('_') + 1
+                            );
+                            sampleIdSet.add(id);
+                        }
+                    }
+
+                    const groups: SessionGroupData[] = _.chain(
+                        clinicalAttributeValues
+                    )
+                        .map(attrVal => {
+                            const groupName = attrVal.value;
+                            const sampleIdSet = grouped.get(groupName);
+
+                            if (!sampleIdSet || sampleIdSet.size === 0) {
+                                return null;
+                            }
+
+                            const sampleIdentifiers: SampleIdentifier[] = Array.from(
+                                sampleIdSet
+                            ).map(id => ({
+                                sampleId: id,
+                                studyId: this.studyIds[0],
+                            }));
+                            const lcValue = attrVal.value.toLowerCase();
+
+                            return getGroupParameters(
+                                groupName,
+                                sampleIdentifiers,
+                                this.studyIds,
+                                lcValueToColor[lcValue].color
+                            );
+                        })
+                        .filter((g): g is SessionGroupData => g !== null)
+                        .slice(
+                            // not sure if this slice works for all charts
+                            0,
+                            doesChartHaveComparisonGroupsLimit(chartMeta)
+                                ? MAX_GROUPS_IN_SESSION
+                                : undefined
+                        )
+                        .value();
+
+                    statusCallback(LoadingPhase.CREATING_SESSION);
+
+                    // create session and get id
+                    const { id } = await comparisonClient.addComparisonSession({
+                        groups,
+                        clinicalAttributeName: chartMeta.displayName, // NOT SURE WHAT TO PASS HERE
+                        origin: this.studyIds,
+                    });
+                    return resolve(id);
+                }
+            );
+        });
+    }
+
     private createCnaGeneComparisonSession(
         chartMeta: ChartMeta,
         hugoGeneSymbols: string[],
@@ -2072,12 +2195,17 @@ export class StudyViewPageStore
                     const chartInfo = this._geneSpecificChartMap.get(
                         chartMeta.uniqueKey
                     )!;
-
-                    comparisonId = await this.createCnaGeneComparisonSession(
+                    comparisonId = await this.createGeneSpecificComparisonSession(
                         chartMeta,
-                        [chartInfo.hugoGeneSymbol],
+                        params.clinicalAttributeValues!,
                         statusCallback
                     );
+
+                    // comparisonId = await this.createCnaGeneComparisonSession(
+                    //     chartMeta,
+                    //     [chartInfo.hugoGeneSymbol],
+                    //     statusCallback
+                    // );
                 } else {
                     comparisonId = await this.createCategoricalAttributeComparisonSession(
                         chartMeta,
