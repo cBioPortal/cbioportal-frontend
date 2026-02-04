@@ -397,10 +397,15 @@ export function makeGeneticTrackDatum_Data(
             });
             break;
         case OncoprintMutationTypeEnum.STRUCTURAL_VARIANT:
+            // Parse fusion partner genes from combined gene symbol (e.g., "BAP1-TCEA3")
+            const geneParts = oncoprinterInputLine.hugoGeneSymbol.split('-');
             ret = Object.assign(ret, {
                 molecularProfileAlterationType:
                     AlterationTypeConstants.STRUCTURAL_VARIANT,
                 mutationType: 'structuralVariant',
+                variantClass: 'FUSION',
+                site1HugoSymbol: geneParts[0] ?? '',
+                site2HugoSymbol: geneParts[1] ?? '',
             });
             break;
         case OncoprintMutationTypeEnum.PROMOTER:
@@ -785,8 +790,13 @@ export function annotateGeneticTrackData(
                     d.molecularProfileAlterationType ===
                     AlterationTypeConstants.STRUCTURAL_VARIANT
                 ) {
-                    //TODO: fetch oncokb data for structural variants once we have
-                    return !excludeVUS;
+                    // tag structural variants as putative driver based on custom annotation or OncoKB
+                    d.putativeDriver = !!(
+                        d.oncoKbOncogenic ||
+                        (params.useCustomBinary &&
+                            d.driverFilter === PUTATIVE_DRIVER)
+                    );
+                    return !excludeVUS || d.putativeDriver;
                 } else {
                     return true;
                 }
@@ -882,13 +892,18 @@ export function parseGeneticInput(
                         }
                         break;
                     case 'fusion':
-                        if (lcType !== 'fusion') {
-                            throw new Error(
-                                `${errorPrefix}Type "${type}" is not valid - it must be "FUSION" if Alteration is "FUSION"`
-                            );
-                        } else {
-                            ret.alteration = 'structuralVariant';
-                            ret.eventInfo = alteration;
+                    case 'fusion_driver':
+                    case 'fusion_germline':
+                    case 'fusion_germline_driver':
+                    case 'fusion_driver_germline':
+                        ret.alteration = 'structuralVariant';
+                        ret.eventInfo = alteration;
+                        // Parse modifiers for fusion type
+                        if (lcType.includes('_driver')) {
+                            ret.isCustomDriver = true;
+                        }
+                        if (lcType.includes('_germline')) {
+                            ret.isGermline = true;
                         }
                         break;
                     default:
