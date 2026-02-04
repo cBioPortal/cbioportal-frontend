@@ -263,8 +263,8 @@ function sessionServiceIsEnabled() {
     }).value;
 }
 
-function showGsva() {
-    setServerConfiguration({ skin_show_gsva: true });
+async function showGsva() {
+    await setServerConfiguration({ skin_show_gsva: true });
 }
 
 function waitForNumberOfStudyCheckboxes(expectedNumber, text) {
