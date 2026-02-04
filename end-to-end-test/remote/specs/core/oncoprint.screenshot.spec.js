@@ -22,6 +22,7 @@ describe('oncoprint screenshot tests', () => {
         await goToUrlAndSetLocalStorage(url);
         await browser.pause(2000);
         await waitForOncoprint();
+        browser.pause(100);
         const res = await checkOncoprintElement('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
@@ -193,7 +194,7 @@ describe('track group headers', () => {
     });
 
     it('oncoprint should cluster heatmap group correctly', async () => {
-        const res = await checkOncoprintElement();
+        const res = await checkOncoprintElement('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
 
@@ -210,7 +211,7 @@ describe('track group headers', () => {
         await clickElement(mrnaElements.dropdown_selector + ' li:nth-child(4)'); // Click Delete
         await waitForOncoprint();
 
-        const res = await checkOncoprintElement();
+        const res = await checkOncoprintElement('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
 
@@ -228,7 +229,7 @@ describe('track group headers', () => {
         ); // Click Delete
         await waitForOncoprint();
 
-        const res = await checkOncoprintElement();
+        const res = await checkOncoprintElement('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
 
@@ -288,7 +289,7 @@ describe('sorting', () => {
 
         await waitForOncoprint();
 
-        const res = await checkOncoprintElement();
+        const res = await checkOncoprintElement('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
 
@@ -308,7 +309,7 @@ describe('sorting', () => {
             eventsPerSampleRadioButton
         );
 
-        const res = await checkOncoprintElement();
+        const res = await checkOncoprintElement('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
 
@@ -341,7 +342,7 @@ describe('sorting', () => {
 
         await waitForOncoprint();
 
-        const res = await checkOncoprintElement();
+        const res = await checkOncoprintElement('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
 
@@ -361,7 +362,7 @@ describe('sorting', () => {
             eventsPerSampleRadioButton
         );
 
-        const res = await checkOncoprintElement();
+        const res = await checkOncoprintElement('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
 
@@ -383,7 +384,7 @@ describe('sorting', () => {
         ); // Click Remove Track
         await waitForOncoprint();
 
-        const res = await checkOncoprintElement();
+        const res = await checkOncoprintElement('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
 
@@ -406,7 +407,7 @@ describe('sorting', () => {
             eventsPerSampleRadioButton
         );
 
-        const res = await checkOncoprintElement();
+        const res = await checkOncoprintElement('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
 
@@ -443,7 +444,7 @@ describe('sorting', () => {
             eventsPerPatientRadioButton
         );
 
-        const res = await checkOncoprintElement();
+        const res = await checkOncoprintElement('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
 
@@ -460,7 +461,7 @@ describe('sorting', () => {
         await (await overallSurvivalElements.dropdown.$('li=Sort Z-a')).click(); // Click sort Z-a
         await browser.pause(100); // give time to sort
 
-        const res = await checkOncoprintElement();
+        const res = await checkOncoprintElement('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
 
@@ -480,7 +481,7 @@ describe('sorting', () => {
         ).click(); // Click sort Z-a
         await browser.pause(100); // give time to sort
 
-        const res = await checkOncoprintElement();
+        const res = await checkOncoprintElement('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
 
@@ -499,7 +500,7 @@ describe('sorting', () => {
         ).click(); // Click sort a-Z
         await browser.pause(100); // give time to sort
 
-        const res = await checkOncoprintElement();
+        const res = await checkOncoprintElement('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
 
@@ -519,7 +520,7 @@ describe('sorting', () => {
             eventsPerSampleRadioButton
         );
 
-        const res = await checkOncoprintElement();
+        const res = await checkOncoprintElement('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
 
@@ -534,7 +535,7 @@ describe('sorting', () => {
         await (await diseaseFreeElements.dropdown.$('li=Sort a-Z')).click(); // Click sort a-Z
         await browser.pause(100); // give time to sort
 
-        const res = await checkOncoprintElement();
+        const res = await checkOncoprintElement('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
 
@@ -551,7 +552,7 @@ describe('sorting', () => {
         await (await diseaseFreeElements.dropdown.$('li=Sort Z-a')).click(); // Click sort Z-a
         await browser.pause(100); // give time to sort
 
-        const res = await checkOncoprintElement();
+        const res = await checkOncoprintElement('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
 
@@ -571,7 +572,7 @@ describe('sorting', () => {
         ).click(); // Click sort Z-a
         await browser.pause(100); // give time to sort
 
-        const res = await checkOncoprintElement();
+        const res = await checkOncoprintElement('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
 
@@ -590,7 +591,7 @@ describe('sorting', () => {
         ).click(); // Click sort a-Z
         await browser.pause(100); // give time to sort
 
-        const res = await checkOncoprintElement();
+        const res = await checkOncoprintElement('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
 
@@ -611,7 +612,7 @@ describe('sorting', () => {
         await heatmapDropdown.click(); // Click sort Z-a
         await browser.pause(100); // give time to sort
 
-        const res = await checkOncoprintElement();
+        const res = await checkOncoprintElement('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
 
@@ -643,7 +644,7 @@ describe('sorting', () => {
         ).click(); // Click sort Z-a
         await browser.pause(100); // give time to sort
 
-        const res = await checkOncoprintElement();
+        const res = await checkOncoprintElement('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
 
@@ -660,7 +661,7 @@ describe('sorting', () => {
         await (await TP53HeatmapElements.dropdown.$('li=Sort a-Z')).click(); // Click sort a-Z
         await browser.pause(100); // give time to sort
 
-        const res = await checkOncoprintElement();
+        const res = await checkOncoprintElement('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
 
@@ -685,7 +686,7 @@ describe('sorting', () => {
         await (await MDM4HeatmapElements.dropdown.$('li=Sort a-Z')).click(); // Click sort a-Z
         await browser.pause(100); // give time to sort
 
-        const res = await checkOncoprintElement();
+        const res = await checkOncoprintElement('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
 
@@ -702,7 +703,7 @@ describe('sorting', () => {
         await (await MDM4HeatmapElements.dropdown.$('li=Sort Z-a')).click(); // Click sort Z-a
         await browser.pause(100); // give time to sort
 
-        const res = await checkOncoprintElement();
+        const res = await checkOncoprintElement('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
 
@@ -719,7 +720,7 @@ describe('sorting', () => {
         ).click(); // Click Don't sort
         await browser.pause(100); // give time to sort
 
-        const res = await checkOncoprintElement();
+        const res = await checkOncoprintElement('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
 
@@ -738,7 +739,7 @@ describe('sorting', () => {
             eventsPerPatientRadioButton
         );
 
-        const res = await checkOncoprintElement();
+        const res = await checkOncoprintElement('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
 });

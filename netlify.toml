@@ -1,10 +1,11 @@
 [build.environment]
-  NODE_VERSION = "15.2.1"
-  YARN_VERSION = "1.22.5"
+  NODE_VERSION = "22.18.0"
+  YARN_VERSION = "1.22.22"
   YARN_FLAGS = "--frozen-lockfile --ignore-engines"
   BABEL_CACHE_FOLDER = "/opt/build/cache/"
   BUILD_REPORT_ERRORS_ONLY = "true"
   DISABLE_SOURCEMAP = "true"
+  NODE_OPTIONS="--openssl-legacy-provider"
 
 [[headers]]
 for = "/*.otf"
