@@ -716,7 +716,11 @@ export default class UserSelections extends React.Component<
                 )
                     ? getSurvivalChartMetaId(clinicalDataFilter.attributeId)
                     : clinicalDataFilter.attributeId;
-                const chartMeta = this.props.attributesMetaSet[attributeId];
+                const chartMeta =
+                    this.props.attributesMetaSet[attributeId] ||
+                    this.props.attributesMetaSet[
+                        clinicalDataFilter.attributeId
+                    ];
                 if (chartMeta) {
                     const dataType = this.props.clinicalAttributeIdToDataType[
                         clinicalDataFilter.attributeId
