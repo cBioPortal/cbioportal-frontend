@@ -258,6 +258,7 @@ var config = {
             },
             {
                 test: /\.otf(\?\S*)?$/,
+                type: 'javascript/auto',
                 use: [
                     {
                         loader: `url-loader`,
@@ -270,6 +271,7 @@ var config = {
             },
             {
                 test: /\.eot(\?\S*)?$/,
+                type: 'javascript/auto',
                 use: [
                     {
                         loader: `url-loader`,
@@ -282,6 +284,7 @@ var config = {
             },
             {
                 test: /\.svg(\?\S*)?$/,
+                type: 'javascript/auto',
                 use: [
                     {
                         loader: `url-loader`,
@@ -296,6 +299,7 @@ var config = {
             },
             {
                 test: /\.ttf(\?\S*)?$/,
+                type: 'javascript/auto',
                 use: [
                     {
                         loader: `url-loader`,
@@ -309,6 +313,7 @@ var config = {
             },
             {
                 test: /\.woff2?(\?\S*)?$/,
+                type: 'javascript/auto',
                 use: [
                     {
                         loader: `url-loader`,
@@ -323,6 +328,7 @@ var config = {
             },
             {
                 test: /\.(jpe?g|png|gif)$/,
+                type: 'javascript/auto',
                 use: [
                     {
                         loader: `url-loader`,
@@ -336,6 +342,7 @@ var config = {
             },
             {
                 test: /\.swf$/,
+                type: 'javascript/auto',
                 use: [
                     {
                         loader: `file-loader`,
@@ -348,6 +355,7 @@ var config = {
             },
             {
                 test: /\.pdf$/,
+                type: 'javascript/auto',
                 use: [
                     {
                         loader: `url-loader`,
