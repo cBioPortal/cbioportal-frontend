@@ -63,6 +63,12 @@ const imgPath = 'reactapp/images/[hash].[ext]';
 
 const babelCacheFolder = process.env.BABEL_CACHE_FOLDER || false;
 
+console.log(`process.env.TRANSPILE_ONLY`, process.env.TRANSPILE_ONLY);
+
+let transpileOnly = process.env.TRANSPILE_ONLY === 'true';
+
+console.log('transpileOnly', transpileOnly);
+
 // we don't need sourcemaps on circleci
 const sourceMap = process.env.DISABLE_SOURCEMAP ? false : 'source-map';
 
@@ -212,8 +218,7 @@ var config = {
                     {
                         loader: 'ts-loader',
                         options: {
-                            transpileOnly:
-                                isDev || isTest || process.env.NETLIFY,
+                            transpileOnly: transpileOnly,
                         },
                     },
                 ],
@@ -284,6 +289,7 @@ var config = {
                             name: fontPath,
                             mimetype: 'image/svg+xml',
                             limit: 10000,
+                            esModule: false,
                         },
                     },
                 ],
@@ -310,6 +316,7 @@ var config = {
                             name: fontPath,
                             mimetype: 'application/font-woff',
                             limit: 10000,
+                            esModule: false,
                         },
                     },
                 ],
@@ -322,6 +329,7 @@ var config = {
                         options: {
                             name: imgPath,
                             limit: 10000,
+                            esModule: false,
                         },
                     },
                 ],
@@ -333,6 +341,7 @@ var config = {
                         loader: `file-loader`,
                         options: {
                             name: imgPath,
+                            esModule: false,
                         },
                     },
                 ],
@@ -345,6 +354,7 @@ var config = {
                         options: {
                             name: imgPath,
                             limit: 1,
+                            esModule: false,
                         },
                     },
                 ],
@@ -389,7 +399,7 @@ var config = {
                 warnings: false,
             },
         },
-        https: false,
+        server: 'https',
         host: 'localhost',
         headers: { 'Access-Control-Allow-Origin': '*' },
         allowedHosts: 'all',
@@ -425,7 +435,6 @@ config.plugins = [
     new webpack.DefinePlugin(defines),
     new MiniCssExtractPlugin({
         filename: 'reactapp/styles.css',
-        allChunks: true,
     }),
     new webpack.ProvidePlugin({
         $: 'jquery',
@@ -469,7 +478,17 @@ if (isDev || isTest) {
         'shared/Empty.tsx'
     );
 
-    config.plugins.push(new ForkTsCheckerWebpackPlugin());
+    config.plugins.push(
+        new ForkTsCheckerWebpackPlugin({
+            typescript: {
+                configOverwrite: {
+                    compilerOptions: {
+                        skipLibCheck: true,
+                    },
+                },
+            },
+        })
+    );
 
     // css modules for any scss matching test
     config.module.rules.push({
@@ -479,9 +498,10 @@ if (isDev || isTest) {
             {
                 loader: 'css-loader',
                 options: {
-                    modules: true,
+                    modules: {
+                        localIdentName: '[name]__[local]__[hash:base64:5]',
+                    },
                     importLoaders: 2,
-                    localIdentName: '[name]__[local]__[hash:base64:5]',
                 },
             },
             'sass-loader',
@@ -494,13 +514,38 @@ if (isDev || isTest) {
 
     config.module.rules.push({
         test: /\.css$/,
-        use: ['style-loader', 'css-loader'],
+        use: [
+            'style-loader',
+            {
+                loader: 'css-loader',
+                options: {
+                    modules: false,
+                },
+            },
+        ],
     });
 
     config.module.rules.push({
         test: /\.scss$/,
         exclude: /\.module\.scss/,
-        use: ['style-loader', 'css-loader', 'sass-loader', sassResourcesLoader],
+        use: [
+            {
+                loader: 'style-loader',
+                options: {
+                    attributes: {
+                        'data-test': 'styles',
+                    },
+                },
+            },
+            {
+                loader: 'css-loader',
+                options: {
+                    modules: false,
+                },
+            },
+            'sass-loader',
+            sassResourcesLoader,
+        ],
     });
 
     config.devServer.port = devPort;
@@ -518,15 +563,13 @@ if (isDev || isTest) {
         use: [
             {
                 loader: MiniCssExtractPlugin.loader,
-                options: {
-                    fallback: 'style-loader',
-                },
             },
             {
                 loader: 'css-loader',
                 options: {
-                    modules: true,
-                    localIdentName: '[name]__[local]__[hash:base64:5]',
+                    modules: {
+                        localIdentName: '[name]__[local]__[hash:base64:5]',
+                    },
                 },
             },
             'sass-loader',
@@ -540,11 +583,13 @@ if (isDev || isTest) {
         use: [
             {
                 loader: MiniCssExtractPlugin.loader,
+            },
+            {
+                loader: 'css-loader',
                 options: {
-                    fallback: 'style-loader',
+                    modules: false,
                 },
             },
-            'css-loader',
             'sass-loader',
             sassResourcesLoader,
         ],
@@ -555,11 +600,13 @@ if (isDev || isTest) {
         use: [
             {
                 loader: MiniCssExtractPlugin.loader,
+            },
+            {
+                loader: 'css-loader',
                 options: {
-                    fallback: 'style-loader',
+                    modules: false,
                 },
             },
-            'css-loader',
         ],
     });
 }
