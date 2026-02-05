@@ -1655,14 +1655,12 @@ export class StudyViewPageStore
                     const chartInfo = this._geneSpecificChartMap.get(
                         chartMeta.uniqueKey
                     );
-                    // TODO: Replace `any` with GenomicDataCountItem[]
+                    // TODO: Replace `any` with GenomicDataCountItem[] when the type in the frontend has been updated
                     let data: any[] = [];
-                    // take a look at this function invokeGenomicDataCount() inStudyViewUtils
-
                     if (!chartInfo || !this.hasFilteredSamples) {
                         return;
                     }
-                    //TODO change the method name to something more generic
+
                     data = await invokeGenomicDataCountIncludeSampleid(
                         chartInfo,
                         this.filters,
@@ -1682,14 +1680,14 @@ export class StudyViewPageStore
                         d.value.toLowerCase()
                     );
 
-                    // group them into mutated, not_mutated, not_profiled
+                    // group them into mutated, not_mutated
                     for (const count of allCounts) {
                         const sampleIds: string[] = count.sampleIds ?? [];
                         if (
                             sampleIds.length === 0 ||
                             SKIP_VALUES.has(count.value)
                         )
-                            continue; // case of no samples
+                            continue; // case of no samples or non profile samples
 
                         const key = NON_MUTATION_VALUES.has(count.value)
                             ? count.value
@@ -1736,7 +1734,6 @@ export class StudyViewPageStore
                         })
                         .filter((g): g is SessionGroupData => g !== null)
                         .slice(
-                            // not sure if this slice works for all charts
                             0,
                             doesChartHaveComparisonGroupsLimit(chartMeta)
                                 ? MAX_GROUPS_IN_SESSION
