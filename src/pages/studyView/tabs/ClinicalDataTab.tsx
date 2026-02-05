@@ -112,14 +112,29 @@ export class ClinicalDataTab extends React.Component<
                 <span data-test={data}>{data}</span>
             ),
             render: (data: { [id: string]: string }) => {
-                if (isUrl(data[key])) {
+                const value = data[key];
+
+                if (!value) {
                     return (
-                        <a href={data[key]} target="_blank">
-                            {data[key]}
+                        <span
+                            style={{ color: '#999' }}
+                            title="No data available"
+                            data-test="missing-clinical-data"
+                        >
+                            —
+                        </span>
+                    );
+                }
+
+                if (isUrl(value)) {
+                    return (
+                        <a href={value} target="_blank" rel="noreferrer">
+                            {value}
                         </a>
                     );
                 }
-                return <span data-test={data[key]}>{data[key]}</span>;
+
+                return <span data-test={value}>{value}</span>;
             },
             download: (data: { [id: string]: string }) => data[key] || '',
             sortBy: (data: { [id: string]: any }) => {
