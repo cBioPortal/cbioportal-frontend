@@ -140,6 +140,8 @@ export type GeneticTrackDatum_Data = Pick<
     | 'putativeDriver'
     | 'mutationStatus'
     | 'eventInfo'
+    | 'site1HugoSymbol'
+    | 'site2HugoSymbol'
 >;
 
 export type GeneticTrackDatum_ProfiledIn = {

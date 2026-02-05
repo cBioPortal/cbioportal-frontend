@@ -139,5 +139,87 @@ describe('OncoprinterGeneticUtils', () => {
                 }
             );
         });
+        it('parses fusion correctly', () => {
+            assert.deepEqual(
+                parseGeneticInput('sampleid	ACY1-BAP1	ACY1-BAP1_fusion	FUSION'),
+                {
+                    parseSuccess: true,
+                    result: [
+                        {
+                            sampleId: 'sampleid',
+                            hugoGeneSymbol: 'ACY1-BAP1',
+                            alteration: 'structuralVariant',
+                            eventInfo: 'ACY1-BAP1_fusion',
+                            trackName: undefined,
+                        },
+                    ],
+                    error: undefined,
+                }
+            );
+        });
+        it('parses driver fusion correctly', () => {
+            assert.deepEqual(
+                parseGeneticInput(
+                    'sampleid	ACY1-BAP1	ACY1-BAP1_fusion	FUSION_DRIVER'
+                ),
+                {
+                    parseSuccess: true,
+                    result: [
+                        {
+                            sampleId: 'sampleid',
+                            hugoGeneSymbol: 'ACY1-BAP1',
+                            alteration: 'structuralVariant',
+                            eventInfo: 'ACY1-BAP1_fusion',
+                            isCustomDriver: true,
+                            trackName: undefined,
+                        },
+                    ],
+                    error: undefined,
+                }
+            );
+        });
+        it('parses germline fusion correctly', () => {
+            assert.deepEqual(
+                parseGeneticInput(
+                    'sampleid	ACY1-BAP1	ACY1-BAP1_fusion	FUSION_GERMLINE'
+                ),
+                {
+                    parseSuccess: true,
+                    result: [
+                        {
+                            sampleId: 'sampleid',
+                            hugoGeneSymbol: 'ACY1-BAP1',
+                            alteration: 'structuralVariant',
+                            eventInfo: 'ACY1-BAP1_fusion',
+                            isGermline: true,
+                            trackName: undefined,
+                        },
+                    ],
+                    error: undefined,
+                }
+            );
+        });
+        it('parses germline & driver fusion correctly', () => {
+            assert.deepEqual(
+                parseGeneticInput(
+                    'sampleid	ACY1-BAP1	ACY1-BAP1_fusion	FUSION_GERMLINE_DRIVER'
+                ),
+                {
+                    parseSuccess: true,
+                    result: [
+                        {
+                            sampleId: 'sampleid',
+                            hugoGeneSymbol: 'ACY1-BAP1',
+                            alteration: 'structuralVariant',
+                            eventInfo: 'ACY1-BAP1_fusion',
+                            isGermline: true,
+                            isCustomDriver: true,
+                            trackName: undefined,
+                        },
+                    ],
+                    error: undefined,
+                }
+            );
+        });
     });
 });
