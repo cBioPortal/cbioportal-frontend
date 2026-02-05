@@ -2197,12 +2197,6 @@ export class StudyViewPageStore
                         params.clinicalAttributeValues!,
                         statusCallback
                     );
-
-                    // comparisonId = await this.createCnaGeneComparisonSession(
-                    //     chartMeta,
-                    //     [chartInfo.hugoGeneSymbol],
-                    //     statusCallback
-                    // );
                 } else {
                     comparisonId = await this.createCategoricalAttributeComparisonSession(
                         chartMeta,
