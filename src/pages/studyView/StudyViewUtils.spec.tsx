@@ -54,6 +54,7 @@ import {
     isLogScaleByDataBins,
     isLogScaleByValues,
     isOccupied,
+    logScalePossible,
     makePatientToClinicalAnalysisGroup,
     needAdditionShiftForLogScaleBarChart,
     pickClinicalDataColors,
@@ -5200,5 +5201,140 @@ describe('StudyViewUtils', () => {
                 );
             }
         );
+    });
+
+    describe('logScalePossible', () => {
+        it('should return true for clinical attribute with NUMBER datatype', () => {
+            const numberAttribute = {
+                clinicalAttributeId: 'AGE',
+                datatype: 'NUMBER',
+                displayName: 'Age',
+            } as any;
+            assert.isTrue(logScalePossible(numberAttribute));
+        });
+
+        it('should return true for MUTATION_COUNT with NUMBER datatype', () => {
+            const mutationCountAttribute = {
+                clinicalAttributeId: 'MUTATION_COUNT',
+                datatype: 'NUMBER',
+                displayName: 'Mutation Count',
+            } as any;
+            assert.isTrue(logScalePossible(mutationCountAttribute));
+        });
+
+        it('should return false for clinical attribute with STRING datatype', () => {
+            const stringAttribute = {
+                clinicalAttributeId: 'GENDER',
+                datatype: 'STRING',
+                displayName: 'Gender',
+            } as any;
+            assert.isFalse(logScalePossible(stringAttribute));
+        });
+
+        it('should return false for clinical attribute with undefined datatype', () => {
+            const undefinedAttribute = {
+                clinicalAttributeId: 'UNKNOWN',
+                displayName: 'Unknown',
+            } as any;
+            assert.isFalse(logScalePossible(undefinedAttribute));
+        });
+
+        it('should return false for null clinical attribute', () => {
+            const nullAttribute = null as any;
+            assert.isFalse(logScalePossible(nullAttribute));
+        });
+
+        it('should return false for clinical attribute with null datatype', () => {
+            const nullDatatypeAttribute = {
+                clinicalAttributeId: 'TEST',
+                datatype: null,
+                displayName: 'Test',
+            } as any;
+            assert.isFalse(logScalePossible(nullDatatypeAttribute));
+        });
+
+        it('should return false for clinical attribute with empty string datatype', () => {
+            const emptyDatatypeAttribute = {
+                clinicalAttributeId: 'TEST',
+                datatype: '',
+                displayName: 'Test',
+            } as any;
+            assert.isFalse(logScalePossible(emptyDatatypeAttribute));
+        });
+
+        it('should handle case sensitivity - lowercase "number" should not work', () => {
+            const lowerCaseAttribute = {
+                clinicalAttributeId: 'AGE',
+                datatype: 'number',
+                displayName: 'Age',
+            } as any;
+            assert.isFalse(logScalePossible(lowerCaseAttribute));
+        });
+
+        it('should handle case sensitivity - mixed case should not work', () => {
+            const mixedCaseAttribute = {
+                clinicalAttributeId: 'AGE',
+                datatype: 'Number',
+                displayName: 'Age',
+            } as any;
+            assert.isFalse(logScalePossible(mixedCaseAttribute));
+        });
+
+        it('should return true for FRACTION_GENOME_ALTERED with NUMBER datatype', () => {
+            const fgaAttribute = {
+                clinicalAttributeId: 'FRACTION_GENOME_ALTERED',
+                datatype: 'NUMBER',
+                displayName: 'Fraction Genome Altered',
+            } as any;
+            assert.isTrue(logScalePossible(fgaAttribute));
+        });
+
+        it('should return true for TMB_NONSYNONYMOUS with NUMBER datatype', () => {
+            const tmbAttribute = {
+                clinicalAttributeId: 'TMB_NONSYNONYMOUS',
+                datatype: 'NUMBER',
+                displayName: 'TMB',
+            } as any;
+            assert.isTrue(logScalePossible(tmbAttribute));
+        });
+
+        it('should return false for CANCER_TYPE with STRING datatype', () => {
+            const cancerTypeAttribute = {
+                clinicalAttributeId: 'CANCER_TYPE',
+                datatype: 'STRING',
+                displayName: 'Cancer Type',
+            } as any;
+            assert.isFalse(logScalePossible(cancerTypeAttribute));
+        });
+
+        it('should return false for unknown datatype', () => {
+            const unknownDatatypeAttribute = {
+                clinicalAttributeId: 'TEST',
+                datatype: 'BOOLEAN',
+                displayName: 'Test',
+            } as any;
+            assert.isFalse(logScalePossible(unknownDatatypeAttribute));
+        });
+
+        it('should return false for attribute with datatype containing whitespace', () => {
+            const whitespaceAttribute = {
+                clinicalAttributeId: 'TEST',
+                datatype: ' NUMBER ',
+                displayName: 'Test',
+            } as any;
+            assert.isFalse(logScalePossible(whitespaceAttribute));
+        });
+
+        it('should return false for empty object', () => {
+            const emptyAttribute = {} as any;
+            assert.isFalse(logScalePossible(emptyAttribute));
+        });
+
+        it('should return false for attribute with only displayName', () => {
+            const onlyDisplayName = {
+                displayName: 'Test',
+            } as any;
+            assert.isFalse(logScalePossible(onlyDisplayName));
+        });
     });
 });
