@@ -190,4 +190,5 @@ export interface IServerConfig {
     clickhouse_mode: boolean;
     download_custom_buttons_json: string;
     feature_study_export: boolean;
+    skin_hide_clinical_data_tab_study_view?: boolean;
 }
