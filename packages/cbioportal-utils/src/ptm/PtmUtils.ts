@@ -13,7 +13,7 @@ export const PTM_COLORS: { [type: string]: string } = {
     [PtmType.Phosphorylation]: '#2DCF00',
     [PtmType.Acetylation]: '#5B5BFF',
     [PtmType.Ubiquitination]: '#B9264F',
-    [PtmType.Methylation]: '#EBD61D',
+    [PtmType.Methylation]: '#A3950F',
     multiType: '#444444',
     default: '#BA21E0',
 };

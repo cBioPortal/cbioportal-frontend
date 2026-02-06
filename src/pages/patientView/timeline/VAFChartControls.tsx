@@ -60,6 +60,10 @@ const VAFChartControls: React.FunctionComponent<IVAFChartControlsProps> = observ
                                 ...styles,
                                 width: 250,
                             }),
+                            placeholder: (styles: any) => ({
+                                ...styles,
+                                color: '#757575',
+                            }),
                         }}
                         clearable={false}
                         searchable={true}

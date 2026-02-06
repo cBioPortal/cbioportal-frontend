@@ -304,6 +304,7 @@ export default class OQLTextArea extends React.Component<
                         cols={80}
                         placeholder={this.promptText}
                         title={this.promptText}
+                        aria-label={this.promptText}
                         defaultValue={this.getTextAreaValue()}
                         onChange={this.onChange}
                         data-test="geneSet"

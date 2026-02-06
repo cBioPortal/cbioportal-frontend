@@ -870,7 +870,7 @@ export default class LollipopPlotNoTooltip extends React.Component<
                         // this.sequenceSegments
                     }
                     <rect
-                        fill="#BABDB6"
+                        fill="#eeeeee"
                         x={this.geneX}
                         y={this.geneY}
                         height={this.geneHeight}

@@ -2899,12 +2899,12 @@ describe('StudyViewUtils', () => {
 
         it('does not pick already picked colors again for non-fixed values', () => {
             const availableColors = [
-                '#66AA00',
+                '#5f9e00',
                 '#666666',
                 '#2986E2',
                 RESERVED_CLINICAL_VALUE_COLORS.na,
                 RESERVED_CLINICAL_VALUE_COLORS.no,
-                '#f88508',
+                '#d87407',
                 RESERVED_CLINICAL_VALUE_COLORS.yes,
                 '#f88507',
             ];
@@ -2917,10 +2917,10 @@ describe('StudyViewUtils', () => {
             assert.equal(colors['Yes'], RESERVED_CLINICAL_VALUE_COLORS.yes);
             assert.equal(colors['NO'], RESERVED_CLINICAL_VALUE_COLORS.no);
             assert.equal(colors['na'], RESERVED_CLINICAL_VALUE_COLORS.na);
-            assert.equal(colors['WHY'], '#66AA00');
+            assert.equal(colors['WHY'], '#5f9e00');
             assert.equal(colors['weather'], '#666666');
             assert.equal(colors['is'], '#2986E2');
-            assert.equal(colors['so'], '#f88508');
+            assert.equal(colors['so'], '#d87407');
             assert.equal(colors['hot'], '#f88507');
         });
     });
