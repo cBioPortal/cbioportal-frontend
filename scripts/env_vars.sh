@@ -18,11 +18,13 @@ fi
 
 if [[ "$CIRCLECI" ]] || [[ "$NETLIFY" ]]; then
     # on circle ci determine env variables based on branch or in case of PR
-    # what branch the PR is pointing to
+    # what branch the PR is pointing to (use GitHub API since HTML scraping no longer works)
     if [[ "$PR_NUMBER" ]] && ! [[ $PR_BRANCH == "release-"* ]]; then
-        BRANCH=$(curl "https://github.com/cBioPortal/cbioportal-frontend/pull/${PR_NUMBER}" | grep -oE 'title="cBioPortal/cbioportal-frontend:[^"]*' | cut -d: -f2 | head -1)
-    elif [[ "$PR_URL" ]] && ! [[ $PR_BRANCH == "release-"* ]]; then
-        BRANCH=$(curl "${PR_URL}" | grep -oE 'title="cBioPortal/cbioportal-frontend:[^"]*' | cut -d: -f2 | head -1)
+        BRANCH=$(curl -s "https://api.github.com/repos/cBioPortal/cbioportal-frontend/pulls/${PR_NUMBER}" | grep -o '"base":{[^}]*"ref":"[^"]*"' | grep -o '"ref":"[^"]*"' | cut -d'"' -f4)
+        if [[ -z "$BRANCH" ]]; then
+            echo "Warning: Could not determine target branch from PR ${PR_NUMBER}, falling back to PR_BRANCH" >&2
+            BRANCH=$PR_BRANCH
+        fi
     elif [[ "$MANUAL_TRIGGER_BRANCH_ENV" ]]; then
         BRANCH=$MANUAL_TRIGGER_BRANCH_ENV
     else
