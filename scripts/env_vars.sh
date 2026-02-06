@@ -31,7 +31,7 @@ if [[ "$CIRCLECI" ]] || [[ "$NETLIFY" ]]; then
     if test -f "$SCRIPT_DIR/../env/${BRANCH}.sh"; then
         cat $SCRIPT_DIR/../env/${BRANCH}.sh
     else
-        echo Branch name was not recognized. Please add env script to /env/ directory or test the branch as part of a github pull request.
+        echo "Branch name ${BRANCH} was not recognized. Please add env script to /env/ directory or test the branch as part of a github pull request."
     fi
     echo "export BRANCH_ENV=$BRANCH"
 elif [[ "$BRANCH_ENV" ]]; then
