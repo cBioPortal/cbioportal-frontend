@@ -1176,11 +1176,35 @@ export class QueryStore {
     });
 
     @computed get sampleCountForSelectedStudies() {
-        return _.sumBy(this.selectableSelectedStudies, s => s.allSampleCount);
+        return _.sumBy(this.selectableSelectedStudies, s =>
+            Math.max(
+                s.sequencedSampleCount || 0,
+                s.cnaSampleCount || 0,
+                s.mrnaRnaSeqV2SampleCount || 0,
+                s.mrnaRnaSeqSampleCount || 0,
+                s.mrnaMicroarraySampleCount || 0,
+                s.completeSampleCount || 0,
+                s.miRnaSampleCount || 0,
+                s.rppaSampleCount || 0,
+                s.massSpectrometrySampleCount || 0
+            )
+        );
     }
 
     @computed get sampleCountForAllStudies() {
-        return _.sumBy(this.selectableStudies, s => s.allSampleCount);
+        return _.sumBy(this.selectableStudies, s =>
+            Math.max(
+                s.sequencedSampleCount || 0,
+                s.cnaSampleCount || 0,
+                s.mrnaRnaSeqV2SampleCount || 0,
+                s.mrnaRnaSeqSampleCount || 0,
+                s.mrnaMicroarraySampleCount || 0,
+                s.completeSampleCount || 0,
+                s.miRnaSampleCount || 0,
+                s.rppaSampleCount || 0,
+                s.massSpectrometrySampleCount || 0
+            )
+        );
     }
 
     readonly sampleLists = remoteData<SampleList[]>({
