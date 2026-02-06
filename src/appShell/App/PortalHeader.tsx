@@ -86,6 +86,14 @@ export default class PortalHeader extends React.Component<
             },
 
             {
+                id: 'roadmap',
+                text: 'Roadmap',
+                address: 'https://about.cbioportal.org/roadmap',
+                internal: false,
+                hide: () => getServerConfig().skin_show_roadmap_tab === false,
+            },
+
+            {
                 id: 'installation-map',
                 text: 'cBioPortal Installations',
                 address: '/installations',
