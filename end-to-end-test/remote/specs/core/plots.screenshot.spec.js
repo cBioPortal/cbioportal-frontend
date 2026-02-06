@@ -9,6 +9,10 @@ const {
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
 describe('plots tab screenshot tests', function() {
+    // you cannot use retries on this spec because tests are
+    // order sensitive :(
+    this.retries(0);
+
     it('plots tab mutation type view', async () => {
         await goToUrlAndSetLocalStorage(
             `${CBIOPORTAL_URL}/results/plots?Action=Submit&RPPA_SCORE_THRESHOLD=2&Z_SCORE_THRESHOLD=2&cancer_study_id=brca_tcga&case_set_id=brca_tcga_cnaseq&data_priority=0&gene_list=TP53%20MDM2&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=brca_tcga_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=brca_tcga_mutations&plots_vert_selection=%7B"selectedDataSourceOption"%3A"rna_seq_v2_mrna_median_Zscores"%7D&tab_index=tab_visualize`

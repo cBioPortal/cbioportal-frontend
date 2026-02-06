@@ -228,7 +228,7 @@ describe('Mutation Table', function() {
                 'document.getElementsByClassName("ReactVirtualized__Grid")[0].scroll(1000, 1000)'
             );
             // wait for clinvar checkbox to appear
-            await browser.pause(2000);
+            //await browser.pause(2000);
             // click "clinvar"
             await clickElement('//*[text()="ClinVar"]');
             let res;

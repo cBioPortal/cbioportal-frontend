@@ -531,7 +531,7 @@ export default class URLWrapper<
         const stringifiedProps = this.stringifyProps(this.query);
         const stringified = this.properties.reduce((acc, nextVal) => {
             if (nextVal.isHashedProp)
-                acc = `${acc},${nextVal.name}:${
+                acc = `${acc},${String(nextVal.name)}:${
                     stringifiedProps[nextVal.name]
                 }`;
             return acc;
