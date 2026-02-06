@@ -37,6 +37,9 @@ import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
 import MutationTableWrapper from './mutation/MutationTableWrapper';
 import { PatientViewPageInner } from 'pages/patientView/PatientViewPage';
 import { Else, If } from 'react-if';
+import PatientReportTab from './oncokb/PatientReportTab';
+import { AppStore } from 'AppStore';
+import { FeatureFlagEnum } from 'shared/featureFlags';
 
 export enum PatientViewPageTabs {
     Summary = 'summary',
@@ -49,6 +52,7 @@ export enum PatientViewPageTabs {
     TrialMatchTab = 'trialMatchTab',
     MutationalSignatures = 'mutationalSignatures',
     PathwayMapper = 'pathways',
+    OncoKBPatientReport = 'oncokbKBPatientReport',
 }
 
 export const PatientViewResourceTabPrefix = 'openResource_';
@@ -69,7 +73,8 @@ export function extractResourceIdFromTabId(tabId: string) {
 export function patientViewTabs(
     pageInstance: PatientViewPageInner,
     urlWrapper: PatientViewUrlWrapper,
-    sampleManager: SampleManager | null
+    sampleManager: SampleManager | null,
+    appStore: AppStore
 ) {
     return (
         <MSKTabs
@@ -84,7 +89,7 @@ export function patientViewTabs(
                 <HelpWidget path={urlWrapper.routing.location.pathname} />
             }
         >
-            {tabs(pageInstance, sampleManager, urlWrapper)}
+            {tabs(pageInstance, sampleManager, appStore)}
         </MSKTabs>
     );
 }
@@ -92,7 +97,7 @@ export function patientViewTabs(
 export function tabs(
     pageComponent: PatientViewPageInner,
     sampleManager: SampleManager | null,
-    urlWrapper: PatientViewUrlWrapper
+    appStore: AppStore
 ) {
     const tabs: JSX.Element[] = [];
     tabs.push(
@@ -701,6 +706,20 @@ export function tabs(
                 />
             </MSKTab>
         );
+
+    if (appStore.featureFlagStore.has(FeatureFlagEnum.ONCOKB_PATIENT_REPORT)) {
+        tabs.push(
+            <MSKTab
+                key={9}
+                id={PatientViewPageTabs.OncoKBPatientReport}
+                linkText="OncoKB Patient Report"
+            >
+                <PatientReportTab
+                    patientViewPageStore={pageComponent.patientViewPageStore}
+                />
+            </MSKTab>
+        );
+    }
 
     pageComponent.resourceTabs.component &&
         /* @ts-ignore */
