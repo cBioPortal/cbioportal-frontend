@@ -16,12 +16,15 @@ import {
 } from 'pages/studyView/StudyViewPageTabs';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { ClinicalDataTab } from './tabs/ClinicalDataTab';
+import { EmbeddingsTab } from './tabs/EmbeddingsTab';
+import { EmbeddingData } from 'shared/components/embeddings/EmbeddingTypes';
 import {
     DefaultTooltip,
     getBrowserWindow,
     onMobxPromise,
     remoteData,
 } from 'cbioportal-frontend-commons';
+import { FeatureFlagEnum } from 'shared/featureFlags';
 import { PageLayout } from '../../shared/components/PageLayout/PageLayout';
 import IFrameLoader from '../../shared/components/iframeLoader/IFrameLoader';
 import { StudySummaryTab } from 'pages/studyView/tabs/SummaryTab';
@@ -96,7 +99,9 @@ export class StudyResultsSummary extends React.Component<
     render() {
         return (
             <div className={styles.selectedInfo} data-test="selected-info">
-                <strong>Selected:&nbsp;</strong>
+                {this.props.store.chartsAreFiltered && (
+                    <strong>Selected:&nbsp;</strong>
+                )}
                 <strong data-test="selected-patients">
                     {this.props.store.selectedPatients.length.toLocaleString()}
                 </strong>
@@ -122,6 +127,9 @@ export default class StudyViewPage extends React.Component<
         StudyViewPageTabKeyEnum.SUMMARY,
         StudyViewPageTabKeyEnum.CLINICAL_DATA,
         StudyViewPageTabKeyEnum.CN_SEGMENTS,
+        StudyViewPageTabKeyEnum.FILES_AND_LINKS,
+        StudyViewPageTabKeyEnum.PLOTS,
+        StudyViewPageTabKeyEnum.EMBEDDINGS,
     ];
     private enableAddChartInTabs = [
         StudyViewPageTabKeyEnum.SUMMARY,
@@ -385,6 +393,26 @@ export default class StudyViewPage extends React.Component<
         } else {
             return false;
         }
+    }
+
+    @computed get hasEmbeddingSupport() {
+        // Check if EMBEDDINGS feature flag is enabled
+        if (
+            !this.props.appStore.featureFlagStore.has(
+                FeatureFlagEnum.EMBEDDINGS
+            )
+        ) {
+            return false;
+        }
+
+        // Check if we have any studies
+        if (this.store.studyIds.length === 0) {
+            return false;
+        }
+
+        // Embeddings tab itself will handle checking if the remote data
+        // supports the current studies, so we just enable the tab here
+        return true;
     }
 
     @computed get isLoading() {
@@ -709,7 +737,9 @@ export default class StudyViewPage extends React.Component<
                                     >
                                         <IFrameLoader
                                             className="mdacc-heatmap-iframe"
-                                            url={`https://bioinformatics.mdanderson.org/TCGA/NGCHMPortal/?${this.store.MDACCHeatmapStudyMeta.result[0]}`}
+                                            url={`https://bioinformatics.mdanderson.org/TCGA/NGCHMPortal/?${this
+                                                .store.MDACCHeatmapStudyMeta
+                                                .result?.[0] || ''}`}
                                         />
                                     </MSKTab>
                                     <MSKTab
@@ -751,20 +781,30 @@ export default class StudyViewPage extends React.Component<
                                         key={5}
                                         id={StudyViewPageTabKeyEnum.PLOTS}
                                         linkText={
-                                            <span>
-                                                {
-                                                    StudyViewPageTabDescriptions.PLOTS
-                                                }{' '}
-                                                <strong className={'beta-text'}>
-                                                    Beta!
-                                                </strong>
-                                            </span>
+                                            StudyViewPageTabDescriptions.PLOTS
                                         }
                                     >
                                         <PlotsTabWrapper
                                             store={this.store}
                                             urlWrapper={this.urlWrapper}
                                         />
+                                    </MSKTab>
+                                    <MSKTab
+                                        key={6}
+                                        id={StudyViewPageTabKeyEnum.EMBEDDINGS}
+                                        linkText={
+                                            <span>
+                                                {
+                                                    StudyViewPageTabDescriptions.EMBEDDINGS
+                                                }{' '}
+                                                <strong className={'beta-text'}>
+                                                    Beta!
+                                                </strong>
+                                            </span>
+                                        }
+                                        hide={!this.hasEmbeddingSupport}
+                                    >
+                                        <EmbeddingsTab store={this.store} />
                                     </MSKTab>
 
                                     {this.resourceTabs.component}

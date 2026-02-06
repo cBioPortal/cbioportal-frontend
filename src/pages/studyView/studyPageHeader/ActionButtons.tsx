@@ -178,7 +178,7 @@ export default class ActionButtons extends React.Component<
                         })}
                         aria-label="View selected cases"
                     >
-                        <i className="fa fa-user-circle-o"></i>
+                        <i className="fa-solid fa-circle-user fa-lg"></i>
                     </button>
                 </DefaultTooltip>
 
@@ -200,7 +200,7 @@ export default class ActionButtons extends React.Component<
                         }
                         aria-label={this.virtualStudyButtonTooltip}
                     >
-                        <i className="fa fa-bookmark"></i>
+                        <i className="fa-solid fa-bookmark fa-lg"></i>
                     </button>
                 </DefaultTooltip>
 
@@ -225,10 +225,10 @@ export default class ActionButtons extends React.Component<
                         >
                             <If condition={this.downloadingData}>
                                 <Then>
-                                    <i className="fa fa-spinner fa-spin"></i>
+                                    <i className="fa-solid fa-spinner fa-spin fa-lg"></i>
                                 </Then>
                                 <Else>
-                                    <i className="fa fa-download"></i>
+                                    <i className="fa-solid fa-download fa-lg"></i>
                                 </Else>
                             </If>
                         </button>
