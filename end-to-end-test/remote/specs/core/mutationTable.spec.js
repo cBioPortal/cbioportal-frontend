@@ -133,7 +133,7 @@ describe('Mutation Table', function() {
             ).waitForDisplayed({ timeout: 300000 });
         });
 
-        it.skip('should show the gnomad table after mouse over the frequency in gnomad column', async () => {
+        it('should show the gnomad table after mouse over the frequency in gnomad column', async () => {
             // filter the table
             await setInputText(
                 '[class*=tableSearchInput]',
@@ -142,65 +142,85 @@ describe('Mutation Table', function() {
             await (
                 await getElement('[data-test=oncogenic-icon-image]')
             ).waitForDisplayed({ timeout: 10000 });
+
             // show the gnomad column
             await (await getElement('button*=Columns')).scrollIntoView();
+
             // click on column button
             await clickElement('button*=Columns');
+
             // scroll down to activated "GNOMAD" selection
             await browser.execute(
                 'document.getElementsByClassName("ReactVirtualized__Grid")[0].scroll(1000, 1000)'
             );
+
             // wait for gnomad checkbox appear
             await (
                 await getElement('[data-test="add-chart-option-gnomad"] input')
             ).waitForDisplayed({
                 timeout: 10000,
             });
+
             // click "GNOMAD"
             await setCheckboxChecked(
                 true,
                 '[data-test="add-chart-option-gnomad"] input'
             );
+
             // close columns menu
             await clickElement('button*=Columns');
 
-            await browser.pause(5000);
-            // find frequency
-            // TODO: not sure why this is not working
-
-            await browser.debug();
-
+            // Wait for the GNOMAD column to be added and data to load
+            // The span might not have a child element immediately
             const frequency =
-                '[data-test2="LUAD-B00416-Tumor"][data-test="gnomad-column"] span';
-            await getElement(frequency, {
+                '[data-test="gnomad-column"][data-test2="LUAD-B00416-Tumor"]';
+
+            // Wait for the gnomad column span to exist
+            await (await getElement(frequency)).waitForExist({
                 timeout: 10000,
             });
-            // wait for gnomad frequency show in the column
+
+            // Wait for gnomad frequency data to be populated inside the Gnomad component
             await browser.waitUntil(
                 async () => {
-                    const textFrequency = await (
-                        await getElement(frequency)
-                    ).getText();
-                    return textFrequency.length >= 1;
+                    const gnomadSpan = await getElement(frequency);
+                    const textContent = await gnomadSpan.getText();
+                    // Check if there's actual content (frequency data)
+                    return textContent && textContent.trim().length > 0;
                 },
-                10000,
-                'Frequency data not in Gnoamd column'
+                15000,
+                'Frequency data not loaded in Gnomad column'
             );
-            // mouse over the frequency
-            await (await getElement(frequency)).moveTo();
-            // wait for gnomad table showing up
-            await getElement('[data-test="gnomad-table"]', { timeout: 20000 });
-            // check if the gnomad table show up
+
+            // Now get the actual frequency element inside the span
+            // The Gnomad component renders the frequency, so we need to target it
+            const frequencyElement = await getElement(frequency);
+
+            // Scroll the element into view to ensure it's visible
+            await frequencyElement.scrollIntoView();
+
+            // Wait a bit for any animations/rendering
+            await browser.pause(500);
+
+            // Mouse over the frequency element
+            await frequencyElement.moveTo();
+
+            // Wait for gnomad table tooltip to show up
+            await (
+                await getElement('[data-test="gnomad-table"]')
+            ).waitForDisplayed({ timeout: 10000 });
+
+            // Check if the gnomad table has 9 allele frequency rows
             let res;
             await browser.waitUntil(
                 async () => {
                     res = await executeInBrowser(
                         () => $('[data-test="allele-frequency-data"]').length
                     );
-                    return res == 9;
+                    return res === 9;
                 },
                 10000,
-                `Failed: There's 9 allele frequency rows in table (${res} found)`
+                `Failed: There should be 9 allele frequency rows in table (${res} found)`
             );
         });
     });
