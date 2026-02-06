@@ -406,8 +406,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             (this.props.promise.result.treatments ??
                 this.props.promise.result.patientTreatments ??
                 this.props.promise.result)!.length > 1 &&
-            COMPARISON_CHART_TYPES.indexOf(this.props.chartType) > -1 &&
-            !this.props.chartMeta.mutationOptionType
+            COMPARISON_CHART_TYPES.indexOf(this.props.chartType) > -1
         );
     }
 
