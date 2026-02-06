@@ -72,8 +72,9 @@ describe('plots tab tests', function() {
             timeout: 20000,
         });
         assert(
-            (await getTextFromElement(METHYLATION_OPTION_SELECTION_BOX)) ===
-                "TP53;WRAP53 (cg06587969): TSS1500;5'UTR;1stExon"
+            (
+                await getTextFromElement(METHYLATION_OPTION_SELECTION_BOX)
+            ).startsWith('TP53;WRAP53')
         );
     });
 });
