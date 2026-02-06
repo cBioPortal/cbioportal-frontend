@@ -37,6 +37,7 @@ export const enum MIS_TYPE_VALUE {
 
 export const MSI_H_THRESHOLD = 10;
 export const TMB_H_THRESHOLD = 10;
+export const DEFAULT_Z_SCORE_THRESHOLD = 2;
 
 /* cbioportal api responses - clinical attribute fields and subfields */
 export const enum CLINICAL_ATTRIBUTE_FIELD_ENUM {
