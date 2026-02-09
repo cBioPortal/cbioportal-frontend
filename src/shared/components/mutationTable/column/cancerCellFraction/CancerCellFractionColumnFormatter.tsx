@@ -61,6 +61,12 @@ export default class CancerCellFractionColumnFormatter {
                 : 'NA';
             sampleToClonalValue[mutation.sampleId] = getClonalValue(mutation);
         }
+        // If only one sampleId is present, render just the CCF value without the graphical element
+        if (sampleIds.length === 1) {
+            const singleSampleId = sampleIds[0];
+            const ccfValue = sampleToCCFValue[singleSampleId];
+            return <span>{ccfValue}</span>;
+        }
         return (
             <span data-test="ccf-cell">
                 <CancerCellFractionElement
