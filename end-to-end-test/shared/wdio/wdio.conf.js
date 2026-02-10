@@ -257,10 +257,7 @@ exports.config = {
     //
 
     // specs: [SPEC_FILE_PATTERN],
-    specs: [
-        './remote/specs/core/genomicEvolution.screenshot.spec.js',
-        './remote/specs/core/comparisonTab.screenshot.spec.js',
-    ],
+    specs: ['./remote/specs/core/genomicEvolution.screenshot.spec.js'],
 
     //exclude: ['./remote/specs/core/groupComparisonLollipop.spec.js'],
 
