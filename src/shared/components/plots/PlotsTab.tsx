@@ -124,6 +124,7 @@ import ResultsViewURLWrapper, {
 import ClinicalDataCache, {
     SpecialAttribute,
 } from '../../../shared/cache/ClinicalDataCache';
+import { createCancerStudyAttribute } from 'shared/lib/ClinicalAttributeUtils';
 import LabeledCheckbox from '../../../shared/components/labeledCheckbox/LabeledCheckbox';
 import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
 import {
@@ -2281,10 +2282,16 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 })),
             });
 
+            // Add Cancer Study as a special attribute at the beginning
+            const clinicalAttrsWithCancerStudy = [
+                createCancerStudyAttribute(),
+                ...this.clinicalAndCustomAttributes.result!,
+            ];
+
             allOptions.push({
                 label: 'Clinical Attributes',
-                options: this.clinicalAndCustomAttributes
-                    .result!.filter(a => {
+                options: clinicalAttrsWithCancerStudy
+                    .filter(a => {
                         return (
                             a.clinicalAttributeId !==
                             SpecialAttribute.MutationSpectrum
