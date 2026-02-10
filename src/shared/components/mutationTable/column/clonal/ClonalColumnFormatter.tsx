@@ -33,6 +33,7 @@ export const getDefaultClonalColumnDefinition = (
 ) => {
     return {
         name: MutationTableColumnType.CLONAL,
+        headerTooltip: 'Clonal status',
         render: (d: Mutation[]) =>
             ClonalColumnFormatter.renderFunction(
                 d,

@@ -184,7 +184,7 @@ export enum MutationTableColumnType {
     VALIDATION_STATUS = 'VS',
     MUTATION_TYPE = 'Mutation Type',
     VARIANT_TYPE = 'Variant Type',
-    CLONAL = 'Clonal',
+    CLONAL = 'Clonality',
     CANCER_CELL_FRACTION = 'CCF',
     EXPECTED_ALT_COPIES = 'Mutant Integer Copy #',
     CENTER = 'Center',
