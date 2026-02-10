@@ -256,8 +256,8 @@ exports.config = {
     //
     //
 
-    // specs: [SPEC_FILE_PATTERN],
-    specs: ['./remote/specs/core/genomicEvolution.screenshot.spec.js'],
+    specs: [SPEC_FILE_PATTERN],
+    //specs: ['./local/specs/core/oncoprint.screenshot.spec.js'],
 
     //exclude: ['./remote/specs/core/groupComparisonLollipop.spec.js'],
 
