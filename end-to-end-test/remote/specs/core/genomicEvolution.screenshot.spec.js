@@ -148,7 +148,7 @@ describe('Patient View Genomic Evolution tab screenshot tests', () => {
         assertScreenShotMatch(res);
     });
     it('pvge uncluster heatmap', async () => {
-        await clickElement('input[data-test="HeatmapCluster"]');
+        await setCheckboxChecked(false, 'input[data-test="HeatmapCluster"]');
         await browser.pause(2000); // give time to uncluster
         const res = await checkElementWithMouseDisabled(
             'div#MutationHeatmap',
@@ -160,7 +160,7 @@ describe('Patient View Genomic Evolution tab screenshot tests', () => {
         assertScreenShotMatch(res);
     });
     it('pvge transpose heatmap', async () => {
-        await clickElement('input[data-test="HeatmapTranspose"]');
+        await setCheckboxChecked(true, 'input[data-test="HeatmapTranspose"]');
         await browser.pause(2000); // give time to transpose
         const res = await checkElementWithMouseDisabled(
             'div#MutationHeatmap',
@@ -172,7 +172,10 @@ describe('Patient View Genomic Evolution tab screenshot tests', () => {
         assertScreenShotMatch(res);
     });
     it('pvge transposed heatmap hide labels', async () => {
-        await clickElement('input[data-test="HeatmapMutationLabels"]');
+        await setCheckboxChecked(
+            false,
+            'input[data-test="HeatmapMutationLabels"]'
+        );
         await browser.pause(400); // give time to rerender
         const res = await checkElementWithMouseDisabled(
             'div#MutationHeatmap',
