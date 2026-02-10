@@ -880,7 +880,7 @@ export function getUniqueKeyFromMolecularProfileIds(
     chartType?: ChartTypeEnum
 ) {
     const returnValue = _(molecularProfileIds)
-        .sortBy(molecularProfileIds)
+        .sortBy()
         .join(UNIQUE_KEY_SEPARATOR);
     return chartType
         ? chartType + CHART_TYPE_SEPARATOR + returnValue
