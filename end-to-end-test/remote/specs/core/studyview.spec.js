@@ -776,6 +776,9 @@ describe('the gene panel is loaded properly', () => {
             `${tooltipSelector} a[data-test='gene-panel-linkout-IMPACT341']`
         );
 
+        // pause a little so that the modal can fully render
+        await browser.pause(2000);
+
         // the modal title should show gene panel ID
         await (
             await getElement(`[data-test="gene-panel-modal-title"]`)
