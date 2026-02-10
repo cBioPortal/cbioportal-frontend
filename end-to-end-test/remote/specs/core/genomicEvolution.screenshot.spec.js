@@ -140,7 +140,7 @@ describe('Patient View Genomic Evolution tab screenshot tests', function() {
 
         await el.scrollIntoView();
 
-        await el.moveTo();
+        await jsApiHover(el);
 
         const res = await browser.checkElement(
             'div[data-test="GenomicEvolutionTab"]',
