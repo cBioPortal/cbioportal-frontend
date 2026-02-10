@@ -57,6 +57,12 @@ export interface IServerConfig {
     mygene_info_url: string | null;
     g2s_url: string | null;
     google_analytics_profile_id: string | null;
+    datadog_rum_application_id: string | null;
+    datadog_rum_client_token: string | null;
+    datadog_rum_site: string | null;
+    datadog_rum_env: string | null;
+    datadog_rum_session_sample_rate: number | null;
+    datadog_rum_session_replay_sample_rate: number | null;
     ptmSources: string[] | undefined;
     oncoprint_hide_vus_default: boolean;
     oncokb_public_api_url: string | null;
