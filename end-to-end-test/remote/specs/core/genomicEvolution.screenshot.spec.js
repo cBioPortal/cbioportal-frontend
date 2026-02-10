@@ -17,6 +17,7 @@ const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 const patientViewUrl = `${CBIOPORTAL_URL}/patient/genomicEvolution?caseId=P04&studyId=lgg_ucsf_2014`;
 
 describe('Patient View Genomic Evolution tab screenshot tests', () => {
+    this.retries(0);
     before(async () => {
         await goToUrlAndSetLocalStorage(patientViewUrl);
         await browser.pause(2000);
