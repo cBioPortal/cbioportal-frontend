@@ -1,6 +1,9 @@
 const MAX_PARAGRAPH_LENGTH = 300;
 const MAX_ITEM_HEIGHT = 400; // Maximum height in pixels before truncating
 
+// we have to consider the abreviated month names
+const dateIdPattern = /^(january|jan|february|feb|march|mar|april|apr|may|june|jun|july|jul|august|aug|september|sep|sept|october|oct|november|nov|december|dec)-\d{1,2}-\d{4}/;
+
 export default function parseNews(html: string) {
     const contentItems = $(html)
         .find('#docs-content')
@@ -8,11 +11,7 @@ export default function parseNews(html: string) {
         .filter((i, el) => {
             // Match date IDs like "november-15-2025", "december-18-2024", etc.
             // Pattern: full month name, day (1-2 digits), and 4-digit year
-            return (
-                /^(january|february|march|april|may|june|july|august|september|october|november|december)-\d{1,2}-\d{4}/.test(
-                    el.id
-                ) || el.tagName === 'UL'
-            );
+            return dateIdPattern.test(el.id) || el.tagName === 'UL';
         });
 
     // Track the last seen date ID for UL elements that don't have their own ID
@@ -20,7 +19,6 @@ export default function parseNews(html: string) {
 
     contentItems.each((i, el) => {
         // Track date IDs as we encounter them
-        const dateIdPattern = /^(january|february|march|april|may|june|july|august|september|october|november|december)-\d{1,2}-\d{4}/;
         if (dateIdPattern.test(el.id)) {
             lastSeenDateId = el.id;
         }

@@ -779,11 +779,15 @@ h2.divider {
     border: 1px solid $borderColor;
 
     /* Fix for #10511: reduce spacing between date and list items */
-    ul {
+    > ul {
         padding-left: 20px;
-        margin-top: 10px !important;     
-        padding-top: 0 !important;    
+        margin-top: 10px;
+        padding-top: 0;
         margin-bottom: 10px;
+
+        > li {
+            margin-bottom: 12px;
+        }
     }
 
     img {
@@ -796,18 +800,22 @@ h2.divider {
     }
 
     /* tightened up the headers to reduce whitespace */
-    h2, h3, h4 {
+    h2,
+    h3,
+    h4 {
         font-size: 14px;
         border-top: 1px dashed $borderColor;
         padding-top: 10px;
-        margin-bottom: 2px !important; 
+        margin-bottom: 2px;
         margin-top: 0;
         line-height: 1.4;
     }
 
     /* special case for the first item: no top border needed */
     doc-anchor-target:first-of-type {
-        h2, h3 {
+        h2,
+        h3,
+        h4 {
             padding-top: 0;
             border: none;
             margin-top: 0;
@@ -819,5 +827,4 @@ h2.divider {
         top: 45%;
         left: 40%;
     }
-    
 }
