@@ -3646,7 +3646,7 @@ export default class CBioPortalAPI {
     getMutationsInMolecularProfileBySampleListIdUsingGETURL(parameters: {
         'molecularProfileId': string,
         'sampleListId': string,
-        'entrezGeneId' ? : number,
+        'entrezGeneId': number,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
@@ -3712,7 +3712,7 @@ export default class CBioPortalAPI {
     getMutationsInMolecularProfileBySampleListIdUsingGETWithHttpInfo(parameters: {
         'molecularProfileId': string,
         'sampleListId': string,
-        'entrezGeneId' ? : number,
+        'entrezGeneId': number,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
@@ -3750,6 +3750,11 @@ export default class CBioPortalAPI {
 
             if (parameters['entrezGeneId'] !== undefined) {
                 queryParameters['entrezGeneId'] = parameters['entrezGeneId'];
+            }
+
+            if (parameters['entrezGeneId'] === undefined) {
+                reject(new Error('Missing required  parameter: entrezGeneId'));
+                return;
             }
 
             if (parameters['projection'] !== undefined) {
@@ -3800,7 +3805,7 @@ export default class CBioPortalAPI {
     getMutationsInMolecularProfileBySampleListIdUsingGET(parameters: {
             'molecularProfileId': string,
             'sampleListId': string,
-            'entrezGeneId' ? : number,
+            'entrezGeneId': number,
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,

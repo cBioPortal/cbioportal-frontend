@@ -1707,7 +1707,7 @@
             "format": "int32",
             "in": "query",
             "name": "entrezGeneId",
-            "required": false,
+            "required": true,
             "type": "integer"
           },
           {
