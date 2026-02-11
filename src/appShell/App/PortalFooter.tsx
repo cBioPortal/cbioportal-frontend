@@ -9,7 +9,7 @@ import { observer } from 'mobx-react';
 import { getLoadConfig, getServerConfig } from 'config/config';
 
 @observer
-export default class PortalFooter extends React.Component
+export default class PortalFooter extends React.Component<
     { appStore: AppStore },
     {}
 > {
@@ -89,7 +89,7 @@ export default class PortalFooter extends React.Component
                                         }
                                     >
                                         <li>
-                                            
+                                            <a
                                                 target="_blank"
                                                 href="https://docs.cbioportal.org/user-guide/overview/"
                                             >
@@ -103,7 +103,7 @@ export default class PortalFooter extends React.Component
                                         }
                                     >
                                         <li>
-                                            
+                                            <a
                                                 target={'_blank'}
                                                 href="https://docs.cbioportal.org/user-guide/faq/"
                                             >
@@ -112,7 +112,7 @@ export default class PortalFooter extends React.Component
                                         </li>
                                     </If>
                                     <li>
-                                        
+                                        <a
                                             target="_blank"
                                             href="https://groups.google.com/forum/#!forum/cbioportal"
                                         >
@@ -137,7 +137,7 @@ export default class PortalFooter extends React.Component
                                         }
                                     >
                                         <li>
-                                            
+                                            <a
                                                 target="_blank"
                                                 href="https://docs.cbioportal.org/news/"
                                             >
@@ -152,7 +152,7 @@ export default class PortalFooter extends React.Component
                                         }
                                     >
                                         <li>
-                                            
+                                            <a
                                                 target={'_blank'}
                                                 href="https://about.cbioportal.org/"
                                             >
@@ -167,7 +167,7 @@ export default class PortalFooter extends React.Component
                                         }
                                     >
                                         <li>
-                                            
+                                            <a
                                                 target={'_blank'}
                                                 href="https://about.cbioportal.org/roadmap"
                                             >
@@ -184,7 +184,7 @@ export default class PortalFooter extends React.Component
                                         }
                                     >
                                         <li>
-                                            
+                                            <a
                                                 href={`${
                                                     getLoadConfig().apiRoot
                                                 }api`}
@@ -200,7 +200,7 @@ export default class PortalFooter extends React.Component
                                         }
                                     >
                                         <li>
-                                            
+                                            <a
                                                 target="_blank"
                                                 href="https://www.twitter.com/cbioportal"
                                             >
@@ -219,7 +219,7 @@ export default class PortalFooter extends React.Component
                                         <Link to="/software">Software</Link>
                                     </li>
                                     <li>
-                                        
+                                        <a
                                             target="_blank"
                                             href="https://github.com/cBioPortal/"
                                         >
@@ -227,7 +227,7 @@ export default class PortalFooter extends React.Component
                                         </a>
                                     </li>
                                     <li>
-                                        
+                                        <a
                                             target="_blank"
                                             href="https://slack.cbioportal.org"
                                         >
@@ -251,7 +251,7 @@ export default class PortalFooter extends React.Component
                             <h3>CONTACT</h3>
                             <ul>
                                 <li>
-                                    
+                                    <a
                                         href={`mailto:${
                                             getServerConfig().skin_email_contact
                                         }`}
