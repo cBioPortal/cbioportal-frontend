@@ -777,27 +777,51 @@ h2.divider {
     overflow-y: scroll;
     overflow-x: hidden;
     border: 1px solid $borderColor;
+
+    /* Fix for #10511: reduce spacing between date and list items */
     > ul {
-        padding-inline-start: 0;
+        padding-left: 20px;
+        margin-top: 10px;
+        padding-top: 0;
+        margin-bottom: 10px;
+
+        > li {
+            margin-bottom: 12px;
+        }
     }
+
     img {
         max-width: 250px;
         margin: 5px 0;
     }
+
     doc-anchor-trigger {
         display: none;
     }
-    h2 {
+
+    /* tightened up the headers to reduce whitespace */
+    h2,
+    h3,
+    h4 {
         font-size: 14px;
         border-top: 1px dashed $borderColor;
         padding-top: 10px;
+        margin-bottom: 2px;
+        margin-top: 0;
+        line-height: 1.4;
     }
+
+    /* special case for the first item: no top border needed */
     doc-anchor-target:first-of-type {
-        h2 {
+        h2,
+        h3,
+        h4 {
             padding-top: 0;
             border: none;
+            margin-top: 0;
         }
     }
+
     .newsLoader {
         position: relative;
         top: 45%;
