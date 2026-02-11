@@ -780,14 +780,12 @@ describe('the gene panel is loaded properly', () => {
         await browser.pause(2000);
 
         // the modal title should show gene panel ID
-        await (
-            await getElement(`[data-test="gene-panel-modal-title"]`)
-        ).waitForDisplayed({
-            timeout: WAIT_FOR_VISIBLE_TIMEOUT,
-        });
-        assert.equal(
-            await getTextFromElement(`[data-test="gene-panel-modal-title"]`),
-            'IMPACT341'
+        await browser.waitUntil(
+            async () =>
+                (await getTextFromElement(
+                    `[data-test="gene-panel-modal-title"]`
+                )) === 'IMPACT341',
+            { timeout: WAIT_FOR_VISIBLE_TIMEOUT }
         );
 
         // test whether the gene info has been loaded correctly
