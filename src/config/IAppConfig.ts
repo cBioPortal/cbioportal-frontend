@@ -117,6 +117,7 @@ export interface IServerConfig {
     skin_right_nav_show_web_tours: boolean;
     skin_right_nav_whats_new_blurb: string | null;
     skin_show_about_tab: boolean;
+    skin_show_roadmap_tab: boolean;
     skin_show_data_tab: boolean;
     skin_show_faqs_tab: boolean;
     skin_show_news_tab: boolean;
