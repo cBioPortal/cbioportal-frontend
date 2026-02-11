@@ -1147,12 +1147,32 @@
   resolved "https://registry.yarnpkg.com/@datadog/browser-core/-/browser-core-5.28.0.tgz#bd4677eeb08fcd3c98eba0600e34a2d8bc347ee2"
   integrity sha512-aLYXaTkbZQIpyx+mxRGnj3Es6njoac8VhBaGr27KPuvwb/xJlBgAt5K/xdGxAPO135mdfq5evmguWuMpffE4Og==
 
+"@datadog/browser-core@6.26.0":
+  version "6.26.0"
+  resolved "https://registry.yarnpkg.com/@datadog/browser-core/-/browser-core-6.26.0.tgz#59a39c93478e0989aab89c02814c02c970b0a26c"
+  integrity sha512-F0KDzcmhpXPO3lr7uIMOc7t3rdvWqL3Jg/YQbODplwDGZYh99rtfU6M/6onDuImr4tsbiGtBJVcGdDj3rmJibQ==
+
 "@datadog/browser-logs@^5.28.0":
   version "5.28.0"
   resolved "https://registry.yarnpkg.com/@datadog/browser-logs/-/browser-logs-5.28.0.tgz#9f86067c0482d0ea01a86a185aff511252d52307"
   integrity sha512-MdmgRnYgxkqHBYQ6nv9VDGLRQcqPgs68PLV6vj1uR1d36F6ZU2r6Blta8qhw3tWyopipw6y08MRuZ4XR2HLtQQ==
   dependencies:
     "@datadog/browser-core" "5.28.0"
+
+"@datadog/browser-rum-core@6.26.0":
+  version "6.26.0"
+  resolved "https://registry.yarnpkg.com/@datadog/browser-rum-core/-/browser-rum-core-6.26.0.tgz#45fe525b7ccc774d5f172dfd4735939490ea654d"
+  integrity sha512-2JFFGZ2TUoaWiSVBSBFJoy0j9QAqHSg8Kv6goRJc0XLK6OTNsStPZMVzRNKa4qtbsYQmRtdgFqo33JQEEXziGA==
+  dependencies:
+    "@datadog/browser-core" "6.26.0"
+
+"@datadog/browser-rum@^6.26.0":
+  version "6.26.0"
+  resolved "https://registry.yarnpkg.com/@datadog/browser-rum/-/browser-rum-6.26.0.tgz#7bf0d961b460037e17f1cf4cfa5303400f660118"
+  integrity sha512-4UtsEh5cgeYX5g60cVxviOc/4mZgECoIbsJEtMln88YoXxbgzqoSCoR3XssmNEv7NhG17OJjyXsuxtItg+kQIA==
+  dependencies:
+    "@datadog/browser-core" "6.26.0"
+    "@datadog/browser-rum-core" "6.26.0"
 
 "@datastructures-js/max-heap@^2.0.0":
   version "2.0.0"
