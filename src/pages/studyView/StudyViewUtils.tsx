@@ -26,6 +26,8 @@ import {
     MolecularProfile,
     MutationMultipleStudyFilter,
     NamespaceAttribute,
+    NamespaceDataCount,
+    NamespaceDataCountItem,
     NamespaceDataFilter,
     NumericGeneMolecularData,
     OredPatientTreatmentFilters,
@@ -4397,14 +4399,14 @@ export async function invokeNamespaceDataCount(
     );
 
     const data = result.find(
-        d =>
+        (d: NamespaceDataCountItem) =>
             d.outerKey === chartMeta.namespaceAttribute!.outerKey &&
             d.innerKey === chartMeta.namespaceAttribute!.innerKey
     );
 
     let counts: MultiSelectionTableRow[] = [];
     if (data !== undefined) {
-        counts = data.counts.map(c => {
+        counts = data.counts.map((c: NamespaceDataCount) => {
             return {
                 uniqueKey: c.value,
                 label: c.value,
