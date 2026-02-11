@@ -33,10 +33,6 @@ export default class PathologyReport extends React.Component<
         )}&pid=explorer&efh=false&a=v&chrome=false&embedded=true`;
     }
 
-    // shouldComponentUpdate(nextProps: IPathologyReportProps){
-    //     return nextProps === this.props;
-    // }
-
     handleSelection() {
         this.setState({
             pdfUrl: this.buildPDFUrl(

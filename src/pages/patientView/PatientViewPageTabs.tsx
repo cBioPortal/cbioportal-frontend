@@ -581,13 +581,16 @@ export function tabs(
             hide={!pageComponent.shouldShowPathologyReport}
         >
             <div>
-                <PathologyReport
-                    iframeHeight={WindowStore.size.height - 220}
-                    pdfs={
-                        pageComponent.patientViewPageStore.pathologyReport
-                            .result
-                    }
-                />
+                {pageComponent.patientViewPageStore.pathologyReport
+                    .isComplete && (
+                    <PathologyReport
+                        iframeHeight={WindowStore.size.height - 220}
+                        pdfs={
+                            pageComponent.patientViewPageStore.pathologyReport
+                                .result
+                        }
+                    />
+                )}
             </div>
         </MSKTab>
     );
