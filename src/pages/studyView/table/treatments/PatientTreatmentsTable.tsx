@@ -205,7 +205,7 @@ export class PatientTreatmentsTable extends TreatmentsTable<
             .filter(data =>
                 this.flattenedFilters.includes(treatmentUniqueKey(data))
             )
-            .sortBy<PatientTreatment>(data =>
+            .sortBy<PatientTreatment>((data: PatientTreatment) =>
                 ifNotDefined(
                     order[treatmentUniqueKey(data)],
                     Number.POSITIVE_INFINITY

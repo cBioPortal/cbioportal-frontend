@@ -4,14 +4,33 @@ const camelcase = require('camelcase');
 
 const [node, script, folder, ...classNames] = process.argv;
 for (const className of classNames) {
-    const swagger = JSON.parse(
-        fs.readFileSync(path.join(folder, `${className}-docs.json`))
-    );
+    const filePath = path.join(folder, `${className}-docs.json`);
+    const fileContent = fs.readFileSync(filePath, 'utf8');
+
+    if (!fileContent || fileContent.trim().length === 0) {
+        console.error(
+            `Error: ${filePath} is empty. The api-spec-converter step may have failed.`
+        );
+        process.exit(1);
+    }
+
+    let swagger;
+    try {
+        swagger = JSON.parse(fileContent);
+    } catch (error) {
+        console.error(
+            `Error: Failed to parse JSON from ${filePath}:`,
+            error.message
+        );
+        console.error(
+            `File content (first 500 chars):`,
+            fileContent.substring(0, 500)
+        );
+        process.exit(1);
+    }
+
     const modified_swagger = fixRequestBodyNames(swagger);
-    fs.writeFileSync(
-        path.join(folder, `${className}-docs.json`),
-        JSON.stringify(modified_swagger, null, 2)
-    );
+    fs.writeFileSync(filePath, JSON.stringify(modified_swagger, null, 2));
 }
 
 function camelCase(str) {
