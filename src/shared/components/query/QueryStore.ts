@@ -1091,6 +1091,12 @@ export class QueryStore {
                 this.studiesHaveChangedSinceInitialization
             ) {
                 this.profileFilterSet = undefined;
+
+                // default profile selection when profiles are loaded
+                const defaultProfile = this.defaultProfileToSelect;
+                if (defaultProfile) {
+                    this.selectMolecularProfile(defaultProfile, true);
+                }
             }
         },
     });
@@ -1787,6 +1793,54 @@ export class QueryStore {
             this.defaultProfilesForOql &&
             this.defaultProfilesForOql[AlterationTypeConstants.PROTEIN_LEVEL]
         );
+    }
+
+    @computed get shouldSelectDefaultProfile() {
+        // select default profile if no profiles are currently selected
+        if (Object.keys(this.selectedProfileIdSet).length > 0) {
+            return false;
+        }
+
+        // count how many profile types are available
+        let profileTypeCount = 0;
+        Object.values(AlterationTypeConstants).forEach(profileType => {
+            if (this.getFilteredProfiles(profileType as any).length > 0) {
+                profileTypeCount++;
+            }
+        });
+
+        // if only one profile type available, use it
+        if (profileTypeCount === 1) {
+            return true;
+        }
+
+        // fallback: if multiple profile types exist but no mutation profiles, auto select mRNA profile if available
+        const hasMutationProfile =
+            this.getFilteredProfiles(
+                AlterationTypeConstants.MUTATION_EXTENDED as any
+            ).length > 0;
+        const hasMrnaProfile =
+            this.getFilteredProfiles(
+                AlterationTypeConstants.MRNA_EXPRESSION as any
+            ).length > 0;
+
+        return !hasMutationProfile && hasMrnaProfile;
+    }
+
+    @computed get defaultProfileToSelect() {
+        if (!this.shouldSelectDefaultProfile) {
+            return undefined;
+        }
+
+        // find the profile type to auto-select
+        for (const profileType of Object.values(AlterationTypeConstants)) {
+            const profiles = this.getFilteredProfiles(profileType as any);
+            if (profiles.length > 0) {
+                return profiles[0];
+            }
+        }
+
+        return undefined;
     }
 
     // SAMPLE LIST

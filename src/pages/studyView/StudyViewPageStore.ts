@@ -10223,6 +10223,11 @@ export class StudyViewPageStore
                     getSuffixOfMolecularProfile(this.defaultProtProfile)
                 );
             }
+            if (this.defaultMrnaProfile) {
+                molecularProfileFilters.push(
+                    getSuffixOfMolecularProfile(this.defaultMrnaProfile)
+                );
+            }
         } else {
             molecularProfileFilters = _.chain([
                 ...this.mutationProfiles.result,
