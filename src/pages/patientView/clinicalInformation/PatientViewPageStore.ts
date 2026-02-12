@@ -107,10 +107,13 @@ import {
     tumorTypeResolver,
     evaluatePutativeDriverInfoWithHotspots,
     evaluatePutativeDriverInfo,
+    IDataQueryFilter,
+    generateDataQueryFilter,
 } from 'shared/lib/StoreUtils';
 import {
     computeGenePanelInformation,
     CoverageInformation,
+    getCoverageInformation,
 } from 'shared/lib/GenePanelUtils';
 import {
     fetchCivicGenes,
@@ -172,6 +175,7 @@ import {
     TMB_H_THRESHOLD,
     AlterationTypeConstants,
     DataTypeConstants,
+    REQUEST_ARG_ENUM,
 } from 'shared/constants';
 import {
     OTHER_BIOMARKER_HUGO_SYMBOL,
@@ -186,6 +190,7 @@ import {
 import {
     getGenericAssayMetaPropertyOrDefault,
     getGenericAssayCategoryFromName,
+    fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecularProfileId,
 } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { GenericAssayTypeConstants } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
 
@@ -201,6 +206,8 @@ import { buildNamespaceColumnConfig } from 'shared/components/namespaceColumns/n
 import { SiteError } from 'shared/model/appMisc';
 import { AnnotatedExtendedAlteration } from 'shared/model/AnnotatedExtendedAlteration';
 import { CustomDriverNumericGeneMolecularData } from 'shared/model/CustomDriverNumericGeneMolecularData';
+import PatientViewUrlWrapper from '../PatientViewUrlWrapper';
+import { PatientViewPlotsStore } from './PatientViewPlotsStore';
 
 type PageMode = 'patient' | 'sample';
 type ResourceId = string;
@@ -323,6 +330,7 @@ function transformClinicalInformationToStoreShape(
 export class PatientViewPageStore {
     constructor(
         private appStore: AppStore,
+        private urlWrapper: PatientViewUrlWrapper,
         studyId: string,
         patientId: string,
         sampleId: string = '',
@@ -340,7 +348,15 @@ export class PatientViewPageStore {
         this._sampleId = sampleId;
 
         this.studyId = studyId;
+
+        this.patientViewPlotsStore = new PatientViewPlotsStore(
+            appStore,
+            urlWrapper,
+            this
+        );
     }
+
+    public patientViewPlotsStore: PatientViewPlotsStore;
 
     public internalClient: CBioPortalAPIInternal;
 
