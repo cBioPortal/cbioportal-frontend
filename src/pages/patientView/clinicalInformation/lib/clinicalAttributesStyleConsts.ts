@@ -11,8 +11,8 @@ export interface configAttribute {
 // Colors taken from clinicalAttributes.scss
 export const colors = {
     sampleColorPrimary: 'black',
-    sampleColorRecurrence: 'orange',
-    sampleColorMetastasis: 'red',
+    sampleColorRecurrence: '#805300',
+    sampleColorMetastasis: '#c70000',
     sampleColorCfdna: 'blue',
     sampleColorOrganoid: 'paleVioletRed',
 };
@@ -128,7 +128,7 @@ export const config: { [key: string]: configAttribute } = {
     OS_STATUS: {
         primary: true,
         values: {
-            DECEASED: '#f00',
+            DECEASED: '#e00000',
             DEAD: '#f00',
             LIVING: 'rgb(0, 128, 0)',
             ALIVE: 'rgb(0, 128, 0)',

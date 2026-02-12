@@ -112,7 +112,7 @@ export const DataTypeFilter: FunctionComponent<IDataTypeFilterProps> = props => 
                                 style={{
                                     padding: '20px',
                                     textAlign: 'center',
-                                    color: '#999',
+                                    color: '#6b6b6b',
                                 }}
                             >
                                 <i
@@ -130,7 +130,7 @@ export const DataTypeFilter: FunctionComponent<IDataTypeFilterProps> = props => 
                                     <tr>
                                         <th
                                             style={{
-                                                color: '#3786C2',
+                                                color: '#2f73a7',
                                                 borderTop: 'none',
                                             }}
                                         >
@@ -139,7 +139,7 @@ export const DataTypeFilter: FunctionComponent<IDataTypeFilterProps> = props => 
                                         <th
                                             style={{
                                                 textAlign: 'right',
-                                                color: '#999',
+                                                color: '#6b6b6b',
                                                 borderTop: 'none',
                                             }}
                                         >
@@ -148,7 +148,7 @@ export const DataTypeFilter: FunctionComponent<IDataTypeFilterProps> = props => 
                                         <th
                                             style={{
                                                 textAlign: 'right',
-                                                color: '#999',
+                                                color: '#6b6b6b',
                                                 borderTop: 'none',
                                             }}
                                         >
@@ -216,7 +216,7 @@ export const DataTypeFilter: FunctionComponent<IDataTypeFilterProps> = props => 
                                                         textAlign: 'right',
                                                         color: isZero
                                                             ? '#ccc'
-                                                            : '#999',
+                                                            : '#6b6b6b',
                                                         paddingTop: 8,
                                                         paddingBottom: 8,
                                                     }}
@@ -228,7 +228,7 @@ export const DataTypeFilter: FunctionComponent<IDataTypeFilterProps> = props => 
                                                         textAlign: 'right',
                                                         color: isZero
                                                             ? '#ccc'
-                                                            : '#999',
+                                                            : '#6b6b6b',
                                                         paddingTop: 8,
                                                         paddingBottom: 8,
                                                     }}

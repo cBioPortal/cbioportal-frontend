@@ -104,7 +104,7 @@ export default class RightBar extends React.Component<
                                 href="https://docs.cbioportal.org/news/"
                                 target="_blank"
                                 style={{
-                                    color: '#2986e2',
+                                    color: '#2f73a7',
                                     textDecoration: 'none',
                                 }}
                                 title="View all news"

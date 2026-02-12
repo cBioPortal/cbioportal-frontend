@@ -401,6 +401,9 @@ export default class QueryContainer extends React.Component<
                                                     .hasSelectedStudies,
                                             }
                                         )}
+                                        aria-disabled={
+                                            !this.store.hasSelectedStudies
+                                        }
                                     >
                                         <i
                                             className={'fa fa-search'}
@@ -445,6 +448,9 @@ export default class QueryContainer extends React.Component<
                                                     .exploreCohortsButtonDisabled,
                                             }
                                         )}
+                                        aria-disabled={
+                                            this.exploreCohortsButtonDisabled
+                                        }
                                     >
                                         <i
                                             style={{ marginTop: 5 }}

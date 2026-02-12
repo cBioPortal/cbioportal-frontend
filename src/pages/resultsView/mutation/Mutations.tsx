@@ -145,7 +145,7 @@ export default class Mutations extends React.Component<
                 tabs.push(
                     <MSKTab
                         key={gene}
-                        id={gene}
+                        id={`${gene}Tab`}
                         linkText={gene}
                         anchorStyle={anchorStyle}
                     >

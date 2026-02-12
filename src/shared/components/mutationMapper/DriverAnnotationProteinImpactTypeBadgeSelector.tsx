@@ -279,6 +279,9 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
                 : undefined,
             badgeStyleOverride: {
                 backgroundColor: this.proteinImpactTypeColors[value],
+                color: value.includes('unknown_significance')
+                    ? '#ffffff'
+                    : undefined,
             },
         }));
     }
@@ -290,6 +293,7 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
                     styles.driverAnnotationSettingsButton,
                     'btn btn-primary'
                 )}
+                aria-label="Change drive filtering in Sliders button"
                 onClick={this.onSettingMenuClick}
             >
                 <i

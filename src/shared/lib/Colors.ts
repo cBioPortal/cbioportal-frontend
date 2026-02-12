@@ -16,7 +16,7 @@ import { RGBAColor } from 'oncoprintjs';
 // Default grey
 export const BLACK = '#000000';
 export const LIGHT_GREY = '#D3D3D3';
-export const DEFAULT_GREY = '#BEBEBE';
+export const DEFAULT_GREY = '#bebebe';
 export const DARK_GREY = '#A9A9A9';
 
 // icon colors

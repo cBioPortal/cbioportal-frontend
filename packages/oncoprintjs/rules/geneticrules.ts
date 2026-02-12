@@ -7,17 +7,17 @@ import {
 } from '../src/js/oncoprintruleset';
 import { shallowExtend } from '../src/js/utils';
 
-export const MUT_COLOR_MISSENSE = '#008000';
-export const MUT_COLOR_MISSENSE_PASSENGER = '#53D400';
-export const MUT_COLOR_INFRAME = '#993404';
-export const MUT_COLOR_INFRAME_PASSENGER = '#a68028';
+export const MUT_COLOR_MISSENSE = '#008001';
+export const MUT_COLOR_MISSENSE_PASSENGER = '#4169e1';
+export const MUT_COLOR_INFRAME = '#983405';
+export const MUT_COLOR_INFRAME_PASSENGER = '#008080';
 export const MUT_COLOR_TRUNC = '#000000';
-export const MUT_COLOR_TRUNC_PASSENGER = '#708090';
-export const MUT_COLOR_FUSION = '#8B00C9';
+export const MUT_COLOR_TRUNC_PASSENGER = '#677481';
+export const MUT_COLOR_FUSION = '#8B00C8';
 export const MUT_COLOR_PROMOTER = '#00B7CE';
 export const MUT_COLOR_PROMOTER_PASSENGER = '#8cedf9';
-export const MUT_COLOR_OTHER = '#cf58bc'; //'#cfb537';
-export const MUT_COLOR_OTHER_PASSENGER = '#f96ae3';
+export const MUT_COLOR_OTHER = '#d029b5';
+export const MUT_COLOR_OTHER_PASSENGER = '#92698c';
 
 export const MRNA_COLOR_HIGH = '#ff9999';
 export const MRNA_COLOR_LOW = '#6699cc';

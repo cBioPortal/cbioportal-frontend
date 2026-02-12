@@ -144,6 +144,7 @@ export default class SampleSummaryList extends React.Component<
                                                 e
                                             )
                                         }
+                                        style={{ color: '#2a6593' }}
                                     >
                                         {SampleManager.getClinicalAttributeInSample(
                                             sample,
