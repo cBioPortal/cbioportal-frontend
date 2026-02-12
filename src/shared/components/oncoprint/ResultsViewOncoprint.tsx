@@ -1522,7 +1522,10 @@ export default class ResultsViewOncoprint extends React.Component<
                     ' ; ' +
                     remainingGeneAfterDeletion
             );
-        } else if (geneticSublabel) {
+        } else if (
+            geneticSublabel &&
+            (geneListFromURL.includes('%20') || geneListFromURL.includes('%25'))
+        ) {
             //OQL Queries logic
             const isSublabelInURL = this.isSublabelInURL(
                 geneListArrayFromURL,
@@ -1541,7 +1544,7 @@ export default class ResultsViewOncoprint extends React.Component<
                 geneListArrayFromURL = geneListArrayFromURL.filter(
                     item => item !== GeneticTrackToBeDeleted
                 );
-                const testRemainingArray = remainingGeneAfterDeletionString; // Split testRemaining into an array
+                const testRemainingArray = remainingGeneAfterDeletionString;
                 let startIdx = 0;
 
                 for (let i = 1; i < testRemainingArray.length; i++) {
@@ -1601,57 +1604,53 @@ export default class ResultsViewOncoprint extends React.Component<
         return updatedGeneList;
     }
 
-    private isSublabelInURL(
-        geneListArrayFromURL: string[],
-        geneticSublabel: string
-    ): boolean {
-        const sublabelWords = geneticSublabel.split(/[ :=]/).filter(Boolean);
-        let currentIndex = 0;
-
-        for (const word of sublabelWords) {
-            const index = geneListArrayFromURL.indexOf(word, currentIndex);
-            if (index === -1) {
-                return false;
-            }
-            currentIndex = index + 1;
-        }
-
-        return true;
-    }
-
     private sliceURLBasedOnSublabel(
         geneListArrayFromURL: string[],
         geneticSublabel: string,
         geneticTrackToBeDeleted: string
     ): string[] | null {
-        const sublabelWords = geneticSublabel.split(/[ :=]/).filter(Boolean);
-        let currentIndex = 0;
+        const decodedTrackToBeDeleted = decodeURIComponent(
+            geneticTrackToBeDeleted
+        ).trim();
 
-        for (const word of sublabelWords) {
-            const index = geneListArrayFromURL.indexOf(word, currentIndex);
-            if (index === -1) {
-                return null;
+        for (let i = 0; i < geneListArrayFromURL.length; i++) {
+            const currentGene = decodeURIComponent(
+                geneListArrayFromURL[i]
+            ).trim();
+
+            if (currentGene.startsWith(decodedTrackToBeDeleted)) {
+                let endIndex = i;
+                while (
+                    endIndex + 1 < geneListArrayFromURL.length &&
+                    !geneListArrayFromURL[endIndex + 1].includes(':')
+                ) {
+                    endIndex++;
+                }
+                const slicedURL = [
+                    ...geneListArrayFromURL.slice(0, i),
+                    ...geneListArrayFromURL.slice(endIndex + 1),
+                ];
+                return slicedURL;
             }
-            currentIndex = index + 1;
+        }
+        return geneListArrayFromURL; 
+    }
+
+    private isSublabelInURL(
+        geneListArrayFromURL: string[],
+        geneticSublabel: string
+    ): boolean {
+        const sublabelWords = geneticSublabel.split(/[ :=]/);
+
+        for (const gene of geneListArrayFromURL) {
+            for (const word of sublabelWords) {
+                if (gene.includes(word)) {
+                    return true;
+                }
+            }
         }
 
-        const startIndex = geneListArrayFromURL.indexOf(sublabelWords[0]);
-        const endIndex = geneListArrayFromURL.indexOf(
-            sublabelWords[sublabelWords.length - 1]
-        );
-        const trackWithoutColon = geneListArrayFromURL[startIndex - 1].endsWith(
-            ':'
-        )
-            ? geneListArrayFromURL[startIndex - 1].slice(0, -1) // Remove ':' if it's the last character
-            : geneListArrayFromURL[startIndex - 1];
-        if (trackWithoutColon === geneticTrackToBeDeleted) {
-            const slicedURL = [
-                ...geneListArrayFromURL.slice(0, startIndex - 1),
-                ...geneListArrayFromURL.slice(endIndex + 1),
-            ];
-            return slicedURL;
-        }
-        return null;
+        return false;
     }
 
     /**
