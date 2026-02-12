@@ -23,7 +23,10 @@ import {
     genetic_rule_set_same_color_for_all_recurrence,
     germline_rule_params,
 } from './geneticrules';
-import { AlterationTypeConstants } from 'shared/constants';
+import {
+    AlterationTypeConstants,
+    DEFAULT_Z_SCORE_THRESHOLD,
+} from 'shared/constants';
 import { CoverageInformation } from '../../lib/GenePanelUtils';
 import { MobxPromise, remoteData } from 'cbioportal-frontend-commons';
 import {
@@ -1218,12 +1221,19 @@ export function makeHeatmapTracksMobxPromise(
             const samples = oncoprint.props.store.filteredSamples.result!;
             const patients = oncoprint.props.store.filteredPatients.result!;
 
-            return cacheQueries.map(query => {
+            const tracks = cacheQueries.map(query => {
                 const molecularProfileId = query.molecularProfileId;
                 const gene = query.hugoGeneSymbol;
                 const data = oncoprint.props.store.geneMolecularDataCache.result!.get(
                     query
                 )!.data!;
+
+                // get Z-score threshold from the store (default to DEFAULT_Z_SCORE_THRESHOLD if not present)
+                const zScoreThreshold =
+                    typeof oncoprint.props.store.zScoreThreshold === 'string'
+                        ? parseFloat(oncoprint.props.store.zScoreThreshold)
+                        : oncoprint.props.store.zScoreThreshold ??
+                          DEFAULT_Z_SCORE_THRESHOLD;
 
                 return {
                     key: `HEATMAPTRACK_${molecularProfileId},${gene}`,
@@ -1245,7 +1255,9 @@ export function makeHeatmapTracksMobxPromise(
                         'hugo_gene_symbol',
                         gene,
                         sampleMode ? samples : patients,
-                        data
+                        data,
+                        undefined,
+                        zScoreThreshold
                     ),
                     trackGroupIndex:
                         molecularProfileIdToAdditionalTracks[molecularProfileId]
@@ -1282,6 +1294,7 @@ export function makeHeatmapTracksMobxPromise(
                     }),
                 };
             });
+            return tracks;
         },
         default: [],
     });
