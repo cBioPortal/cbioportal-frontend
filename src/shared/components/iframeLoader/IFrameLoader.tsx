@@ -6,9 +6,10 @@ import { makeObservable, observable } from 'mobx';
 import autobind from 'autobind-decorator';
 import FontAwesome from 'react-fontawesome';
 interface FrameLoaderProps {
-    url: string;
+    url?: string;
     className?: string;
     iframeId?: string;
+    name?: string;
     height?: number | string;
     width?: number | string;
 }
@@ -63,6 +64,7 @@ export default class IFrameLoader extends React.Component<
                 <iframe
                     id={this.props.iframeId || ''}
                     className={this.props.className || ''}
+                    name={this.props.name}
                     style={{
                         width: '100%',
                         position: 'relative',

@@ -816,7 +816,8 @@ export class PatientViewPageInner extends React.Component<
                     {patientViewTabs(
                         this,
                         this.urlWrapper,
-                        this.pageStore.sampleManager.result!
+                        this.pageStore.sampleManager.result!,
+                        this.props.appStore
                     )}
                 </>
             );
