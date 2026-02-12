@@ -608,6 +608,7 @@ function transitionTracks(
         genesetHeatmap: undefined as undefined | TrackId,
         heatmap: undefined as undefined | TrackId,
         heatmap01: undefined as undefined | TrackId,
+        mutation: undefined as undefined | TrackId,
         genericAssayHeatmap: ({} as any) as GenericAssayProfileToTrackIdMap,
         genericAssayCategorical: ({} as any) as GenericAssayProfileToTrackIdMap,
     };
@@ -629,10 +630,12 @@ function transitionTracks(
         trackIdForRuleSetSharing.genesetHeatmap =
             trackSpecKeyToTrackId[prevProps.genesetHeatmapTracks[0].key];
     }
+
     if (prevProps.heatmapTracks && prevProps.heatmapTracks.length) {
         // set rule set to existing track if theres a track
         let heatmap01;
         let heatmap;
+        let mutation;
         for (const spec of prevProps.heatmapTracks) {
             if (
                 heatmap01 === undefined &&
@@ -641,20 +644,33 @@ function transitionTracks(
             ) {
                 heatmap01 = trackSpecKeyToTrackId[spec.key];
             } else if (
+                mutation === undefined &&
+                spec.molecularAlterationType ===
+                    AlterationTypeConstants.MUTATION_EXTENDED
+            ) {
+                mutation = trackSpecKeyToTrackId[spec.key];
+            } else if (
                 heatmap === undefined &&
                 spec.molecularAlterationType !==
                     AlterationTypeConstants.METHYLATION &&
                 spec.molecularAlterationType !==
-                    AlterationTypeConstants.GENERIC_ASSAY
+                    AlterationTypeConstants.GENERIC_ASSAY &&
+                spec.molecularAlterationType !==
+                    AlterationTypeConstants.MUTATION_EXTENDED
             ) {
                 heatmap = trackSpecKeyToTrackId[spec.key];
             }
-            if (heatmap01 !== undefined && heatmap !== undefined) {
+            if (
+                heatmap01 !== undefined &&
+                heatmap !== undefined &&
+                mutation !== undefined
+            ) {
                 break;
             }
         }
         trackIdForRuleSetSharing.heatmap = heatmap;
         trackIdForRuleSetSharing.heatmap01 = heatmap01;
+        trackIdForRuleSetSharing.mutation = mutation;
     } else if (prevProps.genesetHeatmapTracks) {
         for (const gsTrack of prevProps.genesetHeatmapTracks) {
             if (
@@ -1480,6 +1496,8 @@ export function transitionHeatmapTrack(
         heatmap?: TrackId;
         heatmap01?: TrackId;
         genericAssayHeatmap?: GenericAssayProfileToTrackIdMap;
+        // Mutation-specific key to separate VAF from other tracks
+        mutation?: TrackId;
     },
     expansionParentKey?: string
 ) {
@@ -1489,7 +1507,10 @@ export function transitionHeatmapTrack(
     } else if (nextSpec && !prevSpec) {
         // Add track
         const heatmapTrackParams = {
-            rule_set_params: getHeatmapTrackRuleSetParams(nextSpec),
+            rule_set_params: getHeatmapTrackRuleSetParams(
+                nextSpec,
+                nextProps.isWhiteBackgroundForGlyphsEnabled
+            ),
             data: nextSpec.data,
             data_id_key: 'uid',
             has_column_spacing: ifNotDefined(nextSpec.hasColumnSpacing, false),
@@ -1547,11 +1568,29 @@ export function transitionHeatmapTrack(
             nextSpec.molecularAlterationType !==
             AlterationTypeConstants.GENERIC_ASSAY
         ) {
-            let trackIdForRuleSetSharingKey: 'heatmap' | 'heatmap01' =
-                'heatmap';
-            if (nextSpec.molecularAlterationType === 'METHYLATION') {
+            let trackIdForRuleSetSharingKey:
+                | 'heatmap'
+                | 'heatmap01'
+                | 'mutation';
+
+            // Each molecular alteration type gets its own rule set
+            if (
+                nextSpec.molecularAlterationType ===
+                AlterationTypeConstants.MUTATION_EXTENDED
+            ) {
+                trackIdForRuleSetSharingKey = 'mutation';
+            } else if (
+                nextSpec.molecularAlterationType ===
+                AlterationTypeConstants.METHYLATION
+            ) {
                 trackIdForRuleSetSharingKey = 'heatmap01';
+            } else {
+                // Expression and other molecular data tracks
+                trackIdForRuleSetSharingKey = 'heatmap';
             }
+
+            // Only share rule set with tracks of the SAME molecular alteration type
+            // Prevents VAF tracks (0-1 scale) from sharing rules with mRNA tracks (-3 to 3 scale)
             if (
                 typeof trackIdForRuleSetSharing[trackIdForRuleSetSharingKey] !==
                 'undefined'
@@ -1561,6 +1600,7 @@ export function transitionHeatmapTrack(
                     newTrackId
                 );
             }
+            // Store this track ID for future tracks of the same type
             trackIdForRuleSetSharing[trackIdForRuleSetSharingKey] = newTrackId;
         } else {
             // if the track is a generic assay profile, add to trackIdForRuleSetSharing under its `molecularProfileId`
@@ -1586,6 +1626,33 @@ export function transitionHeatmapTrack(
             nextSpec.movable !== undefined
         ) {
             oncoprint.setTrackMovable(trackId, nextSpec.movable);
+        }
+        // Rule set when white background flag changes for mutation (VAF) heatmap tracks
+        if (
+            nextSpec.molecularAlterationType ===
+                AlterationTypeConstants.MUTATION_EXTENDED &&
+            nextProps.isWhiteBackgroundForGlyphsEnabled !==
+                (prevProps as Partial<IOncoprintProps>)
+                    .isWhiteBackgroundForGlyphsEnabled
+        ) {
+            if (
+                typeof trackIdForRuleSetSharing.mutation !== 'undefined' &&
+                trackIdForRuleSetSharing.mutation !== trackId
+            ) {
+                oncoprint.shareRuleSet(
+                    trackIdForRuleSetSharing.mutation,
+                    trackId
+                );
+            } else {
+                oncoprint.setRuleSet(
+                    trackId,
+                    getHeatmapTrackRuleSetParams(
+                        nextSpec,
+                        nextProps.isWhiteBackgroundForGlyphsEnabled
+                    )
+                );
+            }
+            trackIdForRuleSetSharing.mutation = trackId;
         }
         // generic assay profile tracks always are associated with the last added added track id
         if (
