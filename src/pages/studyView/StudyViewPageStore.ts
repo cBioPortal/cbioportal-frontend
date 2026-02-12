@@ -10496,19 +10496,23 @@ export class StudyViewPageStore
 
     // Poll ClinicalEventTypeCounts API  with no filter to determine if table should be added to StudyView Page
     public readonly shouldDisplayClinicalEventTypeCounts = remoteData({
-        await: () => [this.queriedPhysicalStudyIds],
+        await: () => [this.queriedPhysicalStudyIds, this.unknownQueriedIds],
         invoke: async () => {
-            const filters: Partial<StudyViewFilter> = {};
-            filters.studyIds = this.queriedPhysicalStudyIds.result;
-            return Promise.resolve(
-                (
-                    await this.internalClient.getClinicalEventTypeCountsUsingPOST(
-                        {
-                            studyViewFilter: filters as StudyViewFilter,
-                        }
-                    )
-                ).length > 0
-            );
+            if (this.unknownQueriedIds.result.length === 0) {
+                const filters: Partial<StudyViewFilter> = {};
+                filters.studyIds = this.queriedPhysicalStudyIds.result;
+                return Promise.resolve(
+                    (
+                        await this.internalClient.getClinicalEventTypeCountsUsingPOST(
+                            {
+                                studyViewFilter: filters as StudyViewFilter,
+                            }
+                        )
+                    ).length > 0
+                );
+            } else {
+                return Promise.resolve(false);
+            }
         },
     });
 
@@ -10833,7 +10837,7 @@ export class StudyViewPageStore
     >({
         await: () => [this.shouldDisplaySampleTreatments],
         invoke: async () => {
-            if (this.shouldDisplaySampleTreatments.result) {
+            if (this.shouldDisplaySampleTreatments.result != false) {
                 if (isClickhouseMode()) {
                     return await this.internalClient.fetchSampleTreatmentCountsUsingPOST(
                         {
@@ -10884,20 +10888,30 @@ export class StudyViewPageStore
     });
 
     public readonly shouldDisplayPatientTreatments = remoteData({
-        await: () => [this.queriedPhysicalStudyIds],
+        await: () => [this.queriedPhysicalStudyIds, this.unknownQueriedIds],
         invoke: () => {
-            return this.internalClient.getContainsTreatmentDataUsingPOST({
-                studyIds: toJS(this.queriedPhysicalStudyIds.result),
-            });
+            if (this.unknownQueriedIds.result.length === 0) {
+                return this.internalClient.getContainsTreatmentDataUsingPOST({
+                    studyIds: toJS(this.queriedPhysicalStudyIds.result),
+                });
+            } else {
+                return Promise.resolve(false);
+            }
         },
     });
 
     public readonly shouldDisplaySampleTreatments = remoteData({
-        await: () => [this.queriedPhysicalStudyIds],
+        await: () => [this.queriedPhysicalStudyIds, this.unknownQueriedIds],
         invoke: () => {
-            return this.internalClient.getContainsSampleTreatmentDataUsingPOST({
-                studyIds: toJS(this.queriedPhysicalStudyIds.result),
-            });
+            if (this.unknownQueriedIds.result.length === 0) {
+                return this.internalClient.getContainsSampleTreatmentDataUsingPOST(
+                    {
+                        studyIds: toJS(this.queriedPhysicalStudyIds.result),
+                    }
+                );
+            } else {
+                return Promise.resolve(false);
+            }
         },
     });
 
