@@ -1663,9 +1663,12 @@ export class StudyViewPageStore
 
                 /**
                  * Step 1:
-                 * Normalize counts into { group, sampleId } pairs
+                 * Normalize counts into { group, SampleIdentifier } pairs
                  */
-                const groupedSamples = groupSamplesByMutationStatus(data);
+                const groupedSamples = groupSamplesByMutationStatus(
+                    data,
+                    this.studyIds
+                );
 
                 /**
                  * Step 2:
@@ -1675,15 +1678,13 @@ export class StudyViewPageStore
                     clinicalAttributeValues
                 )
                     .map(attrVal => {
-                        const sampleIds = groupedSamples[attrVal.value];
-                        if (!sampleIds?.length) return null;
+                        const sampleIdentifiers: SampleIdentifier[] =
+                            groupedSamples[attrVal.value];
+                        if (!sampleIdentifiers?.length) return null;
 
                         return getGroupParameters(
                             attrVal.value,
-                            sampleIds.map(id => ({
-                                sampleId: id,
-                                studyId: this.studyIds[0],
-                            })),
+                            sampleIdentifiers,
                             this.studyIds,
                             lcValueToColor[attrVal.value.toLowerCase()]?.color
                         );

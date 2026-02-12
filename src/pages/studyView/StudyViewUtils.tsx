@@ -4280,25 +4280,41 @@ export async function invokeGenomicDataCountIncludeSampleid(
     return result;
 }
 
-export function groupSamplesByMutationStatus(data: any[]) {
+export function groupSamplesByMutationStatus(data: any[], studyIds: string[]) {
     const SKIP_VALUES = new Set(['NOT_PROFILED']);
     const NON_MUTATION_VALUES = new Set(['NOT_MUTATED']);
 
     return _.chain(data)
         .flatMap(d => d.counts ?? [])
-        .filter(c => !SKIP_VALUES.has(c.value) && c.sampleIds.length > 0)
+        .filter(c => !SKIP_VALUES.has(c.value) && c.sampleIds?.length > 0)
         .flatMap(c => {
             const group = NON_MUTATION_VALUES.has(c.value)
                 ? c.value
                 : 'MUTATED';
 
-            return c.sampleIds.map((rawId: string) => ({
-                group,
-                sampleId: rawId.substring(rawId.lastIndexOf('_') + 1),
-            }));
+            return c.sampleIds
+                .map((rawId: string) => {
+                    const matchedStudyId = studyIds.find(studyId =>
+                        rawId.startsWith(studyId + '_')
+                    );
+
+                    if (!matchedStudyId) return null;
+
+                    return {
+                        group,
+                        studyId: matchedStudyId,
+                        sampleId: rawId.substring(matchedStudyId.length + 1),
+                    };
+                })
+                .filter(Boolean);
         })
         .groupBy('group')
-        .mapValues(items => _.uniq(items.map(i => i.sampleId)))
+        .mapValues(items =>
+            _.uniqBy(
+                items.map(({ studyId, sampleId }) => ({ studyId, sampleId })),
+                i => i.sampleId
+            )
+        )
         .value();
 }
 

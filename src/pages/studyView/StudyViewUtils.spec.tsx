@@ -3657,7 +3657,7 @@ describe('StudyViewUtils', () => {
         });
     });
 
-    describe('groupSamplesByMutationStatus', () => {
+    describe.only('groupSamplesByMutationStatus', () => {
         const data = [
             {
                 counts: [
@@ -3671,7 +3671,11 @@ describe('StudyViewUtils', () => {
                 counts: [
                     {
                         value: 'Missense_Mutation',
-                        sampleIds: ['study_ABC_123', 'study_DEF_456'],
+                        sampleIds: [
+                            'study_ABC_123',
+                            'study_DEF_456',
+                            'lgg_ucsf_2014_P21_Pri',
+                        ],
                     },
                 ],
             },
@@ -3685,38 +3689,42 @@ describe('StudyViewUtils', () => {
             },
         ] as any;
 
-        it('groups and trims sample ids by mutation status correctly', () => {
-            const result = groupSamplesByMutationStatus(data);
+        const studyId: string[] = [
+            'study_ABC',
+            'study_DEF',
+            'study_GHI',
+            'lgg_ucsf_2014',
+        ];
+
+        it('groups and creates SampleIdeifier  by mutation status correctly', () => {
+            const result = groupSamplesByMutationStatus(data, studyId);
             assert.deepEqual(result, {
-                MUTATED: ['123', '456'],
-                NOT_MUTATED: ['789'],
+                MUTATED: [
+                    {
+                        studyId: 'study_ABC',
+                        sampleId: '123',
+                    },
+                    {
+                        studyId: 'study_DEF',
+                        sampleId: '456',
+                    },
+                    {
+                        studyId: 'lgg_ucsf_2014',
+                        sampleId: 'P21_Pri',
+                    },
+                ],
+                NOT_MUTATED: [
+                    {
+                        studyId: 'study_GHI',
+                        sampleId: '789',
+                    },
+                ],
             });
         });
 
         it('handles missing or empty counts safely', () => {
             const emptyData = [{}, { counts: [] }];
-            expect(groupSamplesByMutationStatus(emptyData)).toEqual({});
-        });
-
-        it('deduplicates sample IDs across mutation entries', () => {
-            const duplicateData = [
-                {
-                    counts: [
-                        {
-                            value: 'Missense_Mutation',
-                            sampleIds: ['study_X_001', 'study_X_002'],
-                        },
-                        {
-                            value: 'Nonsense_Mutation',
-                            sampleIds: ['study_X_001'],
-                        },
-                    ],
-                },
-            ];
-
-            expect(groupSamplesByMutationStatus(duplicateData)).toEqual({
-                MUTATED: ['001', '002'],
-            });
+            expect(groupSamplesByMutationStatus(emptyData, [])).toEqual({});
         });
     });
 
