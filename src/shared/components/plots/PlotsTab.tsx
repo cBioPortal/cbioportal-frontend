@@ -168,6 +168,7 @@ import { FilteredAndAnnotatedMutationsReport } from 'shared/lib/comparison/Analy
 import { AnnotatedNumericGeneMolecularData } from 'shared/model/AnnotatedNumericGeneMolecularData';
 import { ExtendedAlteration } from 'shared/model/ExtendedAlteration';
 import CaseFilterWarning from '../banners/CaseFilterWarning';
+import { SelectedDataAlert } from './SelectedDataAlert';
 
 enum EventKey {
     horz_logScale,
@@ -475,6 +476,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
 
     @observable searchCase: string = '';
     @observable searchMutation: string = '';
+    @observable.ref selectedData: IPlotSampleData[] = [];
     @observable highlightedLegendItems = observable.map<
         string,
         LegendDataWithId
@@ -499,6 +501,16 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         } else {
             this.highlightedLegendItems.set(ld.highlighting!.uid, ld);
         }
+    }
+
+    @action.bound
+    private onDataSelection(data: IPlotSampleData[]) {
+        this.selectedData = data;
+    }
+
+    @action.bound
+    private onDataSelectionCleared() {
+        this.selectedData = [];
     }
 
     @action.bound
@@ -3664,8 +3676,15 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             }
             return caseMatch || mutationMatch;
         };
+        const selectedSampleIdsSet = new Set(
+            this.selectedData.map(d => d.sampleId)
+        );
+        const dataSelectionHighlight = (d: IPlotSampleData) => {
+            return selectedSampleIdsSet.has(d.sampleId);
+        };
         const highlightFunctions = [
             searchHighlight,
+            dataSelectionHighlight,
             ...Array.from(this.highlightedLegendItems.values()).map(
                 x => x.highlighting!.isDatumHighlighted
             ),
@@ -5761,6 +5780,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                         this.onClickLegendItem
                                     )}
                                     legendTitle={this.legendTitle}
+                                    onDataSelection={this.onDataSelection}
+                                    selectedData={this.selectedData}
                                 />
                             );
                             break;
@@ -6228,6 +6249,19 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                     }
                                 }}
                             </Observer>
+
+                            {this.selectedData.length > 0 && (
+                                <SelectedDataAlert
+                                    selectedData={this.selectedData}
+                                    scatterPlotData={
+                                        this.scatterPlotData.result!
+                                    }
+                                    plotElementWidth={this.plotElementWidth}
+                                    onDataSelectionCleared={
+                                        this.onDataSelectionCleared
+                                    }
+                                />
+                            )}
 
                             <ScrollWrapper
                                 plotElementWidth={this.plotElementWidth}
