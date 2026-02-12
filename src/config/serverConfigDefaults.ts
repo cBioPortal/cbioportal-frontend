@@ -249,6 +249,9 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
     download_custom_buttons_json: '',
 
     feature_study_export: false,
+
+    uptime_robot_status_page_url: null,
+    uptime_robot_api_key: null,
 };
 
 export default ServerConfigDefaults;

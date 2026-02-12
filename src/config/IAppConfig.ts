@@ -197,4 +197,6 @@ export interface IServerConfig {
     clickhouse_mode: boolean;
     download_custom_buttons_json: string;
     feature_study_export: boolean;
+    uptime_robot_status_page_url: string | null;
+    uptime_robot_api_key: string | null;
 }
