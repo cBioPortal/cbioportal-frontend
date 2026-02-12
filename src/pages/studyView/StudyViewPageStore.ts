@@ -315,7 +315,11 @@ import {
     CopyNumberEnrichmentEventType,
     MutationEnrichmentEventType,
 } from 'shared/lib/comparison/ComparisonStoreUtils';
-import { getServerConfig, isClickhouseMode } from 'config/config';
+import {
+    getServerConfig,
+    isClickhouseMode,
+    ServerConfigHelpers,
+} from 'config/config';
 import {
     ChartUserSetting,
     CustomChart,
@@ -389,6 +393,7 @@ import {
     PlotsColoringParam,
     PlotsSelectionParam,
 } from 'pages/resultsView/ResultsViewURLWrapper';
+import { PageUserSession } from 'shared/userSession/PageUserSession';
 
 export const STUDY_VIEW_FILTER_AUTOSUBMIT = 'study_view_filter_autosubmit';
 
@@ -553,6 +558,8 @@ export class StudyViewPageStore
     private chartItemToColor: Map<string, string>;
     private chartToUsedColors: Map<string, Set<string>>;
 
+    public pageUserSession: PageUserSession<StudyPageSettings>;
+
     public studyViewQueryFilter: StudyViewURLQuery;
     @observable
     driverAnnotationSettings: DriverAnnotationSettings = buildDriverAnnotationSettings(
@@ -624,6 +631,28 @@ export class StudyViewPageStore
 
         this.chartItemToColor = new Map();
         this.chartToUsedColors = new Map();
+
+        this.pageUserSession = new PageUserSession<StudyPageSettings>(
+            appStore,
+            ServerConfigHelpers.sessionServiceIsEnabled()
+        );
+
+        this.pageUserSession.id = {
+            page: PageType.STUDY_VIEW,
+            origin: this.studyIds,
+        };
+
+        this.reactionDisposers.push(
+            reaction(
+                () => [this.studyIds],
+                () => {
+                    this.pageUserSession.id = {
+                        page: PageType.STUDY_VIEW,
+                        origin: this.studyIds,
+                    };
+                }
+            )
+        );
 
         /*
         Note for future refactoring:
