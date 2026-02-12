@@ -531,7 +531,7 @@ describe.skip('gsva feature', function() {
     describe('co-expression tab', () => {
         beforeEach(async () => {
             await goToUrlAndSetLocalStorage(coexpressionTabUrl, true);
-            waitForCoExpressionTab();
+            await waitForCoExpressionTab();
         });
 
         it('shows buttons for genes', async () => {
@@ -555,7 +555,7 @@ describe.skip('gsva feature', function() {
                 '//*[@id="coexpressionTabGeneTabs"]'
             );
             const icons = await Promise.all(
-                geneSets.map(async g => container.$('a=' + g))
+                geneSets.map(async g => await container.$('a=' + g))
             );
             assert.equal(geneSets.length, icons.length);
         });

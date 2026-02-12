@@ -717,9 +717,13 @@ describe('hide download controls feature', function() {
                 await waitForTabs(expectedTabNames.length);
             });
             it('covers all tabs with download control tests', async () => {
-                const observedTabNames = await $$('.tabAnchor')
-                    .filter(async a => await a.isDisplayed())
-                    .map(async a => await a.getText());
+                const allTabs = await $$('.tabAnchor');
+                const observedTabNames = [];
+                for (const tab of allTabs) {
+                    if (await tab.isDisplayed()) {
+                        observedTabNames.push(await tab.getText());
+                    }
+                }
                 assert.deepStrictEqual(
                     expectedTabNames,
                     observedTabNames,

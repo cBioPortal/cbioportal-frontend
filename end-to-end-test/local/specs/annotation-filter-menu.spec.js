@@ -748,7 +748,7 @@ describe('alteration filter menu', function() {
                 BRCA2: { alt: '1 (100.00%)', unalt: '11 (55.00%)' },
                 ACP3: { alt: '0 (0.00%)', unalt: '5 (22.73%)' },
             });
-            clickElement('[data-test=ShowUnknownTier]');
+            await clickElement('[data-test=ShowUnknownTier]');
         });
     });
 });
