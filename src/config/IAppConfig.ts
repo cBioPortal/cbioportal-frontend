@@ -57,6 +57,12 @@ export interface IServerConfig {
     mygene_info_url: string | null;
     g2s_url: string | null;
     google_analytics_profile_id: string | null;
+    datadog_rum_application_id: string | null;
+    datadog_rum_client_token: string | null;
+    datadog_rum_site: string | null;
+    datadog_rum_env: string | null;
+    datadog_rum_session_sample_rate: number | null;
+    datadog_rum_session_replay_sample_rate: number | null;
     ptmSources: string[] | undefined;
     oncoprint_hide_vus_default: boolean;
     oncokb_public_api_url: string | null;
@@ -111,6 +117,7 @@ export interface IServerConfig {
     skin_right_nav_show_web_tours: boolean;
     skin_right_nav_whats_new_blurb: string | null;
     skin_show_about_tab: boolean;
+    skin_show_roadmap_tab: boolean;
     skin_show_data_tab: boolean;
     skin_show_faqs_tab: boolean;
     skin_show_news_tab: boolean;
@@ -190,4 +197,6 @@ export interface IServerConfig {
     clickhouse_mode: boolean;
     download_custom_buttons_json: string;
     feature_study_export: boolean;
+    uptime_robot_status_page_url: string | null;
+    uptime_robot_api_key: string | null;
 }

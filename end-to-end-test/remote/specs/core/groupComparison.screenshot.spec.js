@@ -393,9 +393,11 @@ describe('group comparison page screenshot tests', () => {
                 timeout: 10000,
             });
             await clickElement('b=RBMX2');
-            const body = await getElement('body');
-            await body.waitForDisplayed();
-            await body.moveTo({ xOffset: 0, yOffset: 0 });
+            await (
+                await getElement('div[data-test="MiniBoxPlot"]')
+            ).waitForDisplayed({
+                timeout: 20000,
+            });
             const res = await browser.checkElement(
                 '.msk-tab:not(.hiddenByPosition)',
                 '',

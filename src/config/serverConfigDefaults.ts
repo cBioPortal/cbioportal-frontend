@@ -82,6 +82,7 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
     skin_citation_rule_text:
         'Please cite <a href="https://docs.cbioportal.org/user-guide/faq/#how-do-i-cite-the-cbioportal" target="_blank">cBioPortal <i class="fa fa-book"></i></a>',
     skin_show_about_tab: true,
+    skin_show_roadmap_tab: false,
     skin_show_data_tab: true,
     skin_show_faqs_tab: true,
     skin_show_news_tab: true,
@@ -248,6 +249,9 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
     download_custom_buttons_json: '',
 
     feature_study_export: false,
+
+    uptime_robot_status_page_url: null,
+    uptime_robot_api_key: null,
 };
 
 export default ServerConfigDefaults;
