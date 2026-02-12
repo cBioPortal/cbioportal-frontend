@@ -259,9 +259,20 @@ export default class StudyList extends QueryStoreComponent<
     };
 
     renderSamples = (study: CancerStudy) => {
+        const sampleCount = Math.max(
+            study.sequencedSampleCount || 0,
+            study.cnaSampleCount || 0,
+            study.mrnaRnaSeqV2SampleCount || 0,
+            study.mrnaRnaSeqSampleCount || 0,
+            study.mrnaMicroarraySampleCount || 0,
+            study.completeSampleCount || 0,
+            study.miRnaSampleCount || 0,
+            study.rppaSampleCount || 0,
+            study.massSpectrometrySampleCount || 0
+        );
         return (
             <span className={styles.StudySamples}>
-                {`${study.allSampleCount} samples`}
+                {`${sampleCount} samples`}
             </span>
         );
     };
