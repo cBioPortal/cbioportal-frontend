@@ -20,6 +20,7 @@ import {
     GenericAssayMeta,
     GenericAssayDataMultipleStudyFilter,
     GenericAssayMetaFilter,
+    MolecularDataFilter,
 } from 'cbioportal-ts-api-client';
 import { getClient } from '../../../shared/api/cbioportalClientInstance';
 import internalClient from '../../../shared/api/cbioportalInternalClientInstance';
@@ -195,7 +196,10 @@ import {
 } from 'shared/lib/GenericAssayUtils/MutationalSignaturesUtils';
 import { getServerConfig } from 'config/config';
 import { StructuralVariantFilter } from 'cbioportal-ts-api-client';
-import { IGenePanelDataByProfileIdAndSample } from 'shared/lib/isSampleProfiled';
+import {
+    IGenePanelDataByProfileIdAndSample,
+    isPatientProfiledInMultiple,
+} from 'shared/lib/isSampleProfiled';
 import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
 import { buildNamespaceColumnConfig } from 'shared/components/namespaceColumns/namespaceColumnsUtils';
 import { SiteError } from 'shared/model/appMisc';
@@ -469,6 +473,256 @@ export class PatientViewPageStore {
     // this is a string of concatenated ids
     @observable
     public patientIdsInCohort: string[] = [];
+
+    readonly allGenes = remoteData({
+        invoke: () => {
+            return getClient().getAllGenesUsingGET({
+                projection: 'SUMMARY',
+            });
+        },
+    });
+
+    readonly allEntrezGeneIdsToGene = remoteData<{
+        [entrezGeneId: number]: {
+            hugoGeneSymbol: string;
+            entrezGeneId: number;
+        };
+    }>({
+        await: () => [this.allGenes],
+        invoke: () =>
+            Promise.resolve(
+                _.keyBy(this.allGenes.result, gene => gene.entrezGeneId)
+            ),
+        default: {},
+    });
+
+    readonly allHugoGeneSymbolsToGene = remoteData<{
+        [hugoGeneSymbol: string]: {
+            hugoGeneSymbol: string;
+            entrezGeneId: number;
+        };
+    }>({
+        await: () => [this.allGenes],
+        invoke: () =>
+            Promise.resolve(
+                _.keyBy(this.allGenes.result, gene => gene.hugoGeneSymbol)
+            ),
+        default: {},
+    });
+
+    readonly cnaDataByGeneThenProfile = remoteData({
+        await: () => [this.cnaProfiles],
+        invoke: async () => {
+            const cnaMap: Record<
+                number,
+                Record<string, NumericGeneMolecularData[]>
+            > = {};
+            await Promise.all(
+                this.cnaProfiles.result.map(async p => {
+                    let data = await getClient().fetchAllMolecularDataInMolecularProfileUsingPOST(
+                        {
+                            projection: 'DETAILED',
+                            molecularProfileId: p.molecularProfileId,
+                            molecularDataFilter: {
+                                sampleIds: this.sampleIds,
+                            } as MolecularDataFilter,
+                        }
+                    );
+                    data.map(d => {
+                        if (!cnaMap[d.entrezGeneId]) {
+                            cnaMap[d.entrezGeneId] = {};
+                        }
+                        if (!cnaMap[d.entrezGeneId][d.molecularProfileId]) {
+                            cnaMap[d.entrezGeneId][d.molecularProfileId] = [];
+                        }
+                        cnaMap[d.entrezGeneId][d.molecularProfileId].push(d);
+                    });
+                })
+            );
+            return cnaMap;
+        },
+        default: {},
+    });
+
+    readonly cnaProfiles = remoteData(
+        {
+            await: () => [this.molecularProfilesInStudy],
+            invoke: () => {
+                return Promise.resolve(
+                    this.molecularProfilesInStudy.result.filter(
+                        p =>
+                            p.molecularAlterationType ===
+                            'COPY_NUMBER_ALTERATION'
+                    )
+                );
+            },
+        },
+        []
+    );
+
+    readonly mrnaExpressionDataByGeneThenProfile = remoteData({
+        await: () => [this.mrnaExpressionProfiles],
+        invoke: async () => {
+            const mrnaExpressionMap: Record<
+                number,
+                Record<string, NumericGeneMolecularData[]>
+            > = {};
+            await Promise.all(
+                this.mrnaExpressionProfiles.result.map(async p => {
+                    let data = await getClient().fetchAllMolecularDataInMolecularProfileUsingPOST(
+                        {
+                            projection: 'DETAILED',
+                            molecularProfileId: p.molecularProfileId,
+                            molecularDataFilter: {
+                                sampleIds: this.sampleIds,
+                            } as MolecularDataFilter,
+                        }
+                    );
+                    data.map(d => {
+                        if (!mrnaExpressionMap[d.entrezGeneId]) {
+                            mrnaExpressionMap[d.entrezGeneId] = {};
+                        }
+                        if (
+                            !mrnaExpressionMap[d.entrezGeneId][
+                                d.molecularProfileId
+                            ]
+                        ) {
+                            mrnaExpressionMap[d.entrezGeneId][
+                                d.molecularProfileId
+                            ] = [];
+                        }
+                        mrnaExpressionMap[d.entrezGeneId][
+                            d.molecularProfileId
+                        ].push(d);
+                    });
+                })
+            );
+            return mrnaExpressionMap;
+        },
+        default: {},
+    });
+
+    readonly mrnaExpressionProfiles = remoteData(
+        {
+            await: () => [this.molecularProfilesInStudy],
+            invoke: () => {
+                return Promise.resolve(
+                    this.molecularProfilesInStudy.result.filter(
+                        p => p.molecularAlterationType === 'MRNA_EXPRESSION'
+                    )
+                );
+            },
+        },
+        []
+    );
+
+    readonly analysisMrnaExpressionProfiles = remoteData(
+        {
+            await: () => [this.mrnaExpressionProfiles],
+            invoke: () => {
+                return Promise.resolve(
+                    this.mrnaExpressionProfiles.result.filter(
+                        p => p.showProfileInAnalysisTab
+                    )
+                );
+            },
+        },
+        []
+    );
+
+    readonly proteinExpressionDataByGeneThenProfile = remoteData({
+        await: () => [this.proteinExpressionProfiles],
+        invoke: async () => {
+            const proteinExpressionMap: Record<
+                number,
+                Record<string, NumericGeneMolecularData[]>
+            > = {};
+            await Promise.all(
+                this.proteinExpressionProfiles.result.map(async p => {
+                    let data = await getClient().fetchAllMolecularDataInMolecularProfileUsingPOST(
+                        {
+                            projection: 'DETAILED',
+                            molecularProfileId: p.molecularProfileId,
+                            molecularDataFilter: {
+                                sampleIds: this.sampleIds,
+                            } as MolecularDataFilter,
+                        }
+                    );
+                    data.map(d => {
+                        if (!proteinExpressionMap[d.entrezGeneId]) {
+                            proteinExpressionMap[d.entrezGeneId] = {};
+                        }
+                        if (
+                            !proteinExpressionMap[d.entrezGeneId][
+                                d.molecularProfileId
+                            ]
+                        ) {
+                            proteinExpressionMap[d.entrezGeneId][
+                                d.molecularProfileId
+                            ] = [];
+                        }
+                        proteinExpressionMap[d.entrezGeneId][
+                            d.molecularProfileId
+                        ].push(d);
+                    });
+                })
+            );
+            return proteinExpressionMap;
+        },
+        default: {},
+    });
+
+    readonly proteinExpressionProfiles = remoteData(
+        {
+            await: () => [this.molecularProfilesInStudy],
+            invoke: () => {
+                return Promise.resolve(
+                    this.molecularProfilesInStudy.result.filter(
+                        p => p.molecularAlterationType === 'PROTEIN_LEVEL'
+                    )
+                );
+            },
+        },
+        []
+    );
+
+    readonly analysisProteinExpressionProfiles = remoteData(
+        {
+            await: () => [this.proteinExpressionProfiles],
+            invoke: () => {
+                return Promise.resolve(
+                    this.proteinExpressionProfiles.result.filter(
+                        p => p.showProfileInAnalysisTab
+                    )
+                );
+            },
+        },
+        []
+    );
+
+    readonly isExpressionProfiledForPatient = remoteData({
+        await: () => [
+            this.mrnaExpressionProfiles,
+            this.proteinExpressionProfiles,
+            this.derivedUniquePatientKey,
+            this.coverageInformation,
+        ],
+        invoke: () => {
+            const expressionProfileIds = [
+                ...this.mrnaExpressionProfiles.result,
+                ...this.proteinExpressionProfiles.result,
+            ].map(p => p.molecularProfileId);
+            return Promise.resolve(
+                _.some(
+                    isPatientProfiledInMultiple(
+                        this.derivedUniquePatientKey.result,
+                        expressionProfileIds,
+                        this.coverageInformation.result
+                    )
+                )
+            );
+        },
+    });
 
     // public set patientIdsInCohort(cohortIds: string[]) {
     //     // cannot put action on setter
@@ -814,6 +1068,16 @@ export class PatientViewPageStore {
         await: () => [this.samples],
         invoke: async () => {
             for (let sample of this.samples.result) return sample.patientId;
+            return '';
+        },
+        default: '',
+    });
+
+    readonly derivedUniquePatientKey = remoteData<string>({
+        await: () => [this.samples],
+        invoke: async () => {
+            for (let sample of this.samples.result)
+                return sample.uniquePatientKey;
             return '';
         },
         default: '',

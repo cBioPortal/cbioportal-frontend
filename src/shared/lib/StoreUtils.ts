@@ -109,6 +109,7 @@ import {
 } from 'shared/model/CustomDriverAnnotationInfo';
 import { AnnotatedNumericGeneMolecularData } from 'shared/model/AnnotatedNumericGeneMolecularData';
 import { EnsemblFilter } from 'genome-nexus-ts-api-client';
+import { IExpressionRow } from 'pages/patientView/expression/ExpressionTableWrapper';
 
 export const MolecularAlterationType_filenameSuffix: {
     [K in MolecularProfile['molecularAlterationType']]?: string;
@@ -2010,4 +2011,61 @@ export function buildProteinChange(sv: StructuralVariant) {
     } else {
         return `${genes[0]} intragenic`;
     }
+}
+
+export function prepareExpressionRowDataForTable(
+    mrnaExpressionDataByGeneThenProfile: Record<
+        string,
+        Record<string, NumericGeneMolecularData[]>
+    >,
+    proteinExpressionDataByGeneThenProfile: Record<
+        string,
+        Record<string, NumericGeneMolecularData[]>
+    >,
+    mutationData: Mutation[],
+    structuralVariantData: StructuralVariant[],
+    cnaDataByGeneThenProfile: Record<
+        string,
+        Record<string, NumericGeneMolecularData[]>
+    >,
+    allEntrezGeneIdsToGene: {
+        [entrezGeneId: number]: {
+            hugoGeneSymbol: string;
+            entrezGeneId: number;
+        };
+    }
+): IExpressionRow[][] {
+    const tableData: IExpressionRow[][] = [];
+
+    const mrnaEntrezGeneIds = Object.keys(
+        mrnaExpressionDataByGeneThenProfile
+    ).map(Number);
+    const proteinEntrezGeneIds = Object.keys(
+        proteinExpressionDataByGeneThenProfile
+    ).map(Number);
+    const entrezGeneIds = _.uniq([
+        ...mrnaEntrezGeneIds,
+        ...proteinEntrezGeneIds,
+    ]);
+
+    const geneToMutationDataMap = _.groupBy(mutationData, d => d.entrezGeneId);
+    const geneToStructuralVariantDataMap = _.groupBy(
+        structuralVariantData,
+        d => d.site1EntrezGeneId
+    );
+
+    for (const entrezGeneId of entrezGeneIds) {
+        let expressionRowForTable: IExpressionRow = {
+            hugoGeneSymbol: allEntrezGeneIdsToGene[entrezGeneId].hugoGeneSymbol,
+            mrnaExpression: mrnaExpressionDataByGeneThenProfile[entrezGeneId],
+            proteinExpression:
+                proteinExpressionDataByGeneThenProfile[entrezGeneId],
+            mutations: geneToMutationDataMap[entrezGeneId],
+            structuralVariants: geneToStructuralVariantDataMap[entrezGeneId],
+            cna: cnaDataByGeneThenProfile[entrezGeneId],
+        };
+
+        tableData.push([expressionRowForTable]);
+    }
+    return tableData;
 }
