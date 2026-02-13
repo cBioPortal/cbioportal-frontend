@@ -578,12 +578,77 @@ export default class StudyViewPage extends React.Component<
                     unmountOnHide={false}
                 >
                     <IFramePostMessageLoader
-                        url="https://cbioportal.github.io/cbioportal-zarr-loader/"
+                        url="http://localhost:5174"
                         height={window.innerHeight - 275}
                         width="100%"
                         postMessageData={{
-                            type: 'cbioportal-zarr-init',
-                            studyId: 'msk_spectrum_tme_2022',
+                            type: 'applyConfig',
+                            payload: {
+                                defaults: {
+                                    embedding_key: 'X_umap50',
+                                    active_tooltips: [
+                                        'cell_type',
+                                        'author_sample_id',
+                                    ],
+                                    color_by: {
+                                        type: 'category',
+                                        value: 'cell_type',
+                                    },
+                                },
+                                initial_view: 'OV-070 by cell_type',
+                                saved_views: [
+                                    {
+                                        name: 'OV-070 by cell_type',
+                                        selection: {
+                                            target: 'donor_id',
+                                            values: ['SPECTRUM-OV-070'],
+                                        },
+                                        active_tooltips: [
+                                            'cell_type',
+                                            'author_sample_id',
+                                        ],
+                                        color_by: {
+                                            type: 'category',
+                                            value: 'cell_type',
+                                        },
+                                    },
+                                    {
+                                        name: 'OV-090 & OV-022 by cell_type',
+                                        selection: {
+                                            target: 'donor_id',
+                                            values: [
+                                                'SPECTRUM-OV-090',
+                                                'SPECTRUM-OV-022',
+                                            ],
+                                        },
+                                        active_tooltips: [
+                                            'cell_type',
+                                            'author_sample_id',
+                                            'Phase',
+                                        ],
+                                        color_by: {
+                                            type: 'category',
+                                            value: 'cell_type',
+                                        },
+                                    },
+                                    {
+                                        selection: {
+                                            target: 'donor_id',
+                                            values: ['SPECTRUM-OV-041'],
+                                        },
+                                        active_tooltips: [
+                                            'cell_type',
+                                            'author_sample_id',
+                                            'Phase',
+                                        ],
+                                        color_by: {
+                                            type: 'gene',
+                                            value: 'dapl1',
+                                            color_scale: 'magma',
+                                        },
+                                    },
+                                ],
+                            },
                         }}
                     />
                 </MSKTab>
