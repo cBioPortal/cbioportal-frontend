@@ -631,27 +631,66 @@ export default class StudyViewPage extends React.Component<
         default: [],
     });
 
+    @computed get zarrLoaderPostMessageData() {
+        const allNames = this.allPatientDisplayNames.result || [];
+        const selectedNames = this.selectedPatientDisplayNames.result || [];
+        const allViewName = `All patients (${allNames.length}) by cell_type`;
+        const selectedViewName = `Selected patients (${selectedNames.length}) by cell_type`;
+
+        console.log('[cBioPortal] zarr loader views:', {
+            all: allNames,
+            selected: selectedNames,
+        });
+
+        return {
+            type: 'applyConfig',
+            payload: {
+                defaults: {
+                    embedding_key: 'X_umap50',
+                    active_tooltips: ['cell_type', 'author_sample_id'],
+                    color_by: {
+                        type: 'category',
+                        value: 'cell_type',
+                    },
+                },
+                initial_view: selectedViewName,
+                saved_views: [
+                    {
+                        name: selectedViewName,
+                        selection: {
+                            target: 'donor_id',
+                            values: selectedNames,
+                        },
+                        active_tooltips: ['cell_type', 'author_sample_id'],
+                        color_by: {
+                            type: 'category',
+                            value: 'cell_type',
+                        },
+                    },
+                    {
+                        name: allViewName,
+                        selection: {
+                            target: 'donor_id',
+                            values: allNames,
+                        },
+                        active_tooltips: ['cell_type', 'author_sample_id'],
+                        color_by: {
+                            type: 'category',
+                            value: 'cell_type',
+                        },
+                    },
+                ],
+            },
+        };
+    }
+
     readonly zarrLoaderTab = MakeMobxView({
-        await: () => [
-            this.store.queriedPhysicalStudyIds,
-            this.allPatientDisplayNames,
-            this.selectedPatientDisplayNames,
-        ],
+        await: () => [this.store.queriedPhysicalStudyIds],
         render: () => {
             const studyIds = this.store.queriedPhysicalStudyIds.result!;
             if (!studyIds.includes('msk_spectrum_tme_2022')) {
                 return null;
             }
-
-            const allNames = this.allPatientDisplayNames.result!;
-            const selectedNames = this.selectedPatientDisplayNames.result!;
-            const allViewName = `All patients (${allNames.length}) by cell_type`;
-            const selectedViewName = `Selected patients (${selectedNames.length}) by cell_type`;
-
-            console.log('[cBioPortal] zarr loader views:', {
-                all: allNames,
-                selected: selectedNames,
-            });
 
             return (
                 <MSKTab
@@ -664,55 +703,7 @@ export default class StudyViewPage extends React.Component<
                         url="http://localhost:5174"
                         height={window.innerHeight - 275}
                         width="100%"
-                        postMessageData={{
-                            type: 'applyConfig',
-                            payload: {
-                                defaults: {
-                                    embedding_key: 'X_umap50',
-                                    active_tooltips: [
-                                        'cell_type',
-                                        'author_sample_id',
-                                    ],
-                                    color_by: {
-                                        type: 'category',
-                                        value: 'cell_type',
-                                    },
-                                },
-                                initial_view: selectedViewName,
-                                saved_views: [
-                                    {
-                                        name: selectedViewName,
-                                        selection: {
-                                            target: 'donor_id',
-                                            values: selectedNames,
-                                        },
-                                        active_tooltips: [
-                                            'cell_type',
-                                            'author_sample_id',
-                                        ],
-                                        color_by: {
-                                            type: 'category',
-                                            value: 'cell_type',
-                                        },
-                                    },
-                                    {
-                                        name: allViewName,
-                                        selection: {
-                                            target: 'donor_id',
-                                            values: allNames,
-                                        },
-                                        active_tooltips: [
-                                            'cell_type',
-                                            'author_sample_id',
-                                        ],
-                                        color_by: {
-                                            type: 'category',
-                                            value: 'cell_type',
-                                        },
-                                    },
-                                ],
-                            },
-                        }}
+                        postMessageData={this.zarrLoaderPostMessageData}
                     />
                 </MSKTab>
             );
