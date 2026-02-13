@@ -22,6 +22,14 @@ import StudyTagsTooltip, {
 import { formatStudyReferenceGenome } from 'shared/lib/referenceGenomeUtils';
 import { getServerConfig } from 'config/config';
 
+// We ignore the lack of types for these icons and will force them to be React components just below
+import { BiBook as _BiBook } from "@react-icons/all-files/bi/BiBook";
+import { BiInfoCircle as _BiInfoCircle } from "@react-icons/all-files/bi/BiInfoCircle";
+
+// We give them the correct type
+const BiBook = _BiBook as React.FC<any>;
+const BiInfoCircle = _BiInfoCircle as React.FC<any>;
+
 const styles = {
     ...styles_any,
     Level: (level: number) => (styles_any as any)[`Level${level}`],
@@ -326,19 +334,45 @@ export default class StudyList extends QueryStoreComponent<
             return (
                 <span className={styles.StudyLinks}>
                     {links.map((link, i) => {
-                        let content = (
-                            <FontAwesome
-                                key={i}
-                                name={link.icon}
-                                className={classNames({
-                                    [styles.icon]: true,
-                                    [styles.iconWithTooltip]: !!link.tooltip,
-                                    [styles.trashIcon]: link.icon === 'trash',
-                                    [styles.infoCircleIcon]:
-                                        link.icon === 'info-circle',
-                                })}
-                            />
-                        );
+                        
+                        const commonClasses = classNames({
+                            [styles.icon]: true,
+                            [styles.iconWithTooltip]: !!link.tooltip,
+                            [styles.trashIcon]: link.icon === 'trash',
+                            [styles.infoCircleIcon]: link.icon === 'info-circle',
+                        });
+
+                        let content;
+                        
+                        // We use BiBook
+                        if (link.icon === 'book') {
+                            content = (
+                                <BiBook 
+                                    key={i} 
+                                    className={commonClasses} 
+                                    style={{ verticalAlign: '-0.25em' }} // Adjust vertical alignment y
+                                />
+                            );
+                        } 
+                        else if (link.icon === 'info-circle') {
+                            content = (
+                                <BiInfoCircle 
+                                    key={i} 
+                                    className={commonClasses} 
+                                    style={{ verticalAlign: '-0.25em' }} 
+                                />
+                            );
+                        }
+                        // For other, we use original icons
+                        else {
+                            content = (
+                                <FontAwesome
+                                    key={i}
+                                    name={link.icon}
+                                    className={commonClasses}
+                                />
+                            );
+                        }
 
                         if (link.onClick) {
                             let anchorProps: any = {
