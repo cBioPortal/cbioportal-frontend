@@ -631,13 +631,13 @@ export default class StudyViewPage extends React.Component<
         default: [],
     });
 
-    @computed get zarrLoaderPostMessageData() {
+    @computed get czLoaderPostMessageData() {
         const allNames = this.allPatientDisplayNames.result || [];
         const selectedNames = this.selectedPatientDisplayNames.result || [];
         const allViewName = `All patients (${allNames.length}) by cell_type`;
         const selectedViewName = `Selected patients (${selectedNames.length}) by cell_type`;
 
-        console.log('[cBioPortal] zarr loader views:', {
+        console.log('[cBioPortal] cz loader views:', {
             all: allNames,
             selected: selectedNames,
         });
@@ -684,7 +684,7 @@ export default class StudyViewPage extends React.Component<
         };
     }
 
-    @computed get zarrLoaderTab(): JSX.Element | null {
+    @computed get czLoaderTab(): JSX.Element | null {
         if (
             !this.store.queriedPhysicalStudyIds.isComplete ||
             !this.store.queriedPhysicalStudyIds.result!.includes(
@@ -696,9 +696,9 @@ export default class StudyViewPage extends React.Component<
 
         return (
             <MSKTab
-                key={StudyViewPageTabKeyEnum.ZARR_LOADER}
-                id={StudyViewPageTabKeyEnum.ZARR_LOADER}
-                linkText="Zarr Loader"
+                key={StudyViewPageTabKeyEnum.CZ_LOADER}
+                id={StudyViewPageTabKeyEnum.CZ_LOADER}
+                linkText="scRNA Explorer"
                 unmountOnHide={false}
             >
                 <Observer>
@@ -707,7 +707,7 @@ export default class StudyViewPage extends React.Component<
                             url="http://localhost:5174"
                             height={window.innerHeight - 275}
                             width="100%"
-                            postMessageData={this.zarrLoaderPostMessageData}
+                            postMessageData={this.czLoaderPostMessageData}
                         />
                     )}
                 </Observer>
@@ -921,7 +921,7 @@ export default class StudyViewPage extends React.Component<
                                     </MSKTab>
 
                                     {this.resourceTabs.component}
-                                    {this.zarrLoaderTab}
+                                    {this.czLoaderTab}
                                     {this.customTabs}
                                 </MSKTabs>
 
