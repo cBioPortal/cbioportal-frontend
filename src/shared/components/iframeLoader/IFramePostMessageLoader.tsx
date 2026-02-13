@@ -1,4 +1,5 @@
 import * as React from 'react';
+import _ from 'lodash';
 import LoadingIndicator from '../loadingIndicator/LoadingIndicator';
 import { observer } from 'mobx-react';
 import { makeObservable, observable } from 'mobx';
@@ -33,44 +34,39 @@ export default class IFramePostMessageLoader extends React.Component<
         makeObservable(this);
     }
 
+    private sendPostMessage() {
+        if (
+            this.props.postMessageData &&
+            this.iframeRef.current?.contentWindow
+        ) {
+            const origin =
+                this.props.postMessageOrigin || new URL(this.props.url).origin;
+            console.log(
+                '[cBioPortal] sending postMessage to origin:',
+                origin,
+                this.props.postMessageData
+            );
+            this.iframeRef.current.contentWindow.postMessage(
+                this.props.postMessageData,
+                origin
+            );
+        }
+    }
+
     @autobind
     private onLoad() {
         console.log('[cBioPortal] iframe loaded:', this.props.url);
         this.iframeLoaded = true;
+        this.sendPostMessage();
+    }
 
-        if (this.props.postMessageData) {
-            console.log(
-                '[cBioPortal] postMessage data to send:',
-                this.props.postMessageData
-            );
-
-            if (this.iframeRef.current?.contentWindow) {
-                const origin =
-                    this.props.postMessageOrigin ||
-                    new URL(this.props.url).origin;
-                // Delay to allow the iframe's React app to fully mount
-                // and register its message listeners after the HTML document loads
-                console.log(
-                    '[cBioPortal] waiting for iframe app to initialize...'
-                );
-                setTimeout(() => {
-                    console.log(
-                        '[cBioPortal] sending postMessage to origin:',
-                        origin
-                    );
-                    this.iframeRef.current?.contentWindow?.postMessage(
-                        this.props.postMessageData,
-                        origin
-                    );
-                    console.log('[cBioPortal] postMessage sent successfully');
-                }, 500);
-            } else {
-                console.warn(
-                    '[cBioPortal] iframe contentWindow not available, cannot send postMessage'
-                );
-            }
-        } else {
-            console.log('[cBioPortal] no postMessageData provided, skipping');
+    componentDidUpdate(prevProps: IFramePostMessageLoaderProps) {
+        if (
+            this.iframeLoaded &&
+            !_.isEqual(prevProps.postMessageData, this.props.postMessageData)
+        ) {
+            console.log('[cBioPortal] postMessageData changed, re-sending');
+            this.sendPostMessage();
         }
     }
 
