@@ -24,6 +24,7 @@ import {
 } from 'cbioportal-frontend-commons';
 import { PageLayout } from '../../shared/components/PageLayout/PageLayout';
 import IFrameLoader from '../../shared/components/iframeLoader/IFrameLoader';
+import IFramePostMessageLoader from '../../shared/components/iframeLoader/IFramePostMessageLoader';
 import { StudySummaryTab } from 'pages/studyView/tabs/SummaryTab';
 import StudyPageHeader from './studyPageHeader/StudyPageHeader';
 import CNSegments from './tabs/CNSegments';
@@ -562,6 +563,34 @@ export default class StudyViewPage extends React.Component<
         },
     });
 
+    readonly zarrLoaderTab = MakeMobxView({
+        await: () => [this.store.queriedPhysicalStudyIds],
+        render: () => {
+            const studyIds = this.store.queriedPhysicalStudyIds.result!;
+            if (!studyIds.includes('msk_spectrum_tme_2022')) {
+                return null;
+            }
+            return (
+                <MSKTab
+                    key={StudyViewPageTabKeyEnum.ZARR_LOADER}
+                    id={StudyViewPageTabKeyEnum.ZARR_LOADER}
+                    linkText="Zarr Loader"
+                    unmountOnHide={false}
+                >
+                    <IFramePostMessageLoader
+                        url="https://cbioportal.github.io/cbioportal-zarr-loader/"
+                        height={window.innerHeight - 275}
+                        width="100%"
+                        postMessageData={{
+                            type: 'cbioportal-zarr-init',
+                            studyId: 'msk_spectrum_tme_2022',
+                        }}
+                    />
+                </MSKTab>
+            );
+        },
+    });
+
     @computed get customTabs() {
         return buildCustomTabs(this.customTabsConfigs);
     }
@@ -768,6 +797,7 @@ export default class StudyViewPage extends React.Component<
                                     </MSKTab>
 
                                     {this.resourceTabs.component}
+                                    {this.zarrLoaderTab.component}
                                     {this.customTabs}
                                 </MSKTabs>
 
