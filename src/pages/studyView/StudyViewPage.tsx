@@ -684,31 +684,36 @@ export default class StudyViewPage extends React.Component<
         };
     }
 
-    readonly zarrLoaderTab = MakeMobxView({
-        await: () => [this.store.queriedPhysicalStudyIds],
-        render: () => {
-            const studyIds = this.store.queriedPhysicalStudyIds.result!;
-            if (!studyIds.includes('msk_spectrum_tme_2022')) {
-                return null;
-            }
+    @computed get zarrLoaderTab(): JSX.Element | null {
+        if (
+            !this.store.queriedPhysicalStudyIds.isComplete ||
+            !this.store.queriedPhysicalStudyIds.result!.includes(
+                'msk_spectrum_tme_2022'
+            )
+        ) {
+            return null;
+        }
 
-            return (
-                <MSKTab
-                    key={StudyViewPageTabKeyEnum.ZARR_LOADER}
-                    id={StudyViewPageTabKeyEnum.ZARR_LOADER}
-                    linkText="Zarr Loader"
-                    unmountOnHide={false}
-                >
-                    <IFramePostMessageLoader
-                        url="http://localhost:5174"
-                        height={window.innerHeight - 275}
-                        width="100%"
-                        postMessageData={this.zarrLoaderPostMessageData}
-                    />
-                </MSKTab>
-            );
-        },
-    });
+        return (
+            <MSKTab
+                key={StudyViewPageTabKeyEnum.ZARR_LOADER}
+                id={StudyViewPageTabKeyEnum.ZARR_LOADER}
+                linkText="Zarr Loader"
+                unmountOnHide={false}
+            >
+                <Observer>
+                    {() => (
+                        <IFramePostMessageLoader
+                            url="http://localhost:5174"
+                            height={window.innerHeight - 275}
+                            width="100%"
+                            postMessageData={this.zarrLoaderPostMessageData}
+                        />
+                    )}
+                </Observer>
+            </MSKTab>
+        );
+    }
 
     @computed get customTabs() {
         return buildCustomTabs(this.customTabsConfigs);
@@ -916,7 +921,7 @@ export default class StudyViewPage extends React.Component<
                                     </MSKTab>
 
                                     {this.resourceTabs.component}
-                                    {this.zarrLoaderTab.component}
+                                    {this.zarrLoaderTab}
                                     {this.customTabs}
                                 </MSKTabs>
 
