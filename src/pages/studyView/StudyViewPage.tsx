@@ -24,6 +24,7 @@ import {
 } from 'cbioportal-frontend-commons';
 import { PageLayout } from '../../shared/components/PageLayout/PageLayout';
 import IFrameLoader from '../../shared/components/iframeLoader/IFrameLoader';
+import IFramePostMessageLoader from '../../shared/components/iframeLoader/IFramePostMessageLoader';
 import { StudySummaryTab } from 'pages/studyView/tabs/SummaryTab';
 import StudyPageHeader from './studyPageHeader/StudyPageHeader';
 import CNSegments from './tabs/CNSegments';
@@ -60,7 +61,7 @@ import { MakeMobxView } from '../../shared/components/MobxView';
 import ResourceTab from '../../shared/components/resources/ResourceTab';
 import StudyViewURLWrapper from './StudyViewURLWrapper';
 import ResourcesTab, { RESOURCES_TAB_NAME } from './resources/ResourcesTab';
-import { ResourceData } from 'cbioportal-ts-api-client';
+import { ClinicalDataFilter, ResourceData } from 'cbioportal-ts-api-client';
 import $ from 'jquery';
 import { StudyViewComparisonGroup } from 'pages/groupComparison/GroupComparisonUtils';
 import { parse } from 'query-string';
@@ -562,6 +563,158 @@ export default class StudyViewPage extends React.Component<
         },
     });
 
+    readonly allPatientDisplayNames = remoteData<string[]>({
+        await: () => [this.store.queriedPhysicalStudyIds],
+        invoke: async () => {
+            const studyIds = this.store.queriedPhysicalStudyIds.result!;
+            if (!studyIds.includes('msk_spectrum_tme_2022')) {
+                return [];
+            }
+            const result = await this.store.internalClient.fetchClinicalDataCountsUsingPOST(
+                {
+                    clinicalDataCountFilter: {
+                        attributes: [
+                            {
+                                attributeId: 'PATIENT_DISPLAY_NAME',
+                            } as ClinicalDataFilter,
+                        ],
+                        studyViewFilter: this.store.initialFilters,
+                    },
+                }
+            );
+            const item = _.find(result, {
+                attributeId: 'PATIENT_DISPLAY_NAME',
+            });
+            const names = item
+                ? item.counts.map((c: { value: string }) => c.value)
+                : [];
+            console.log('[cBioPortal] all PATIENT_DISPLAY_NAME values:', names);
+            return names;
+        },
+        default: [],
+    });
+
+    readonly selectedPatientDisplayNames = remoteData<string[]>({
+        await: () => [
+            this.store.queriedPhysicalStudyIds,
+            this.store.selectedSamples,
+        ],
+        invoke: async () => {
+            const studyIds = this.store.queriedPhysicalStudyIds.result!;
+            if (!studyIds.includes('msk_spectrum_tme_2022')) {
+                return [];
+            }
+            const result = await this.store.internalClient.fetchClinicalDataCountsUsingPOST(
+                {
+                    clinicalDataCountFilter: {
+                        attributes: [
+                            {
+                                attributeId: 'PATIENT_DISPLAY_NAME',
+                            } as ClinicalDataFilter,
+                        ],
+                        studyViewFilter: this.store.filters,
+                    },
+                }
+            );
+            const item = _.find(result, {
+                attributeId: 'PATIENT_DISPLAY_NAME',
+            });
+            const names = item
+                ? item.counts.map((c: { value: string }) => c.value)
+                : [];
+            console.log(
+                '[cBioPortal] selected PATIENT_DISPLAY_NAME values:',
+                names
+            );
+            return names;
+        },
+        default: [],
+    });
+
+    @computed get czLoaderPostMessageData() {
+        const allNames = this.allPatientDisplayNames.result || [];
+        const selectedNames = this.selectedPatientDisplayNames.result || [];
+        const allViewName = `All patients (${allNames.length}) by cell_type`;
+        const selectedViewName = `Selected patients (${selectedNames.length}) by cell_type`;
+
+        console.log('[cBioPortal] cz loader views:', {
+            all: allNames,
+            selected: selectedNames,
+        });
+
+        return {
+            type: 'applyConfig',
+            payload: {
+                defaults: {
+                    embedding_key: 'X_umap50',
+                    active_tooltips: ['cell_type', 'author_sample_id'],
+                    color_by: {
+                        type: 'category',
+                        value: 'cell_type',
+                    },
+                },
+                initial_view: selectedViewName,
+                saved_views: [
+                    {
+                        name: selectedViewName,
+                        selection: {
+                            target: 'donor_id',
+                            values: selectedNames,
+                        },
+                        active_tooltips: ['cell_type', 'author_sample_id'],
+                        color_by: {
+                            type: 'category',
+                            value: 'cell_type',
+                        },
+                    },
+                    {
+                        name: allViewName,
+                        selection: {
+                            target: 'donor_id',
+                            values: allNames,
+                        },
+                        active_tooltips: ['cell_type', 'author_sample_id'],
+                        color_by: {
+                            type: 'category',
+                            value: 'cell_type',
+                        },
+                    },
+                ],
+            },
+        };
+    }
+
+    @computed get czLoaderTab(): JSX.Element | null {
+        if (
+            !this.store.queriedPhysicalStudyIds.isComplete ||
+            !this.store.queriedPhysicalStudyIds.result!.includes(
+                'msk_spectrum_tme_2022'
+            )
+        ) {
+            return null;
+        }
+
+        return (
+            <MSKTab
+                key={StudyViewPageTabKeyEnum.CZ_LOADER}
+                id={StudyViewPageTabKeyEnum.CZ_LOADER}
+                linkText="scRNA Explorer"
+                unmountOnHide={false}
+            >
+                <Observer>
+                    {() => (
+                        <IFramePostMessageLoader
+                            url="https://cbioportal.github.io/cbioportal-zarr-loader/"
+                            height={window.innerHeight - 275}
+                            width="100%"
+                            postMessageData={this.czLoaderPostMessageData}
+                        />
+                    )}
+                </Observer>
+            </MSKTab>
+        );
+    }
+
     @computed get customTabs() {
         return buildCustomTabs(this.customTabsConfigs);
     }
@@ -768,6 +921,7 @@ export default class StudyViewPage extends React.Component<
                                     </MSKTab>
 
                                     {this.resourceTabs.component}
+                                    {this.czLoaderTab}
                                     {this.customTabs}
                                 </MSKTabs>
 
