@@ -350,7 +350,7 @@ export default class StudyList extends QueryStoreComponent<
                                 <BiBook 
                                     key={i} 
                                     className={commonClasses} 
-                                    style={{ verticalAlign: '-0.25em' }} // Adjust vertical alignment y
+                                    style={{ verticalAlign: '-0.25em' }} // Adjust vertical alignment
                                 />
                             );
                         } 
