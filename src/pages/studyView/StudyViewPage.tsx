@@ -61,7 +61,7 @@ import { MakeMobxView } from '../../shared/components/MobxView';
 import ResourceTab from '../../shared/components/resources/ResourceTab';
 import StudyViewURLWrapper from './StudyViewURLWrapper';
 import ResourcesTab, { RESOURCES_TAB_NAME } from './resources/ResourcesTab';
-import { ResourceData } from 'cbioportal-ts-api-client';
+import { ClinicalDataFilter, ResourceData } from 'cbioportal-ts-api-client';
 import $ from 'jquery';
 import { StudyViewComparisonGroup } from 'pages/groupComparison/GroupComparisonUtils';
 import { parse } from 'query-string';
@@ -563,13 +563,96 @@ export default class StudyViewPage extends React.Component<
         },
     });
 
-    readonly zarrLoaderTab = MakeMobxView({
+    readonly allPatientDisplayNames = remoteData<string[]>({
         await: () => [this.store.queriedPhysicalStudyIds],
+        invoke: async () => {
+            const studyIds = this.store.queriedPhysicalStudyIds.result!;
+            if (!studyIds.includes('msk_spectrum_tme_2022')) {
+                return [];
+            }
+            const result = await this.store.internalClient.fetchClinicalDataCountsUsingPOST(
+                {
+                    clinicalDataCountFilter: {
+                        attributes: [
+                            {
+                                attributeId: 'PATIENT_DISPLAY_NAME',
+                            } as ClinicalDataFilter,
+                        ],
+                        studyViewFilter: this.store.initialFilters,
+                    },
+                }
+            );
+            const item = _.find(result, {
+                attributeId: 'PATIENT_DISPLAY_NAME',
+            });
+            const names = item
+                ? item.counts.map((c: { value: string }) => c.value)
+                : [];
+            console.log('[cBioPortal] all PATIENT_DISPLAY_NAME values:', names);
+            return names;
+        },
+        default: [],
+    });
+
+    readonly selectedPatientDisplayNames = remoteData<string[]>({
+        await: () => [
+            this.store.queriedPhysicalStudyIds,
+            this.store.selectedSamples,
+        ],
+        invoke: async () => {
+            const studyIds = this.store.queriedPhysicalStudyIds.result!;
+            if (!studyIds.includes('msk_spectrum_tme_2022')) {
+                return [];
+            }
+            const result = await this.store.internalClient.fetchClinicalDataCountsUsingPOST(
+                {
+                    clinicalDataCountFilter: {
+                        attributes: [
+                            {
+                                attributeId: 'PATIENT_DISPLAY_NAME',
+                            } as ClinicalDataFilter,
+                        ],
+                        studyViewFilter: this.store.filters,
+                    },
+                }
+            );
+            const item = _.find(result, {
+                attributeId: 'PATIENT_DISPLAY_NAME',
+            });
+            const names = item
+                ? item.counts.map((c: { value: string }) => c.value)
+                : [];
+            console.log(
+                '[cBioPortal] selected PATIENT_DISPLAY_NAME values:',
+                names
+            );
+            return names;
+        },
+        default: [],
+    });
+
+    readonly zarrLoaderTab = MakeMobxView({
+        await: () => [
+            this.store.queriedPhysicalStudyIds,
+            this.allPatientDisplayNames,
+            this.selectedPatientDisplayNames,
+        ],
         render: () => {
             const studyIds = this.store.queriedPhysicalStudyIds.result!;
             if (!studyIds.includes('msk_spectrum_tme_2022')) {
                 return null;
             }
+
+            const allNames = this.allPatientDisplayNames.result!;
+            const selectedNames = this.selectedPatientDisplayNames.result!;
+            const allViewName = `All patients (${allNames.length}) by cell_type`;
+            const selectedViewName = `Selected patients (${selectedNames.length}) by cell_type`;
+
+            console.log('[cBioPortal] zarr loader views:', {
+                all: allNames,
+                selected: selectedNames,
+            });
+
             return (
                 <MSKTab
                     key={StudyViewPageTabKeyEnum.ZARR_LOADER}
@@ -595,13 +678,13 @@ export default class StudyViewPage extends React.Component<
                                         value: 'cell_type',
                                     },
                                 },
-                                initial_view: 'OV-070 by cell_type',
+                                initial_view: selectedViewName,
                                 saved_views: [
                                     {
-                                        name: 'OV-070 by cell_type',
+                                        name: selectedViewName,
                                         selection: {
                                             target: 'donor_id',
-                                            values: ['SPECTRUM-OV-070'],
+                                            values: selectedNames,
                                         },
                                         active_tooltips: [
                                             'cell_type',
@@ -613,38 +696,18 @@ export default class StudyViewPage extends React.Component<
                                         },
                                     },
                                     {
-                                        name: 'OV-090 & OV-022 by cell_type',
+                                        name: allViewName,
                                         selection: {
                                             target: 'donor_id',
-                                            values: [
-                                                'SPECTRUM-OV-090',
-                                                'SPECTRUM-OV-022',
-                                            ],
+                                            values: allNames,
                                         },
                                         active_tooltips: [
                                             'cell_type',
                                             'author_sample_id',
-                                            'Phase',
                                         ],
                                         color_by: {
                                             type: 'category',
                                             value: 'cell_type',
-                                        },
-                                    },
-                                    {
-                                        selection: {
-                                            target: 'donor_id',
-                                            values: ['SPECTRUM-OV-041'],
-                                        },
-                                        active_tooltips: [
-                                            'cell_type',
-                                            'author_sample_id',
-                                            'Phase',
-                                        ],
-                                        color_by: {
-                                            type: 'gene',
-                                            value: 'dapl1',
-                                            color_scale: 'magma',
                                         },
                                     },
                                 ],
