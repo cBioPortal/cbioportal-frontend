@@ -225,4 +225,18 @@ describe('CancerCellFractionElement', () => {
             'NA'
         );
     });
+    const singleSampleSampleManager = new SampleManager(
+        [{ id: 'S001', clinicalData: [] }],
+        ['S001']
+    );
+
+    it('renders correctly for valid single sample with SampleManager', () => {
+        const validSingleSampleWithManager = mount(
+            <CancerCellFractionElement
+                {...getCancerCellFractionProps(false, true)}
+                sampleManager={singleSampleSampleManager}
+            />
+        );
+        testExpectedSingleSampleCCF(validSingleSampleWithManager, '0.94');
+    });
 });
