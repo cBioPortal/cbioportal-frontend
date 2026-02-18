@@ -110,6 +110,26 @@ const CancerCellFractionElement: React.FunctionComponent<{
     sampleManager?: SampleManager | null;
 }> = props => {
     if (props.sampleManager) {
+        const sampleOrder = props.sampleManager.getSampleIdsInOrder();
+        // For single-sample cases, display CCF as a plain number
+        // instead of a bar chart for better readability
+        if (sampleOrder.length <= 1) {
+            const sampleId =
+                sampleOrder.length === 1
+                    ? sampleOrder[0]
+                    : props.sampleIds[0];
+            const ccfValue = props.sampleToCCFValue[sampleId];
+            return (
+                <DefaultTooltip
+                    placement="left"
+                    overlay={
+                        <CancerCellFractionElementTooltip {...props} />
+                    }
+                >
+                    <span data-test="ccf-number">{ccfValue}</span>
+                </DefaultTooltip>
+            );
+        }
         return (
             <DefaultTooltip
                 placement="left"

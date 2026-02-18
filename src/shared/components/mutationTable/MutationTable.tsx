@@ -132,9 +132,9 @@ export interface IMutationTableProps {
     data?: Mutation[][];
     dataStore?: ILazyMobXTableApplicationDataStore<Mutation[]>;
     downloadDataFetcher?:
-        | ILazyMobXTableApplicationLazyDownloadDataFetcher
-        | (() => Promise<any>)
-        | undefined;
+    | ILazyMobXTableApplicationLazyDownloadDataFetcher
+    | (() => Promise<any>)
+    | undefined;
     initialItemsPerPage?: number;
     itemsLabel?: string;
     itemsLabelPlural?: string;
@@ -149,8 +149,8 @@ export interface IMutationTableProps {
     storeColumnVisibility?: (
         columnVisibility:
             | {
-                  [columnId: string]: boolean;
-              }
+                [columnId: string]: boolean;
+            }
             | undefined
     ) => void;
     onRowClick?: (d: Mutation[]) => void;
@@ -184,7 +184,7 @@ export enum MutationTableColumnType {
     VALIDATION_STATUS = 'VS',
     MUTATION_TYPE = 'Mutation Type',
     VARIANT_TYPE = 'Variant Type',
-    CLONAL = 'Clonality',
+    CLONAL = 'Clonal',
     CANCER_CELL_FRACTION = 'CCF',
     EXPECTED_ALT_COPIES = 'Mutant Integer Copy #',
     CENTER = 'Center',
@@ -230,7 +230,7 @@ export type MutationTableColumn = Column<Mutation[]> & {
     shouldExclude?: () => boolean;
 };
 
-export class MutationTableComponent extends LazyMobXTable<Mutation[]> {}
+export class MutationTableComponent extends LazyMobXTable<Mutation[]> { }
 
 export function getDivForDataField(
     data: Mutation[],
