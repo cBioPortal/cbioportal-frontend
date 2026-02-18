@@ -704,8 +704,8 @@ export default class StudyViewPage extends React.Component<
                 <Observer>
                     {() => (
                         <IFramePostMessageLoader
-                            // url="https://cbioportal.github.io/cbioportal-zarr-loader/"
-                            url="http://localhost:5174/cbioportal-zarr-loader/"
+                            url="https://cbioportal.github.io/cbioportal-zarr-loader/"
+                            //url="http://localhost:5174/cbioportal-zarr-loader/"
                             height={window.innerHeight}
                             width="100%"
                             postMessageData={this.czLoaderPostMessageData}
