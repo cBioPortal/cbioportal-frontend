@@ -21,6 +21,7 @@ import {
     getBrowserWindow,
     onMobxPromise,
     remoteData,
+    pluralize,
 } from 'cbioportal-frontend-commons';
 import { PageLayout } from '../../shared/components/PageLayout/PageLayout';
 import IFrameLoader from '../../shared/components/iframeLoader/IFrameLoader';
@@ -61,6 +62,7 @@ import ResourceTab from '../../shared/components/resources/ResourceTab';
 import StudyViewURLWrapper from './StudyViewURLWrapper';
 import ResourcesTab, { RESOURCES_TAB_NAME } from './resources/ResourcesTab';
 import { ResourceData } from 'cbioportal-ts-api-client';
+import { getResourceConfig } from 'shared/lib/ResourceConfig';
 import $ from 'jquery';
 import { StudyViewComparisonGroup } from 'pages/groupComparison/GroupComparisonUtils';
 import { parse } from 'query-string';
@@ -380,7 +382,10 @@ export default class StudyViewPage extends React.Component<
     }
 
     @computed get shouldShowResources() {
-        if (this.store.resourceDefinitions.isComplete) {
+        if (
+            this.store.resourceDefinitions.isComplete &&
+            this.store.resourceIdToResourceData.isComplete
+        ) {
             return this.store.resourceDefinitions.result.length > 0;
         } else {
             return false;
@@ -542,6 +547,10 @@ export default class StudyViewPage extends React.Component<
             const tabs: JSX.Element[] = sorted.reduce((list, def) => {
                 const data = resourceDataById[def.resourceId];
                 if (data && data.length > 0) {
+                    const config = getResourceConfig(def);
+                    const customDisplayName =
+                        config.customizedDisplayName || def.displayName;
+
                     list.push(
                         <MSKTab
                             key={getStudyViewResourceTabId(def.resourceId)}
@@ -552,6 +561,7 @@ export default class StudyViewPage extends React.Component<
                             <ResourceTab
                                 resourceData={resourceDataById[def.resourceId]}
                                 urlWrapper={this.urlWrapper}
+                                resourceDisplayName={customDisplayName}
                             />
                         </MSKTab>
                     );
@@ -735,6 +745,16 @@ export default class StudyViewPage extends React.Component<
                                     >
                                         <div>
                                             <ResourcesTab
+                                                resourceDisplayName={
+                                                    this.store
+                                                        .resourceDefinitions
+                                                        .result?.length == 1
+                                                        ? this.store
+                                                              .resourceDefinitions
+                                                              .result[0]
+                                                              .displayName
+                                                        : RESOURCES_TAB_NAME
+                                                }
                                                 store={this.store}
                                                 openResource={this.openResource}
                                             />

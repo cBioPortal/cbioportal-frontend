@@ -6,6 +6,7 @@ import { IColumnVisibilityDef } from 'shared/components/columnVisibilityControls
 import {
     DefaultTooltip,
     toggleColumnVisibility,
+    pluralize,
 } from 'cbioportal-frontend-commons';
 import {
     PatientViewPageStore,
@@ -487,6 +488,7 @@ export class PatientViewPageInner extends React.Component<
                             onClickClose={this.closeResourceTab}
                         >
                             <ResourceTab
+                                resourceDisplayName={def.displayName}
                                 resourceData={resourceDataById[def.resourceId]}
                                 urlWrapper={this.urlWrapper}
                             />
