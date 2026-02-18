@@ -42,7 +42,7 @@ export interface ResourceCustomConfig {
 }
 
 export const RESOURCE_CUSTOM_CONFIGS: Record<string, ResourceCustomConfig> = {
-    HE: {
+    MSK_HNE: {
         customizedDisplayName: 'Samples with H&E Slides',
         hidePerPatientColumn: true,
         columnNameMapping: { 'Type Of Resource': 'View' },
