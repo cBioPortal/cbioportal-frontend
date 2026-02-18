@@ -111,6 +111,7 @@ export default class IFramePostMessageLoader extends React.Component<
                     }}
                     src={this.props.url}
                     onLoad={this.onLoad}
+                    scrolling="no"
                     allowFullScreen={true}
                 ></iframe>
             </div>
