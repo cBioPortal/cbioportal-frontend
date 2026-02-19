@@ -1777,6 +1777,168 @@ describe('DataUtils', () => {
                 profile_data: -10,
             });
         });
+
+        describe('with Z-score threshold', () => {
+            it('selects most extreme thresholded value when zScoreThreshold provided', () => {
+                const data = [{ value: 1.5 }, { value: 2.5 }, { value: -3.0 }];
+                const partialTrackDatum = {};
+                fillHeatmapTrackDatum<
+                    IGeneHeatmapTrackDatum,
+                    'hugo_gene_symbol'
+                >(
+                    partialTrackDatum,
+                    'hugo_gene_symbol',
+                    'gene',
+                    { patientId: 'patient', studyId: 'study' } as Patient,
+                    data,
+                    undefined,
+                    2.0
+                );
+                assert.deepEqual(partialTrackDatum, {
+                    hugo_gene_symbol: 'gene',
+                    study_id: 'study',
+                    profile_data: -3.0,
+                });
+            });
+
+            it('falls back to original logic when no data meets threshold', () => {
+                const data = [{ value: 1.5 }, { value: -1.0 }, { value: 0.5 }];
+                const partialTrackDatum = {};
+                fillHeatmapTrackDatum<
+                    IGeneHeatmapTrackDatum,
+                    'hugo_gene_symbol'
+                >(
+                    partialTrackDatum,
+                    'hugo_gene_symbol',
+                    'gene',
+                    { patientId: 'patient', studyId: 'study' } as Patient,
+                    data,
+                    undefined,
+                    2.0
+                );
+                assert.deepEqual(partialTrackDatum, {
+                    hugo_gene_symbol: 'gene',
+                    study_id: 'study',
+                    profile_data: 1.5,
+                });
+            });
+
+            it('selects positive thresholded value over negative when both meet threshold', () => {
+                const data = [{ value: 2.5 }, { value: -2.5 }, { value: 1.0 }];
+                const partialTrackDatum = {};
+                fillHeatmapTrackDatum<
+                    IGeneHeatmapTrackDatum,
+                    'hugo_gene_symbol'
+                >(
+                    partialTrackDatum,
+                    'hugo_gene_symbol',
+                    'gene',
+                    { patientId: 'patient', studyId: 'study' } as Patient,
+                    data,
+                    undefined,
+                    2.0
+                );
+                // should select first value when absolute values are equal
+                assert.deepEqual(partialTrackDatum, {
+                    hugo_gene_symbol: 'gene',
+                    study_id: 'study',
+                    profile_data: 2.5,
+                });
+            });
+
+            it('respects ASC sort order in fallback when no data meets threshold', () => {
+                const data = [{ value: 1.5 }, { value: 0.5 }, { value: 1.0 }];
+                const partialTrackDatum = {};
+                fillHeatmapTrackDatum<
+                    IGeneHeatmapTrackDatum,
+                    'hugo_gene_symbol'
+                >(
+                    partialTrackDatum,
+                    'hugo_gene_symbol',
+                    'gene',
+                    { patientId: 'patient', studyId: 'study' } as Patient,
+                    data,
+                    'ASC',
+                    2.0
+                );
+                assert.deepEqual(partialTrackDatum, {
+                    hugo_gene_symbol: 'gene',
+                    study_id: 'study',
+                    profile_data: 0.5,
+                });
+            });
+
+            it('respects DESC sort order in fallback when no data meets threshold', () => {
+                const data = [{ value: 1.5 }, { value: 0.5 }, { value: 1.0 }];
+                const partialTrackDatum = {};
+                fillHeatmapTrackDatum<
+                    IGeneHeatmapTrackDatum,
+                    'hugo_gene_symbol'
+                >(
+                    partialTrackDatum,
+                    'hugo_gene_symbol',
+                    'gene',
+                    { patientId: 'patient', studyId: 'study' } as Patient,
+                    data,
+                    'DESC',
+                    2.0
+                );
+                assert.deepEqual(partialTrackDatum, {
+                    hugo_gene_symbol: 'gene',
+                    study_id: 'study',
+                    profile_data: 1.5,
+                });
+            });
+
+            it('selects highest absolute value among thresholded data', () => {
+                const data = [
+                    { value: 2.1 },
+                    { value: -4.5 },
+                    { value: 3.0 },
+                    { value: 1.0 },
+                ];
+                const partialTrackDatum = {};
+                fillHeatmapTrackDatum<
+                    IGeneHeatmapTrackDatum,
+                    'hugo_gene_symbol'
+                >(
+                    partialTrackDatum,
+                    'hugo_gene_symbol',
+                    'gene',
+                    { patientId: 'patient', studyId: 'study' } as Patient,
+                    data,
+                    undefined,
+                    2.0
+                );
+                assert.deepEqual(partialTrackDatum, {
+                    hugo_gene_symbol: 'gene',
+                    study_id: 'study',
+                    profile_data: -4.5,
+                });
+            });
+
+            it('works correctly for sample (single value) with threshold', () => {
+                const data = [{ value: 3.0 }];
+                const partialTrackDatum = {};
+                fillHeatmapTrackDatum<
+                    IGeneHeatmapTrackDatum,
+                    'hugo_gene_symbol'
+                >(
+                    partialTrackDatum,
+                    'hugo_gene_symbol',
+                    'gene',
+                    { sampleId: 'sample', studyId: 'study' } as Sample,
+                    data,
+                    undefined,
+                    2.0
+                );
+                assert.deepEqual(partialTrackDatum, {
+                    hugo_gene_symbol: 'gene',
+                    study_id: 'study',
+                    profile_data: 3.0,
+                });
+            });
+        });
     });
 
     describe('fillClinicalTrackDatum', () => {
