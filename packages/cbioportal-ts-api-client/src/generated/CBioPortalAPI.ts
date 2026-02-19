@@ -258,6 +258,8 @@ export type GenericAssayData = {
 
         'patientId': string
 
+        'patientLevel': boolean
+
         'sampleId': string
 
         'stableId': string
@@ -303,6 +305,12 @@ export type GenericAssayMetaFilter = {
 };
 export type Info = {
     'dbVersion': string
+
+        'derivedTableVersion': string
+
+        'geneTableVersion': string
+
+        'genesetVersion': string
 
         'gitBranch': string
 
@@ -464,9 +472,9 @@ export type MutationMultipleStudyFilter = {
 
 };
 export type NamespaceAttribute = {
-    'outerKey': string
+    'innerKey': string
 
-        'innerKey': string
+        'outerKey': string
 
 };
 export type NumericGeneMolecularData = {
@@ -516,23 +524,23 @@ export type PatientIdentifier = {
 export type ResourceCount = {
     'customMetaData': string
 
-    'description': string
+        'description': string
 
-    'displayName': string
+        'displayName': string
 
-    'openByDefault': boolean
+        'openByDefault': boolean
 
-    'patientCount': number
+        'patientCount': number
 
-    'priority': string
+        'priority': string
 
-    'resourceId': string
+        'resourceId': string
 
-    'resourceType': "STUDY" | "SAMPLE" | "PATIENT"
+        'resourceType': "STUDY" | "SAMPLE" | "PATIENT"
 
-    'sampleCount': number
+        'sampleCount': number
 
-    'studyId': string
+        'studyId': string
 
 };
 export type Sample = {
@@ -3638,7 +3646,7 @@ export default class CBioPortalAPI {
     getMutationsInMolecularProfileBySampleListIdUsingGETURL(parameters: {
         'molecularProfileId': string,
         'sampleListId': string,
-        'entrezGeneId' ? : number,
+        'entrezGeneId': number,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
@@ -3704,7 +3712,7 @@ export default class CBioPortalAPI {
     getMutationsInMolecularProfileBySampleListIdUsingGETWithHttpInfo(parameters: {
         'molecularProfileId': string,
         'sampleListId': string,
-        'entrezGeneId' ? : number,
+        'entrezGeneId': number,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
@@ -3742,6 +3750,11 @@ export default class CBioPortalAPI {
 
             if (parameters['entrezGeneId'] !== undefined) {
                 queryParameters['entrezGeneId'] = parameters['entrezGeneId'];
+            }
+
+            if (parameters['entrezGeneId'] === undefined) {
+                reject(new Error('Missing required  parameter: entrezGeneId'));
+                return;
             }
 
             if (parameters['projection'] !== undefined) {
@@ -3792,7 +3805,7 @@ export default class CBioPortalAPI {
     getMutationsInMolecularProfileBySampleListIdUsingGET(parameters: {
             'molecularProfileId': string,
             'sampleListId': string,
-            'entrezGeneId' ? : number,
+            'entrezGeneId': number,
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
@@ -4094,6 +4107,83 @@ export default class CBioPortalAPI {
         }): Promise < Array < Mutation >
         > {
             return this.fetchMutationsInMultipleMolecularProfilesUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    fetchNamespaceUsingPOSTURL(parameters: {
+        'studyIds': Array < string > ,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/api/namespace-attributes/fetch';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Fetch namespace attributes
+     * @method
+     * @name CBioPortalAPI#fetchNamespaceUsingPOST
+     * @param {} studyIds - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     */
+    fetchNamespaceUsingPOSTWithHttpInfo(parameters: {
+        'studyIds': Array < string > ,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/api/namespace-attributes/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/octet-stream';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['studyIds'] !== undefined) {
+                body = parameters['studyIds'];
+            }
+
+            if (parameters['studyIds'] === undefined) {
+                reject(new Error('Missing required  parameter: studyIds'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Fetch namespace attributes
+     * @method
+     * @name CBioPortalAPI#fetchNamespaceUsingPOST
+     * @param {} studyIds - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     */
+    fetchNamespaceUsingPOST(parameters: {
+            'studyIds': Array < string > ,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < NamespaceAttribute >
+        > {
+            return this.fetchNamespaceUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
@@ -7254,74 +7344,4 @@ export default class CBioPortalAPI {
             return response.body;
         });
     };
-
-        /**
-     * Fetch namespace attributes
-     * @method
-     * @name CBioPortalAPI#fetchNamespaceAttributesUsingPOST
-     * @param {string} projection - Level of detail of the response
-     * @param {} studyIds - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     */
-    fetchNamespaceAttributesUsingPOSTWithHttpInfo(parameters: {
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'studyIds': Array < string > ,
-            $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/api/namespace-attributes/fetch';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters['projection'] !== undefined) {
-                queryParameters['projection'] = parameters['projection'];
-            }
-
-            if (parameters['studyIds'] !== undefined) {
-                body = parameters['studyIds'];
-            }
-
-            if (parameters['studyIds'] === undefined) {
-                reject(new Error('Missing required  parameter: studyIds'));
-                return;
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Fetch namespace attributes
-     * @method
-     * @name CBioPortalAPI#fetchNamespaceAttributesUsingPOST
-     * @param {string} projection - Level of detail of the response
-     * @param {} studyIds - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     */
-    fetchNamespaceAttributesUsingPOST(parameters: {
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-            'studyIds': Array < string > ,
-                $queryParameters ? : any,
-                $domain ? : string
-        }): Promise < Array < NamespaceAttribute >
-        > {
-            return this.fetchNamespaceAttributesUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
-
 }

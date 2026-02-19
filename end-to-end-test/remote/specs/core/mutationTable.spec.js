@@ -224,7 +224,7 @@ describe('Mutation Table', function() {
             // click on column button
             await clickElement('button*=Columns');
             // scroll down to activated "ClinVar" selection
-            browser.execute(
+            await browser.execute(
                 'document.getElementsByClassName("ReactVirtualized__Grid")[0].scroll(1000, 1000)'
             );
             // wait for clinvar checkbox to appear
