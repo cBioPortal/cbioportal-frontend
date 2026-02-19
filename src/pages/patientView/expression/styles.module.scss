@@ -1,0 +1,407 @@
+.expressionTab {
+    padding: 15px 20px;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+.headerTitle {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.headerControls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.filterBadge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 14px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid #d0d0d0;
+    background: #fff;
+    transition: background-color 0.15s, border-color 0.15s;
+    user-select: none;
+
+    &:hover {
+        background: #f5f5f5;
+    }
+}
+
+.filterBadgeActive {
+    color: #fff;
+    border-color: transparent;
+}
+
+.mutationBadge {
+    &.filterBadgeActive {
+        background: #3d9a50;
+        border-color: #3d9a50;
+    }
+}
+
+.cnaBadge {
+    &.filterBadgeActive {
+        background: #c1272d;
+        border-color: #c1272d;
+    }
+}
+
+.fusionBadge {
+    &.filterBadgeActive {
+        background: #8b5cc2;
+        border-color: #8b5cc2;
+    }
+}
+
+.splitPanel {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+.leftPanel {
+    width: 42%;
+    min-width: 380px;
+    flex-shrink: 0;
+}
+
+.rightPanel {
+    width: 58%;
+    flex-grow: 1;
+    position: sticky;
+    top: 0;
+}
+
+// Gene table styles
+.tableContainer {
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.searchInput {
+    width: 100%;
+    padding: 10px 14px;
+    border: none;
+    border-bottom: 1px solid #e0e0e0;
+    font-size: 13px;
+    outline: none;
+    background: #fafafa;
+
+    &::placeholder {
+        color: #aaa;
+    }
+
+    &:focus {
+        background: #fff;
+        box-shadow: inset 0 -2px 0 0 #337ab7;
+    }
+}
+
+.tableScroll {
+    max-height: calc(100vh - 280px);
+    overflow-y: auto;
+}
+
+.geneTable {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+
+    th {
+        position: sticky;
+        top: 0;
+        background: #fafafa;
+        padding: 10px 12px 8px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 12px;
+        color: #555;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        border-bottom: 1px solid #e0e0e0;
+        white-space: nowrap;
+        cursor: pointer;
+        user-select: none;
+        z-index: 1;
+
+        &:hover {
+            background: #f0f0f0;
+        }
+    }
+
+    td {
+        padding: 8px 12px;
+        border-bottom: 1px solid #f0f0f0;
+        vertical-align: middle;
+    }
+
+    tbody tr {
+        cursor: pointer;
+        transition: background-color 0.1s;
+
+        &:hover {
+            background: #f7f9fc;
+        }
+    }
+}
+
+.sampleColHeader {
+    text-align: right !important;
+}
+
+.sampleColSubtitle {
+    display: block;
+    font-size: 10px;
+    font-weight: 400;
+    color: #888;
+    text-transform: none;
+    letter-spacing: 0;
+    margin-top: 1px;
+}
+
+.selectedRow {
+    background: #f0f5ff !important;
+
+    .geneSymbol {
+        color: #1a73e8;
+    }
+
+    &:hover {
+        background: #e8f0fe !important;
+    }
+}
+
+.zScoreCell {
+    text-align: right;
+    white-space: nowrap;
+    vertical-align: middle !important;
+}
+
+.zScoreValue {
+    font-family: 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', monospace;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.zScorePositive {
+    color: #c0392b;
+}
+
+.zScoreNegative {
+    color: #2471a3;
+}
+
+.zScoreNeutral {
+    color: #666;
+}
+
+.absZScore {
+    font-family: 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', monospace;
+    font-size: 12px;
+    color: #888;
+    text-align: right;
+}
+
+.badgeContainer {
+    display: inline-flex;
+    gap: 3px;
+    margin-left: 6px;
+    flex-wrap: wrap;
+    vertical-align: middle;
+}
+
+.alterationBadge {
+    display: inline-flex;
+    align-items: center;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 9px;
+    font-weight: 700;
+    color: #fff;
+    white-space: nowrap;
+    letter-spacing: 0.2px;
+}
+
+.mutationColor {
+    background: #3d9a50;
+}
+
+.fusionColor {
+    background: #8b5cc2;
+}
+
+.tableFooter {
+    padding: 8px 12px;
+    font-size: 12px;
+    color: #888;
+    border-top: 1px solid #e0e0e0;
+    background: #fafafa;
+    text-align: center;
+}
+
+// Waterfall plot styles
+.plotContainer {
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 16px;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.plotTitle {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 0 8px 0;
+    text-align: center;
+    color: #333;
+}
+
+.plotToggle {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+
+.toggleButton {
+    padding: 4px 12px;
+    border: 1px solid #d0d0d0;
+    border-radius: 4px;
+    background: #fff;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.15s;
+
+    &:hover {
+        background: #f5f5f5;
+    }
+}
+
+.toggleButtonActive {
+    background: #337ab7;
+    color: #fff;
+    border-color: #337ab7;
+}
+
+.toggleButtonDisabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.plotPlaceholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 300px;
+    color: #aaa;
+    font-size: 13px;
+    font-style: italic;
+}
+
+// Selected gene detail styles
+.geneDetail {
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    margin-top: 16px;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+}
+
+.geneDetailHeader {
+    padding: 10px 16px;
+    border-bottom: 1px solid #e0e0e0;
+    font-size: 13px;
+    font-weight: 600;
+    background: #fafafa;
+    color: #333;
+}
+
+.sampleCards {
+    padding: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.sampleCard {
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 12px 14px;
+    border-left-width: 4px;
+    min-width: 200px;
+    flex: 1;
+    background: #fafbfc;
+}
+
+.sampleCardId {
+    font-weight: 600;
+    font-size: 12px;
+    margin-bottom: 2px;
+    color: #333;
+}
+
+.sampleCardType {
+    font-size: 11px;
+    color: #888;
+    margin-bottom: 8px;
+}
+
+.sampleCardZScore {
+    font-family: 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', monospace;
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.gtexLink {
+    display: inline-block;
+    margin: 8px 16px 12px;
+    font-size: 13px;
+    color: #337ab7;
+
+    &:hover {
+        text-decoration: underline;
+    }
+}
+
+.sortArrow {
+    font-size: 10px;
+    margin-left: 3px;
+    color: #337ab7;
+}
+
+.geneSymbol {
+    font-weight: 600;
+    color: #333;
+}
+
+.downloadButton {
+    padding: 5px 12px;
+    border: 1px solid #d0d0d0;
+    border-radius: 4px;
+    background: #fff;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+
+    &:hover {
+        background: #f5f5f5;
+        border-color: #bbb;
+    }
+}
