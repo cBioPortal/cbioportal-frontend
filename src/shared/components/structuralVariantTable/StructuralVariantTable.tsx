@@ -391,7 +391,13 @@ export default class StructuralVariantTable<
                     ] ?? null;
                 return <span>{data ?? ''}</span>;
             },
-            sortBy: this.defaultSortBy(cancerTypeDetailedAttribute),
+            sortBy: (d: StructuralVariant[]) => {
+                return (
+                    this.props.uniqueSampleKeyToTumorType?.[
+                        d[0].uniqueSampleKey
+                    ] ?? null
+                );
+            },
             filter: (
                 d: StructuralVariantExt[],
                 filterString: string,

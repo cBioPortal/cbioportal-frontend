@@ -52,19 +52,6 @@ if (
         // },
     ];
 
-    // MSK specific messaging
-    if (
-        ['cbioportal.mskcc.org'].includes(getBrowserWindow().location.hostname)
-    ) {
-        MESSAGE_DATA.push({
-            dateEnd: 1000000000000000,
-            content: `During the MSK Epic transition, updates to de-identified
-            clinical data in cBioPortal will be delayed several months, but
-            genomics data will update regularly. For questions, please email <a
-            href="mailto:cdsi@mskcc.org">cdsi@mskcc.org</a>.`,
-            id: '2025_epic_transition_warning',
-        });
-    }
 }
 
 interface IUserMessagerProps {
