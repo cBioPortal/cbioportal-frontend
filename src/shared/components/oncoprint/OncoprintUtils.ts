@@ -627,11 +627,7 @@ function createHeatmapTracksData(
 
             mutations.forEach(m => {
                 const vafReport = getVariantAlleleFrequency(m);
-                if (
-                    vafReport &&
-                    typeof vafReport.vaf === 'number' &&
-                    !isNaN(vafReport.vaf)
-                ) {
+                if (vafReport && _.isFinite(vafReport.vaf)) {
                     const existingVaf = sampleMutationMap.get(
                         m.uniqueSampleKey
                     );

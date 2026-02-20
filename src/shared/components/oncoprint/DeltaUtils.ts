@@ -1636,7 +1636,7 @@ export function transitionHeatmapTrack(
                     .isWhiteBackgroundForGlyphsEnabled
         ) {
             if (
-                typeof trackIdForRuleSetSharing.mutation !== 'undefined' &&
+                trackIdForRuleSetSharing.mutation !== undefined &&
                 trackIdForRuleSetSharing.mutation !== trackId
             ) {
                 oncoprint.shareRuleSet(
