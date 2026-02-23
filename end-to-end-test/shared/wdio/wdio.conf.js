@@ -182,7 +182,8 @@ function saveErrorImage(
     test,
     context,
     { error, result, duration, passed, retries },
-    networkLog
+    networkLog,
+    pendingRequests
 ) {
     if (error) {
         if (!fs.existsSync(errorDir)) {
@@ -193,13 +194,34 @@ function saveErrorImage(
         console.log('ERROR SHOT PATH: ' + img);
         browser.saveScreenshot(img);
 
+        const currentTimestamp = Date.now() / 1000;
+
+        for (const requestId of Object.keys(pendingRequests)) {
+            const data = pendingRequests[requestId];
+
+            const duration =
+                data.startTime != null
+                    ? (currentTimestamp - data.startTime) * 1000
+                    : undefined;
+
+            networkLog[requestId] = {
+                url: data.url,
+                status: 'PENDING',
+                type: data.type,
+                duration,
+            };
+        }
+
         // log failed network requests
         if (Object.keys(networkLog).length) {
             const errorLogs = Object.values(networkLog).filter(
-                log => !log.status || log.status >= 400
+                log =>
+                    log.status === 'PENDING' || !log.status || log.status >= 400
             );
             if (errorLogs.length) {
-                console.log(`[network] Failed requests for '${title}':`);
+                console.log(
+                    `[network] Failed or pending requests for '${title}':`
+                );
                 for (const log of errorLogs) {
                     console.log(
                         `[network] ${log.status ?? '-'} ${log.type ??
@@ -479,9 +501,6 @@ exports.config = {
      * @param {Object}         browser      instance of created browser/device session
      */
     before: async function(capabilities, specs) {
-        // clear network log
-        this.networkLog = {};
-
         // Enable network tracking via Puppeteer CDP session
         try {
             const puppeteer = await browser.getPuppeteer();
@@ -493,7 +512,7 @@ exports.config = {
             const cdpSession = await page.target().createCDPSession();
             await cdpSession.send('Network.enable');
 
-            const requestData = {};
+            const requestData = this.pendingRequests;
 
             // capture url and start time
             cdpSession.on('Network.requestWillBeSent', params => {
@@ -574,8 +593,11 @@ exports.config = {
     /**
      * Function to be executed before a test (in Mocha/Jasmine) starts.
      */
-    // beforeTest: function (test, context) {
-    // },
+    beforeTest: function(test, context) {
+        // clear network log
+        this.networkLog = {};
+        this.pendingRequests = {};
+    },
     /**
      * Hook that gets executed _before_ a hook within the suite starts (e.g. runs before calling
      * beforeEach in Mocha)
@@ -583,6 +605,7 @@ exports.config = {
     // beforeHook: function (test, context) {
     // },
     networkLog: {},
+    pendingRequests: {},
     /**
      * Hook that gets executed _after_ a hook within the suite starts (e.g. runs after calling
      * afterEach in Mocha)
@@ -596,7 +619,8 @@ exports.config = {
             test,
             context,
             { error, result, duration, passed, retries },
-            this.networkLog
+            this.networkLog,
+            this.pendingRequests
         );
     },
     /**
@@ -611,7 +635,8 @@ exports.config = {
             test,
             context,
             { error, result, duration, passed, retries },
-            this.networkLog
+            this.networkLog,
+            this.pendingRequests
         );
     },
     /**
