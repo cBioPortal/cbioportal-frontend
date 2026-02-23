@@ -85,7 +85,7 @@
           {
             "name": "isoformOverrideSource",
             "in": "query",
-            "description": "Isoform override source. For example uniprot",
+            "description": "Isoform override source. For example mskcc",
             "required": false,
             "type": "string"
           },
@@ -139,7 +139,7 @@
           {
             "name": "isoformOverrideSource",
             "in": "query",
-            "description": "Isoform override source. For example uniprot",
+            "description": "Isoform override source. For example mskcc",
             "required": false,
             "type": "string"
           },
@@ -933,6 +933,9 @@
         "transcriptId": {
           "type": "string"
         },
+        "transcriptIdVersion": {
+          "type": "string"
+        },
         "variant": {
           "type": "string",
           "description": "HGVS notation"
@@ -1535,6 +1538,10 @@
         "transcriptId": {
           "type": "string",
           "description": "Ensembl Transcript Id"
+        },
+        "transcriptIdVersion": {
+          "type": "string",
+          "description": "Ensembl Transcript Id Version"
         },
         "truncatingCount": {
           "type": "integer",
@@ -2240,6 +2247,10 @@
         "transcriptId": {
           "type": "string",
           "description": "Transcript id"
+        },
+        "transcriptIdVersion": {
+          "type": "string",
+          "description": "Transcript id version"
         },
         "uniprotId": {
           "type": "string",
