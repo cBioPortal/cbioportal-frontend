@@ -109,7 +109,10 @@ const CancerCellFractionElement: React.FunctionComponent<{
     sampleToCCFValue: { [key: string]: string };
     sampleManager?: SampleManager | null;
 }> = props => {
-    if (props.sampleManager) {
+    if (
+        props.sampleManager &&
+        props.sampleManager.getSampleIdsInOrder().length > 1
+    ) {
         return (
             <DefaultTooltip
                 placement="left"

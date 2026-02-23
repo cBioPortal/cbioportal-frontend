@@ -72,7 +72,7 @@ describe('CancerCellFractionColumnFormatter', () => {
         const validMultiSampleCCFColumn = mount(
             getDefaultCancerCellFractionColumnDefinition(
                 ['S001', 'S002'],
-                new SampleManager([], [])
+                new SampleManager([{ id: 'S001', clinicalData: [] }, { id: 'S002', clinicalData: [] }], ['S001', 'S002'])
             ).render([createMutation('S001', 0.75), createMutation('S002', 1)])
         );
         testExpectedCancerCellFractionElement(
@@ -90,7 +90,7 @@ describe('CancerCellFractionColumnFormatter', () => {
         const validMultiSampleCCFColumn = mount(
             getDefaultCancerCellFractionColumnDefinition(
                 ['S001', 'S002', 'S003'],
-                new SampleManager([], [])
+                new SampleManager([{ id: 'S001', clinicalData: [] }, { id: 'S002', clinicalData: [] }, { id: 'S003', clinicalData: [] }], ['S001', 'S002', 'S003'])
             ).render([
                 createMutationWithoutASCN(),
                 createMutationWithoutCCF(),
