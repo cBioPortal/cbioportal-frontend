@@ -8292,8 +8292,9 @@ export class StudyViewPageStore
                                     );
                                 } else if (
                                     molecularProfileOption.dataType ===
-                                    (DataTypeConstants.BINARY ||
-                                        DataTypeConstants.CATEGORICAL)
+                                        DataTypeConstants.BINARY ||
+                                    molecularProfileOption.dataType ===
+                                        DataTypeConstants.CATEGORICAL
                                 ) {
                                     this.addGenericAssayBinaryOrCategoricalCharts(
                                         [
