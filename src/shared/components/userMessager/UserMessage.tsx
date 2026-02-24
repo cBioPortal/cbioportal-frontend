@@ -50,38 +50,8 @@ if (
         //     },
         //     id: '2024_newsletter_intro',
         // },
-        {
-            dateEnd: 1772755200000, // March 6, 2026
-            content: (
-                <>
-                    Help us improve cBioPortal by taking a 7-minute survey
-                    <a
-                        href="https://forms.microsoft.com/Pages/ResponsePage.aspx?id=tfzFk_YtUEWaEM018oXPfMGEYSmyAP5Pn3gtQdn_2L5URUU5WlUzREVYQlo1Q09HV1I1VU1NRjdYVi4u"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="btn btn-sm"
-                    >
-                        Take Survey
-                    </a>
-                </>
-            ),
-            id: '2025_user_survey',
-        },
     ];
 
-    // MSK specific messaging
-    if (
-        ['cbioportal.mskcc.org'].includes(getBrowserWindow().location.hostname)
-    ) {
-        MESSAGE_DATA.push({
-            dateEnd: 1000000000000000,
-            content: `During the MSK Epic transition, updates to de-identified
-            clinical data in cBioPortal will be delayed several months, but
-            genomics data will update regularly. For questions, please email <a
-            href="mailto:cdsi@mskcc.org">cdsi@mskcc.org</a>.`,
-            id: '2025_epic_transition_warning',
-        });
-    }
 }
 
 interface IUserMessagerProps {
@@ -117,7 +87,7 @@ export default class UserMessager extends React.Component<
         try {
             // Fetch from all providers in parallel
             const providerResults = await Promise.all(
-                STATUS_PROVIDERS.map(provider => provider.fetchMessages())
+                STATUS_PROVIDERS.map((provider) => provider.fetchMessages())
             );
 
             // Flatten the results into a single array
@@ -131,7 +101,7 @@ export default class UserMessager extends React.Component<
     @observable dismissed = false;
 
     get shownMessage() {
-        const messageToShow = _.find(this.messageData.result, message => {
+        const messageToShow = _.find(this.messageData.result, (message) => {
             // not shown in either session or local storage
             // (session is used for remind
             const notYetShown =

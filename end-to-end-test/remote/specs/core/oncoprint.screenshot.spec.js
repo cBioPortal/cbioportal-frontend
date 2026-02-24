@@ -22,7 +22,7 @@ describe('oncoprint screenshot tests', () => {
         await goToUrlAndSetLocalStorage(url);
         await browser.pause(2000);
         await waitForOncoprint();
-        browser.pause(100);
+        await browser.pause(100);
         const res = await checkOncoprintElement('.oncoprintContainer');
         assertScreenShotMatch(res);
     });

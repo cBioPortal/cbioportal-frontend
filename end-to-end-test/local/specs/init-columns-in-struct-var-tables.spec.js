@@ -87,7 +87,7 @@ const defaultColumnsAreDisplayed = async () => {
 };
 
 async function columnIsDisplayed(column) {
-    return (
+    return await (
         await getElementByTestHandle('patientview-structural-variant-table')
     ).$(`span=${column}`);
 }

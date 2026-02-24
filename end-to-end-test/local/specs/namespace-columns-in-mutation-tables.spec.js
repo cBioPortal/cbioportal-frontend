@@ -183,7 +183,7 @@ const filterIconOfHeader = async selector => {
     //     .parentElement())
     //     .$('.fa-filter');
 
-    return getNestedElement([selector, '..', '..', '.fa-filter']);
+    return await getNestedElement([selector, '..', '..', '.fa-filter']);
 };
 
 const numberOfTableRows = async () => (await $$('.lazy-mobx-table tr')).length;
