@@ -77,6 +77,7 @@ import {
     SampleIdentifier,
     SampleMolecularIdentifier,
     SampleTreatmentRow,
+    PatientTreatmentRow,
     StructuralVariant,
     StructuralVariantFilter,
     StructuralVariantFilterQuery,
@@ -111,6 +112,7 @@ import {
 import { PatientSurvival } from 'shared/model/PatientSurvival';
 import { getPatientSurvivals } from 'pages/resultsView/SurvivalStoreHelper';
 import {
+    ALTERATION_FILTER_DEFAULTS,
     AnalysisGroup,
     annotationFilterActive,
     buildSelectedDriverTiersMap,
@@ -311,10 +313,6 @@ import {
     initializeCustomDriverAnnotationSettings,
 } from 'shared/alterationFiltering/AnnotationFilteringSettings';
 import { ISettingsMenuButtonVisible } from 'shared/components/driverAnnotations/SettingsMenuButton';
-import {
-    CopyNumberEnrichmentEventType,
-    MutationEnrichmentEventType,
-} from 'shared/lib/comparison/ComparisonStoreUtils';
 import { getServerConfig, isClickhouseMode } from 'config/config';
 import {
     ChartUserSetting,
@@ -1541,7 +1539,7 @@ export class StudyViewPageStore
                 ) => {
                     const treatmentKeysMap = _.keyBy(treatmentUniqueKeys);
                     const desiredTreatments = sampleTreatments.treatments.filter(
-                        t =>
+                        (t: SampleTreatmentRow | PatientTreatmentRow) =>
                             treatmentUniqueKey(t, isPatientType) in
                             treatmentKeysMap
                     );
@@ -1557,12 +1555,17 @@ export class StudyViewPageStore
                         treatmentRows => {
                             const selectedSampleIdentifiers = _.flatMap(
                                 treatmentRows,
-                                treatmentRow => {
-                                    return treatmentRow.samples.filter(s =>
-                                        selectedSampleSet.has(s, [
-                                            'sampleId',
-                                            'studyId',
-                                        ])
+                                (
+                                    treatmentRow:
+                                        | SampleTreatmentRow
+                                        | PatientTreatmentRow
+                                ) => {
+                                    return treatmentRow.samples.filter(
+                                        (s: SampleIdentifier) =>
+                                            selectedSampleSet.has(s, [
+                                                'sampleId',
+                                                'studyId',
+                                            ])
                                     );
                                 }
                             ).map(s => ({
@@ -1755,7 +1758,7 @@ export class StudyViewPageStore
                     values,
                 } as NamespaceComparisonFilter;
 
-                const namespaceData = await this.internalClient.getNamespaceDataUsingPOST(
+                const namespaceData = await this.internalClient.getNamespaceDataForComparisonUsingPOST(
                     {
                         namespaceComparisonFilter,
                     }
@@ -2475,29 +2478,23 @@ export class StudyViewPageStore
                 driverAnnotationSettings.customTiersDefault
             );
 
-            studyViewFilter.alterationFilter = ({
-                // select all CNA types
-                copyNumberAlterationEventTypes: {
-                    [CopyNumberEnrichmentEventType.AMP]: true,
-                    [CopyNumberEnrichmentEventType.HOMDEL]: true,
+            studyViewFilter.alterationFilter = _.mergeWith(
+                {},
+                ALTERATION_FILTER_DEFAULTS,
+                {
+                    includeDriver: driverAnnotationSettings.includeDriver,
+                    includeVUS: driverAnnotationSettings.includeVUS,
+                    includeUnknownOncogenicity:
+                        driverAnnotationSettings.includeUnknownOncogenicity,
+                    includeUnknownTier:
+                        driverAnnotationSettings.includeUnknownTier,
+                    tiersBooleanMap: this.selectedDriverTiersMap.isComplete
+                        ? this.selectedDriverTiersMap.result!
+                        : {},
                 },
-                // select all mutation types
-                mutationEventTypes: {
-                    [MutationEnrichmentEventType.any]: true,
-                },
-                structuralVariants: null,
-                includeDriver: driverAnnotationSettings.includeDriver,
-                includeVUS: driverAnnotationSettings.includeVUS,
-                includeUnknownOncogenicity:
-                    driverAnnotationSettings.includeUnknownOncogenicity,
-                includeUnknownTier: driverAnnotationSettings.includeUnknownTier,
-                includeGermline: true,
-                includeSomatic: true,
-                includeUnknownStatus: true,
-                tiersBooleanMap: this.selectedDriverTiersMap.isComplete
-                    ? this.selectedDriverTiersMap.result!
-                    : {},
-            } as unknown) as AlterationFilter;
+                (defaultValue, providedValue) =>
+                    providedValue !== undefined ? providedValue : defaultValue
+            );
         }
 
         //studyViewFilter can only have studyIds or sampleIdentifiers
@@ -4462,30 +4459,26 @@ export class StudyViewPageStore
             }
         }
 
-        filters.alterationFilter = ({
-            // select all CNA types
-            copyNumberAlterationEventTypes: {
-                [CopyNumberEnrichmentEventType.AMP]: true,
-                [CopyNumberEnrichmentEventType.HOMDEL]: true,
+        filters.alterationFilter = _.mergeWith(
+            {},
+            ALTERATION_FILTER_DEFAULTS,
+            {
+                includeDriver: this.driverAnnotationSettings.includeDriver,
+                includeVUS: this.driverAnnotationSettings.includeVUS,
+                includeUnknownOncogenicity: this.driverAnnotationSettings
+                    .includeUnknownOncogenicity,
+                includeUnknownTier: this.driverAnnotationSettings
+                    .includeUnknownTier,
+                includeGermline: this.includeGermlineMutations,
+                includeSomatic: this.includeSomaticMutations,
+                includeUnknownStatus: this.includeUnknownStatusMutations,
+                tiersBooleanMap: this.selectedDriverTiersMap.isComplete
+                    ? this.selectedDriverTiersMap.result!
+                    : {},
             },
-            // select all mutation types
-            mutationEventTypes: {
-                [MutationEnrichmentEventType.any]: true,
-            },
-            structuralVariants: null,
-            includeDriver: this.driverAnnotationSettings.includeDriver,
-            includeVUS: this.driverAnnotationSettings.includeVUS,
-            includeUnknownOncogenicity: this.driverAnnotationSettings
-                .includeUnknownOncogenicity,
-            includeUnknownTier: this.driverAnnotationSettings
-                .includeUnknownTier,
-            includeGermline: this.includeGermlineMutations,
-            includeSomatic: this.includeSomaticMutations,
-            includeUnknownStatus: this.includeUnknownStatusMutations,
-            tiersBooleanMap: this.selectedDriverTiersMap.isComplete
-                ? this.selectedDriverTiersMap.result!
-                : {},
-        } as unknown) as AlterationFilter;
+            (defaultValue, providedValue) =>
+                providedValue !== undefined ? providedValue : defaultValue
+        );
 
         return filters as StudyViewFilter;
     }
@@ -6184,7 +6177,7 @@ export class StudyViewPageStore
         invoke: async () => {
             if (this.queriedPhysicalStudyIds.result.length > 0) {
                 return [];
-                // return await getClient().fetchNamespaceAttributesUsingPOST({
+                // return await getClient().fetchNamespaceUsing({
                 //     studyIds: this.queriedPhysicalStudyIds.result,
                 // });
             }
@@ -8299,8 +8292,9 @@ export class StudyViewPageStore
                                     );
                                 } else if (
                                     molecularProfileOption.dataType ===
-                                    (DataTypeConstants.BINARY ||
-                                        DataTypeConstants.CATEGORICAL)
+                                        DataTypeConstants.BINARY ||
+                                    molecularProfileOption.dataType ===
+                                        DataTypeConstants.CATEGORICAL
                                 ) {
                                     this.addGenericAssayBinaryOrCategoricalCharts(
                                         [
@@ -9758,7 +9752,7 @@ export class StudyViewPageStore
                 };
             });
             let namespaceAttributes = this.namespaceAttributes.result.map(
-                namespaceAttribute => {
+                (namespaceAttribute: NamespaceAttribute) => {
                     return {
                         innerKey: namespaceAttribute.innerKey,
                         outerKey: namespaceAttribute.outerKey,
@@ -9813,12 +9807,15 @@ export class StudyViewPageStore
 
                 // Add counts for namespace data
                 if (!_.isEmpty(this.namespaceAttributesCounts.result)) {
-                    _.each(this.namespaceAttributesCounts.result, countData => {
-                        const { outerKey, innerKey, count } = countData;
-                        const uniqueKey = `${outerKey}_${innerKey}`;
-                        ret[uniqueKey] = ret[uniqueKey] || 0;
-                        ret[uniqueKey] += count;
-                    });
+                    _.each(
+                        this.namespaceAttributesCounts.result,
+                        (countData: NamespaceAttributeCount) => {
+                            const { outerKey, innerKey, count } = countData;
+                            const uniqueKey = `${outerKey}_${innerKey}`;
+                            ret[uniqueKey] = ret[uniqueKey] || 0;
+                            ret[uniqueKey] += count;
+                        }
+                    );
                 }
 
                 _.each(
@@ -10835,6 +10832,7 @@ export class StudyViewPageStore
         invoke: async () => {
             if (this.shouldDisplaySampleTreatments.result) {
                 if (isClickhouseMode()) {
+                    // @ts-ignore
                     return await this.internalClient.fetchSampleTreatmentCountsUsingPOST(
                         {
                             studyViewFilter: this.filters,

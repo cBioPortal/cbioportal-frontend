@@ -30,6 +30,7 @@ import { stringListToIndexSet } from 'cbioportal-frontend-commons';
 import { CaseAggregatedData } from 'shared/model/CaseAggregatedData';
 import { AnnotatedExtendedAlteration } from 'shared/model/AnnotatedExtendedAlteration';
 import { CustomDriverNumericGeneMolecularData } from 'shared/model/CustomDriverNumericGeneMolecularData';
+import { isSampleProfiled } from 'shared/lib/isSampleProfiled';
 
 const cnaDataToString: { [integerCNA: string]: string | undefined } = {
     '-2': 'homdel',
@@ -72,8 +73,10 @@ const protRenderPriority = {
     low: 0,
 };
 
-type HeatmapCaseDatum = {
-    value: number;
+export type HeatmapCaseDatum = {
+    value: number | null;
+    uniquePatientKey: string;
+    uniqueSampleKey: string;
     thresholdType?: '<' | '>';
 };
 
@@ -393,22 +396,31 @@ export function fillHeatmapTrackDatum<
     trackDatum[featureKey] = featureId;
     trackDatum.study_id = case_.studyId;
 
-    // remove data points of which `value` is NaN
-    const dataWithValue = _.filter(data, d => !isNaN(d.value));
+    const dataWithValue = _.filter(
+        data,
+        d => d && (d.value === null || !isNaN(d.value))
+    );
 
     if (!dataWithValue || !dataWithValue.length) {
         trackDatum.profile_data = null;
         trackDatum.na = true;
     } else if (dataWithValue.length === 1) {
-        trackDatum.profile_data = dataWithValue[0].value;
-        if (dataWithValue[0].thresholdType) {
-            trackDatum.thresholdType = dataWithValue[0].thresholdType;
-            trackDatum.category =
-                trackDatum.profile_data && trackDatum.thresholdType
-                    ? `${
-                          trackDatum.thresholdType
-                      }${trackDatum.profile_data.toFixed(2)}`
-                    : undefined;
+        const singleData = dataWithValue[0];
+        if (singleData.value === null) {
+            trackDatum.profile_data = null;
+            trackDatum.na = false;
+        } else {
+            trackDatum.profile_data = singleData.value;
+            trackDatum.na = false;
+            if (singleData.thresholdType) {
+                trackDatum.thresholdType = singleData.thresholdType;
+                trackDatum.category =
+                    trackDatum.profile_data && trackDatum.thresholdType
+                        ? `${
+                              trackDatum.thresholdType
+                          }${trackDatum.profile_data.toFixed(2)}`
+                        : undefined;
+            }
         }
     } else {
         if (isSample(case_)) {
@@ -416,60 +428,73 @@ export function fillHeatmapTrackDatum<
                 'Unexpectedly received multiple heatmap profile data for one sample'
             );
         } else {
-            // aggregate samples for this patient by selecting the highest absolute (Z-)score
-            // default: the most extreme value (pos. or neg.) is shown for data
-            // sortOrder=ASC: the smallest value is shown for data
-            // sortOrder=DESC: the largest value is shown for data
-            let representingDatum;
-            let bestValue;
-            switch (sortOrder) {
-                case 'ASC':
-                    bestValue = _(dataWithValue)
-                        .map((d: HeatmapCaseDatum) => d.value)
-                        .min();
-                    representingDatum = selectRepresentingDataPoint(
-                        bestValue!,
-                        dataWithValue,
-                        false
-                    );
-                    break;
-                case 'DESC':
-                    bestValue = _(dataWithValue)
-                        .map((d: HeatmapCaseDatum) => d.value)
-                        .max();
-                    representingDatum = selectRepresentingDataPoint(
-                        bestValue!,
-                        dataWithValue,
-                        false
-                    );
-                    break;
-                default:
-                    bestValue = _.maxBy(dataWithValue, (d: HeatmapCaseDatum) =>
-                        Math.abs(d.value)
-                    )!.value;
-                    representingDatum = selectRepresentingDataPoint(
-                        bestValue,
-                        dataWithValue,
-                        true
-                    );
-                    break;
-            }
+            // Handle multiple data points for patient mode
+            const dataWithNonNullValues = dataWithValue.filter(
+                d => d.value !== null
+            );
 
-            // `data` can contain data points with only NaN values
-            // this is detected by `representingDatum` to be undefined
-            // in that case select the first element as representing datum
-            if (representingDatum === undefined) {
-                representingDatum = dataWithValue[0];
-            }
+            if (dataWithNonNullValues.length === 0) {
+                trackDatum.profile_data = null;
+                trackDatum.na = false;
+            } else {
+                // aggregate samples for this patient by selecting the highest absolute (Z-)score
+                // default: the most extreme value (pos. or neg.) is shown for data
+                // sortOrder=ASC: the smallest value is shown for data
+                // sortOrder=DESC: the largest value is shown for data
+                let representingDatum;
+                let bestValue;
 
-            trackDatum.profile_data = representingDatum!.value;
-            if (representingDatum!.thresholdType) {
-                trackDatum.thresholdType = representingDatum!.thresholdType;
-                trackDatum.category = trackDatum.thresholdType
-                    ? `${
-                          trackDatum.thresholdType
-                      }${trackDatum.profile_data.toFixed(2)}`
-                    : undefined;
+                switch (sortOrder) {
+                    case 'ASC':
+                        bestValue = _(dataWithNonNullValues)
+                            .map((d: HeatmapCaseDatum) => d.value as number)
+                            .min();
+                        representingDatum = selectRepresentingDataPoint(
+                            bestValue!,
+                            dataWithNonNullValues,
+                            false
+                        );
+                        break;
+                    case 'DESC':
+                        bestValue = _(dataWithNonNullValues)
+                            .map((d: HeatmapCaseDatum) => d.value as number)
+                            .max();
+                        representingDatum = selectRepresentingDataPoint(
+                            bestValue!,
+                            dataWithNonNullValues,
+                            false
+                        );
+                        break;
+                    default:
+                        bestValue = _.maxBy(
+                            dataWithNonNullValues,
+                            (d: HeatmapCaseDatum) => Math.abs(d.value as number)
+                        )!.value as number;
+                        representingDatum = selectRepresentingDataPoint(
+                            bestValue,
+                            dataWithNonNullValues,
+                            true
+                        );
+                        break;
+                }
+
+                // `data` can contain data points with only NaN values
+                // this is detected by `representingDatum` to be undefined
+                // in that case select the first element as representing datum
+                if (representingDatum === undefined) {
+                    representingDatum = dataWithNonNullValues[0];
+                }
+
+                trackDatum.profile_data = representingDatum!.value;
+                trackDatum.na = false;
+                if (representingDatum!.thresholdType) {
+                    trackDatum.thresholdType = representingDatum!.thresholdType;
+                    trackDatum.category = trackDatum.thresholdType
+                        ? `${
+                              trackDatum.thresholdType
+                          }${(trackDatum.profile_data as number).toFixed(2)}`
+                        : undefined;
+                }
             }
         }
     }
@@ -482,7 +507,7 @@ function selectRepresentingDataPoint(
     useAbsolute: boolean
 ): HeatmapCaseDatum {
     const fFilter = useAbsolute
-        ? (d: HeatmapCaseDatum) => Math.abs(d.value) === bestValue
+        ? (d: HeatmapCaseDatum) => Math.abs(d.value!) === bestValue
         : (d: HeatmapCaseDatum) => d.value === bestValue;
     const selData = _.filter(data, fFilter);
     const selDataNoTreshold = _.filter(
@@ -576,20 +601,16 @@ export function makeHeatmapTrackData<
     featureKey: K,
     featureId: T[K],
     cases: Sample[] | Patient[],
-    data: {
-        value: number;
-        uniquePatientKey: string;
-        uniqueSampleKey: string;
-        thresholdType?: '>' | '<';
-    }[],
+    data: HeatmapCaseDatum[],
     sortOrder?: string
 ): T[] {
     if (!cases.length) {
         return [];
     }
-    const sampleData = isSampleList(cases);
-    let keyToData: { [uniqueKey: string]: { value: number }[] };
+
+    let keyToData: { [uniqueKey: string]: HeatmapCaseDatum[] };
     let ret: T[];
+
     if (isSampleList(cases)) {
         keyToData = _.groupBy(data, d => d.uniqueSampleKey);
         ret = cases.map(c => {

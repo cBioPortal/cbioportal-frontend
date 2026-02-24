@@ -131,7 +131,7 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
 orbs:
   browser-tools: circleci/browser-tools@2.3.1
 jobs:
-  api_sync:
+  api_sync_cbioportal:
     <<: *defaults
     resource_class: medium
     environment:
@@ -140,10 +140,24 @@ jobs:
       - attach_workspace:
           at: /tmp/repo
       - run:
-          name: Check that all api responses are still the same
+          name: Check that cbioportal api responses are still the same
           command: |
             cd cbioportal-frontend
-            bash src/test/check_api_sync.sh
+            bash src/test/check_api_sync_cbioportal.sh
+
+  api_sync_dependencies:
+    <<: *defaults
+    environment:
+      MANUAL_TRIGGER_BRANCH_ENV: << pipeline.parameters.manual_trigger_branch_env >>
+    steps:
+      - attach_workspace:
+          at: /tmp/repo
+      - run:
+          name: Check that dependency api responses (OncoKB, GenomeNexus) are still the same
+          command: |
+            cd cbioportal-frontend
+            bash src/test/check_api_sync_dependencies.sh
+
 
   unit_tests_main:
     <<: *defaults
@@ -472,7 +486,10 @@ workflows:
           requires:
             - pull_cbioportal_test_codebase
             - build_frontend
-      - api_sync:
+      - api_sync_cbioportal:
+          requires:
+            - build_frontend
+      - api_sync_dependencies:
           requires:
             - build_frontend
       - unit_tests_packages:
@@ -512,7 +529,10 @@ workflows:
       #     requires:
       #       - pull_cbioportal_test_codebase
       #       - build_frontend
-      - api_sync:
+      - api_sync_cbioportal:
+          requires:
+            - build_frontend
+      - api_sync_dependencies:
           requires:
             - build_frontend
       - unit_tests_main:
