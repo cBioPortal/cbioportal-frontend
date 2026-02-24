@@ -169,7 +169,7 @@ export default class PortalHeader extends React.Component<
                             <Then>
                                 <div className="identity">
                                     <Dropdown id="dat-dropdown">
-                                        <Dropdown.Toggle className="btn-sm">
+                                        <Dropdown.Toggle className="btn-sm username">
                                             Logged in as{' '}
                                             {this.props.appStore.userName}
                                         </Dropdown.Toggle>
