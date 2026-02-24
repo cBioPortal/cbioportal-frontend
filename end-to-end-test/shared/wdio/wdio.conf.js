@@ -183,7 +183,7 @@ function saveErrorImage(
     context,
     { error, result, duration, passed, retries },
     networkLog,
-    pendingRequests
+    requests
 ) {
     if (error) {
         if (!fs.existsSync(errorDir)) {
@@ -194,21 +194,13 @@ function saveErrorImage(
         console.log('ERROR SHOT PATH: ' + img);
         browser.saveScreenshot(img);
 
-        const currentTimestamp = Date.now() / 1000;
-
-        for (const requestId of Object.keys(pendingRequests)) {
-            const data = pendingRequests[requestId];
-
-            const duration =
-                data.startTime != null
-                    ? (currentTimestamp - data.startTime) * 1000
-                    : undefined;
+        for (const requestId of Object.keys(requests)) {
+            const data = requests[requestId];
 
             networkLog[requestId] = {
                 url: data.url,
                 status: 'PENDING',
                 type: data.type,
-                duration,
             };
         }
 
@@ -278,8 +270,8 @@ exports.config = {
     //
     //
 
-    specs: [SPEC_FILE_PATTERN],
-    //specs: ['./local/specs/core/oncoprint.screenshot.spec.js'],
+    // specs: [SPEC_FILE_PATTERN],
+    specs: ['./remote/specs/core/oncoprint.screenshot.spec.js'],
 
     //exclude: ['./remote/specs/core/groupComparisonLollipop.spec.js'],
 
@@ -508,16 +500,18 @@ exports.config = {
             if (!pages.length) {
                 return;
             }
-            const page = pages[0];
+            const page = pages[pages.length - 1];
             const cdpSession = await page.target().createCDPSession();
             await cdpSession.send('Network.enable');
 
-            const requestData = this.pendingRequests;
+            // initialize
+            browser.requests = {};
+            browser.networkLog = {};
 
             // capture url and start time
             cdpSession.on('Network.requestWillBeSent', params => {
                 if (!['Document', 'XHR', 'Fetch'].includes(params.type)) return;
-                requestData[params.requestId] = {
+                browser.requests[params.requestId] = {
                     url: params.request.url,
                     startTime: params.timestamp,
                     type: params.type,
@@ -526,48 +520,48 @@ exports.config = {
 
             // capture status
             cdpSession.on('Network.responseReceived', params => {
-                if (requestData[params.requestId]) {
-                    requestData[params.requestId].status =
+                if (browser.requests[params.requestId]) {
+                    browser.requests[params.requestId].status =
                         params.response.status;
                 }
             });
 
             // capture requests that fail before completion
             cdpSession.on('Network.loadingFailed', params => {
-                if (requestData[params.requestId]) {
-                    const data = requestData[params.requestId];
+                if (browser.requests[params.requestId]) {
+                    const data = browser.requests[params.requestId];
                     const duration =
                         data.startTime != null
                             ? (params.timestamp - data.startTime) * 1000
                             : undefined;
-                    this.networkLog[params.requestId] = {
+                    browser.networkLog[params.requestId] = {
                         url: data.url,
                         status: null,
                         type: data.type || null,
                         duration: duration,
                         errorText: params.errorText,
                     };
-                    delete requestData[params.requestId];
+                    delete browser.requests[params.requestId];
                 }
             });
 
             // calculate duration
             cdpSession.on('Network.loadingFinished', params => {
-                if (requestData[params.requestId]) {
-                    const data = requestData[params.requestId];
+                if (browser.requests[params.requestId]) {
+                    const data = browser.requests[params.requestId];
                     const duration =
                         data.startTime !== undefined && data.startTime !== null
                             ? (params.timestamp - data.startTime) * 1000
                             : undefined;
 
-                    this.networkLog[params.requestId] = {
+                    browser.networkLog[params.requestId] = {
                         url: data.url,
                         status: data.status,
                         type: data.type,
                         duration: duration,
                     };
 
-                    delete requestData[params.requestId];
+                    delete browser.requests[params.requestId];
                 }
             });
         } catch (e) {
@@ -594,9 +588,9 @@ exports.config = {
      * Function to be executed before a test (in Mocha/Jasmine) starts.
      */
     beforeTest: function(test, context) {
-        // clear network log
-        this.networkLog = {};
-        this.pendingRequests = {};
+        // clear
+        browser.requests = {};
+        browser.networkLog = {};
     },
     /**
      * Hook that gets executed _before_ a hook within the suite starts (e.g. runs before calling
@@ -605,7 +599,6 @@ exports.config = {
     // beforeHook: function (test, context) {
     // },
     networkLog: {},
-    pendingRequests: {},
     /**
      * Hook that gets executed _after_ a hook within the suite starts (e.g. runs after calling
      * afterEach in Mocha)
@@ -619,8 +612,8 @@ exports.config = {
             test,
             context,
             { error, result, duration, passed, retries },
-            this.networkLog,
-            this.pendingRequests
+            browser.networkLog,
+            browser.requests
         );
     },
     /**
@@ -635,8 +628,8 @@ exports.config = {
             test,
             context,
             { error, result, duration, passed, retries },
-            this.networkLog,
-            this.pendingRequests
+            browser.networkLog,
+            browser.requests
         );
     },
     /**
