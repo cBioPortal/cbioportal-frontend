@@ -106,10 +106,14 @@ export default class StudyViewViolinPlotTable extends React.Component<
         startX: undefined as undefined | number,
         dragging: false,
         get rectX() {
-            return Math.min(this.mouseX, this.startX);
+            return this.mouseX !== undefined && this.startX !== undefined
+                ? Math.min(this.mouseX, this.startX)
+                : 0;
         },
         get rectWidth() {
-            return Math.abs(this.mouseX - this.startX);
+            return this.mouseX !== undefined && this.startX !== undefined
+                ? Math.abs(this.mouseX - this.startX)
+                : 0;
         },
     };
 
@@ -227,7 +231,7 @@ export default class StudyViewViolinPlotTable extends React.Component<
     }
 
     private isCategorySelected(category: string) {
-        return category in this.selectedCategories;
+        return this.props.selectedCategories.includes(category);
     }
 
     @action.bound
@@ -644,6 +648,12 @@ export default class StudyViewViolinPlotTable extends React.Component<
                         ? Math.log(this.props.violinFilterRange.max + 1)
                         : this.props.violinFilterRange.max,
             };
+            if (
+                (range.min !== undefined && isNaN(range.min)) ||
+                (range.max !== undefined && isNaN(range.max))
+            ) {
+                return null;
+            }
             return (
                 <>
                     {this.props.violinFilterRange.min !== undefined && (
