@@ -21,10 +21,16 @@ import StudyTagsTooltip, {
 } from '../../studyTagsTooltip/StudyTagsTooltip';
 import { formatStudyReferenceGenome } from 'shared/lib/referenceGenomeUtils';
 import { getServerConfig } from 'config/config';
+import { BiBook, BiInfoCircle } from 'react-icons/bi';
 
 const styles = {
     ...styles_any,
     Level: (level: number) => (styles_any as any)[`Level${level}`],
+};
+
+const ICON_OVERRIDES: Record<string, React.ReactNode> = {
+    book: <BiBook />,
+    'info-circle': <BiInfoCircle />,
 };
 
 export interface IStudyListProps {
@@ -326,19 +332,12 @@ export default class StudyList extends QueryStoreComponent<
             return (
                 <span className={styles.StudyLinks}>
                     {links.map((link, i) => {
-                        let content = (
-                            <FontAwesome
-                                key={i}
-                                name={link.icon}
-                                className={classNames({
-                                    [styles.icon]: true,
-                                    [styles.iconWithTooltip]: !!link.tooltip,
-                                    [styles.trashIcon]: link.icon === 'trash',
-                                    [styles.infoCircleIcon]:
-                                        link.icon === 'info-circle',
-                                })}
-                            />
-                        );
+                        const commonClasses = classNames({
+                            [styles.icon]: true,
+                            [styles.iconWithTooltip]: !!link.tooltip,
+                            [styles.trashIcon]: link.icon === 'trash',
+                            [styles.infoCircleIcon]: link.icon === 'info-circle',
+                        });
 
                         if (link.onClick) {
                             let anchorProps: any = {
