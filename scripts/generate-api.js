@@ -1,6 +1,5 @@
 const fs = require('fs');
 const path = require('path');
-const request = require('request');
 const CodeGen = require('swagger-js-codegen').CodeGen;
 
 const [node, script, folder, ...classNames] = process.argv;

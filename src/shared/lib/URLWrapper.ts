@@ -59,6 +59,7 @@ export default class URLWrapper<
 
     @observable sessionProps = {};
     @observable localSessionData: PortalSession | undefined = undefined;
+    private static nextSessionUpdateId = 0;
 
     constructor(
         public routing: ExtendedRouterStore,
@@ -87,9 +88,9 @@ export default class URLWrapper<
                 | string
                 | undefined
                 | Object = (routing.query as MapValues<
-                QueryParamsType,
-                string | undefined
-            >)[property.name];
+                    QueryParamsType,
+                    string | undefined
+                >)[property.name];
             if (_.isString(value) && property.doubleURIEncode) {
                 // @ts-ignore
                 value = decodeURIComponent(value);
@@ -338,7 +339,7 @@ export default class URLWrapper<
                     that async session response matches the
                     current session and hasn't been invalidated by subsequent session
                 */
-                const timeStamp = Date.now();
+                const timeStamp = URLWrapper.nextSessionUpdateId++;
                 this.localSessionData = {
                     id: 'pending',
                     query: this.stringifyProps(paramsMap.sessionProps),
@@ -531,9 +532,8 @@ export default class URLWrapper<
         const stringifiedProps = this.stringifyProps(this.query);
         const stringified = this.properties.reduce((acc, nextVal) => {
             if (nextVal.isHashedProp)
-                acc = `${acc},${String(nextVal.name)}:${
-                    stringifiedProps[nextVal.name]
-                }`;
+                acc = `${acc},${String(nextVal.name)}:${stringifiedProps[nextVal.name]
+                    }`;
             return acc;
         }, '');
         return hashString(stringified);

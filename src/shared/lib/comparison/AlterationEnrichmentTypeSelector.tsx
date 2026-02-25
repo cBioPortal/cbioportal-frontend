@@ -166,7 +166,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
     }
 
     @autobind
-    private onInputClick(event: React.MouseEvent<HTMLInputElement>) {
+    private onInputClick(event: React.ChangeEvent<HTMLInputElement>) {
         console.log((event.target as HTMLInputElement).value);
         switch ((event.target as HTMLInputElement).value) {
             case checkbox.mutations:
@@ -332,7 +332,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                                     type="checkbox"
                                     value={checkbox.mutations}
                                     checked={this.isAnyMutationsSelected}
-                                    onClick={this.onInputClick}
+                                    onChange={this.onInputClick}
                                 />{' '}
                                 <b>Mutations</b>
                             </label>
@@ -349,7 +349,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                                     type="checkbox"
                                     value={checkbox.missense}
                                     checked={this.isAnyMissenseSelected}
-                                    onClick={this.onInputClick}
+                                    onChange={this.onInputClick}
                                 />{' '}
                                 Missense
                             </label>
@@ -366,7 +366,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                                     type="checkbox"
                                     value={checkbox.inframe}
                                     checked={this.isAnyInframeSelected}
-                                    onClick={this.onInputClick}
+                                    onChange={this.onInputClick}
                                 />{' '}
                                 Inframe
                             </label>
@@ -383,7 +383,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                                     checked={
                                         this.isAnyInframeInsertionsSelected
                                     }
-                                    onClick={this.onInputClick}
+                                    onChange={this.onInputClick}
                                 />{' '}
                                 Inframe Insertion
                             </label>
@@ -398,7 +398,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                                     type="checkbox"
                                     value={checkbox.inframedeletion}
                                     checked={this.isAnyInframeDeletionsSelected}
-                                    onClick={this.onInputClick}
+                                    onChange={this.onInputClick}
                                 />{' '}
                                 Inframe Deletion
                             </label>
@@ -415,7 +415,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                                     type="checkbox"
                                     value={checkbox.truncating}
                                     checked={this.isAnyTruncationsSelected}
-                                    onClick={this.onInputClick}
+                                    onChange={this.onInputClick}
                                 />{' '}
                                 Truncating
                             </label>
@@ -431,7 +431,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                                     type="checkbox"
                                     value={checkbox.nonsense}
                                     checked={this.isAnyNonsenseSelected}
-                                    onClick={this.onInputClick}
+                                    onChange={this.onInputClick}
                                 />{' '}
                                 Nonsense
                             </label>
@@ -446,7 +446,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                                     type="checkbox"
                                     value={checkbox.frameshift}
                                     checked={this.isAnyFrameshiftSelected}
-                                    onClick={this.onInputClick}
+                                    onChange={this.onInputClick}
                                 />{' '}
                                 Frameshift
                             </label>
@@ -463,7 +463,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                                     checked={
                                         this.isAnyFrameshiftInsertionsSelected
                                     }
-                                    onClick={this.onInputClick}
+                                    onChange={this.onInputClick}
                                 />{' '}
                                 Frameshift Insertion
                             </label>
@@ -480,7 +480,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                                     checked={
                                         this.isAnyFrameshiftDeletionsSelected
                                     }
-                                    onClick={this.onInputClick}
+                                    onChange={this.onInputClick}
                                 />{' '}
                                 Frameshift Deletion
                             </label>
@@ -495,7 +495,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                                     type="checkbox"
                                     value={checkbox.nonstart}
                                     checked={this.isAnyNonStartSelected}
-                                    onClick={this.onInputClick}
+                                    onChange={this.onInputClick}
                                 />{' '}
                                 Nonstart
                             </label>
@@ -510,7 +510,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                                     type="checkbox"
                                     value={checkbox.nonstop}
                                     checked={this.isAnyNonStopSelected}
-                                    onClick={this.onInputClick}
+                                    onChange={this.onInputClick}
                                 />{' '}
                                 Nonstop
                             </label>
@@ -525,7 +525,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                                     type="checkbox"
                                     value={checkbox.splice}
                                     checked={this.isAnySpliceSelected}
-                                    onClick={this.onInputClick}
+                                    onChange={this.onInputClick}
                                 />{' '}
                                 Splice
                             </label>
@@ -541,7 +541,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                                     type="checkbox"
                                     value={checkbox.other}
                                     checked={this.isAnyOtherSelected}
-                                    onClick={this.onInputClick}
+                                    onChange={this.onInputClick}
                                 />{' '}
                                 Other
                             </label>
@@ -572,7 +572,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                                     type="checkbox"
                                     value={checkbox.cna}
                                     checked={this.isAnyCopyNumberSelected}
-                                    onClick={this.onInputClick}
+                                    onChange={this.onInputClick}
                                 />{' '}
                                 <b>Copy Number Alterations</b>
                             </label>
@@ -587,7 +587,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                                     type="checkbox"
                                     value={checkbox.amplification}
                                     checked={this.isAnyAmplificationsSelected}
-                                    onClick={this.onInputClick}
+                                    onChange={this.onInputClick}
                                 />{' '}
                                 Amplification
                             </label>

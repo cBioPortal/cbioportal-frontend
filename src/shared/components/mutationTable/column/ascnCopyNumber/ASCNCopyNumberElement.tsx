@@ -188,7 +188,7 @@ const ASCNCopyNumberIcon: React.FunctionComponent<{
                     stroke={getASCNCopyNumberStrokeColor(
                         props.ascnCopyNumberValue
                     )}
-                    stroke-width="1"
+                    strokeWidth="1"
                     fill={getASCNCopyNumberColor(props.ascnCopyNumberValue)}
                     opacity={getASCNCopyNumberOpacity(
                         props.ascnCopyNumberValue
