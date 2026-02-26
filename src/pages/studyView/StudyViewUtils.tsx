@@ -128,7 +128,6 @@ import { MultiSelectionTableRow } from './table/MultiSelectionTable';
 import Survival from 'pages/groupComparison/Survival';
 import { StructVarMultiSelectionTableRow } from './table/StructuralVariantMultiSelectionTable';
 import { ObservableMap } from 'mobx';
-import { boolean } from 'yargs';
 
 // Cannot use ClinicalDataTypeEnum here for the strong type. The model in the type is not strongly typed
 export enum ClinicalDataTypeEnum {
@@ -4367,13 +4366,12 @@ export async function invokeGenericAssayDataCount(
     return undefined;
 }
 
-export async function invokeGenomicDataCountIncludeSampleid(
+export function invokeGenomicDataCountIncludeSampleid(
     chartInfo: GenomicChart,
     filters: StudyViewFilter,
     includeSampleIds: boolean
 ) {
-    let result = [];
-    let params = {
+    const params = {
         genomicDataCountFilter: {
             genomicDataFilters: [
                 {
@@ -4387,56 +4385,56 @@ export async function invokeGenomicDataCountIncludeSampleid(
             projection: 'DETAILED',
             includeSampleIds,
         },
-    } as any;
+    };
 
-    result = await getInternalClient().fetchMutationDataCountsUsingPOST(params);
-
-    return result;
+    return getInternalClient().fetchMutationDataCountsUsingPOST(params);
 }
 
 export function groupSamplesByMutationStatus(data: any[], studyIds: string[]) {
     const SKIP_VALUES = new Set(['NOT_PROFILED']);
     const NON_MUTATION_VALUES = new Set(['NOT_MUTATED']);
 
-    return _.chain(data)
-        .flatMap(d => d.counts ?? [])
-        .filter(c => !SKIP_VALUES.has(c.value) && c.sampleIds?.length > 0) // avoid NOT_PROFILED samples and any bins without samples
-        .flatMap(c => {
-            const group = NON_MUTATION_VALUES.has(c.value)
-                ? c.value
-                : 'MUTATED';
+    return (
+        _.chain(data)
+            .flatMap(d => d.counts ?? [])
+            // Skip bins with 'NOT_PROFILED' or empty sampleIds
+            .filter(c => !SKIP_VALUES.has(c.value) && c.sampleIds?.length > 0)
+            .flatMap(c => {
+                const group = NON_MUTATION_VALUES.has(c.value)
+                    ? c.value
+                    : 'MUTATED';
 
-            return c.sampleIds
-                .map((rawId: string) => {
-                    // sampleIds are in the format of {studyId}_{sampleId}, need to be split before grouping
-                    const matchedStudyId = studyIds.find(studyId =>
-                        rawId.startsWith(studyId + '_')
-                    );
+                // Map sampleIds to structured objects and remove unmatched samples if any
+                return _.compact(
+                    c.sampleIds.map((rawId: string) => {
+                        const matchedStudyId = studyIds.find(studyId =>
+                            rawId.startsWith(studyId + '_')
+                        );
 
-                    if (!matchedStudyId) return null;
-                    // create an object with group, studyId and sampleId for each sampleId, where group is MUTATED or NOT_MUTATED based on the value of the bin it belongs to
-                    return {
-                        group,
-                        studyId: matchedStudyId,
-                        sampleId: rawId.substring(matchedStudyId.length + 1),
-                    };
-                })
-                .filter(Boolean);
-        })
-        .groupBy('group')
-        .mapValues(items =>
-            _.uniqBy(
-                // cretaes a sampleidentifier{sampleId, studyId} using the matched studyId and the rest of the rawId as sampleId
-                items.map(
-                    ({ studyId, sampleId }): SampleIdentifier => ({
+                        if (!matchedStudyId) return null;
+
+                        return {
+                            group,
+                            studyId: matchedStudyId,
+                            sampleId: rawId.substring(
+                                matchedStudyId.length + 1
+                            ),
+                        };
+                    })
+                );
+            })
+            .groupBy('group')
+            .mapValues(items =>
+                _.uniqBy(
+                    items.map(({ studyId, sampleId }) => ({
                         studyId,
                         sampleId,
-                    })
-                ),
-                i => i.sampleId // if sample IDs aren't globally unique across studies, we may want to use both studyId and sampleId to determine uniqueness
+                    })),
+                    i => i.sampleId // for now using sampleId as unique identifier, but may need to switch to using sampleId + studyId if there are duplicate sampleIds across studies
+                )
             )
-        )
-        .value();
+            .value()
+    );
 }
 
 export async function invokeGenomicDataCount(
