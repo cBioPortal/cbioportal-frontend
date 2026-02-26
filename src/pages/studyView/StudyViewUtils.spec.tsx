@@ -3660,7 +3660,7 @@ describe('StudyViewUtils', () => {
         });
     });
 
-    describe.only('groupSamplesByMutationStatus', () => {
+    describe('groupSamplesByMutationStatus', () => {
         const data = [
             {
                 counts: [
