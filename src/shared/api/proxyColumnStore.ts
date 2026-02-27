@@ -31,6 +31,7 @@ const endpoints = [
     'SampleInStudy',
     'AllSamplesInStudy',
     'AllSamplesOfPatientInStudy',
+    'GenericAssayMeta',
 ];
 
 export function proxyColumnStore(client: any, endpoint: string) {
