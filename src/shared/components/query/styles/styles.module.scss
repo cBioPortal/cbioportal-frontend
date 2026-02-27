@@ -43,11 +43,15 @@
 .errorMessage {
     color: $redError;
     font-weight: bold;
+    font-size: 12px;
+    line-height: 1.35;
 }
 
 .oqlMessage {
     color: $brand-info;
     font-weight: bold;
+    font-size: 12px;
+    line-height: 1.35;
 }
 
 .CancerStudySelector {
@@ -409,7 +413,8 @@ div.SelectedStudiesWindow {
     span.pendingMessage,
     span.oqlNotice,
     span.errorMessage {
-        font-size: small;
+        font-size: 12px;
+        line-height: 1.35;
     }
     div.validBubble,
     div.invalidBubble {

@@ -2,7 +2,7 @@
     margin: 0px 5px 3px 0;
     padding: 2px 5px;
     border-radius: $border-radius-base;
-    font-size: 0.8rem;
+    font-size: 12px;
 }
 
 .topRow {
@@ -72,7 +72,8 @@
         span.pendingMessage,
         span.oqlNotice,
         span.errorMessage {
-            font-size: small;
+            font-size: 12px;
+            line-height: 1.35;
             color: $redError;
             font-weight: bold;
         }
