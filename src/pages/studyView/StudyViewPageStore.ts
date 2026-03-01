@@ -3923,9 +3923,11 @@ export class StudyViewPageStore
                     break;
                 case ChartTypeEnum.MUTATED_GENES_TABLE:
                 case ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE:
-                case ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE:
                 case ChartTypeEnum.CNA_GENES_TABLE:
                     this.resetGeneFilter(chartUniqueKey);
+                    break;
+                case ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE:
+                    this.resetStructVarFilter(chartUniqueKey);
                     break;
                 case ChartTypeEnum.MUTATION_TYPE_COUNTS_TABLE:
                     this.updateMutationDataFilters(chartUniqueKey, [[]]);
