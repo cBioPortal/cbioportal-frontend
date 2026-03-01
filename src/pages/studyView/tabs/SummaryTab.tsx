@@ -540,13 +540,13 @@ export class StudySummaryTab extends React.Component<
                 filterAlterations: this.store.isGlobalMutationFilterActive,
             }),
             [ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE]: () => ({
-                filters: this.store.getGeneFiltersByUniqueKey(
+                filters: this.store.getStructVarFiltersByUniqueKey(
                     chartMeta.uniqueKey
                 ),
                 promise: this.store.structuralVariantTableRowData,
                 onValueSelection: this.store.addStructVarFilters,
                 onResetSelection: () =>
-                    this.store.resetGeneFilter(chartMeta.uniqueKey),
+                    this.store.resetStructVarFilter(chartMeta.uniqueKey),
                 selectedStructuralVariants: this.store
                     .selectedStructuralVariants,
                 onStructuralVariantSelect: this.store.onCheckStructuralVariant,
