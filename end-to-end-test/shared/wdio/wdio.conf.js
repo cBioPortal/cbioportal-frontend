@@ -216,7 +216,11 @@ function cacheKey(url, postData) {
         .digest('hex');
 }
 
+const enableRequestCache = process.env.E2E_REQUEST_CACHE === 'true';
+
 async function setupRequestCache() {
+    if (!enableRequestCache) return;
+
     const puppeteer = await browser.getPuppeteer();
     const pages = await puppeteer.pages();
     if (!pages.length) return;
