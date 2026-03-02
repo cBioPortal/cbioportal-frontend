@@ -361,7 +361,7 @@ describe('selects the right default case sets in a single->select all filtered->
             '[data-tour="cancer-study-list-container"] input[data-test="selectAllStudies"]'
         );
         await clickQueryByGeneButton();
-        validateSelectedCaseSet('Samples with mutation data (160)');
+        await validateSelectedCaseSet('Samples with mutation data (160)');
     });
 
     it('Step 4: Select Adrenocortical Carcinoma', async function() {
@@ -548,9 +548,11 @@ describe('genetic profile selection in front page query form', function() {
             "'Mutation' should be selected"
         );
         assert(
-            getElementByTestHandle('COPY_NUMBER_ALTERATION', {
-                timeout: 10000,
-            }),
+            await (
+                await getElementByTestHandle('COPY_NUMBER_ALTERATION', {
+                    timeout: 10000,
+                })
+            ).isSelected(),
             "'Copy number alterations' should be selected"
         );
     });

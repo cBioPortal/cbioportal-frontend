@@ -309,7 +309,9 @@ describe('patient view page', function() {
         });
 
         it('toggles gene panel modal from patient header', async () => {
-            await (await $('.patientSamples .clinical-spans svg')).moveTo();
+            await (
+                await $('[data-test="patientSamplesClinicalSpans"] svg')
+            ).moveTo();
 
             await clickOnGenePanelLinks();
 
@@ -565,7 +567,8 @@ async function testSampleIcon(
     );
     const icons = await samplesCell.$$('li');
 
-    sampleIconTypes.forEach(async (desiredDataType, i) => {
+    for (let i = 0; i < sampleIconTypes.length; i++) {
+        const desiredDataType = sampleIconTypes[i];
         const isExpectedIcon = await (
             await icons[i].$('svg[data-test=' + desiredDataType + ']')
         ).isExisting();
@@ -580,9 +583,10 @@ async function testSampleIcon(
                 desiredDataType +
                 '`'
         );
-    });
+    }
 
-    sampleVisibilities.forEach(async (desiredVisibility, i) => {
+    for (let i = 0; i < sampleVisibilities.length; i++) {
+        const desiredVisibility = sampleVisibilities[i];
         const actualVisibility = await icons[i].isDisplayed();
         assert.equal(
             actualVisibility,
@@ -597,5 +601,5 @@ async function testSampleIcon(
                 actualVisibility +
                 '`'
         );
-    });
+    }
 }
