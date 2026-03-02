@@ -115,9 +115,9 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
         x?: { value: string; label: string };
         y?: { value: string; label: string };
     } = {
-        x: undefined,
-        y: undefined,
-    };
+            x: undefined,
+            y: undefined,
+        };
     private readonly tabsDivRef: React.RefObject<HTMLDivElement>;
     private genericAssayEntityOptionsReaction: IReactionDisposer;
 
@@ -252,7 +252,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
     get genomicChartOptions(): ChartOption[] {
         const genomicDataOptions = getOptionsByChartMetaDataType(
             this.groupedChartMetaByDataType[ChartMetaDataTypeEnum.GENOMIC] ||
-                [],
+            [],
             this.selectedAttrs,
             _.fromPairs(this.props.store.chartsType.toJSON())
         );
@@ -272,7 +272,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
     get namespaceChartOptions(): ChartOption[] {
         const namespaceDataOptions = getOptionsByChartMetaDataType(
             this.groupedChartMetaByDataType[
-                ChartMetaDataTypeEnum.VARIANT_ANNOTATIONS
+            ChartMetaDataTypeEnum.VARIANT_ANNOTATIONS
             ] || [],
             this.selectedAttrs,
             _.fromPairs(this.props.store.chartsType.toJSON())
@@ -284,7 +284,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
     get geneSpecificChartOptions(): ChartOption[] {
         const genomicDataOptions = getOptionsByChartMetaDataType(
             this.groupedChartMetaByDataType[
-                ChartMetaDataTypeEnum.GENE_SPECIFIC
+            ChartMetaDataTypeEnum.GENE_SPECIFIC
             ] || [],
             this.selectedAttrs,
             _.fromPairs(this.props.store.chartsType.toJSON())
@@ -306,7 +306,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
     } {
         const groupedChartMetaByGenericAssayType = _.groupBy(
             this.groupedChartMetaByDataType[
-                ChartMetaDataTypeEnum.GENERIC_ASSAY
+            ChartMetaDataTypeEnum.GENERIC_ASSAY
             ] || [],
             chartMeta => chartMeta.genericAssayType
         );
@@ -335,7 +335,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
 
         return getOptionsByChartMetaDataType(
             this.groupedChartMetaByDataType[ChartMetaDataTypeEnum.CLINICAL] ||
-                [],
+            [],
             this.selectedAttrs,
             _.fromPairs(this.props.store.chartsType.toJSON()),
             undefined,
@@ -347,7 +347,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
     get customChartDataOptions(): ChartOption[] {
         return getOptionsByChartMetaDataType(
             this.groupedChartMetaByDataType[
-                ChartMetaDataTypeEnum.CUSTOM_DATA
+            ChartMetaDataTypeEnum.CUSTOM_DATA
             ] || [],
             this.selectedAttrs,
             _.fromPairs(this.props.store.chartsType.toJSON()),
@@ -371,7 +371,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
             !this.props.store.molecularProfileForGeneCharts.isComplete ||
             (this.props.store.molecularProfileForGeneCharts.isComplete &&
                 this.props.store.molecularProfileForGeneCharts.result.length ===
-                    0)
+                0)
         );
     }
 
@@ -380,8 +380,6 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
         return (
             this.props.disableGenericAssayTabs ||
             !this.props.store.genericAssayProfiles.isComplete ||
-            !this.props.store.genericAssayEntitiesGroupedByProfileIdSuffix
-                .isComplete ||
             (this.props.store.genericAssayProfiles.isComplete &&
                 _.isEmpty(this.props.store.genericAssayProfiles.result))
         );
@@ -434,13 +432,11 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
     private onAddAll(keys: string[]) {
         this.props.store.addCharts(this.selectedAttrs.concat(keys));
 
-        const addInSummaryInfoMessage = `${keys.length} chart${
-            keys.length > 1 ? 's' : ''
-        } added`;
+        const addInSummaryInfoMessage = `${keys.length} chart${keys.length > 1 ? 's' : ''
+            } added`;
         if (this.props.currentTab === StudyViewPageTabKeyEnum.CLINICAL_DATA) {
             this.updateInfoMessage(
-                `${keys.length} column${
-                    keys.length > 1 ? 's' : ''
+                `${keys.length} column${keys.length > 1 ? 's' : ''
                 } added to table and ${addInSummaryInfoMessage} in Summary tab`
             );
         } else if (this.props.currentTab === StudyViewPageTabKeyEnum.SUMMARY) {
@@ -465,14 +461,12 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
             )
         );
 
-        const removeInSummaryInfoMessage = `${keys.length} chart${
-            keys.length > 1 ? 's' : ''
-        } removed`;
+        const removeInSummaryInfoMessage = `${keys.length} chart${keys.length > 1 ? 's' : ''
+            } removed`;
 
         if (this.props.currentTab === StudyViewPageTabKeyEnum.CLINICAL_DATA) {
             this.updateInfoMessage(
-                `${keys.length} column${
-                    keys.length > 1 ? 's' : ''
+                `${keys.length} column${keys.length > 1 ? 's' : ''
                 } removed from table and ${removeInSummaryInfoMessage} from Summary tab`
             );
         } else if (this.props.currentTab === StudyViewPageTabKeyEnum.SUMMARY) {
@@ -488,7 +482,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
         if (chartMeta !== undefined) {
             const chartTypeName =
                 ChartTypeNameEnum[
-                    this.props.store.chartsType.get(chartUniqueKey)!
+                this.props.store.chartsType.get(chartUniqueKey)!
                 ];
             if (this.selectedAttrs.includes(chartUniqueKey)) {
                 this.props.store.resetFilterAndChangeChartVisibility(
@@ -577,17 +571,8 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                     type
                 )!;
 
-                const entityMap = _.keyBy(
-                    this.props.store
-                        .genericAssayEntitiesGroupedByProfileIdSuffix.result![
-                        molecularProfileIdSuffix
-                    ],
-                    meta => meta.stableId
-                );
-                const genericAssayEntityOptions = _.map(
-                    entityMap,
-                    makeGenericAssayOption
-                );
+                const genericAssayEntityOptions = [];
+                const entityMap = {};
 
                 const shouldShowChartOptionTable =
                     this.genericAssayChartOptionsByGenericAssayType[type] &&
@@ -596,9 +581,8 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                 const molecularProfileOptions = options.map(option => {
                     return {
                         ...option,
-                        label: `${option.label} (${option.count} ${
-                            option.patientLevel ? 'patients' : 'samples'
-                        })`,
+                        label: `${option.label} (${option.count} ${option.patientLevel ? 'patients' : 'samples'
+                            })`,
                         profileName: option.label,
                     };
                 });
@@ -614,10 +598,6 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                             molecularProfileOptions={molecularProfileOptions}
                             submitButtonText={'Add Chart'}
                             genericAssayType={type}
-                            genericAssayEntityOptions={
-                                genericAssayEntityOptions
-                            }
-                            entityMap={entityMap}
                             onChartSubmit={this.onGenericAssaySubmit}
                             onSelectGenericAssayProfile={profileId =>
                                 this.onSelectGenericAssayProfileByType(
@@ -633,7 +613,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                                     options={
                                         this
                                             .genericAssayChartOptionsByGenericAssayType[
-                                            type
+                                        type
                                         ]
                                     }
                                     freqPromise={this.dataCount}
@@ -801,25 +781,24 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                     disabled
                         ? undefined
                         : action(() => {
-                              if (type === 'scatter') {
-                                  this.props.store.addXvsYScatterChart({
-                                      xAttrId: this.XvsYSelection.x!.value,
-                                      yAttrId: this.XvsYSelection.y!.value,
-                                  });
-                              } else {
-                                  this.props.store.addXvsYViolinChart({
-                                      categoricalAttrId,
-                                      numericalAttrId,
-                                  });
-                              }
-                              this.updateInfoMessage(
-                                  `${this.XvsYSelection.y!.label} vs ${
-                                      this.XvsYSelection.x!.label
-                                  } added.`
-                              );
-                              this.XvsYSelection.x = undefined;
-                              this.XvsYSelection.y = undefined;
-                          })
+                            if (type === 'scatter') {
+                                this.props.store.addXvsYScatterChart({
+                                    xAttrId: this.XvsYSelection.x!.value,
+                                    yAttrId: this.XvsYSelection.y!.value,
+                                });
+                            } else {
+                                this.props.store.addXvsYViolinChart({
+                                    categoricalAttrId,
+                                    numericalAttrId,
+                                });
+                            }
+                            this.updateInfoMessage(
+                                `${this.XvsYSelection.y!.label} vs ${this.XvsYSelection.x!.label
+                                } added.`
+                            );
+                            this.XvsYSelection.x = undefined;
+                            this.XvsYSelection.y = undefined;
+                        })
                 }
             >
                 {text}
@@ -896,12 +875,11 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                                         charts[0].mutationOptionType
                                     );
                                     this.updateInfoMessage(
-                                        `${charts[0].name} ${
-                                            this.selectedAttrs.includes(
-                                                uniqueKey
-                                            )
-                                                ? 'is already'
-                                                : 'has been'
+                                        `${charts[0].name} ${this.selectedAttrs.includes(
+                                            uniqueKey
+                                        )
+                                            ? 'is already'
+                                            : 'has been'
                                         } added.`
                                     );
                                 } else {
@@ -1029,62 +1007,62 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                                     <>
                                         {this.customChartDataOptions.length >
                                             0 && (
-                                            <>
-                                                <hr
-                                                    style={{
-                                                        marginTop: 10,
-                                                        marginBottom: 10,
-                                                    }}
-                                                />
-                                                <AddChartByType
-                                                    width={this.getTabsWidth}
-                                                    options={
-                                                        this
-                                                            .customChartDataOptions
-                                                    }
-                                                    freqPromise={this.dataCount}
-                                                    onAddAll={this.onAddAll}
-                                                    onClearAll={this.onClearAll}
-                                                    onToggleOption={
-                                                        this.onToggleOption
-                                                    }
-                                                    hideControls={true}
-                                                    firstColumnHeaderName="Custom data"
-                                                    shareCharts={
-                                                        this.props
-                                                            .openShareCustomDataUrlModal
-                                                    }
-                                                    deleteChart={(
-                                                        id: string
-                                                    ) => {
-                                                        this.props.store.toggleCustomChartMarkedForDeletion(
-                                                            id
-                                                        );
-                                                    }}
-                                                    restoreChart={(
-                                                        id: string
-                                                    ) => {
-                                                        this.props.store.toggleCustomChartMarkedForDeletion(
-                                                            id
-                                                        );
-                                                    }}
-                                                    markedForDeletion={
-                                                        this.props.store
-                                                            .customChartGroupMarkedForDeletion
-                                                    }
-                                                />
-                                            </>
-                                        )}
+                                                <>
+                                                    <hr
+                                                        style={{
+                                                            marginTop: 10,
+                                                            marginBottom: 10,
+                                                        }}
+                                                    />
+                                                    <AddChartByType
+                                                        width={this.getTabsWidth}
+                                                        options={
+                                                            this
+                                                                .customChartDataOptions
+                                                        }
+                                                        freqPromise={this.dataCount}
+                                                        onAddAll={this.onAddAll}
+                                                        onClearAll={this.onClearAll}
+                                                        onToggleOption={
+                                                            this.onToggleOption
+                                                        }
+                                                        hideControls={true}
+                                                        firstColumnHeaderName="Custom data"
+                                                        shareCharts={
+                                                            this.props
+                                                                .openShareCustomDataUrlModal
+                                                        }
+                                                        deleteChart={(
+                                                            id: string
+                                                        ) => {
+                                                            this.props.store.toggleCustomChartMarkedForDeletion(
+                                                                id
+                                                            );
+                                                        }}
+                                                        restoreChart={(
+                                                            id: string
+                                                        ) => {
+                                                            this.props.store.toggleCustomChartMarkedForDeletion(
+                                                                id
+                                                            );
+                                                        }}
+                                                        markedForDeletion={
+                                                            this.props.store
+                                                                .customChartGroupMarkedForDeletion
+                                                        }
+                                                    />
+                                                </>
+                                            )}
                                         {this.notificationMessages.length >
                                             0 && (
-                                            <>
-                                                <br />
-                                                <span className="text-warning">
-                                                    Note:{' '}
-                                                    {this.notificationMessages}
-                                                </span>
-                                            </>
-                                        )}
+                                                <>
+                                                    <br />
+                                                    <span className="text-warning">
+                                                        Note:{' '}
+                                                        {this.notificationMessages}
+                                                    </span>
+                                                </>
+                                            )}
                                     </>
                                 </div>
                             )}
@@ -1206,9 +1184,7 @@ export default class AddChartButton extends React.Component<
     get tabsLoading() {
         return (
             this.props.store.genericAssayProfileOptionsByType.isPending ||
-            this.props.store.molecularProfileOptions.isPending ||
-            this.props.store.genericAssayEntitiesGroupedByProfileIdSuffix
-                .isPending
+            this.props.store.molecularProfileOptions.isPending
         );
     }
 

@@ -163,15 +163,15 @@ export async function fetchGenericAssayMetaByProfileIds(
 }
 
 export async function fetchGenericAssayMetaByEntityIds(
-    stableIds: string[],
+    genericAssayStableIds: string[],
     keyword?: string,
     limit?: number,
     offset?: number
 ) {
-    if (stableIds.length > 0) {
+    if (genericAssayStableIds.length > 0) {
         return await client.fetchGenericAssayMetaUsingPOST({
             genericAssayMetaFilter: {
-                stableIds,
+                genericAssayStableIds,
                 keyword,
                 limit,
                 offset,

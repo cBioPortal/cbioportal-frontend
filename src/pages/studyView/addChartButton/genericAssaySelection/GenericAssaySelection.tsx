@@ -23,8 +23,8 @@ export interface IGenericAssaySelectionProps {
         profileName: string;
     })[]
     | ISelectOption[];
-    genericAssayEntityOptions: ISelectOption[];
-    entityMap: {
+    genericAssayEntityOptions?: ISelectOption[];
+    entityMap?: {
         [stableId: string]: GenericAssayMeta;
     };
     genericAssayType: string;
