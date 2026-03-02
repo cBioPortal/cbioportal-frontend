@@ -296,11 +296,19 @@ export type GenericAssayMeta = {
 
     'stableId': string
 
+    'molecularProfileId': string
+
 };
 export type GenericAssayMetaFilter = {
     'genericAssayStableIds': Array<string>
 
+    'keyword'?: string
+
+    'limit'?: number
+
     'molecularProfileIds': Array<string>
+
+    'offset'?: number
 
 };
 export type Info = {
