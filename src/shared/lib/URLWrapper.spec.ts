@@ -334,7 +334,7 @@ describe('URLWrapper', () => {
         const testWrapper = new TestURLWrapper(routingStore);
         const stub = sinon.stub(testWrapper, 'saveRemoteSession');
 
-        stub.callsFake(function(sessionData) {
+        stub.callsFake(function (sessionData) {
             return new Promise(resolve => {
                 setTimeout(() => {
                     return resolve({ id: 'someSessionId' });
@@ -375,7 +375,7 @@ describe('URLWrapper', () => {
     it('sets and reads from internal session appropriately', done => {
         const stub = sinon.stub(wrapper, 'saveRemoteSession');
 
-        stub.callsFake(function(sessionData) {
+        stub.callsFake(function (sessionData) {
             return new Promise(resolve => {
                 setTimeout(() => {
                     return resolve({ id: 'someSessionId' });
@@ -444,7 +444,7 @@ describe('URLWrapper', () => {
     it('respects url length threshold for session', done => {
         const stub = sinon.stub(wrapper, 'saveRemoteSession');
 
-        stub.callsFake(function(sessionData) {
+        stub.callsFake(function (sessionData) {
             return new Promise(resolve => {
                 setTimeout(() => {
                     return resolve({ id: 'someSessionId' });
@@ -561,7 +561,7 @@ describe('URLWrapper', () => {
         const testWrapper = new TestURLWrapper(routingStore);
         const stub = sinon.stub(testWrapper, 'getRemoteSession');
 
-        stub.callsFake(function(sessionData) {
+        stub.callsFake(function (sessionData) {
             return new Promise(resolve => {
                 setTimeout(() => {
                     return resolve({
@@ -624,7 +624,7 @@ describe('URLWrapper', () => {
         );
         let saveSessionStub = sinon.stub(testWrapper, 'saveRemoteSession');
 
-        getRemoteSessionStub.callsFake(function(sessionData) {
+        getRemoteSessionStub.callsFake(function (sessionData) {
             return new Promise(resolve => {
                 setTimeout(() => {
                     return resolve({
@@ -638,7 +638,7 @@ describe('URLWrapper', () => {
             });
         });
 
-        saveSessionStub.callsFake(function(sessionData) {
+        saveSessionStub.callsFake(function (sessionData) {
             return new Promise(resolve => {
                 setTimeout(() => {
                     return resolve({ id: 'someSessionId' });
@@ -755,7 +755,7 @@ describe('URLWrapper', () => {
 
         let saveSessionStub = sinon.stub(wrapper, 'saveRemoteSession');
 
-        saveSessionStub.callsFake(function(sessionData) {
+        saveSessionStub.callsFake(function (sessionData) {
             return new Promise(resolve => {
                 setTimeout(() => {
                     return resolve({ id: 'someSessionId' });
@@ -763,7 +763,7 @@ describe('URLWrapper', () => {
             });
         });
 
-        getSessionStub.callsFake(function(sessionData) {
+        getSessionStub.callsFake(function (sessionData) {
             return new Promise(resolve => {
                 setTimeout(() => {
                     return resolve({
@@ -842,7 +842,7 @@ describe('URLWrapper', () => {
 
         let saveSessionStub = sinon.stub(testWrapper, 'saveRemoteSession');
 
-        saveSessionStub.callsFake(function(sessionData) {
+        saveSessionStub.callsFake(function (sessionData) {
             return new Promise(resolve => {
                 setTimeout(() => {
                     return resolve({ id: 'someSessionId' });
@@ -850,7 +850,7 @@ describe('URLWrapper', () => {
             });
         });
 
-        getSessionStub.callsFake(function(sessionData) {
+        getSessionStub.callsFake(function (sessionData) {
             return new Promise(resolve => {
                 setTimeout(() => {
                     return resolve({
@@ -979,7 +979,7 @@ describe('URLWrapper', () => {
 
         let saveSessionStub = sinon.stub(wrapper, 'saveRemoteSession');
 
-        saveSessionStub.callsFake(function(sessionData) {
+        saveSessionStub.callsFake(function (sessionData) {
             return new Promise(resolve => {
                 setTimeout(() => {
                     return resolve({ id: 'sessionId1' });
@@ -991,11 +991,11 @@ describe('URLWrapper', () => {
 
         assert.isTrue(saveSessionStub.called);
 
-        saveSessionStub.callsFake(function(sessionData) {
+        saveSessionStub.callsFake(function (sessionData) {
             return new Promise(resolve => {
                 setTimeout(() => {
                     return resolve({ id: 'sessionId2' });
-                }, 5);
+                }, 15);
             });
         });
 
@@ -1011,7 +1011,7 @@ describe('URLWrapper', () => {
             assert.equal(wrapper.query.gene_list, '54321');
             assert.equal(routingStore.query.session_id, 'sessionId2');
             done();
-        }, 1000);
+        }, 50);
     });
 
     it('#needToLoadSession obeys rules', () => {

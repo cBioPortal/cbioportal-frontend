@@ -105,7 +105,8 @@ export default class GenericAssaySelection extends React.Component<
                     };
                 const charts = this._selectedGenericAssayEntityIds.map(
                     entityId => {
-                        const entityMetaInfo = this.props.entityMap[entityId] || this.localEntityMap[entityId];
+                        const safeEntityMap = this.props.entityMap || {};
+                        const entityMetaInfo = safeEntityMap[entityId] || this.localEntityMap[entityId];
                         const entityName = GENERIC_ASSAY_CONFIG
                             .genericAssayConfigByType[
                             this.props.genericAssayType
@@ -196,7 +197,7 @@ export default class GenericAssaySelection extends React.Component<
         [value: string]: ISelectOption;
     } {
         // Fallback to localEntityMap if props.genericAssayEntityOptions is not provided or incomplete
-        const optionsList = this.props.genericAssayEntityOptions?.length > 0
+        const optionsList = this.props.genericAssayEntityOptions && this.props.genericAssayEntityOptions.length > 0
             ? this.props.genericAssayEntityOptions
             : Object.values(this.localEntityMap).map((meta: GenericAssayMeta) => ({
                 value: meta.stableId,
