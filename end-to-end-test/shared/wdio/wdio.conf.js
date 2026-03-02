@@ -187,6 +187,101 @@ function getTestId(test) {
     return `${process.pid}-${title}`;
 }
 
+// ============================================================================
+// API Request Cache
+// ============================================================================
+// Caches API responses keyed by URL + POST body so repeated identical requests
+// are served from memory. Replays the original response time to keep test
+// timing realistic. Only caches requests whose URL matches one of the patterns
+// in CACHE_API_PATTERNS.
+
+const crypto = require('crypto');
+
+const CACHE_API_PATTERNS = [/\/api\//];
+
+// Shared across the entire worker process (survives page navigations).
+const requestCache = new Map();
+
+function cacheKey(url, postData) {
+    return crypto
+        .createHash('md5')
+        .update(url + (postData || ''))
+        .digest('hex');
+}
+
+function shouldCacheUrl(url) {
+    return CACHE_API_PATTERNS.some(p => p.test(url));
+}
+
+async function setupRequestCache() {
+    const puppeteer = await browser.getPuppeteer();
+    const pages = await puppeteer.pages();
+    if (!pages.length) return;
+
+    const page = pages[pages.length - 1];
+
+    // Guard against double-setup on the same page.
+    if (page.__requestCacheEnabled) return;
+    page.__requestCacheEnabled = true;
+
+    await page.setRequestInterception(true);
+
+    page.on('request', async request => {
+        const url = request.url();
+        const resourceType = request.resourceType();
+
+        // Only intercept XHR/Fetch to API endpoints.
+        if (
+            (resourceType !== 'xhr' && resourceType !== 'fetch') ||
+            !shouldCacheUrl(url)
+        ) {
+            return request.continue();
+        }
+
+        const postData = request.postData() || '';
+        const key = cacheKey(url, postData);
+        const cached = requestCache.get(key);
+
+        if (cached) {
+            // Replicate original response time.
+            if (cached.duration > 0) {
+                await new Promise(r => setTimeout(r, cached.duration));
+            }
+            return request.respond({
+                status: cached.status,
+                headers: cached.headers,
+                body: cached.body,
+            });
+        }
+
+        // Tag the request so we can cache the response later.
+        request._cacheKey = key;
+        request._cacheStartTime = Date.now();
+        return request.continue();
+    });
+
+    page.on('response', async response => {
+        const request = response.request();
+        if (!request._cacheKey) return;
+
+        try {
+            const body = await response.buffer();
+            const duration = Date.now() - request._cacheStartTime;
+
+            requestCache.set(request._cacheKey, {
+                status: response.status(),
+                headers: response.headers(),
+                body,
+                duration,
+            });
+        } catch (e) {
+            // Body may be unavailable for redirects etc.
+        }
+    });
+}
+
+// ============================================================================
+
 async function setupNetworkTracker(test) {
     const testId = getTestId(test);
 
@@ -624,10 +719,17 @@ exports.config = {
      * @param {Array.<String>} specs        List of spec file paths that are to be run
      * @param {Object}         browser      instance of created browser/device session
      */
-    before: function(capabilities, specs) {
+    before: async function(capabilities, specs) {
         // initialize tracker map
         if (!browser._networkTrackers) {
             browser._networkTrackers = new Map();
+        }
+
+        // set up API request cache
+        try {
+            await setupRequestCache();
+        } catch (e) {
+            console.log('[cache] Request cache setup failed:', e.message);
         }
     },
     /**
@@ -656,6 +758,13 @@ exports.config = {
                 e.message
             );
         }
+
+        // Re-setup request cache (needed after page navigations)
+        try {
+            await setupRequestCache();
+        } catch (e) {
+            console.log('[cache] Request cache setup failed:', e.message);
+        }
     },
     /**
      * Hook that gets executed _before_ a hook within the suite starts (e.g. runs before calling
@@ -670,6 +779,13 @@ exports.config = {
                 '[network] CDP network tracking not available:',
                 e.message
             );
+        }
+
+        // Re-setup request cache (needed after page navigations)
+        try {
+            await setupRequestCache();
+        } catch (e) {
+            console.log('[cache] Request cache setup failed:', e.message);
         }
     },
     networkLog: {},
