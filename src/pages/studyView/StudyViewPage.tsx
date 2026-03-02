@@ -598,7 +598,7 @@ export default class StudyViewPage extends React.Component<
 
     content() {
         const hideClinicalTab =
-            getServerConfig().skin_hide_clinical_data_tab_study_view ?? false;
+            getServerConfig().skin_hide_clinical_data_tab_study_view === true;
         return (
             <div className="studyView">
                 {this.showBookmarkModal && this.bookmarkModal}
