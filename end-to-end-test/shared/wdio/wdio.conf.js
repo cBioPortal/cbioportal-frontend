@@ -192,25 +192,28 @@ function getTestId(test) {
 // ============================================================================
 // Caches API responses keyed by URL + POST body so repeated identical requests
 // are served from memory. Replays the original response time to keep test
-// timing realistic. Only caches requests whose URL matches one of the patterns
-// in CACHE_API_PATTERNS.
+// timing realistic. Uses CDP Fetch domain for request interception and CDP
+// Network domain for response body capture.
 
 const crypto = require('crypto');
 
-const CACHE_API_PATTERNS = [/\/api\//];
+const CACHE_URL_PATTERN = '*/api/*';
 
 // Shared across the entire worker process (survives page navigations).
 const requestCache = new Map();
+
+// Pending requests awaiting response capture (per-session, keyed by network ID).
+const pendingCacheRequests = new Map();
+
+// Track the current cache CDP session and page to avoid double-setup.
+let _cachePage = null;
+let _cacheCdpSession = null;
 
 function cacheKey(url, postData) {
     return crypto
         .createHash('md5')
         .update(url + (postData || ''))
         .digest('hex');
-}
-
-function shouldCacheUrl(url) {
-    return CACHE_API_PATTERNS.some(p => p.test(url));
 }
 
 async function setupRequestCache() {
@@ -220,25 +223,33 @@ async function setupRequestCache() {
 
     const page = pages[pages.length - 1];
 
-    // Guard against double-setup on the same page.
-    if (page.__requestCacheEnabled) return;
-    page.__requestCacheEnabled = true;
+    // Already set up for this page.
+    if (page === _cachePage && _cacheCdpSession) return;
 
-    await page.setRequestInterception(true);
+    // Clean up previous session if page changed.
+    if (_cacheCdpSession) {
+        try {
+            await _cacheCdpSession.detach();
+        } catch (e) {}
+    }
 
-    page.on('request', async request => {
-        const url = request.url();
-        const resourceType = request.resourceType();
+    _cachePage = page;
+    const cdpSession = await page.target().createCDPSession();
+    _cacheCdpSession = cdpSession;
 
-        // Only intercept XHR/Fetch to API endpoints.
-        if (
-            (resourceType !== 'xhr' && resourceType !== 'fetch') ||
-            !shouldCacheUrl(url)
-        ) {
-            return request.continue();
-        }
+    // Fetch domain intercepts requests matching the URL pattern.
+    await cdpSession.send('Fetch.enable', {
+        patterns: [{ urlPattern: CACHE_URL_PATTERN }],
+    });
 
-        const postData = request.postData() || '';
+    // Network domain captures response status, headers, and body.
+    await cdpSession.send('Network.enable');
+
+    // --- Request interception ---
+    cdpSession.on('Fetch.requestPaused', async params => {
+        const { requestId, request, networkId } = params;
+        const url = request.url;
+        const postData = request.postData || '';
         const key = cacheKey(url, postData);
         const cached = requestCache.get(key);
 
@@ -246,47 +257,88 @@ async function setupRequestCache() {
             console.log(
                 `[cache] HIT ${url} (${cached.duration.toFixed(0)}ms delay)`
             );
-            // Replicate original response time.
             if (cached.duration > 0) {
                 await new Promise(r => setTimeout(r, cached.duration));
             }
-            return request.respond({
-                status: cached.status,
-                headers: cached.headers,
-                body: cached.body,
-            });
+            try {
+                await cdpSession.send('Fetch.fulfillRequest', {
+                    requestId,
+                    responseCode: cached.status,
+                    responseHeaders: cached.headers,
+                    body: cached.body,
+                });
+            } catch (e) {
+                console.log('[cache] Error fulfilling request:', e.message);
+            }
+            return;
         }
 
         console.log(`[cache] MISS ${url}`);
-        // Tag the request so we can cache the response later.
-        request._cacheKey = key;
-        request._cacheStartTime = Date.now();
-        return request.continue();
-    });
-
-    page.on('response', async response => {
-        const request = response.request();
-        if (!request._cacheKey) return;
+        // Track this request so we can cache the response when it arrives.
+        pendingCacheRequests.set(networkId, {
+            key,
+            url,
+            startTime: Date.now(),
+        });
 
         try {
-            const body = await response.buffer();
-            const duration = Date.now() - request._cacheStartTime;
+            await cdpSession.send('Fetch.continueRequest', { requestId });
+        } catch (e) {
+            console.log('[cache] Error continuing request:', e.message);
+        }
+    });
 
-            requestCache.set(request._cacheKey, {
-                status: response.status(),
-                headers: response.headers(),
-                body,
+    // --- Response capture: status + headers ---
+    cdpSession.on('Network.responseReceived', params => {
+        const pending = pendingCacheRequests.get(params.requestId);
+        if (!pending) return;
+
+        pending.status = params.response.status;
+        // Fetch.fulfillRequest expects [{name, value}] format.
+        pending.responseHeaders = Object.entries(
+            params.response.headers
+        ).map(([name, value]) => ({ name, value: String(value) }));
+    });
+
+    // --- Response capture: body (after loading finishes) ---
+    cdpSession.on('Network.loadingFinished', async params => {
+        const pending = pendingCacheRequests.get(params.requestId);
+        if (!pending) return;
+        pendingCacheRequests.delete(params.requestId);
+
+        try {
+            const resp = await cdpSession.send('Network.getResponseBody', {
+                requestId: params.requestId,
+            });
+            const duration = Date.now() - pending.startTime;
+
+            // Fetch.fulfillRequest expects base64-encoded body.
+            const bodyBase64 = resp.base64Encoded
+                ? resp.body
+                : Buffer.from(resp.body).toString('base64');
+
+            requestCache.set(pending.key, {
+                status: pending.status,
+                headers: pending.responseHeaders,
+                body: bodyBase64,
                 duration,
             });
             console.log(
-                `[cache] STORED ${request.url()} (${duration.toFixed(0)}ms, ${
-                    body.length
-                } bytes)`
+                `[cache] STORED ${pending.url} (${duration.toFixed(0)}ms, ${
+                    resp.body.length
+                } chars)`
             );
         } catch (e) {
-            // Body may be unavailable for redirects etc.
+            // Body may be unavailable for redirects, aborted requests, etc.
         }
     });
+
+    // --- Clean up pending entries on failure ---
+    cdpSession.on('Network.loadingFailed', params => {
+        pendingCacheRequests.delete(params.requestId);
+    });
+
+    console.log('[cache] Request cache initialized');
 }
 
 // ============================================================================
