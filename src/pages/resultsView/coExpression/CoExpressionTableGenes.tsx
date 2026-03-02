@@ -16,7 +16,10 @@ import { cytobandFilter } from 'pages/resultsView/ResultsViewTableUtils';
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import { formatSignificanceValueWithStyle } from 'shared/lib/FormatUtils';
 import { getServerConfig } from 'config/config';
-import { DownloadControlOption } from 'cbioportal-frontend-commons';
+import {
+    DefaultTooltip,
+    DownloadControlOption,
+} from 'cbioportal-frontend-commons';
 
 export interface ICoExpressionTableGenesProps {
     referenceGeneticEntity: Gene | Geneset;
@@ -64,7 +67,10 @@ const COLUMNS = [
     Object.assign(
         makeNumberColumn(Q_VALUE_COLUMN_NAME, 'qValue', false, true),
         {
-            sortBy: (d: CoExpressionWithQ) => [d.qValue, d.pValue],
+            sortBy: (d: CoExpressionWithQ) => [
+                d.qValue ?? Number.POSITIVE_INFINITY,
+                d.pValue ?? Number.POSITIVE_INFINITY,
+            ],
             tooltip: (
                 <span>
                     Derived from Benjamini-Hochberg FDR correction procedure.
@@ -83,11 +89,36 @@ function makeNumberColumn(
     return {
         name: name,
         render: (d: CoExpressionWithQ) => {
+            const value = d[key] as number | null;
+            if (value === null || value === undefined) {
+                return (
+                    <DefaultTooltip
+                        overlay={
+                            <span>
+                                Correlation could not be computed: this gene has
+                                too few distinct expression values across the
+                                selected samples.
+                            </span>
+                        }
+                    >
+                        <span
+                            style={{
+                                textAlign: 'right',
+                                float: 'right',
+                                whiteSpace: 'nowrap',
+                                color: '#999999',
+                            }}
+                        >
+                            N/A
+                        </span>
+                    </DefaultTooltip>
+                );
+            }
             return (
                 <span
                     style={{
                         color: colorByValue
-                            ? correlationColor(d[key] as number)
+                            ? correlationColor(value)
                             : '#000000',
                         textAlign: 'right',
                         float: 'right',
@@ -95,13 +126,23 @@ function makeNumberColumn(
                     }}
                 >
                     {formatSignificance
-                        ? formatSignificanceValueWithStyle(d[key] as number)
-                        : toConditionalPrecision(d[key] as number, 3, 0.01)}
+                        ? formatSignificanceValueWithStyle(value)
+                        : toConditionalPrecision(value, 3, 0.01)}
                 </span>
             );
         },
-        download: (d: CoExpressionWithQ) => (d[key] as number).toString() + '',
-        sortBy: (d: CoExpressionWithQ) => correlationSortBy(d[key] as number),
+        download: (d: CoExpressionWithQ) => {
+            const value = d[key] as number | null;
+            return value === null || value === undefined
+                ? 'N/A'
+                : value.toString();
+        },
+        sortBy: (d: CoExpressionWithQ) => {
+            const value = d[key] as number | null;
+            return value === null || value === undefined
+                ? [0, 0] // sort nulls to bottom
+                : correlationSortBy(value);
+        },
         align: 'right' as 'right',
     };
 }

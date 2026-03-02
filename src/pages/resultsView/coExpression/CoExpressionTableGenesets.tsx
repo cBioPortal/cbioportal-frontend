@@ -14,6 +14,7 @@ import InfoIcon from '../../../shared/components/InfoIcon';
 import { bind } from 'bind-decorator';
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import { formatSignificanceValueWithStyle } from 'shared/lib/FormatUtils';
+import { DefaultTooltip } from 'cbioportal-frontend-commons';
 
 export interface ICoExpressionTableGenesetsProps {
     referenceGeneticEntity: Gene | Geneset;
@@ -51,7 +52,12 @@ const COLUMNS = [
     makeNumberColumn(P_VALUE_COLUMN_NAME, 'pValue', false, false),
     Object.assign(
         makeNumberColumn(Q_VALUE_COLUMN_NAME, 'qValue', false, true),
-        { sortBy: (d: CoExpressionWithQ) => [d.qValue, d.pValue] }
+        {
+            sortBy: (d: CoExpressionWithQ) => [
+                d.qValue ?? Number.POSITIVE_INFINITY,
+                d.pValue ?? Number.POSITIVE_INFINITY,
+            ],
+        }
     ),
 ];
 
@@ -64,11 +70,36 @@ function makeNumberColumn(
     return {
         name: name,
         render: (d: CoExpressionWithQ) => {
+            const value = d[key] as number | null;
+            if (value === null || value === undefined) {
+                return (
+                    <DefaultTooltip
+                        overlay={
+                            <span>
+                                Correlation could not be computed: this gene has
+                                too few distinct expression values across the
+                                selected samples.
+                            </span>
+                        }
+                    >
+                        <span
+                            style={{
+                                textAlign: 'right',
+                                float: 'right',
+                                whiteSpace: 'nowrap',
+                                color: '#999999',
+                            }}
+                        >
+                            N/A
+                        </span>
+                    </DefaultTooltip>
+                );
+            }
             return (
                 <span
                     style={{
                         color: colorByValue
-                            ? correlationColor(d[key] as number)
+                            ? correlationColor(value)
                             : '#000000',
                         textAlign: 'right',
                         float: 'right',
@@ -76,13 +107,23 @@ function makeNumberColumn(
                     }}
                 >
                     {formatSignificance
-                        ? formatSignificanceValueWithStyle(d[key] as number)
-                        : toConditionalPrecision(d[key] as number, 3, 0.01)}
+                        ? formatSignificanceValueWithStyle(value)
+                        : toConditionalPrecision(value, 3, 0.01)}
                 </span>
             );
         },
-        download: (d: CoExpressionWithQ) => (d[key] as number).toString() + '',
-        sortBy: (d: CoExpressionWithQ) => correlationSortBy(d[key] as number),
+        download: (d: CoExpressionWithQ) => {
+            const value = d[key] as number | null;
+            return value === null || value === undefined
+                ? 'N/A'
+                : value.toString();
+        },
+        sortBy: (d: CoExpressionWithQ) => {
+            const value = d[key] as number | null;
+            return value === null || value === undefined
+                ? [0, 0] // sort nulls to bottom
+                : correlationSortBy(value);
+        },
         align: 'right' as 'right',
     };
 }
