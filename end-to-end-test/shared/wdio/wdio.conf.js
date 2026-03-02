@@ -243,6 +243,9 @@ async function setupRequestCache() {
         const cached = requestCache.get(key);
 
         if (cached) {
+            console.log(
+                `[cache] HIT ${url} (${cached.duration.toFixed(0)}ms delay)`
+            );
             // Replicate original response time.
             if (cached.duration > 0) {
                 await new Promise(r => setTimeout(r, cached.duration));
@@ -254,6 +257,7 @@ async function setupRequestCache() {
             });
         }
 
+        console.log(`[cache] MISS ${url}`);
         // Tag the request so we can cache the response later.
         request._cacheKey = key;
         request._cacheStartTime = Date.now();
@@ -274,6 +278,11 @@ async function setupRequestCache() {
                 body,
                 duration,
             });
+            console.log(
+                `[cache] STORED ${request.url()} (${duration.toFixed(0)}ms, ${
+                    body.length
+                } bytes)`
+            );
         } catch (e) {
             // Body may be unavailable for redirects etc.
         }
