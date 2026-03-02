@@ -681,23 +681,22 @@ export default class StudyViewPage extends React.Component<
                                     >
                                         <StudySummaryTab store={this.store} />
                                     </MSKTab>
-                                    {!hideClinicalTab &&
-                                        this.store.selectedSamples.result
-                                            .length > 0 && (
-                                            <MSKTab
-                                                key={1}
-                                                id={
-                                                    StudyViewPageTabKeyEnum.CLINICAL_DATA
-                                                }
-                                                linkText={
-                                                    StudyViewPageTabDescriptions.CLINICAL_DATA
-                                                }
-                                            >
-                                                <ClinicalDataTab
-                                                    store={this.store}
-                                                />
-                                            </MSKTab>
-                                        )}
+                                    <MSKTab
+                                        key={1}
+                                        id={
+                                            StudyViewPageTabKeyEnum.CLINICAL_DATA
+                                        }
+                                        linkText={
+                                            StudyViewPageTabDescriptions.CLINICAL_DATA
+                                        }
+                                        hide={
+                                            hideClinicalTab ||
+                                            this.store.selectedSamples.result
+                                                .length === 0
+                                        }
+                                    >
+                                        <ClinicalDataTab store={this.store} />
+                                    </MSKTab>
                                     <MSKTab
                                         key={2}
                                         id={StudyViewPageTabKeyEnum.HEATMAPS}
