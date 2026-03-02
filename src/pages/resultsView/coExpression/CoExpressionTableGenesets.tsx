@@ -82,16 +82,7 @@ function makeNumberColumn(
                             </span>
                         }
                     >
-                        <span
-                            style={{
-                                textAlign: 'right',
-                                float: 'right',
-                                whiteSpace: 'nowrap',
-                                color: '#999999',
-                            }}
-                        >
-                            N/A
-                        </span>
+                        <span>N/A</span>
                     </DefaultTooltip>
                 );
             }
