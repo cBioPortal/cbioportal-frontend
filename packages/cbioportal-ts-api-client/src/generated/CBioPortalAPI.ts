@@ -296,17 +296,17 @@ export type GenericAssayMeta = {
 
     'stableId': string
 
-    'molecularProfileId': string
+    'molecularProfileId'?: string
 
 };
 export type GenericAssayMetaFilter = {
-    'genericAssayStableIds': Array<string>
+    'genericAssayStableIds'?: Array<string>
 
     'keyword'?: string
 
     'limit'?: number
 
-    'molecularProfileIds': Array<string>
+    'molecularProfileIds'?: Array<string>
 
     'offset'?: number
 

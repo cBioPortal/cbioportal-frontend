@@ -101,6 +101,12 @@ function patchGenericAssayDefinitions(json_data) {
                 if (!filterProperties.offset) {
                     filterProperties.offset = { type: 'integer', format: 'int32' };
                 }
+                if (filterProperties.genericAssayStableIds) {
+                    delete filterProperties.genericAssayStableIds.minItems;
+                }
+                if (filterProperties.molecularProfileIds) {
+                    delete filterProperties.molecularProfileIds.minItems;
+                }
             }
         }
         if (json_data.definitions.GenericAssayMeta) {

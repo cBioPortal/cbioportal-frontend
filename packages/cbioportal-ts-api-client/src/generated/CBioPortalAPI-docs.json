@@ -4637,7 +4637,6 @@
             "type": "string"
           },
           "maxItems": 10000000,
-          "minItems": 1,
           "type": "array"
         },
         "keyword": {
@@ -4652,7 +4651,6 @@
             "type": "string"
           },
           "maxItems": 10000000,
-          "minItems": 1,
           "type": "array"
         },
         "offset": {
