@@ -3690,7 +3690,7 @@ describe('StudyViewUtils', () => {
 
         const studyId: string[] = ['study_ABC', 'study_DEF', 'study_GHI'];
 
-        it('groups and creates SampleIdeifier  by mutation status correctly', () => {
+        it('groups and creates SampleIdentifier  by mutation status correctly', () => {
             const result = groupSamplesByMutationStatus(data, studyId);
             assert.deepEqual(result, {
                 MUTATED: [
