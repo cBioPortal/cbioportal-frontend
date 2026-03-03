@@ -9,7 +9,7 @@ export type CoExpressionWithEntityInfo = CoExpression & {
 };
 
 export type CoExpressionWithQ = CoExpressionWithEntityInfo & {
-    qValue: number;
+    qValue: number | null;
 };
 
 export const correlationInformation =
