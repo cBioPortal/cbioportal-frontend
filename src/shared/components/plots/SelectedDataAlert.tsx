@@ -2,6 +2,7 @@ import * as React from 'react';
 import _ from 'lodash';
 import { IPlotSampleData, IScatterPlotData } from './PlotsTabUtils';
 import { submitToStudyViewPage } from 'pages/resultsView/querySummary/QuerySummaryUtils';
+import { DefaultTooltip } from 'cbioportal-frontend-commons';
 
 interface ISelectedDataAlertProps {
     selectedData: IPlotSampleData[];
@@ -9,6 +10,8 @@ interface ISelectedDataAlertProps {
     plotElementWidth: number;
     onDataSelectionCleared: () => void;
 }
+
+export const SelectedDataTooltip = 'Explore selected samples in study view';
 
 export const SelectedDataAlert: React.FC<ISelectedDataAlertProps> = ({
     selectedData,
@@ -30,22 +33,29 @@ export const SelectedDataAlert: React.FC<ISelectedDataAlertProps> = ({
         <div
             data-test="selected-data-alert"
             style={{
-                position: 'absolute',
+                position: 'relative',
                 zIndex: 1,
                 paddingTop: 30,
+                marginBottom: -30,
                 width: plotElementWidth,
                 textAlign: 'center',
             }}
         >
             <strong>
                 {`Selecting `}
-                <a
-                    onClick={() => {
-                        submitToStudyViewPage(studies, sampleIdentifiers, true);
-                    }}
-                >
-                    {`${selectedData.length} sample(s)`}
-                </a>
+                <DefaultTooltip overlay={SelectedDataTooltip}>
+                    <a
+                        onClick={() => {
+                            submitToStudyViewPage(
+                                studies,
+                                sampleIdentifiers,
+                                true
+                            );
+                        }}
+                    >
+                        {`${selectedData.length} sample(s)`}
+                    </a>
+                </DefaultTooltip>
             </strong>
             <button
                 className="btn btn-default btn-xs"
