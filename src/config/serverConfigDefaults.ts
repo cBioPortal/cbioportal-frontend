@@ -252,6 +252,8 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
 
     uptime_robot_status_page_url: null,
     uptime_robot_api_key: null,
+
+    skin_hide_clinical_data_tab_study_view: false,
 };
 
 export default ServerConfigDefaults;
