@@ -521,7 +521,9 @@ export default class CoExpressionTab extends React.Component<
             this.selectedProfileX.isComplete &&
             this.selectedProfileY.isComplete &&
             this.props.store.geneticEntities.isComplete &&
-            this.props.store.coexpressionTabMolecularProfiles.isComplete
+            this.props.store.coexpressionTabMolecularProfiles.isComplete &&
+            this.props.store.molecularProfileIdToProfiledFilteredSamples
+                .isComplete
         ) {
             const coExpressionVizElements = [];
             for (const geneticEntity of this.props.store.geneticEntities
@@ -538,6 +540,9 @@ export default class CoExpressionTab extends React.Component<
                       )) {
                     for (const profileY of this.props.store
                         .coexpressionTabMolecularProfiles.result) {
+                        const profileXSamples = this.props.store
+                            .molecularProfileIdToProfiledFilteredSamples
+                            .result![profileX.molecularProfileId];
                         coExpressionVizElements.push(
                             <CoExpressionViz
                                 key={`${geneticEntity.geneticEntityId},${profileX.molecularProfileId},${profileY.molecularProfileId}`}
@@ -575,6 +580,11 @@ export default class CoExpressionTab extends React.Component<
                                 studyToMutationMolecularProfile={
                                     this.props.store
                                         .studyToMutationMolecularProfile
+                                }
+                                numSamples={
+                                    profileXSamples
+                                        ? profileXSamples.length
+                                        : undefined
                                 }
                             />
                         );
