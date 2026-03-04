@@ -196,6 +196,7 @@ import { ChartTypeEnum } from 'pages/studyView/StudyViewConfig';
 import {
     COMMON_GENERIC_ASSAY_PROPERTY,
     fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecularProfileId,
+    fetchGenericAssayMetaByMolecularProfileIdsGroupedByGenericAssayType,
     getGenericAssayMetaPropertyOrDefault,
 } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { createVariantAnnotationsByMutationFetcher } from 'shared/components/mutationMapper/MutationMapperUtils';
@@ -4783,45 +4784,11 @@ export class ResultsViewPageStore extends AnalysisStore
         [genericAssayType: string]: GenericAssayMeta[];
     }>(
         {
-            await: () => [
-                this.genericAssayEntitiesGroupByMolecularProfileId,
-                this.molecularProfilesInStudies,
-            ],
-            invoke: () => {
-                const perProfile = this
-                    .genericAssayEntitiesGroupByMolecularProfileId.result!;
-                const profileIdToType = _.chain(
+            await: () => [this.molecularProfilesInStudies],
+            invoke: async () => {
+                return await fetchGenericAssayMetaByMolecularProfileIdsGroupedByGenericAssayType(
                     this.molecularProfilesInStudies.result
-                )
-                    .filter(
-                        p =>
-                            p.molecularAlterationType === 'GENERIC_ASSAY'
-                    )
-                    .keyBy('molecularProfileId')
-                    .mapValues('genericAssayType')
-                    .value();
-
-                const result: {
-                    [type: string]: GenericAssayMeta[];
-                } = {};
-                for (const [profileId, metas] of Object.entries(
-                    perProfile
-                )) {
-                    const type = profileIdToType[profileId];
-                    if (type) {
-                        if (!result[type]) result[type] = [];
-                        for (const meta of metas) {
-                            if (
-                                !result[type].some(
-                                    m => m.stableId === meta.stableId
-                                )
-                            ) {
-                                result[type].push(meta);
-                            }
-                        }
-                    }
-                }
-                return Promise.resolve(result);
+                );
             },
         },
         {}
