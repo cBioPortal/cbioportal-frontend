@@ -94,7 +94,7 @@ export async function fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecular
 
     // Group profiles by suffix — profiles with the same suffix across
     // different studies share the same entity set (e.g.
-    // "methylation_hm27_hm450_merge" vs "methylation_hm450").
+    // "study_a_methylation_hm450" and "study_b_methylation_hm450" both share the suffix "methylation_hm450").
     const profilesGroupedBySuffix = _.groupBy(
         genericAssayProfiles,
         getSuffixOfMolecularProfile
