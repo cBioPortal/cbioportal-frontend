@@ -92,21 +92,36 @@ export async function fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecular
         return profile.molecularAlterationType === 'GENERIC_ASSAY';
     });
 
-    const genericAssayMetaGroupByMolecularProfileId: {
-        [molecularProfileId: string]: GenericAssayMeta[];
-    } = {};
+    // Group profiles by suffix — profiles with the same suffix across
+    // different studies share the same entity set (e.g.
+    // "methylation_hm27_hm450_merge" vs "methylation_hm450").
+    const profilesGroupedBySuffix = _.groupBy(
+        genericAssayProfiles,
+        getSuffixOfMolecularProfile
+    );
 
+    // One API call per unique suffix instead of one per profile
+    const metaBySuffix: { [suffix: string]: GenericAssayMeta[] } = {};
     await Promise.all(
-        genericAssayProfiles.map(profile =>
-            fetchGenericAssayMetaByProfileIds([
-                profile.molecularProfileId,
-            ]).then(genericAssayMeta => {
-                genericAssayMetaGroupByMolecularProfileId[
-                    profile.molecularProfileId
-                ] = genericAssayMeta;
+        _.map(profilesGroupedBySuffix, (profiles, suffix) =>
+            fetchGenericAssayMetaByProfileIds(
+                profiles.map(p => p.molecularProfileId)
+            ).then(meta => {
+                metaBySuffix[suffix] = meta;
             })
         )
     );
+
+    // Map results back to individual profile IDs
+    const genericAssayMetaGroupByMolecularProfileId: {
+        [molecularProfileId: string]: GenericAssayMeta[];
+    } = {};
+    for (const profile of genericAssayProfiles) {
+        const suffix = getSuffixOfMolecularProfile(profile);
+        genericAssayMetaGroupByMolecularProfileId[
+            profile.molecularProfileId
+        ] = metaBySuffix[suffix] || [];
+    }
 
     return genericAssayMetaGroupByMolecularProfileId;
 }
