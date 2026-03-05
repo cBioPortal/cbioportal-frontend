@@ -2149,11 +2149,26 @@ export class StudyViewPageStore
                     chartMeta.uniqueKey
                 );
                 if (isGeneSpecificChart) {
-                    comparisonId = await this.createGeneSpecificComparisonSession(
-                        chartMeta,
-                        params.clinicalAttributeValues!,
-                        statusCallback
-                    );
+                    const chartInfo = this._geneSpecificChartMap.get(
+                        chartMeta.uniqueKey
+                    )!;
+
+                    if (
+                        chartInfo.profileType ===
+                        MolecularAlterationType_filenameSuffix.MUTATION_EXTENDED
+                    ) {
+                        comparisonId = await this.createGeneSpecificComparisonSession(
+                            chartMeta,
+                            params.clinicalAttributeValues!,
+                            statusCallback
+                        );
+                    } else {
+                        comparisonId = await this.createCnaGeneComparisonSession(
+                            chartMeta,
+                            [chartInfo.hugoGeneSymbol],
+                            statusCallback
+                        );
+                    }
                 } else {
                     comparisonId = await this.createCategoricalAttributeComparisonSession(
                         chartMeta,
