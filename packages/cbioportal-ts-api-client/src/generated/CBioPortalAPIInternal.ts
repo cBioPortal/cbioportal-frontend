@@ -343,6 +343,33 @@ export type CoExpressionFilter = {
         'sampleListId': string
 
 };
+export type ContentDisposition = {
+    'attachment': boolean
+
+        'charset': {
+        'registered': boolean
+
+    }
+
+        'creationDate': string
+
+        'filename': string
+
+        'formData': boolean
+
+        'inline': boolean
+
+        'modificationDate': string
+
+        'name': string
+
+        'readDate': string
+
+        'size': number
+
+        'type': string
+
+};
 export type CopyNumberCount = {
     'alteration': number
 
@@ -707,6 +734,8 @@ export type GenomicDataCount = {
 
         'label': string
 
+        'sampleIds': Array < string >
+
         'uniqueCount': number
 
         'value': string
@@ -786,6 +815,45 @@ export type GroupStatistics = {
         'name': string
 
         'standardDeviation': number
+
+};
+export type HttpMethod = {};
+export type HttpRange = {};
+export type HttpStatusCode = {
+    'error': boolean
+
+        'is1xxInformational': boolean
+
+        'is2xxSuccessful': boolean
+
+        'is3xxRedirection': boolean
+
+        'is4xxClientError': boolean
+
+        'is5xxServerError': boolean
+
+};
+export type MediaType = {
+    'parameters': {}
+
+    'charset': {
+        'registered': boolean
+
+    }
+
+    'concrete': boolean
+
+        'qualityValue': number
+
+        'subtype': string
+
+        'subtypeSuffix': string
+
+        'type': string
+
+        'wildcardSubtype': boolean
+
+        'wildcardType': boolean
 
 };
 export type MolecularProfileCaseIdentifier = {
@@ -1070,6 +1138,201 @@ export type ResourceDefinition = {
         'resourceType': "STUDY" | "SAMPLE" | "PATIENT"
 
         'studyId': string
+
+};
+export type ResponseEntityReferenceGenomeGene = {
+    'body': ReferenceGenomeGene
+
+        'headers': {
+        'host': {
+            'address': {
+                'address': string
+
+                    'anyLocalAddress': boolean
+
+                    'canonicalHostName': string
+
+                    'hostAddress': string
+
+                    'hostName': string
+
+                    'linkLocalAddress': boolean
+
+                    'loopbackAddress': boolean
+
+                    'mcglobal': boolean
+
+                    'mclinkLocal': boolean
+
+                    'mcnodeLocal': boolean
+
+                    'mcorgLocal': boolean
+
+                    'mcsiteLocal': boolean
+
+                    'multicastAddress': boolean
+
+                    'siteLocalAddress': boolean
+
+            }
+
+            'hostName': string
+
+                'hostString': string
+
+                'port': number
+
+                'unresolved': boolean
+
+        }
+
+        'accept': Array < MediaType >
+
+            'acceptCharset': Array < {
+                'registered': boolean
+
+            } >
+
+            'acceptLanguage': Array < {
+                'range': string
+
+                    'weight': number
+
+            } >
+
+            'acceptLanguageAsLocales': Array < {
+                'country': string
+
+                    'displayCountry': string
+
+                    'displayLanguage': string
+
+                    'displayName': string
+
+                    'displayScript': string
+
+                    'displayVariant': string
+
+                    'extensionKeys': Array < string >
+
+                    'iso3Country': string
+
+                    'iso3Language': string
+
+                    'language': string
+
+                    'script': string
+
+                    'unicodeLocaleAttributes': Array < string >
+
+                    'unicodeLocaleKeys': Array < string >
+
+                    'variant': string
+
+            } >
+
+            'acceptPatch': Array < MediaType >
+
+            'accessControlAllowCredentials': boolean
+
+            'accessControlAllowHeaders': Array < string >
+
+            'accessControlAllowMethods': Array < HttpMethod >
+
+            'accessControlAllowOrigin': string
+
+            'accessControlExposeHeaders': Array < string >
+
+            'accessControlMaxAge': number
+
+            'accessControlRequestHeaders': Array < string >
+
+            'accessControlRequestMethod': HttpMethod
+
+            'all': {}
+
+            'allow': Array < HttpMethod >
+
+            'basicAuth': string
+
+            'bearerAuth': string
+
+            'cacheControl': string
+
+            'connection': Array < string >
+
+            'contentDisposition': ContentDisposition
+
+            'contentLanguage': {
+            'country': string
+
+                'displayCountry': string
+
+                'displayLanguage': string
+
+                'displayName': string
+
+                'displayScript': string
+
+                'displayVariant': string
+
+                'extensionKeys': Array < string >
+
+                'iso3Country': string
+
+                'iso3Language': string
+
+                'language': string
+
+                'script': string
+
+                'unicodeLocaleAttributes': Array < string >
+
+                'unicodeLocaleKeys': Array < string >
+
+                'variant': string
+
+        }
+
+            'contentLength': number
+
+            'contentType': MediaType
+
+            'date': number
+
+            'empty': boolean
+
+            'etag': string
+
+            'expires': number
+
+            'ifMatch': Array < string >
+
+            'ifModifiedSince': number
+
+            'ifNoneMatch': Array < string >
+
+            'ifUnmodifiedSince': number
+
+            'lastModified': number
+
+            'location': string
+
+            'origin': string
+
+            'pragma': string
+
+            'range': Array < HttpRange >
+
+            'upgrade': string
+
+            'vary': Array < string >
+
+    }
+
+        'statusCode': HttpStatusCode
+
+        'statusCodeValue': number
 
 };
 export type Sample = {
