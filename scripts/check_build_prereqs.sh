@@ -7,7 +7,18 @@ if [ ! -f common-dist/common-manifest.json ]; then
     yarn run buildDLL:dev
 fi
 
-if ! ls packages/*/dist/index.js > /dev/null 2>&1; then
-    echo "Package builds not found, running buildModules..."
+# Check every package with a build script has its dist/index.js
+missing=0
+for pkg_json in packages/*/package.json; do
+    pkg_dir=$(dirname "$pkg_json")
+    has_build=$(node -e "const p=require('./$pkg_json');process.exit(p.scripts&&p.scripts.build?0:1)" 2>/dev/null && echo yes || echo no)
+    if [ "$has_build" = "yes" ] && [ ! -f "$pkg_dir/dist/index.js" ]; then
+        echo "Missing build artifact: $pkg_dir/dist/index.js"
+        missing=1
+    fi
+done
+
+if [ "$missing" = "1" ]; then
+    echo "Running buildModules..."
     yarn run buildModules
 fi
