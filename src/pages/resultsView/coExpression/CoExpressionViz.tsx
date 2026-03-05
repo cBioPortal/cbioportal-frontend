@@ -60,6 +60,7 @@ export interface ICoExpressionVizProps {
     }>;
     mutationCache?: MobxPromiseCache<{ entrezGeneId: number }, Mutation[]>;
     hidden?: boolean;
+    numSamples?: number;
 }
 
 export enum TableMode {
@@ -590,7 +591,12 @@ export default class CoExpressionViz extends React.Component<
                     }
                     center={true}
                     size={'big'}
-                />
+                >
+                    {this.props.numSamples !== undefined &&
+                        (this.props.numSamples <= 500
+                            ? 'Computing correlations across all genes. This may take a few seconds.'
+                            : 'This study has a large number of samples. Computing correlations may take up to 2 minutes.')}
+                </LoadingIndicator>
             </div>
         );
     }
