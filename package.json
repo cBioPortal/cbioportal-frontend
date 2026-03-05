@@ -13,7 +13,9 @@
     "prettierFixCurrentChanges"
   ],
   "scripts": {
+    "prestart": "./scripts/check_build_prereqs.sh",
     "start": "lerna run watch --parallel",
+    "prestartSSL": "./scripts/check_build_prereqs.sh",
     "startSSL": "lerna run watchSSL --parallel",
     "mergeTests": "./scripts/api-test_env.sh && node api-e2e/merge-tests.js",
     "apitests": "cd ./api-e2e && npx tsc && yarn run mergeTests && node ./run.js",
