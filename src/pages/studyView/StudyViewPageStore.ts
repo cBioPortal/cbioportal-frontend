@@ -1640,7 +1640,7 @@ export class StudyViewPageStore
         });
     }
 
-    private createGeneSpecificComparisonSession(
+    private createGeneSpecificMutationComparisonSession(
         chartMeta: ChartMeta,
         clinicalAttributeValues: ClinicalDataCountSummary[],
         statusCallback: (phase: LoadingPhase) => void
@@ -2157,7 +2157,7 @@ export class StudyViewPageStore
                         chartInfo.profileType ===
                         MolecularAlterationType_filenameSuffix.MUTATION_EXTENDED
                     ) {
-                        comparisonId = await this.createGeneSpecificComparisonSession(
+                        comparisonId = await this.createGeneSpecificMutationComparisonSession(
                             chartMeta,
                             params.clinicalAttributeValues!,
                             statusCallback
