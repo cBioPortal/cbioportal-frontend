@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -euo pipefail
 # Ensures DLL and package builds exist before starting the dev server.
 # Run automatically via prestart/prestartSSL hooks in package.json.
 
