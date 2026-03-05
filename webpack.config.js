@@ -49,7 +49,7 @@ console.log('NODE_ENV', NODE_ENV);
 
 // devServer config
 const devHost = process.env.HOST || 'localhost';
-const devPort = process.env.PORT || 'auto';
+const devPort = process.env.PORT || 3000;
 
 const root = resolve(__dirname);
 const src = join(root, 'src');
