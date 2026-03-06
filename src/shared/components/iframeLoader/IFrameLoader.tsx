@@ -11,9 +11,10 @@ const RETRY_DELAY_MS = 1500;
 const LOAD_CHECK_DELAY_MS = 1000;
 
 interface FrameLoaderProps {
-    url: string;
+    url?: string;
     className?: string;
     iframeId?: string;
+    name?: string;
     height?: number | string;
     width?: number | string;
 }
@@ -137,6 +138,7 @@ export default class IFrameLoader extends React.Component<
                     ref={this.iframeRef}
                     id={this.props.iframeId || ''}
                     className={this.props.className || ''}
+                    name={this.props.name}
                     style={{
                         width: '100%',
                         position: 'relative',
