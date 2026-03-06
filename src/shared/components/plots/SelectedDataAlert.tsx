@@ -11,7 +11,7 @@ interface ISelectedDataAlertProps {
     onDataSelectionCleared: () => void;
 }
 
-export const SelectedDataTooltip = 'Explore selected samples in study view';
+export const SelectedDataTooltip = 'Explore samples in study view';
 
 export const SelectedDataAlert: React.FC<ISelectedDataAlertProps> = ({
     selectedData,
@@ -42,7 +42,7 @@ export const SelectedDataAlert: React.FC<ISelectedDataAlertProps> = ({
             }}
         >
             <strong>
-                {`Selecting `}
+                {`Selected: `}
                 <DefaultTooltip overlay={SelectedDataTooltip}>
                     <a
                         onClick={() => {
@@ -53,7 +53,9 @@ export const SelectedDataAlert: React.FC<ISelectedDataAlertProps> = ({
                             );
                         }}
                     >
-                        {`${selectedData.length} sample(s)`}
+                        {`${selectedData.length} sample${
+                            selectedData.length === 1 ? '' : 's'
+                        }`}
                     </a>
                 </DefaultTooltip>
             </strong>
