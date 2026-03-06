@@ -22,50 +22,16 @@ import {
 import IComparisonURLWrapper from 'pages/groupComparison/IComparisonURLWrapper';
 import _ from 'lodash';
 import { MapValues } from 'shared/lib/TypeScriptUtils';
-import { GroupComparisonTab } from 'pages/groupComparison/GroupComparisonTabs';
 import { ClinicalTrackConfig } from 'shared/components/oncoprint/Oncoprint';
 import { ResultPageSettings } from 'shared/api/session-service/sessionServiceModels';
 import { parse } from 'query-string';
+import {
+    PlotsColoringParam,
+    PlotsSelectionParam,
+    PLOTS_TAB_URL_PARAMS,
+} from 'shared/components/plots/PlotsTabUrlParameters';
 
 export const USER_SETTINGS_QUERY_PARAM = 'userSettingsJson';
-
-export type PlotsSelectionParam = {
-    selectedGeneOption?: string;
-    selectedGenesetOption?: string;
-    selectedGenericAssayOption?: string;
-    dataType?: string;
-    selectedDataSourceOption?: string;
-    mutationCountBy?: string;
-    structuralVariantCountBy?: string;
-    logScale?: string;
-};
-
-const PlotsSelectionParamProps: Required<PlotsSelectionParam> = {
-    selectedGeneOption: '',
-    selectedGenesetOption: '',
-    selectedGenericAssayOption: '',
-    dataType: '',
-    selectedDataSourceOption: '',
-    mutationCountBy: '',
-    structuralVariantCountBy: '',
-    logScale: '',
-};
-
-export type PlotsColoringParam = {
-    selectedOption?: string;
-    logScale?: string;
-    colorByMutationType?: string;
-    colorByCopyNumber?: string;
-    colorBySv?: string;
-};
-
-const PlotsColoringParamProps: Required<PlotsColoringParam> = {
-    selectedOption: '',
-    logScale: '',
-    colorByMutationType: '',
-    colorByCopyNumber: '',
-    colorBySv: '',
-};
 
 export enum ResultsViewURLQueryEnum {
     clinicallist = 'clinicallist',
@@ -208,18 +174,7 @@ const propertiesMap = _.mapValues(
         },
 
         // plots
-        plots_horz_selection: {
-            isSessionProp: false,
-            nestedObjectProps: PlotsSelectionParamProps,
-        },
-        plots_vert_selection: {
-            isSessionProp: false,
-            nestedObjectProps: PlotsSelectionParamProps,
-        },
-        plots_coloring_selection: {
-            isSessionProp: false,
-            nestedObjectProps: PlotsColoringParamProps,
-        },
+        ...PLOTS_TAB_URL_PARAMS,
 
         // mutations
         mutations_gene: {
