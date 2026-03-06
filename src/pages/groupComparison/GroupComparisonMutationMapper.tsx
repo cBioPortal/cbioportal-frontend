@@ -25,7 +25,10 @@ import { IAnnotationFilterSettings } from 'shared/alterationFiltering/Annotation
 import SettingsMenuButton from 'shared/components/driverAnnotations/SettingsMenuButton';
 import styles from './styles.module.scss';
 import { LegendColorCodes } from 'shared/components/mutationMapper/LegendColorCodes';
-import { ProteinImpactWithoutVusMutationType } from 'cbioportal-frontend-commons';
+import {
+    DefaultTooltip,
+    ProteinImpactWithoutVusMutationType,
+} from 'cbioportal-frontend-commons';
 import { ExtendedMutationTableColumnType } from 'shared/components/mutationTable/MutationTable';
 import GroupComparisonMutationTable from './GroupComparisonMutationTable';
 import MutationMapperDataStore, {
@@ -43,6 +46,7 @@ import mutationMapperStyles from 'shared/components/mutationMapper/mutationMappe
 import { submitToStudyViewPage } from 'pages/resultsView/querySummary/QuerySummaryUtils';
 import checkboxStyles from 'pages/resultsView/enrichments/styles.module.scss';
 import { getServerConfig } from 'config/config';
+import { SelectedDataTooltip } from 'shared/components/plots/SelectedDataAlert';
 
 interface IGroupComparisonMutationMapperProps extends IMutationMapperProps {
     onInit?: (mutationMapper: GroupComparisonMutationMapper) => void;
@@ -279,20 +283,22 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
                 : '';
         if (this.props.queriedStudies) {
             const linkToFilteredStudyView = (
-                <a
-                    onClick={() => {
-                        submitToStudyViewPage(
-                            this.props.queriedStudies,
-                            dataStore.tableDataSamples,
-                            true
-                        );
-                    }}
-                >
-                    <PatientSampleSummary
-                        samples={dataStore.tableDataSamples}
-                        patients={dataStore.tableDataPatients}
-                    />
-                </a>
+                <DefaultTooltip overlay={SelectedDataTooltip}>
+                    <a
+                        onClick={() => {
+                            submitToStudyViewPage(
+                                this.props.queriedStudies,
+                                dataStore.tableDataSamples,
+                                true
+                            );
+                        }}
+                    >
+                        <PatientSampleSummary
+                            samples={dataStore.tableDataSamples}
+                            patients={dataStore.tableDataPatients}
+                        />
+                    </a>
+                </DefaultTooltip>
             );
             filterInfo = (
                 <span>
