@@ -681,8 +681,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     {plots.map(pill => (
                         <li
                             className={
-                                'plots-tab-pills ' +
-                                (pill.selected ? 'active' : '')
+                                'plots-tab-pills' +
+                                (pill.selected ? ' active' : '')
                             }
                             onClick={action(() => {
                                 if (pill.plotModel.horizontal.dataType) {
@@ -712,7 +712,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                 }
                             })}
                         >
-                            <a>{pill.display}</a>
+                            <a
+                                style={{
+                                    color: pill.selected ? '' : '#2e70a3',
+                                }}
+                            >
+                                {pill.display}
+                            </a>
                         </li>
                     ))}
                 </ul>
@@ -4473,6 +4479,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                         axisSelection.selectedCategories =
                                             options || [];
                                     }}
+                                    styles={{
+                                        placeholder: (styles: any) => ({
+                                            ...styles,
+                                            color: '#757575',
+                                        }),
+                                    }}
                                 />
                             </div>
                         )}
@@ -4656,8 +4668,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     {showSearchOptions && (
                         <div>
                             <div className="form-group">
-                                <label>Search Case(s)</label>
+                                <label htmlFor="plotsTabSearchCases">
+                                    Search Case(s)
+                                </label>
                                 <FormControl
+                                    id="plotsTabSearchCases"
                                     type="text"
                                     value={this.searchCaseInput}
                                     onChange={this.setSearchCaseInput}
@@ -4666,8 +4681,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                             </div>
                             {this.canColorByMutationData && (
                                 <div className="form-group">
-                                    <label>Search Mutation(s)</label>
+                                    <label htmlFor="plotsTabSearchMutations">
+                                        Search Mutation(s)
+                                    </label>
                                     <FormControl
+                                        id="plotsTabSearchMutations"
                                         type="text"
                                         value={this.searchMutationInput}
                                         onChange={this.setSearchMutationInput}

@@ -307,7 +307,7 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
                         <div>
                             <a
                                 href={data.url}
-                                style={{ fontSize: 10 }}
+                                style={{ fontSize: 13 }}
                                 target={'_blank'}
                             >
                                 <i

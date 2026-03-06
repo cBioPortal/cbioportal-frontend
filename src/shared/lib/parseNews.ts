@@ -118,7 +118,7 @@ export default function parseNews(html: string) {
 
             if (dateId) {
                 const newsUrl = `https://docs.cbioportal.org/news/#${dateId}`;
-                const readMoreLink = `<p style="margin: 10px 0 0 0; font-size: 12px;"><a href="${newsUrl}" target="_blank" style="color: #2986e2; text-decoration: none;">(Read more)</a></p>`;
+                const readMoreLink = `<p style="margin: 10px 0 0 0; font-size: 12px;"><a href="${newsUrl}" target="_blank" style="color: #2f73a7; text-decoration: none;">(Read more)</a></p>`;
                 $(el).append(readMoreLink);
             }
         }
