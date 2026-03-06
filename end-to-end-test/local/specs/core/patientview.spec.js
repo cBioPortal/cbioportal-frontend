@@ -7,6 +7,7 @@ const {
     waitForPatientView,
     getNestedElement,
     getElement,
+    setCheckboxChecked,
 } = require('../../../shared/specUtils_Async');
 
 const _ = require('lodash');
@@ -405,24 +406,30 @@ describe('patient view page', function() {
             await goToUrlAndSetLocalStorage(ascnPatientViewUrl, true);
             await waitForPatientView();
             const mutationsTable = '[data-test=patientview-mutation-table]';
+
+            // make sure "Clonal", "Mutant Integer Copy #", "CCF", and "Total Integer Copy #" columns are visible
+
             await (
                 await $(`${mutationsTable} button#dropdown-custom-1`)
             ).click();
-            await (
-                await (await $(`${mutationsTable} ul.dropdown-menu`)).$$(
-                    'li label input'
-                )
-            )[21].click();
-            await (
-                await (await $(`${mutationsTable} ul.dropdown-menu`)).$$(
-                    'li label input'
-                )
-            )[22].click();
-            await (
-                await (await $(`${mutationsTable} ul.dropdown-menu`)).$$(
-                    'li label input'
-                )
-            )[23].click();
+
+            const clonalCheckboxSelector = `${mutationsTable} ul.dropdown-menu li label input[data-id="Clonal"]`;
+            if (!(await $(clonalCheckboxSelector).isSelected())) {
+                await setCheckboxChecked(true, clonalCheckboxSelector);
+            }
+            const mutantIntCopyCheckboxSelector = `${mutationsTable} ul.dropdown-menu li label input[data-id="Mutant Integer Copy #"]`;
+            if (!(await $(mutantIntCopyCheckboxSelector).isSelected())) {
+                await setCheckboxChecked(true, mutantIntCopyCheckboxSelector);
+            }
+            const ccfCheckboxSelector = `${mutationsTable} ul.dropdown-menu li label input[data-id="CCF"]`;
+            if (!(await $(ccfCheckboxSelector).isSelected())) {
+                await setCheckboxChecked(true, ccfCheckboxSelector);
+            }
+            const totalIntCopyCheckboxSelector = `${mutationsTable} ul.dropdown-menu li label input[data-id="Total Integer Copy #"]`;
+            if (!(await $(totalIntCopyCheckboxSelector).isSelected())) {
+                await setCheckboxChecked(true, totalIntCopyCheckboxSelector);
+            }
+
             await (
                 await $(`${mutationsTable} button#dropdown-custom-1`)
             ).click();
