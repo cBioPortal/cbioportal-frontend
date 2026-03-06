@@ -3677,10 +3677,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             return caseMatch || mutationMatch;
         };
         const selectedSampleIdsSet = new Set(
-            this.selectedData.map(d => d.sampleId)
+            this.selectedData.map(d => d.uniqueSampleKey)
         );
         const dataSelectionHighlight = (d: IPlotSampleData) => {
-            return selectedSampleIdsSet.has(d.sampleId);
+            return selectedSampleIdsSet.has(d.uniqueSampleKey);
         };
         const highlightFunctions = [
             searchHighlight,
@@ -5781,7 +5781,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                     )}
                                     legendTitle={this.legendTitle}
                                     onDataSelection={this.onDataSelection}
-                                    selectedData={this.selectedData}
                                 />
                             );
                             break;
@@ -6250,18 +6249,20 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                 }}
                             </Observer>
 
-                            {this.selectedData.length > 0 && (
-                                <SelectedDataAlert
-                                    selectedData={this.selectedData}
-                                    scatterPlotData={
-                                        this.scatterPlotData.result!
-                                    }
-                                    plotElementWidth={this.plotElementWidth}
-                                    onDataSelectionCleared={
-                                        this.onDataSelectionCleared
-                                    }
-                                />
-                            )}
+                            {this.selectedData.length > 0 &&
+                                this.scatterPlotData.isComplete &&
+                                this.scatterPlotData.result && (
+                                    <SelectedDataAlert
+                                        selectedData={this.selectedData}
+                                        scatterPlotData={
+                                            this.scatterPlotData.result
+                                        }
+                                        plotElementWidth={this.plotElementWidth}
+                                        onDataSelectionCleared={
+                                            this.onDataSelectionCleared
+                                        }
+                                    />
+                                )}
 
                             <ScrollWrapper
                                 plotElementWidth={this.plotElementWidth}

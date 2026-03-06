@@ -81,7 +81,6 @@ export interface IScatterPlotProps<D extends IBaseScatterPlotData> {
     fontFamily?: string;
     legendTitle?: string | string[];
     onDataSelection?: (selectedSampleData: D[]) => void;
-    selectedData?: IPlotSampleData[];
 }
 // constants related to the gutter
 const GUTTER_TEXT_STYLE = {
@@ -701,7 +700,7 @@ export default class ScatterPlot<
             >
                 <VictoryChart
                     containerComponent={
-                        this.props.selectedData && (
+                        this.props.onDataSelection && (
                             <VictorySelectionContainer
                                 containerRef={this.props.svgRef}
                                 activateSelectedData={false}
