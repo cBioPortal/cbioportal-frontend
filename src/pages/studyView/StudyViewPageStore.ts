@@ -335,6 +335,7 @@ import {
     oqlQueryToStructVarGenePair,
     StructuralVariantFilterQueryFromOql,
     structVarFilterQueryToOql,
+    structVarGeneSubQueryToSymbol,
     StructVarGenePair,
     updateStructuralVariantQuery,
 } from 'pages/studyView/StructVarUtils';
@@ -3923,9 +3924,11 @@ export class StudyViewPageStore
                     break;
                 case ChartTypeEnum.MUTATED_GENES_TABLE:
                 case ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE:
-                case ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE:
                 case ChartTypeEnum.CNA_GENES_TABLE:
                     this.resetGeneFilter(chartUniqueKey);
+                    break;
+                case ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE:
+                    this.resetStructVarFilter(chartUniqueKey);
                     break;
                 case ChartTypeEnum.MUTATION_TYPE_COUNTS_TABLE:
                     this.updateMutationDataFilters(chartUniqueKey, [[]]);
@@ -4505,7 +4508,13 @@ export class StudyViewPageStore
     public getStructVarFiltersByUniqueKey(uniqueKey: string): string[][] {
         const filters = _.map(
             this._structVarFilterSet.get(uniqueKey),
-            filterSet => _.map(filterSet, structVarFilterQueryToOql)
+            filterSet =>
+                _.map(filterSet, query =>
+                    generateStructVarTableCellKey(
+                        structVarGeneSubQueryToSymbol(query.gene1Query),
+                        structVarGeneSubQueryToSymbol(query.gene2Query)
+                    )
+                )
         );
         return toJS(filters);
     }
