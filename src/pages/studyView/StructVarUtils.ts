@@ -24,6 +24,21 @@ export type StructVarGenePair = {
     gene2HugoSymbolOrOql: string;
 };
 
+/**
+ * Converts a StructuralVariantGeneSubQuery to a hugo symbol string
+ * suitable for use in generateStructVarTableCellKey.
+ * Maps specialValue 'ANY_GENE' to '*', and returns undefined for
+ * 'NO_GENE' or missing values (generateStructVarTableCellKey will
+ * fall back to '-').
+ */
+export function structVarGeneSubQueryToSymbol(
+    subQuery: StructuralVariantGeneSubQuery
+): string | undefined {
+    if (subQuery.hugoSymbol) return subQuery.hugoSymbol;
+    if (subQuery.specialValue === 'ANY_GENE') return STRUCTVARAnyGeneStr;
+    return undefined;
+}
+
 // This function acts as a toggle. If present in 'geneQueries', the query
 // is removed. If absent, a gene1/gene2 struct var query is added.
 export function updateStructuralVariantQuery(

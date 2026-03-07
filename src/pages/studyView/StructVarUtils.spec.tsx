@@ -8,10 +8,13 @@ import {
 } from 'shared/lib/oql/oqlfilter';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import {
+    generateStructVarTableCellKey,
     oqlQueryToStructVarGenePair,
     StructuralVariantFilterQueryFromOql,
+    structVarGeneSubQueryToSymbol,
     StructVarGenePair,
 } from 'pages/studyView/StructVarUtils';
+import { StructuralVariantGeneSubQuery } from 'cbioportal-ts-api-client';
 
 describe('StructVarUtils', () => {
     describe('StructuralVariantFilterQueryFromOql', () => {
@@ -221,5 +224,85 @@ describe('StructVarUtils', () => {
                 );
             }
         );
+    });
+
+    describe('structVarGeneSubQueryToSymbol', () => {
+        it('returns hugoSymbol when present', () => {
+            const subQuery = {
+                hugoSymbol: 'ERG',
+            } as StructuralVariantGeneSubQuery;
+            assert.equal(structVarGeneSubQueryToSymbol(subQuery), 'ERG');
+        });
+
+        it('returns STRUCTVARAnyGeneStr ("*") for ANY_GENE specialValue', () => {
+            const subQuery = {
+                specialValue: 'ANY_GENE',
+            } as StructuralVariantGeneSubQuery;
+            assert.equal(
+                structVarGeneSubQueryToSymbol(subQuery),
+                STRUCTVARAnyGeneStr
+            );
+        });
+
+        it('returns undefined for NO_GENE specialValue', () => {
+            const subQuery = {
+                specialValue: 'NO_GENE',
+            } as StructuralVariantGeneSubQuery;
+            assert.isUndefined(structVarGeneSubQueryToSymbol(subQuery));
+        });
+
+        it('returns undefined when neither hugoSymbol nor specialValue is set', () => {
+            const subQuery = {} as StructuralVariantGeneSubQuery;
+            assert.isUndefined(structVarGeneSubQueryToSymbol(subQuery));
+        });
+    });
+
+    describe('generateStructVarTableCellKey', () => {
+        it('produces gene1::gene2 format for two defined genes', () => {
+            assert.equal(
+                generateStructVarTableCellKey('ERG', 'TMPRSS2'),
+                'ERG::TMPRSS2'
+            );
+        });
+
+        it('falls back to STRUCTVARNullGeneStr ("-") for undefined gene1', () => {
+            assert.equal(
+                generateStructVarTableCellKey(undefined, 'TMPRSS2'),
+                `${STRUCTVARNullGeneStr}::TMPRSS2`
+            );
+        });
+
+        it('falls back to STRUCTVARNullGeneStr ("-") for undefined gene2', () => {
+            assert.equal(
+                generateStructVarTableCellKey('ERG', undefined),
+                `ERG::${STRUCTVARNullGeneStr}`
+            );
+        });
+
+        it('produces "ERG::*" for ERG with ANY_GENE (via structVarGeneSubQueryToSymbol)', () => {
+            const gene1 = structVarGeneSubQueryToSymbol({
+                hugoSymbol: 'ERG',
+            } as StructuralVariantGeneSubQuery);
+            const gene2 = structVarGeneSubQueryToSymbol({
+                specialValue: 'ANY_GENE',
+            } as StructuralVariantGeneSubQuery);
+            assert.equal(
+                generateStructVarTableCellKey(gene1, gene2),
+                `ERG::${STRUCTVARAnyGeneStr}`
+            );
+        });
+
+        it('produces "-::TMPRSS2" for NO_GENE with TMPRSS2 (via structVarGeneSubQueryToSymbol)', () => {
+            const gene1 = structVarGeneSubQueryToSymbol({
+                specialValue: 'NO_GENE',
+            } as StructuralVariantGeneSubQuery);
+            const gene2 = structVarGeneSubQueryToSymbol({
+                hugoSymbol: 'TMPRSS2',
+            } as StructuralVariantGeneSubQuery);
+            assert.equal(
+                generateStructVarTableCellKey(gene1, gene2),
+                `${STRUCTVARNullGeneStr}::TMPRSS2`
+            );
+        });
     });
 });
