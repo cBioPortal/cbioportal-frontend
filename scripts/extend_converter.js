@@ -1,6 +1,5 @@
 const fs = require('fs');
 const path = require('path');
-const camelcase = require('camelcase');
 
 const [node, script, folder, ...classNames] = process.argv;
 for (const className of classNames) {
@@ -29,7 +28,8 @@ for (const className of classNames) {
         process.exit(1);
     }
 
-    const modified_swagger = fixRequestBodyNames(swagger);
+    let modified_swagger = fixRequestBodyNames(swagger);
+    modified_swagger = patchGenericAssayDefinitions(modified_swagger);
     fs.writeFileSync(filePath, JSON.stringify(modified_swagger, null, 2));
 }
 
@@ -69,7 +69,7 @@ function extractNameFromRefKey(bodyParam) {
     const refValue = bodyParam.schema.$ref.replace('#/definitions/', '');
 
     // Convert the extracted value to camelCase
-    const camelCaseName = camelcase(refValue);
+    const camelCaseName = camelCase(refValue);
 
     // Update the name field
     bodyParam.name = camelCaseName;
@@ -82,6 +82,42 @@ function extractNameFromDescription(bodyParam) {
     if (isArray) {
         description = bodyParam.schema.description.replace('List of', '');
     }
-    bodyParam.name = camelcase(description.toLowerCase());
+    bodyParam.name = camelCase(description.toLowerCase());
     return bodyParam;
+}
+
+function patchGenericAssayDefinitions(json_data) {
+    if (json_data.definitions) {
+        if (json_data.definitions.GenericAssayMetaFilter) {
+            const filterProperties =
+                json_data.definitions.GenericAssayMetaFilter.properties;
+            if (filterProperties) {
+                if (!filterProperties.keyword) {
+                    filterProperties.keyword = { type: 'string' };
+                }
+                if (!filterProperties.limit) {
+                    filterProperties.limit = { type: 'integer', format: 'int32' };
+                }
+                if (!filterProperties.offset) {
+                    filterProperties.offset = { type: 'integer', format: 'int32' };
+                }
+                if (filterProperties.genericAssayStableIds) {
+                    delete filterProperties.genericAssayStableIds.minItems;
+                }
+                if (filterProperties.molecularProfileIds) {
+                    delete filterProperties.molecularProfileIds.minItems;
+                }
+            }
+        }
+        if (json_data.definitions.GenericAssayMeta) {
+            const metaProperties =
+                json_data.definitions.GenericAssayMeta.properties;
+            if (metaProperties) {
+                if (!metaProperties.molecularProfileId) {
+                    metaProperties.molecularProfileId = { type: 'string' };
+                }
+            }
+        }
+    }
+    return json_data;
 }

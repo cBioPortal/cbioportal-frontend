@@ -71,7 +71,7 @@ export async function fetchGenericAssayMetaByMolecularProfileIdsGroupedByGeneric
             fetchGenericAssayMetaByProfileIds(
                 _.map(
                     genericAssayProfilesGroupedByGenericAssayType[
-                        genericAssayType
+                    genericAssayType
                     ],
                     profile => profile.molecularProfileId
                 )
@@ -143,31 +143,39 @@ export async function fetchGenericAssayMetaGroupedByMolecularProfileIdSuffix(
     return genericAssayMetaGroupedByProfileIdSuffix;
 }
 
-export function fetchGenericAssayMetaByProfileIds(
-    genericAssayProfileIds: string[]
+export async function fetchGenericAssayMetaByProfileIds(
+    molecularProfileIds: string[],
+    keyword?: string,
+    limit?: number,
+    offset?: number
 ) {
-    if (genericAssayProfileIds.length > 0) {
-        return client.fetchGenericAssayMetaUsingPOST({
+    if (molecularProfileIds.length > 0) {
+        return await client.fetchGenericAssayMetaUsingPOST({
             genericAssayMetaFilter: {
-                molecularProfileIds: genericAssayProfileIds,
-                // the Swagger-generated type expected by the client method below
-                // incorrectly requires both molecularProfileIds and genericAssayStableIds;
-                // use 'as' to tell TypeScript that this object really does fit.
-            } as GenericAssayMetaFilter,
+                molecularProfileIds,
+                keyword,
+                limit,
+                offset,
+            },
         });
     }
     return Promise.resolve([]);
 }
 
-export function fetchGenericAssayMetaByEntityIds(entityIds: string[]) {
-    if (entityIds.length > 0) {
-        return client.fetchGenericAssayMetaUsingPOST({
+export async function fetchGenericAssayMetaByEntityIds(
+    genericAssayStableIds: string[],
+    keyword?: string,
+    limit?: number,
+    offset?: number
+) {
+    if (genericAssayStableIds.length > 0) {
+        return await client.fetchGenericAssayMetaUsingPOST({
             genericAssayMetaFilter: {
-                genericAssayStableIds: entityIds,
-                // the Swagger-generated type expected by the client method below
-                // incorrectly requires both molecularProfileIds and genericAssayStableIds;
-                // use 'as' to tell TypeScript that this object really does fit.
-            } as GenericAssayMetaFilter,
+                genericAssayStableIds,
+                keyword,
+                limit,
+                offset,
+            },
         });
     }
     return Promise.resolve([]);
@@ -244,9 +252,9 @@ export function makeGenericAssayPlotsTabOption(
         label: label,
         plotAxisLabel: shouldUseCompactLabelForPlotAxis
             ? formatGenericAssayCompactLabelByNameAndId(
-                  meta.stableId,
-                  entityName
-              )
+                meta.stableId,
+                entityName
+            )
             : entityName,
     };
 }
