@@ -337,6 +337,7 @@ import {
     oqlQueryToStructVarGenePair,
     StructuralVariantFilterQueryFromOql,
     structVarFilterQueryToOql,
+    structVarGeneSubQueryToSymbol,
     StructVarGenePair,
     updateStructuralVariantQuery,
 } from 'pages/studyView/StructVarUtils';
@@ -4595,7 +4596,13 @@ export class StudyViewPageStore
     public getStructVarFiltersByUniqueKey(uniqueKey: string): string[][] {
         const filters = _.map(
             this._structVarFilterSet.get(uniqueKey),
-            filterSet => _.map(filterSet, structVarFilterQueryToOql)
+            filterSet =>
+                _.map(filterSet, query =>
+                    generateStructVarTableCellKey(
+                        structVarGeneSubQueryToSymbol(query.gene1Query),
+                        structVarGeneSubQueryToSymbol(query.gene2Query)
+                    )
+                )
         );
         return toJS(filters);
     }
