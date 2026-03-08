@@ -1,6 +1,7 @@
 import $ from 'jquery';
 import { getServerConfig } from 'config/config';
 import { getBrowserWindow, isWebdriver } from 'cbioportal-frontend-commons';
+import { datadogRum } from '@datadog/browser-rum';
 import _ from 'lodash';
 import { log } from './consoleLog';
 import { StudyViewPageStore } from '../../pages/studyView/StudyViewPageStore';
@@ -9,14 +10,14 @@ import { UniversalAnalytics } from 'google.analytics';
 
 export type GAEvent = {
     category:
-        | 'studyPage'
-        | 'resultsView'
-        | 'quickSearch'
-        | 'download'
-        | 'groupComparison'
-        | 'homePage'
-        | 'patientView'
-        | 'linkout';
+    | 'studyPage'
+    | 'resultsView'
+    | 'quickSearch'
+    | 'download'
+    | 'groupComparison'
+    | 'homePage'
+    | 'patientView'
+    | 'linkout';
     action: string;
     label?: string | string[];
     fieldsObject?: { [key: string]: string | number };
@@ -47,6 +48,9 @@ export function initializeTracking() {
             );
         }
     }
+
+    // Initialize Datadog RUM
+    initializeDatadogRUM();
 
     $('body').on('click', '[data-event]', el => {
         try {
@@ -159,6 +163,25 @@ export function embedGoogleAnalyticsVersion4(ga_code: string) {
         gtag('config', ga_code);
 
         sendToLoggly({ message: 'PAGE_VIEW' });
+    });
+}
+
+export function initializeDatadogRUM() {
+    const config = getServerConfig();
+
+    if (!config.datadog_rum_application_id || !config.datadog_rum_client_token) {
+        return;
+    }
+
+    datadogRum.init({
+        applicationId: config.datadog_rum_application_id,
+        clientToken: config.datadog_rum_client_token,
+        site: config.datadog_rum_site || 'datadoghq.com',
+        service: config.app_name || 'cbioportal',
+        env: config.datadog_rum_env || 'public',
+        sessionSampleRate: config.datadog_rum_session_sample_rate || 100,
+        sessionReplaySampleRate: config.datadog_rum_session_replay_sample_rate || 20,
+        defaultPrivacyLevel: 'mask-user-input',
     });
 }
 

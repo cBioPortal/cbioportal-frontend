@@ -7,7 +7,7 @@ import {
     ClinicalAttribute,
 } from 'cbioportal-ts-api-client';
 import { cleanAndDerive } from './clinicalInformation/lib/clinicalAttributesUtil.js';
-import styles from './patientHeader/style/clinicalAttributes.scss';
+import styles from './patientHeader/style/clinicalAttributes.module.scss';
 import naturalSort from 'javascript-natural-sort';
 import { ClinicalEvent, ClinicalEventData } from 'cbioportal-ts-api-client';
 import { SampleLabelHTML } from 'shared/components/sampleLabel/SampleLabel';

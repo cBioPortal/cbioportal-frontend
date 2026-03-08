@@ -290,6 +290,7 @@ export default class ResultsViewOncoprint extends React.Component<
     @observable showClinicalTrackLegends: boolean = true;
     @observable _onlyShowClinicalLegendForAlteredCases = false;
     @observable showOqlInLabels = false;
+    @observable useOqlFilteringForVafHeatmap: boolean = true;
 
     @computed get onlyShowClinicalLegendForAlteredCases() {
         return (
@@ -1797,11 +1798,94 @@ export default class ResultsViewOncoprint extends React.Component<
 
     readonly sampleHeatmapTracks = makeHeatmapTracksMobxPromise(this, true);
     readonly patientHeatmapTracks = makeHeatmapTracksMobxPromise(this, false);
+
+    private applyOqlFilterToHeatmapTracks(
+        tracks: IHeatmapTrackSpec[]
+    ): IHeatmapTrackSpec[] {
+        if (
+            !this.useOqlFilteringForVafHeatmap ||
+            !this.props.store.oqlFilteredAlterations.isComplete
+        ) {
+            return tracks;
+        }
+
+        const oqlFilteredAlterations = this.props.store.oqlFilteredAlterations
+            .result!;
+        const isSampleMode =
+            this.oncoprintAnalysisCaseType === OncoprintAnalysisCaseType.SAMPLE;
+
+        const queriedGenes = this.props.store.genes.result || [];
+        const queriedGeneSymbols = new Set(
+            queriedGenes.map(g => g.hugoGeneSymbol.toUpperCase())
+        );
+
+        return tracks.map(track => {
+            if (
+                track.molecularAlterationType !==
+                AlterationTypeConstants.MUTATION_EXTENDED
+            ) {
+                return track;
+            }
+
+            const geneSymbol = track.label.toUpperCase();
+
+            if (!queriedGeneSymbols.has(geneSymbol)) {
+                return track;
+            }
+
+            const oqlMatchingCaseKeys = new Set<string>();
+            oqlFilteredAlterations.forEach((alt: any) => {
+                if (
+                    alt.hugoGeneSymbol &&
+                    alt.hugoGeneSymbol.toUpperCase() === geneSymbol &&
+                    alt.molecularProfileAlterationType === 'MUTATION_EXTENDED'
+                ) {
+                    if (isSampleMode) {
+                        oqlMatchingCaseKeys.add(alt.uniqueSampleKey);
+                    } else {
+                        oqlMatchingCaseKeys.add(alt.uniquePatientKey);
+                    }
+                }
+            });
+
+            const filteredData = track.data.map(datum => {
+                const caseKey = datum.uid;
+                if (oqlMatchingCaseKeys.has(caseKey)) {
+                    return datum;
+                } else {
+                    return {
+                        ...datum,
+                        profile_data: null,
+                        na: datum.profile_data === null ? datum.na : false,
+                    };
+                }
+            });
+
+            return {
+                ...track,
+                data: filteredData,
+            };
+        });
+    }
+
     @computed get heatmapTracks() {
-        return this.oncoprintAnalysisCaseType ===
-            OncoprintAnalysisCaseType.SAMPLE
-            ? this.sampleHeatmapTracks
-            : this.patientHeatmapTracks;
+        const basePromise =
+            this.oncoprintAnalysisCaseType === OncoprintAnalysisCaseType.SAMPLE
+                ? this.sampleHeatmapTracks
+                : this.patientHeatmapTracks;
+
+        if (!basePromise.isComplete || !this.useOqlFilteringForVafHeatmap) {
+            return basePromise;
+        }
+
+        const filteredTracks = this.applyOqlFilterToHeatmapTracks(
+            basePromise.result!
+        );
+
+        return {
+            ...basePromise,
+            result: filteredTracks,
+        };
     }
 
     readonly samplegGenericAssayHeatmapTracks = makeGenericAssayProfileHeatmapTracksMobxPromise(
@@ -1972,6 +2056,11 @@ export default class ResultsViewOncoprint extends React.Component<
         this.setHeatmapTracks(molecularProfileId, []);
     }
 
+    @action.bound
+    public toggleVafHeatmapOqlFiltering() {
+        this.useOqlFilteringForVafHeatmap = !this.useOqlFilteringForVafHeatmap;
+    }
+
     readonly additionalTrackGroupHeaders = remoteData({
         await: () => [this.props.store.molecularProfileIdToMolecularProfile],
         invoke: () => {
@@ -1984,7 +2073,10 @@ export default class ResultsViewOncoprint extends React.Component<
                     () => this.clusteredHeatmapTrackGroupIndex,
                     this.clusterHeatmapByIndex,
                     () => this.sortByData(),
-                    this.removeAdditionalTrackSection
+                    this.removeAdditionalTrackSection,
+                    this.props.store.queryContainsOql,
+                    this.useOqlFilteringForVafHeatmap,
+                    this.toggleVafHeatmapOqlFiltering
                 )
             );
         },

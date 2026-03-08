@@ -270,6 +270,9 @@ export function makeHeatmapTrackTooltip(
                         (trackSpec as IHeatmapTrackSpec).genericAssayType!
                     )}: `;
                     break;
+                case AlterationTypeConstants.MUTATION_EXTENDED:
+                    data_header = 'VAF: ';
+                    break;
                 default:
                     data_header = 'Value: ';
                     break;

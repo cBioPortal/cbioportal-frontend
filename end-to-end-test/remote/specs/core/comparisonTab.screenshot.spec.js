@@ -8,7 +8,7 @@ const {
     getElement,
     clickElement,
     waitForElementDisplayed,
-    waitForOncoprint,
+    setCheckboxChecked,
 } = require('../../../shared/specUtils_Async');
 const { assertScreenShotMatch } = require('../../../shared/lib/testUtils');
 
@@ -22,7 +22,7 @@ describe('results view comparison tab screenshot tests', () => {
             );
         });
         it('results view comparison tab overlap tab upset plot view', async () => {
-            await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
+            //await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
             await (
                 await getElement('div[data-test="ComparisonPageOverlapTabDiv"]')
             ).waitForDisplayed({
@@ -51,7 +51,7 @@ describe('results view comparison tab screenshot tests', () => {
                     'div[data-test="ComparisonPageSurvivalTabDiv"]'
                 )
             ).waitForDisplayed({ timeout: 60000 });
-            await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
+            //await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
             const res = await browser.checkElement(
                 'div[data-test="ComparisonPageSurvivalTabDiv"]',
                 '',
@@ -67,7 +67,7 @@ describe('results view comparison tab screenshot tests', () => {
             await getElement('div[data-test="ComparisonPageSurvivalTabDiv"]', {
                 timeout: 60000,
             });
-            await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
+            //await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
             const res = await browser.checkElement(
                 'div[data-test="ComparisonPageSurvivalTabDiv"]',
                 '',
@@ -98,7 +98,7 @@ describe('results view comparison tab screenshot tests', () => {
             await clickElement(
                 'div[data-test="ComparisonPageClinicalTabDiv"] div[data-test="LazyMobXTable"] span[data-test="Mutation Count"]'
             );
-            await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
+            //await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
             const res = await browser.checkElement(
                 'div[data-test="ComparisonPageClinicalTabDiv"]',
                 '',
@@ -108,7 +108,8 @@ describe('results view comparison tab screenshot tests', () => {
         });
 
         it('results view comparison tab clinical tab swaped axes Kruskal Wallis test', async () => {
-            await clickElement(
+            await setCheckboxChecked(
+                true,
                 'div[data-test="ComparisonPageClinicalTabDiv"] input[data-test="SwapAxes"]'
             );
             await (
@@ -116,7 +117,7 @@ describe('results view comparison tab screenshot tests', () => {
                     'div[data-test="ComparisonPageClinicalTabDiv"] div[data-test="ClinicalTabPlotDiv"]'
                 )
             ).waitForDisplayed({ timeout: 20000 });
-            await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
+            //await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
             const res = await browser.checkElement(
                 'div[data-test="ComparisonPageClinicalTabDiv"]',
                 '',
@@ -126,7 +127,8 @@ describe('results view comparison tab screenshot tests', () => {
         });
 
         it('results view comparison tab clinical tab log scale  Kruskal Wallis test', async () => {
-            await clickElement(
+            await setCheckboxChecked(
+                true,
                 'div[data-test="ComparisonPageClinicalTabDiv"] input[data-test="logScale"]'
             );
             await (
@@ -134,7 +136,7 @@ describe('results view comparison tab screenshot tests', () => {
                     'div[data-test="ComparisonPageClinicalTabDiv"] div[data-test="ClinicalTabPlotDiv"]'
                 )
             ).waitForDisplayed({ timeout: 20000 });
-            await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
+            //await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
             const res = await browser.checkElement(
                 'div[data-test="ComparisonPageClinicalTabDiv"]',
                 '',
@@ -152,7 +154,7 @@ describe('results view comparison tab screenshot tests', () => {
                     'div[data-test="ComparisonPageClinicalTabDiv"] div[data-test="ClinicalTabPlotDiv"]'
                 )
             ).waitForDisplayed({ timeout: 20000 });
-            await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
+            //await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
             const res = await browser.checkElement(
                 'div[data-test="ComparisonPageClinicalTabDiv"]',
                 '',
@@ -168,7 +170,7 @@ describe('results view comparison tab screenshot tests', () => {
                     'div[data-test="ComparisonPageClinicalTabDiv"] div[data-test="ClinicalTabPlotDiv"]'
                 )
             ).waitForDisplayed({ timeout: 20000 });
-            await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
+            //await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
             const res = await browser.checkElement(
                 'div[data-test="ComparisonPageClinicalTabDiv"]',
                 '',
@@ -184,7 +186,7 @@ describe('results view comparison tab screenshot tests', () => {
                     'div[data-test="ComparisonPageClinicalTabDiv"] div[data-test="ClinicalTabPlotDiv"]'
                 )
             ).waitForDisplayed({ timeout: 20000 });
-            await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
+            //await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
             const res = await browser.checkElement(
                 'div[data-test="ComparisonPageClinicalTabDiv"]',
                 '',
@@ -194,10 +196,11 @@ describe('results view comparison tab screenshot tests', () => {
         });
 
         it('results view comparison tab clinical tab stacked bar chart swaped axes Chi squared test', async () => {
-            await clickElement(
+            await setCheckboxChecked(
+                true,
                 'div[data-test="ComparisonPageClinicalTabDiv"] input[data-test="SwapAxes"]'
             );
-            await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
+            //await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
             await (
                 await getElement(
                     'div[data-test="ComparisonPageClinicalTabDiv"] div[data-test="ClinicalTabPlotDiv"]'
@@ -212,10 +215,12 @@ describe('results view comparison tab screenshot tests', () => {
         });
 
         it('results view comparison tab clinical tab stacked bar chart horizontal bars Chi squared test', async () => {
-            await clickElement(
+            await setCheckboxChecked(
+                false,
                 'div[data-test="ComparisonPageClinicalTabDiv"] input[data-test="SwapAxes"]'
             );
-            await clickElement(
+            await setCheckboxChecked(
+                true,
                 'div[data-test="ComparisonPageClinicalTabDiv"] input[data-test="HorizontalBars"]'
             );
             await (
@@ -223,7 +228,7 @@ describe('results view comparison tab screenshot tests', () => {
                     'div[data-test="ComparisonPageClinicalTabDiv"] div[data-test="ClinicalTabPlotDiv"]'
                 )
             ).waitForDisplayed({ timeout: 20000 });
-            await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
+            //await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
             const res = await browser.checkElement(
                 'div[data-test="ComparisonPageClinicalTabDiv"]',
                 '',
@@ -294,7 +299,7 @@ describe('results view comparison tab screenshot tests', () => {
             ).waitForDisplayed({
                 timeout: 20000,
             });
-            await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
+            //await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
             const res = await browser.checkElement(
                 '.msk-tab:not(.hiddenByPosition)',
                 '',
@@ -316,7 +321,7 @@ describe('results view comparison tab screenshot tests', () => {
                 timeout: 10000,
             });
             await clickElement('b=MERTK');
-            await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
+            //await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
             const res = await browser.checkElement(
                 '.msk-tab:not(.hiddenByPosition)',
                 '',
@@ -345,7 +350,7 @@ describe('results view comparison tab screenshot tests', () => {
             ).waitForDisplayed({
                 timeout: 20000,
             });
-            await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
+            //await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
             const res = await browser.checkElement(
                 '.msk-tab:not(.hiddenByPosition)',
                 '',
@@ -369,7 +374,7 @@ describe('results view comparison tab screenshot tests', () => {
                 timeout: 10000,
             });
             await clickElement('b=FASN');
-            await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
+            //await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
             const res = await browser.checkElement(
                 '.msk-tab:not(.hiddenByPosition)',
                 '',

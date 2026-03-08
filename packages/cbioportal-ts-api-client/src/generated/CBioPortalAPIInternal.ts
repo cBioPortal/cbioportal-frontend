@@ -14,6 +14,8 @@ export type AlterationCountByGene = {
 
         'numberOfAlteredCases': number
 
+        'numberOfAlteredCasesOnPanel': number
+
         'numberOfProfiledCases': number
 
         'qValue': number
@@ -39,6 +41,8 @@ export type AlterationCountByStructuralVariant = {
         'matchingGenePanelIds': Array < string >
 
         'numberOfAlteredCases': number
+
+        'numberOfAlteredCasesOnPanel': number
 
         'numberOfProfiledCases': number
 
@@ -339,6 +343,33 @@ export type CoExpressionFilter = {
         'sampleListId': string
 
 };
+export type ContentDisposition = {
+    'attachment': boolean
+
+        'charset': {
+        'registered': boolean
+
+    }
+
+        'creationDate': string
+
+        'filename': string
+
+        'formData': boolean
+
+        'inline': boolean
+
+        'modificationDate': string
+
+        'name': string
+
+        'readDate': string
+
+        'size': number
+
+        'type': string
+
+};
 export type CopyNumberCount = {
     'alteration': number
 
@@ -368,6 +399,8 @@ export type CopyNumberCountByGene = {
 
         'numberOfAlteredCases': number
 
+        'numberOfAlteredCasesOnPanel': number
+
         'numberOfProfiledCases': number
 
         'qValue': number
@@ -381,16 +414,6 @@ export type CopyNumberCountIdentifier = {
     'alteration': number
 
         'entrezGeneId': number
-
-};
-export type CosmicMutation = {
-    'cosmicMutationId': string
-
-        'count': number
-
-        'keyword': string
-
-        'proteinChange': string
 
 };
 export type CountSummary = {
@@ -711,6 +734,8 @@ export type GenomicDataCount = {
 
         'label': string
 
+        'sampleIds': Array < string >
+
         'uniqueCount': number
 
         'value': string
@@ -790,6 +815,45 @@ export type GroupStatistics = {
         'name': string
 
         'standardDeviation': number
+
+};
+export type HttpMethod = {};
+export type HttpRange = {};
+export type HttpStatusCode = {
+    'error': boolean
+
+        'is1xxInformational': boolean
+
+        'is2xxSuccessful': boolean
+
+        'is3xxRedirection': boolean
+
+        'is4xxClientError': boolean
+
+        'is5xxServerError': boolean
+
+};
+export type MediaType = {
+    'parameters': {}
+
+    'charset': {
+        'registered': boolean
+
+    }
+
+    'concrete': boolean
+
+        'qualityValue': number
+
+        'subtype': string
+
+        'subtypeSuffix': string
+
+        'type': string
+
+        'wildcardSubtype': boolean
+
+        'wildcardType': boolean
 
 };
 export type MolecularProfileCaseIdentifier = {
@@ -907,48 +971,58 @@ export type MutationSpectrumFilter = {
         'sampleListId': string
 
 };
-export type NamespaceAttributeCount = {
-    'outerKey': string
-
+export type NamespaceAttribute = {
     'innerKey': string
 
-        'count': number
+        'outerKey': string
+
+};
+export type NamespaceAttributeCount = {
+    'count': number
+
+        'innerKey': string
+
+        'outerKey': string
 
 };
 export type NamespaceAttributeCountFilter = {
-    'sampleIdentifiers': Array < SampleIdentifier >
+    'namespaceAttributes': Array < NamespaceAttribute >
 
-        'namespaceAttributes': Array < NamespaceAttribute >
+        'sampleIdentifiers': Array < SampleIdentifier >
 
 };
 export type NamespaceComparisonFilter = {
-    'sampleIdentifiers': Array < SampleIdentifier >
+    'namespaceAttribute': NamespaceAttribute
 
-        'namespaceAttribute': NamespaceAttribute
+        'sampleIdentifiers': Array < SampleIdentifier >
 
         'values': Array < string >
 
 };
 export type NamespaceData = {
-    'outerKey': string
+    'attrValue': string
 
-    'innerKey': string
+        'innerKey': string
 
-    'sampleId': string
+        'outerKey': string
 
-    'patientId': string
+        'patientId': string
 
-    'studyId': string
+        'sampleId': string
 
-    'attrValue': Array < string >
+        'studyId': string
+
+        'uniquePatientKey': string
+
+        'uniqueSampleKey': string
 
 };
 export type NamespaceDataCount = {
     'count': number
 
-        'value': string
-
         'totalCount': number
+
+        'value': string
 
 };
 export type NamespaceDataCountFilter = {
@@ -958,25 +1032,20 @@ export type NamespaceDataCountFilter = {
 
 };
 export type NamespaceDataCountItem = {
-    'outerKey': string
+    'counts': Array < NamespaceDataCount >
 
         'innerKey': string
 
-        'counts': Array < NamespaceDataCount >
+        'outerKey': string
 
 };
 export type NamespaceDataFilter = {
-    'outerKey': string
-
-        'innerKey': string
-
-        'values': Array < Array < DataFilterValue >>
-
-};
-export type NamespaceAttribute = {
     'innerKey': string
 
         'outerKey': string
+
+        'values': Array < Array < DataFilterValue >
+        >
 
 };
 export type OredPatientTreatmentFilters = {
@@ -1054,7 +1123,9 @@ export type ResourceData = {
 
 };
 export type ResourceDefinition = {
-    'description': string
+    'customMetaData': string
+
+        'description': string
 
         'displayName': string
 
@@ -1067,6 +1138,201 @@ export type ResourceDefinition = {
         'resourceType': "STUDY" | "SAMPLE" | "PATIENT"
 
         'studyId': string
+
+};
+export type ResponseEntityReferenceGenomeGene = {
+    'body': ReferenceGenomeGene
+
+        'headers': {
+        'host': {
+            'address': {
+                'address': string
+
+                    'anyLocalAddress': boolean
+
+                    'canonicalHostName': string
+
+                    'hostAddress': string
+
+                    'hostName': string
+
+                    'linkLocalAddress': boolean
+
+                    'loopbackAddress': boolean
+
+                    'mcglobal': boolean
+
+                    'mclinkLocal': boolean
+
+                    'mcnodeLocal': boolean
+
+                    'mcorgLocal': boolean
+
+                    'mcsiteLocal': boolean
+
+                    'multicastAddress': boolean
+
+                    'siteLocalAddress': boolean
+
+            }
+
+            'hostName': string
+
+                'hostString': string
+
+                'port': number
+
+                'unresolved': boolean
+
+        }
+
+        'accept': Array < MediaType >
+
+            'acceptCharset': Array < {
+                'registered': boolean
+
+            } >
+
+            'acceptLanguage': Array < {
+                'range': string
+
+                    'weight': number
+
+            } >
+
+            'acceptLanguageAsLocales': Array < {
+                'country': string
+
+                    'displayCountry': string
+
+                    'displayLanguage': string
+
+                    'displayName': string
+
+                    'displayScript': string
+
+                    'displayVariant': string
+
+                    'extensionKeys': Array < string >
+
+                    'iso3Country': string
+
+                    'iso3Language': string
+
+                    'language': string
+
+                    'script': string
+
+                    'unicodeLocaleAttributes': Array < string >
+
+                    'unicodeLocaleKeys': Array < string >
+
+                    'variant': string
+
+            } >
+
+            'acceptPatch': Array < MediaType >
+
+            'accessControlAllowCredentials': boolean
+
+            'accessControlAllowHeaders': Array < string >
+
+            'accessControlAllowMethods': Array < HttpMethod >
+
+            'accessControlAllowOrigin': string
+
+            'accessControlExposeHeaders': Array < string >
+
+            'accessControlMaxAge': number
+
+            'accessControlRequestHeaders': Array < string >
+
+            'accessControlRequestMethod': HttpMethod
+
+            'all': {}
+
+            'allow': Array < HttpMethod >
+
+            'basicAuth': string
+
+            'bearerAuth': string
+
+            'cacheControl': string
+
+            'connection': Array < string >
+
+            'contentDisposition': ContentDisposition
+
+            'contentLanguage': {
+            'country': string
+
+                'displayCountry': string
+
+                'displayLanguage': string
+
+                'displayName': string
+
+                'displayScript': string
+
+                'displayVariant': string
+
+                'extensionKeys': Array < string >
+
+                'iso3Country': string
+
+                'iso3Language': string
+
+                'language': string
+
+                'script': string
+
+                'unicodeLocaleAttributes': Array < string >
+
+                'unicodeLocaleKeys': Array < string >
+
+                'variant': string
+
+        }
+
+            'contentLength': number
+
+            'contentType': MediaType
+
+            'date': number
+
+            'empty': boolean
+
+            'etag': string
+
+            'expires': number
+
+            'ifMatch': Array < string >
+
+            'ifModifiedSince': number
+
+            'ifNoneMatch': Array < string >
+
+            'ifUnmodifiedSince': number
+
+            'lastModified': number
+
+            'location': string
+
+            'origin': string
+
+            'pragma': string
+
+            'range': Array < HttpRange >
+
+            'upgrade': string
+
+            'vary': Array < string >
+
+    }
+
+        'statusCode': HttpStatusCode
+
+        'statusCodeValue': number
 
 };
 export type Sample = {
@@ -1313,6 +1579,8 @@ export type StudyViewFilter = {
         'structuralVariantFilters': Array < StudyViewStructuralVariantFilter >
 
         'studyIds': Array < string >
+
+        'uniqueStudyIds': Array < string >
 
 };
 export type StudyViewStructuralVariantFilter = {
@@ -1673,118 +1941,6 @@ export default class CBioPortalAPIInternal {
         let keys = Object.keys(queryParameters);
         return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
     };
-
-    /**
-     * Get counts for namespace attributes according to their data availability for selected samples/patients
-     * @method
-     * @name CBioPortalAPIInternal#getNamespaceAttributeCountsUsingPOST
-     * @param {} namespaceAttributeCountFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     */
-    getNamespaceAttributeCountsUsingPOSTWithHttpInfo(parameters: {
-        'namespaceAttributeCountFilter' ? : NamespaceAttributeCountFilter,
-        $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/api/namespace-attributes/counts/fetch';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters['namespaceAttributeCountFilter'] !== undefined) {
-                body = parameters['namespaceAttributeCountFilter'];
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Get counts for namespace attributes according to their data availability for selected samples/patients
-     * @method
-     * @name CBioPortalAPIInternal#getNamespaceAttributeCountsUsingPOST
-     * @param {} namespaceAttributeCountFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     */
-    getNamespaceAttributeCountsUsingPOST(parameters: {
-            'namespaceAttributeCountFilter' ? : NamespaceAttributeCountFilter,
-            $queryParameters ? : any,
-                $domain ? : string
-        }): Promise < Array < NamespaceAttributeCount >
-        > {
-            return this.getNamespaceAttributeCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
-
-    /**
-     * Get counts for namespace attributes according to their data availability for selected samples/patients
-     * @method
-     * @name CBioPortalAPIInternal#getNamespaceAttributeCountsUsingPOST
-     * @param {} namespaceAttributeCountFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     */
-    getNamespaceDataUsingPOSTWithHttpInfo(parameters: {
-        'namespaceComparisonFilter' ? : NamespaceComparisonFilter,
-        $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/api/namespace-data/fetch';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters['namespaceComparisonFilter'] !== undefined) {
-                body = parameters['namespaceComparisonFilter'];
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Get counts for namespace attributes according to their data availability for selected samples/patients
-     * @method
-     * @name CBioPortalAPIInternal#getNamespaceAttributeCountsUsingPOST
-     * @param {} namespaceAttributeCountFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     */
-    getNamespaceDataUsingPOST(parameters: {
-            'namespaceComparisonFilter' ? : NamespaceComparisonFilter,
-            $queryParameters ? : any,
-                $domain ? : string
-        }): Promise < Array < NamespaceData >
-        > {
-            return this.getNamespaceDataUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
 
     /**
      * Fetch clinical data bin counts by study view filter
@@ -2810,6 +2966,7 @@ export default class CBioPortalAPIInternal {
     };
     fetchSampleTreatmentCountsUsingPOSTURL(parameters: {
         'tier' ? : "Agent" | "AgentClass" | "AgentTarget",
+        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'studyViewFilter' ? : StudyViewFilter,
         $queryParameters ? : any
     }): string {
@@ -2817,6 +2974,10 @@ export default class CBioPortalAPIInternal {
         let path = '/api/column-store/treatments/sample-counts/fetch';
         if (parameters['tier'] !== undefined) {
             queryParameters['tier'] = parameters['tier'];
+        }
+
+        if (parameters['projection'] !== undefined) {
+            queryParameters['projection'] = parameters['projection'];
         }
 
         if (parameters.$queryParameters) {
@@ -2834,10 +2995,12 @@ export default class CBioPortalAPIInternal {
      * @method
      * @name CBioPortalAPIInternal#fetchSampleTreatmentCountsUsingPOST
      * @param {string} tier - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {string} projection - Level of detail of the response
      * @param {} studyViewFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      */
     fetchSampleTreatmentCountsUsingPOSTWithHttpInfo(parameters: {
         'tier' ? : "Agent" | "AgentClass" | "AgentTarget",
+        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'studyViewFilter' ? : StudyViewFilter,
         $queryParameters ? : any,
             $domain ? : string
@@ -2856,6 +3019,10 @@ export default class CBioPortalAPIInternal {
 
             if (parameters['tier'] !== undefined) {
                 queryParameters['tier'] = parameters['tier'];
+            }
+
+            if (parameters['projection'] !== undefined) {
+                queryParameters['projection'] = parameters['projection'];
             }
 
             if (parameters['studyViewFilter'] !== undefined) {
@@ -2879,10 +3046,12 @@ export default class CBioPortalAPIInternal {
      * @method
      * @name CBioPortalAPIInternal#fetchSampleTreatmentCountsUsingPOST
      * @param {string} tier - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {string} projection - Level of detail of the response
      * @param {} studyViewFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      */
     fetchSampleTreatmentCountsUsingPOST(parameters: {
         'tier' ? : "Agent" | "AgentClass" | "AgentTarget",
+        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'studyViewFilter' ? : StudyViewFilter,
         $queryParameters ? : any,
             $domain ? : string
@@ -2891,83 +3060,6 @@ export default class CBioPortalAPIInternal {
             return response.body;
         });
     };
-    fetchCosmicCountsUsingPOSTURL(parameters: {
-        'keywords': Array < string > ,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/api/cosmic-counts/fetch';
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Get counts within the COSMIC database by keywords
-     * @method
-     * @name CBioPortalAPIInternal#fetchCosmicCountsUsingPOST
-     * @param {} keywords - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     */
-    fetchCosmicCountsUsingPOSTWithHttpInfo(parameters: {
-        'keywords': Array < string > ,
-        $queryParameters ? : any,
-        $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/api/cosmic-counts/fetch';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters['keywords'] !== undefined) {
-                body = parameters['keywords'];
-            }
-
-            if (parameters['keywords'] === undefined) {
-                reject(new Error('Missing required  parameter: keywords'));
-                return;
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Get counts within the COSMIC database by keywords
-     * @method
-     * @name CBioPortalAPIInternal#fetchCosmicCountsUsingPOST
-     * @param {} keywords - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     */
-    fetchCosmicCountsUsingPOST(parameters: {
-            'keywords': Array < string > ,
-            $queryParameters ? : any,
-            $domain ? : string
-        }): Promise < Array < CosmicMutation >
-        > {
-            return this.fetchCosmicCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
     fetchCustomDataBinCountsUsingPOSTURL(parameters: {
         'dataBinMethod' ? : "STATIC" | "DYNAMIC",
         'clinicalDataBinCountFilter' ? : ClinicalDataBinCountFilter,
@@ -5871,14 +5963,84 @@ export default class CBioPortalAPIInternal {
                 return response.body;
             });
         };
-    getAllReferenceGenomeGenesUsingGETURL(parameters: {
-        'genomeName': string,
+    getNamespaceAttributeCountsUsingPOSTURL(parameters: {
+        'namespaceAttributeCountFilter' ? : NamespaceAttributeCountFilter,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/api/reference-genome-genes/{genomeName}';
+        let path = '/api/namespace-attributes/counts/fetch';
 
-        path = path.replace('{genomeName}', parameters['genomeName'] + '');
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Get counts for namespace attributes according to their data availability for selected samples/patients
+     * @method
+     * @name CBioPortalAPIInternal#getNamespaceAttributeCountsUsingPOST
+     * @param {} namespaceAttributeCountFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     */
+    getNamespaceAttributeCountsUsingPOSTWithHttpInfo(parameters: {
+        'namespaceAttributeCountFilter' ? : NamespaceAttributeCountFilter,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/api/namespace-attributes/counts/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['namespaceAttributeCountFilter'] !== undefined) {
+                body = parameters['namespaceAttributeCountFilter'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Get counts for namespace attributes according to their data availability for selected samples/patients
+     * @method
+     * @name CBioPortalAPIInternal#getNamespaceAttributeCountsUsingPOST
+     * @param {} namespaceAttributeCountFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     */
+    getNamespaceAttributeCountsUsingPOST(parameters: {
+            'namespaceAttributeCountFilter' ? : NamespaceAttributeCountFilter,
+            $queryParameters ? : any,
+                $domain ? : string
+        }): Promise < Array < NamespaceAttributeCount >
+        > {
+            return this.getNamespaceAttributeCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    fetchNamespaceDataCountsUsingPOSTURL(parameters: {
+        'namespaceDataCountFilter' ? : NamespaceDataCountFilter,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/api/namespace-data-counts/fetch';
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -5945,6 +6107,96 @@ export default class CBioPortalAPIInternal {
                 return response.body;
             });
         };
+    getNamespaceDataForComparisonUsingPOSTURL(parameters: {
+        'namespaceComparisonFilter' ? : NamespaceComparisonFilter,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/api/namespace-data/fetch';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Get namespace data for comparison page for the selected samples and values
+     * @method
+     * @name CBioPortalAPIInternal#getNamespaceDataForComparisonUsingPOST
+     * @param {} namespaceComparisonFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     */
+    getNamespaceDataForComparisonUsingPOSTWithHttpInfo(parameters: {
+        'namespaceComparisonFilter' ? : NamespaceComparisonFilter,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/api/namespace-data/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['namespaceComparisonFilter'] !== undefined) {
+                body = parameters['namespaceComparisonFilter'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Get namespace data for comparison page for the selected samples and values
+     * @method
+     * @name CBioPortalAPIInternal#getNamespaceDataForComparisonUsingPOST
+     * @param {} namespaceComparisonFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     */
+    getNamespaceDataForComparisonUsingPOST(parameters: {
+            'namespaceComparisonFilter' ? : NamespaceComparisonFilter,
+            $queryParameters ? : any,
+                $domain ? : string
+        }): Promise < Array < NamespaceData >
+        > {
+            return this.getNamespaceDataForComparisonUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    getAllReferenceGenomeGenesUsingGETURL(parameters: {
+        'genomeName': string,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/api/reference-genome-genes/{genomeName}';
+
+        path = path.replace('{genomeName}', parameters['genomeName'] + '');
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
 
     /**
      * Get all reference genes
@@ -7332,7 +7584,7 @@ export default class CBioPortalAPIInternal {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
-        'sortBy' ? : "resourceId" | "displayName" | "description" | "resourceType" | "priority" | "openByDefault" | "studyId",
+        'sortBy' ? : "resourceId" | "displayName" | "description" | "resourceType" | "priority" | "openByDefault" | "studyId" | "customMetaData",
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any
     }): string {
@@ -7386,7 +7638,7 @@ export default class CBioPortalAPIInternal {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
-        'sortBy' ? : "resourceId" | "displayName" | "description" | "resourceType" | "priority" | "openByDefault" | "studyId",
+        'sortBy' ? : "resourceId" | "displayName" | "description" | "resourceType" | "priority" | "openByDefault" | "studyId" | "customMetaData",
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any,
         $domain ? : string
@@ -7457,7 +7709,7 @@ export default class CBioPortalAPIInternal {
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
-            'sortBy' ? : "resourceId" | "displayName" | "description" | "resourceType" | "priority" | "openByDefault" | "studyId",
+            'sortBy' ? : "resourceId" | "displayName" | "description" | "resourceType" | "priority" | "openByDefault" | "studyId" | "customMetaData",
             'direction' ? : "ASC" | "DESC",
             $queryParameters ? : any,
             $domain ? : string

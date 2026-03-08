@@ -27,7 +27,6 @@ async function waitForPlotsTab(timeout) {
 }
 
 async function waitForAndCheckPlotsTab() {
-    await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
     await waitForElementDisplayed('div[data-test="PlotsTabPlotDiv"]', {
         timeout: 20000,
     });
@@ -53,7 +52,7 @@ async function waitForPatientView(timeout) {
     });
 }
 
-async function waitForOncoprint(timeout = 100000) {
+async function waitForOncoprint(timeout = 20000) {
     await browser.pause(500); // give oncoprint time to disappear
     await browser.waitUntil(
         async () => {
@@ -65,7 +64,7 @@ async function waitForOncoprint(timeout = 100000) {
         },
         { timeout }
     );
-    await browser.pause(500);
+    await browser.pause(1000);
 }
 
 async function waitForComparisonTab() {
@@ -391,7 +390,7 @@ async function toStudyViewClinicalDataTab() {
     const clinicalDataTab = '#studyViewTabs a.tabAnchor_clinicalData';
     const clinicalDataContent = "[data-test='clinical-data-tab-content']";
     if (!(await (await $(clinicalDataContent)).isDisplayedInViewport())) {
-        (await $(clinicalDataTab)).waitForDisplayed({ timeout: 10000 });
+        await (await $(clinicalDataTab)).waitForDisplayed({ timeout: 10000 });
         await clickElement(clinicalDataTab);
         await (await $(clinicalDataContent)).waitForDisplayed({
             timeout: 10000,
@@ -399,10 +398,10 @@ async function toStudyViewClinicalDataTab() {
     }
 }
 
-function removeAllStudyViewFilters() {
+async function removeAllStudyViewFilters() {
     const clearAllFilter = "[data-test='clear-all-filters']";
-    if ($(clearAllFilter).isDisplayedInViewport()) {
-        $(clearAllFilter).click();
+    if (await (await $(clearAllFilter)).isDisplayedInViewport()) {
+        await (await $(clearAllFilter)).click();
     }
 }
 
@@ -418,7 +417,7 @@ async function waitForStudyView() {
     await browser.waitUntil(
         async () => (await $$('.sk-spinner')).length === 0,
         {
-            timeout: 100000,
+            timeout: 10000,
         }
     );
 }
@@ -442,7 +441,7 @@ async function setInputText(selector, text) {
     // await (await $(selector)).click();
     //browser.keys('\uE003'.repeat($(selector).getValue().length));
 
-    // await (await $(selector)).clearValue();
+    await (await $(selector)).clearValue();
 
     await (await $(selector)).setValue('');
     //browser.pause(1000);
@@ -473,17 +472,17 @@ async function reactSelectOption(parent, optionText, loose = false) {
     return await parent.$('.Select-option=' + optionText);
 }
 
-function selectCheckedOption(parent, optionText, loose = false) {
-    parent.$('.default-checked-select').click();
+async function selectCheckedOption(parent, optionText, loose = false) {
+    await (await parent.$('.default-checked-select')).click();
     if (loose) {
-        return parent.$('.checked-select-option*=' + optionText);
+        return await parent.$('.checked-select-option*=' + optionText);
     }
-    return parent.$('.checked-select-option=' + optionText);
+    return await parent.$('.checked-select-option=' + optionText);
 }
 
-function getSelectCheckedOptions(parent) {
-    parent.$('.default-checked-select').click();
-    return parent.$$('.checked-select-option');
+async function getSelectCheckedOptions(parent) {
+    await (await parent.$('.default-checked-select')).click();
+    return await parent.$$('.checked-select-option');
 }
 
 async function pasteToElement(elementSelector, text) {
@@ -494,6 +493,13 @@ async function pasteToElement(elementSelector, text) {
 
 async function checkOncoprintElement(selector, viewports) {
     //browser.moveToObject('body', 0, 0);
+
+    if (
+        await $('.oncoprint__controls .open #viewDropdownButton').isExisting()
+    ) {
+        await clickElement('.dropdown.open #viewDropdownButton');
+    }
+
     await browser.execute(() => {
         frontendOnc.clearMouseOverEffects(); // clear mouse hover effects for uniform screenshot
     });
@@ -717,21 +723,24 @@ async function openGroupComparison(studyViewUrl, chartDataTest, timeout) {
     await closeOtherTabs();
 
     const chart = '[data-test=' + chartDataTest + ']';
+
     await waitForElementDisplayed(chart, { timeout: timeout || 10000 });
+
+    await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
+    await $(chart).scrollIntoView();
+
     await jsApiHover(chart);
 
-    await browser.waitUntil(
-        async () => {
-            return await getElement(chart + ' .controls', {
-                waitForExist: true,
-            });
-        },
-        { timeout: timeout || 10000 }
-    );
+    await getElement(chart + ' .controls', {
+        waitForExist: true,
+    });
+
+    await $(chart + ' .controls').waitForClickable();
+    //await browser.pause(5000);
 
     // move to hamburger icon
     const hamburgerIcon = '[data-test=chart-header-hamburger-icon]';
-    await jsApiHover(hamburgerIcon);
+    await $(hamburgerIcon).moveTo();
 
     // wait for the menu available
     await waitForElementDisplayed(hamburgerIcon, { timeout: timeout || 10000 });
@@ -868,13 +877,11 @@ async function isUnselected(selector, options) {
 }
 
 async function clickElement(selector, options = {}) {
-    let el = await getElement(selector);
-    //
-    // if (/^handle=/.test(selector)) {
-    //     el = await getElementByTestHandle(selector.replace(/^handle=/, ''));
-    // } else {
-    //     el = await $(selector);
-    // }
+    // note that selector can be string an element
+    let el =
+        typeof selector === 'string' ? await getElement(selector) : selector;
+
+    if (options?.moveTo) await el.moveTo();
     await el.waitForDisplayed(options);
     await el.click();
 }
