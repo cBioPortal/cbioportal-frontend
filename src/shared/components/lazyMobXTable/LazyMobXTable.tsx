@@ -1317,6 +1317,8 @@ export default class LazyMobXTable<T> extends React.Component<
                     overflowX: this.props.enableHorizontalScroll
                         ? 'auto'
                         : 'visible',
+                    maxHeight: 'calc(100vh - 220px)',
+                    overflowY: 'auto',
                 }}
             >
                 {(this.props.showLoading && this.props.loadingComponent) ||
