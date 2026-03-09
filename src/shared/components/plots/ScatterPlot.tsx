@@ -4,6 +4,7 @@ import { observer, Observer } from 'mobx-react';
 import { computed, makeObservable, observable } from 'mobx';
 import {
     VictoryChart,
+    VictoryContainer,
     VictorySelectionContainer,
     VictoryAxis,
     VictoryScatter,
@@ -117,6 +118,19 @@ export default class ScatterPlot<
     @autobind
     private containerRef(container: HTMLDivElement) {
         this.container = container;
+    }
+
+    @autobind
+    private svgContainerRef(container: HTMLDivElement | null) {
+        // containerRef in VictoryContainer gives us the wrapper <div>, not the <svg>.
+        // Find the SVG inside and apply the svgId and svgRef props.
+        const svgEl = container ? container.querySelector('svg') : null;
+        if (svgEl && this.props.svgId) {
+            svgEl.setAttribute('id', this.props.svgId);
+        }
+        if (this.props.svgRef) {
+            this.props.svgRef(svgEl as SVGElement | null);
+        }
     }
 
     get mouseEvents() {
@@ -700,9 +714,9 @@ export default class ScatterPlot<
             >
                 <VictoryChart
                     containerComponent={
-                        this.props.onDataSelection && (
+                        this.props.onDataSelection ? (
                             <VictorySelectionContainer
-                                containerRef={this.props.svgRef}
+                                containerRef={this.svgContainerRef}
                                 activateSelectedData={false}
                                 onSelection={(
                                     points: any,
@@ -712,6 +726,12 @@ export default class ScatterPlot<
                                     this.handleSelection(points, bounds, props)
                                 }
                                 responsive={true}
+                                id={this.props.svgId || ''}
+                            />
+                        ) : (
+                            <VictoryContainer
+                                containerRef={this.svgContainerRef}
+                                id={this.props.svgId || ''}
                             />
                         )
                     }
