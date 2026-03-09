@@ -13,6 +13,7 @@ import { Dropdown } from 'react-bootstrap';
 import { DataAccessTokensDropdown } from '../../shared/components/dataAccessTokens/DataAccessTokensDropdown';
 import { getLoadConfig, getServerConfig } from 'config/config';
 import FontAwesome from 'react-fontawesome';
+import { FeatureFlagEnum } from 'shared/featureFlags';
 
 @observer
 export default class PortalHeader extends React.Component<
@@ -99,6 +100,28 @@ export default class PortalHeader extends React.Component<
                 address: '/installations',
                 internal: false,
                 hide: () => !getServerConfig().installation_map_url,
+            },
+
+            {
+                id: 'chat',
+                text: (
+                    <>
+                        Chat{' '}
+                        <strong className={'beta-text'}>Beta!</strong>
+                    </>
+                ),
+                address:
+                    getServerConfig().app_name === 'mskcc-portal'
+                        ? 'https://chat.cbioportal.aws.mskcc.org'
+                        : 'https://chat.cbioportal.org',
+                internal: false,
+                hide: () =>
+                    !this.props.appStore.featureFlagStore.has(
+                        FeatureFlagEnum.CHAT
+                    ) ||
+                    !['public-portal', 'mskcc-portal'].includes(
+                        getServerConfig().app_name!
+                    ),
             },
 
             {
