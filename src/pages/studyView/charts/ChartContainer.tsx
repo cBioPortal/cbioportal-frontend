@@ -1102,6 +1102,53 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     />
                 );
             }
+            case ChartTypeEnum.RESOURCE_METADATA_TABLE: {
+                return () => (
+                    <MultiSelectionTable
+                        tableType={FreqColumnTypeEnum.DATA}
+                        promise={this.props.promise}
+                        width={getWidthByDimension(
+                            this.props.dimension,
+                            this.borderWidth
+                        )}
+                        height={getTableHeightByDimension(
+                            this.props.dimension,
+                            this.chartHeaderHeight
+                        )}
+                        filters={this.props.filters}
+                        onSubmitSelection={this.handlers.onValueSelection}
+                        onChangeSelectedRows={
+                            this.handlers.onChangeSelectedRows
+                        }
+                        selectedRowsKeys={this.selectedRowsKeys}
+                        cancerGeneFilterEnabled={
+                            this.props.cancerGeneFilterEnabled
+                        }
+                        filterByCancerGenes={this.props.filterByCancerGenes!}
+                        onChangeCancerGeneFilter={
+                            this.props.onChangeCancerGeneFilter!
+                        }
+                        columns={[
+                            {
+                                columnKey:
+                                    MultiSelectionTableColumnKey.CASE_LIST,
+                            },
+                            {
+                                columnKey: MultiSelectionTableColumnKey.NUMBER,
+                            },
+                            {
+                                columnKey: MultiSelectionTableColumnKey.FREQ,
+                            },
+                        ]}
+                        defaultSortBy={MultiSelectionTableColumnKey.FREQ}
+                        setOperationsButtonText={
+                            this.props.store.hesitateUpdate
+                                ? 'Add Filters '
+                                : 'Select Samples '
+                        }
+                    />
+                );
+            }
             case ChartTypeEnum.GENOMIC_PROFILES_TABLE: {
                 return () => (
                     <MultiSelectionTable

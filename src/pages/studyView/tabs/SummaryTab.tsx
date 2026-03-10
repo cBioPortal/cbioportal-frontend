@@ -491,6 +491,13 @@ export class StudySummaryTab extends React.Component<
                     ),
                 downloadTypes: ['Data'],
             }),
+            [ChartTypeEnum.RESOURCE_METADATA_TABLE]: () => ({
+                filters: [] as string[][],
+                promise: this.store.getResourceMetadataChartData(chartMeta),
+                id: 'resource-metadata-table',
+                title: chartMeta.displayName,
+                downloadTypes: ['Data'],
+            }),
             [ChartTypeEnum.MUTATION_TYPE_COUNTS_TABLE]: () => ({
                 filters: this.store.getMutationDataFiltersByUniqueKey(
                     chartMeta.uniqueKey
