@@ -138,20 +138,70 @@ interface ResourceTreeResponse {
 - Non-matching branches collapse/hide
 - Debounced input for performance
 
-### cBioPortal Filter Integration (Exploration)
+### cBioPortal Filter Integration (Investigation Results)
 
 Key question: Can the `METADATA` JSON field on `resource_node` integrate with cBioPortal's existing filter system?
 
-Areas to investigate:
-- How study view filters currently work (clinical attributes, custom data filters)
-- Whether `METADATA` key-value pairs can be surfaced as filterable attributes
-- How filtered patient/sample sets could narrow which resource nodes are displayed
-- Whether this requires backend support or can be done client-side with the mock
+#### Existing Filter Types in Study View
+
+The study view (`StudyViewPageStore`) manages 5 filter types, each stored in its own observable map and composed into a single `StudyViewFilter` object sent to the backend:
+
+| Filter Type             | Structure                                      | Use Case                        |
+| ----------------------- | ---------------------------------------------- | ------------------------------- |
+| `ClinicalDataFilter`    | `attributeId` + `values[]`                     | Standard clinical attributes    |
+| `CustomDataFilter`      | Same as ClinicalDataFilter (user-uploaded)      | Dynamic user-defined data       |
+| `NamespaceDataFilter`   | `outerKey` + `innerKey` + `values[][]`          | Hierarchical key-value metadata |
+| `GenericAssayDataFilter` | `stableId` + `profileType` + `values[]`        | Molecular profile data          |
+| `GenomicDataFilter`     | Gene-specific                                  | Genomic alterations             |
+
+#### Recommended Approach: NamespaceDataFilter Pattern
+
+The `NamespaceDataFilter` is the best fit for JSON metadata integration:
+
+- **`outerKey`**: maps to a metadata namespace (e.g., `"resource_metadata"`)
+- **`innerKey`**: maps to a metadata field name (e.g., `"stain_type"`, `"site"`)
+- **`values[][]`**: 2D array supporting union/intersection filtering
+
+Example: resource metadata `{"site": "Primary", "stain_type": "H&E", "year": 2023}` becomes:
+
+```
+outerKey: "resource_metadata"
+innerKey: "site"         → values: [["Primary"], ["Metastasis"]]
+innerKey: "stain_type"   → values: [["H_AND_E"], ["IHC"]]
+```
+
+This pattern is already implemented for variant annotations in the codebase (`StudyViewPageStore.ts` lines 3222-3248).
+
+#### Existing Extension Point
+
+`ResourceDefinition` already has an **unused** `customMetaData: string` field in the API types. This could store JSON metadata without backend schema changes — useful for prototyping.
+
+#### Integration Strategy (Two Directions)
+
+**Direction A: Resource metadata filters sample selection (metadata → filters)**
+- Extract metadata keys from resource nodes across all patients/samples
+- Register them as filterable charts (like namespace attributes)
+- User filters by metadata values → narrows visible patients/samples
+- Requires: client-side metadata aggregation, chart registration
+
+**Direction B: Study view filters narrow visible resources (filters → resources)**
+- Active study view filters (clinical attributes, etc.) determine which patients/samples are selected
+- Resource tree only shows resources belonging to selected patients/samples
+- Requires: resource tree listens to `StudyViewPageStore.selectedSamples`
+
+Both directions can work together. Direction B is simpler to implement first.
+
+#### Key Files
+
+- `StudyViewPageStore.ts` — filter state management (11,000+ lines)
+- `StudyViewUtils.tsx` — `getChartMetaSet()` shows how data types become filterable charts
+- `CBioPortalAPIInternal.ts` — all filter and count API type definitions
+- `StudyViewConfig.ts` — chart type configuration and defaults
 
 ## Open Questions
 
 - **ITEM click behavior**: iframe, new tab, download, or configurable per TYPE?
-- **METADATA filter integration**: feasible client-side or requires backend filter API changes?
+- **Direction A feasibility**: can we aggregate metadata keys client-side from mock data and register them as filterable charts without backend changes?
 - **Tree state persistence**: should expanded/collapsed state persist across navigation?
 - **Performance**: how does the tree handle studies with thousands of resource nodes?
 
