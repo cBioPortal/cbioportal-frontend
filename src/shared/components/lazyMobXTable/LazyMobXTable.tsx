@@ -77,6 +77,7 @@ export type Column<T> = {
 };
 
 type LazyMobXTableProps<T> = {
+    tableMaxHeight?: string;
     className?: string;
     columns: Column<T>[];
     data?: T[];
@@ -1317,8 +1318,11 @@ export default class LazyMobXTable<T> extends React.Component<
                     overflowX: this.props.enableHorizontalScroll
                         ? 'auto'
                         : 'visible',
-                    maxHeight: 'calc(100vh - 220px)',
-                    overflowY: 'auto',
+
+                    ...(this.props.tableMaxHeight && {
+                        maxHeight: this.props.tableMaxHeight,
+                        overflowY: 'auto',
+                    }),
                 }}
             >
                 {(this.props.showLoading && this.props.loadingComponent) ||
