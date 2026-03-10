@@ -244,6 +244,8 @@ import {
     toPromise,
 } from 'cbioportal-frontend-commons';
 import request from 'superagent';
+import { parseTsvToRows } from 'shared/lib/ResourceNodeTsvParser';
+import { buildChartDataFromMetadata } from 'shared/lib/ResourceNodeChartData';
 import { trackStudyViewFilterEvent } from '../../shared/lib/tracking';
 import comparisonClient from '../../shared/api/comparisonGroupClientInstance';
 import {
@@ -2777,6 +2779,16 @@ export class StudyViewPageStore
         ChartUniqueKey,
         ChartMeta
     >({}, { deep: false });
+
+    // Resource metadata charts (hackathon: CDSI resource data model)
+    @observable private _resourceMetadataCharts = observable.map<
+        ChartUniqueKey,
+        ChartMeta
+    >({}, { deep: false });
+
+    private _resourceMetadataChartDataCache: {
+        [id: string]: MobxPromise<MultiSelectionTableRow[]>;
+    } = {};
 
     //used in saving gene specific charts
     @observable private _geneSpecificChartMap = observable.map<
@@ -5466,6 +5478,122 @@ export class StudyViewPageStore
         return this.namespaceDataChartCountPromises[chartMeta.uniqueKey];
     }
 
+    // Resource metadata chart methods (hackathon: CDSI resource data model)
+    @action
+    public registerResourceMetadataCharts(
+        chartDataEntries: Array<{
+            metadataKey: string;
+            rows: Array<{
+                value: string;
+                count: number;
+                uniquePatientKeys: string[];
+                uniqueSampleKeys: string[];
+            }>;
+        }>,
+        totalProfiledCases: number
+    ): void {
+        const OUTER_KEY = 'resource_metadata';
+
+        for (const entry of chartDataEntries) {
+            const uniqueKey = `${OUTER_KEY}_${entry.metadataKey}`;
+
+            // Create ChartMeta
+            const chartMeta: ChartMeta = {
+                displayName: entry.metadataKey,
+                uniqueKey: uniqueKey,
+                dataType: ChartMetaDataTypeEnum.RESOURCE_METADATA,
+                patientAttribute: false,
+                description: `Resource metadata: ${entry.metadataKey}`,
+                priority: 75,
+                renderWhenDataChange: false,
+            };
+
+            // Register chart
+            this._resourceMetadataCharts.set(uniqueKey, chartMeta);
+            this.chartsType.set(
+                uniqueKey,
+                ChartTypeEnum.RESOURCE_METADATA_TABLE
+            );
+            this.chartsDimension.set(
+                uniqueKey,
+                STUDY_VIEW_CONFIG.layout.dimensions[
+                    ChartTypeEnum.RESOURCE_METADATA_TABLE
+                ]
+            );
+
+            // Pre-populate data cache with mock data
+            const tableRows: MultiSelectionTableRow[] = entry.rows.map(row => ({
+                uniqueKey: row.value,
+                label: row.value,
+                numberOfAlteredCases: row.count,
+                numberOfProfiledCases: totalProfiledCases,
+                totalCount: row.count,
+                qValue: 0,
+                matchingGenePanelIds: [],
+                oncokbAnnotated: false,
+                isOncokbOncogene: false,
+                isOncokbTumorSuppressorGene: false,
+                isCancerGene: false,
+            }));
+
+            this._resourceMetadataChartDataCache[uniqueKey] = remoteData<
+                MultiSelectionTableRow[]
+            >({
+                invoke: async () => tableRows,
+                default: [],
+            });
+
+            // Make chart visible
+            this.changeChartVisibility(uniqueKey, true);
+        }
+    }
+
+    public getResourceMetadataChartData(
+        chartMeta: ChartMeta
+    ): MobxPromise<MultiSelectionTableRow[]> {
+        if (this._resourceMetadataChartDataCache[chartMeta.uniqueKey]) {
+            return this._resourceMetadataChartDataCache[chartMeta.uniqueKey];
+        }
+        // Fallback: return empty resolved promise
+        return remoteData<MultiSelectionTableRow[]>({
+            invoke: async () => [],
+            default: [],
+        });
+    }
+
+    // Fetch resource metadata TSV and register charts (hackathon: CDSI)
+    async initializeResourceMetadataCharts(
+        totalSamples: number
+    ): Promise<void> {
+        try {
+            // In dev, static files are served by the webpack dev server
+            const devServerUrl = `//localhost:3000`;
+            const tsvUrl = `${devServerUrl}/data_resource_image.txt`;
+            console.log('[CDSI] Fetching resource metadata TSV from:', tsvUrl);
+            const response = await fetch(tsvUrl);
+            console.log('[CDSI] Fetch response:', response.status, response.ok);
+            if (!response.ok) return;
+            const tsv = await response.text();
+            const rows = parseTsvToRows(tsv);
+            console.log('[CDSI] Parsed rows:', rows.length);
+            const chartData = buildChartDataFromMetadata(rows);
+            console.log(
+                '[CDSI] Chart data entries:',
+                chartData.length,
+                chartData.map(d => d.metadataKey)
+            );
+            if (chartData.length > 0) {
+                this.registerResourceMetadataCharts(chartData, totalSamples);
+                console.log(
+                    '[CDSI] Charts registered. _resourceMetadataCharts size:',
+                    this._resourceMetadataCharts.size
+                );
+            }
+        } catch (e) {
+            console.warn('[CDSI] Resource metadata TSV not available:', e);
+        }
+    }
+
     public getMutationTypeChartDataCount(
         chartMeta: ChartMeta
     ): MobxPromise<MultiSelectionTableRow[]> {
@@ -7029,6 +7157,10 @@ export class StudyViewPageStore
             this.shouldDisplaySampleTreatmentTarget.result,
             this.shouldDisplayPatientTreatmentTarget.result
         );
+        // Merge resource metadata charts (hackathon: CDSI)
+        this._resourceMetadataCharts.forEach((meta, key) => {
+            chartMetaSet[key] = meta;
+        });
         return chartMetaSet;
     }
 
@@ -7085,6 +7217,10 @@ export class StudyViewPageStore
             this.shouldDisplaySampleTreatmentTarget.result,
             this.shouldDisplayPatientTreatmentTarget.result
         );
+        // Merge resource metadata charts (hackathon: CDSI)
+        this._resourceMetadataCharts.forEach((meta, key) => {
+            chartMetaSet[key] = meta;
+        });
         return chartMetaSet;
     }
 
@@ -7900,6 +8036,7 @@ export class StudyViewPageStore
         this.initializeClinicalDataBinCountCharts();
         this.initializeGeneSpecificCharts();
         this.initializeNamespaceCharts();
+        this.initializeResourceMetadataCharts(this.samples.result!.length);
         this.initializeGenericAssayCharts();
         this._defaultChartsDimension = observable.map(
             _.fromPairs(this.chartsDimension.toJSON())
