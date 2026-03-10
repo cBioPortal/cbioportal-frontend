@@ -38,17 +38,3 @@
         background-color: $borderColor;
     }
 }
-
-.lazy-mobx-table table thead {
-    position: sticky;
-    top: 0px;
-    z-index: 200;
-}
-
-.lazy-mobx-table table thead th {
-    position: sticky;
-    top: 0px;
-    background: #ffffff;
-    z-index: 201;
-    border-bottom: 2px solid #ddd;
-}
