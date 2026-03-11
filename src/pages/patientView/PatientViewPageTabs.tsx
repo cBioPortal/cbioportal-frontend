@@ -36,11 +36,14 @@ import FeatureInstruction from 'shared/FeatureInstruction/FeatureInstruction';
 import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
 import MutationTableWrapper from './mutation/MutationTableWrapper';
 import { PatientViewPageInner } from 'pages/patientView/PatientViewPage';
+import ASCNTab from 'pages/patientView/ascn/ASCNTab';
 import { Else, If } from 'react-if';
+import { ClinicalData } from 'cbioportal-ts-api-client';
 
 export enum PatientViewPageTabs {
     Summary = 'summary',
     genomicEvolution = 'genomicEvolution',
+    ASCN = 'ascn',
     ClinicalData = 'clinicalData',
     FilesAndLinks = 'filesAndLinks',
     PathologyReport = 'pathologyReport',
@@ -214,6 +217,39 @@ export function tabs(
                                 pageComponent.patientViewPageStore.studies
                                     .result[0]?.referenceGenome
                             }
+                            wgdBySampleId={(() => {
+                                const clinicalDataMap =
+                                    pageComponent.patientViewPageStore
+                                        .clinicalDataGroupedBySampleMap.result;
+                                if (!clinicalDataMap) return undefined;
+                                const result: {
+                                    [sampleId: string]: string;
+                                } = {};
+                                for (const [sampleId, data] of Object.entries(
+                                    clinicalDataMap
+                                )) {
+                                    const entry = (data as ClinicalData[]).find(
+                                        (cd: ClinicalData) =>
+                                            cd.clinicalAttributeId
+                                                .toUpperCase()
+                                                .includes('WGD')
+                                    );
+                                    if (entry) {
+                                        const v = entry.value
+                                            .trim()
+                                            .toUpperCase();
+                                        result[sampleId] =
+                                            v === 'WGD' ||
+                                            v === 'YES' ||
+                                            v === 'TRUE' ||
+                                            v === '1' ||
+                                            v === 'YES_WGD'
+                                                ? 'WGD'
+                                                : 'no WGD';
+                                    }
+                                }
+                                return result;
+                            })()}
                         />
                         <hr />
                     </FeatureInstruction>
@@ -447,6 +483,18 @@ export function tabs(
                 )}
         </MSKTab>
     );
+
+    Object.values(
+        pageComponent.patientViewPageStore.existsSomeMutationWithAscnProperty
+    ).some(Boolean) &&
+        tabs.push(
+            <MSKTab key={9} id={PatientViewPageTabs.ASCN} linkText="ASCN">
+                <ASCNTab
+                    store={pageComponent.patientViewPageStore}
+                    sampleManager={sampleManager}
+                />
+            </MSKTab>
+        );
 
     !!sampleManager &&
         pageComponent.patientViewPageStore.sampleIds.length > 1 &&

@@ -22,8 +22,11 @@ import {
     genetic_rule_set_same_color_for_all_no_recurrence,
     genetic_rule_set_same_color_for_all_recurrence,
     germline_rule_params,
+    ascn_cn_rule_params,
+    getClonalMutationRuleParams,
 } from './geneticrules';
 import { AlterationTypeConstants } from 'shared/constants';
+import { ClonalValue } from 'pages/patientView/mutation/oncoprint/MutationOncoprintUtils';
 import { CoverageInformation } from '../../lib/GenePanelUtils';
 import {
     MobxPromise,
@@ -221,16 +224,52 @@ export function getHeatmapTrackRuleSetParams(
             ];
             break;
         case AlterationTypeConstants.MUTATION_EXTENDED:
-            value_range = [0, 1];
-            legend_label = trackSpec.legendLabel || 'VAF Heatmap';
-            null_legend_label = 'Not mutated/no VAF data';
-            na_legend_label = 'Not profiled';
-            value_stop_points = [0, 1];
-            colors = [
-                [241, 242, 181, 1],
-                [19, 80, 88, 1],
-            ];
-            break;
+            return {
+                type: RuleSetType.GRADIENT_AND_CATEGORICAL,
+                legend_label: trackSpec.legendLabel || 'VAF Heatmap',
+                value_key: 'profile_data',
+                value_range: [0, 1] as [number, number],
+                value_stop_points: [0, 1],
+                colors: [
+                    [241, 242, 181, 1],
+                    [19, 80, 88, 1],
+                ] as [number, number, number, number][],
+                null_color: isWhiteBackgroundForGlyphsEnabled
+                    ? [255, 255, 255, 1]
+                    : [224, 224, 224, 1],
+                na_legend_label: 'Not profiled',
+                na_shapes: trackSpec.customNaShapes,
+                legend_base_color: isWhiteBackgroundForGlyphsEnabled
+                    ? hexToRGBA(ASCN_WHITE)
+                    : undefined,
+                category_key: 'clonal',
+                category_to_color: {
+                    [ClonalValue.CLONAL]: [0, 119, 182, 1] as [
+                        number,
+                        number,
+                        number,
+                        number
+                    ],
+                    [ClonalValue.SUBCLONAL]: [255, 140, 0, 1] as [
+                        number,
+                        number,
+                        number,
+                        number
+                    ],
+                    [ClonalValue.INDETERMINATE]: [160, 160, 160, 1] as [
+                        number,
+                        number,
+                        number,
+                        number
+                    ],
+                    [ClonalValue.NA]: [224, 224, 224, 1] as [
+                        number,
+                        number,
+                        number,
+                        number
+                    ],
+                },
+            };
         default:
             value_range = [-3, 3];
             legend_label = trackSpec.legendLabel || 'Expression Heatmap';
@@ -468,7 +507,9 @@ export function getGeneticTrackRuleSetParams(
     distinguishMutationType?: boolean,
     distinguishDrivers?: boolean,
     distinguishGermlineMutations?: boolean,
-    isWhiteBackgroundForGlyphsEnabled?: boolean
+    isWhiteBackgroundForGlyphsEnabled?: boolean,
+    showASCNCNColors?: { [colorHex: string]: boolean },
+    showClonalMutationShapes?: boolean
 ): IGeneticAlterationRuleSetParams {
     let rule_set;
     if (!distinguishMutationType && !distinguishDrivers) {
@@ -483,6 +524,44 @@ export function getGeneticTrackRuleSetParams(
     rule_set = _.cloneDeep(rule_set);
     if (distinguishGermlineMutations) {
         Object.assign(rule_set.rule_params.conditional, germline_rule_params);
+    }
+    const anyColorEnabled =
+        showASCNCNColors && Object.values(showASCNCNColors).some(Boolean);
+    if (anyColorEnabled) {
+        // Only include colors that are toggled on
+        const filteredAscnCNRuleParams = {
+            disp_ascn_cn: Object.fromEntries(
+                Object.entries(ascn_cn_rule_params.disp_ascn_cn).filter(
+                    ([colorHex]) => showASCNCNColors![colorHex]
+                )
+            ),
+        };
+        Object.assign(
+            rule_set.rule_params.conditional,
+            filteredAscnCNRuleParams
+        );
+    }
+    if (showClonalMutationShapes) {
+        // Replace disp_mut rectangles with empty shapes so the disp_mut_clonal
+        // rules (triangle/ellipse) are the sole mutation shape renderers.
+        if (rule_set.rule_params.conditional.disp_mut) {
+            for (const key of Object.keys(
+                rule_set.rule_params.conditional.disp_mut
+            )) {
+                rule_set.rule_params.conditional.disp_mut[key] = {
+                    ...rule_set.rule_params.conditional.disp_mut[key],
+                    shapes: [],
+                };
+            }
+        }
+        // Add shape rules for disp_mut_clonal (triangle=clonal, ellipse=subclonal).
+        Object.assign(
+            rule_set.rule_params.conditional,
+            getClonalMutationRuleParams(
+                !!distinguishMutationType,
+                !!distinguishDrivers
+            )
+        );
     }
     if (isWhiteBackgroundForGlyphsEnabled) {
         rule_set.legend_base_color = hexToRGBA(ASCN_WHITE);

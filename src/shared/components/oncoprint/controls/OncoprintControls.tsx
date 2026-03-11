@@ -58,6 +58,8 @@ export interface IOncoprintControlsHandlers
     onSelectShowMinimap: (showMinimap: boolean) => void;
     onSelectDistinguishMutationType: (distinguish: boolean) => void;
     onSelectDistinguishGermlineMutations: (distinguish: boolean) => void;
+    onToggleASCNCNColor?: (colorHex: string, show: boolean) => void;
+    onSelectShowClonalMutationShapes?: (show: boolean) => void;
     onSelectIsWhiteBackgroundForGlyphsEnabled?: (use: boolean) => void;
 
     onSelectHideVUS: (hide: boolean) => void;
@@ -108,6 +110,8 @@ export interface IOncoprintControlsState
     isSessionServiceEnabled: boolean;
     distinguishMutationType: boolean;
     distinguishGermlineMutations: boolean;
+    showASCNCNColors?: { [colorHex: string]: boolean };
+    showClonalMutationShapes?: boolean;
     sortByMutationType: boolean;
     sortByDrivers: boolean;
     sortByCaseListDisabled: boolean;

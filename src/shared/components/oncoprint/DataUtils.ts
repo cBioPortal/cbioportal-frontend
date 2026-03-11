@@ -31,6 +31,11 @@ import { CaseAggregatedData } from 'shared/model/CaseAggregatedData';
 import { AnnotatedExtendedAlteration } from 'shared/model/AnnotatedExtendedAlteration';
 import { CustomDriverNumericGeneMolecularData } from 'shared/model/CustomDriverNumericGeneMolecularData';
 import { isSampleProfiled } from 'shared/lib/isSampleProfiled';
+import {
+    ClonalValue,
+    getClonalValue,
+} from 'shared/components/mutationTable/column/clonal/ClonalColumnFormatter';
+import { getOncoPrintASCNCNColor } from 'shared/lib/ASCNUtils';
 
 const cnaDataToString: { [integerCNA: string]: string | undefined } = {
     '-2': 'homdel',
@@ -243,6 +248,41 @@ export function fillGeneticTrackDatum(
     newDatum.disp_germ = newDatum.disp_mut
         ? dispGermline[newDatum.disp_mut]
         : undefined;
+
+    // Compute clonal status and ASCN CN color from any mutation with ASCN data
+    const mutationWithAscn = data.find(
+        event =>
+            event.molecularProfileAlterationType ===
+                AlterationTypeConstants.MUTATION_EXTENDED &&
+            event.alleleSpecificCopyNumber
+    );
+    if (mutationWithAscn) {
+        const clonalValue = getClonalValue(mutationWithAscn as any);
+        if (
+            clonalValue === ClonalValue.CLONAL ||
+            clonalValue === ClonalValue.SUBCLONAL
+        ) {
+            newDatum.disp_clonal = clonalValue;
+        }
+
+        const ascn = mutationWithAscn.alleleSpecificCopyNumber;
+        if (ascn) {
+            const color = getOncoPrintASCNCNColor(
+                ascn.totalCopyNumber,
+                ascn.minorCopyNumber
+            );
+            if (color !== null) {
+                newDatum.disp_ascn_cn = color;
+            }
+        }
+    }
+
+    // Compute combined mutation+clonal field for FACETS shape-based rendering
+    if (newDatum.disp_mut) {
+        newDatum.disp_mut_clonal = newDatum.disp_clonal
+            ? `${newDatum.disp_mut}_${newDatum.disp_clonal}`
+            : newDatum.disp_mut;
+    }
 
     return newDatum as GeneticTrackDatum; // return for convenience, even though changes made in place
 }

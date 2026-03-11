@@ -3,6 +3,10 @@ import { CopyNumberSeg, Mutation } from 'cbioportal-ts-api-client';
 import { normalizeChromosome } from 'cbioportal-utils';
 import { TrackProps } from 'shared/components/igv/IntegrativeGenomicsViewer';
 import { getColorForProteinImpactType } from 'shared/lib/MutationUtils';
+import {
+    getASCNCallSegmentColor,
+    getASCNCopyNumberCall,
+} from 'shared/lib/ASCNUtils';
 
 export const WHOLE_GENOME = 'all';
 export const CNA_TRACK_NAME = 'CNA';
@@ -22,6 +26,11 @@ export type SegmentTrackFeatures = {
     study: string;
     numberOfProbes: number;
     sampleKey: string;
+    // Optional ASCN fields — populated when the study has allele-specific CN data
+    wgd?: string;
+    totalCopyNumber?: number;
+    minorCopyNumber?: number;
+    ascnCall?: string;
 };
 
 export type MutationTrackFeatures = {
@@ -151,20 +160,57 @@ export function generateSegmentFileContent(segments: CopyNumberSeg[]): string {
 }
 
 export function generateSegmentFeatures(
-    segments: CopyNumberSeg[]
+    segments: CopyNumberSeg[],
+    wgdBySampleId?: { [sampleId: string]: string }
 ): SegmentTrackFeatures[] {
-    return segments.map(segment => ({
-        chr: normalizeChromosome(segment.chromosome),
-        start: segment.start,
-        end: segment.end,
-        value: segment.segmentMean,
-        sample: segment.sampleId,
-        patient: segment.patientId,
-        study: segment.studyId,
-        numberOfProbes: segment.numberOfProbes,
-        sampleKey: segment.sampleId,
-        popupData: () => segmentPopupData(segment),
-    }));
+    return segments.map(segment => {
+        // Attempt to read ASCN integer copy numbers that FACETS studies may
+        // include as extra runtime fields even though the TypeScript type
+        // doesn't declare them.
+        const seg = segment as any;
+        const totalCopyNumber: number | undefined = seg.totalCopyNumber;
+        const minorCopyNumber: number | undefined = seg.minorCopyNumber;
+        const wgd: string | undefined = wgdBySampleId
+            ? wgdBySampleId[segment.sampleId]
+            : undefined;
+
+        let ascnCall: string | undefined;
+        if (
+            wgd !== undefined &&
+            totalCopyNumber !== undefined &&
+            minorCopyNumber !== undefined
+        ) {
+            ascnCall = getASCNCopyNumberCall(
+                wgd,
+                String(totalCopyNumber),
+                String(minorCopyNumber)
+            );
+        }
+
+        return {
+            chr: normalizeChromosome(segment.chromosome),
+            start: segment.start,
+            end: segment.end,
+            value: segment.segmentMean,
+            sample: segment.sampleId,
+            patient: segment.patientId,
+            study: segment.studyId,
+            numberOfProbes: segment.numberOfProbes,
+            sampleKey: segment.sampleId,
+            wgd,
+            totalCopyNumber,
+            minorCopyNumber,
+            ascnCall,
+            popupData: () =>
+                segmentPopupData(
+                    segment,
+                    wgd,
+                    totalCopyNumber,
+                    minorCopyNumber,
+                    ascnCall
+                ),
+        };
+    });
 }
 
 export function generateMutationFeatures(
@@ -214,12 +260,31 @@ export function mutationPopupData(mutation: Mutation) {
     ];
 }
 
-export function segmentPopupData(segment: CopyNumberSeg) {
-    return [
+export function segmentPopupData(
+    segment: CopyNumberSeg,
+    wgd?: string,
+    totalCopyNumber?: number,
+    minorCopyNumber?: number,
+    ascnCall?: string
+) {
+    const rows: { name: string; value: string | number }[] = [
         { name: 'Sample', value: segment.sampleId },
         { name: 'Mean CN log2 value', value: segment.segmentMean },
         { name: 'Location', value: getLocation(segment) },
     ];
+    if (wgd !== undefined) {
+        rows.push({ name: 'WGD', value: wgd });
+    }
+    if (totalCopyNumber !== undefined) {
+        rows.push({ name: 'Total Copy Number', value: totalCopyNumber });
+    }
+    if (minorCopyNumber !== undefined) {
+        rows.push({ name: 'Minor Copy Number', value: minorCopyNumber });
+    }
+    if (ascnCall !== undefined) {
+        rows.push({ name: 'ASCN Call', value: ascnCall });
+    }
+    return rows;
 }
 
 function getLocation(feature: {

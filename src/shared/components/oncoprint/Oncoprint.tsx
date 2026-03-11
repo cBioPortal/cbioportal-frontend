@@ -8,7 +8,11 @@ import {
     InitParams,
     ColumnLabel,
 } from 'oncoprintjs';
-import { GenePanelData, MolecularProfile } from 'cbioportal-ts-api-client';
+import {
+    AlleleSpecificCopyNumber,
+    GenePanelData,
+    MolecularProfile,
+} from 'cbioportal-ts-api-client';
 import { observer } from 'mobx-react';
 import { computed, makeObservable } from 'mobx';
 import { transition } from './DeltaUtils';
@@ -142,7 +146,7 @@ export type GeneticTrackDatum_Data = Pick<
     | 'eventInfo'
     | 'site1HugoSymbol'
     | 'site2HugoSymbol'
->;
+> & { alleleSpecificCopyNumber?: AlleleSpecificCopyNumber };
 
 export type GeneticTrackDatum_ProfiledIn = {
     genePanelId?: string;
@@ -165,6 +169,9 @@ export type GeneticTrackDatum = {
     disp_prot?: string;
     disp_structuralVariant?: string;
     disp_germ?: boolean;
+    disp_clonal?: string;
+    disp_ascn_cn?: string; // hex color from ASCN CN call, when available
+    disp_mut_clonal?: string; // combined mut type + clonal status, used for FACETS shape rendering
 };
 
 export type GeneticTrackSpec = {
@@ -295,6 +302,8 @@ export interface IOncoprintProps {
     distinguishMutationType?: boolean;
     distinguishDrivers?: boolean;
     distinguishGermlineMutations?: boolean;
+    showASCNCNColors?: { [colorHex: string]: boolean };
+    showClonalMutationShapes?: boolean;
 
     showTrackLabels?: boolean;
     showSublabels?: boolean;

@@ -285,6 +285,8 @@ export default class ResultsViewOncoprint extends React.Component<
 
     @observable distinguishGermlineMutations: boolean = true;
     @observable distinguishMutationType: boolean = true;
+    @observable showASCNCNColors: { [colorHex: string]: boolean } = {};
+    @observable showClonalMutationShapes: boolean = false;
     @observable showUnalteredColumns: boolean = true;
     @observable showWhitespaceBetweenColumns: boolean = true;
     @observable showClinicalTrackLegends: boolean = true;
@@ -591,6 +593,12 @@ export default class ResultsViewOncoprint extends React.Component<
             get distinguishGermlineMutations() {
                 return self.distinguishGermlineMutations;
             },
+            get showASCNCNColors() {
+                return self.showASCNCNColors;
+            },
+            get showClonalMutationShapes() {
+                return self.showClonalMutationShapes;
+            },
             get annotateDriversOncoKb() {
                 return self.props.store.driverAnnotationSettings.oncoKb;
             },
@@ -866,6 +874,15 @@ export default class ResultsViewOncoprint extends React.Component<
             onSelectDistinguishGermlineMutations: (s: boolean) => {
                 this.distinguishGermlineMutations = s;
             },
+            onToggleASCNCNColor: action((colorHex: string, show: boolean) => {
+                this.showASCNCNColors = {
+                    ...this.showASCNCNColors,
+                    [colorHex]: show,
+                };
+            }),
+            onSelectShowClonalMutationShapes: action((s: boolean) => {
+                this.showClonalMutationShapes = s;
+            }),
             onSelectAnnotateOncoKb: action((s: boolean) => {
                 this.props.store.driverAnnotationSettings.oncoKb = s;
             }),
@@ -2490,6 +2507,10 @@ export default class ResultsViewOncoprint extends React.Component<
                                 distinguishDrivers={this.distinguishDrivers}
                                 distinguishGermlineMutations={
                                     this.distinguishGermlineMutations
+                                }
+                                showASCNCNColors={this.showASCNCNColors}
+                                showClonalMutationShapes={
+                                    this.showClonalMutationShapes
                                 }
                                 sortConfig={this.oncoprintLibrarySortConfig}
                                 showClinicalTrackLegends={

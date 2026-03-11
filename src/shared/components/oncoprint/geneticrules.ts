@@ -6,6 +6,7 @@ import {
     RuleSetType,
 } from 'oncoprintjs';
 import { DEFAULT_GREY, hexToRGBA } from 'shared/lib/Colors';
+import { ASCN_ONCOPRINT_CN_COLORS } from 'shared/lib/ASCNUtils';
 import _ from 'lodash';
 import {
     CNA_COLOR_AMP,
@@ -64,6 +65,17 @@ enum ShapeId {
     structuralVariantVUSRectangle = 'structuralVariantVUSRectangle',
 
     germlineRectangle = 'germlineRectangle',
+
+    clonalIndicatorRectangle = 'clonalIndicatorRectangle',
+    subclonalIndicatorRectangle = 'subclonalIndicatorRectangle',
+
+    ascnCNBlueRectangle = 'ascnCNBlueRectangle',
+    ascnCNLightBlueRectangle = 'ascnCNLightBlueRectangle',
+    ascnCNLightPurpleRectangle = 'ascnCNLightPurpleRectangle',
+    ascnCNPurpleRectangle = 'ascnCNPurpleRectangle',
+    ascnCNWhiteRectangle = 'ascnCNWhiteRectangle',
+    ascnCNPinkRectangle = 'ascnCNPinkRectangle',
+    ascnCNRedRectangle = 'ascnCNRedRectangle',
 
     missenseMutationDriverRectangle = 'missenseMutationDriverRectangle',
     missenseMutationVUSRectangle = 'missenseMutationVUSRectangle',
@@ -187,6 +199,125 @@ const shapeBank = {
         width: 100,
         height: 8,
         z: 7,
+    },
+    [ShapeId.clonalIndicatorRectangle]: {
+        type: 'rectangle',
+        fill: [0, 119, 182, 1] as [number, number, number, number],
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 16.67,
+        z: 8,
+    },
+    [ShapeId.subclonalIndicatorRectangle]: {
+        type: 'rectangle',
+        fill: [255, 140, 0, 1] as [number, number, number, number],
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 16.67,
+        z: 8,
+    },
+    // ASCN CN call indicator — full cell, same size/placement as amp/homdel
+    [ShapeId.ascnCNBlueRectangle]: {
+        type: 'rectangle',
+        fill: hexToRGBA(ASCN_ONCOPRINT_CN_COLORS.BLUE) as [
+            number,
+            number,
+            number,
+            number
+        ],
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100,
+        z: 2,
+    },
+    [ShapeId.ascnCNLightBlueRectangle]: {
+        type: 'rectangle',
+        fill: hexToRGBA(ASCN_ONCOPRINT_CN_COLORS.LIGHT_BLUE) as [
+            number,
+            number,
+            number,
+            number
+        ],
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100,
+        z: 2,
+    },
+    [ShapeId.ascnCNLightPurpleRectangle]: {
+        type: 'rectangle',
+        fill: hexToRGBA(ASCN_ONCOPRINT_CN_COLORS.LIGHT_PURPLE) as [
+            number,
+            number,
+            number,
+            number
+        ],
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100,
+        z: 2,
+    },
+    [ShapeId.ascnCNPurpleRectangle]: {
+        type: 'rectangle',
+        fill: hexToRGBA(ASCN_ONCOPRINT_CN_COLORS.PURPLE) as [
+            number,
+            number,
+            number,
+            number
+        ],
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100,
+        z: 2,
+    },
+    [ShapeId.ascnCNWhiteRectangle]: {
+        type: 'rectangle',
+        fill: hexToRGBA(ASCN_ONCOPRINT_CN_COLORS.WHITE) as [
+            number,
+            number,
+            number,
+            number
+        ],
+        stroke: hexToRGBA('#cccccc') as [number, number, number, number],
+        'stroke-width': 0.5,
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100,
+        z: 2,
+    },
+    [ShapeId.ascnCNPinkRectangle]: {
+        type: 'rectangle',
+        fill: hexToRGBA(ASCN_ONCOPRINT_CN_COLORS.PINK) as [
+            number,
+            number,
+            number,
+            number
+        ],
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100,
+        z: 2,
+    },
+    [ShapeId.ascnCNRedRectangle]: {
+        type: 'rectangle',
+        fill: hexToRGBA(ASCN_ONCOPRINT_CN_COLORS.RED) as [
+            number,
+            number,
+            number,
+            number
+        ],
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100,
+        z: 2,
     },
     [ShapeId.spliceMutationDriverRectangle]: {
         type: 'rectangle',
@@ -358,6 +489,64 @@ const non_mutation_rule_params: GeneticAlterationRuleParams = {
                 legend_label: 'Protein Low',
                 legend_order: PROT_LOW_LEGEND_ORDER,
             },
+        },
+    },
+};
+
+const CLONAL_LEGEND_ORDER = -1; // show before mutations in legend
+const ASCN_CN_LEGEND_ORDER = -2; // show before clonal in legend
+
+export const ascn_cn_rule_params = {
+    disp_ascn_cn: {
+        [ASCN_ONCOPRINT_CN_COLORS.BLUE]: {
+            shapes: [shapeBank[ShapeId.ascnCNBlueRectangle]],
+            legend_label: 'Homozygous Deletion',
+            legend_order: ASCN_CN_LEGEND_ORDER,
+        },
+        [ASCN_ONCOPRINT_CN_COLORS.LIGHT_BLUE]: {
+            shapes: [shapeBank[ShapeId.ascnCNLightBlueRectangle]],
+            legend_label: 'Heterozygous Loss / CNLOH',
+            legend_order: ASCN_CN_LEGEND_ORDER,
+        },
+        [ASCN_ONCOPRINT_CN_COLORS.LIGHT_PURPLE]: {
+            shapes: [shapeBank[ShapeId.ascnCNLightPurpleRectangle]],
+            legend_label: 'CNLOH (Gain)',
+            legend_order: ASCN_CN_LEGEND_ORDER,
+        },
+        [ASCN_ONCOPRINT_CN_COLORS.PURPLE]: {
+            shapes: [shapeBank[ShapeId.ascnCNPurpleRectangle]],
+            legend_label: 'AMP with LOH',
+            legend_order: ASCN_CN_LEGEND_ORDER,
+        },
+        [ASCN_ONCOPRINT_CN_COLORS.WHITE]: {
+            shapes: [shapeBank[ShapeId.ascnCNWhiteRectangle]],
+            legend_label: 'Diploid',
+            legend_order: ASCN_CN_LEGEND_ORDER,
+        },
+        [ASCN_ONCOPRINT_CN_COLORS.PINK]: {
+            shapes: [shapeBank[ShapeId.ascnCNPinkRectangle]],
+            legend_label: 'Gain',
+            legend_order: ASCN_CN_LEGEND_ORDER,
+        },
+        [ASCN_ONCOPRINT_CN_COLORS.RED]: {
+            shapes: [shapeBank[ShapeId.ascnCNRedRectangle]],
+            legend_label: 'Amplification',
+            legend_order: ASCN_CN_LEGEND_ORDER,
+        },
+    },
+};
+
+const clonal_rule_params = {
+    disp_clonal: {
+        CLONAL: {
+            shapes: [shapeBank[ShapeId.clonalIndicatorRectangle]],
+            legend_label: 'Clonal',
+            legend_order: CLONAL_LEGEND_ORDER,
+        },
+        SUBCLONAL: {
+            shapes: [shapeBank[ShapeId.subclonalIndicatorRectangle]],
+            legend_label: 'Subclonal',
+            legend_order: CLONAL_LEGEND_ORDER,
         },
     },
 };
@@ -665,3 +854,244 @@ export const genetic_rule_set_different_colors_recurrence: IGeneticAlterationRul
         },
     }
 ) as IGeneticAlterationRuleSetParams;
+
+// ─── Clonal mutation shapes (for FACETS shape rendering) ────────────────────
+// When FACETS overlay is enabled, mutation boxes change shape based on clonal
+// status: upward-pointing triangle for CLONAL, ellipse for SUBCLONAL.
+// The disp_mut_clonal datum field encodes "{mutType}_{CLONAL|SUBCLONAL}" or
+// just "{mutType}" (fallback rectangle) when no clonal data is available.
+
+const MUT_Y_TOP = 33.33;
+const MUT_Y_BOTTOM = 66.67;
+const MUT_HEIGHT = MUT_Y_BOTTOM - MUT_Y_TOP;
+const MUT_Z = 6;
+
+function clonalTriangleShape(color: string) {
+    return {
+        type: 'triangle',
+        fill: hexToRGBA(color),
+        // upward-pointing: apex at top-center, base at bottom
+        x1: 50,
+        y1: MUT_Y_TOP,
+        x2: 0,
+        y2: MUT_Y_BOTTOM,
+        x3: 100,
+        y3: MUT_Y_BOTTOM,
+        z: MUT_Z,
+    };
+}
+
+function subclonalEllipseShape(color: string) {
+    return {
+        type: 'ellipse',
+        fill: hexToRGBA(color),
+        x: 10,
+        y: MUT_Y_TOP + MUT_HEIGHT * 0.05,
+        width: 80,
+        height: MUT_HEIGHT * 0.9,
+        z: MUT_Z,
+    };
+}
+
+function fallbackRectShape(color: string) {
+    return {
+        type: 'rectangle',
+        fill: hexToRGBA(color),
+        x: 0,
+        y: MUT_Y_TOP,
+        width: 100,
+        height: MUT_HEIGHT,
+        z: MUT_Z,
+    };
+}
+
+function makeClonalMutRules(
+    mutKey: string,
+    driverColor: string,
+    vusColor: string,
+    legendLabel: string
+) {
+    return {
+        [`${mutKey}_rec_CLONAL`]: {
+            shapes: [clonalTriangleShape(driverColor)],
+            legend_label: `${legendLabel} (putative driver, clonal)`,
+            legend_order: MUTATION_LEGEND_ORDER,
+        },
+        [`${mutKey}_rec_SUBCLONAL`]: {
+            shapes: [subclonalEllipseShape(driverColor)],
+            legend_label: `${legendLabel} (putative driver, subclonal)`,
+            legend_order: MUTATION_LEGEND_ORDER,
+        },
+        // fallback when no clonal data is available
+        [`${mutKey}_rec`]: {
+            shapes: [fallbackRectShape(driverColor)],
+            legend_label: `${legendLabel} (putative driver)`,
+            legend_order: MUTATION_LEGEND_ORDER,
+        },
+        [`${mutKey}_CLONAL`]: {
+            shapes: [clonalTriangleShape(vusColor)],
+            legend_label: `${legendLabel} (unknown significance, clonal)`,
+            legend_order: MUTATION_LEGEND_ORDER,
+        },
+        [`${mutKey}_SUBCLONAL`]: {
+            shapes: [subclonalEllipseShape(vusColor)],
+            legend_label: `${legendLabel} (unknown significance, subclonal)`,
+            legend_order: MUTATION_LEGEND_ORDER,
+        },
+        // fallback when no clonal data is available
+        [mutKey]: {
+            shapes: [fallbackRectShape(vusColor)],
+            legend_label: `${legendLabel} (unknown significance)`,
+            legend_order: MUTATION_LEGEND_ORDER,
+        },
+    };
+}
+
+/**
+ * Returns rule params for `disp_mut_clonal` that render mutation boxes as
+ * triangles (clonal) or ellipses (subclonal), keyed by mutation type and
+ * driver status.  When no clonal data is present the fallback value equals
+ * the plain disp_mut value and renders a rectangle (identical to normal mode).
+ */
+export function getClonalMutationRuleParams(
+    distinguishMutationType: boolean,
+    distinguishDrivers: boolean
+): GeneticAlterationRuleParams['conditional'] {
+    if (!distinguishMutationType) {
+        if (!distinguishDrivers) {
+            const allKeys = [
+                'missense_rec',
+                'splice_rec',
+                'trunc_rec',
+                'inframe_rec',
+                'promoter_rec',
+                'other_rec',
+                'missense',
+                'splice',
+                'trunc',
+                'inframe',
+                'promoter',
+                'other',
+            ];
+            return {
+                disp_mut_clonal: {
+                    [allKeys.map(k => `${k}_CLONAL`).join(',')]: {
+                        shapes: [clonalTriangleShape(MUT_COLOR_MISSENSE)],
+                        legend_label: 'Mutation (clonal)',
+                        legend_order: MUTATION_LEGEND_ORDER,
+                    },
+                    [allKeys.map(k => `${k}_SUBCLONAL`).join(',')]: {
+                        shapes: [subclonalEllipseShape(MUT_COLOR_MISSENSE)],
+                        legend_label: 'Mutation (subclonal)',
+                        legend_order: MUTATION_LEGEND_ORDER,
+                    },
+                    [allKeys.join(',')]: {
+                        shapes: [fallbackRectShape(MUT_COLOR_MISSENSE)],
+                        legend_label: 'Mutation',
+                        legend_order: MUTATION_LEGEND_ORDER,
+                    },
+                },
+            } as GeneticAlterationRuleParams['conditional'];
+        } else {
+            const driverKeys = [
+                'missense_rec',
+                'splice_rec',
+                'trunc_rec',
+                'inframe_rec',
+                'promoter_rec',
+                'other_rec',
+            ];
+            const vusKeys = [
+                'missense',
+                'splice',
+                'trunc',
+                'inframe',
+                'promoter',
+                'other',
+            ];
+            return {
+                disp_mut_clonal: {
+                    [driverKeys.map(k => `${k}_CLONAL`).join(',')]: {
+                        shapes: [clonalTriangleShape(MUT_COLOR_MISSENSE)],
+                        legend_label: 'Mutation (putative driver, clonal)',
+                        legend_order: MUTATION_LEGEND_ORDER,
+                    },
+                    [driverKeys.map(k => `${k}_SUBCLONAL`).join(',')]: {
+                        shapes: [subclonalEllipseShape(MUT_COLOR_MISSENSE)],
+                        legend_label: 'Mutation (putative driver, subclonal)',
+                        legend_order: MUTATION_LEGEND_ORDER,
+                    },
+                    [driverKeys.join(',')]: {
+                        shapes: [fallbackRectShape(MUT_COLOR_MISSENSE)],
+                        legend_label: 'Mutation (putative driver)',
+                        legend_order: MUTATION_LEGEND_ORDER,
+                    },
+                    [vusKeys.map(k => `${k}_CLONAL`).join(',')]: {
+                        shapes: [
+                            clonalTriangleShape(MUT_COLOR_MISSENSE_PASSENGER),
+                        ],
+                        legend_label: 'Mutation (unknown significance, clonal)',
+                        legend_order: MUTATION_LEGEND_ORDER,
+                    },
+                    [vusKeys.map(k => `${k}_SUBCLONAL`).join(',')]: {
+                        shapes: [
+                            subclonalEllipseShape(MUT_COLOR_MISSENSE_PASSENGER),
+                        ],
+                        legend_label:
+                            'Mutation (unknown significance, subclonal)',
+                        legend_order: MUTATION_LEGEND_ORDER,
+                    },
+                    [vusKeys.join(',')]: {
+                        shapes: [
+                            fallbackRectShape(MUT_COLOR_MISSENSE_PASSENGER),
+                        ],
+                        legend_label: 'Mutation (unknown significance)',
+                        legend_order: MUTATION_LEGEND_ORDER,
+                    },
+                },
+            } as GeneticAlterationRuleParams['conditional'];
+        }
+    }
+
+    // distinguishMutationType = true: each type gets its own color.
+    return {
+        disp_mut_clonal: {
+            ...makeClonalMutRules(
+                'missense',
+                MUT_COLOR_MISSENSE,
+                MUT_COLOR_MISSENSE_PASSENGER,
+                'Missense Mutation'
+            ),
+            ...makeClonalMutRules(
+                'splice',
+                MUT_COLOR_SPLICE,
+                MUT_COLOR_SPLICE_PASSENGER,
+                'Splice Mutation'
+            ),
+            ...makeClonalMutRules(
+                'trunc',
+                MUT_COLOR_TRUNC,
+                MUT_COLOR_TRUNC_PASSENGER,
+                'Truncating Mutation'
+            ),
+            ...makeClonalMutRules(
+                'inframe',
+                MUT_COLOR_INFRAME,
+                MUT_COLOR_INFRAME_PASSENGER,
+                'Inframe Mutation'
+            ),
+            ...makeClonalMutRules(
+                'promoter',
+                MUT_COLOR_PROMOTER,
+                MUT_COLOR_PROMOTER_PASSENGER,
+                'Promoter Mutation'
+            ),
+            ...makeClonalMutRules(
+                'other',
+                MUT_COLOR_OTHER,
+                MUT_COLOR_OTHER_PASSENGER,
+                'Other Mutation'
+            ),
+        },
+    } as GeneticAlterationRuleParams['conditional'];
+}

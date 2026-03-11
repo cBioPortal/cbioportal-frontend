@@ -6,6 +6,7 @@ import { ResultsViewPageStore } from '../ResultsViewPageStore';
 import _ from 'lodash';
 import OncoprintDropdownCount from './OncoprintDropdownCount';
 import CustomDropdown from 'shared/components/oncoprint/controls/CustomDropdown';
+import { ASCN_ONCOPRINT_CN_COLORS } from 'shared/lib/ASCNUtils';
 import {
     deriveDisplayTextFromGenericAssayType,
     filterGenericAssayEntitiesByGenes,
@@ -50,7 +51,22 @@ enum Tab {
     HEATMAP = 'Heatmap',
     GROUPS = 'Groups',
     CUSTOM_CHARTS = 'Custom Charts',
+    FACETS = 'FACETS',
 }
+
+// Labels and order for the 7 ASCN CN color categories shown in the FACETS tab
+const ASCN_CN_COLOR_ENTRIES: { colorHex: string; label: string }[] = [
+    { colorHex: ASCN_ONCOPRINT_CN_COLORS.BLUE, label: 'Homozygous Deletion' },
+    {
+        colorHex: ASCN_ONCOPRINT_CN_COLORS.LIGHT_BLUE,
+        label: 'Heterozygous Loss / CNLOH',
+    },
+    { colorHex: ASCN_ONCOPRINT_CN_COLORS.LIGHT_PURPLE, label: 'CNLOH (Gain)' },
+    { colorHex: ASCN_ONCOPRINT_CN_COLORS.PURPLE, label: 'AMP with LOH' },
+    { colorHex: ASCN_ONCOPRINT_CN_COLORS.WHITE, label: 'Diploid' },
+    { colorHex: ASCN_ONCOPRINT_CN_COLORS.PINK, label: 'Gain' },
+    { colorHex: ASCN_ONCOPRINT_CN_COLORS.RED, label: 'Amplification' },
+];
 
 export const MIN_DROPDOWN_WIDTH = 500;
 export const CONTAINER_PADDING_WIDTH = 20;
@@ -733,6 +749,69 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
         return Math.max(width, MIN_DROPDOWN_WIDTH);
     }
 
+    @computed get facetsTabContent() {
+        const showASCNCNColors = this.props.state.showASCNCNColors || {};
+        const showClonalMutationShapes = !!this.props.state
+            .showClonalMutationShapes;
+        return (
+            <div style={{ padding: '10px' }}>
+                <h5 style={{ marginTop: 0 }}>CN Colors</h5>
+                <div style={{ marginLeft: '10px' }}>
+                    {ASCN_CN_COLOR_ENTRIES.map(({ colorHex, label }) => (
+                        <div className="checkbox" key={colorHex}>
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    checked={!!showASCNCNColors[colorHex]}
+                                    onChange={() =>
+                                        this.props.handlers
+                                            .onToggleASCNCNColor &&
+                                        this.props.handlers.onToggleASCNCNColor(
+                                            colorHex,
+                                            !showASCNCNColors[colorHex]
+                                        )
+                                    }
+                                />
+                                <span
+                                    style={{
+                                        display: 'inline-block',
+                                        width: 12,
+                                        height: 12,
+                                        backgroundColor: colorHex,
+                                        border: '1px solid #aaa',
+                                        marginLeft: 4,
+                                        marginRight: 6,
+                                        verticalAlign: 'middle',
+                                    }}
+                                />
+                                {label}
+                            </label>
+                        </div>
+                    ))}
+                </div>
+                <h5>Mutation Shapes</h5>
+                <div style={{ marginLeft: '10px' }}>
+                    <div className="checkbox">
+                        <label>
+                            <input
+                                type="checkbox"
+                                checked={showClonalMutationShapes}
+                                onChange={() =>
+                                    this.props.handlers
+                                        .onSelectShowClonalMutationShapes &&
+                                    this.props.handlers.onSelectShowClonalMutationShapes(
+                                        !showClonalMutationShapes
+                                    )
+                                }
+                            />{' '}
+                            Show clonal/subclonal shaping
+                        </label>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     render() {
         return (
             <CustomDropdown
@@ -794,6 +873,9 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
                             }
                         >
                             {this.addChartTracksMenu.component}
+                        </MSKTab>
+                        <MSKTab key={4} id={Tab.FACETS} linkText="FACETS">
+                            {this.facetsTabContent}
                         </MSKTab>
                         {this.genericAssayTabs}
                     </MSKTabs>

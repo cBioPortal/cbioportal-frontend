@@ -51,6 +51,8 @@ interface IGenomicOverviewProps {
     store?: IGenomicOverviewStore;
     onResetView: () => void;
     genome?: string;
+    // WGD status per sample — enables ASCN call coloring on segment tracks
+    wgdBySampleId?: { [sampleId: string]: string };
 }
 
 interface IGenomicOverviewStore {
@@ -208,7 +210,10 @@ export default class GenomicOverview extends React.Component<
             const sortedSegments = this.props.cnaSegments
                 .slice()
                 .sort(compareFn);
-            const segFeatures = generateSegmentFeatures(sortedSegments);
+            const segFeatures = generateSegmentFeatures(
+                sortedSegments,
+                this.props.wgdBySampleId
+            );
             const segHeight = calcIgvTrackHeight(
                 segFeatures,
                 600,

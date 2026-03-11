@@ -11,11 +11,18 @@ import { MutationStatus } from '../PatientViewMutationsTabUtils';
 import { getVariantAlleleFrequency } from '../../../../shared/lib/MutationUtils';
 import { MutationOncoprintMode } from './MutationOncoprint';
 import { ShapeParams } from 'oncoprintjs/dist/js/oncoprintshape';
+import {
+    ClonalValue,
+    getClonalValue,
+} from 'shared/components/mutationTable/column/clonal/ClonalColumnFormatter';
+
+export { ClonalValue };
 
 export interface IMutationOncoprintTrackDatum extends IGeneHeatmapTrackDatum {
     mutation: Mutation;
     mutationStatus: MutationStatus;
     mutationId: string;
+    clonal: ClonalValue;
 }
 
 export const MUTATION_ONCOPRINT_NA_SHAPES: ShapeParams[] = [
@@ -96,6 +103,7 @@ export function makeMutationHeatmapData(
                     uid,
                     mutationId,
                     mutationStatus,
+                    clonal: getClonalValue(mutation),
                 });
             }
         }
@@ -133,6 +141,7 @@ export function makeMutationHeatmapData(
                     ? MutationStatus.PROFILED_BUT_NOT_MUTATED
                     : MutationStatus.NOT_PROFILED,
                 na: !isProfiledForGene,
+                clonal: getClonalValue(mutation),
             });
         }
     }
