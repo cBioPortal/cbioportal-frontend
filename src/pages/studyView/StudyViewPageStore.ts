@@ -2790,6 +2790,11 @@ export class StudyViewPageStore
         [id: string]: MobxPromise<MultiSelectionTableRow[]>;
     } = {};
 
+    // Lookup: uniqueKey → value → sampleIds (for filtering)
+    private _resourceMetadataValueToSamples: {
+        [uniqueKey: string]: Map<string, string[]>;
+    } = {};
+
     //used in saving gene specific charts
     @observable private _geneSpecificChartMap = observable.map<
         ChartUniqueKey,
@@ -4032,6 +4037,9 @@ export class StudyViewPageStore
                     break;
                 case ChartTypeEnum.VARIANT_ANNOTATIONS_TABLE:
                     this.updateNamespaceDataFilters(chartUniqueKey, [[]]);
+                    break;
+                case ChartTypeEnum.RESOURCE_METADATA_TABLE:
+                    this.updateResourceMetadataFilter(chartUniqueKey, []);
                     break;
                 case ChartTypeEnum.GENOMIC_PROFILES_TABLE:
                     this.setGenomicProfilesFilter([]);
@@ -5521,11 +5529,12 @@ export class StudyViewPageStore
                 ]
             );
 
-            // Pre-populate data cache with mock data
+            // Pre-populate data cache
+            // numberOfAlteredCases = unique samples, totalCount = resource rows
             const tableRows: MultiSelectionTableRow[] = entry.rows.map(row => ({
                 uniqueKey: row.value,
                 label: row.value,
-                numberOfAlteredCases: row.count,
+                numberOfAlteredCases: row.uniqueSampleKeys.length,
                 numberOfProfiledCases: totalProfiledCases,
                 totalCount: row.count,
                 qValue: 0,
@@ -5543,9 +5552,86 @@ export class StudyViewPageStore
                 default: [],
             });
 
+            // Build value → sampleIds lookup for filtering
+            const valueToSamples = new Map<string, string[]>();
+            for (const row of entry.rows) {
+                valueToSamples.set(row.value, row.uniqueSampleKeys);
+            }
+            this._resourceMetadataValueToSamples[uniqueKey] = valueToSamples;
+
             // Make chart visible
             this.changeChartVisibility(uniqueKey, true);
         }
+    }
+
+    @action.bound
+    public updateResourceMetadataFilter(
+        uniqueKey: string,
+        values: string[][]
+    ): void {
+        if (values.length > 0 && values.some(v => v.length > 0)) {
+            const valueLookup = this._resourceMetadataValueToSamples[uniqueKey];
+            if (!valueLookup) return;
+
+            // Collect sample IDs matching selected values
+            const matchingSampleIds = new Set<string>();
+            for (const valueGroup of values) {
+                for (const value of valueGroup) {
+                    const sampleIds = valueLookup.get(value);
+                    if (sampleIds) {
+                        sampleIds.forEach(id => matchingSampleIds.add(id));
+                    }
+                }
+            }
+
+            const studyId = this.queriedPhysicalStudyIds.result?.[0];
+            if (!studyId) return;
+
+            const sampleIdentifiers: SampleIdentifier[] = Array.from(
+                matchingSampleIds
+            ).map(sampleId => ({ sampleId, studyId }));
+
+            this._chartSampleIdentifiersFilterSet.set(
+                uniqueKey,
+                sampleIdentifiers
+            );
+        } else {
+            this._chartSampleIdentifiersFilterSet.delete(uniqueKey);
+        }
+    }
+
+    @action.bound
+    public addResourceMetadataFilter(
+        uniqueKey: string,
+        values: string[][]
+    ): void {
+        const existing = this.getResourceMetadataFiltersByUniqueKey(uniqueKey);
+        const merged = existing.concat(values);
+        this.updateResourceMetadataFilter(uniqueKey, merged);
+    }
+
+    public getResourceMetadataFiltersByUniqueKey(
+        uniqueKey: string
+    ): string[][] {
+        const sampleIdentifiers = this._chartSampleIdentifiersFilterSet.get(
+            uniqueKey
+        );
+        if (!sampleIdentifiers || sampleIdentifiers.length === 0) return [];
+
+        // Reverse lookup: find which values are selected
+        const valueLookup = this._resourceMetadataValueToSamples[uniqueKey];
+        if (!valueLookup) return [];
+
+        const selectedSampleIds = new Set(
+            sampleIdentifiers.map(s => s.sampleId)
+        );
+        const selectedValues: string[] = [];
+        for (const [value, sampleIds] of valueLookup) {
+            if (sampleIds.every(id => selectedSampleIds.has(id))) {
+                selectedValues.push(value);
+            }
+        }
+        return selectedValues.length > 0 ? [selectedValues] : [];
     }
 
     public getResourceMetadataChartData(
