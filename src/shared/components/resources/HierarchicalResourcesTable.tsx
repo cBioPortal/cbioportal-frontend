@@ -296,7 +296,7 @@ function toLabel(key: string): string {
 
 const BASE_COLUMN_DEFS: ColDef[] = [
     {
-        headerName: 'Patient / Sample / Resource / Group / Item',
+        headerName: 'Resource',
         field: 'id',
         flex: 3,
         cellRenderer: 'entityCellRenderer',

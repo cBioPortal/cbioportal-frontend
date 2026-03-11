@@ -45,14 +45,27 @@ export default class HierarchicalResourcesTab extends React.Component<
     }
 
     readonly tsvData = remoteData<ResourceNodeRow[]>({
-        await: () => [],
+        await: () => [this.props.store.samples],
         invoke: async () => {
             const tsvFile = STUDY_RESOURCE_TSV_MAP[this.props.store.studyId];
             if (!tsvFile) return [];
             const response = await fetch(`${RESOURCE_BASE_URL}${tsvFile}`);
             if (!response.ok) return [];
             const text = await response.text();
-            return parseTsvToRows(text);
+            const allRows = parseTsvToRows(text);
+
+            // Filter to only rows for this patient. For sample-mode pages,
+            // also restrict to the specific sample(s) loaded for this patient.
+            const patientId = this.props.store.patientId;
+            const sampleIds = new Set(this.props.store.sampleIds);
+
+            return allRows.filter(row => {
+                if (row.patientId !== patientId) return false;
+                // Patient-level resources (sampleId === patientId) always pass.
+                if (row.sampleId === patientId) return true;
+                // Sample-level resources: only include samples for this patient.
+                return sampleIds.has(row.sampleId);
+            });
         },
     });
 
