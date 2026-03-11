@@ -59,6 +59,7 @@ import {
     getColoringMenuOptionValue,
     basicAppearance,
     getAxisDataOverlapSampleCount,
+    getAxisDataOverlapPatientCount,
     isAlterationTypePresent,
     getCacheQueries,
     getCategoryOptions,
@@ -736,6 +737,48 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.horzAxisDataPromise.result!,
             this.vertAxisDataPromise.result!
         );
+        const horzClinicalAttribute =
+            this.horzSelection.dataType === CLIN_ATTR_DATA_TYPE
+                ? this.clinicalAttributeIdToClinicalAttribute.result?.[
+                      this.horzSelection.dataSourceId!
+                  ]
+                : this.horzSelection.dataType === CUSTOM_ATTR_DATA_TYPE
+                ? this.customAttributeIdToClinicalAttribute.result?.[
+                      this.horzSelection.dataSourceId!
+                  ]
+                : undefined;
+
+        const vertClinicalAttribute =
+            this.vertSelection.dataType === CLIN_ATTR_DATA_TYPE
+                ? this.clinicalAttributeIdToClinicalAttribute.result?.[
+                      this.vertSelection.dataSourceId!
+                  ]
+                : this.vertSelection.dataType === CUSTOM_ATTR_DATA_TYPE
+                ? this.customAttributeIdToClinicalAttribute.result?.[
+                      this.vertSelection.dataSourceId!
+                  ]
+                : undefined;
+
+        const horzIsPatientAttribute = !!horzClinicalAttribute?.patientAttribute;
+        const vertIsPatientAttribute = !!vertClinicalAttribute?.patientAttribute;
+
+        const bothAxesPatientBased =
+            horzIsPatientAttribute && vertIsPatientAttribute;
+        const mixedPatientAndSample =
+            horzIsPatientAttribute !== vertIsPatientAttribute;
+
+        const axisOverlapPatientCount = getAxisDataOverlapPatientCount(
+            this.horzAxisDataPromise.result!,
+            this.vertAxisDataPromise.result!,
+            this.props.sampleKeyToSample.result!
+        );
+
+        const overlapCountToDisplay = bothAxesPatientBased
+            ? axisOverlapPatientCount
+            : axisOverlapSampleCount;
+
+        const overlapUnitLabel = bothAxesPatientBased ? 'patients' : 'samples';
+
         let horzAxisStudies: CancerStudy[] = [];
         let vertAxisStudies: CancerStudy[] = [];
         let isHorzAxisNoneOptionSelected = false;
@@ -925,7 +968,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         components.push(
             <div>
                 <strong>Intersection of the two axes: </strong>
-                {`${axisOverlapSampleCount} samples from ${
+                {`${overlapCountToDisplay} ${overlapUnitLabel} from ${
                     intersectionStudiesOfTwoAxis.length
                 } ${Pluralize('study', intersectionStudiesOfTwoAxis.length)}`}
             </div>
@@ -943,7 +986,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.vertSelection.mutationCountBy ===
                 MutationCountBy.VariantAlleleFrequency;
 
-        let mainMessage = `Showing ${axisOverlapSampleCount} samples with data in both profiles (axes)`;
+        let mainMessage = `Showing ${overlapCountToDisplay} ${overlapUnitLabel} with data in both profiles (axes)`;
+
+        if (mixedPatientAndSample) {
+            mainMessage +=
+                '. Warning: one axis is patient-based and the other is sample-based, so sample counts are shown.';
+        }
+
         if (isHorzAxisVAF || isVertAxisVAF) {
             mainMessage +=
                 '. Samples without mutations or Variant Allele Frequency data are excluded from the plot';
