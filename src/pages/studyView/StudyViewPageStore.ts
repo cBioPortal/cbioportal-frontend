@@ -5634,6 +5634,43 @@ export class StudyViewPageStore
         return selectedValues.length > 0 ? [selectedValues] : [];
     }
 
+    @computed
+    get resourceMetadataFilterSummary(): Array<{
+        uniqueKey: string;
+        displayName: string;
+        values: string[];
+    }> {
+        const result: Array<{
+            uniqueKey: string;
+            displayName: string;
+            values: string[];
+        }> = [];
+        this._resourceMetadataCharts.forEach((chartMeta, uniqueKey) => {
+            const filters = this.getResourceMetadataFiltersByUniqueKey(
+                uniqueKey
+            );
+            const values = filters.flat();
+            if (values.length > 0) {
+                result.push({
+                    uniqueKey,
+                    displayName: chartMeta.displayName,
+                    values,
+                });
+            }
+        });
+        return result;
+    }
+
+    @action.bound
+    public removeResourceMetadataFilter(
+        uniqueKey: string,
+        value: string
+    ): void {
+        const filters = this.getResourceMetadataFiltersByUniqueKey(uniqueKey);
+        const updated = filters.map(group => group.filter(v => v !== value));
+        this.updateResourceMetadataFilter(uniqueKey, updated);
+    }
+
     public getResourceMetadataChartData(
         chartMeta: ChartMeta
     ): MobxPromise<MultiSelectionTableRow[]> {

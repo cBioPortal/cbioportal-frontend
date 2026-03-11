@@ -79,6 +79,7 @@ export interface IUserSelectionsProps {
     ) => void;
     removeMutationDataFilter: (uniqueKey: string, value: string) => void;
     removeNamespaceDataFilter: (uniqueKey: string, value: string) => void;
+    removeResourceMetadataFilter: (uniqueKey: string, value: string) => void;
     updateGenericAssayDataFilter: (
         uniqueKey: string,
         values: DataFilterValue[]
@@ -344,6 +345,48 @@ export default class UserSelections extends React.Component<
             },
             components
         );
+
+        // Resource metadata chart filters
+        for (const filterEntry of this.props.store
+            .resourceMetadataFilterSummary) {
+            const chartMeta = this.props.attributesMetaSet[
+                filterEntry.uniqueKey
+            ];
+            const pillTags = filterEntry.values.map(value => (
+                <PillTag
+                    content={value}
+                    backgroundColor={
+                        STUDY_VIEW_CONFIG.colors.theme.clinicalFilterContent
+                    }
+                    onDelete={() =>
+                        this.props.removeResourceMetadataFilter(
+                            filterEntry.uniqueKey,
+                            value
+                        )
+                    }
+                    store={this.props.store}
+                />
+            ));
+            components.push(
+                <div className={styles.parentGroupLogic}>
+                    <GroupLogic
+                        components={[
+                            <span className={styles.filterClinicalAttrName}>
+                                {chartMeta?.displayName ||
+                                    filterEntry.displayName}
+                            </span>,
+                            <GroupLogic
+                                components={pillTags}
+                                operation={'or'}
+                                group={pillTags.length > 1}
+                            />,
+                        ]}
+                        operation={':'}
+                        group={false}
+                    />
+                </div>
+            );
+        }
 
         // Mutation chart filters
         _.reduce(
