@@ -22,7 +22,16 @@ export function parseTsvToRows(tsv: string): ResourceNodeRow[] {
         mappedHeaders.forEach((header, i) => {
             const value = (values[i] || '').trim();
             if (header === 'metadata') {
-                row[header] = value ? JSON.parse(value) : undefined;
+                if (!value) {
+                    row[header] = undefined;
+                } else {
+                    // Handle CSV-escaped JSON: "{""key"": ""val""}" → {"key": "val"}
+                    let json = value;
+                    if (json.startsWith('"') && json.endsWith('"')) {
+                        json = json.slice(1, -1).replace(/""/g, '"');
+                    }
+                    row[header] = JSON.parse(json);
+                }
             } else {
                 row[header] = value;
             }

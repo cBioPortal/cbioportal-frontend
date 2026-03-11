@@ -41,7 +41,8 @@ export function buildChartDataFromMetadata(
             const entry = valueMap.get(strValue)!;
             entry.count++;
             entry.patients.add(row.patientId);
-            entry.samples.add(row.sampleId);
+            // Use sampleId if available, fall back to patientId
+            entry.samples.add(row.sampleId || row.patientId);
         }
     }
 

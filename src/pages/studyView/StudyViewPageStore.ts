@@ -5688,7 +5688,15 @@ export class StudyViewPageStore
         try {
             // In dev, static files are served by the webpack dev server
             const devServerUrl = `//localhost:3000`;
-            const tsvUrl = `${devServerUrl}/data_resource_image.txt`;
+            const studyToFile: Record<string, string> = {
+                coad_msk_2025: 'data_resource_image.txt',
+                blca_tcga_pan_can_atlas_2018:
+                    'tcga_imaging_resources_mock_data.txt',
+            };
+            const studyId = this.queriedPhysicalStudyIds.result?.[0];
+            const filename = studyId ? studyToFile[studyId] : undefined;
+            if (!filename) return;
+            const tsvUrl = `${devServerUrl}/${filename}`;
             console.log('[CDSI] Fetching resource metadata TSV from:', tsvUrl);
             const response = await fetch(tsvUrl);
             console.log('[CDSI] Fetch response:', response.status, response.ok);
