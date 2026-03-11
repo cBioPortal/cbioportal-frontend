@@ -5509,6 +5509,18 @@ export class StudyViewPageStore
     ): void {
         const OUTER_KEY = 'resource_metadata';
 
+        // Build patient→sample map for resolving patient-level data
+        // (when TSV has no SAMPLE_ID column, uniqueSampleKeys contains patient IDs)
+        const patientToSampleIds = new Map<string, string[]>();
+        if (this.samples.result) {
+            for (const sample of this.samples.result) {
+                if (!patientToSampleIds.has(sample.patientId)) {
+                    patientToSampleIds.set(sample.patientId, []);
+                }
+                patientToSampleIds.get(sample.patientId)!.push(sample.sampleId);
+            }
+        }
+
         for (const entry of chartDataEntries) {
             const uniqueKey = `${OUTER_KEY}_${entry.metadataKey}`;
 
@@ -5538,19 +5550,31 @@ export class StudyViewPageStore
 
             // Pre-populate data cache
             // numberOfAlteredCases = unique samples, totalCount = resource rows
-            const tableRows: MultiSelectionTableRow[] = entry.rows.map(row => ({
-                uniqueKey: row.value,
-                label: row.value,
-                numberOfAlteredCases: row.uniqueSampleKeys.length,
-                numberOfProfiledCases: totalProfiledCases,
-                totalCount: row.count,
-                qValue: 0,
-                matchingGenePanelIds: [],
-                oncokbAnnotated: false,
-                isOncokbOncogene: false,
-                isOncokbTumorSuppressorGene: false,
-                isCancerGene: false,
-            }));
+            const tableRows: MultiSelectionTableRow[] = entry.rows.map(row => {
+                // Resolve patient IDs to sample IDs for accurate sample count
+                const resolvedSamples = new Set<string>();
+                for (const id of row.uniqueSampleKeys) {
+                    const mappedSamples = patientToSampleIds.get(id);
+                    if (mappedSamples) {
+                        mappedSamples.forEach(s => resolvedSamples.add(s));
+                    } else {
+                        resolvedSamples.add(id);
+                    }
+                }
+                return {
+                    uniqueKey: row.value,
+                    label: row.value,
+                    numberOfAlteredCases: resolvedSamples.size,
+                    numberOfProfiledCases: totalProfiledCases,
+                    totalCount: row.count,
+                    qValue: 0,
+                    matchingGenePanelIds: [],
+                    oncokbAnnotated: false,
+                    isOncokbOncogene: false,
+                    isOncokbTumorSuppressorGene: false,
+                    isCancerGene: false,
+                };
+            });
 
             this._resourceMetadataChartDataCache[uniqueKey] = remoteData<
                 MultiSelectionTableRow[]
@@ -5560,9 +5584,24 @@ export class StudyViewPageStore
             });
 
             // Build value → sampleIds lookup for filtering
+            // When TSV has no SAMPLE_ID column, uniqueSampleKeys contains patient IDs.
+            // Resolve them to actual sample IDs using the patientToSampleIds map above.
             const valueToSamples = new Map<string, string[]>();
             for (const row of entry.rows) {
-                valueToSamples.set(row.value, row.uniqueSampleKeys);
+                // Check if uniqueSampleKeys are actually patient IDs by seeing
+                // if they match patient IDs in the patient→sample map
+                const resolvedSampleIds: string[] = [];
+                for (const id of row.uniqueSampleKeys) {
+                    const mappedSamples = patientToSampleIds.get(id);
+                    if (mappedSamples) {
+                        // This ID is a patient ID — expand to its sample IDs
+                        resolvedSampleIds.push(...mappedSamples);
+                    } else {
+                        // Already a sample ID
+                        resolvedSampleIds.push(id);
+                    }
+                }
+                valueToSamples.set(row.value, [...new Set(resolvedSampleIds)]);
             }
             this._resourceMetadataValueToSamples[uniqueKey] = valueToSamples;
 
