@@ -1132,6 +1132,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             {
                                 columnKey:
                                     MultiSelectionTableColumnKey.CASE_LIST,
+                                columnWidthRatio: 0.35,
+                            },
+                            {
+                                columnKey:
+                                    MultiSelectionTableColumnKey.NUMBER_RESOURCES,
                             },
                             {
                                 columnKey: MultiSelectionTableColumnKey.NUMBER,

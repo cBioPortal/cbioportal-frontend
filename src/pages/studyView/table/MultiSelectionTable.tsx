@@ -63,6 +63,7 @@ export enum MultiSelectionTableColumnKey {
     NUMBER_VARIANT_ANNOTATIONS = '# VA',
     CYTOBAND = 'Cytoband',
     CNA = 'CNA',
+    NUMBER_RESOURCES = '# Res',
     NUMBER = '#',
     FREQ = 'Freq',
 }
@@ -112,6 +113,7 @@ const DEFAULT_COLUMN_WIDTH_RATIO: {
     [MultiSelectionTableColumnKey.NUMBER_MUTATIONS]: 0.25,
     [MultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS]: 0.2,
     [MultiSelectionTableColumnKey.NUMBER_VARIANT_ANNOTATIONS]: 0.2,
+    [MultiSelectionTableColumnKey.NUMBER_RESOURCES]: 0.25,
     [MultiSelectionTableColumnKey.NUMBER]: 0.25,
     [MultiSelectionTableColumnKey.FREQ]: 0.15,
     [MultiSelectionTableColumnKey.CYTOBAND]: 0.25,
@@ -517,6 +519,36 @@ export class MultiSelectionTable extends React.Component<
                 },
                 width: columnWidth,
             },
+            [MultiSelectionTableColumnKey.NUMBER_RESOURCES]: {
+                name: columnKey,
+                tooltip: <span>Total number of resources</span>,
+                headerRender: () => {
+                    return (
+                        <div style={{ marginLeft: cellMargin }}>
+                            {MultiSelectionTableColumnKey.NUMBER_RESOURCES}
+                        </div>
+                    );
+                },
+                render: (data: MultiSelectionTableRow) => (
+                    <span
+                        className={styles.pullRight}
+                        style={{
+                            marginRight: cellMargin,
+                        }}
+                    >
+                        {data.totalCount.toLocaleString()}
+                    </span>
+                ),
+                sortBy: (data: MultiSelectionTableRow) => data.totalCount,
+                defaultSortDirection: 'desc' as 'desc',
+                filter: (
+                    data: MultiSelectionTableRow,
+                    filterString: string
+                ) => {
+                    return _.toString(data.totalCount).includes(filterString);
+                },
+                width: columnWidth,
+            },
             [MultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS]: {
                 name: columnKey,
                 tooltip: <span>Total number of structural variants</span>,
@@ -659,6 +691,12 @@ export class MultiSelectionTable extends React.Component<
                             )
                         )!
                     )
+                )
+            ),
+            [MultiSelectionTableColumnKey.NUMBER_RESOURCES]: correctMargin(
+                getFixedHeaderNumberCellMargin(
+                    columnWidth,
+                    this.totalCountLocaleString
                 )
             ),
             [MultiSelectionTableColumnKey.CYTOBAND]: 0,
