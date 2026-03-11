@@ -2795,6 +2795,12 @@ export class StudyViewPageStore
         [uniqueKey: string]: Map<string, string[]>;
     } = {};
 
+    // Track actual selected values per chart (not reverse-engineered from sample IDs)
+    @observable private _resourceMetadataSelectedValues = observable.map<
+        string,
+        string[]
+    >({}, { deep: false });
+
     //used in saving gene specific charts
     @observable private _geneSpecificChartMap = observable.map<
         ChartUniqueKey,
@@ -3061,6 +3067,7 @@ export class StudyViewPageStore
         this._namespaceDataFilterSet.clear();
         this._genericAssayDataFilterSet.clear();
         this._chartSampleIdentifiersFilterSet.clear();
+        this._resourceMetadataSelectedValues.clear();
         this.preDefinedCustomChartFilterSet.clear();
         this.numberOfSelectedSamplesInCustomSelection = 0;
         this.removeComparisonGroupSelectionFilter();
@@ -5595,8 +5602,12 @@ export class StudyViewPageStore
                 uniqueKey,
                 sampleIdentifiers
             );
+
+            // Store the actual selected values
+            this._resourceMetadataSelectedValues.set(uniqueKey, values.flat());
         } else {
             this._chartSampleIdentifiersFilterSet.delete(uniqueKey);
+            this._resourceMetadataSelectedValues.delete(uniqueKey);
         }
     }
 
@@ -5613,25 +5624,11 @@ export class StudyViewPageStore
     public getResourceMetadataFiltersByUniqueKey(
         uniqueKey: string
     ): string[][] {
-        const sampleIdentifiers = this._chartSampleIdentifiersFilterSet.get(
+        const selectedValues = this._resourceMetadataSelectedValues.get(
             uniqueKey
         );
-        if (!sampleIdentifiers || sampleIdentifiers.length === 0) return [];
-
-        // Reverse lookup: find which values are selected
-        const valueLookup = this._resourceMetadataValueToSamples[uniqueKey];
-        if (!valueLookup) return [];
-
-        const selectedSampleIds = new Set(
-            sampleIdentifiers.map(s => s.sampleId)
-        );
-        const selectedValues: string[] = [];
-        for (const [value, sampleIds] of valueLookup) {
-            if (sampleIds.every(id => selectedSampleIds.has(id))) {
-                selectedValues.push(value);
-            }
-        }
-        return selectedValues.length > 0 ? [selectedValues] : [];
+        if (!selectedValues || selectedValues.length === 0) return [];
+        return [selectedValues];
     }
 
     @computed
