@@ -8,8 +8,9 @@ import { remoteData } from 'cbioportal-frontend-commons';
 import HierarchicalResourcesTable from 'shared/components/resources/HierarchicalResourcesTable';
 import { parseTsvToRows } from 'shared/lib/ResourceNodeTsvParser';
 import { ResourceNodeRow } from 'shared/lib/ResourceNodeTypes';
+import { STUDY_RESOURCE_TSV_MAP } from 'pages/studyView/resources/HierarchicalResourcesTab';
 
-const RESOURCE_TSV_URL = '//localhost:3000/data_resource_image.txt';
+const RESOURCE_BASE_URL = '//localhost:3000/';
 
 export const HIERARCHICAL_RESOURCES_TAB_NAME = 'Hierarchical Resources';
 
@@ -46,7 +47,9 @@ export default class HierarchicalResourcesTab extends React.Component<
     readonly tsvData = remoteData<ResourceNodeRow[]>({
         await: () => [],
         invoke: async () => {
-            const response = await fetch(RESOURCE_TSV_URL);
+            const tsvFile = STUDY_RESOURCE_TSV_MAP[this.props.store.studyId];
+            if (!tsvFile) return [];
+            const response = await fetch(`${RESOURCE_BASE_URL}${tsvFile}`);
             if (!response.ok) return [];
             const text = await response.text();
             return parseTsvToRows(text);
@@ -58,6 +61,7 @@ export default class HierarchicalResourcesTab extends React.Component<
         render: () => (
             <HierarchicalResourcesTable
                 data={this.tsvData.result!}
+                studyId={this.props.store.studyId}
                 searchTerm={this.searchTerm}
             />
         ),

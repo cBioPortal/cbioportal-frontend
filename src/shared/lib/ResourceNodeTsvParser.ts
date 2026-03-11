@@ -15,6 +15,7 @@ export function parseTsvToRows(tsv: string): ResourceNodeRow[] {
     const lines = tsv.trim().split('\n');
     const headers = lines[0].split('\t');
     const mappedHeaders = headers.map(h => HEADER_MAP[h.trim()] || h.trim());
+    const hasSampleId = mappedHeaders.includes('sampleId');
 
     return lines.slice(1).map(line => {
         const values = line.split('\t');
@@ -36,6 +37,10 @@ export function parseTsvToRows(tsv: string): ResourceNodeRow[] {
                 row[header] = value;
             }
         });
+        // When no SAMPLE_ID column exists (patient-level resources), use patientId
+        if (!hasSampleId || !row.sampleId) {
+            row.sampleId = row.patientId;
+        }
         return row as ResourceNodeRow;
     });
 }

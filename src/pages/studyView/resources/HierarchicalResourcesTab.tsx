@@ -9,7 +9,13 @@ import HierarchicalResourcesTable from 'shared/components/resources/Hierarchical
 import { parseTsvToRows } from 'shared/lib/ResourceNodeTsvParser';
 import { ResourceNodeRow } from 'shared/lib/ResourceNodeTypes';
 
-const RESOURCE_TSV_URL = '//localhost:3000/data_resource_image.txt';
+const RESOURCE_BASE_URL = '//localhost:3000/';
+
+/** Maps study IDs to their resource TSV filenames served by the dev server. */
+export const STUDY_RESOURCE_TSV_MAP: Record<string, string> = {
+    coad_msk_2025: 'data_resource_image.txt',
+    blca_tcga_pan_can_atlas_2018: 'tcga_imaging_resources_mock_data.txt',
+};
 
 export const HIERARCHICAL_RESOURCES_TAB_NAME = 'Hierarchical Resources';
 
@@ -44,19 +50,29 @@ export default class HierarchicalResourcesTab extends React.Component<
     }
 
     readonly tsvData = remoteData<ResourceNodeRow[]>({
-        await: () => [this.props.store.selectedSamples],
+        await: () => [
+            this.props.store.selectedSamples,
+            this.props.store.queriedPhysicalStudyIds,
+        ],
         onError: () => {},
         invoke: async () => {
-            const selectedSamples = this.props.store.selectedSamples.result!;
-            const allowedSampleIds = new Set(
-                selectedSamples.map(s => s.sampleId)
-            );
+            const studyId = this.props.store.queriedPhysicalStudyIds.result![0];
+            const tsvFile = STUDY_RESOURCE_TSV_MAP[studyId];
+            if (!tsvFile) return [];
 
-            const response = await fetch(RESOURCE_TSV_URL);
+            const selectedSamples = this.props.store.selectedSamples.result!;
+            // Include both sample IDs and patient IDs so that patient-level
+            // resources (where sampleId === patientId) are not filtered out.
+            const allowedIds = new Set([
+                ...selectedSamples.map(s => s.sampleId),
+                ...selectedSamples.map(s => s.patientId),
+            ]);
+
+            const response = await fetch(`${RESOURCE_BASE_URL}${tsvFile}`);
             if (!response.ok) return [];
             const text = await response.text();
             const allRows = parseTsvToRows(text);
-            return allRows.filter(row => allowedSampleIds.has(row.sampleId));
+            return allRows.filter(row => allowedIds.has(row.sampleId));
         },
     });
 
@@ -84,11 +100,16 @@ export default class HierarchicalResourcesTab extends React.Component<
         );
     }
 
+    @computed get studyId(): string {
+        return this.props.store.queriedPhysicalStudyIds.result?.[0] ?? '';
+    }
+
     readonly content = MakeMobxView({
         await: () => [this.tsvData],
         render: () => (
             <HierarchicalResourcesTable
                 data={this.filteredRows}
+                studyId={this.studyId}
                 searchTerm={this.searchTerm}
             />
         ),

@@ -9,6 +9,7 @@ import {
 } from 'ag-grid-community';
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-alpine.css';
+import ReactSelect from 'react-select';
 import {
     getPatientViewUrlWithPathname,
     getSampleViewUrlWithPathname,
@@ -51,6 +52,7 @@ type ResourceDefGridRow = {
     resourceId: string;
     isExpanded: boolean;
     itemCount: number;
+    indentLevel: number;
 };
 
 type GroupNodeGridRow = {
@@ -182,7 +184,7 @@ const EntityCellRenderer: React.FC<ICellRendererParams> = ({ data }) => {
                     display: 'flex',
                     alignItems: 'center',
                     gap: 6,
-                    paddingLeft: 2 * INDENT_PX,
+                    paddingLeft: row.indentLevel * INDENT_PX,
                 }}
             >
                 <i
@@ -282,109 +284,15 @@ const CountCellRenderer: React.FC<ICellRendererParams> = ({ data }) => {
     return null;
 };
 
-function makeMetaCellRenderer(key: string): React.FC<ICellRendererParams> {
-    const renderer: React.FC<ICellRendererParams> = ({ data }) => {
-        const row = data as GridRow;
-        if (row.rowType !== 'itemNode') return null;
-        const val = row.row.metadata?.[key];
-        if (val === undefined || val === null) return null;
-        return (
-            <span style={{ fontSize: 12, color: '#555' }}>{String(val)}</span>
-        );
-    };
-    renderer.displayName = `Meta_${key}`;
-    return renderer;
-}
-
-const MetaScannerIdCellRenderer = makeMetaCellRenderer('scanner_id');
-const MetaBrandCellRenderer = makeMetaCellRenderer('brand');
-const MetaModelCellRenderer = makeMetaCellRenderer('model');
-const MetaMagnificationCellRenderer = makeMetaCellRenderer('magnification');
-const MetaPartTypeCellRenderer = makeMetaCellRenderer('part_type');
-const MetaPartInstCellRenderer = makeMetaCellRenderer('part_inst');
-const MetaImageIdCellRenderer = makeMetaCellRenderer('image_id');
-
 // ─── Column definitions ───────────────────────────────────────────────────────
 
-export const META_COLUMN_DEFS: Array<ColDef & { label: string }> = [
-    {
-        headerName: 'Scanner ID',
-        label: 'Scanner ID',
-        colId: 'meta_scanner_id',
-        field: 'meta_scanner_id',
-        width: 130,
-        cellRenderer: 'metaScannerIdCellRenderer',
-        sortable: false,
-        resizable: true,
-        hide: true,
-    },
-    {
-        headerName: 'Brand',
-        label: 'Brand',
-        colId: 'meta_brand',
-        field: 'meta_brand',
-        width: 100,
-        cellRenderer: 'metaBrandCellRenderer',
-        sortable: false,
-        resizable: true,
-        hide: true,
-    },
-    {
-        headerName: 'Model',
-        label: 'Model',
-        colId: 'meta_model',
-        field: 'meta_model',
-        width: 90,
-        cellRenderer: 'metaModelCellRenderer',
-        sortable: false,
-        resizable: true,
-        hide: true,
-    },
-    {
-        headerName: 'Magnification',
-        label: 'Magnification',
-        colId: 'meta_magnification',
-        field: 'meta_magnification',
-        width: 120,
-        cellRenderer: 'metaMagnificationCellRenderer',
-        sortable: false,
-        resizable: true,
-        hide: true,
-    },
-    {
-        headerName: 'Part Type',
-        label: 'Part Type',
-        colId: 'meta_part_type',
-        field: 'meta_part_type',
-        flex: 2,
-        cellRenderer: 'metaPartTypeCellRenderer',
-        sortable: false,
-        resizable: true,
-        hide: true,
-    },
-    {
-        headerName: 'Part #',
-        label: 'Part #',
-        colId: 'meta_part_inst',
-        field: 'meta_part_inst',
-        width: 80,
-        cellRenderer: 'metaPartInstCellRenderer',
-        sortable: false,
-        resizable: true,
-        hide: true,
-    },
-    {
-        headerName: 'Image ID',
-        label: 'Image ID',
-        colId: 'meta_image_id',
-        field: 'meta_image_id',
-        width: 110,
-        cellRenderer: 'metaImageIdCellRenderer',
-        sortable: false,
-        resizable: true,
-        hide: true,
-    },
-];
+/** Converts snake_case or camelCase keys to a human-readable Title Case label. */
+function toLabel(key: string): string {
+    return key
+        .replace(/_/g, ' ')
+        .replace(/([a-z])([A-Z])/g, '$1 $2')
+        .replace(/\b\w/g, c => c.toUpperCase());
+}
 
 const BASE_COLUMN_DEFS: ColDef[] = [
     {
@@ -429,13 +337,6 @@ const FRAMEWORK_COMPONENTS = {
     typeCellRenderer: TypeCellRenderer,
     urlCellRenderer: UrlCellRenderer,
     countCellRenderer: CountCellRenderer,
-    metaScannerIdCellRenderer: MetaScannerIdCellRenderer,
-    metaBrandCellRenderer: MetaBrandCellRenderer,
-    metaModelCellRenderer: MetaModelCellRenderer,
-    metaMagnificationCellRenderer: MetaMagnificationCellRenderer,
-    metaPartTypeCellRenderer: MetaPartTypeCellRenderer,
-    metaPartInstCellRenderer: MetaPartInstCellRenderer,
-    metaImageIdCellRenderer: MetaImageIdCellRenderer,
 };
 
 // ─── Table component ──────────────────────────────────────────────────────────
@@ -465,22 +366,61 @@ export class HierarchicalResourcesTable extends React.Component<
     }
 
     @action.bound
-    private toggleMetaCol(colId: string) {
-        if (this.shownMetaCols.has(colId)) {
-            this.shownMetaCols.delete(colId);
-        } else {
-            this.shownMetaCols.add(colId);
+    private onMetaColsChange(
+        selected: ReadonlyArray<{ value: string; label: string }> | null
+    ) {
+        this.shownMetaCols = new Set((selected ?? []).map(o => o.value));
+    }
+
+    /** Unique metadata keys found across all item rows in the current data. */
+    @computed get metadataKeys(): string[] {
+        const keys = new Set<string>();
+        for (const row of this.props.data) {
+            if (row.metadata) {
+                for (const key of Object.keys(row.metadata)) {
+                    keys.add(key);
+                }
+            }
         }
+        return Array.from(keys).sort();
+    }
+
+    @computed get metaColOptions(): Array<{ value: string; label: string }> {
+        return this.metadataKeys.map(key => ({
+            value: `meta_${key}`,
+            label: toLabel(key),
+        }));
+    }
+
+    @computed get selectedMetaColOptions(): Array<{
+        value: string;
+        label: string;
+    }> {
+        return this.metaColOptions.filter(o => this.shownMetaCols.has(o.value));
     }
 
     @computed get columnDefs(): ColDef[] {
-        return [
-            ...BASE_COLUMN_DEFS,
-            ...META_COLUMN_DEFS.map(col => ({
-                ...col,
-                hide: !this.shownMetaCols.has(col.colId as string),
-            })),
-        ];
+        const metaCols: ColDef[] = this.metadataKeys.map(key => {
+            const colId = `meta_${key}`;
+            return {
+                headerName: toLabel(key),
+                colId,
+                field: colId,
+                width: 130,
+                valueGetter: (params: any) => {
+                    const row = params.data as GridRow;
+                    if (row.rowType !== 'itemNode') return undefined;
+                    const val = (row as ItemNodeGridRow).row.metadata?.[key];
+                    return val !== undefined && val !== null
+                        ? String(val)
+                        : undefined;
+                },
+                sortable: false,
+                resizable: true,
+                hide: !this.shownMetaCols.has(colId),
+            };
+        });
+        return [...BASE_COLUMN_DEFS, ...metaCols];
     }
 
     @action.bound
@@ -619,7 +559,12 @@ export class HierarchicalResourcesTable extends React.Component<
             if (!patientExpanded) continue;
 
             for (const [sampleId, resourceMap] of sampleMap) {
+                // When sampleId equals patientId the TSV has no SAMPLE_ID
+                // column (patient-level resources). Skip the redundant sample
+                // row and render resources one level shallower.
+                const isPatientLevel = sampleId === patientId;
                 const sampleKey = `${patientId}::${sampleId}`;
+
                 const sampleItemCount = countVisibleResourceItems(
                     resourceMap,
                     isFiltering,
@@ -628,19 +573,27 @@ export class HierarchicalResourcesTable extends React.Component<
 
                 if (isFiltering && sampleItemCount === 0) continue;
 
-                const sampleExpanded =
-                    isFiltering || this.expandedSamples.has(sampleKey);
-                rows.push({
-                    rowType: 'sample',
-                    id: sampleKey,
-                    patientId,
-                    studyId,
-                    sampleId,
-                    isExpanded: sampleExpanded,
-                    itemCount: sampleItemCount,
-                } as SampleGridRow);
+                if (!isPatientLevel) {
+                    const sampleExpanded =
+                        isFiltering || this.expandedSamples.has(sampleKey);
+                    rows.push({
+                        rowType: 'sample',
+                        id: sampleKey,
+                        patientId,
+                        studyId,
+                        sampleId,
+                        isExpanded: sampleExpanded,
+                        itemCount: sampleItemCount,
+                    } as SampleGridRow);
 
-                if (!sampleExpanded) continue;
+                    if (!sampleExpanded) continue;
+                }
+
+                // Indent one level less when there is no sample row.
+                const resourceIndent = isPatientLevel ? 1 : 2;
+                const groupIndent = isPatientLevel ? 2 : 3;
+                const itemIndentDirect = isPatientLevel ? 2 : 3;
+                const itemIndentGrouped = isPatientLevel ? 3 : 4;
 
                 for (const [resourceId, groupMap] of resourceMap) {
                     const defKey = `${sampleKey}::${resourceId}`;
@@ -662,6 +615,7 @@ export class HierarchicalResourcesTable extends React.Component<
                         resourceId,
                         isExpanded: defExpanded,
                         itemCount: defItemCount,
+                        indentLevel: resourceIndent,
                     } as ResourceDefGridRow);
 
                     if (!defExpanded) continue;
@@ -678,7 +632,7 @@ export class HierarchicalResourcesTable extends React.Component<
                                     patientId,
                                     sampleId,
                                     row: item,
-                                    indentLevel: 3,
+                                    indentLevel: itemIndentDirect,
                                 } as ItemNodeGridRow);
                             }
                         } else {
@@ -701,7 +655,7 @@ export class HierarchicalResourcesTable extends React.Component<
                                 patientId,
                                 sampleId,
                                 groupPath,
-                                indentLevel: 3,
+                                indentLevel: groupIndent,
                                 isExpanded: groupExpanded,
                                 itemCount: groupItemCount,
                             } as GroupNodeGridRow);
@@ -719,7 +673,7 @@ export class HierarchicalResourcesTable extends React.Component<
                                     patientId,
                                     sampleId,
                                     row: item,
-                                    indentLevel: 4,
+                                    indentLevel: itemIndentGrouped,
                                 } as ItemNodeGridRow);
                             }
                         }
@@ -773,57 +727,49 @@ export class HierarchicalResourcesTable extends React.Component<
         }
         return (
             <div>
-                {/* Metadata column toggles */}
+                {/* Metadata column selector */}
                 <div
                     style={{
                         display: 'flex',
                         alignItems: 'center',
-                        gap: 4,
+                        gap: 8,
                         marginBottom: 8,
-                        flexWrap: 'wrap',
                     }}
                 >
                     <span
                         style={{
                             fontSize: 12,
                             color: '#666',
-                            marginRight: 6,
                             whiteSpace: 'nowrap',
                         }}
                     >
                         Metadata columns:
                     </span>
-                    {META_COLUMN_DEFS.map(col => {
-                        const colId = col.colId as string;
-                        const visible = this.shownMetaCols.has(colId);
-                        return (
-                            <label
-                                key={colId}
-                                style={{
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: 4,
+                    <div style={{ minWidth: 260, maxWidth: 480, flex: 1 }}>
+                        <ReactSelect
+                            isMulti
+                            options={this.metaColOptions}
+                            value={this.selectedMetaColOptions}
+                            onChange={this.onMetaColsChange}
+                            placeholder="Select metadata columns to show…"
+                            closeMenuOnSelect={false}
+                            styles={{
+                                control: (base: any) => ({
+                                    ...base,
+                                    minHeight: 30,
                                     fontSize: 12,
-                                    cursor: 'pointer',
-                                    padding: '2px 8px',
-                                    borderRadius: 3,
-                                    border: '1px solid #ccc',
-                                    background: visible ? '#e8f0fe' : '#f5f5f5',
-                                    color: visible ? '#1a73e8' : '#555',
-                                    userSelect: 'none',
-                                    whiteSpace: 'nowrap',
-                                }}
-                            >
-                                <input
-                                    type="checkbox"
-                                    checked={visible}
-                                    onChange={() => this.toggleMetaCol(colId)}
-                                    style={{ margin: 0 }}
-                                />
-                                {col.label}
-                            </label>
-                        );
-                    })}
+                                }),
+                                menu: (base: any) => ({
+                                    ...base,
+                                    fontSize: 12,
+                                }),
+                                multiValue: (base: any) => ({
+                                    ...base,
+                                    fontSize: 12,
+                                }),
+                            }}
+                        />
+                    </div>
                 </div>
 
                 <div
