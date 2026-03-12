@@ -2720,10 +2720,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                         profile.molecularAlterationType ===
                         AlterationTypeConstants.GENERIC_ASSAY
                 )
-                .uniqBy(
-                    profile =>
-                        `${profile.genericAssayType}|${profile.datatype || ''}`
-                )
+                .uniqBy(profile => profile.genericAssayType)
                 .map(profile => ({
                     value: profile.genericAssayType,
                     label: deriveDisplayTextFromGenericAssayType(
