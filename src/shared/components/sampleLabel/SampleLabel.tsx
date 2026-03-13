@@ -84,3 +84,42 @@ interface ISampleLabelHTMLProps {
     color: string;
     fillOpacity: number;
 }
+
+export class SamplePointLabel extends React.Component<
+    ISamplePointLabelProps,
+    {}
+> {
+    public render() {
+        const { x = 6, y = 6, events = {}, label, ...restProps } = this.props;
+        const { onMouseOver, onMouseOut } = events;
+        return (
+            <>
+                <g
+                    transform={`translate(${x}, ${y})`}
+                    onMouseOver={onMouseOver}
+                    onMouseOut={onMouseOut}
+                >
+                    <circle r="8" {...restProps} />
+                </g>
+                <g transform={`translate(${x}, ${y - 0.5})`}>
+                    <text
+                        y="4"
+                        textAnchor="middle"
+                        fontSize="12"
+                        fill="black"
+                        style={{ cursor: 'default' }}
+                    >
+                        {label}
+                    </text>
+                </g>
+            </>
+        );
+    }
+}
+
+interface ISamplePointLabelProps {
+    label: string;
+    events: any;
+    x?: number;
+    y?: number;
+}
