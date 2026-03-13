@@ -4366,6 +4366,77 @@ export async function invokeGenericAssayDataCount(
     return undefined;
 }
 
+export function invokeGenomicDataCountIncludeSampleid(
+    chartInfo: GenomicChart,
+    filters: StudyViewFilter,
+    includeSampleIds: boolean
+) {
+    const params = {
+        genomicDataCountFilter: {
+            genomicDataFilters: [
+                {
+                    hugoGeneSymbol: chartInfo.hugoGeneSymbol,
+                    profileType: chartInfo.profileType,
+                } as GenomicDataFilter,
+            ],
+            studyViewFilter: filters,
+        },
+        $queryParameters: {
+            projection: 'DETAILED',
+            includeSampleIds,
+        },
+    };
+
+    return getInternalClient().fetchMutationDataCountsUsingPOST(params);
+}
+
+export function groupSamplesByMutationStatus(data: any[], studyIds: string[]) {
+    const SKIP_VALUES = new Set(['NOT_PROFILED']);
+    const NON_MUTATION_VALUES = new Set(['NOT_MUTATED']);
+
+    return (
+        _.chain(data)
+            .flatMap(d => d.counts ?? [])
+            // Skip bins with 'NOT_PROFILED' or empty sampleIds
+            .filter(c => !SKIP_VALUES.has(c.value) && c.sampleIds?.length > 0)
+            .flatMap(c => {
+                const group = NON_MUTATION_VALUES.has(c.value)
+                    ? c.value
+                    : 'MUTATED';
+
+                // Map sampleIds to structured objects and remove unmatched samples if any
+                return _.compact(
+                    c.sampleIds.map((rawId: string) => {
+                        const matchedStudyId = studyIds.find(studyId =>
+                            rawId.startsWith(studyId + '_')
+                        );
+
+                        if (!matchedStudyId) return null;
+
+                        return {
+                            group,
+                            studyId: matchedStudyId,
+                            sampleId: rawId.substring(
+                                matchedStudyId.length + 1
+                            ),
+                        };
+                    })
+                );
+            })
+            .groupBy('group')
+            .mapValues(items =>
+                _.uniqBy(
+                    items.map(({ studyId, sampleId }) => ({
+                        studyId,
+                        sampleId,
+                    })),
+                    i => i.sampleId // for now using sampleId as unique identifier, but may need to switch to using sampleId + studyId if there are duplicate sampleIds across studies
+                )
+            )
+            .value()
+    );
+}
+
 export async function invokeGenomicDataCount(
     chartInfo: GenomicChart,
     filters: StudyViewFilter
