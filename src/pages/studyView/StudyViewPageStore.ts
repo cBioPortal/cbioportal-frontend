@@ -2422,7 +2422,8 @@ export class StudyViewPageStore
         if (!_.isEmpty(filters.structuralVariantFilters)) {
             filters.structuralVariantFilters!.forEach(structVarFilter => {
                 const key = getUniqueKeyFromMolecularProfileIds(
-                    structVarFilter.molecularProfileIds
+                    structVarFilter.molecularProfileIds,
+                    ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE
                 );
                 this._structVarFilterSet.set(
                     key,
@@ -2918,7 +2919,7 @@ export class StudyViewPageStore
                 doesStructVarMatchSingleGeneQuery(
                     q,
                     gene1SymbolOrOql,
-                    gene1SymbolOrOql
+                    gene2SymbolOrOql
                 )
             )
         ) {
@@ -3776,7 +3777,7 @@ export class StudyViewPageStore
                 const newGroup = next.filter(
                     StructuralVariantFilterQuery =>
                         StructuralVariantFilterQuery.gene1Query.hugoSymbol !==
-                            gene1HugoSymbol &&
+                            gene1HugoSymbol ||
                         StructuralVariantFilterQuery.gene2Query.hugoSymbol !==
                             gene2HugoSymbol
                 );
