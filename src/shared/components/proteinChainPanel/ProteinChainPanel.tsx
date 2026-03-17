@@ -18,6 +18,7 @@ import { ALIGNMENT_GAP, IPdbChain } from '../../model/Pdb';
 import PdbHeaderCache from '../../cache/PdbHeaderCache';
 import PdbChainInfo from '../PdbChainInfo';
 import onNextRenderFrame from 'shared/lib/onNextRenderFrame';
+import { getAlphaFoldEntryUrl } from 'shared/lib/AlphaFoldUtils';
 
 type ProteinChainPanelProps = {
     store: MutationMapperStore;
@@ -246,6 +247,8 @@ export default class ProteinChainPanel extends React.Component<
     }
 
     public helpTooltipContent() {
+        const alphaFoldLink = this.alphaFoldLink;
+
         return (
             <div style={{ maxWidth: 400 }}>
                 This panel displays a list of PDB chains for the corresponding
@@ -270,11 +273,35 @@ export default class ProteinChainPanel extends React.Component<
                 highlighted with a different frame color. You can also select a
                 chain by clicking on a row in the table. Selecting a chain
                 reloads the PDB data for the 3D structure visualizer.
+                {alphaFoldLink && (
+                    <>
+                        <br />
+                        <br />
+                        This panel only lists experimental PDB chains. For a
+                        predicted structure based on the corresponding UniProt
+                        entry, see{' '}
+                        <a
+                            href={alphaFoldLink}
+                            target="_blank"
+                            rel="noreferrer"
+                        >
+                            AlphaFold DB
+                        </a>
+                        .
+                    </>
+                )}
             </div>
         );
     }
 
+    @computed private get alphaFoldLink() {
+        const uniprotId = this.props.store.uniprotId.result;
+        return uniprotId ? getAlphaFoldEntryUrl(uniprotId) : undefined;
+    }
+
     render() {
+        const uniprotId = this.props.store.uniprotId.result;
+
         const tooltipVisibleProps: any = {};
         if (!this.tooltipVisible) {
             tooltipVisibleProps.visible = false;
@@ -339,6 +366,25 @@ export default class ProteinChainPanel extends React.Component<
                                 display: this.isExpanded ? 'inherit' : 'none',
                             }}
                         >
+                            {this.alphaFoldLink && (
+                                <div
+                                    className="small"
+                                    style={{ marginBottom: 8 }}
+                                >
+                                    PDB chains shown here are experimental
+                                    structures. Predicted structures may also
+                                    be available in{' '}
+                                    <a
+                                        href={this.alphaFoldLink}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                    >
+                                        AlphaFold DB
+                                    </a>
+                                    {uniprotId && <> for UniProt {uniprotId}</>}
+                                    .
+                                </div>
+                            )}
                             <button
                                 onClick={this.handlers.togglePDBTable}
                                 className="btn btn-default"
