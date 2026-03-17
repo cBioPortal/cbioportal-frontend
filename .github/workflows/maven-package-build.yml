@@ -141,7 +141,7 @@ jobs:
           elif [ "${{ github.event_name }}" == "release" ]; then
             TAG="${{ github.event.release.tag_name }}"
           else
-            echo "Action triggered through a invalid event!";
+            echo "Action triggered through an invalid event!";
             exit 1
           fi
           cd cbioportal
