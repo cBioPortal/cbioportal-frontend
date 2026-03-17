@@ -4,6 +4,9 @@ on:
   release:
     types:
       - published
+  push:
+    tags:
+      - '*'
   workflow_dispatch:
     inputs:
       source_ref:
@@ -35,7 +38,7 @@ jobs:
           ref: ${{ inputs.source_ref }}
 
       - name: Checkout repository (automatic trigger)
-        if: github.event_name == 'release'
+        if: github.event_name == 'release' || github.event_name == 'push'
         uses: actions/checkout@v4
 
       - name: Setup java for Maven Central
@@ -57,12 +60,18 @@ jobs:
         if: github.event_name == 'release'
         run: mvn versions:set -DnewVersion=${{ github.event.release.tag_name }} -DgenerateBackupPoms=false
 
+      - name: Set maven version from pushed tag
+        if: github.event_name == 'push'
+        run: mvn versions:set -DnewVersion=${{ github.ref_name }} -DgenerateBackupPoms=false
+
       - name: Publish package to Maven Central
         run: |
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-          TAG=${{ inputs.source_ref }}
+          TAG="${{ inputs.source_ref }}"
           elif [ "${{ github.event_name }}" == "release" ]; then
-          TAG=${{ github.event.release.tag_name }}
+          TAG="${{ github.event.release.tag_name }}"
+          elif [ "${{ github.event_name }}" == "push" ]; then
+          TAG="${{ github.ref_name }}"
           else
           echo "Action triggered through a invalid event!";
           exit 1
@@ -82,9 +91,11 @@ jobs:
           INTERVAL_SECONDS: 60
         run: |
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-          VERSION=${{ inputs.source_ref }}
+          VERSION="${{ inputs.source_ref }}"
           elif [ "${{ github.event_name }}" == "release" ]; then
-          VERSION=${{ github.event.release.tag_name }}
+          VERSION="${{ github.event.release.tag_name }}"
+          elif [ "${{ github.event_name }}" == "push" ]; then
+          VERSION="${{ github.ref_name }}"
           else
           echo "Action triggered through a invalid event!";
           exit 1
@@ -126,9 +137,9 @@ jobs:
       - name: Update backend pom with new frontend version
         run: |
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            TAG=${{ inputs.source_ref }}
+            TAG="${{ inputs.source_ref }}"
           elif [ "${{ github.event_name }}" == "release" ]; then
-            TAG=${{ github.event.release.tag_name }}
+            TAG="${{ github.event.release.tag_name }}"
           else
             echo "Action triggered through a invalid event!";
             exit 1
