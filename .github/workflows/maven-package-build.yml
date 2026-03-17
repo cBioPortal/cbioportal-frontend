@@ -97,7 +97,7 @@ jobs:
           elif [ "${{ github.event_name }}" == "push" ]; then
           VERSION="${{ github.ref_name }}"
           else
-          echo "Action triggered through a invalid event!";
+          echo "Action triggered through an invalid event!";
           exit 1
           fi
           URL="https://repo1.maven.org/maven2/${GROUP_ID_PATH}/${ARTIFACT_ID}/${VERSION}"
