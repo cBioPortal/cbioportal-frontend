@@ -14,6 +14,7 @@ import {
     getComparisonLoadingUrl,
     redirectToComparisonPage,
 } from '../../../shared/api/urls';
+import { fuzzySearchItems } from '../../../shared/lib/FuzzySearchUtils';
 import styles, { sharedGroup } from '../styles.module.scss';
 import { DefaultTooltip, remoteData } from 'cbioportal-frontend-commons';
 import {
@@ -69,16 +70,12 @@ export default class ComparisonGroupManager extends React.Component<
 
     readonly filteredGroups = remoteData({
         await: () => [this.props.store.comparisonGroups],
-        invoke: () =>
-            Promise.resolve(
-                // TODO: fuzzy string search?
-                _.sortBy(
-                    this.props.store.comparisonGroups.result!.filter(group =>
-                        new RegExp(this.groupNameFilter, 'i').test(group.name)
-                    ),
-                    group => group.name.toLowerCase()
-                )
-            ),
+        invoke: () => {
+            const groups = this.props.store.comparisonGroups.result!;
+            return Promise.resolve(
+                fuzzySearchItems(this.groupNameFilter, groups, ['name'])
+            );
+        }
     });
 
     @action.bound
@@ -219,7 +216,7 @@ export default class ComparisonGroupManager extends React.Component<
                                     group={group}
                                     color={
                                         this.props.store.userGroupColors[
-                                            group.uid
+                                        group.uid
                                         ]
                                     }
                                     store={this.props.store}
