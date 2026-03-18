@@ -41,10 +41,32 @@ export function groupHotspotsByMutations(
     filter?: (hotspot: Hotspot) => boolean
 ): { [pos: number]: Hotspot[] } {
     const hotspotMap: { [pos: number]: Hotspot[] } = {};
+    const mutationHotspotCache = new Map<string, Hotspot[]>();
 
     _.forEach(mutationsByPosition, (mutations, key) => {
         const position = Number(key);
-        const hotspots = filterHotspotsByMutations(mutations, index, filter);
+        const hotspots: Hotspot[] = [];
+
+        for (const mutation of mutations) {
+            const genomicLocation = extractGenomicLocation(mutation);
+            if (genomicLocation) {
+                const locString = genomicLocationString(genomicLocation);
+                if (mutationHotspotCache.has(locString)) {
+                    hotspots.push(...mutationHotspotCache.get(locString)!);
+                } else {
+                    const aggregatedHotspots = index[locString];
+                    let mutationHotspots: Hotspot[] = [];
+                    if (aggregatedHotspots) {
+                        mutationHotspots = aggregatedHotspots.hotspots;
+                        if (filter) {
+                            mutationHotspots = mutationHotspots.filter(filter);
+                        }
+                    }
+                    mutationHotspotCache.set(locString, mutationHotspots);
+                    hotspots.push(...mutationHotspots);
+                }
+            }
+        }
 
         if (hotspots.length > 0) {
             hotspotMap[position] = hotspots;
