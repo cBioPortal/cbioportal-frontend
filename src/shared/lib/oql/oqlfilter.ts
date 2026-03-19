@@ -121,7 +121,10 @@ export function isMergedTrackFilter<T>(
     return (oqlFilter as any).list !== undefined;
 }
 
-function parseMergedTrackOQLQuery(oql_query: string, opt_default_oql = '') {
+export function parseMergedTrackOQLQuery(
+    oql_query: string,
+    opt_default_oql = ''
+) {
     /* In: - oql_query, a string, an OQL query
      - opt_default_oql, a string, default OQL to add to any empty line
      Out: An array, with each element being a parsed single-gene or
@@ -411,6 +414,26 @@ export function unparseOQLQueryLine(parsed_oql_line: SingleGeneQuery): string {
         ret += ';';
     }
     return ret;
+}
+
+export function unparseOQLQuery(
+    parsed_query: (SingleGeneQuery | MergedGeneQuery)[]
+): string {
+    return parsed_query
+        .map(line => {
+            if (isMergedGeneQuery(line)) {
+                // Handle merged track (track group)
+                const label = line.label;
+                const geneLines = line.list
+                    .map(gene => unparseOQLQueryLine(gene))
+                    .join(' ');
+                return `["${label}" ${geneLines}]`;
+            } else {
+                // Handle single gene line
+                return unparseOQLQueryLine(line);
+            }
+        })
+        .join('\n');
 }
 
 // Convert structural variants in OQL SingleGeneQuery to 'GeneA::GeneB' notations.
