@@ -83,6 +83,7 @@ export enum ChartTypeEnum {
     PATIENT_TREATMENT_GROUPS_TABLE = 'PATIENT_TREATMENT_GROUPS_TABLE',
     PATIENT_TREATMENT_TARGET_TABLE = 'PATIENT_TREATMENT_TARGET_TABLE',
     CLINICAL_EVENT_TYPE_COUNTS_TABLE = 'CLINICAL_EVENT_TYPE_COUNTS_TABLE',
+    RESOURCE_METADATA_TABLE = 'RESOURCE_METADATA_TABLE',
     NONE = 'NONE',
 }
 
@@ -108,6 +109,7 @@ export enum ChartTypeNameEnum {
     PATIENT_TREATMENT_GROUPS_TABLE = 'table',
     PATIENT_TREATMENT_TARGET_TABLE = 'table',
     CLINICAL_EVENT_TYPE_COUNTS_TABLE = 'table',
+    RESOURCE_METADATA_TABLE = 'table',
     NONE = 'none',
 }
 
@@ -143,6 +145,7 @@ const studyViewFrontEnd = {
         SAMPLE_TREATMENT_TARGET_TABLE: 75,
         CLINICAL_EVENT_TYPE_COUNTS_TABLE: 75,
         VARIANT_ANNOTATIONS_TABLE: 75,
+        RESOURCE_METADATA_TABLE: 75,
         CANCER_STUDIES: 70,
         SEQUENCED: 60,
         HAS_CNA_DATA: 50,
@@ -218,6 +221,11 @@ const studyViewFrontEnd = {
                 minW: 2,
             },
             [ChartTypeEnum.VARIANT_ANNOTATIONS_TABLE]: {
+                w: 2,
+                h: 1,
+                minW: 2,
+            },
+            [ChartTypeEnum.RESOURCE_METADATA_TABLE]: {
                 w: 2,
                 h: 1,
                 minW: 2,

@@ -197,6 +197,24 @@ export class StudySummaryTab extends React.Component<
             onRemoveNamespaceDataFilters: (chartMeta: ChartMeta) => {
                 this.store.updateNamespaceDataFilters(chartMeta.uniqueKey, []);
             },
+            onAddResourceMetadataValues: (
+                chartMeta: ChartMeta,
+                values: string[][]
+            ) => {
+                this.store.addResourceMetadataFilter(
+                    chartMeta.uniqueKey,
+                    values
+                );
+            },
+            onSetResourceMetadataValues: (
+                chartMeta: ChartMeta,
+                values: string[][]
+            ) => {
+                this.store.updateResourceMetadataFilter(
+                    chartMeta.uniqueKey,
+                    values
+                );
+            },
             onGenericAssayCategoricalValueSelection: (
                 chartMeta: ChartMeta,
                 values: string[]
@@ -489,6 +507,17 @@ export class StudySummaryTab extends React.Component<
                     getVariantAnnotationTypesDownloadData(
                         this.store.getVariantAnnotationChartData(chartMeta)
                     ),
+                downloadTypes: ['Data'],
+            }),
+            [ChartTypeEnum.RESOURCE_METADATA_TABLE]: () => ({
+                filters: this.store.getResourceMetadataFiltersByUniqueKey(
+                    chartMeta.uniqueKey
+                ),
+                promise: this.store.getResourceMetadataChartData(chartMeta),
+                onValueSelection: this.handlers.onAddResourceMetadataValues,
+                onResetSelection: this.handlers.onSetResourceMetadataValues,
+                id: 'resource-metadata-table',
+                title: chartMeta.displayName,
                 downloadTypes: ['Data'],
             }),
             [ChartTypeEnum.MUTATION_TYPE_COUNTS_TABLE]: () => ({

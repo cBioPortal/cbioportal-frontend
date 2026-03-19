@@ -244,6 +244,8 @@ import {
     toPromise,
 } from 'cbioportal-frontend-commons';
 import request from 'superagent';
+import { parseTsvToRows } from 'shared/lib/ResourceNodeTsvParser';
+import { buildChartDataFromMetadata } from 'shared/lib/ResourceNodeChartData';
 import { trackStudyViewFilterEvent } from '../../shared/lib/tracking';
 import comparisonClient from '../../shared/api/comparisonGroupClientInstance';
 import {
@@ -2778,6 +2780,27 @@ export class StudyViewPageStore
         ChartMeta
     >({}, { deep: false });
 
+    // Resource metadata charts (hackathon: CDSI resource data model)
+    @observable private _resourceMetadataCharts = observable.map<
+        ChartUniqueKey,
+        ChartMeta
+    >({}, { deep: false });
+
+    private _resourceMetadataChartDataCache: {
+        [id: string]: MobxPromise<MultiSelectionTableRow[]>;
+    } = {};
+
+    // Lookup: uniqueKey → value → sampleIds (for filtering)
+    private _resourceMetadataValueToSamples: {
+        [uniqueKey: string]: Map<string, string[]>;
+    } = {};
+
+    // Track actual selected values per chart (not reverse-engineered from sample IDs)
+    @observable private _resourceMetadataSelectedValues = observable.map<
+        string,
+        string[]
+    >({}, { deep: false });
+
     //used in saving gene specific charts
     @observable private _geneSpecificChartMap = observable.map<
         ChartUniqueKey,
@@ -3044,6 +3067,7 @@ export class StudyViewPageStore
         this._namespaceDataFilterSet.clear();
         this._genericAssayDataFilterSet.clear();
         this._chartSampleIdentifiersFilterSet.clear();
+        this._resourceMetadataSelectedValues.clear();
         this.preDefinedCustomChartFilterSet.clear();
         this.numberOfSelectedSamplesInCustomSelection = 0;
         this.removeComparisonGroupSelectionFilter();
@@ -4020,6 +4044,9 @@ export class StudyViewPageStore
                     break;
                 case ChartTypeEnum.VARIANT_ANNOTATIONS_TABLE:
                     this.updateNamespaceDataFilters(chartUniqueKey, [[]]);
+                    break;
+                case ChartTypeEnum.RESOURCE_METADATA_TABLE:
+                    this.updateResourceMetadataFilter(chartUniqueKey, []);
                     break;
                 case ChartTypeEnum.GENOMIC_PROFILES_TABLE:
                     this.setGenomicProfilesFilter([]);
@@ -5464,6 +5491,274 @@ export class StudyViewPageStore
             });
         }
         return this.namespaceDataChartCountPromises[chartMeta.uniqueKey];
+    }
+
+    // Resource metadata chart methods (hackathon: CDSI resource data model)
+    @action
+    public registerResourceMetadataCharts(
+        chartDataEntries: Array<{
+            metadataKey: string;
+            rows: Array<{
+                value: string;
+                count: number;
+                uniquePatientKeys: string[];
+                uniqueSampleKeys: string[];
+            }>;
+        }>,
+        totalProfiledCases: number
+    ): void {
+        const OUTER_KEY = 'resource_metadata';
+
+        // Build patient→sample map for resolving patient-level data
+        // (when TSV has no SAMPLE_ID column, uniqueSampleKeys contains patient IDs)
+        const patientToSampleIds = new Map<string, string[]>();
+        if (this.samples.result) {
+            for (const sample of this.samples.result) {
+                if (!patientToSampleIds.has(sample.patientId)) {
+                    patientToSampleIds.set(sample.patientId, []);
+                }
+                patientToSampleIds.get(sample.patientId)!.push(sample.sampleId);
+            }
+        }
+
+        for (const entry of chartDataEntries) {
+            const uniqueKey = `${OUTER_KEY}_${entry.metadataKey}`;
+
+            // Create ChartMeta
+            const chartMeta: ChartMeta = {
+                displayName: entry.metadataKey,
+                uniqueKey: uniqueKey,
+                dataType: ChartMetaDataTypeEnum.RESOURCE_METADATA,
+                patientAttribute: false,
+                description: `Resource metadata: ${entry.metadataKey}`,
+                priority: 75,
+                renderWhenDataChange: false,
+            };
+
+            // Register chart
+            this._resourceMetadataCharts.set(uniqueKey, chartMeta);
+            this.chartsType.set(
+                uniqueKey,
+                ChartTypeEnum.RESOURCE_METADATA_TABLE
+            );
+            this.chartsDimension.set(
+                uniqueKey,
+                STUDY_VIEW_CONFIG.layout.dimensions[
+                    ChartTypeEnum.RESOURCE_METADATA_TABLE
+                ]
+            );
+
+            // Pre-populate data cache
+            // numberOfAlteredCases = unique samples, totalCount = resource rows
+            const tableRows: MultiSelectionTableRow[] = entry.rows.map(row => {
+                // Resolve patient IDs to sample IDs for accurate sample count
+                const resolvedSamples = new Set<string>();
+                for (const id of row.uniqueSampleKeys) {
+                    const mappedSamples = patientToSampleIds.get(id);
+                    if (mappedSamples) {
+                        mappedSamples.forEach(s => resolvedSamples.add(s));
+                    } else {
+                        resolvedSamples.add(id);
+                    }
+                }
+                return {
+                    uniqueKey: row.value,
+                    label: row.value,
+                    numberOfAlteredCases: resolvedSamples.size,
+                    numberOfProfiledCases: totalProfiledCases,
+                    totalCount: row.count,
+                    qValue: 0,
+                    matchingGenePanelIds: [],
+                    oncokbAnnotated: false,
+                    isOncokbOncogene: false,
+                    isOncokbTumorSuppressorGene: false,
+                    isCancerGene: false,
+                };
+            });
+
+            this._resourceMetadataChartDataCache[uniqueKey] = remoteData<
+                MultiSelectionTableRow[]
+            >({
+                invoke: async () => tableRows,
+                default: [],
+            });
+
+            // Build value → sampleIds lookup for filtering
+            // When TSV has no SAMPLE_ID column, uniqueSampleKeys contains patient IDs.
+            // Resolve them to actual sample IDs using the patientToSampleIds map above.
+            const valueToSamples = new Map<string, string[]>();
+            for (const row of entry.rows) {
+                // Check if uniqueSampleKeys are actually patient IDs by seeing
+                // if they match patient IDs in the patient→sample map
+                const resolvedSampleIds: string[] = [];
+                for (const id of row.uniqueSampleKeys) {
+                    const mappedSamples = patientToSampleIds.get(id);
+                    if (mappedSamples) {
+                        // This ID is a patient ID — expand to its sample IDs
+                        resolvedSampleIds.push(...mappedSamples);
+                    } else {
+                        // Already a sample ID
+                        resolvedSampleIds.push(id);
+                    }
+                }
+                valueToSamples.set(row.value, [...new Set(resolvedSampleIds)]);
+            }
+            this._resourceMetadataValueToSamples[uniqueKey] = valueToSamples;
+
+            // Make chart visible
+            this.changeChartVisibility(uniqueKey, true);
+        }
+    }
+
+    @action.bound
+    public updateResourceMetadataFilter(
+        uniqueKey: string,
+        values: string[][]
+    ): void {
+        if (values.length > 0 && values.some(v => v.length > 0)) {
+            const valueLookup = this._resourceMetadataValueToSamples[uniqueKey];
+            if (!valueLookup) return;
+
+            // Collect sample IDs matching selected values
+            const matchingSampleIds = new Set<string>();
+            for (const valueGroup of values) {
+                for (const value of valueGroup) {
+                    const sampleIds = valueLookup.get(value);
+                    if (sampleIds) {
+                        sampleIds.forEach(id => matchingSampleIds.add(id));
+                    }
+                }
+            }
+
+            const studyId = this.queriedPhysicalStudyIds.result?.[0];
+            if (!studyId) return;
+
+            const sampleIdentifiers: SampleIdentifier[] = Array.from(
+                matchingSampleIds
+            ).map(sampleId => ({ sampleId, studyId }));
+
+            this._chartSampleIdentifiersFilterSet.set(
+                uniqueKey,
+                sampleIdentifiers
+            );
+
+            // Store the actual selected values
+            this._resourceMetadataSelectedValues.set(uniqueKey, values.flat());
+        } else {
+            this._chartSampleIdentifiersFilterSet.delete(uniqueKey);
+            this._resourceMetadataSelectedValues.delete(uniqueKey);
+        }
+    }
+
+    @action.bound
+    public addResourceMetadataFilter(
+        uniqueKey: string,
+        values: string[][]
+    ): void {
+        const existing = this.getResourceMetadataFiltersByUniqueKey(uniqueKey);
+        const merged = existing.concat(values);
+        this.updateResourceMetadataFilter(uniqueKey, merged);
+    }
+
+    public getResourceMetadataFiltersByUniqueKey(
+        uniqueKey: string
+    ): string[][] {
+        const selectedValues = this._resourceMetadataSelectedValues.get(
+            uniqueKey
+        );
+        if (!selectedValues || selectedValues.length === 0) return [];
+        return [selectedValues];
+    }
+
+    @computed
+    get resourceMetadataFilterSummary(): Array<{
+        uniqueKey: string;
+        displayName: string;
+        values: string[];
+    }> {
+        const result: Array<{
+            uniqueKey: string;
+            displayName: string;
+            values: string[];
+        }> = [];
+        this._resourceMetadataCharts.forEach((chartMeta, uniqueKey) => {
+            const filters = this.getResourceMetadataFiltersByUniqueKey(
+                uniqueKey
+            );
+            const values = filters.flat();
+            if (values.length > 0) {
+                result.push({
+                    uniqueKey,
+                    displayName: chartMeta.displayName,
+                    values,
+                });
+            }
+        });
+        return result;
+    }
+
+    @action.bound
+    public removeResourceMetadataFilter(
+        uniqueKey: string,
+        value: string
+    ): void {
+        const filters = this.getResourceMetadataFiltersByUniqueKey(uniqueKey);
+        const updated = filters.map(group => group.filter(v => v !== value));
+        this.updateResourceMetadataFilter(uniqueKey, updated);
+    }
+
+    public getResourceMetadataChartData(
+        chartMeta: ChartMeta
+    ): MobxPromise<MultiSelectionTableRow[]> {
+        if (this._resourceMetadataChartDataCache[chartMeta.uniqueKey]) {
+            return this._resourceMetadataChartDataCache[chartMeta.uniqueKey];
+        }
+        // Fallback: return empty resolved promise
+        return remoteData<MultiSelectionTableRow[]>({
+            invoke: async () => [],
+            default: [],
+        });
+    }
+
+    // Fetch resource metadata TSV and register charts (hackathon: CDSI)
+    async initializeResourceMetadataCharts(
+        totalSamples: number
+    ): Promise<void> {
+        try {
+            // In dev, static files are served by the webpack dev server
+            const devServerUrl = `//localhost:3000`;
+            const studyToFile: Record<string, string> = {
+                coad_msk_2025: 'data_resource_image.txt',
+                blca_tcga_pan_can_atlas_2018:
+                    'tcga_imaging_resources_mock_data.txt',
+            };
+            const studyId = this.queriedPhysicalStudyIds.result?.[0];
+            const filename = studyId ? studyToFile[studyId] : undefined;
+            if (!filename) return;
+            const tsvUrl = `${devServerUrl}/${filename}`;
+            console.log('[CDSI] Fetching resource metadata TSV from:', tsvUrl);
+            const response = await fetch(tsvUrl);
+            console.log('[CDSI] Fetch response:', response.status, response.ok);
+            if (!response.ok) return;
+            const tsv = await response.text();
+            const rows = parseTsvToRows(tsv);
+            console.log('[CDSI] Parsed rows:', rows.length);
+            const chartData = buildChartDataFromMetadata(rows);
+            console.log(
+                '[CDSI] Chart data entries:',
+                chartData.length,
+                chartData.map(d => d.metadataKey)
+            );
+            if (chartData.length > 0) {
+                this.registerResourceMetadataCharts(chartData, totalSamples);
+                console.log(
+                    '[CDSI] Charts registered. _resourceMetadataCharts size:',
+                    this._resourceMetadataCharts.size
+                );
+            }
+        } catch (e) {
+            console.warn('[CDSI] Resource metadata TSV not available:', e);
+        }
     }
 
     public getMutationTypeChartDataCount(
@@ -7029,6 +7324,10 @@ export class StudyViewPageStore
             this.shouldDisplaySampleTreatmentTarget.result,
             this.shouldDisplayPatientTreatmentTarget.result
         );
+        // Merge resource metadata charts (hackathon: CDSI)
+        this._resourceMetadataCharts.forEach((meta, key) => {
+            chartMetaSet[key] = meta;
+        });
         return chartMetaSet;
     }
 
@@ -7085,6 +7384,10 @@ export class StudyViewPageStore
             this.shouldDisplaySampleTreatmentTarget.result,
             this.shouldDisplayPatientTreatmentTarget.result
         );
+        // Merge resource metadata charts (hackathon: CDSI)
+        this._resourceMetadataCharts.forEach((meta, key) => {
+            chartMetaSet[key] = meta;
+        });
         return chartMetaSet;
     }
 
@@ -7900,6 +8203,7 @@ export class StudyViewPageStore
         this.initializeClinicalDataBinCountCharts();
         this.initializeGeneSpecificCharts();
         this.initializeNamespaceCharts();
+        this.initializeResourceMetadataCharts(this.samples.result!.length);
         this.initializeGenericAssayCharts();
         this._defaultChartsDimension = observable.map(
             _.fromPairs(this.chartsDimension.toJSON())

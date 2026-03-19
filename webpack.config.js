@@ -392,9 +392,10 @@ var config = {
         noParse: [/3Dmol-nojquery.js/, /jspdf/],
     },
     devServer: {
-        static: {
-            directory: path.resolve(__dirname, 'dist'),
-        },
+        static: [
+            { directory: path.resolve(__dirname, 'dist') },
+            { directory: path.resolve(__dirname, 'public') },
+        ],
         hot: true,
         historyApiFallback: true,
         // TODO removed in favor of https://webpack.js.org/configuration/other-options/#infrastructurelogging

@@ -4,6 +4,7 @@ export enum StudyViewPageTabKeyEnum {
     HEATMAPS = 'heatmaps',
     CN_SEGMENTS = 'cnSegments',
     FILES_AND_LINKS = 'filesAndLinks',
+    RESOURCES = 'resources',
     PLOTS = 'plots',
 }
 

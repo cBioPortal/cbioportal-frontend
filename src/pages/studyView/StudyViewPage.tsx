@@ -60,6 +60,7 @@ import { MakeMobxView } from '../../shared/components/MobxView';
 import ResourceTab from '../../shared/components/resources/ResourceTab';
 import StudyViewURLWrapper from './StudyViewURLWrapper';
 import ResourcesTab, { RESOURCES_TAB_NAME } from './resources/ResourcesTab';
+import HierarchicalResourcesTab from './resources/HierarchicalResourcesTab';
 import { ResourceData } from 'cbioportal-ts-api-client';
 import $ from 'jquery';
 import { StudyViewComparisonGroup } from 'pages/groupComparison/GroupComparisonUtils';
@@ -750,6 +751,18 @@ export default class StudyViewPage extends React.Component<
                                     </MSKTab>
                                     <MSKTab
                                         key={5}
+                                        id={StudyViewPageTabKeyEnum.RESOURCES}
+                                        linkText={'Resources'}
+                                        hide={!this.shouldShowResources}
+                                    >
+                                        <div>
+                                            <HierarchicalResourcesTab
+                                                store={this.store}
+                                            />
+                                        </div>
+                                    </MSKTab>
+                                    <MSKTab
+                                        key={6}
                                         id={StudyViewPageTabKeyEnum.PLOTS}
                                         linkText={
                                             <span>

@@ -15,6 +15,9 @@ import ClinicalEventsTables from 'pages/patientView/timeline/ClinicalEventsTable
 import ResourcesTab, {
     RESOURCES_TAB_NAME,
 } from 'pages/patientView/resources/ResourcesTab';
+import HierarchicalResourcesTab, {
+    HIERARCHICAL_RESOURCES_TAB_NAME,
+} from 'pages/patientView/resources/HierarchicalResourcesTab';
 import PathologyReport from 'pages/patientView/pathologyReport/PathologyReport';
 import IFrameLoader from 'shared/components/iframeLoader/IFrameLoader';
 import { getDigitalSlideArchiveIFrameUrl } from 'shared/api/urls';
@@ -43,6 +46,7 @@ export enum PatientViewPageTabs {
     genomicEvolution = 'genomicEvolution',
     ClinicalData = 'clinicalData',
     FilesAndLinks = 'filesAndLinks',
+    Resources = 'resources',
     PathologyReport = 'pathologyReport',
     TissueImage = 'tissueImage',
     MSKTissueImage = 'MSKTissueImage',
@@ -568,6 +572,21 @@ export function tabs(
                                 .result!
                         }
                         openResource={pageComponent.openResource}
+                    />
+                </div>
+            </MSKTab>
+        );
+
+    if (pageComponent.shouldShowResources)
+        tabs.push(
+            <MSKTab
+                key={14}
+                id={PatientViewPageTabs.Resources}
+                linkText={'Resources'}
+            >
+                <div>
+                    <HierarchicalResourcesTab
+                        store={pageComponent.patientViewPageStore}
                     />
                 </div>
             </MSKTab>
