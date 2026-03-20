@@ -1,12 +1,32 @@
 # cBioPortal E2E Test Runner
-# Contains Chrome, WebDriverIO, and all test specs.
-# Point it at a running frontend + backend to run tests.
+#
+# Contains Chrome, WebDriverIO, and all test specs (local + remote).
+# Point it at a running cBioPortal instance to run tests.
 #
 # Build (from cbioportal-frontend root):
 #   docker build -f end-to-end-test/Dockerfile.e2e-runner -t cbioportal/e2e-runner:latest .
 #
-# Run:
+# Run local tests (against a local backend + frontend):
 #   docker run --network host \
+#     -e CBIOPORTAL_URL=http://localhost \
+#     -e SPEC_FILE_PATTERN="./local/specs/**/*.spec.js" \
+#     cbioportal/e2e-runner:latest
+#
+# Run remote tests (against production or staging):
+#   docker run --network host \
+#     -e CBIOPORTAL_URL=https://www.cbioportal.org \
+#     -e SPEC_FILE_PATTERN="./remote/specs/**/*.spec.js" \
+#     cbioportal/e2e-runner:latest
+#
+# Run a single test:
+#   docker run --network host \
+#     -e CBIOPORTAL_URL=http://localhost \
+#     -e SPEC_FILE_PATTERN="./local/specs/core/patientview.spec.js" \
+#     cbioportal/e2e-runner:latest
+#
+# Save results to host:
+#   docker run --network host \
+#     -v ./results:/tests/local/junit \
 #     -e CBIOPORTAL_URL=http://localhost \
 #     cbioportal/e2e-runner:latest
 
@@ -30,7 +50,7 @@ WORKDIR /tests
 COPY end-to-end-test/package.json end-to-end-test/yarn.lock ./
 RUN corepack enable && yarn install --frozen-lockfile
 
-# Copy test specs and shared utilities
+# Copy all test specs (local + remote) and shared utilities
 COPY end-to-end-test/local/ ./local/
 COPY end-to-end-test/remote/ ./remote/
 COPY end-to-end-test/shared/ ./shared/
@@ -39,8 +59,8 @@ ENV CHROMEDRIVER_CUSTOM_PATH=/usr/local/bin/chromedriver
 ENV HEADLESS_CHROME=true
 ENV FRONTEND_TEST_USE_LOCAL_DIST=true
 
-# Default: run local specs
-ENV CBIOPORTAL_URL=http://backend:8080
+# Defaults - override via env vars
+ENV CBIOPORTAL_URL=http://localhost
 ENV SPEC_FILE_PATTERN=./local/specs/**/*.spec.js
 ENV SCREENSHOT_DIRECTORY=./local/screenshots
 ENV JUNIT_REPORT_PATH=./local/junit/
