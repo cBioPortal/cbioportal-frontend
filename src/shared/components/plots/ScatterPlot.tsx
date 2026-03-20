@@ -125,6 +125,7 @@ export default class ScatterPlot<
     private onMouseDown() {
         if (this.props.onDataSelection) {
             this.isDragging = true;
+            window.addEventListener('mouseup', this.onMouseUp, { once: true });
         }
     }
 
