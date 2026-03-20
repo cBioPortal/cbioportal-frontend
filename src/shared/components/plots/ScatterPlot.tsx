@@ -108,6 +108,7 @@ export default class ScatterPlot<
     D extends IBaseScatterPlotData
 > extends React.Component<IScatterPlotProps<D>, {}> {
     @observable.ref private container: HTMLDivElement;
+    @observable private isDragging: boolean = false;
     private tooltipHelper: ScatterPlotTooltipHelper = new ScatterPlotTooltipHelper();
 
     constructor(props: any) {
@@ -118,6 +119,18 @@ export default class ScatterPlot<
     @autobind
     private containerRef(container: HTMLDivElement) {
         this.container = container;
+    }
+
+    @autobind
+    private onMouseDown() {
+        if (this.props.onDataSelection) {
+            this.isDragging = true;
+        }
+    }
+
+    @autobind
+    private onMouseUp() {
+        this.isDragging = false;
     }
 
     @autobind
@@ -711,6 +724,8 @@ export default class ScatterPlot<
             <div
                 ref={this.containerRef}
                 style={{ width: this.svgWidth, height: this.svgHeight }}
+                onMouseDown={this.onMouseDown}
+                onMouseUp={this.onMouseUp}
             >
                 <VictoryChart
                     containerComponent={
@@ -817,17 +832,22 @@ export default class ScatterPlot<
         return (
             <div>
                 <Observer>{this.getChart}</Observer>
-                {this.container && this.tooltipModel && this.props.tooltip && (
-                    <ScatterPlotTooltip
-                        container={this.container}
-                        targetHovered={this.pointHovered}
-                        targetCoords={{
-                            x: this.tooltipModel.x,
-                            y: this.tooltipModel.y,
-                        }}
-                        overlay={this.props.tooltip(this.tooltipModel.datum)}
-                    />
-                )}
+                {this.container &&
+                    this.tooltipModel &&
+                    this.props.tooltip &&
+                    !this.isDragging && (
+                        <ScatterPlotTooltip
+                            container={this.container}
+                            targetHovered={this.pointHovered}
+                            targetCoords={{
+                                x: this.tooltipModel.x,
+                                y: this.tooltipModel.y,
+                            }}
+                            overlay={this.props.tooltip(
+                                this.tooltipModel.datum
+                            )}
+                        />
+                    )}
             </div>
         );
     }
