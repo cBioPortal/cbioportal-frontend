@@ -4275,11 +4275,6 @@
   resolved "https://registry.yarnpkg.com/@types/json-schema/-/json-schema-7.0.15.tgz#596a1747233694d50f6ad8a7869fcb6f56cf5841"
   integrity sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==
 
-"@types/jspdf@^1.1.31":
-  version "1.2.2"
-  resolved "https://registry.yarnpkg.com/@types/jspdf/-/jspdf-1.2.2.tgz#bb827def0130e72f0692749b0db0c25a7f261840"
-  integrity sha512-OeryGbolZyGuMGlVyn/D7g1KsVClNmbnt8DE9TgOxKG6ixMeG9f8iqspLuhhuQx8BS8zs8Tyn1yEth+ptdkVgw==
-
 "@types/jstree@^3.3.35":
   version "3.3.37"
   resolved "https://registry.yarnpkg.com/@types/jstree/-/jstree-3.3.37.tgz#f79add02a0af21202a1e0c1bbffe5276b2b87317"
@@ -11268,7 +11263,7 @@ file-loader@^6.2.0:
     loader-utils "^2.0.0"
     schema-utils "^3.0.0"
 
-file-saver@1.3.8, file-saver@^1.3.3, file-saver@eligrey/FileSaver.js#1.3.8:
+file-saver@1.3.8, file-saver@^1.3.3:
   version "1.3.8"
   resolved "https://codeload.github.com/eligrey/FileSaver.js/tar.gz/e865e37af9f9947ddcced76b549e27dc45c1cb2e"
 
@@ -15285,18 +15280,6 @@ jspdf-yworks@^2.0.1:
     omggif "1.0.7"
     promise-polyfill "8.1.0"
     stackblur-canvas "1.4.1"
-
-jspdf@^1.3.3:
-  version "1.5.3"
-  resolved "https://registry.yarnpkg.com/jspdf/-/jspdf-1.5.3.tgz#5a12c011479defabef5735de55c913060ed219f2"
-  integrity sha512-J9X76xnncMw+wIqb15HeWfPMqPwYxSpPY8yWPJ7rAZN/ZDzFkjCSZObryCyUe8zbrVRNiuCnIeQteCzMn7GnWw==
-  dependencies:
-    canvg "1.5.3"
-    file-saver eligrey/FileSaver.js#1.3.8
-    html2canvas "1.0.0-alpha.12"
-    omggif "1.0.7"
-    promise-polyfill "8.1.0"
-    stackblur-canvas "2.2.0"
 
 jsprim@^1.2.2:
   version "1.4.1"
@@ -23281,11 +23264,6 @@ stackblur-canvas@1.4.1, stackblur-canvas@^1.4.1:
   version "1.4.1"
   resolved "https://registry.yarnpkg.com/stackblur-canvas/-/stackblur-canvas-1.4.1.tgz#849aa6f94b272ff26f6471fa4130ed1f7e47955b"
   integrity sha1-hJqm+UsnL/JvZHH6QTDtH35HlVs=
-
-stackblur-canvas@2.2.0:
-  version "2.2.0"
-  resolved "https://registry.yarnpkg.com/stackblur-canvas/-/stackblur-canvas-2.2.0.tgz#cacc5924a0744b3e183eb2e6c1d8559c1a17c26e"
-  integrity sha512-5Gf8dtlf8k6NbLzuly2NkGrkS/Ahh+I5VUjO7TnFizdJtgpfpLLEdQlLe9umbcnZlitU84kfYjXE67xlSXfhfQ==
 
 static-eval@2.1.1, static-eval@^2.0.0:
   version "2.1.1"
