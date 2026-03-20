@@ -24,6 +24,7 @@ import {
 } from 'cbioportal-frontend-commons';
 import { PageLayout } from '../../shared/components/PageLayout/PageLayout';
 import IFrameLoader from '../../shared/components/iframeLoader/IFrameLoader';
+import IFramePostMessageLoader from '../../shared/components/iframeLoader/IFramePostMessageLoader';
 import { StudySummaryTab } from 'pages/studyView/tabs/SummaryTab';
 import StudyPageHeader from './studyPageHeader/StudyPageHeader';
 import CNSegments from './tabs/CNSegments';
@@ -60,7 +61,7 @@ import { MakeMobxView } from '../../shared/components/MobxView';
 import ResourceTab from '../../shared/components/resources/ResourceTab';
 import StudyViewURLWrapper from './StudyViewURLWrapper';
 import ResourcesTab, { RESOURCES_TAB_NAME } from './resources/ResourcesTab';
-import { ResourceData } from 'cbioportal-ts-api-client';
+import { ClinicalDataFilter, ResourceData } from 'cbioportal-ts-api-client';
 import $ from 'jquery';
 import { StudyViewComparisonGroup } from 'pages/groupComparison/GroupComparisonUtils';
 import { parse } from 'query-string';
@@ -562,6 +563,96 @@ export default class StudyViewPage extends React.Component<
         },
     });
 
+    readonly selectedPatientDisplayNames = remoteData<string[]>({
+        await: () => [
+            this.store.queriedPhysicalStudyIds,
+            this.store.selectedSamples,
+        ],
+        invoke: async () => {
+            const studyIds = this.store.queriedPhysicalStudyIds.result!;
+            if (!studyIds.includes('msk_spectrum_tme_2022')) {
+                return [];
+            }
+            const result = await this.store.internalClient.fetchClinicalDataCountsUsingPOST(
+                {
+                    clinicalDataCountFilter: {
+                        attributes: [
+                            {
+                                attributeId: 'PATIENT_DISPLAY_NAME',
+                            } as ClinicalDataFilter,
+                        ],
+                        studyViewFilter: this.store.filters,
+                    },
+                }
+            );
+            const item = _.find(result, {
+                attributeId: 'PATIENT_DISPLAY_NAME',
+            });
+            const names = item
+                ? item.counts.map((c: { value: string }) => c.value)
+                : [];
+            console.log(
+                '[cBioPortal] selected PATIENT_DISPLAY_NAME values:',
+                names
+            );
+            return names;
+        },
+        default: [],
+    });
+
+    @computed get ccePostMessageData() {
+        const selectedNames = this.selectedPatientDisplayNames.result || [];
+
+        return {
+            type: 'applyConfig',
+            payload: {
+                url:
+                    'https://cbioportal-public-imaging.assets.cbioportal.org/msk_spectrum_tme_2022/zarr/spectrum_all_cells-f16-zstd-c1s30-v3.zarr/',
+                embedding: 'X_umap50',
+                colorBy: 'category',
+                category: 'cell_type',
+                filter: {
+                    ids: selectedNames,
+                    obsColumn: 'donor_id',
+                },
+                summaryObsColumns: ['cell_type', 'phase'],
+                summaryGenes: ['dapl1', 'cetn2'],
+                showDatasetDropdown: false,
+            },
+        };
+    }
+
+    @computed get cceTab(): JSX.Element | null {
+        if (
+            !this.store.queriedPhysicalStudyIds.isComplete ||
+            !this.store.queriedPhysicalStudyIds.result!.includes(
+                'msk_spectrum_tme_2022'
+            )
+        ) {
+            return null;
+        }
+
+        return (
+            <MSKTab
+                key={StudyViewPageTabKeyEnum.CELL_EXPLORER}
+                id={StudyViewPageTabKeyEnum.CELL_EXPLORER}
+                linkText="Cell Explorer"
+                unmountOnHide={false}
+            >
+                <Observer>
+                    {() => (
+                        <IFramePostMessageLoader
+                            url="https://cbioportal.github.io/cbioportal-cell-explorer/view"
+                            height={window.innerHeight}
+                            width="100%"
+                            postMessageData={this.ccePostMessageData}
+                        />
+                    )}
+                </Observer>
+            </MSKTab>
+        );
+    }
+
     @computed get customTabs() {
         return buildCustomTabs(this.customTabsConfigs);
     }
@@ -769,6 +860,7 @@ export default class StudyViewPage extends React.Component<
                                     </MSKTab>
 
                                     {this.resourceTabs.component}
+                                    {this.cceTab}
                                     {this.customTabs}
                                 </MSKTabs>
 
