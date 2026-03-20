@@ -135,6 +135,18 @@ export default class ScatterPlot<
     }
 
     @autobind
+    private onMouseLeave() {
+        if (this.isDragging) {
+            // Dispatch a synthetic mouseup on the SVG so Victory's
+            // selection container clears its internal drag state.
+            const svg = this.container?.querySelector('svg');
+            if (svg) {
+                svg.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+            }
+        }
+    }
+
+    @autobind
     private svgContainerRef(container: HTMLDivElement | null) {
         // containerRef in VictoryContainer gives us the wrapper <div>, not the <svg>.
         // Find the SVG inside and apply the svgId and svgRef props.
@@ -727,6 +739,7 @@ export default class ScatterPlot<
                 style={{ width: this.svgWidth, height: this.svgHeight }}
                 onMouseDown={this.onMouseDown}
                 onMouseUp={this.onMouseUp}
+                onMouseLeave={this.onMouseLeave}
             >
                 <VictoryChart
                     containerComponent={
