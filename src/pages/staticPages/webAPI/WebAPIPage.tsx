@@ -87,6 +87,7 @@ export default class WebAPIPage extends React.Component<{}, {}> {
                     API documentation is now at{' '}
                     <a
                         target={'_blank'}
+                        rel="noopener noreferrer"
                         href="https://docs.cbioportal.org/web-api-and-clients/"
                     >
                         docs.cbioportal.org
@@ -104,7 +105,7 @@ export default class WebAPIPage extends React.Component<{}, {}> {
                 <ul>
                     <li>
                         <strong>q</strong>=[a query following{' '}
-                        <a href="oql" target="_blank">
+                        <a href="oql" target="_blank" rel="noopener noreferrer">
                             Onco Query Language
                         </a>
                         , e.g. a space separated list of HUGO gene symbols]

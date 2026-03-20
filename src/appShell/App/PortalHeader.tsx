@@ -154,7 +154,11 @@ export default class PortalHeader extends React.Component<
                             {tab.text}
                         </NavLink>
                     ) : (
-                        <a target={'_blank'} href={tab.address}>
+                        <a
+                            target={'_blank'}
+                            rel="noopener noreferrer"
+                            href={tab.address}
+                        >
                             {tab.text}
                         </a>
                     )}

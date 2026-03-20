@@ -406,6 +406,7 @@ export default class CancerStudySelector extends React.Component<
                                         'https://docs.cbioportal.org/user-guide/by-page/#homepage'
                                     }
                                     target={'_blank'}
+                                    rel="noopener noreferrer"
                                 >
                                     Help <i className={'fa fa-book'}></i>
                                 </a>

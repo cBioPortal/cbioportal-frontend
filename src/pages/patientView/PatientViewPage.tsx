@@ -661,6 +661,7 @@ export class PatientViewPageInner extends React.Component<
                                     <a
                                         onClick={this.handleReturnToStudyView}
                                         target={'_blank'}
+                                        rel="noopener noreferrer"
                                     >
                                         {`${this.pageStore.patientIdsInCohort.length} patients`}
                                     </a>

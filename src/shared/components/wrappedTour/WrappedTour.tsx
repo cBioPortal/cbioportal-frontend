@@ -18,6 +18,7 @@ export function WrappedTour() {
                                 <a
                                     href={'/tutorials#group-comparison'}
                                     target={'_blank'}
+                                    rel="noopener noreferrer"
                                 >
                                     Click here
                                 </a>{' '}

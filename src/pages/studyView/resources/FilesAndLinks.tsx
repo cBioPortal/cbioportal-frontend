@@ -309,6 +309,7 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
                                 href={data.url}
                                 style={{ fontSize: 10 }}
                                 target={'_blank'}
+                                rel="noopener noreferrer"
                             >
                                 <i
                                     className={`fa fa-external-link fa-sm`}

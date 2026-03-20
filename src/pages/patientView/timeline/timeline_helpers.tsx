@@ -37,6 +37,7 @@ export function configureHtanOhsuTimeline(baseConfig: ITimelineConfig) {
                             'https://minerva-story-htan-ohsu-demo.surge.sh/#s=0#w=0#g=0#m=-1#a=-100_-100#v=0.5_0.5_0.5#o=-100_-100_1_1#p=Q'
                         }
                         target={'_blank'}
+                        rel="noopener noreferrer"
                         onClick={e => e.stopPropagation()}
                     >
                         <svg

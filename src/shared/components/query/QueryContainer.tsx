@@ -129,6 +129,7 @@ export default class QueryContainer extends React.Component<
                             <a
                                 href={'https://genie.cbioportal.org'}
                                 target={'_blank'}
+                                rel="noopener noreferrer"
                             >
                                 It's available here.
                             </a>{' '}

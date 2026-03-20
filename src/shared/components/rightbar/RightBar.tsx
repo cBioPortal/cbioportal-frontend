@@ -222,6 +222,7 @@ export default class RightBar extends React.Component<
                     <a
                         className={'btn btn-link btn-xs pull-right'}
                         target={'_blank'}
+                        rel="noopener noreferrer"
                         href={buildCBioPortalPageUrl('/visualize')}
                     >
                         Host your own
@@ -230,6 +231,7 @@ export default class RightBar extends React.Component<
                 <a
                     href={buildCBioPortalPageUrl('/installations')}
                     target={'_blank'}
+                    rel="noopener noreferrer"
                     style={{ display: 'block' }}
                 >
                     <iframe
@@ -246,6 +248,7 @@ export default class RightBar extends React.Component<
                     private?{' '}
                     <a
                         target={'_blank'}
+                        rel="noopener noreferrer"
                         href="https://docs.google.com/forms/d/e/1FAIpQLSflQdN956q7Xh5caO8z8jIaF6uMLBkKrSxFvPi8OhNBWB247w/viewform"
                     >
                         Complete the survey here

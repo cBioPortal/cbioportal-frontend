@@ -88,6 +88,7 @@ const ResourceTable = observer(
                                         href={resource.url}
                                         style={{ fontSize: 10 }}
                                         target={'_blank'}
+                                        rel="noopener noreferrer"
                                     >
                                         <i
                                             className={`fa fa-external-link fa-sm`}

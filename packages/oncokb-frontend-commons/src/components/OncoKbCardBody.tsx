@@ -39,7 +39,11 @@ const publicInstanceDisclaimerOverLay = (
             therefore some OncoKB content is not available including
             therapeutic, diagnostic and prognostic implications. To obtain a
             license, please follow{' '}
-            <a href={ONCOKB_DATA_ACCESS_PAGE_LINK} target={'_blank'}>
+            <a
+                href={ONCOKB_DATA_ACCESS_PAGE_LINK}
+                target={'_blank'}
+                rel="noopener noreferrer"
+            >
                 these instructions
             </a>
             .
