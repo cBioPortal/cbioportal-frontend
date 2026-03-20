@@ -30,16 +30,6 @@ export default class ProteinChange extends React.Component<
         const proteinChange = mutation.proteinChange;
         const mutationStatus = mutation.mutationStatus;
 
-        // TODO TruncatedText
-        // let content = (
-        //     <TruncatedText
-        //         text={proteinChange}
-        //         tooltip={<span>{proteinChange}</span>}
-        //         className={styles.proteinChange}
-        //         maxLength={40}
-        //     />
-        // );
-
         let content = (
             <span className={styles.proteinChange}>{proteinChange}</span>
         );

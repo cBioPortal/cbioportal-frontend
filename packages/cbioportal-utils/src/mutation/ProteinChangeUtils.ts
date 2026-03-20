@@ -228,8 +228,6 @@ function resolveConsequenceForPattern0(
 ): string | undefined {
     let consequence: string | undefined;
 
-    // const p = Pattern.compile("^([A-Z\\*]+)([0-9]+)([A-Z\\*\\?]*)$");
-    // const m = p.matcher(proteinChange);
     const match = proteinChange.match(PROTEIN_CHANGE_MATCHERS[0]);
 
     if (match) {
@@ -274,8 +272,6 @@ function resolveConsequenceForPattern1(
 ): string | undefined {
     let consequence: string | undefined;
 
-    // const p = Pattern.compile("[A-Z]?([0-9]+)(_[A-Z]?([0-9]+))?(delins|ins)([A-Z]+)");
-    // const m = p.matcher(proteinChange);
     const match = proteinChange.match(PROTEIN_CHANGE_MATCHERS[1]);
 
     if (match) {
@@ -307,8 +303,6 @@ function resolveConsequenceForPattern2(
 ): string | undefined {
     let consequence: string | undefined;
 
-    // const p = Pattern.compile("[A-Z]?([0-9]+)(_[A-Z]?([0-9]+))?(_)?splice");
-    // const m = p.matcher(proteinChange);
     const match = proteinChange.match(PROTEIN_CHANGE_MATCHERS[2]);
 
     if (match) {
@@ -323,8 +317,6 @@ function resolveConsequenceForPattern3(
 ): string | undefined {
     let consequence: string | undefined;
 
-    // const p = Pattern.compile("[A-Z]?([0-9]+)_[A-Z]?([0-9]+)(.+)");
-    // const m = p.matcher(proteinChange);
     const match = proteinChange.match(PROTEIN_CHANGE_MATCHERS[3]);
 
     if (match) {
@@ -347,7 +339,6 @@ function resolveConsequenceForPattern3(
                 break;
             case 'dup':
                 consequence = 'inframe_insertion';
-                // isDup = true;
                 break;
             case 'mut':
                 consequence = 'any';
@@ -362,12 +353,9 @@ function resolveConsequenceForPattern4(
 ): string | undefined {
     let consequence: string | undefined;
 
-    //const p = Pattern.compile("([A-Z\\*])([0-9]+)[A-Z]?fs.*");
-    //const m = p.matcher(proteinChange);
     const match = proteinChange.match(PROTEIN_CHANGE_MATCHERS[4]);
 
     if (match) {
-        //const ref = match[1);
         consequence = 'frameshift_variant';
     }
 
@@ -379,12 +367,9 @@ function resolveConsequenceForPattern5(
 ): string | undefined {
     let consequence: string | undefined;
 
-    // const p = Pattern.compile("([A-Z]+)?([0-9]+)((ins)|(del)|(dup))");
-    // const m = p.matcher(proteinChange);
     const match = proteinChange.match(PROTEIN_CHANGE_MATCHERS[5]);
 
     if (match) {
-        // const ref = match[1);
         const v = match[3];
 
         switch (v) {
@@ -392,7 +377,6 @@ function resolveConsequenceForPattern5(
                 consequence = 'inframe_insertion';
                 break;
             case 'dup':
-                // isDup = true;
                 consequence = 'inframe_insertion';
                 break;
             case 'del':
@@ -435,7 +419,6 @@ function extractNonNumerical(matched: RegExpMatchArray): number[] {
 export function calcProteinChangeSortValue(
     proteinChange: string
 ): number | null {
-    // let matched = proteinChange.match(/.*[A-Z]([0-9]+)[^0-9]+/);
     const alleleAndPosition: RegExp = /[A-Za-z][0-9]+./g;
     const position: RegExp = /[0-9]+/g;
 

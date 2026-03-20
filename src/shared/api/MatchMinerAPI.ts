@@ -5,8 +5,6 @@ import { buildCBioPortalAPIUrl } from './urls';
 /**
  * Retrieves the trial matches for the query given, if they are in the MatchMiner API.
  */
-// It cannot be set globally since it will cause test error: undefined of 'replace'.
-// const cbioportalUrl = buildCBioPortalAPIUrl('api/matchminer/api');
 export async function fetchTrialMatchesUsingPOST(
     query: object
 ): Promise<Array<ITrialMatch>> {

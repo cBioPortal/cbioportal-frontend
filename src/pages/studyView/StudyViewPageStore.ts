@@ -11674,10 +11674,6 @@ export class StudyViewPageStore
                     this.plotsSelectedGenes.result,
                     (gene: Gene) => gene.entrezGeneId
                 );
-                // // Set all SVs that are queried at the gene1::gene2 orientation level.
-                // const structuralVariantQueries = this.structVarQueries.map(sv =>
-                //     createStructuralVariantQuery(sv, this.plotsSelectedGenes.result!)
-                // );
 
                 return await this.internalClient.fetchStructuralVariantsUsingPOST(
                     {

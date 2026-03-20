@@ -13695,87 +13695,11 @@ describe('SurvivalUtil', () => {
         });
     });
 
-    // describe('#getLineData()', () => {
-    //     it('returns [{x: 0, y: 100}] for empty list', () => {
-    //         assert.deepEqual(getLineData([], []), [{ x: 0, y: 100 }]);
-    //     });
-
-    //     it('returns correct line data for the example data', () => {
-    //         assert.deepEqual(
-    //             getLineData(examplePatientSurvivals, exampleEstimates),
-    //             [
-    //                 { x: 0, y: 100 },
-    //                 { x: 0, y: 100 },
-    //                 { x: 0.09, y: 80 },
-    //                 { x: 0.13, y: 80 },
-    //                 { x: 5.09, y: 80 },
-    //                 { x: 63.83, y: 40 },
-    //                 { x: 182.19, y: 0 },
-    //             ]
-    //         );
-    //     });
-    // });
-
     describe('#getScatterData()', () => {
         it('returns empty list for empty list', () => {
             assert.deepEqual(getScatterData([], []), []);
         });
 
-        //     it('returns correct scatter data for the example data', () => {
-        //         assert.deepEqual(
-        //             getScatterData(examplePatientSurvivals, exampleEstimates),
-        //             [
-        //                 {
-        //                     x: 0,
-        //                     y: 100,
-        //                     patientId: 'TCGA-OR-A5J3',
-        //                     uniquePatientKey: 'TCGA-OR-A5J3',
-        //                     studyId: 'acc_tcga',
-        //                     status: false,
-        //                 },
-        //                 {
-        //                     x: 0.09,
-        //                     y: 80,
-        //                     patientId: 'TCGA-OR-A5J2',
-        //                     uniquePatientKey: 'TCGA-OR-A5J2',
-        //                     studyId: 'acc_tcga',
-        //                     status: true,
-        //                 },
-        //                 {
-        //                     x: 0.13,
-        //                     y: 80,
-        //                     patientId: 'TCGA-2F-A9KP',
-        //                     uniquePatientKey: 'TCGA-2F-A9KP',
-        //                     studyId: 'blca_tcga',
-        //                     status: false,
-        //                 },
-        //                 {
-        //                     x: 5.09,
-        //                     y: 80,
-        //                     patientId: 'TCGA-OR-A5J1',
-        //                     uniquePatientKey: 'TCGA-OR-A5J1',
-        //                     studyId: 'acc_tcga',
-        //                     status: false,
-        //                 },
-        //                 {
-        //                     x: 63.83,
-        //                     y: 40,
-        //                     patientId: 'TCGA-2F-A9KO',
-        //                     uniquePatientKey: 'TCGA-2F-A9KO',
-        //                     studyId: 'blca_tcga',
-        //                     status: true,
-        //                 },
-        //                 {
-        //                     x: 182.19,
-        //                     y: 0,
-        //                     patientId: 'TCGA-2F-A9KQ',
-        //                     uniquePatientKey: 'TCGA-2F-A9KQ',
-        //                     studyId: 'blca_tcga',
-        //                     status: true,
-        //                 },
-        //             ]
-        //         );
-        //     });
     });
 
     describe('#getScatterDataWithOpacity()', () => {
@@ -13783,70 +13707,6 @@ describe('SurvivalUtil', () => {
             assert.deepEqual(getScatterDataWithOpacity([], []), []);
         });
 
-        //     it('returns correct scatter data with opacity for the example data', () => {
-        //         assert.deepEqual(
-        //             getScatterDataWithOpacity(
-        //                 examplePatientSurvivals,
-        //                 exampleEstimates
-        //             ),
-        //             [
-        //                 {
-        //                     x: 0,
-        //                     y: 100,
-        //                     patientId: 'TCGA-OR-A5J3',
-        //                     uniquePatientKey: 'TCGA-OR-A5J3',
-        //                     studyId: 'acc_tcga',
-        //                     status: false,
-        //                     opacity: 1,
-        //                 },
-        //                 {
-        //                     x: 0.09,
-        //                     y: 80,
-        //                     patientId: 'TCGA-OR-A5J2',
-        //                     uniquePatientKey: 'TCGA-OR-A5J2',
-        //                     studyId: 'acc_tcga',
-        //                     status: true,
-        //                     opacity: 0,
-        //                 },
-        //                 {
-        //                     x: 0.13,
-        //                     y: 80,
-        //                     patientId: 'TCGA-2F-A9KP',
-        //                     uniquePatientKey: 'TCGA-2F-A9KP',
-        //                     studyId: 'blca_tcga',
-        //                     status: false,
-        //                     opacity: 1,
-        //                 },
-        //                 {
-        //                     x: 5.09,
-        //                     y: 80,
-        //                     patientId: 'TCGA-OR-A5J1',
-        //                     uniquePatientKey: 'TCGA-OR-A5J1',
-        //                     studyId: 'acc_tcga',
-        //                     status: false,
-        //                     opacity: 1,
-        //                 },
-        //                 {
-        //                     x: 63.83,
-        //                     y: 40,
-        //                     patientId: 'TCGA-2F-A9KO',
-        //                     uniquePatientKey: 'TCGA-2F-A9KO',
-        //                     studyId: 'blca_tcga',
-        //                     status: true,
-        //                     opacity: 0,
-        //                 },
-        //                 {
-        //                     x: 182.19,
-        //                     y: 0,
-        //                     patientId: 'TCGA-2F-A9KQ',
-        //                     uniquePatientKey: 'TCGA-2F-A9KQ',
-        //                     studyId: 'blca_tcga',
-        //                     status: true,
-        //                     opacity: 0,
-        //                 },
-        //             ]
-        //         );
-        //     });
     });
 
     describe('#getStats()', () => {
@@ -13862,38 +13722,6 @@ describe('SurvivalUtil', () => {
         });
     });
 
-    // describe('#getDownloadContent()', () => {
-    //     it('returns correct download content for the example data', () => {
-    //         const data = [];
-    //         data.push({
-    //             scatterData: getScatterData(
-    //                 exampleAlteredPatientSurvivals,
-    //                 exampleAlteredEstimates
-    //             ),
-    //             title: 'test_altered_title',
-    //         });
-    //         data.push({
-    //             scatterData: getScatterData(
-    //                 exampleUnalteredPatientSurvivals,
-    //                 exampleUnalteredEstimates
-    //             ),
-    //             title: 'test_unaltered_title',
-    //         });
-
-    //         const targetDownloadContent =
-    //             'test_main_title\n\ntest_altered_title\nCase ID\tStudy ID\t' +
-    //             'Number at Risk\tStatus\tSurvival Rate\tTime (months)\nTCGA-OR-A5J2\tacc_tcga\t2\t' +
-    //             'deceased\t1\t0.09\nTCGA-OR-A5J1\tacc_tcga\t1\tcensored\t0.8\t5.09\n\ntest_unaltered_title\nCase ID\tStudy ID\tNumber at Risk\tStatus\tSurvival Rate\tTime (months)\nTCGA-OR-A5J3\t' +
-    //             'acc_tcga\t4\tcensored\t0.8\t0\nTCGA-2F-A9KP\tblca_tcga\t3\tcensored\t' +
-    //             '0.8\t0.13\nTCGA-2F-A9KO\tblca_tcga\t2\tdeceased\t0.4\t63.83\nTCGA-2F-A9KQ\tblca_tcga\t1\tdeceased\t0\t182.19';
-
-    //         assert.equal(
-    //             getDownloadContent(data, 'test_main_title'),
-    //             targetDownloadContent
-    //         );
-    //     });
-    // });
-
     describe('#convertScatterDataToDownloadData()', () => {
         it('returns empty list for empty list', () => {
             assert.deepEqual(
@@ -13902,63 +13730,6 @@ describe('SurvivalUtil', () => {
             );
         });
 
-        //     it('returns correct download data for the example data', () => {
-        //         assert.deepEqual(
-        //             convertScatterDataToDownloadData(
-        //                 getScatterData(examplePatientSurvivals, exampleEstimates)
-        //             ),
-        //             [
-        //                 {
-        //                     'Time (months)': 0,
-        //                     'Survival Rate': 1,
-        //                     'Case ID': 'TCGA-OR-A5J3',
-        //                     'Study ID': 'acc_tcga',
-        //                     Status: 'censored',
-        //                     'Number at Risk': 6,
-        //                 },
-        //                 {
-        //                     'Time (months)': 0.09,
-        //                     'Survival Rate': 0.8,
-        //                     'Case ID': 'TCGA-OR-A5J2',
-        //                     'Study ID': 'acc_tcga',
-        //                     Status: 'deceased',
-        //                     'Number at Risk': 5,
-        //                 },
-        //                 {
-        //                     'Time (months)': 0.13,
-        //                     'Survival Rate': 0.8,
-        //                     'Case ID': 'TCGA-2F-A9KP',
-        //                     'Study ID': 'blca_tcga',
-        //                     Status: 'censored',
-        //                     'Number at Risk': 4,
-        //                 },
-        //                 {
-        //                     'Time (months)': 5.09,
-        //                     'Survival Rate': 0.8,
-        //                     'Case ID': 'TCGA-OR-A5J1',
-        //                     'Study ID': 'acc_tcga',
-        //                     Status: 'censored',
-        //                     'Number at Risk': 3,
-        //                 },
-        //                 {
-        //                     'Time (months)': 63.83,
-        //                     'Survival Rate': 0.4,
-        //                     'Case ID': 'TCGA-2F-A9KO',
-        //                     'Study ID': 'blca_tcga',
-        //                     Status: 'deceased',
-        //                     'Number at Risk': 2,
-        //                 },
-        //                 {
-        //                     'Time (months)': 182.19,
-        //                     'Survival Rate': 0,
-        //                     'Case ID': 'TCGA-2F-A9KQ',
-        //                     'Study ID': 'blca_tcga',
-        //                     Status: 'deceased',
-        //                     'Number at Risk': 1,
-        //                 },
-        //             ]
-        //         );
-        //     });
     });
 
     describe('#downSampling()', () => {

@@ -624,7 +624,6 @@ export async function runSpecs(
 
     if (getLogLevel(logLevel).includes('verbose')) {
         console.groupCollapsed('specs');
-        //console.log('raw', json);
         console.log('filtered', files);
         console.groupEnd();
     }
@@ -636,10 +635,6 @@ export async function runSpecs(
     let httpErrors: any[] = [];
     let supressed: any[] = [];
 
-    //
-    // let filterFunc = (test:any)=>{
-    //     return [2087302238,-1234322951,-341016470,388930409].includes(test.hash);
-    // }
     let filterFunc = (test: any) => true;
 
     const invokers: (() => Promise<any>)[] = [] as any;

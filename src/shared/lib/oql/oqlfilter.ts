@@ -1076,13 +1076,8 @@ function filterData<T extends Datum>(
         return null;
     };
 
-    // var required_accessors = ['gene', 'cna', 'mut_type', 'mut_position',
-    //     'mut_amino_acid_change', 'exp', 'prot', 'fusion'];
     // default every non-given accessor function to null
     var accessors = _accessors;
-    // for (var i = 0; i < required_accessors.length; i++) {
-    //     AccessorsForOqlFilter[required_accessors[i]] = _accessors[required_accessors[i]] || null_fn;
-    // }
 
     for (var i = 0; i < data.length; i++) {
         (data[

@@ -470,20 +470,6 @@ export class PatientViewPageStore {
     @observable
     public patientIdsInCohort: string[] = [];
 
-    // public set patientIdsInCohort(cohortIds: string[]) {
-    //     // cannot put action on setter
-    //     runInAction(() => (this._patientIdsInCohort = cohortIds || []));
-    // }
-
-    // @computed
-    // public get patientIdsInCohort(): string[]  {
-    //     let concatenatedIds: string;
-    //     // check to see if we copied from url hash on app load
-    //     // const memoryCachedIds = getNavCaseIdsCache();
-    //     // return memoryCachedIds ? memoryCachedIds :
-    //     return this._patientIdsInCohort;
-    // }
-
     // get mutational signature molecular profile Ids (contribution and confidence)
     readonly mutationalSignatureMolecularProfiles = remoteData<
         MolecularProfile[]

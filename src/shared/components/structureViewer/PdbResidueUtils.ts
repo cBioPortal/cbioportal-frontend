@@ -73,8 +73,6 @@ export function generateResiduePosToSelectorMap(
 
     residues.forEach((residue: IResidueSpec) => {
         // TODO "rescode" selector does not work anymore for some reason (3Dmol.js bug?)
-        //const resCodes = convertPositionsToResCode([residue.positionRange]);
-
         const residueSelectors = convertPdbPosToResAndInsCode(
             residue.positionRange
         );

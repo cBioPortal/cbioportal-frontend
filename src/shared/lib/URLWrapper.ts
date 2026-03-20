@@ -118,8 +118,6 @@ export default class URLWrapper<
             () => {
                 // this is necessary to establish observation of properties
                 // at least in test context, it doesn't otherwise work
-                //const queryProps = _.mapValues(routing.query);
-                //const sessionProps = this._sessionData && this._sessionData.query && _.mapValues(this._sessionData.query);
                 return [routing.query, this.sessionQuery];
             },
             ([routeQuery, sessionQuery]) => {

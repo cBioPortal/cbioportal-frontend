@@ -544,9 +544,6 @@ export default class BoxScatterPlot<
             2 * this.categoryAxisDomainPadding +
             miscPadding
         );
-        //return 2*this.domainPadding + numBoxes*this.boxWidth + (numBoxes-1)*this.boxSeparation;
-        //const ret = Math.max(computedExtent, this.props.chartBase);
-        //return ret;
     }
 
     @computed get svgWidth() {

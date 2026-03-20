@@ -58,13 +58,3 @@ function showTest(txt: string) {
         .val(txt)
         .appendTo('body');
 }
-
-// var old = extendSamplesWithCancerType;
-//
-// (extendSamplesWithCancerType as any) = function(){
-//     var args = Array.from(arguments);
-//     var argMap = args.map((a,i)=>`var arg${i}=${JSON.stringify(a)}`);
-//     var ret = old.apply(this,arguments);
-//     writeTest("me", argMap, JSON.stringify(ret));
-//     return ret;
-// }

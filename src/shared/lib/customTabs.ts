@@ -65,19 +65,3 @@ export function showCustomTab(
         runCallback(tab);
     });
 }
-
-// SAMPLE USAGE
-
-// const myFeatureGlobal = {};
-
-// function sampleTabCallback(div, tab, url, store, autorun, isUnmount){
-//     if (isMount) {
-//         myGlobal.myDisposer = autorun(function(){
-//             if (store.someData.isComplete) {
-//                 $(div).append(`<div>${store.someData.result}</div>`);
-//             }
-//         });
-//     } else { // clean up!
-//         myGlobal.myDisposer();
-//     }
-// }

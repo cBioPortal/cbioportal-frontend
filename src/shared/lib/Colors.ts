@@ -36,11 +36,6 @@ export const ASCN_WHITE = '#ffffff';
 export const DEFAULT_NA_COLOR = LIGHT_GREY;
 export const DEFAULT_UNKNOWN_COLOR = DARK_GREY;
 
-// clinical value colors
-// Original version
-// const CLI_YES_COLOR = "#109618";
-// const CLI_NO_COLOR = "#DC3912";
-
 // Colorblind safe version. http://colorbrewer2.org/#type=qualitative&scheme=Dark2&n=3
 export const CLI_YES_COLOR = '#1b9e77';
 export const CLI_NO_COLOR = '#d95f02';

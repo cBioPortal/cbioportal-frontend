@@ -126,7 +126,6 @@ export const AlleleFreqPlotMulti = function(
     // to getBBox
     var div = component.div;
 
-    //var fillcolors = d3.scale.category10();
     // construct colors, if a duplicate found replace it with 'darker'
     var colorhist = {};
     if (!order) {
@@ -144,8 +143,6 @@ export const AlleleFreqPlotMulti = function(
     colors = $.extend(true, {}, colors);
     for (var k in data) {
         if (data.hasOwnProperty(k)) {
-            /*var ind = Object.keys(colors).length;
-             colors[k] = {stroke:fillcolors(ind), fill:fillcolors(ind)};*/
             var col = d3.rgb(colors[k] || 'rgb(0,0,0)');
             while (
                 col.toString() in colorhist &&

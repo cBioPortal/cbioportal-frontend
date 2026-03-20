@@ -201,29 +201,6 @@ const TickAxis: React.FunctionComponent<ITickAxisProps> = observer(function({
                         }
                     }
 
-                    // DAY TICKS
-                    // if (store.tickPixelWidth > 2000) {
-                    //     const dayTickWidth = TickIntervalEnum.MONTH/30;
-                    //     for (let i = 0; i <= 365; i++) {
-                    //
-                    //         if (i % 30 !== 0) {
-                    //             const position = majorTickPosition && store.getPosition(
-                    //                 {start: startPoint + dayTickWidth * i},
-                    //                 store.trimmedLimit
-                    //             );
-                    //             if (position) {
-                    //                 minorTicks.push(
-                    //                     <div className={'tl-daytick'} style={{left: position.left}}>
-                    //                         <div className={'tl-tickline'}></div>
-                    //                     </div>
-                    //                 )
-                    //             }
-                    //         }
-                    //     }
-                    //
-                    //
-                    // }
-
                     const rightAfterTrim =
                         index > 0 && store.ticks[index - 1].isTrim;
 

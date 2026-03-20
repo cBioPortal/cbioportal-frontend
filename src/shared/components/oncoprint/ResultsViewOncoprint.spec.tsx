@@ -130,10 +130,7 @@ describe('Oncoprint sortBy URL parameter', () => {
 
     const initResultsViewWithSortByParam = (params: IHelperFunction) => {
         // mock the url params by mocking the ExtendedRouterStore class
-        //const routingStub = sinon.createStubInstance(ExtendedRouterStore);
-        //routingStub.location = { query: {oncoprint_sortby: params.sortByParam}};
         wrapper.updateURL({ oncoprint_sortby: params.sortByParam });
-        //getBrowserWindow().globalStores = {routing: routingStub };
         if (params.caselistEnabled !== undefined) {
             storeMock.givenSampleOrder.isComplete = params.caselistEnabled;
         }

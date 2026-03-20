@@ -45,36 +45,6 @@ export default class GroupSelector extends React.Component<
         return !!this.props.store.isGroupSelected(groupName);
     }
 
-    // @autobind
-    // private onClick(groupName: string) {
-    //     const original = this.props.store._originalGroups.result!;
-
-    //     if (!this.dragging) {
-    //         this.props.store.toggleGroupSelected(groupName);
-    //     }
-
-    //     const matchingGroup = original.find(ele => ele.name === groupName)!
-
-    //     const groupStudies = matchingGroup.studies.map((study) => {
-    //         return {studyId: study.id}
-    //     });
-
-    //     const groupSamples = _(matchingGroup.studies).flatMap((study) => {
-    //         return study.samples.map((sample => {
-    //             return {
-    //                 studyId: study.id,
-    //                 sampleId: sample
-    //             }
-    //         }))
-    //     }).value()
-
-    //     submitToStudyViewPage(
-    //         groupStudies,
-    //         groupSamples,
-    //         true
-    //     );
-    // }
-
     @autobind
     private onClick(groupName: string) {
         if (!this.dragging) {

@@ -552,8 +552,6 @@ export class PatientViewPageInner extends React.Component<
     @computed get customTabs() {
         // we want this to regenerate when
         // hash changes
-        //const hash = this.urlWrapper.hash;
-
         return prepareCustomTabConfigurations(
             getServerConfig().custom_tabs,
             'PATIENT_PAGE'

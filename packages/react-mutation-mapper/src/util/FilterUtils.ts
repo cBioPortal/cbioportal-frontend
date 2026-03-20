@@ -138,9 +138,6 @@ export function applyDefaultPositionFilter(
     filter: PositionFilter,
     mutation: Mutation
 ) {
-    // const positions: {[position: string]: {position: number}} = indexPositions([filter]);
-    // return !positions || !!positions[mutation.proteinPosStart+""];
-
     return filter.values.includes(mutation.proteinPosStart);
 }
 

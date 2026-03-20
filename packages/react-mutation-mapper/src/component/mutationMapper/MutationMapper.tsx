@@ -262,18 +262,6 @@ export default class MutationMapper<
 
     protected get mutationTableInfo(): JSX.Element | undefined {
         // TODO implement default
-        // @computed
-        // get multipleMutationInfo(): string {
-        //     const count = this.store.dataStore.duplicateMutationCountInMultipleSamples;
-        //     const mutationsLabel = count === 1 ? "mutation" : "mutations";
-        //
-        //     return count > 0 ? `: includes ${count} duplicate ${mutationsLabel} in patients with multiple samples` : "";
-        // }
-        //
-        // @computed get itemsLabelPlural(): string {
-        //     return `Mutations${this.multipleMutationInfo}`;
-        // }
-
         return undefined;
     }
 
