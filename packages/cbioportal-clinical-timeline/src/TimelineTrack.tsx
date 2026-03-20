@@ -432,7 +432,13 @@ export const OurPopup: React.FunctionComponent<any> = observer(function(
             })
             .on('click', function(e) {
                 if (/Open in New Window/.test(e.target.innerText)) {
-                    getBrowserWindow().open(props[0].href);
+                    const popup = getBrowserWindow().open(
+                        props[0].href,
+                        '_blank'
+                    );
+                    if (popup) {
+                        popup.opener = null;
+                    }
                 }
                 $modal.remove();
             });

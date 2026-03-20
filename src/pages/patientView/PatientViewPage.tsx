@@ -584,10 +584,15 @@ export class PatientViewPageInner extends React.Component<
             }),
             '_blank'
         );
-        if (patientIdentifiers.length > 0) {
-            (studyPage as any).studyPageFilter = `filterJson=${JSON.stringify({
-                patientIdentifiers,
-            })}`;
+        if (studyPage) {
+            studyPage.opener = null;
+            if (patientIdentifiers.length > 0) {
+                (studyPage as any).studyPageFilter = `filterJson=${JSON.stringify(
+                    {
+                        patientIdentifiers,
+                    }
+                )}`;
+            }
         }
     }
 
@@ -660,8 +665,6 @@ export class PatientViewPageInner extends React.Component<
                                 >
                                     <a
                                         onClick={this.handleReturnToStudyView}
-                                        target={'_blank'}
-                                        rel="noopener noreferrer"
                                     >
                                         {`${this.pageStore.patientIdsInCohort.length} patients`}
                                     </a>

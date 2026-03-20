@@ -103,6 +103,7 @@ export default class RightBar extends React.Component<
                             <a
                                 href="https://docs.cbioportal.org/news/"
                                 target="_blank"
+                                rel="noopener noreferrer"
                                 style={{
                                     color: '#2986e2',
                                     textDecoration: 'none',
@@ -119,6 +120,7 @@ export default class RightBar extends React.Component<
                                 <a
                                     href="https://bsky.app/profile/cbioportal.bsky.social"
                                     target="_blank"
+                                    rel="noopener noreferrer"
                                     style={{ marginLeft: 10 }}
                                     title="Follow us on Bluesky"
                                 >
@@ -131,6 +133,7 @@ export default class RightBar extends React.Component<
                                 <a
                                     href="https://www.twitter.com/cbioportal"
                                     target="_blank"
+                                    rel="noopener noreferrer"
                                     style={{ marginLeft: 10 }}
                                     title="Follow us on Twitter"
                                 >
@@ -143,6 +146,7 @@ export default class RightBar extends React.Component<
                                 <a
                                     href="https://linkedin.com/company/cbioportal"
                                     target="_blank"
+                                    rel="noopener noreferrer"
                                     style={{ marginLeft: 10 }}
                                     title="Follow us on LinkedIn"
                                 >
@@ -189,6 +193,7 @@ export default class RightBar extends React.Component<
                                 </p>
                                 <a
                                     target="_blank"
+                                    rel="noopener noreferrer"
                                     className="btn btn-default btn-sm"
                                     href="https://www.linkedin.com/newsletters/cbioportal-newsletter-7178731490539634689/"
                                     style={{ width: '49%', marginRight: '3px' }}
@@ -197,6 +202,7 @@ export default class RightBar extends React.Component<
                                 </a>
                                 <a
                                     target="_blank"
+                                    rel="noopener noreferrer"
                                     className="btn btn-default btn-sm"
                                     href="https://groups.google.com/g/cbioportal-news"
                                     style={{ width: '50%' }}

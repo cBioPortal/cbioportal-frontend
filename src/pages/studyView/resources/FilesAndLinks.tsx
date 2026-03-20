@@ -182,7 +182,11 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
             render: (data: { [id: string]: string }) => {
                 if (isUrl(data[key])) {
                     return (
-                        <a href={data[key]} target="_blank">
+                        <a
+                            href={data[key]}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
                             {data[key]}
                         </a>
                     );
@@ -252,6 +256,7 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
                                 'patient/filesAndLinks'
                             )}
                             target="_blank"
+                            rel="noopener noreferrer"
                         >
                             {data.patientId}
                         </a>
@@ -270,6 +275,7 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
                                 'patient/filesAndLinks'
                             )}
                             target="_blank"
+                            rel="noopener noreferrer"
                         >
                             {data.sampleId}
                         </a>
