@@ -1,0 +1,48 @@
+# cBioPortal E2E Test Runner
+# Contains Chrome, WebDriverIO, and all test specs.
+# Point it at a running frontend + backend to run tests.
+#
+# Build (from cbioportal-frontend root):
+#   docker build -f end-to-end-test/Dockerfile.e2e-runner -t cbioportal/e2e-runner:latest .
+#
+# Run:
+#   docker run --network host \
+#     -e CBIOPORTAL_URL=http://localhost \
+#     cbioportal/e2e-runner:latest
+
+FROM node:22.18.0
+
+# Install Chrome
+ARG CHROME_VERSION=139.0.7258.154
+RUN wget -q "https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_${CHROME_VERSION}-1_amd64.deb" && \
+    dpkg -i "google-chrome-stable_${CHROME_VERSION}-1_amd64.deb" || apt-get install -yf && \
+    rm "google-chrome-stable_${CHROME_VERSION}-1_amd64.deb"
+
+# Install ChromeDriver
+RUN wget -q "https://storage.googleapis.com/chrome-for-testing-public/${CHROME_VERSION}/linux64/chromedriver-linux64.zip" && \
+    unzip -q chromedriver-linux64.zip && \
+    mv chromedriver-linux64/chromedriver /usr/local/bin/ && \
+    chmod +x /usr/local/bin/chromedriver && \
+    rm -rf chromedriver-linux64.zip chromedriver-linux64
+
+# Install test dependencies
+WORKDIR /tests
+COPY end-to-end-test/package.json end-to-end-test/yarn.lock ./
+RUN corepack enable && yarn install --frozen-lockfile
+
+# Copy test specs and shared utilities
+COPY end-to-end-test/local/ ./local/
+COPY end-to-end-test/remote/ ./remote/
+COPY end-to-end-test/shared/ ./shared/
+
+ENV CHROMEDRIVER_CUSTOM_PATH=/usr/local/bin/chromedriver
+ENV HEADLESS_CHROME=true
+ENV FRONTEND_TEST_USE_LOCAL_DIST=true
+
+# Default: run local specs
+ENV CBIOPORTAL_URL=http://backend:8080
+ENV SPEC_FILE_PATTERN=./local/specs/**/*.spec.js
+ENV SCREENSHOT_DIRECTORY=./local/screenshots
+ENV JUNIT_REPORT_PATH=./local/junit/
+
+ENTRYPOINT ["npx", "wdio", "./shared/wdio/wdio.conf.js"]
