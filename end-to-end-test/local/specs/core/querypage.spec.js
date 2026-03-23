@@ -100,7 +100,7 @@ describe('study select page', function() {
                 assert(!(await isDisplayed(hg38StudyEntry)));
             });
             it('updates reference genome form elements and study filter when entering search shorthand in text input', async () => {
-                await clickElement(searchTextInput);
+                await clickElement('.input-group-btn');
                 await getElement(referenceGenomeFormSection, {
                     waitForExist: true,
                 });

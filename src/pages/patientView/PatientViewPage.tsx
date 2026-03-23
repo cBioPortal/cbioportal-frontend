@@ -63,6 +63,7 @@ import setWindowVariable from 'shared/lib/setWindowVariable';
 import { getNavCaseIdsCache } from 'shared/lib/handleLongUrls';
 import PatientViewPageHeader from 'pages/patientView/PatientViewPageHeader';
 import { MAX_URL_LENGTH } from 'pages/studyView/studyPageHeader/ActionButtons';
+import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 
 export interface IPatientViewPageProps {
     routing: any;
@@ -783,6 +784,10 @@ export class PatientViewPageInner extends React.Component<
             this.pageStore.sampleManager,
             this.pageStore.studyMetaData,
         ],
+
+        renderPending: () => (
+            <LoadingIndicator isLoading={true} center={true} size={'big'} />
+        ),
         render: () => {
             return (
                 <>
