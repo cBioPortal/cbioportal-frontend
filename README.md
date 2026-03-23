@@ -171,15 +171,15 @@ git clone https://github.com/cBioPortal/cbioportal-test.git
 cd cbioportal-test
 
 # Run all local tests with defaults
-docker compose -f docker-compose.e2e.yml up --abort-on-container-exit
+docker compose -f docker-compose.e2e.yml run test-runner
 
 # Run a single test
 SPEC_PATTERN="./local/specs/core/patientview.spec.js" \
-  docker compose -f docker-compose.e2e.yml up --abort-on-container-exit
+  docker compose -f docker-compose.e2e.yml run test-runner
 
 # Test a frontend PR branch
 FRONTEND_IMAGE=cbioportal/cbioportal-frontend-dev:pr-1234 \
-  docker compose -f docker-compose.e2e.yml up --abort-on-container-exit
+  docker compose -f docker-compose.e2e.yml run test-runner
 
 # Run remote tests against cbioportal.org
 SPEC_PATTERN="./remote/specs/**/*.spec.js" \
