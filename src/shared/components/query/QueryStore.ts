@@ -439,6 +439,13 @@ export class QueryStore {
                             this.getFilteredProfiles(altType)
                         );
 
+                        // Fall back to RNA expression profiles for RNA-only studies
+                        if (profiles.length === 0) {
+                            profiles = this.getFilteredProfiles(
+                                'MRNA_EXPRESSION'
+                            );
+                        }
+
                         profiles.forEach(profile => {
                             selectedIdSet[
                                 getSuffixOfMolecularProfile(profile)
@@ -460,6 +467,17 @@ export class QueryStore {
                                 ] = true;
                             });
                     });
+
+                    // Fall back to RNA expression profiles for RNA-only studies
+                    if (_.isEmpty(selectedIdSet)) {
+                        _(this.getFilteredProfiles('MRNA_EXPRESSION'))
+                            .groupBy(profile => profile.studyId)
+                            .forEach(profiles => {
+                                selectedIdSet[
+                                    getSuffixOfMolecularProfile(profiles[0])
+                                ] = true;
+                            });
+                    }
                 }
             } else {
                 selectedIdSet = _.fromPairs(this.profileFilterSet.toJSON());

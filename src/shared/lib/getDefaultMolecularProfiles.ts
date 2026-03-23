@@ -115,6 +115,18 @@ export function getDefaultGeneSetProfile(profiles: MolecularProfile[]) {
     );
 }
 
+export function getDefaultRNAProfile(
+    profiles: MolecularProfile[]
+): MolecularProfile | undefined {
+    return _.find(
+        profiles,
+        profile =>
+            profile.molecularAlterationType ===
+                AlterationTypeConstants.MRNA_EXPRESSION &&
+            profile.showProfileInAnalysisTab
+    );
+}
+
 export function getFilteredMolecularProfiles(
     profiles: MolecularProfile[],
     queriedProfileSuffixes?: string[],
@@ -151,6 +163,12 @@ export function getFilteredMolecularProfiles(
                 defaultProfiles.push(
                     getDefaultStructuralVariantProfile(profiles)
                 );
+        }
+
+        // If no profiles were selected (e.g. RNA-only study), fall back to
+        // the first RNA expression profile with showProfileInAnalysisTab=true
+        if (_.compact(defaultProfiles).length === 0) {
+            defaultProfiles.push(getDefaultRNAProfile(profiles));
         }
     }
     // get rid of any undefined items
