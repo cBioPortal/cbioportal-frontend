@@ -159,82 +159,39 @@ javascript:(function()%7Bvar pr %3D prompt("Please enter PR%23")%3Bif (pr %26%26
 
 ## E2E Tests
 
-End-to-end tests run inside a Docker image (`cbioportal/e2e-runner`) that bundles Chrome, WebDriverIO, and all test specs. Tests can target a local backend+database or the public cbioportal.org instance.
+E2E tests run via Docker using the [cbioportal-test](https://github.com/cBioPortal/cbioportal-test) compose setup. All components (frontend, backend, database, test runner) are swappable Docker images.
 
-**Requirements:** Docker
+**Requirements:** Docker and Docker Compose
 
-### Docker Images
-
-| Image | Description |
-|---|---|
-| `cbioportal/cbioportal-frontend` | Built React SPA served by static-web-server |
-| `cbioportal/e2e-runner` | Chrome + WebDriverIO + all test specs |
-| `cbioportal/cbioportal:6.4.1` | Java backend |
-| `cbioportal/clickhouse:test-data` | ClickHouse pre-loaded with test studies |
-
-### Run remote tests (against cbioportal.org)
+### Running tests
 
 ```bash
-docker run --network host \
-  -e CBIOPORTAL_URL=https://www.cbioportal.org \
-  -e SPEC_FILE_PATTERN="./remote/specs/**/*.spec.js" \
-  cbioportal/e2e-runner:latest
-```
+# Clone the test repo
+git clone https://github.com/cBioPortal/cbioportal-test.git
+cd cbioportal-test
 
-### Run local tests
+# Run all local tests with defaults
+docker compose -f docker-compose.e2e.yml up --abort-on-container-exit
 
-Start the backend, database, frontend, and proxy, then run the test runner:
+# Run a single test
+SPEC_PATTERN="./local/specs/core/patientview.spec.js" \
+  docker compose -f docker-compose.e2e.yml up --abort-on-container-exit
 
-```bash
-# 1. Start database
-docker run -d --network host \
-  cbioportal/clickhouse:test-data
+# Test a frontend PR branch
+FRONTEND_IMAGE=cbioportal/cbioportal-frontend-dev:pr-1234 \
+  docker compose -f docker-compose.e2e.yml up --abort-on-container-exit
 
-# 2. Start backend
-docker run -d --network host \
-  -e CLICKHOUSE_MODE=true -e AUTHENTICATE=false \
-  cbioportal/cbioportal:6.4.1
-
-# 3. Start frontend
-docker run -d --network host \
-  -e SERVER_PORT=3000 \
-  cbioportal/cbioportal-frontend:latest
-
-# 4. Start proxy (routes /api/* to backend, /* to frontend)
-cat > /tmp/Caddyfile << 'EOF'
-:80
-handle /api/* { reverse_proxy localhost:8080 }
-handle { reverse_proxy localhost:3000 }
-EOF
-docker run -d --network host \
-  -v /tmp/Caddyfile:/etc/caddy/Caddyfile:ro \
-  caddy:2-alpine
-
-# 5. Run tests
-docker run --network host \
-  -e CBIOPORTAL_URL=http://localhost \
-  -e SPEC_FILE_PATTERN="./local/specs/**/*.spec.js" \
-  -e SKIP_KEYCLOAK=true \
-  -v $(pwd)/e2e-results:/tests/local/junit \
-  cbioportal/e2e-runner:latest
+# Run remote tests against cbioportal.org
+SPEC_PATTERN="./remote/specs/**/*.spec.js" \
+  docker compose -f docker-compose.e2e.yml run test-runner
 ```
 
 Results are saved to `./e2e-results/`.
 
-### Run a single test
+### Building images locally
 
 ```bash
-docker run --network host \
-  -e CBIOPORTAL_URL=http://localhost \
-  -e SPEC_FILE_PATTERN="./local/specs/core/patientview.spec.js" \
-  -e SKIP_KEYCLOAK=true \
-  cbioportal/e2e-runner:latest
-```
-
-### Build images locally
-
-```bash
-# Frontend image
+# Frontend image (from cbioportal-frontend root)
 docker build -t cbioportal/cbioportal-frontend:latest .
 
 # E2E runner image
@@ -246,30 +203,30 @@ docker build -f end-to-end-test/Dockerfile.e2e-runner -t cbioportal/e2e-runner:l
 - Test specs live in `end-to-end-test/local/specs/` (local) and `end-to-end-test/remote/specs/` (remote).
 - Screenshot tests end with `*.screenshot.spec.js`, DOM tests with `*.spec.js`.
 - Screenshot tests should only be used to test components that cannot be accessed via the DOM.
-- Screenshots should cover as little of the page as possible to test behavior. Larger screenshots are more likely to need updating when unrelated features change.
+- Screenshots should cover as little of the page as possible. Larger screenshots are more likely to need updating when unrelated features change.
 - For DOM selection, [WebDriverIO selectors](https://blog.kevinlamping.com/selecting-elements-in-webdriverio/) are used. These overlap with jQuery selectors and both use `$` notation, but are not equivalent.
 - Tests use the node.js `assert` library (not chai). See the [assert docs](https://nodejs.org/api/assert.html).
-- Use `waitForExist()`, `waitForVisible()`, and `waitFor()` to handle async page updates and avoid flaky tests. Flaky tests typically pass locally (plenty of resources) but fail on CI (slower page loads). Always wait for elements before asserting:
+- Use `waitForExist()`, `waitForVisible()`, and `waitFor()` to handle async page updates and avoid flaky tests. Flaky tests typically pass locally but fail on CI due to slower page loads. Always wait for elements before asserting:
   ```javascript
   browser.waitForExist('id=button');
   assert($('id=button'));
   ```
-- Screenshots for failing tests appear in `screenshots/diff` and `screenshots/error` folders — useful for debugging.
-- Use `browser.debug()` in test code to pause execution and get an interactive prompt for testing selectors in the browser.
-- Reference screenshots created on a host system directly differ from those produced by the dockerized setup (e.g., on CI) and cannot be used as references.
+- Screenshots for failing tests appear in `screenshots/diff` and `screenshots/error` folders.
+- Use `browser.debug()` in test code to pause execution and get an interactive prompt for testing selectors.
+- Reference screenshots created on a host system differ from those produced by the dockerized setup and cannot be used as references.
 
 #### Creating a new e2e test
 
-1. Create a test file and place it in `end-to-end-test/local/specs/` or `end-to-end-test/remote/specs/`.
-2. (Optional) Add a folder with an uncompressed custom study in `end-to-end-test/local/studies/`.
-3. Keep custom studies as small as possible to minimize test runtime.
-4. Gene panel and gene set data in custom studies must comply with those imported as part of study_es_0.
+1. Create a test file in `end-to-end-test/local/specs/` or `end-to-end-test/remote/specs/`.
+2. (Optional) Add a custom study folder in `end-to-end-test/local/studies/`.
+3. Keep custom studies small to minimize test runtime.
+4. Gene panel and gene set data must comply with those imported as part of study_es_0.
 
 ### Debugging
 
-- **"boundingRects.reduce is not a function"** — the element you're trying to screenshot doesn't exist.
-- **"There are some read requests waiting on finished stream"** — the reference screenshot file is corrupted. Delete and re-generate it.
-- **Flaky tests** — usually caused by not waiting for async page updates. Add `waitForExist()` or `waitForVisible()` before assertions.
+- **"boundingRects.reduce is not a function"** — the element you're screenshotting doesn't exist.
+- **"There are some read requests waiting on finished stream"** — corrupted reference screenshot. Delete and re-generate it.
+- **Flaky tests** — add `waitForExist()` or `waitForVisible()` before assertions.
 
 
 ## Workspaces
