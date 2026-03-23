@@ -245,13 +245,30 @@ docker build -f end-to-end-test/Dockerfile.e2e-runner -t cbioportal/e2e-runner:l
 
 - Test specs live in `end-to-end-test/local/specs/` (local) and `end-to-end-test/remote/specs/` (remote).
 - Screenshot tests end with `*.screenshot.spec.js`, DOM tests with `*.spec.js`.
+- Screenshot tests should only be used to test components that cannot be accessed via the DOM.
+- Screenshots should cover as little of the page as possible to test behavior. Larger screenshots are more likely to need updating when unrelated features change.
+- For DOM selection, [WebDriverIO selectors](https://blog.kevinlamping.com/selecting-elements-in-webdriverio/) are used. These overlap with jQuery selectors and both use `$` notation, but are not equivalent.
 - Tests use the node.js `assert` library (not chai). See the [assert docs](https://nodejs.org/api/assert.html).
-- Use `waitForExist()`, `waitForVisible()`, and `waitFor()` to handle async page updates and avoid flaky tests.
-- Screenshots for failing tests appear in `screenshots/diff` and `screenshots/error` folders.
+- Use `waitForExist()`, `waitForVisible()`, and `waitFor()` to handle async page updates and avoid flaky tests. Flaky tests typically pass locally (plenty of resources) but fail on CI (slower page loads). Always wait for elements before asserting:
+  ```javascript
+  browser.waitForExist('id=button');
+  assert($('id=button'));
+  ```
+- Screenshots for failing tests appear in `screenshots/diff` and `screenshots/error` folders — useful for debugging.
+- Use `browser.debug()` in test code to pause execution and get an interactive prompt for testing selectors in the browser.
+- Reference screenshots created on a host system directly differ from those produced by the dockerized setup (e.g., on CI) and cannot be used as references.
+
+#### Creating a new e2e test
+
+1. Create a test file and place it in `end-to-end-test/local/specs/` or `end-to-end-test/remote/specs/`.
+2. (Optional) Add a folder with an uncompressed custom study in `end-to-end-test/local/studies/`.
+3. Keep custom studies as small as possible to minimize test runtime.
+4. Gene panel and gene set data in custom studies must comply with those imported as part of study_es_0.
 
 ### Debugging
 
 - **"boundingRects.reduce is not a function"** — the element you're trying to screenshot doesn't exist.
+- **"There are some read requests waiting on finished stream"** — the reference screenshot file is corrupted. Delete and re-generate it.
 - **Flaky tests** — usually caused by not waiting for async page updates. Add `waitForExist()` or `waitForVisible()` before assertions.
 
 
