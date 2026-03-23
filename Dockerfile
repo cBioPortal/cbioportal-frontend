@@ -2,7 +2,10 @@
 # Serves the built React SPA with fallback routing.
 #
 # Build:
-#   docker build -f Dockerfile.frontend -t cbioportal/frontend:latest .
+#   docker build -t cbioportal/frontend:latest .
+#
+# Build with custom branch env:
+#   docker build --build-arg BRANCH_ENV=rc -t cbioportal/frontend:rc .
 #
 # Run:
 #   docker run -p 3000:80 cbioportal/frontend:latest
@@ -11,11 +14,16 @@ FROM node:22.18.0 AS builder
 WORKDIR /app
 RUN apt-get update -qq && apt-get install -y -qq git > /dev/null 2>&1
 RUN corepack enable
-COPY package.json yarn.lock .yarnrc.yml ./
+COPY package.json yarn.lock ./
 COPY packages/ packages/
 RUN yarn install --frozen-lockfile
-COPY . .
-ENV BRANCH_ENV=master
+COPY tsconfig.json ./
+COPY src/ src/
+COPY config/ config/
+COPY public/ public/
+COPY scripts/ scripts/
+ARG BRANCH_ENV=master
+ENV BRANCH_ENV=$BRANCH_ENV
 RUN yarn run buildModules
 RUN git config --global --add safe.directory /app && yarn run buildMain
 

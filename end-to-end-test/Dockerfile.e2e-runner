@@ -32,6 +32,14 @@
 
 FROM node:22.18.0
 
+# Install dependencies for Chrome and utilities
+RUN apt-get update -qq && \
+    apt-get install -y -qq wget unzip fonts-liberation libasound2 \
+    libatk-bridge2.0-0 libatk1.0-0 libcups2 libdbus-1-3 libdrm2 \
+    libgbm1 libgtk-3-0 libnspr4 libnss3 libxcomposite1 libxdamage1 \
+    libxrandr2 xdg-utils > /dev/null 2>&1 && \
+    rm -rf /var/lib/apt/lists/*
+
 # Install Chrome
 ARG CHROME_VERSION=139.0.7258.154
 RUN wget -q "https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_${CHROME_VERSION}-1_amd64.deb" && \
