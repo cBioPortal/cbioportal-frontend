@@ -1742,7 +1742,7 @@ export default class CBioPortalAPI {
                 return response.body;
             });
         };
-    getGenericAssayMeta_gaUsingGETURL(parameters: {
+    getGenericAssayMetaByStableIdUsingGETURL(parameters: {
         'genericAssayStableId': string,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         $queryParameters ? : any
@@ -1768,11 +1768,11 @@ export default class CBioPortalAPI {
     /**
      * Fetch meta data for generic-assay by ID
      * @method
-     * @name CBioPortalAPI#getGenericAssayMeta_gaUsingGET
+     * @name CBioPortalAPI#getGenericAssayMetaByStableIdUsingGET
      * @param {string} genericAssayStableId - Generic Assay stable ID
      * @param {string} projection - Level of detail of the response
      */
-    getGenericAssayMeta_gaUsingGETWithHttpInfo(parameters: {
+    getGenericAssayMetaByStableIdUsingGETWithHttpInfo(parameters: {
         'genericAssayStableId': string,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         $queryParameters ? : any,
@@ -1815,18 +1815,18 @@ export default class CBioPortalAPI {
     /**
      * Fetch meta data for generic-assay by ID
      * @method
-     * @name CBioPortalAPI#getGenericAssayMeta_gaUsingGET
+     * @name CBioPortalAPI#getGenericAssayMetaByStableIdUsingGET
      * @param {string} genericAssayStableId - Generic Assay stable ID
      * @param {string} projection - Level of detail of the response
      */
-    getGenericAssayMeta_gaUsingGET(parameters: {
+    getGenericAssayMetaByStableIdUsingGET(parameters: {
             'genericAssayStableId': string,
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < GenericAssayMeta >
         > {
-            return this.getGenericAssayMeta_gaUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+            return this.getGenericAssayMetaByStableIdUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
