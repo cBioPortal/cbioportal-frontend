@@ -6,6 +6,5 @@
     "packages/*"
   ],
   "version": "independent",
-  "useWorkspaces": true,
   "useNx": false
 }
