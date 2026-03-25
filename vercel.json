@@ -1,0 +1,66 @@
+{
+    "buildCommand": "yarn run build",
+    "installCommand": "yarn install --frozen-lockfile --ignore-engines",
+    "outputDirectory": "dist",
+    "framework": null,
+    "build": {
+        "env": {
+            "BUILD_REPORT_ERRORS_ONLY": "true",
+            "DISABLE_SOURCEMAP": "true",
+            "NODE_OPTIONS": "--openssl-legacy-provider",
+            "TRANSPILE_ONLY": "true"
+        }
+    },
+    "headers": [
+        {
+            "source": "/(.*)\\.otf",
+            "headers": [
+                { "key": "Access-Control-Allow-Origin", "value": "*" },
+                { "key": "Content-Type", "value": "font/otf" }
+            ]
+        },
+        {
+            "source": "/(.*)\\.ttf",
+            "headers": [
+                { "key": "Access-Control-Allow-Origin", "value": "*" },
+                { "key": "Content-Type", "value": "font/ttf" }
+            ]
+        },
+        {
+            "source": "/(.*)\\.json",
+            "headers": [
+                { "key": "Access-Control-Allow-Origin", "value": "*" },
+                { "key": "Content-Type", "value": "application/json" }
+            ]
+        },
+        {
+            "source": "/(.*)\\.ttc",
+            "headers": [
+                { "key": "Access-Control-Allow-Origin", "value": "*" },
+                { "key": "Content-Type", "value": "font/collection" }
+            ]
+        },
+        {
+            "source": "/(.*)\\.woff2",
+            "headers": [
+                { "key": "Access-Control-Allow-Origin", "value": "*" },
+                { "key": "Content-Type", "value": "font/woff2" }
+            ]
+        },
+        {
+            "source": "/(.*)\\.woff",
+            "headers": [
+                { "key": "Access-Control-Allow-Origin", "value": "*" },
+                { "key": "Content-Type", "value": "font/woff" }
+            ]
+        },
+        {
+            "source": "/(.*)\\.eot",
+            "headers": [
+                { "key": "Access-Control-Allow-Origin", "value": "*" },
+                { "key": "Content-Type", "value": "application/vnd.ms-fontobject" }
+            ]
+        }
+    ],
+    "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+}
