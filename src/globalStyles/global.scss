@@ -28,12 +28,49 @@ body {
     scrollbar-width: none;
 }
 
-//get rid of blue border around active button
-button:active,
-button:focus,
-div:focus,
-div:active {
-    outline: none !important;
+// Keyboard focus indicators (visible only for keyboard navigation, not mouse clicks)
+button:focus-visible,
+div:focus-visible {
+    outline: 2px solid #1a74c6;
+    outline-offset: 2px;
+}
+
+// Skip navigation link — hidden until focused via keyboard
+.skip-nav {
+    position: absolute;
+    left: -9999px;
+    top: auto;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    z-index: 10000;
+
+    &:focus {
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        width: auto;
+        height: auto;
+        padding: 8px 16px;
+        background: #1a74c6;
+        color: #fff;
+        font-size: 14px;
+        text-decoration: none;
+        border-radius: 4px;
+    }
+}
+
+// Visually hidden but accessible to screen readers
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
 }
 
 .text-white {
@@ -398,7 +435,8 @@ th.reactable-header-sort-asc:after {
     }
 }
 
-.subhead-dark #mainColumn {
+.subhead-dark #mainColumn,
+.subhead-dark #main-content {
 }
 
 .headBlock {
@@ -419,12 +457,14 @@ th.reactable-header-sort-asc:after {
     }
 }
 
-#mainColumn {
+#mainColumn,
+#main-content {
     padding-top: $gutterWidth;
 }
 
 .fixedWidth {
-    #mainColumn {
+    #mainColumn,
+    #main-content {
         flex: 1;
         padding-left: 0;
         padding-right: 0;
@@ -449,7 +489,8 @@ th.reactable-header-sort-asc:after {
 }
 
 .twoColumn {
-    #mainColumn {
+    #mainColumn,
+    #main-content {
         padding-right: $gutterWidth;
     }
 }
@@ -547,7 +588,8 @@ h3 {
     padding-left: 20px;
     padding-right: 20px;
 
-    #mainColumn {
+    #mainColumn,
+    #main-content {
         flex: 1;
         padding-left: 0;
         min-height: 80vh;

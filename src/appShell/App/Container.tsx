@@ -100,6 +100,9 @@ export default class Container extends React.Component<IContainerProps, {}> {
             <AppContext.Provider value={this.appContext}>
                 <ErrorBoundary>
                     <div>
+                        <a href="#main-content" className="skip-nav">
+                            Skip to main content
+                        </a>
                         <ToastContainer />
                         <Helmet>
                             <meta charSet="utf-8" />
@@ -157,6 +160,11 @@ export default class Container extends React.Component<IContainerProps, {}> {
                                 </div>
                             </Else>
                         </If>
+                        <div
+                            aria-live="polite"
+                            id="a11y-announcer"
+                            className="sr-only"
+                        ></div>
                     </div>
                 </ErrorBoundary>
             </AppContext.Provider>

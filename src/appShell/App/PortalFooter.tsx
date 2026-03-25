@@ -29,7 +29,7 @@ export default class PortalFooter extends React.Component<
             !_.isEmpty(getServerConfig().skin_footer)
         ) {
             return (
-                <div
+                <footer
                     id="footer"
                     dangerouslySetInnerHTML={{
                         __html:
@@ -43,12 +43,12 @@ export default class PortalFooter extends React.Component<
                                 getServerConfig().skin_email_contact
                             }">${getServerConfig().skin_email_contact}</a>`,
                     }}
-                ></div>
+                ></footer>
             );
         } else {
             return (
-                <div id="footer">
-                    <div className="footer-layout">
+                <footer id="footer">
+                    <nav className="footer-layout" aria-label="Footer">
                         <div className="footer-elem">
                             <img
                                 src={require('../../globalStyles/images/cbioportal_logo.png')}
@@ -261,8 +261,8 @@ export default class PortalFooter extends React.Component<
                                 </li>
                             </ul>
                         </div>
-                    </div>
-                </div>
+                    </nav>
+                </footer>
             );
         }
     }
