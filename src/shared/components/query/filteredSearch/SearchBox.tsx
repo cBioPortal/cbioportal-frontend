@@ -33,6 +33,7 @@ export const SearchBox: FunctionComponent<SearchBoxProps> = props => {
                 className="form-control"
                 placeholder="Search..."
                 type="text"
+                aria-label="Search studies"
                 value={inputValue}
                 onChange={e => setInputValue(e.target.value)}
                 onFocus={props.onFocus}

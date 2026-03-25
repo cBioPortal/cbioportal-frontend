@@ -407,6 +407,7 @@ export default class FixedHeaderTable<T> extends React.Component<
                         placeholder={'Search...'}
                         type="text"
                         onInput={this.onFilterTextChange()}
+                        aria-label="Search table"
                         className={classnames(
                             'form-control',
                             styles.tableSearchInput
@@ -470,6 +471,7 @@ export default class FixedHeaderTable<T> extends React.Component<
                         onInput={this.onFilterTextChange()}
                         ref={this.setInputRef}
                         data-test="fixed-header-table-search-input"
+                        aria-label="Search table"
                         className={classnames(
                             'form-control',
                             styles.tableSearchInput
