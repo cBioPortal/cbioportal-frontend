@@ -321,8 +321,7 @@ export default class MrnaExprColumnFormatter {
         ) {
             // Try to get the actual expression distribution from the raw data cache
             let distributionChart: JSX.Element | null = null;
-            let distributionLabel: string =
-                'Percentile relative to all samples in the study';
+            let rawExprValue: number | undefined;
             if (
                 mrnaExprSourceCache &&
                 mrnaExprSourceMolecularProfileId &&
@@ -338,6 +337,12 @@ export default class MrnaExprColumnFormatter {
                     sourceDatum.status === 'complete' &&
                     sourceDatum.data
                 ) {
+                    const currentSample = sourceDatum.data.find(
+                        d => d.sampleId === sampleId
+                    );
+                    if (currentSample && isFinite(currentSample.value)) {
+                        rawExprValue = currentSample.value;
+                    }
                     const histogram =
                         MrnaExprColumnFormatter.getExpressionHistogram(
                             sourceDatum.data,
@@ -345,8 +350,6 @@ export default class MrnaExprColumnFormatter {
                         );
                     if (histogram) {
                         distributionChart = histogram;
-                        distributionLabel =
-                            'Distribution of expression across all samples in the study';
                     }
                 }
             }
@@ -361,10 +364,20 @@ export default class MrnaExprColumnFormatter {
             return (
                 <div>
                     <span>
-                        Total mRNA expression level of the gene in this tumor
+                        Distribution of expression across all samples in this
+                        study for this gene:
                     </span>
                     <br />
                     {distributionChart}
+                    {rawExprValue !== undefined && (
+                        <>
+                            <span>
+                                <b>mRNA expression: </b>
+                                {rawExprValue.toFixed(2)}
+                            </span>
+                            <br />
+                        </>
+                    )}
                     <span>
                         <b>mRNA z-score: </b>
                         {cacheDatum.data.zScore}
@@ -373,16 +386,6 @@ export default class MrnaExprColumnFormatter {
                     <span>
                         <b>Percentile: </b>
                         {cacheDatum.data.percentile}
-                    </span>
-                    <br />
-                    <span
-                        style={{
-                            fontSize: '0.9em',
-                            color: '#888',
-                            fontStyle: 'italic',
-                        }}
-                    >
-                        {distributionLabel}
                     </span>
                 </div>
             );
