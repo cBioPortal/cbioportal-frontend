@@ -75,7 +75,7 @@ const PatientViewPageHeader: React.FC<IPatientPageHeaderProps> = observer(
                         </td>
                     </tr>
                     <tr>
-                        <td>MFP:</td>
+                        <td>Immune Signature:</td>
                         <td>
                             <MFPClassBar />
                         </td>

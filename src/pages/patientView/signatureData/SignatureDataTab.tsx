@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { observer } from 'mobx-react';
 import {
     VictoryBar,
     VictoryChart,
@@ -8,11 +9,9 @@ import {
     VictoryTooltip,
     VictoryLabel,
 } from 'victory';
+import { signatureSampleStore } from './SignatureSampleStore';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const signatureData = require('../../../../signature_data/signature_data.json');
-
-// Pick a specific patient sample
-const SAMPLE_ID = 'P-0752735-T05-TG2';
 
 const MFP_CLASS_COLORS: Record<string, string> = {
     D: '#c8b631',
@@ -28,8 +27,9 @@ const MFP_CLASS_LABELS: Record<string, string> = {
     'IE/F': 'Immune Enriched / Fibrotic (IE/F)',
 };
 
-export const SignatureDataTab: React.FC = () => {
-    const sample = signatureData.samples[SAMPLE_ID];
+export const SignatureDataTab: React.FC = observer(() => {
+    const store = signatureSampleStore;
+    const sample = store.sample;
     const signatures = signatureData.metadata.signatures;
     const assignedClass = sample.classification.knn_class;
     const centroid =
@@ -68,16 +68,11 @@ export const SignatureDataTab: React.FC = () => {
         y: sample.knn_class_scores[cls] as number,
     }));
 
-    const centroidCorrs = mfpClasses.map(cls => ({
-        x: MFP_CLASS_LABELS[cls] || cls,
-        y: sample.centroid_correlations[cls] as number,
-    }));
-
     return (
         <div style={{ padding: 20 }}>
             <h2>Immune Microenvironment Signature Profile</h2>
             <p style={{ color: '#666', marginBottom: 20 }}>
-                Sample: <strong>{SAMPLE_ID}</strong>
+                Sample: <strong>{store.sampleId}</strong>
             </p>
 
             {/* Classification Summary */}
@@ -100,7 +95,9 @@ export const SignatureDataTab: React.FC = () => {
                 >
                     <h4 style={{ marginTop: 0 }}>Classification</h4>
                     <div style={{ fontSize: 16, marginBottom: 8 }}>
-                        <span style={{ fontWeight: 'bold' }}>MFP Class: </span>
+                        <span style={{ fontWeight: 'bold' }}>
+                            Immune Signature{' '}
+                        </span>
                         <span
                             style={{
                                 display: 'inline-block',
@@ -123,15 +120,38 @@ export const SignatureDataTab: React.FC = () => {
                         }}
                     >
                         <tbody>
-                            <tr>
-                                <td style={{ paddingRight: 16, color: '#666' }}>
-                                    KNN Probability
-                                </td>
-                                <td style={{ fontWeight: 'bold' }}>
-                                    {(sample.classification
-                                        .knn_probability as number).toFixed(3)}
-                                </td>
-                            </tr>
+                            {['D', 'IE', 'IE/F', 'F'].map((cls: string) => (
+                                <tr key={cls}>
+                                    <td
+                                        style={{
+                                            paddingRight: 16,
+                                            color: '#666',
+                                        }}
+                                    >
+                                        <span
+                                            style={{
+                                                display: 'inline-block',
+                                                width: 10,
+                                                height: 10,
+                                                borderRadius: 2,
+                                                backgroundColor:
+                                                    MFP_CLASS_COLORS[cls],
+                                                marginRight: 6,
+                                                verticalAlign: 'middle',
+                                            }}
+                                        />
+                                        {MFP_CLASS_LABELS[cls]}
+                                    </td>
+                                    <td style={{ fontWeight: 'bold' }}>
+                                        {(
+                                            (sample.knn_class_scores[
+                                                cls
+                                            ] as number) * 100
+                                        ).toFixed(1)}
+                                        %
+                                    </td>
+                                </tr>
+                            ))}
                             <tr>
                                 <td style={{ paddingRight: 16, color: '#666' }}>
                                     KNN Confidence
@@ -214,54 +234,6 @@ export const SignatureDataTab: React.FC = () => {
                         />
                         <VictoryBar
                             data={classScores}
-                            style={{
-                                data: {
-                                    fill: ({ index }: any) =>
-                                        mfpColorScale[index] || '#999',
-                                },
-                            }}
-                        />
-                    </VictoryChart>
-                </div>
-
-                {/* Centroid Correlations */}
-                <div
-                    style={{
-                        background: '#f8f9fa',
-                        border: '1px solid #dee2e6',
-                        borderRadius: 8,
-                        padding: 20,
-                        flex: '1 1 300px',
-                    }}
-                >
-                    <h4 style={{ marginTop: 0 }}>Centroid Correlations</h4>
-                    <VictoryChart
-                        height={200}
-                        width={400}
-                        domainPadding={{ x: 50 }}
-                        padding={{
-                            top: 10,
-                            bottom: 60,
-                            left: 50,
-                            right: 20,
-                        }}
-                    >
-                        <VictoryAxis
-                            tickLabelComponent={
-                                <VictoryLabel angle={-30} textAnchor="end" />
-                            }
-                            style={{
-                                tickLabels: { fontSize: 10 },
-                            }}
-                        />
-                        <VictoryAxis
-                            dependentAxis
-                            style={{
-                                tickLabels: { fontSize: 10 },
-                            }}
-                        />
-                        <VictoryBar
-                            data={centroidCorrs}
                             style={{
                                 data: {
                                     fill: ({ index }: any) =>
@@ -384,6 +356,6 @@ export const SignatureDataTab: React.FC = () => {
             </div>
         </div>
     );
-};
+});
 
 export default SignatureDataTab;
