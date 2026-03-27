@@ -232,15 +232,18 @@ export const SignatureDataTab: React.FC = observer(() => {
                                 tickLabels: { fontSize: 10 },
                             }}
                         />
-                        <VictoryBar
-                            data={classScores}
-                            style={{
-                                data: {
-                                    fill: ({ index }: any) =>
-                                        mfpColorScale[index] || '#999',
-                                },
-                            }}
-                        />
+                        {classScores.map((d, i) => (
+                            <VictoryBar
+                                key={i}
+                                data={[d]}
+                                barWidth={40}
+                                style={{
+                                    data: {
+                                        fill: mfpColorScale[i],
+                                    },
+                                }}
+                            />
+                        ))}
                     </VictoryChart>
                 </div>
             </div>
