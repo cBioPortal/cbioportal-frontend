@@ -31,50 +31,138 @@ export default class MrnaExprColumnFormatter {
         }
     }
 
-    private static getDistributionChart(percentile: number) {
-        const barWidth = 150;
-        const barHeight = 10;
-        const circleRadius = 4;
-        const markerLeft = (percentile / 100) * barWidth;
+    private static getDistributionChart(zScore: number) {
+        const svgWidth = 160;
+        const svgHeight = 50;
+        const padLeft = 10;
+        const padRight = 10;
+        const padTop = 4;
+        const padBottom = 16;
+        const plotWidth = svgWidth - padLeft - padRight;
+        const plotHeight = svgHeight - padTop - padBottom;
+
+        // z-score axis spans -3.5 to 3.5
+        const zMin = -3.5;
+        const zMax = 3.5;
+        const zRange = zMax - zMin;
+
+        // Standard normal distribution probability density function (mean=0, std=1)
+        const gaussianPdf = (z: number) =>
+            Math.exp((-z * z) / 2) / Math.sqrt(2 * Math.PI);
+
+        const maxDensity = gaussianPdf(0); // ≈ 0.3989
+
+        // Map z-score to svg x coordinate
+        const toSvgX = (z: number) =>
+            padLeft + ((z - zMin) / zRange) * plotWidth;
+        // Map density to svg y coordinate (invert: higher density = lower y)
+        const toSvgY = (d: number) =>
+            padTop + plotHeight - (d / maxDensity) * plotHeight;
+
+        // Number of points used to approximate the smooth Gaussian curve
+        const curveResolution = 100;
+        const curvePoints: [number, number][] = [];
+        for (let i = 0; i <= curveResolution; i++) {
+            const z = zMin + (i / curveResolution) * zRange;
+            curvePoints.push([toSvgX(z), toSvgY(gaussianPdf(z))]);
+        }
+
+        // Build SVG paths for filled area and curve outline separately
+        const baseline = padTop + plotHeight;
+        const firstX = curvePoints[0][0];
+        const lastX = curvePoints[curvePoints.length - 1][0];
+
+        // Outline path (just the curve, no closing)
+        let outlineD = `M ${firstX} ${curvePoints[0][1]}`;
+        for (let i = 1; i < curvePoints.length; i++) {
+            outlineD += ` L ${curvePoints[i][0]} ${curvePoints[i][1]}`;
+        }
+
+        // Filled area path (baseline → curve → back to baseline)
+        let fillD = `M ${firstX} ${baseline} L ${firstX} ${curvePoints[0][1]}`;
+        for (let i = 1; i < curvePoints.length; i++) {
+            fillD += ` L ${curvePoints[i][0]} ${curvePoints[i][1]}`;
+        }
+        fillD += ` L ${lastX} ${baseline} Z`;
+
+        // Clamp z-score to visible range
+        const clampedZ = Math.max(zMin, Math.min(zMax, zScore));
+        const markerX = toSvgX(clampedZ);
+        const markerTopY = padTop;
+        const markerBottomY = padTop + plotHeight;
+
+        // Axis tick marks at -2, 0, 2
+        const axisTicks = [-2, 0, 2];
+        const axisY = padTop + plotHeight;
+
+        const tickLabel = (tick: number) => {
+            if (tick === 0) return 'mean';
+            return tick > 0 ? `+${tick}σ` : `${tick}σ`;
+        };
 
         return (
-            <div style={{ margin: '5px 0', width: barWidth }}>
-                <div
-                    style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        fontSize: 9,
-                        marginBottom: 2,
-                    }}
-                >
-                    <span>low</span>
-                    <span>high</span>
-                </div>
-                <div
-                    style={{
-                        position: 'relative',
-                        width: barWidth,
-                        height: barHeight,
-                        background:
-                            'linear-gradient(to right, rgba(0,0,255,0.7), rgba(128,128,128,0.5), rgba(255,0,0,0.7))',
-                        borderRadius: 2,
-                    }}
-                >
-                    <div
-                        style={{
-                            position: 'absolute',
-                            left: markerLeft - circleRadius,
-                            top: '50%',
-                            transform: 'translateY(-50%)',
-                            width: circleRadius * 2,
-                            height: circleRadius * 2,
-                            borderRadius: '50%',
-                            background: 'white',
-                            border: '1.5px solid black',
-                            boxSizing: 'border-box',
-                        }}
+            <div style={{ margin: '5px 0' }}>
+                <svg width={svgWidth} height={svgHeight}>
+                    {/* Bell curve filled area */}
+                    <path d={fillD} fill="#aaccee" fillOpacity={0.7} />
+                    {/* Bell curve outline */}
+                    <path
+                        d={outlineD}
+                        fill="none"
+                        stroke="#5588bb"
+                        strokeWidth={1.5}
                     />
-                </div>
+                    {/* Axis line */}
+                    <line
+                        x1={padLeft}
+                        y1={axisY}
+                        x2={svgWidth - padRight}
+                        y2={axisY}
+                        stroke="#999"
+                        strokeWidth={1}
+                    />
+                    {/* Axis ticks and labels */}
+                    {axisTicks.map(tick => (
+                        <g key={tick}>
+                            <line
+                                x1={toSvgX(tick)}
+                                y1={axisY}
+                                x2={toSvgX(tick)}
+                                y2={axisY + 3}
+                                stroke="#999"
+                                strokeWidth={1}
+                            />
+                            <text
+                                x={toSvgX(tick)}
+                                y={axisY + 11}
+                                textAnchor="middle"
+                                fontSize={8}
+                                fill="#666"
+                            >
+                                {tickLabel(tick)}
+                            </text>
+                        </g>
+                    ))}
+                    {/* Marker line for current sample */}
+                    <line
+                        x1={markerX}
+                        y1={markerTopY}
+                        x2={markerX}
+                        y2={markerBottomY}
+                        stroke="#c0392b"
+                        strokeWidth={1.5}
+                        strokeDasharray="3,2"
+                    />
+                    {/* Marker circle */}
+                    <circle
+                        cx={markerX}
+                        cy={toSvgY(gaussianPdf(clampedZ))}
+                        r={3.5}
+                        fill="#c0392b"
+                        stroke="white"
+                        strokeWidth={1}
+                    />
+                </svg>
             </div>
         );
     }
@@ -94,7 +182,7 @@ export default class MrnaExprColumnFormatter {
                     </span>
                     <br />
                     {MrnaExprColumnFormatter.getDistributionChart(
-                        cacheDatum.data.percentile
+                        cacheDatum.data.zScore
                     )}
                     <span>
                         <b>mRNA z-score: </b>
