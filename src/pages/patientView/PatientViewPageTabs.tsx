@@ -41,6 +41,7 @@ import { PatientViewPageInner } from 'pages/patientView/PatientViewPage';
 import { Else, If } from 'react-if';
 import { PatientViewPlotsTabWrapper } from './PatientViewPlotsTabWrapper';
 import ExpressionTableWrapper from './expression/ExpressionTableWrapper';
+import SignatureDataTab from './signatureData/SignatureDataTab';
 
 export enum PatientViewPageTabs {
     Summary = 'summary',
@@ -56,6 +57,7 @@ export enum PatientViewPageTabs {
     MRNA = 'mrna',
     Plots = 'plots',
     Expression = 'expression',
+    HelloWorld = 'helloWorld',
 }
 
 export const PatientViewResourceTabPrefix = 'openResource_';
@@ -844,6 +846,16 @@ export function tabs(
             </MSKTab>
         );
     }
+
+    tabs.push(
+        <MSKTab
+            key={12}
+            id={PatientViewPageTabs.HelloWorld}
+            linkText="Hello World"
+        >
+            <SignatureDataTab />
+        </MSKTab>
+    );
 
     pageComponent.resourceTabs.component &&
         /* @ts-ignore */
