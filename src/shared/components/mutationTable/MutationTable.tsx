@@ -36,6 +36,7 @@ import ExonColumnFormatter from './column/ExonColumnFormatter';
 import { IMutSigData } from 'shared/model/MutSig';
 import DiscreteCNACache from 'shared/cache/DiscreteCNACache';
 import MrnaExprRankCache from 'shared/cache/MrnaExprRankCache';
+import GeneMolecularDataCache from 'shared/cache/GeneMolecularDataCache';
 import VariantCountCache from 'shared/cache/VariantCountCache';
 import PubMedCache from 'shared/cache/PubMedCache';
 import MutationCountCache from 'shared/cache/MutationCountCache';
@@ -97,8 +98,10 @@ export interface IMutationTableProps {
     };
     discreteCNACache?: DiscreteCNACache;
     oncoKbCancerGenes?: RemoteData<CancerGene[] | Error | undefined>;
+    /** Cache for z-score ranked mRNA expression values (used for cell display and percentile) */
     mrnaExprRankCache?: MrnaExprRankCache;
-    variantCountCache?: VariantCountCache;
+    /** Cache for raw RSEM/TPM expression values across all study samples (used for histogram in tooltip) */
+    mrnaExprSourceCache?: GeneMolecularDataCache;
     pubMedCache?: PubMedCache;
     mutationCountCache?: MutationCountCache;
     genomeNexusCache?: GenomeNexusCache;
@@ -125,7 +128,10 @@ export interface IMutationTableProps {
     onOncoKbIconToggle?: (mergeIcons: boolean) => void;
     civicGenes?: RemoteData<ICivicGeneIndex | undefined>;
     civicVariants?: RemoteData<ICivicVariantIndex | undefined>;
+    /** Molecular profile ID for the z-score mRNA expression profile */
     mrnaExprRankMolecularProfileId?: string;
+    /** Molecular profile ID for the raw (non-z-score) mRNA expression profile, for histogram data */
+    mrnaExprSourceMolecularProfileId?: string;
     discreteCNAMolecularProfileId?: string;
     columns?: ExtendedMutationTableColumnType[];
     namespaceColumns?: NamespaceColumnConfig;
@@ -521,7 +527,9 @@ export default class MutationTable<
                 this.props.mrnaExprRankCache ? (
                     MrnaExprColumnFormatter.renderFunction(
                         d,
-                        this.props.mrnaExprRankCache as MrnaExprRankCache
+                        this.props.mrnaExprRankCache as MrnaExprRankCache,
+                        this.props.mrnaExprSourceCache,
+                        this.props.mrnaExprSourceMolecularProfileId
                     )
                 ) : (
                     <span></span>

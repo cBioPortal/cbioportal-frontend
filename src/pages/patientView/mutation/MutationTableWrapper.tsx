@@ -7,6 +7,7 @@ import { IColumnVisibilityControlsProps } from 'shared/components/columnVisibili
 import SampleManager from '../SampleManager';
 import PubMedCache from 'shared/cache/PubMedCache';
 import MrnaExprRankCache from 'shared/cache/MrnaExprRankCache';
+import GeneMolecularDataCache from 'shared/cache/GeneMolecularDataCache';
 import { GeneFilterOption } from '../mutation/GeneFilterMenu';
 import {
     ICivicGeneIndex,
@@ -48,6 +49,7 @@ type IMutationTableWrapperProps = {
     genomeNexusCache?: GenomeNexusCache;
     genomeNexusMutationAssessorCache?: GenomeNexusMutationAssessorCache;
     mrnaExprRankMolecularProfileId?: string;
+    mrnaExprSourceMolecularProfileId?: string;
     discreteCNAMolecularProfileId?: string;
     mutSigData?: IMutSigData;
     hotspotData?: RemoteData<IHotspotIndex | undefined>;
@@ -130,6 +132,7 @@ export default class MutationTableWrapper extends React.Component<
             this.pageStore.genePanelIdToEntrezGeneIds,
             this.pageStore.molecularProfileIdToMolecularProfile,
             this.pageStore.mrnaRankMolecularProfileId,
+            this.pageStore.mrnaExprSourceMolecularProfileId,
             this.pageStore.molecularProfileIdDiscrete,
             this.pageStore.mutSigData,
             this.pageStore.mutationTableShowGeneFilterMenu,
@@ -208,6 +211,9 @@ export default class MutationTableWrapper extends React.Component<
                                 mrnaExprRankCache={
                                     this.pageStore.mrnaExprRankCache
                                 }
+                                mrnaExprSourceCache={
+                                    this.pageStore.mrnaExprSourceCache
+                                }
                                 pubMedCache={this.pageStore.pubMedCache}
                                 genomeNexusCache={
                                     this.pageStore.genomeNexusCache
@@ -218,6 +224,11 @@ export default class MutationTableWrapper extends React.Component<
                                 }
                                 mrnaExprRankMolecularProfileId={
                                     this.pageStore.mrnaRankMolecularProfileId
+                                        .result || undefined
+                                }
+                                mrnaExprSourceMolecularProfileId={
+                                    this.pageStore
+                                        .mrnaExprSourceMolecularProfileId
                                         .result || undefined
                                 }
                                 discreteCNAMolecularProfileId={
