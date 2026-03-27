@@ -526,6 +526,13 @@ export default class MutationTable<
                 ) : (
                     <span></span>
                 ),
+            tooltip: (
+                <span>
+                    Total mRNA expression level of the gene in the tumor
+                    sample, shown as a percentile rank among all samples in the
+                    study
+                </span>
+            ),
         };
 
         this._columns[MutationTableColumnType.COHORT] = {

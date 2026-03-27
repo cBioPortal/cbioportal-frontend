@@ -31,6 +31,54 @@ export default class MrnaExprColumnFormatter {
         }
     }
 
+    private static getDistributionChart(percentile: number) {
+        const barWidth = 150;
+        const barHeight = 10;
+        const circleRadius = 4;
+        const markerLeft = (percentile / 100) * barWidth;
+
+        return (
+            <div style={{ margin: '5px 0', width: barWidth }}>
+                <div
+                    style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        fontSize: 9,
+                        marginBottom: 2,
+                    }}
+                >
+                    <span>low</span>
+                    <span>high</span>
+                </div>
+                <div
+                    style={{
+                        position: 'relative',
+                        width: barWidth,
+                        height: barHeight,
+                        background:
+                            'linear-gradient(to right, rgba(0,0,255,0.7), rgba(128,128,128,0.5), rgba(255,0,0,0.7))',
+                        borderRadius: 2,
+                    }}
+                >
+                    <div
+                        style={{
+                            position: 'absolute',
+                            left: markerLeft - circleRadius,
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            width: circleRadius * 2,
+                            height: circleRadius * 2,
+                            borderRadius: '50%',
+                            background: 'white',
+                            border: '1.5px solid black',
+                            boxSizing: 'border-box',
+                        }}
+                    />
+                </div>
+            </div>
+        );
+    }
+
     protected static getTooltipContents(
         cacheDatum: MrnaExprRankCacheDataType | null
     ) {
@@ -41,8 +89,13 @@ export default class MrnaExprColumnFormatter {
         ) {
             return (
                 <div>
-                    <span>mRNA level of the gene in this tumor</span>
+                    <span>
+                        Total mRNA expression level of the gene in this tumor
+                    </span>
                     <br />
+                    {MrnaExprColumnFormatter.getDistributionChart(
+                        cacheDatum.data.percentile
+                    )}
                     <span>
                         <b>mRNA z-score: </b>
                         {cacheDatum.data.zScore}
@@ -53,6 +106,15 @@ export default class MrnaExprColumnFormatter {
                         {cacheDatum.data.percentile}
                     </span>
                     <br />
+                    <span
+                        style={{
+                            fontSize: '0.9em',
+                            color: '#888',
+                            fontStyle: 'italic',
+                        }}
+                    >
+                        Percentile relative to all samples in the study
+                    </span>
                 </div>
             );
         } else if (
