@@ -38,6 +38,7 @@ import MutationTableWrapper from './mutation/MutationTableWrapper';
 import { PatientViewPageInner } from 'pages/patientView/PatientViewPage';
 import { Else, If } from 'react-if';
 import ExpressionTableWrapper from './expression/ExpressionTableWrapper';
+import SignatureDataTab from './signatureData/SignatureDataTab';
 
 export enum PatientViewPageTabs {
     Summary = 'summary',
@@ -51,6 +52,7 @@ export enum PatientViewPageTabs {
     MutationalSignatures = 'mutationalSignatures',
     PathwayMapper = 'pathways',
     Expression = 'expression',
+    HelloWorld = 'helloWorld',
 }
 
 export const PatientViewResourceTabPrefix = 'openResource_';
@@ -749,6 +751,16 @@ export function tabs(
                 />
             </MSKTab>
         );
+
+    tabs.push(
+        <MSKTab
+            key={10}
+            id={PatientViewPageTabs.HelloWorld}
+            linkText="Hello World"
+        >
+            <SignatureDataTab />
+        </MSKTab>
+    );
 
     pageComponent.resourceTabs.component &&
         /* @ts-ignore */
