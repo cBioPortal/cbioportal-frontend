@@ -387,6 +387,16 @@ export default class MrnaExprColumnFormatter {
                         <b>Percentile: </b>
                         {cacheDatum.data.percentile}
                     </span>
+                    <br />
+                    <span
+                        style={{
+                            fontSize: '0.9em',
+                            color: '#888',
+                            fontStyle: 'italic',
+                        }}
+                    >
+                        Expression values are not adjusted for purity
+                    </span>
                 </div>
             );
         } else if (
