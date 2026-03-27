@@ -9,7 +9,12 @@ import {
     MrnaExprRankCacheDataType,
     default as MrnaExprRankCache,
 } from 'shared/cache/MrnaExprRankCache';
-import { Mutation, DiscreteCopyNumberData } from 'cbioportal-ts-api-client';
+import {
+    Mutation,
+    DiscreteCopyNumberData,
+    NumericGeneMolecularData,
+} from 'cbioportal-ts-api-client';
+import GeneMolecularDataCache from 'shared/cache/GeneMolecularDataCache';
 
 export default class MrnaExprColumnFormatter {
     protected static getCircleX(
@@ -31,6 +36,141 @@ export default class MrnaExprColumnFormatter {
         }
     }
 
+    // Renders a histogram of actual RSEM/TPM expression values across all samples,
+    // with the current sample's value marked by a red dashed line.
+    private static getExpressionHistogram(
+        allData: NumericGeneMolecularData[],
+        currentSampleId: string
+    ) {
+        const values = allData.map(d => d.value).filter(v => isFinite(v));
+        if (values.length === 0) return null;
+
+        const svgWidth = 160;
+        const svgHeight = 50;
+        const padLeft = 10;
+        const padRight = 10;
+        const padTop = 4;
+        const padBottom = 16;
+        const plotWidth = svgWidth - padLeft - padRight;
+        const plotHeight = svgHeight - padTop - padBottom;
+        const axisY = padTop + plotHeight;
+
+        const minVal = Math.min(...values);
+        const maxVal = Math.max(...values);
+
+        // When all values are identical, the histogram is trivial (one full-height bar)
+        if (minVal === maxVal) return null;
+
+        const valRange = maxVal - minVal;
+        const numBins = 20;
+        const binWidth = valRange / numBins;
+        const bins = new Array(numBins).fill(0);
+        for (const v of values) {
+            const idx = Math.min(
+                Math.floor((v - minVal) / binWidth),
+                numBins - 1
+            );
+            bins[idx]++;
+        }
+        const maxCount = Math.max(...bins);
+
+        const toSvgX = (v: number) =>
+            padLeft + ((v - minVal) / valRange) * plotWidth;
+        const svgBarWidth = plotWidth / numBins;
+
+        const currentSample = allData.find(
+            d => d.sampleId === currentSampleId
+        );
+        const currentValue = currentSample?.value;
+        const markerX =
+            currentValue !== undefined && isFinite(currentValue)
+                ? toSvgX(Math.max(minVal, Math.min(maxVal, currentValue)))
+                : null;
+
+        // Thresholds for compact axis label formatting
+        const KILO_THRESHOLD = 10000; // values >= 10000 shown as "Xk"
+        const KILO_DECIMAL_THRESHOLD = 1000; // values >= 1000 shown as "X.Xk"
+        const TINY_THRESHOLD = 0.01; // values < 0.01 shown in scientific notation
+
+        const formatAxisVal = (v: number) => {
+            if (v === 0) return '0';
+            const abs = Math.abs(v);
+            if (abs >= KILO_THRESHOLD) return `${(v / 1000).toFixed(0)}k`;
+            if (abs >= KILO_DECIMAL_THRESHOLD)
+                return `${(v / 1000).toFixed(1)}k`;
+            if (abs < TINY_THRESHOLD) return v.toExponential(0);
+            return v.toFixed(abs < 1 ? 2 : 0);
+        };
+
+        return (
+            <div style={{ margin: '5px 0' }}>
+                <svg width={svgWidth} height={svgHeight}>
+                    {/* Histogram bars */}
+                    {bins.map((count, i) => {
+                        const x = padLeft + i * svgBarWidth;
+                        const barH =
+                            maxCount > 0
+                                ? (count / maxCount) * plotHeight
+                                : 0;
+                        return (
+                            <rect
+                                key={i}
+                                x={x}
+                                y={axisY - barH}
+                                width={Math.max(svgBarWidth - 0.5, 0.5)}
+                                height={barH}
+                                fill="#aaccee"
+                                stroke="#5588bb"
+                                strokeWidth={0.5}
+                            />
+                        );
+                    })}
+                    {/* Axis line */}
+                    <line
+                        x1={padLeft}
+                        y1={axisY}
+                        x2={svgWidth - padRight}
+                        y2={axisY}
+                        stroke="#999"
+                        strokeWidth={1}
+                    />
+                    {/* Min/max axis labels */}
+                    <text
+                        x={padLeft}
+                        y={axisY + 11}
+                        textAnchor="start"
+                        fontSize={7}
+                        fill="#666"
+                    >
+                        {formatAxisVal(minVal)}
+                    </text>
+                    <text
+                        x={svgWidth - padRight}
+                        y={axisY + 11}
+                        textAnchor="end"
+                        fontSize={7}
+                        fill="#666"
+                    >
+                        {formatAxisVal(maxVal)}
+                    </text>
+                    {/* Marker line for current sample */}
+                    {markerX !== null && (
+                        <line
+                            x1={markerX}
+                            y1={padTop}
+                            x2={markerX}
+                            y2={axisY}
+                            stroke="#c0392b"
+                            strokeWidth={1.5}
+                            strokeDasharray="3,2"
+                        />
+                    )}
+                </svg>
+            </div>
+        );
+    }
+
+    // Fallback: renders a theoretical Gaussian bell curve with the sample's z-score marked.
     private static getDistributionChart(zScore: number) {
         const svgWidth = 160;
         const svgHeight = 50;
@@ -78,7 +218,7 @@ export default class MrnaExprColumnFormatter {
             outlineD += ` L ${curvePoints[i][0]} ${curvePoints[i][1]}`;
         }
 
-        // Filled area path (baseline → curve → back to baseline)
+        // Filled area path (baseline to curve and back to baseline)
         let fillD = `M ${firstX} ${baseline} L ${firstX} ${curvePoints[0][1]}`;
         for (let i = 1; i < curvePoints.length; i++) {
             fillD += ` L ${curvePoints[i][0]} ${curvePoints[i][1]}`;
@@ -97,7 +237,7 @@ export default class MrnaExprColumnFormatter {
 
         const tickLabel = (tick: number) => {
             if (tick === 0) return 'mean';
-            return tick > 0 ? `+${tick}σ` : `${tick}σ`;
+            return tick > 0 ? `+${tick}\u03c3` : `${tick}\u03c3`;
         };
 
         return (
@@ -168,22 +308,63 @@ export default class MrnaExprColumnFormatter {
     }
 
     protected static getTooltipContents(
-        cacheDatum: MrnaExprRankCacheDataType | null
+        cacheDatum: MrnaExprRankCacheDataType | null,
+        sampleId?: string,
+        entrezGeneId?: number,
+        mrnaExprSourceCache?: GeneMolecularDataCache,
+        mrnaExprSourceMolecularProfileId?: string
     ) {
         if (
             cacheDatum &&
             cacheDatum.status === 'complete' &&
             cacheDatum.data !== null
         ) {
+            // Try to get the actual expression distribution from the raw data cache
+            let distributionChart: JSX.Element | null = null;
+            let distributionLabel: string =
+                'Percentile relative to all samples in the study';
+            if (
+                mrnaExprSourceCache &&
+                mrnaExprSourceMolecularProfileId &&
+                sampleId !== undefined &&
+                entrezGeneId !== undefined
+            ) {
+                const sourceDatum = mrnaExprSourceCache.get({
+                    entrezGeneId,
+                    molecularProfileId: mrnaExprSourceMolecularProfileId,
+                });
+                if (
+                    sourceDatum &&
+                    sourceDatum.status === 'complete' &&
+                    sourceDatum.data
+                ) {
+                    const histogram =
+                        MrnaExprColumnFormatter.getExpressionHistogram(
+                            sourceDatum.data,
+                            sampleId
+                        );
+                    if (histogram) {
+                        distributionChart = histogram;
+                        distributionLabel =
+                            'Distribution of expression across all samples in the study';
+                    }
+                }
+            }
+            // Fall back to Gaussian bell curve if no real distribution data available
+            if (!distributionChart) {
+                distributionChart =
+                    MrnaExprColumnFormatter.getDistributionChart(
+                        cacheDatum.data.zScore
+                    );
+            }
+
             return (
                 <div>
                     <span>
                         Total mRNA expression level of the gene in this tumor
                     </span>
                     <br />
-                    {MrnaExprColumnFormatter.getDistributionChart(
-                        cacheDatum.data.zScore
-                    )}
+                    {distributionChart}
                     <span>
                         <b>mRNA z-score: </b>
                         {cacheDatum.data.zScore}
@@ -201,7 +382,7 @@ export default class MrnaExprColumnFormatter {
                             fontStyle: 'italic',
                         }}
                     >
-                        Percentile relative to all samples in the study
+                        {distributionLabel}
                     </span>
                 </div>
             );
@@ -320,21 +501,57 @@ export default class MrnaExprColumnFormatter {
     }
 
     private static renderFromCacheDatum(
-        cacheDatum: MrnaExprRankCacheDataType | null
+        cacheDatum: MrnaExprRankCacheDataType | null,
+        sampleId?: string,
+        entrezGeneId?: number,
+        mrnaExprSourceCache?: GeneMolecularDataCache,
+        mrnaExprSourceMolecularProfileId?: string
     ) {
         return (
             <DefaultTooltip
                 placement="left"
-                overlay={MrnaExprColumnFormatter.getTooltipContents(cacheDatum)}
+                overlay={MrnaExprColumnFormatter.getTooltipContents(
+                    cacheDatum,
+                    sampleId,
+                    entrezGeneId,
+                    mrnaExprSourceCache,
+                    mrnaExprSourceMolecularProfileId
+                )}
                 arrowContent={<div className="rc-tooltip-arrow-inner" />}
             >
                 {MrnaExprColumnFormatter.getTdContents(cacheDatum)}
             </DefaultTooltip>
         );
     }
-    public static renderFunction(data: Mutation[], cache: MrnaExprRankCache) {
+
+    public static renderFunction(
+        data: Mutation[],
+        cache: MrnaExprRankCache,
+        mrnaExprSourceCache?: GeneMolecularDataCache,
+        mrnaExprSourceMolecularProfileId?: string
+    ) {
         const cacheDatum = MrnaExprColumnFormatter.getData(data, cache);
-        return MrnaExprColumnFormatter.renderFromCacheDatum(cacheDatum);
+        const sampleId = data.length > 0 ? data[0].sampleId : undefined;
+        const entrezGeneId =
+            data.length > 0 ? data[0].entrezGeneId : undefined;
+        // Trigger lazy loading of distribution data when source cache is available
+        if (
+            mrnaExprSourceCache &&
+            mrnaExprSourceMolecularProfileId &&
+            entrezGeneId !== undefined
+        ) {
+            mrnaExprSourceCache.get({
+                entrezGeneId,
+                molecularProfileId: mrnaExprSourceMolecularProfileId,
+            });
+        }
+        return MrnaExprColumnFormatter.renderFromCacheDatum(
+            cacheDatum,
+            sampleId,
+            entrezGeneId,
+            mrnaExprSourceCache,
+            mrnaExprSourceMolecularProfileId
+        );
     }
 
     public static cnaRenderFunction(
