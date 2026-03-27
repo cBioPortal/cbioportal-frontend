@@ -15,10 +15,10 @@ const signatureData = require('../../../../signature_data/signature_data.json');
 const SAMPLE_ID = 'P-0752735-T05-TG2';
 
 const MFP_CLASS_COLORS: Record<string, string> = {
-    D: '#e74c3c',
-    F: '#f39c12',
-    IE: '#27ae60',
-    'IE/F': '#2980b9',
+    D: '#c8b631',
+    F: '#c4375b',
+    IE: '#3b4fb8',
+    'IE/F': '#2a9d8f',
 };
 
 const MFP_CLASS_LABELS: Record<string, string> = {
