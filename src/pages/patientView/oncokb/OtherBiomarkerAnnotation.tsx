@@ -20,7 +20,7 @@ export const OtherBiomarkerAnnotation: React.FunctionComponent<{
             <span
                 style={{
                     marginLeft: 2,
-                    display: 'flex',
+                    display: 'inline-flex',
                 }}
             >
                 <OncoKB
