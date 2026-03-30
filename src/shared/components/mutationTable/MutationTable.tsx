@@ -102,6 +102,7 @@ export interface IMutationTableProps {
     mrnaExprRankCache?: MrnaExprRankCache;
     /** Cache for raw RSEM/TPM expression values across all study samples (used for histogram in tooltip) */
     mrnaExprSourceCache?: GeneMolecularDataCache;
+    variantCountCache?: VariantCountCache;
     pubMedCache?: PubMedCache;
     mutationCountCache?: MutationCountCache;
     genomeNexusCache?: GenomeNexusCache;
