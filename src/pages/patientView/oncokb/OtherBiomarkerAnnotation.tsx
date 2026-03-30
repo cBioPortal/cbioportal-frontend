@@ -21,6 +21,7 @@ export const OtherBiomarkerAnnotation: React.FunctionComponent<{
                 style={{
                     marginLeft: 2,
                     display: 'inline-flex',
+                    verticalAlign: 'middle',
                 }}
             >
                 <OncoKB
