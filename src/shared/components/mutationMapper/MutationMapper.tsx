@@ -42,7 +42,7 @@ import MutationMapperDataStore, {
 import WindowStore from '../window/WindowStore';
 
 import styles from './mutationMapper.module.scss';
-import { DefaultTooltip, ProteinImpactType } from 'cbioportal-frontend-commons';
+import { ProteinImpactType } from 'cbioportal-frontend-commons';
 import DriverAnnotationProteinImpactTypeBadgeSelector from './DriverAnnotationProteinImpactTypeBadgeSelector';
 import { Mutation, PtmSource } from 'cbioportal-utils';
 import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
@@ -475,23 +475,16 @@ export default class MutationMapper<
 
     protected get view3dButton(): JSX.Element | null {
         return (
-            <DefaultTooltip
-                placement="top"
-                overlay={<>3D Structure viewer is temporarily unavailable</>}
-                destroyTooltipOnHide={true}
+            <button
+                className="btn btn-default btn-sm"
+                disabled={
+                    this.props.store.pdbChainDataStore.allData.length === 0
+                }
+                onClick={this.toggle3dPanel}
+                data-test="view3DStructure"
             >
-                <button
-                    className="btn btn-default btn-sm"
-                    disabled={
-                        this.props.store.pdbChainDataStore.allData.length === 0
-                    }
-                    // TODO temporarily unavailable (uncomment after fixing the related 3D viewer issue)
-                    // onClick={this.toggle3dPanel}
-                    data-test="view3DStructure"
-                >
-                    View 3D Structure
-                </button>
-            </DefaultTooltip>
+                View 3D Structure
+            </button>
         );
     }
 
