@@ -1166,21 +1166,32 @@ function transitionGeneticTrack(
                     // Expansion sub-tracks (expansionParentKey is set) are
                     // not individually removable via this handler.
                     //
-                    // Compute the new gene list from the remaining tracks'
-                    // OQL strings. This avoids fragile URL parsing and
-                    // correctly handles all URL encoding variants (e.g.,
-                    // `+`-encoded spaces from the homepage) as well as
-                    // OQL-qualified genes (e.g., `BRAF:V600E`).
+                    // Compute the new gene list from the remaining tracks.
+                    // This avoids fragile URL parsing and correctly handles
+                    // all URL encoding variants (e.g., `+`-encoded spaces
+                    // from the homepage) as well as OQL-qualified genes
+                    // (e.g., `BRAF:V600E`).
                     //
-                    // `t.oql` is always set for tracks created by the
-                    // standard track factory (makeGeneticTrackWith), so the
-                    // `t.label` fallback is only a safety net for custom
-                    // track specs where `oql` might be omitted.
+                    // Use label.trim() + sublabel (the user-specified OQL)
+                    // rather than `oql` (which includes profile-default
+                    // alteration expansions) so that plain-gene tracks don't
+                    // gain unwanted OQL qualifiers after the URL update.
+                    // For merged tracks (oql starts with '['), the full oql
+                    // is necessary to preserve the bracketed group syntax.
                     const remainingTracks = nextProps.geneticTracks.filter(
                         t => t.key !== nextSpec.key
                     );
                     const newGeneList = remainingTracks
-                        .map(t => t.oql || t.label)
+                        .map(t => {
+                            const oql = t.oql || '';
+                            if (oql.startsWith('[')) {
+                                // Merged track — keep bracketed OQL as-is
+                                return oql;
+                            }
+                            // Simple track — reconstruct from label + user-
+                            // specified sublabel only (not profile defaults)
+                            return t.label.trim() + (t.sublabel || '');
+                        })
                         .join('\n');
                     nextProps.onDeleteGeneticTrack(nextSpec.label, newGeneList);
                 }
