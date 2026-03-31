@@ -1161,19 +1161,28 @@ function transitionGeneticTrack(
                 if (nextSpec.removeCallback) nextSpec.removeCallback();
             },
             onClickRemoveInTrackMenu: () => {
-                const oql = nextSpec.oql;
-                const sublabel = nextSpec.sublabel;
-                if (oql) {
-                    const geneLabelsRegex = /[A-Z0-9]+(?=:)/g;
-                    const geneLabels = oql.match(geneLabelsRegex);
-                    if (geneLabels) {
-                        const geneLabelsString = geneLabels.join(' ');
-                        nextProps.onDeleteGeneticTrack &&
-                            nextProps.onDeleteGeneticTrack(
-                                geneLabelsString,
-                                sublabel || ''
-                            );
-                    }
+                if (nextProps.onDeleteGeneticTrack && !expansionParentKey) {
+                    // Only handle top-level genetic tracks.
+                    // Expansion sub-tracks (expansionParentKey is set) are
+                    // not individually removable via this handler.
+                    //
+                    // Compute the new gene list from the remaining tracks'
+                    // OQL strings. This avoids fragile URL parsing and
+                    // correctly handles all URL encoding variants (e.g.,
+                    // `+`-encoded spaces from the homepage) as well as
+                    // OQL-qualified genes (e.g., `BRAF:V600E`).
+                    //
+                    // `t.oql` is always set for tracks created by the
+                    // standard track factory (makeGeneticTrackWith), so the
+                    // `t.label` fallback is only a safety net for custom
+                    // track specs where `oql` might be omitted.
+                    const remainingTracks = nextProps.geneticTracks.filter(
+                        t => t.key !== nextSpec.key
+                    );
+                    const newGeneList = remainingTracks
+                        .map(t => t.oql || t.label)
+                        .join('\n');
+                    nextProps.onDeleteGeneticTrack(nextSpec.label, newGeneList);
                 }
             },
             expandCallback: nextSpec.expansionCallback || undefined,
