@@ -314,7 +314,7 @@ export interface IOncoprintProps {
 
     onMinimapClose?: () => void;
     onDeleteClinicalTrack?: (key: string) => void;
-    onDeleteGeneticTrack?: (key: string, sublabel: string) => void;
+    onDeleteGeneticTrack?: (label: string, newGeneList: string) => void;
     onTrackSortDirectionChange?: (trackId: TrackId, dir: number) => void;
     onTrackGapChange?: (trackId: TrackId, gap: GAP_MODE_ENUM) => void;
 
