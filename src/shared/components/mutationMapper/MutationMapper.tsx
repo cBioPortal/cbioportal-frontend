@@ -455,8 +455,7 @@ export default class MutationMapper<
         }
         tracks.push(TrackName.Exon);
         tracks.push(TrackName.UniprotTopology);
-        // TODO temporarily unavailable (uncomment after fixing the related 3D viewer issue)
-        // tracks.push(TrackName.PDB);
+        tracks.push(TrackName.PDB);
 
         return tracks;
     }
