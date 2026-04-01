@@ -295,8 +295,7 @@ describe('Results Page', () => {
                     timeout: 10000,
                 });
                 await getElement('[class=onco-kb-0]', { timeout: 10000 });
-                // TODO temporarily unavailable (uncomment after fixing the related 3D viewer issue)
-                // await getElement('[class=chain-0]', { timeout: 10000 });
+                await getElement('[class=chain-0]', { timeout: 10000 });
                 await getElement('[class=ptm-0-0]', { timeout: 10000 });
             });
         });
