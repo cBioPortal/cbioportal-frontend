@@ -171,10 +171,12 @@ describe('select all/deselect all functionality in study selector', () => {
         );
 
         await browser.pause(500);
-        const selectElement = await $$(
-            '[data-test="StudySelect"] input[type=checkbox]'
-        );
-        await selectElement[50].click();
+        const input = 'div[data-test=study-search] input[type=text]';
+        await setInputText(input, 'ovarian nature 2011');
+        await waitForNumberOfStudyCheckboxes(1);
+        await getElement('[data-test="StudySelect"]', { timeout: 10000 });
+        await clickElement('[data-test="StudySelect"] input');
+        await browser.pause(200);
 
         assert.equal(
             await (
@@ -188,10 +190,7 @@ describe('select all/deselect all functionality in study selector', () => {
             1,
             'we selected one study'
         );
-        await setInputText(
-            'div[data-test=study-search] input[type=text]',
-            'breast'
-        );
+        await setInputText(input, 'breast');
 
         //click global deselect all while filtered
         await clickElement('[data-test=globalDeselectAllStudiesButton]');
