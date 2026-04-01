@@ -47,6 +47,7 @@ import DriverAnnotationProteinImpactTypeBadgeSelector from './DriverAnnotationPr
 import { Mutation, PtmSource } from 'cbioportal-utils';
 import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
 import { LegendColorCodes } from './LegendColorCodes';
+import { getAlphaFoldEntryUrl } from 'shared/lib/AlphaFoldUtils';
 
 export interface IMutationMapperProps {
     store: MutationMapperStore;
@@ -473,18 +474,44 @@ export default class MutationMapper<
         ) : null;
     }
 
+    @computed
+    protected get alphaFoldLink(): string | undefined {
+        const uniprotId = this.props.store.uniprotId.result;
+        return uniprotId ? getAlphaFoldEntryUrl(uniprotId) : undefined;
+    }
+
     protected get view3dButton(): JSX.Element | null {
+        const hasPdbChains = this.props.store.pdbChainDataStore.allData.length > 0;
+
         return (
             <DefaultTooltip
                 placement="top"
-                overlay={<>3D Structure viewer is temporarily unavailable</>}
+                overlay={
+                    <>
+                        3D Structure viewer is temporarily unavailable.
+                        {!hasPdbChains && this.alphaFoldLink && (
+                            <>
+                                <br />
+                                No experimental PDB chains are available for
+                                this selection. A predicted structure may still
+                                be available in{' '}
+                                <a
+                                    href={this.alphaFoldLink}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                >
+                                    AlphaFold DB
+                                </a>
+                                .
+                            </>
+                        )}
+                    </>
+                }
                 destroyTooltipOnHide={true}
             >
                 <button
                     className="btn btn-default btn-sm"
-                    disabled={
-                        this.props.store.pdbChainDataStore.allData.length === 0
-                    }
+                    disabled={!hasPdbChains}
                     // TODO temporarily unavailable (uncomment after fixing the related 3D viewer issue)
                     // onClick={this.toggle3dPanel}
                     data-test="view3DStructure"
