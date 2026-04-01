@@ -78,7 +78,10 @@ import ProgressIndicator, {
     IProgressIndicatorItem,
 } from '../progressIndicator/ProgressIndicator';
 import autobind from 'autobind-decorator';
-import { parseOQLQuery } from '../../lib/oql/oqlfilter';
+import {
+    parseOQLQuery,
+    removeIndexFromGeneList,
+} from '../../lib/oql/oqlfilter';
 import AlterationFilterWarning from '../banners/AlterationFilterWarning';
 import WindowStore from '../window/WindowStore';
 import { OncoprintAnalysisCaseType } from '../../../pages/resultsView/ResultsViewPageStoreUtils';
@@ -1460,7 +1463,7 @@ export default class ResultsViewOncoprint extends React.Component<
 
     private onDeleteGeneticTrack(
         geneticTrackLabel: string,
-        newGeneList: string
+        trackIndex: number
     ): void {
         if (!this.isHidden) {
             let json: GeneticTrackConfigMap = _.clone(
@@ -1475,6 +1478,12 @@ export default class ResultsViewOncoprint extends React.Component<
                 ...session.userSettings,
                 geneticlist: _.values(json),
             };
+            const currentGeneList =
+                this.urlWrapper.query.gene_list || '';
+            const newGeneList = removeIndexFromGeneList(
+                currentGeneList,
+                trackIndex
+            );
             this.urlWrapper.updateURL({
                 gene_list: newGeneList,
             });
