@@ -228,8 +228,7 @@ describe('Results Page', () => {
                 });
             });
 
-            // TODO temporarily unavailable (enable test after fixing the related 3D viewer issue)
-            it.skip('populates PDB info properly', async () => {
+            it('populates PDB info properly', async () => {
                 await clickElement('[data-test=view3DStructure]');
                 await browser.waitUntil(
                     async () =>
@@ -284,9 +283,8 @@ describe('Results Page', () => {
                 await getElement('[class=ptm-0-0]', { timeout: 10000 });
 
                 // open 3D visualizer via tracks menu
-                // TODO temporarily unavailable (uncomment after fixing the related 3D viewer issue)
-                // await clickElement('.//*[text()[contains(.,"3D Structure")]]');
-                // await getElement('[class=chain-0]', { timeout: 10000 });
+                await clickElement('.//*[text()[contains(.,"3D Structure")]]');
+                await getElement('[class=chain-0]', { timeout: 10000 });
             });
 
             it('keeps tracks selection state when switching to another gene tab', async () => {
