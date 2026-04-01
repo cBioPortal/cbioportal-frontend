@@ -1,0 +1,32 @@
+.fusionViewerTab {
+    display: flex;
+    height: calc(100vh - 200px);
+    min-height: 500px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.diagramPanel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.diagramContainer {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+}
+
+.notePanel {
+    padding: 8px 16px;
+    border-top: 1px solid #eee;
+    background: #fafafa;
+    font-size: 11px;
+    color: #666;
+    font-style: italic;
+    max-height: 60px;
+    overflow-y: auto;
+}
