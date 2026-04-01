@@ -1166,34 +1166,20 @@ function transitionGeneticTrack(
                     // Expansion sub-tracks (expansionParentKey is set) are
                     // not individually removable via this handler.
                     //
-                    // Compute the new gene list from the remaining tracks.
-                    // This avoids fragile URL parsing and correctly handles
-                    // all URL encoding variants (e.g., `+`-encoded spaces
-                    // from the homepage) as well as OQL-qualified genes
-                    // (e.g., `BRAF:V600E`).
-                    //
-                    // Use label.trim() + sublabel (the user-specified OQL)
-                    // rather than `oql` (which includes profile-default
-                    // alteration expansions) so that plain-gene tracks don't
-                    // gain unwanted OQL qualifiers after the URL update.
-                    // For merged tracks (oql starts with '['), the full oql
-                    // is necessary to preserve the bracketed group syntax.
-                    const remainingTracks = nextProps.geneticTracks.filter(
-                        t => t.key !== nextSpec.key
-                    );
-                    const newGeneList = remainingTracks
-                        .map(t => {
-                            const oql = t.oql || '';
-                            if (oql.startsWith('[')) {
-                                // Merged track — keep bracketed OQL as-is
-                                return oql;
-                            }
-                            // Simple track — reconstruct from label + user-
-                            // specified sublabel only (not profile defaults)
-                            return t.label.trim() + (t.sublabel || '');
-                        })
-                        .join('\n');
-                    nextProps.onDeleteGeneticTrack(nextSpec.label, newGeneList);
+                    // Pass the track index so the handler can remove the
+                    // corresponding entry from the raw URL gene_list string
+                    // without any default OQL expansion.  The key format is
+                    // `GENETICTRACK_N` where N is the index in the list.
+                    const match = nextSpec.key.match(/^GENETICTRACK_(\d+)$/);
+                    if (!match) {
+                        console.warn(
+                            'onClickRemoveInTrackMenu: unexpected track key format:',
+                            nextSpec.key
+                        );
+                        return; // skip deletion — can't determine correct index
+                    }
+                    const trackIndex = parseInt(match[1], 10);
+                    nextProps.onDeleteGeneticTrack(nextSpec.label, trackIndex);
                 }
             },
             expandCallback: nextSpec.expansionCallback || undefined,
