@@ -20,6 +20,20 @@
     overflow-y: auto;
 }
 
+.fusionItem {
+    background-color: #fff;
+    transition: background-color 0.1s;
+
+    &:hover:not(.fusionItemSelected) {
+        background-color: #f0f0f0;
+    }
+}
+
+.fusionItemSelected {
+    background-color: #e8eef7;
+    border-left-color: #5a73b3;
+}
+
 .notePanel {
     padding: 8px 16px;
     border-top: 1px solid #eee;

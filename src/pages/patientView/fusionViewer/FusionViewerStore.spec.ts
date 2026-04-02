@@ -174,10 +174,11 @@ describe('FusionViewerStore', () => {
 
         it('is a no-op for non-existent fusion ID', () => {
             store.structuralVariants = [makeFusion({ id: 'f1' })] as any;
+            store.selectFusion('f1');
             store.selectFusion('nonexistent');
 
-            assert.equal(store.selectedFusionId, 'nonexistent');
-            assert.equal(store.selectedTranscript5pIds.size, 0);
+            // selectedFusionId stays at previous value since nonexistent is ignored
+            assert.equal(store.selectedFusionId, 'f1');
         });
     });
 
@@ -387,23 +388,58 @@ describe('FusionViewerStore', () => {
     });
 
     // -------------------------------------------------------------------
-    // setGenomeBuild
+    // genome build derivation
     // -------------------------------------------------------------------
-    describe('setGenomeBuild', () => {
-        it('updates genomeBuild observable', () => {
-            store.setGenomeBuild('GRCh37');
+    describe('genome build from referenceGenome', () => {
+        it('derives GRCh37 from hg19', () => {
+            store.setStructuralVariants([] as any, 'hg19');
 
             assert.equal(store.genomeBuild, 'GRCh37');
         });
 
-        it('is a no-op when setting the same build', () => {
-            store.setGenomeBuild('GRCh38');
-            mockFetchTranscripts.mockClear();
+        it('derives GRCh38 from hg38', () => {
+            store.setStructuralVariants([] as any, 'hg38');
 
-            store.setGenomeBuild('GRCh38');
-
-            // genomeBuild unchanged, so remoteData won't re-invoke
             assert.equal(store.genomeBuild, 'GRCh38');
+        });
+
+        it('defaults to GRCh38 when referenceGenome is omitted', () => {
+            store.setStructuralVariants([] as any);
+
+            assert.equal(store.genomeBuild, 'GRCh38');
+        });
+    });
+
+    // -------------------------------------------------------------------
+    // transcript ID pruning in onResult
+    // -------------------------------------------------------------------
+    describe('onResult transcript pruning', () => {
+        it('prunes invalid pre-populated transcript IDs and falls back to FORTE', async () => {
+            const forteT = makeTranscript({
+                transcriptId: 'ENST_FORTE',
+                isForteSelected: true,
+            });
+            mockFetchTranscripts.mockResolvedValue([forteT]);
+
+            // Fusion has a transcript ID that Genome Nexus won't return
+            const f = makeFusion({
+                id: 'f1',
+                gene1: {
+                    symbol: 'ALK',
+                    chromosome: '2',
+                    position: 5000,
+                    strand: '+',
+                    selectedTranscriptId: 'ENST_INVALID',
+                    siteDescription: '',
+                },
+                gene2: null,
+            });
+            store.setStructuralVariants([f] as any);
+            await new Promise(r => setTimeout(r, 50));
+
+            // Invalid ID should be pruned, FORTE should be selected
+            assert.isFalse(store.selectedTranscript5pIds.has('ENST_INVALID'));
+            assert.isTrue(store.selectedTranscript5pIds.has('ENST_FORTE'));
         });
     });
 });

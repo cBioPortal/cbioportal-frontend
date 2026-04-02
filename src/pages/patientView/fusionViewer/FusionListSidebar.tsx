@@ -1,7 +1,9 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
+import classNames from 'classnames';
 import { FusionViewerStore } from './FusionViewerStore';
 import { FusionEvent } from './data/types';
+import moduleStyles from './styles.module.scss';
 
 interface IFusionListSidebarProps {
     store: FusionViewerStore;
@@ -40,12 +42,6 @@ const styles = {
         fontSize: 12,
         lineHeight: 1.45,
         borderLeft: '3px solid transparent',
-        backgroundColor: '#fff',
-        transition: 'background-color 0.1s',
-    },
-    itemSelected: {
-        backgroundColor: '#e8eef7',
-        borderLeftColor: '#5A73B3',
     },
     fusionName: {
         fontWeight: 600 as const,
@@ -130,11 +126,6 @@ export class FusionListSidebar extends React.Component<
                         const selected = fusion.id === store.selectedFusionId;
                         const intergenic = isIntergenic(fusion);
 
-                        const itemStyle = {
-                            ...styles.item,
-                            ...(selected ? styles.itemSelected : {}),
-                        };
-
                         const nameStyle = {
                             ...styles.fusionName,
                             ...(intergenic ? styles.intergenicName : {}),
@@ -143,19 +134,12 @@ export class FusionListSidebar extends React.Component<
                         return (
                             <li
                                 key={fusion.id}
-                                style={itemStyle}
+                                className={classNames(
+                                    moduleStyles.fusionItem,
+                                    selected && moduleStyles.fusionItemSelected
+                                )}
+                                style={styles.item}
                                 onClick={() => this.handleClick(fusion.id)}
-                                onMouseEnter={e => {
-                                    if (!selected) {
-                                        (e.currentTarget as HTMLElement).style.backgroundColor =
-                                            '#f0f0f0';
-                                    }
-                                }}
-                                onMouseLeave={e => {
-                                    (e.currentTarget as HTMLElement).style.backgroundColor = selected
-                                        ? '#e8eef7'
-                                        : '#fff';
-                                }}
                             >
                                 <div style={nameStyle}>
                                     {formatFusionName(fusion)}

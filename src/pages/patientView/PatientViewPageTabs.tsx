@@ -722,7 +722,13 @@ export function tabs(
             linkText="Fusion Viewer"
             hide={hideFusionViewer}
         >
-            <FusionViewerTab structuralVariants={svData.result || []} />
+            <FusionViewerTab
+                structuralVariants={svData.result || []}
+                referenceGenome={
+                    pageComponent.patientViewPageStore.studies.result[0]
+                        ?.referenceGenome
+                }
+            />
         </MSKTab>
     );
 
