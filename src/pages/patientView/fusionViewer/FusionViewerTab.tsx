@@ -19,7 +19,7 @@ export class FusionViewerTab extends React.Component<IFusionViewerTabProps> {
     constructor(props: IFusionViewerTabProps) {
         super(props);
         this.store = new FusionViewerStore();
-        this.store.loadFromStructuralVariants(props.structuralVariants);
+        this.store.setStructuralVariants(props.structuralVariants);
     }
 
     render() {

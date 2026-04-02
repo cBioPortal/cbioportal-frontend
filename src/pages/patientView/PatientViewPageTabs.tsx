@@ -711,28 +711,20 @@ export function tabs(
         /* @ts-ignore */
         tabs.push(...pageComponent.resourceTabs.component);
 
-    const hasSvData =
-        pageComponent.patientViewPageStore.structuralVariantData.isComplete &&
-        pageComponent.patientViewPageStore.structuralVariantData.result &&
-        pageComponent.patientViewPageStore.structuralVariantData.result.length >
-            0;
+    const svData = pageComponent.patientViewPageStore.structuralVariantData;
+    const hideFusionViewer =
+        svData.isPending || !svData.result || svData.result.length === 0;
 
-    if (hasSvData) {
-        tabs.push(
-            <MSKTab
-                key={9}
-                id={PatientViewPageTabs.FusionViewer}
-                linkText="Fusion Viewer"
-            >
-                <FusionViewerTab
-                    structuralVariants={
-                        pageComponent.patientViewPageStore.structuralVariantData
-                            .result!
-                    }
-                />
-            </MSKTab>
-        );
-    }
+    tabs.push(
+        <MSKTab
+            key={9}
+            id={PatientViewPageTabs.FusionViewer}
+            linkText="Fusion Viewer"
+            hide={hideFusionViewer}
+        >
+            <FusionViewerTab structuralVariants={svData.result || []} />
+        </MSKTab>
+    );
 
     tabs.push(...buildCustomTabs(pageComponent.customTabs));
 

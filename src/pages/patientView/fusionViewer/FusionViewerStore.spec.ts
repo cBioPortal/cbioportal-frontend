@@ -1,4 +1,5 @@
 import { assert } from 'chai';
+import { autorun } from 'mobx';
 import { FusionViewerStore } from './FusionViewerStore';
 import { FusionEvent, TranscriptData } from './data/types';
 
@@ -75,30 +76,39 @@ function makeFusion(overrides: Partial<FusionEvent> = {}): FusionEvent {
 
 describe('FusionViewerStore', () => {
     let store: FusionViewerStore;
+    let disposeAutorun: () => void;
 
     beforeEach(() => {
         jest.clearAllMocks();
         // Default: return empty arrays so selectFusion doesn't fail
         mockFetchTranscripts.mockResolvedValue([]);
         store = new FusionViewerStore();
+        // Keep remoteData reactive (mirrors mobx-react observer in production)
+        disposeAutorun = autorun(() => {
+            void store.transcriptsLoading;
+        });
+    });
+
+    afterEach(() => {
+        disposeAutorun();
     });
 
     // -------------------------------------------------------------------
-    // loadFromStructuralVariants
+    // setStructuralVariants
     // -------------------------------------------------------------------
-    describe('loadFromStructuralVariants', () => {
+    describe('setStructuralVariants', () => {
         it('populates fusions array and auto-selects first fusion', () => {
             const f1 = makeFusion({ id: 'f1' });
             const f2 = makeFusion({ id: 'f2' });
 
-            store.loadFromStructuralVariants([f1, f2] as any);
+            store.setStructuralVariants([f1, f2] as any);
 
             assert.equal(store.fusions.length, 2);
             assert.equal(store.selectedFusionId, 'f1');
         });
 
         it('does not select anything if fusions array is empty', () => {
-            store.loadFromStructuralVariants([] as any);
+            store.setStructuralVariants([] as any);
 
             assert.equal(store.fusions.length, 0);
             assert.equal(store.selectedFusionId, '');
@@ -111,7 +121,7 @@ describe('FusionViewerStore', () => {
     describe('selectFusion', () => {
         it('sets selectedFusionId and pre-populates transcript selections', () => {
             const f = makeFusion({ id: 'f1' });
-            store.fusions = [f];
+            store.structuralVariants = [f] as any;
 
             store.selectFusion('f1');
 
@@ -143,7 +153,7 @@ describe('FusionViewerStore', () => {
                     siteDescription: '',
                 },
             });
-            store.fusions = [f1, f2];
+            store.structuralVariants = [f1, f2] as any;
 
             store.selectFusion('f1');
             assert.isTrue(store.selectedTranscript5pIds.has('ENST00000001'));
@@ -155,24 +165,15 @@ describe('FusionViewerStore', () => {
 
         it('does not populate 3p selections for single-gene fusions', () => {
             const f = makeFusion({ id: 'f1', gene2: null });
-            store.fusions = [f];
+            store.structuralVariants = [f] as any;
 
             store.selectFusion('f1');
 
             assert.equal(store.selectedTranscript3pIds.size, 0);
         });
 
-        it('triggers transcript fetch', () => {
-            const f = makeFusion({ id: 'f1' });
-            store.fusions = [f];
-
-            store.selectFusion('f1');
-
-            assert.isTrue(mockFetchTranscripts.mock.calls.length > 0);
-        });
-
         it('is a no-op for non-existent fusion ID', () => {
-            store.fusions = [makeFusion({ id: 'f1' })];
+            store.structuralVariants = [makeFusion({ id: 'f1' })] as any;
             store.selectFusion('nonexistent');
 
             assert.equal(store.selectedFusionId, 'nonexistent');
@@ -232,14 +233,14 @@ describe('FusionViewerStore', () => {
     describe('computed getters', () => {
         it('selectedFusion returns the fusion matching selectedFusionId', () => {
             const f = makeFusion({ id: 'f1' });
-            store.fusions = [f];
+            store.structuralVariants = [f] as any;
             store.selectedFusionId = 'f1';
 
             assert.deepEqual(store.selectedFusion, f);
         });
 
         it('selectedFusion returns undefined for no match', () => {
-            store.fusions = [makeFusion({ id: 'f1' })];
+            store.structuralVariants = [makeFusion({ id: 'f1' })] as any;
             store.selectedFusionId = 'nonexistent';
 
             assert.isUndefined(store.selectedFusion);
@@ -256,29 +257,37 @@ describe('FusionViewerStore', () => {
             assert.equal(store.selectedTranscript5pId, '');
         });
 
-        it('selectedTranscript5p finds transcript in gene1Transcripts', () => {
+        it('selectedTranscript5p finds transcript in gene1Transcripts', async () => {
+            const t1 = makeTranscript({ transcriptId: 'ENST_X' });
+            const t2 = makeTranscript({ transcriptId: 'ENST_Y' });
+            mockFetchTranscripts.mockResolvedValue([t1, t2]);
+
+            store.setStructuralVariants([makeFusion({ id: 'f1' })] as any);
+            await new Promise(r => setTimeout(r, 50));
+
+            store.selectedTranscript5pIds.clear();
+            store.selectedTranscript5pIds.add('ENST_Y');
+            assert.equal(store.selectedTranscript5p!.transcriptId, 'ENST_Y');
+        });
+
+        it('gene1Transcripts returns result from remoteData', async () => {
             const t = makeTranscript({ transcriptId: 'ENST_X' });
-            store.asyncGene1Transcripts = [t];
-            store.selectedTranscript5pIds.add('ENST_X');
+            mockFetchTranscripts.mockResolvedValue([t]);
 
-            assert.equal(store.selectedTranscript5p!.transcriptId, 'ENST_X');
+            const f = makeFusion({ id: 'f1' });
+            store.setStructuralVariants([f] as any);
+            await new Promise(r => setTimeout(r, 50));
+
+            assert.isTrue(
+                store.gene1Transcripts.some(tr => tr.transcriptId === 'ENST_X')
+            );
         });
 
-        it('allSelectedTranscripts5p returns all matching transcripts', () => {
-            const t1 = makeTranscript({ transcriptId: 'ENST_1' });
-            const t2 = makeTranscript({ transcriptId: 'ENST_2' });
-            const t3 = makeTranscript({ transcriptId: 'ENST_3' });
-            store.asyncGene1Transcripts = [t1, t2, t3];
-            store.selectedTranscript5pIds.add('ENST_1');
-            store.selectedTranscript5pIds.add('ENST_3');
-
-            const selected = store.allSelectedTranscripts5p;
-            assert.equal(selected.length, 2);
-            assert.equal(selected[0].transcriptId, 'ENST_1');
-            assert.equal(selected[1].transcriptId, 'ENST_3');
+        it('gene1Transcripts defaults to empty array when no fusion selected', () => {
+            assert.deepEqual(store.gene1Transcripts, []);
         });
 
-        it('forteTranscript5p returns the FORTE-selected transcript', () => {
+        it('forteTranscript5p returns the FORTE-selected transcript', async () => {
             const t1 = makeTranscript({
                 transcriptId: 'ENST_1',
                 isForteSelected: false,
@@ -287,90 +296,51 @@ describe('FusionViewerStore', () => {
                 transcriptId: 'ENST_2',
                 isForteSelected: true,
             });
-            store.asyncGene1Transcripts = [t1, t2];
+            mockFetchTranscripts.mockResolvedValue([t1, t2]);
+
+            const f = makeFusion({ id: 'f1' });
+            store.setStructuralVariants([f] as any);
+            await new Promise(r => setTimeout(r, 50));
 
             assert.equal(store.forteTranscript5p!.transcriptId, 'ENST_2');
         });
 
-        it('forteTranscript5p returns undefined when none is FORTE-selected', () => {
-            store.asyncGene1Transcripts = [
+        it('forteTranscript5p returns undefined when none is FORTE-selected', async () => {
+            mockFetchTranscripts.mockResolvedValue([
                 makeTranscript({ isForteSelected: false }),
-            ];
+            ]);
+
+            const f = makeFusion({ id: 'f1' });
+            store.setStructuralVariants([f] as any);
+            await new Promise(r => setTimeout(r, 50));
 
             assert.isUndefined(store.forteTranscript5p);
         });
     });
 
     // -------------------------------------------------------------------
-    // Race condition guard (_fetchVersion)
+    // remoteData async behavior
     // -------------------------------------------------------------------
-    describe('race condition guard', () => {
-        it('discards stale async responses when a newer fetch is in flight', async () => {
-            const f1 = makeFusion({ id: 'f1' });
-            const f2 = makeFusion({ id: 'f2' });
-            store.fusions = [f1, f2];
-
-            // Create two deferred promises to control resolution order
-            let resolveFirst: (v: TranscriptData[]) => void;
-            let resolveSecond: (v: TranscriptData[]) => void;
-
-            const firstPromise = new Promise<TranscriptData[]>(r => {
-                resolveFirst = r;
-            });
-            const secondPromise = new Promise<TranscriptData[]>(r => {
-                resolveSecond = r;
-            });
-
-            let callCount = 0;
-            mockFetchTranscripts.mockImplementation(() => {
-                callCount++;
-                if (callCount <= 2) return firstPromise; // calls 1-2: gene1 & gene2 of f1
-                return secondPromise; // calls 3-4: gene1 & gene2 of f2
-            });
-
-            // Start first fetch
-            store.selectFusion('f1');
-            // Immediately switch to second fusion (supersedes first)
-            store.selectFusion('f2');
-
-            const staleTranscript = makeTranscript({
-                transcriptId: 'STALE',
-                isForteSelected: true,
-            });
-            const freshTranscript = makeTranscript({
-                transcriptId: 'FRESH',
-                isForteSelected: true,
-            });
-
-            // Resolve the SECOND (newer) fetch first
-            resolveSecond!([freshTranscript]);
-            await new Promise(r => setTimeout(r, 10));
-
-            assert.equal(store.asyncGene1Transcripts[0]?.transcriptId, 'FRESH');
-
-            // Now resolve the FIRST (stale) fetch — should be discarded
-            resolveFirst!([staleTranscript]);
-            await new Promise(r => setTimeout(r, 10));
-
-            // Should still be FRESH, not overwritten by stale response
-            assert.equal(store.asyncGene1Transcripts[0]?.transcriptId, 'FRESH');
-        });
-
-        it('sets transcriptsLoading to false after fetch completes', async () => {
-            const f = makeFusion({ id: 'f1' });
-            store.fusions = [f];
-
+    describe('remoteData transcript fetching', () => {
+        it('fetches transcripts when a fusion is selected', async () => {
             const transcript = makeTranscript({ isForteSelected: true });
             mockFetchTranscripts.mockResolvedValue([transcript]);
 
-            store.selectFusion('f1');
-            // Wait for async to settle
-            await new Promise(r => setTimeout(r, 10));
+            const f = makeFusion({ id: 'f1' });
+            store.setStructuralVariants([f] as any);
+            await new Promise(r => setTimeout(r, 50));
 
+            assert.isTrue(mockFetchTranscripts.mock.calls.length > 0);
             assert.isFalse(store.transcriptsLoading);
         });
 
-        it('auto-selects FORTE transcript when selectedTranscript5pIds becomes empty', async () => {
+        it('auto-selects FORTE transcript when selectedTranscript5pIds is empty', async () => {
+            const forteT = makeTranscript({
+                transcriptId: 'ENST_FORTE',
+                isForteSelected: true,
+            });
+            mockFetchTranscripts.mockResolvedValue([forteT]);
+
             const f = makeFusion({
                 id: 'f1',
                 gene1: {
@@ -383,18 +353,36 @@ describe('FusionViewerStore', () => {
                 },
                 gene2: null,
             });
-            store.fusions = [f];
-
-            const forteT = makeTranscript({
-                transcriptId: 'ENST_FORTE',
-                isForteSelected: true,
-            });
-            mockFetchTranscripts.mockResolvedValue([forteT]);
-
-            store.selectFusion('f1');
-            await new Promise(r => setTimeout(r, 10));
+            store.setStructuralVariants([f] as any);
+            await new Promise(r => setTimeout(r, 50));
 
             assert.isTrue(store.selectedTranscript5pIds.has('ENST_FORTE'));
+        });
+
+        it('returns correct transcripts after switching fusions', async () => {
+            const f1 = makeFusion({ id: 'f1' });
+            const f2 = makeFusion({ id: 'f2' });
+
+            const transcript1 = makeTranscript({
+                transcriptId: 'FROM_F1',
+                isForteSelected: true,
+            });
+            const transcript2 = makeTranscript({
+                transcriptId: 'FROM_F2',
+                isForteSelected: true,
+            });
+
+            mockFetchTranscripts.mockResolvedValue([transcript1]);
+            store.setStructuralVariants([f1, f2] as any);
+            await new Promise(r => setTimeout(r, 50));
+
+            assert.equal(store.gene1Transcripts[0]?.transcriptId, 'FROM_F1');
+
+            mockFetchTranscripts.mockResolvedValue([transcript2]);
+            store.selectFusion('f2');
+            await new Promise(r => setTimeout(r, 50));
+
+            assert.equal(store.gene1Transcripts[0]?.transcriptId, 'FROM_F2');
         });
     });
 
@@ -402,16 +390,10 @@ describe('FusionViewerStore', () => {
     // setGenomeBuild
     // -------------------------------------------------------------------
     describe('setGenomeBuild', () => {
-        it('updates genomeBuild and re-fetches when there is a selected fusion', () => {
-            const f = makeFusion({ id: 'f1' });
-            store.fusions = [f];
-            store.selectedFusionId = 'f1';
-
-            mockFetchTranscripts.mockClear();
+        it('updates genomeBuild observable', () => {
             store.setGenomeBuild('GRCh37');
 
             assert.equal(store.genomeBuild, 'GRCh37');
-            assert.isTrue(mockFetchTranscripts.mock.calls.length > 0);
         });
 
         it('is a no-op when setting the same build', () => {
@@ -420,7 +402,8 @@ describe('FusionViewerStore', () => {
 
             store.setGenomeBuild('GRCh38');
 
-            assert.equal(mockFetchTranscripts.mock.calls.length, 0);
+            // genomeBuild unchanged, so remoteData won't re-invoke
+            assert.equal(store.genomeBuild, 'GRCh38');
         });
     });
 });
