@@ -13,6 +13,7 @@ import {
     fetchTranscriptsForGeneWithFallback,
     GenomeBuild,
 } from './data/genomeNexusTranscriptService';
+import { GENOME_ID_TO_GENOME_BUILD } from 'shared/lib/referenceGenomeUtils';
 
 /**
  * MobX store for the Fusion Viewer tab.
@@ -52,16 +53,8 @@ export class FusionViewerStore {
             );
         },
         onResult: (result?: TranscriptData[]) => {
-            if (this.selectedTranscript5pIds.size === 0 && result) {
-                const forte = result.find(
-                    (t: TranscriptData) => t.isForteSelected
-                );
-                if (forte) {
-                    this.selectedTranscript5pIds.add(forte.transcriptId);
-                } else if (result.length > 0) {
-                    this.selectedTranscript5pIds.add(result[0].transcriptId);
-                }
-            }
+            if (!result) return;
+            pruneAndFallback(this.selectedTranscript5pIds, result);
         },
         default: [],
     });
@@ -77,21 +70,8 @@ export class FusionViewerStore {
             );
         },
         onResult: (result?: TranscriptData[]) => {
-            const fusion = this.selectedFusion;
-            if (
-                fusion?.gene2 &&
-                this.selectedTranscript3pIds.size === 0 &&
-                result
-            ) {
-                const forte = result.find(
-                    (t: TranscriptData) => t.isForteSelected
-                );
-                if (forte) {
-                    this.selectedTranscript3pIds.add(forte.transcriptId);
-                } else if (result.length > 0) {
-                    this.selectedTranscript3pIds.add(result[0].transcriptId);
-                }
-            }
+            if (!result || !this.selectedFusion?.gene2) return;
+            pruneAndFallback(this.selectedTranscript3pIds, result);
         },
         default: [],
     });
@@ -110,8 +90,20 @@ export class FusionViewerStore {
     // -----------------------------------------------------------------------
 
     @action
-    public setStructuralVariants(svs: StructuralVariant[]): void {
+    public setStructuralVariants(
+        svs: StructuralVariant[],
+        referenceGenome?: string
+    ): void {
         this.structuralVariants = svs;
+        if (referenceGenome) {
+            const mapped =
+                GENOME_ID_TO_GENOME_BUILD[
+                    referenceGenome as keyof typeof GENOME_ID_TO_GENOME_BUILD
+                ];
+            if (mapped === 'GRCh37' || mapped === 'GRCh38') {
+                this.genomeBuild = mapped;
+            }
+        }
         this.selectedFusionId = '';
         this.selectedTranscript5pIds.clear();
         this.selectedTranscript3pIds.clear();
@@ -123,14 +115,14 @@ export class FusionViewerStore {
 
     @action
     public selectFusion(fusionId: string): void {
+        const fusion = this.fusions.find(f => f.id === fusionId);
+        if (!fusion) return;
+
         this.selectedFusionId = fusionId;
 
         // Reset transcript selections
         this.selectedTranscript5pIds.clear();
         this.selectedTranscript3pIds.clear();
-
-        const fusion = this.fusions.find(f => f.id === fusionId);
-        if (!fusion) return;
 
         const default5pId = stripVersionSuffix(
             fusion.gene1.selectedTranscriptId
@@ -170,12 +162,6 @@ export class FusionViewerStore {
         } else {
             this.selectedTranscript3pIds.add(transcriptId);
         }
-    }
-
-    @action
-    public setGenomeBuild(build: GenomeBuild): void {
-        if (build === this.genomeBuild) return;
-        this.genomeBuild = build;
     }
 
     // -----------------------------------------------------------------------
@@ -265,4 +251,29 @@ export class FusionViewerStore {
 
 function stripVersionSuffix(transcriptId: string): string {
     return transcriptId.replace(/\.\d+$/, '');
+}
+
+/**
+ * Prune selected transcript IDs against the fetched result.
+ * If all selected IDs are invalid (not in result), fall back to
+ * the FORTE-selected transcript or the first available.
+ */
+function pruneAndFallback(
+    selectedIds: ObservableSet<string>,
+    result: TranscriptData[]
+): void {
+    const validIds = new Set(result.map(t => t.transcriptId));
+
+    // Remove any selected IDs not present in the result
+    for (const id of Array.from(selectedIds)) {
+        if (!validIds.has(id)) {
+            selectedIds.delete(id);
+        }
+    }
+
+    // If nothing remains selected, fall back
+    if (selectedIds.size === 0 && result.length > 0) {
+        const forte = result.find(t => t.isForteSelected);
+        selectedIds.add(forte ? forte.transcriptId : result[0].transcriptId);
+    }
 }

@@ -7,9 +7,9 @@ import { FusionInfoBar } from './FusionInfoBar';
 import { FusionDiagramSVG } from './FusionDiagramSVG';
 import styles from './styles.module.scss';
 
-// TODO: When FORTE adds a separate FusionEvent type, accept that here too
 interface IFusionViewerTabProps {
     structuralVariants: StructuralVariant[];
+    referenceGenome?: string;
 }
 
 @observer
@@ -19,7 +19,19 @@ export class FusionViewerTab extends React.Component<IFusionViewerTabProps> {
     constructor(props: IFusionViewerTabProps) {
         super(props);
         this.store = new FusionViewerStore();
-        this.store.setStructuralVariants(props.structuralVariants);
+        this.store.setStructuralVariants(
+            props.structuralVariants,
+            props.referenceGenome
+        );
+    }
+
+    componentDidUpdate(prevProps: IFusionViewerTabProps) {
+        if (prevProps.structuralVariants !== this.props.structuralVariants) {
+            this.store.setStructuralVariants(
+                this.props.structuralVariants,
+                this.props.referenceGenome
+            );
+        }
     }
 
     render() {
