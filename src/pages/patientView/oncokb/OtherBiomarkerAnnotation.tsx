@@ -17,7 +17,7 @@ export const OtherBiomarkerAnnotation: React.FunctionComponent<{
     return (
         <span
             className="clinical-spans"
-            style={{ display: 'inline-flex', alignItems: 'center' }}
+            style={{ display: 'inline-flex' }}
         >
             {OTHER_BIOMARKER_NAME[props.type]}
             <span
