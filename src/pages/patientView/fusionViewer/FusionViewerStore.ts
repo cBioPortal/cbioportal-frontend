@@ -4,8 +4,8 @@ import {
     makeObservable,
     observable,
     ObservableSet,
-    runInAction,
 } from 'mobx';
+import { remoteData } from 'cbioportal-frontend-commons';
 import { StructuralVariant } from 'cbioportal-ts-api-client';
 import { FusionEvent, TranscriptData } from './data/types';
 import { convertStructuralVariantsToFusionEvents } from './data/structuralVariantAdapter';
@@ -19,7 +19,7 @@ import {
  * Uses cBioPortal StructuralVariant data with Genome Nexus for transcript lookup.
  */
 export class FusionViewerStore {
-    @observable public fusions: FusionEvent[] = [];
+    @observable public structuralVariants: StructuralVariant[] = [];
     @observable public selectedFusionId: string = '';
 
     // Multi-select transcript IDs (checkbox UI)
@@ -30,19 +30,79 @@ export class FusionViewerStore {
         string
     > = observable.set<string>();
 
-    // Async transcript data
-    @observable public asyncGene1Transcripts: TranscriptData[] = [];
-    @observable public asyncGene2Transcripts: TranscriptData[] = [];
-    @observable public transcriptsLoading: boolean = false;
-
     // Genome build selection (GRCh38 or GRCh37)
     @observable public genomeBuild: GenomeBuild = 'GRCh38';
 
-    // Guard against stale async responses
-    private _fetchVersion: number = 0;
-
     constructor() {
         makeObservable(this);
+    }
+
+    // -----------------------------------------------------------------------
+    // Async transcript fetching via remoteData
+    // -----------------------------------------------------------------------
+
+    readonly gene1TranscriptsRemote = remoteData<TranscriptData[]>({
+        invoke: async () => {
+            const fusion = this.selectedFusion;
+            if (!fusion) return [];
+            return fetchTranscriptsForGeneWithFallback(
+                fusion.gene1.symbol,
+                fusion.gene1.selectedTranscriptId,
+                this.genomeBuild
+            );
+        },
+        onResult: (result?: TranscriptData[]) => {
+            if (this.selectedTranscript5pIds.size === 0 && result) {
+                const forte = result.find(
+                    (t: TranscriptData) => t.isForteSelected
+                );
+                if (forte) {
+                    this.selectedTranscript5pIds.add(forte.transcriptId);
+                } else if (result.length > 0) {
+                    this.selectedTranscript5pIds.add(result[0].transcriptId);
+                }
+            }
+        },
+        default: [],
+    });
+
+    readonly gene2TranscriptsRemote = remoteData<TranscriptData[]>({
+        invoke: async () => {
+            const fusion = this.selectedFusion;
+            if (!fusion || !fusion.gene2) return [];
+            return fetchTranscriptsForGeneWithFallback(
+                fusion.gene2.symbol,
+                fusion.gene2.selectedTranscriptId,
+                this.genomeBuild
+            );
+        },
+        onResult: (result?: TranscriptData[]) => {
+            const fusion = this.selectedFusion;
+            if (
+                fusion?.gene2 &&
+                this.selectedTranscript3pIds.size === 0 &&
+                result
+            ) {
+                const forte = result.find(
+                    (t: TranscriptData) => t.isForteSelected
+                );
+                if (forte) {
+                    this.selectedTranscript3pIds.add(forte.transcriptId);
+                } else if (result.length > 0) {
+                    this.selectedTranscript3pIds.add(result[0].transcriptId);
+                }
+            }
+        },
+        default: [],
+    });
+
+    // -----------------------------------------------------------------------
+    // Derived fusions (reactive)
+    // -----------------------------------------------------------------------
+
+    @computed
+    public get fusions(): FusionEvent[] {
+        return convertStructuralVariantsToFusionEvents(this.structuralVariants);
     }
 
     // -----------------------------------------------------------------------
@@ -50,10 +110,14 @@ export class FusionViewerStore {
     // -----------------------------------------------------------------------
 
     @action
-    public loadFromStructuralVariants(svs: StructuralVariant[]): void {
-        this.fusions = convertStructuralVariantsToFusionEvents(svs);
-        if (this.fusions.length > 0) {
-            this.selectFusion(this.fusions[0].id);
+    public setStructuralVariants(svs: StructuralVariant[]): void {
+        this.structuralVariants = svs;
+        this.selectedFusionId = '';
+        this.selectedTranscript5pIds.clear();
+        this.selectedTranscript3pIds.clear();
+        const fusions = this.fusions;
+        if (fusions.length > 0) {
+            this.selectFusion(fusions[0].id);
         }
     }
 
@@ -83,8 +147,6 @@ export class FusionViewerStore {
                 this.selectedTranscript3pIds.add(default3pId);
             }
         }
-
-        this.fetchTranscriptsForSelectedFusion(fusion);
     }
 
     @action
@@ -114,87 +176,6 @@ export class FusionViewerStore {
     public setGenomeBuild(build: GenomeBuild): void {
         if (build === this.genomeBuild) return;
         this.genomeBuild = build;
-
-        // Re-fetch transcripts for the current fusion with the new build
-        if (this.selectedFusion) {
-            this.fetchTranscriptsForSelectedFusion(this.selectedFusion);
-        }
-    }
-
-    // -----------------------------------------------------------------------
-    // Async transcript fetching
-    // -----------------------------------------------------------------------
-
-    private async fetchTranscriptsForSelectedFusion(
-        fusion: FusionEvent
-    ): Promise<void> {
-        const version = ++this._fetchVersion;
-        runInAction(() => {
-            this.transcriptsLoading = true;
-        });
-
-        try {
-            const build = this.genomeBuild;
-
-            const gene1Promise = fetchTranscriptsForGeneWithFallback(
-                fusion.gene1.symbol,
-                fusion.gene1.selectedTranscriptId,
-                build
-            );
-
-            const gene2Promise = fusion.gene2
-                ? fetchTranscriptsForGeneWithFallback(
-                      fusion.gene2.symbol,
-                      fusion.gene2.selectedTranscriptId,
-                      build
-                  )
-                : Promise.resolve([]);
-
-            const [g1Transcripts, g2Transcripts] = await Promise.all([
-                gene1Promise,
-                gene2Promise,
-            ]);
-
-            runInAction(() => {
-                if (version !== this._fetchVersion) return;
-                this.asyncGene1Transcripts = g1Transcripts;
-                this.asyncGene2Transcripts = g2Transcripts;
-                this.transcriptsLoading = false;
-
-                // Auto-select the FORTE transcript if we haven't already
-                if (this.selectedTranscript5pIds.size === 0) {
-                    const forte5p = g1Transcripts.find(
-                        (t: TranscriptData) => t.isForteSelected
-                    );
-                    if (forte5p) {
-                        this.selectedTranscript5pIds.add(forte5p.transcriptId);
-                    } else if (g1Transcripts.length > 0) {
-                        this.selectedTranscript5pIds.add(
-                            g1Transcripts[0].transcriptId
-                        );
-                    }
-                }
-
-                if (fusion.gene2 && this.selectedTranscript3pIds.size === 0) {
-                    const forte3p = g2Transcripts.find(
-                        (t: TranscriptData) => t.isForteSelected
-                    );
-                    if (forte3p) {
-                        this.selectedTranscript3pIds.add(forte3p.transcriptId);
-                    } else if (g2Transcripts.length > 0) {
-                        this.selectedTranscript3pIds.add(
-                            g2Transcripts[0].transcriptId
-                        );
-                    }
-                }
-            });
-        } catch (error) {
-            console.warn('Failed to fetch transcripts:', error);
-            runInAction(() => {
-                if (version !== this._fetchVersion) return;
-                this.transcriptsLoading = false;
-            });
-        }
     }
 
     // -----------------------------------------------------------------------
@@ -208,12 +189,20 @@ export class FusionViewerStore {
 
     @computed
     public get gene1Transcripts(): TranscriptData[] {
-        return this.asyncGene1Transcripts;
+        return this.gene1TranscriptsRemote.result || [];
     }
 
     @computed
     public get gene2Transcripts(): TranscriptData[] {
-        return this.asyncGene2Transcripts;
+        return this.gene2TranscriptsRemote.result || [];
+    }
+
+    @computed
+    public get transcriptsLoading(): boolean {
+        return (
+            this.gene1TranscriptsRemote.isPending ||
+            this.gene2TranscriptsRemote.isPending
+        );
     }
 
     // Primary selected transcript (first in the set) — used by diagram

@@ -42,9 +42,6 @@ export interface FusionDiagramSVGProps {
     userTranscripts5p?: TranscriptData[];
     /** Multiple user-selected transcripts for 3' gene */
     userTranscripts3p?: TranscriptData[];
-    // Backward compat: single transcript props
-    userTranscript5p?: TranscriptData;
-    userTranscript3p?: TranscriptData;
 }
 
 // ---------------------------------------------------------------------------
@@ -55,9 +52,8 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
     render() {
         const { fusion, forteTranscript5p, forteTranscript3p } = this.props;
 
-        // Resolve multi vs single transcript props
-        const userTranscripts5p = this.resolveUserTranscripts5p();
-        const userTranscripts3p = this.resolveUserTranscripts3p();
+        const userTranscripts5p = this.props.userTranscripts5p || [];
+        const userTranscripts3p = this.props.userTranscripts3p || [];
 
         const { gene1, gene2 } = fusion;
 
@@ -278,31 +274,5 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
                 )}
             </svg>
         );
-    }
-
-    private resolveUserTranscripts5p(): TranscriptData[] {
-        if (
-            this.props.userTranscripts5p &&
-            this.props.userTranscripts5p.length > 0
-        ) {
-            return this.props.userTranscripts5p;
-        }
-        if (this.props.userTranscript5p) {
-            return [this.props.userTranscript5p];
-        }
-        return [];
-    }
-
-    private resolveUserTranscripts3p(): TranscriptData[] {
-        if (
-            this.props.userTranscripts3p &&
-            this.props.userTranscripts3p.length > 0
-        ) {
-            return this.props.userTranscripts3p;
-        }
-        if (this.props.userTranscript3p) {
-            return [this.props.userTranscript3p];
-        }
-        return [];
     }
 }
