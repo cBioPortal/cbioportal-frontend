@@ -56,6 +56,8 @@ export interface GeneTrackProps {
     y: number;
     width: number;
     is5Prime: boolean;
+    /** Overall track height (max of both genes) so breakpoint line spans full height */
+    trackHeight?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -84,6 +86,7 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
     y,
     width,
     is5Prime,
+    trackHeight,
 }) => {
     // Resolve: prefer array prop, fall back to single
     const userTranscripts: TranscriptData[] = userTranscriptsProp
@@ -198,7 +201,9 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
     // ---- Breakpoint line ----
     const totalUserHeight = userTranscripts.length * USER_TRACK_HEIGHT;
     const bpLineTop = forteY - 4;
-    const bpLineBottom = forteY + FORTE_TRACK_HEIGHT + totalUserHeight + 4;
+    const bpLineBottom = trackHeight
+        ? y + trackHeight - BREAKPOINT_EXTRA + 4
+        : forteY + FORTE_TRACK_HEIGHT + totalUserHeight + 4;
 
     return (
         <g>
@@ -268,11 +273,17 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
                 />
             </BreakpointTooltip>
 
-            {/* Breakpoint coordinate label */}
+            {/* Breakpoint coordinate label — clamp anchor to avoid clipping */}
             <text
                 x={bpX}
                 y={bpLineBottom + 10}
-                textAnchor="middle"
+                textAnchor={
+                    bpX - x < width * 0.15
+                        ? 'start'
+                        : x + width - bpX < width * 0.15
+                        ? 'end'
+                        : 'middle'
+                }
                 fontSize={COORD_FONT_SIZE}
                 fill={COLOR_BREAKPOINT}
             >

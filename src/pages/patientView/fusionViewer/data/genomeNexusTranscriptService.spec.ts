@@ -26,7 +26,7 @@ jest.mock('config/config', () => ({
 import {
     fetchTranscriptsFromEnsembl,
     fetchTranscriptsForGeneWithFallback,
-} from './ensemblTranscriptService';
+} from './genomeNexusTranscriptService';
 
 // ---------------------------------------------------------------------------
 // Test data builders
@@ -64,7 +64,7 @@ function uniqueGene(): string {
     return `TEST_GENE_${++geneCounter}`;
 }
 
-describe('ensemblTranscriptService', () => {
+describe('genomeNexusTranscriptService', () => {
     beforeEach(() => {
         jest.clearAllMocks();
     });
@@ -185,9 +185,7 @@ describe('ensemblTranscriptService', () => {
 
         it('returns empty array on fetch error', async () => {
             const gene = uniqueGene();
-            mockFetchTranscripts.mockRejectedValue(
-                new Error('Network error')
-            );
+            mockFetchTranscripts.mockRejectedValue(new Error('Network error'));
 
             const result = await fetchTranscriptsFromEnsembl(gene, 'GRCh38');
 

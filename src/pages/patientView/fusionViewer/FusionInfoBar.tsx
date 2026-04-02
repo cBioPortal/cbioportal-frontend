@@ -2,7 +2,7 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import { FusionViewerStore } from './FusionViewerStore';
 import { TranscriptData, COLOR_5PRIME, COLOR_3PRIME } from './data/types';
-import { GenomeBuild } from './data/ensemblTranscriptService';
+import { GenomeBuild } from './data/genomeNexusTranscriptService';
 import { inlineStyles } from './FusionInfoBarStyles';
 
 interface IFusionInfoBarProps {

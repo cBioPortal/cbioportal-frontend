@@ -12,7 +12,7 @@ import { convertStructuralVariantsToFusionEvents } from './data/structuralVarian
 import {
     fetchTranscriptsForGeneWithFallback,
     GenomeBuild,
-} from './data/ensemblTranscriptService';
+} from './data/genomeNexusTranscriptService';
 
 /**
  * MobX store for the Fusion Viewer tab.
@@ -163,7 +163,9 @@ export class FusionViewerStore {
 
                 // Auto-select the FORTE transcript if we haven't already
                 if (this.selectedTranscript5pIds.size === 0) {
-                    const forte5p = g1Transcripts.find((t: TranscriptData) => t.isForteSelected);
+                    const forte5p = g1Transcripts.find(
+                        (t: TranscriptData) => t.isForteSelected
+                    );
                     if (forte5p) {
                         this.selectedTranscript5pIds.add(forte5p.transcriptId);
                     } else if (g1Transcripts.length > 0) {
@@ -174,7 +176,9 @@ export class FusionViewerStore {
                 }
 
                 if (fusion.gene2 && this.selectedTranscript3pIds.size === 0) {
-                    const forte3p = g2Transcripts.find((t: TranscriptData) => t.isForteSelected);
+                    const forte3p = g2Transcripts.find(
+                        (t: TranscriptData) => t.isForteSelected
+                    );
                     if (forte3p) {
                         this.selectedTranscript3pIds.add(forte3p.transcriptId);
                     } else if (g2Transcripts.length > 0) {
