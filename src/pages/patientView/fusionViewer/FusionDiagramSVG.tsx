@@ -198,6 +198,7 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
                     y={geneTrackY}
                     width={GENE_TRACK_WIDTH}
                     is5Prime={true}
+                    trackHeight={geneTrackHeight}
                 />
 
                 {/* 3-prime gene track or intergenic placeholder */}
@@ -215,6 +216,7 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
                         y={geneTrackY}
                         width={GENE_TRACK_WIDTH}
                         is5Prime={false}
+                        trackHeight={geneTrackHeight}
                     />
                 ) : (
                     <g>

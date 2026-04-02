@@ -8,7 +8,7 @@ import { FusionEvent, TranscriptData } from './data/types';
 
 const mockFetchTranscripts = jest.fn();
 
-jest.mock('./data/ensemblTranscriptService', () => ({
+jest.mock('./data/genomeNexusTranscriptService', () => ({
     fetchTranscriptsForGeneWithFallback: (...args: any[]) =>
         mockFetchTranscripts(...args),
 }));
@@ -346,20 +346,14 @@ describe('FusionViewerStore', () => {
             resolveSecond!([freshTranscript]);
             await new Promise(r => setTimeout(r, 10));
 
-            assert.equal(
-                store.asyncGene1Transcripts[0]?.transcriptId,
-                'FRESH'
-            );
+            assert.equal(store.asyncGene1Transcripts[0]?.transcriptId, 'FRESH');
 
             // Now resolve the FIRST (stale) fetch — should be discarded
             resolveFirst!([staleTranscript]);
             await new Promise(r => setTimeout(r, 10));
 
             // Should still be FRESH, not overwritten by stale response
-            assert.equal(
-                store.asyncGene1Transcripts[0]?.transcriptId,
-                'FRESH'
-            );
+            assert.equal(store.asyncGene1Transcripts[0]?.transcriptId, 'FRESH');
         });
 
         it('sets transcriptsLoading to false after fetch completes', async () => {
@@ -400,9 +394,7 @@ describe('FusionViewerStore', () => {
             store.selectFusion('f1');
             await new Promise(r => setTimeout(r, 10));
 
-            assert.isTrue(
-                store.selectedTranscript5pIds.has('ENST_FORTE')
-            );
+            assert.isTrue(store.selectedTranscript5pIds.has('ENST_FORTE'));
         });
     });
 
