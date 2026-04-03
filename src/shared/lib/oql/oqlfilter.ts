@@ -1232,6 +1232,52 @@ export const structVarOQLSpecialValues = [
     STRUCTVARNullGeneStr,
 ];
 
+/**
+ * Removes the entry at the given index from an OQL gene list string and
+ * returns the resulting string. The list is parsed without any default OQL
+ * expansion so that plain genes keep their original form (no profile-default
+ * alteration qualifiers are added). Falls back to returning the original
+ * string unchanged if parsing fails or the index is out of range.
+ *
+ * This is the correct primitive for "Remove track" in the Oncoprint: the
+ * track key `GENETICTRACK_N` corresponds to index N in the parsed gene list.
+ */
+export function removeIndexFromGeneList(
+    geneList: string,
+    indexToRemove: number
+): string {
+    let parsed: (SingleGeneQuery | MergedGeneQuery)[];
+    try {
+        parsed = (oql_parser.parse(geneList) ||
+            []) as (SingleGeneQuery | MergedGeneQuery)[];
+    } catch (e) {
+        console.warn(
+            'removeIndexFromGeneList: failed to parse gene list:',
+            e
+        );
+        return geneList;
+    }
+    if (indexToRemove < 0 || indexToRemove >= parsed.length) {
+        console.warn(
+            `removeIndexFromGeneList: index ${indexToRemove} is out of range ` +
+                `for gene list with ${parsed.length} entries`
+        );
+        return geneList;
+    }
+    return parsed
+        .filter((_, i) => i !== indexToRemove)
+        .map(entry => {
+            if (isMergedGeneQuery(entry)) {
+                const label = entry.label ? `${entry.label}: ` : '';
+                return `[${label}${entry.list
+                    .map(unparseOQLQueryLine)
+                    .join(' ')}]`;
+            }
+            return unparseOQLQueryLine(entry);
+        })
+        .join('\n');
+}
+
 export function uniqueGenesInOQLQuery(oql_query: string): string[] {
     const parse_result: SingleGeneQuery[] = parseOQLQuery(oql_query);
     const genes = parse_result
