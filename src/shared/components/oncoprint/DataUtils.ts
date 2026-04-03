@@ -80,6 +80,12 @@ export type HeatmapCaseDatum = {
     thresholdType?: '<' | '>';
 };
 
+type ValueDatum = {
+    value: number | null;
+    thresholdType?: '<' | '>';
+    alterationSubType?: string;
+};
+
 export type OncoprintMutationType =
     | 'missense'
     | 'inframe'
@@ -157,7 +163,11 @@ export function fillGeneticTrackDatum(
     // must already have all non-disp* fields except trackLabel and data
     newDatum: Partial<GeneticTrackDatum>,
     trackLabel: string,
-    data: GeneticTrackDatum_Data[]
+    data: GeneticTrackDatum_Data[],
+    options?: {
+        isPatientMode?: boolean;
+        expressionSortOrder?: string;
+    }
 ): GeneticTrackDatum {
     newDatum.trackLabel = trackLabel;
     newDatum.data = data;
@@ -168,6 +178,8 @@ export function fillGeneticTrackDatum(
     const dispMutCounts: { [mutType: string]: number } = {};
     const dispGermline: { [mutType: string]: boolean } = {};
     const dispSvCounts: { [svType: string]: number } = {};
+    const mrnaEvents: ValueDatum[] = [];
+    const protEvents: ValueDatum[] = [];
     let structuralVariantCounts: number = 0;
     const caseInsensitiveGermlineMatch = new RegExp(
         MUTATION_STATUS_GERMLINE,
@@ -197,6 +209,13 @@ export function fillGeneticTrackDatum(
                     const mrnaEvent = event.alterationSubType;
                     dispMrnaCounts[mrnaEvent] = dispMrnaCounts[mrnaEvent] || 0;
                     dispMrnaCounts[mrnaEvent] += 1;
+                    mrnaEvents.push({
+                        value:
+                            event.value === undefined
+                                ? null
+                                : (event.value as number | null),
+                        alterationSubType: event.alterationSubType,
+                    });
                 }
                 break;
             case AlterationTypeConstants.PROTEIN_LEVEL:
@@ -204,6 +223,13 @@ export function fillGeneticTrackDatum(
                     const protEvent = event.alterationSubType;
                     dispProtCounts[protEvent] = dispProtCounts[protEvent] || 0;
                     dispProtCounts[protEvent] += 1;
+                    protEvents.push({
+                        value:
+                            event.value === undefined
+                                ? null
+                                : (event.value as number | null),
+                        alterationSubType: event.alterationSubType,
+                    });
                 }
                 break;
             case AlterationTypeConstants.MUTATION_EXTENDED:
@@ -237,8 +263,47 @@ export function fillGeneticTrackDatum(
         svRenderPriority
     );
     newDatum.disp_cna = selectDisplayValue(dispCnaCounts, cnaRenderPriority);
-    newDatum.disp_mrna = selectDisplayValue(dispMrnaCounts, mrnaRenderPriority);
-    newDatum.disp_prot = selectDisplayValue(dispProtCounts, protRenderPriority);
+    if (options?.isPatientMode) {
+        const mrnaRepresentative = selectRepresentingValueDatum(
+            mrnaEvents,
+            options.expressionSortOrder
+        );
+        const protRepresentative = selectRepresentingValueDatum(
+            protEvents,
+            options.expressionSortOrder
+        );
+
+        if (mrnaRepresentative && _.isFinite(mrnaRepresentative.value)) {
+            newDatum.disp_mrna =
+                mrnaRepresentative.alterationSubType ||
+                (mrnaRepresentative.value! > 0 ? 'high' : 'low');
+        } else {
+            newDatum.disp_mrna = selectDisplayValue(
+                dispMrnaCounts,
+                mrnaRenderPriority
+            );
+        }
+
+        if (protRepresentative && _.isFinite(protRepresentative.value)) {
+            newDatum.disp_prot =
+                protRepresentative.alterationSubType ||
+                (protRepresentative.value! > 0 ? 'high' : 'low');
+        } else {
+            newDatum.disp_prot = selectDisplayValue(
+                dispProtCounts,
+                protRenderPriority
+            );
+        }
+    } else {
+        newDatum.disp_mrna = selectDisplayValue(
+            dispMrnaCounts,
+            mrnaRenderPriority
+        );
+        newDatum.disp_prot = selectDisplayValue(
+            dispProtCounts,
+            protRenderPriority
+        );
+    }
     newDatum.disp_mut = selectDisplayValue(dispMutCounts, mutRenderPriority);
     newDatum.disp_germ = newDatum.disp_mut
         ? dispGermline[newDatum.disp_mut]
@@ -328,7 +393,8 @@ export function makeGeneticTrackData(
                 fillGeneticTrackDatum(
                     newDatum,
                     geneSymbolArray.join(' / '),
-                    sampleData
+                    sampleData,
+                    { isPatientMode: false }
                 )
             );
         }
@@ -374,7 +440,8 @@ export function makeGeneticTrackData(
                 fillGeneticTrackDatum(
                     newDatum,
                     geneSymbolArray.join(' / '),
-                    patientData
+                    patientData,
+                    { isPatientMode: true }
                 )
             );
         }
@@ -441,42 +508,10 @@ export function fillHeatmapTrackDatum<
                 // default: the most extreme value (pos. or neg.) is shown for data
                 // sortOrder=ASC: the smallest value is shown for data
                 // sortOrder=DESC: the largest value is shown for data
-                let representingDatum;
-                let bestValue;
-
-                switch (sortOrder) {
-                    case 'ASC':
-                        bestValue = _(dataWithNonNullValues)
-                            .map((d: HeatmapCaseDatum) => d.value as number)
-                            .min();
-                        representingDatum = selectRepresentingDataPoint(
-                            bestValue!,
-                            dataWithNonNullValues,
-                            false
-                        );
-                        break;
-                    case 'DESC':
-                        bestValue = _(dataWithNonNullValues)
-                            .map((d: HeatmapCaseDatum) => d.value as number)
-                            .max();
-                        representingDatum = selectRepresentingDataPoint(
-                            bestValue!,
-                            dataWithNonNullValues,
-                            false
-                        );
-                        break;
-                    default:
-                        bestValue = _.maxBy(
-                            dataWithNonNullValues,
-                            (d: HeatmapCaseDatum) => Math.abs(d.value as number)
-                        )!.value as number;
-                        representingDatum = selectRepresentingDataPoint(
-                            bestValue,
-                            dataWithNonNullValues,
-                            true
-                        );
-                        break;
-                }
+                let representingDatum = selectRepresentingValueDatum(
+                    dataWithNonNullValues,
+                    sortOrder
+                );
 
                 // `data` can contain data points with only NaN values
                 // this is detected by `representingDatum` to be undefined
@@ -501,24 +536,64 @@ export function fillHeatmapTrackDatum<
     return trackDatum;
 }
 
-function selectRepresentingDataPoint(
+function selectRepresentingDataPoint<T extends ValueDatum>(
     bestValue: number,
-    data: HeatmapCaseDatum[],
+    data: T[],
     useAbsolute: boolean
-): HeatmapCaseDatum {
+): T {
     const fFilter = useAbsolute
-        ? (d: HeatmapCaseDatum) => Math.abs(d.value!) === bestValue
-        : (d: HeatmapCaseDatum) => d.value === bestValue;
+        ? (d: T) => Math.abs(d.value!) === bestValue
+        : (d: T) => d.value === bestValue;
     const selData = _.filter(data, fFilter);
     const selDataNoTreshold = _.filter(
         selData,
-        (d: HeatmapCaseDatum) => !d.thresholdType
+        (d: T) => !d.thresholdType
     );
     if (selDataNoTreshold.length > 0) {
         return selDataNoTreshold[0];
     } else {
         return selData[0];
     }
+}
+
+function selectRepresentingValueDatum<T extends ValueDatum>(
+    data: T[],
+    sortOrder?: string
+): T | undefined {
+    if (!data.length) {
+        return undefined;
+    }
+
+    let bestValue: number | undefined;
+    let useAbsolute = false;
+
+    switch (sortOrder) {
+        case 'ASC':
+            bestValue = _(data)
+                .map((d: T) => d.value as number)
+                .min();
+            break;
+        case 'DESC':
+            bestValue = _(data)
+                .map((d: T) => d.value as number)
+                .max();
+            break;
+        default:
+            bestValue = Math.abs(
+                (_.maxBy(data, (d: T) => Math.abs(d.value as number))
+                    ?.value as number | undefined) || 0
+            );
+            useAbsolute = true;
+            break;
+    }
+
+    if (bestValue === undefined) {
+        return undefined;
+    }
+
+    return selectRepresentingDataPoint(bestValue, data, useAbsolute) as
+        | T
+        | undefined;
 }
 
 function fillCategoricalTrackDatum(
