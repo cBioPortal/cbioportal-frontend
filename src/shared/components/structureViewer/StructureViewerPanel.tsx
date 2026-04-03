@@ -455,7 +455,10 @@ export default class StructureViewerPanel extends React.Component<
                     <span>3D Structure</span>
                 </div>
                 <div className="col col-sm-2">
-                    <span className="pull-right" style={{ whiteSpace: 'nowrap' }}>
+                    <span
+                        className="pull-right"
+                        style={{ whiteSpace: 'nowrap' }}
+                    >
                         <i
                             className={classnames('fa', {
                                 'fa-compress': this.isIncreasedSize,

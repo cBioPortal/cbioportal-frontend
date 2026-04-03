@@ -106,8 +106,7 @@ export default class PortalHeader extends React.Component<
                 id: 'chat',
                 text: (
                     <>
-                        Chat{' '}
-                        <strong className={'beta-text'}>Beta!</strong>
+                        Chat <strong className={'beta-text'}>Beta!</strong>
                     </>
                 ),
                 address:

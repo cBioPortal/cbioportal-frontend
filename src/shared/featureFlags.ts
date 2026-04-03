@@ -1,4 +1,5 @@
 export enum FeatureFlagEnum {
     LEFT_TRUNCATION_ADJUSTMENT = 'LEFT_TRUNCATION_ADJUSTMENT',
+    EMBEDDINGS = 'EMBEDDINGS',
     CHAT = 'CHAT',
 }

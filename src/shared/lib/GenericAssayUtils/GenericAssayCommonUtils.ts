@@ -118,9 +118,8 @@ export async function fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecular
     } = {};
     for (const profile of genericAssayProfiles) {
         const suffix = getSuffixOfMolecularProfile(profile);
-        genericAssayMetaGroupByMolecularProfileId[
-            profile.molecularProfileId
-        ] = metaBySuffix[suffix] || [];
+        genericAssayMetaGroupByMolecularProfileId[profile.molecularProfileId] =
+            metaBySuffix[suffix] || [];
     }
 
     return genericAssayMetaGroupByMolecularProfileId;

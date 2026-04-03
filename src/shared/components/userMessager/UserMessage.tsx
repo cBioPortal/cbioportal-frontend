@@ -51,7 +51,6 @@ if (
         //     id: '2024_newsletter_intro',
         // },
     ];
-
 }
 
 interface IUserMessagerProps {
@@ -87,7 +86,7 @@ export default class UserMessager extends React.Component<
         try {
             // Fetch from all providers in parallel
             const providerResults = await Promise.all(
-                STATUS_PROVIDERS.map((provider) => provider.fetchMessages())
+                STATUS_PROVIDERS.map(provider => provider.fetchMessages())
             );
 
             // Flatten the results into a single array
@@ -101,7 +100,7 @@ export default class UserMessager extends React.Component<
     @observable dismissed = false;
 
     get shownMessage() {
-        const messageToShow = _.find(this.messageData.result, (message) => {
+        const messageToShow = _.find(this.messageData.result, message => {
             // not shown in either session or local storage
             // (session is used for remind
             const notYetShown =

@@ -181,7 +181,9 @@ export function parseSamplesSpecifications(
 
     if (case_ids && case_ids.length > 0) {
         // const case_ids_parsed = case_ids.split(/\+|\s+/);
-        const case_ids_parsed= case_ids.trim().split(/\s+|\+(?=[A-Za-z0-9_.-]+:)/)
+        const case_ids_parsed = case_ids
+            .trim()
+            .split(/\s+|\+(?=[A-Za-z0-9_.-]+:)/);
         samplesSpecifications = case_ids_parsed.map((item: string) => {
             const split = item.split(':');
             return {
