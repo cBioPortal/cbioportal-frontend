@@ -178,28 +178,174 @@ function proxyComparisonMethod(target) {
     };
 }
 
+function formatTestTitle(test) {
+    return test.title.trim().replace(/\s/g, '_');
+}
+
+function getTestId(test) {
+    const title = formatTestTitle(test);
+    return `${process.pid}-${title}`;
+}
+
+async function setupNetworkTracker(test) {
+    const testId = getTestId(test);
+
+    const puppeteer = await browser.getPuppeteer();
+    const pages = await puppeteer.pages();
+    if (!pages.length) {
+        return;
+    }
+    const page = pages[pages.length - 1];
+    const cdpSession = await page.target().createCDPSession();
+    await cdpSession.send('Network.enable');
+
+    const tracker = {
+        session: cdpSession,
+        requests: {},
+        networkLog: {},
+        listeners: {},
+    };
+
+    // capture url and start time
+    const requestListener = params => {
+        if (!['Document', 'XHR', 'Fetch'].includes(params.type)) return;
+        tracker.requests[params.requestId] = {
+            url: params.request.url,
+            startTime: params.timestamp,
+            type: params.type,
+        };
+    };
+    cdpSession.on('Network.requestWillBeSent', requestListener);
+
+    // capture status
+    const responseListener = params => {
+        if (tracker.requests[params.requestId]) {
+            tracker.requests[params.requestId].status = params.response.status;
+        }
+    };
+    cdpSession.on('Network.responseReceived', responseListener);
+
+    // capture requests that fail before completion
+    const failedListener = params => {
+        if (tracker.requests[params.requestId]) {
+            const data = tracker.requests[params.requestId];
+            const duration =
+                data.startTime != null
+                    ? (params.timestamp - data.startTime) * 1000
+                    : undefined;
+            tracker.networkLog[params.requestId] = {
+                url: data.url,
+                status: null,
+                type: data.type || null,
+                duration: duration,
+                errorText: params.errorText,
+            };
+            delete tracker.requests[params.requestId];
+        }
+    };
+    cdpSession.on('Network.loadingFailed', failedListener);
+
+    // calculate duration
+    const finishedListener = params => {
+        if (tracker.requests[params.requestId]) {
+            const data = tracker.requests[params.requestId];
+            const duration =
+                data.startTime != null
+                    ? (params.timestamp - data.startTime) * 1000
+                    : undefined;
+
+            tracker.networkLog[params.requestId] = {
+                url: data.url,
+                status: data.status,
+                type: data.type,
+                duration: duration,
+            };
+
+            delete tracker.requests[params.requestId];
+        }
+    };
+    cdpSession.on('Network.loadingFinished', finishedListener);
+
+    tracker.listeners = {
+        requestListener,
+        responseListener,
+        failedListener,
+        finishedListener,
+    };
+
+    // save tracker for afterTest
+    browser._networkTrackers.set(testId, tracker);
+}
+
+async function deleteNetworkTracker(test) {
+    const testId = getTestId(test);
+    const tracker = browser._networkTrackers?.get(testId);
+    if (!tracker) {
+        return;
+    }
+
+    const { session, listeners } = tracker;
+
+    // remove listeners
+    session.removeListener(
+        'Network.requestWillBeSent',
+        listeners.requestListener
+    );
+    session.removeListener(
+        'Network.responseReceived',
+        listeners.responseListener
+    );
+    session.removeListener('Network.loadingFailed', listeners.failedListener);
+    session.removeListener(
+        'Network.loadingFinished',
+        listeners.finishedListener
+    );
+
+    // detach CDP session
+    await session.detach();
+
+    // delete tracker
+    browser._networkTrackers.delete(testId);
+
+    return tracker;
+}
+
 function saveErrorImage(
     test,
     context,
     { error, result, duration, passed, retries },
-    networkLog
+    networkLog,
+    requests
 ) {
     if (error) {
         if (!fs.existsSync(errorDir)) {
             fs.mkdirSync(errorDir, 0o755);
         }
-        const title = test.title.trim().replace(/\s/g, '_');
+        const title = formatTestTitle(test);
         const img = `${errorDir}${title}.png`;
         console.log('ERROR SHOT PATH: ' + img);
         browser.saveScreenshot(img);
 
+        for (const requestId of Object.keys(requests)) {
+            const data = requests[requestId];
+
+            networkLog[requestId] = {
+                url: data.url,
+                status: 'PENDING',
+                type: data.type,
+            };
+        }
+
         // log failed network requests
         if (Object.keys(networkLog).length) {
             const errorLogs = Object.values(networkLog).filter(
-                log => !log.status || log.status >= 400
+                log =>
+                    log.status === 'PENDING' || !log.status || log.status >= 400
             );
             if (errorLogs.length) {
-                console.log(`[network] Failed requests for '${title}':`);
+                console.log(
+                    `[network] Failed or pending requests for '${title}':`
+                );
                 for (const log of errorLogs) {
                     console.log(
                         `[network] ${log.status ?? '-'} ${log.type ??
@@ -257,7 +403,7 @@ exports.config = {
     //
 
     specs: [SPEC_FILE_PATTERN],
-    //specs: ['./local/specs/core/oncoprint.screenshot.spec.js'],
+    // specs: ['./local/specs/core/oncoprint.screenshot.spec.js'],
 
     //exclude: ['./remote/specs/core/groupComparisonLollipop.spec.js'],
 
@@ -478,84 +624,10 @@ exports.config = {
      * @param {Array.<String>} specs        List of spec file paths that are to be run
      * @param {Object}         browser      instance of created browser/device session
      */
-    before: async function(capabilities, specs) {
-        // clear network log
-        this.networkLog = {};
-
-        // Enable network tracking via Puppeteer CDP session
-        try {
-            const puppeteer = await browser.getPuppeteer();
-            const pages = await puppeteer.pages();
-            if (!pages.length) {
-                return;
-            }
-            const page = pages[0];
-            const cdpSession = await page.target().createCDPSession();
-            await cdpSession.send('Network.enable');
-
-            const requestData = {};
-
-            // capture url and start time
-            cdpSession.on('Network.requestWillBeSent', params => {
-                if (!['Document', 'XHR', 'Fetch'].includes(params.type)) return;
-                requestData[params.requestId] = {
-                    url: params.request.url,
-                    startTime: params.timestamp,
-                    type: params.type,
-                };
-            });
-
-            // capture status
-            cdpSession.on('Network.responseReceived', params => {
-                if (requestData[params.requestId]) {
-                    requestData[params.requestId].status =
-                        params.response.status;
-                }
-            });
-
-            // capture requests that fail before completion
-            cdpSession.on('Network.loadingFailed', params => {
-                if (requestData[params.requestId]) {
-                    const data = requestData[params.requestId];
-                    const duration =
-                        data.startTime != null
-                            ? (params.timestamp - data.startTime) * 1000
-                            : undefined;
-                    this.networkLog[params.requestId] = {
-                        url: data.url,
-                        status: null,
-                        type: data.type || null,
-                        duration: duration,
-                        errorText: params.errorText,
-                    };
-                    delete requestData[params.requestId];
-                }
-            });
-
-            // calculate duration
-            cdpSession.on('Network.loadingFinished', params => {
-                if (requestData[params.requestId]) {
-                    const data = requestData[params.requestId];
-                    const duration =
-                        data.startTime !== undefined && data.startTime !== null
-                            ? (params.timestamp - data.startTime) * 1000
-                            : undefined;
-
-                    this.networkLog[params.requestId] = {
-                        url: data.url,
-                        status: data.status,
-                        type: data.type,
-                        duration: duration,
-                    };
-
-                    delete requestData[params.requestId];
-                }
-            });
-        } catch (e) {
-            console.log(
-                '[network] CDP network tracking not available:',
-                e.message
-            );
+    before: function(capabilities, specs) {
+        // initialize tracker map
+        if (!browser._networkTrackers) {
+            browser._networkTrackers = new Map();
         }
     },
     /**
@@ -574,44 +646,74 @@ exports.config = {
     /**
      * Function to be executed before a test (in Mocha/Jasmine) starts.
      */
-    // beforeTest: function (test, context) {
-    // },
+    beforeTest: async function(test, context) {
+        // Enable network tracking via Puppeteer CDP session
+        try {
+            await setupNetworkTracker(test);
+        } catch (e) {
+            console.log(
+                '[network] CDP network tracking not available:',
+                e.message
+            );
+        }
+    },
     /**
      * Hook that gets executed _before_ a hook within the suite starts (e.g. runs before calling
      * beforeEach in Mocha)
      */
-    // beforeHook: function (test, context) {
-    // },
+    beforeHook: async function(test, context) {
+        // Enable network tracking via Puppeteer CDP session
+        try {
+            await setupNetworkTracker(test);
+        } catch (e) {
+            console.log(
+                '[network] CDP network tracking not available:',
+                e.message
+            );
+        }
+    },
     networkLog: {},
     /**
      * Hook that gets executed _after_ a hook within the suite starts (e.g. runs after calling
      * afterEach in Mocha)
      */
-    afterHook: function(
+    afterHook: async function(
         test,
         context,
         { error, result, duration, passed, retries }
     ) {
+        const tracker = await deleteNetworkTracker(test);
+        if (!tracker) {
+            return;
+        }
+
         saveErrorImage(
             test,
             context,
             { error, result, duration, passed, retries },
-            this.networkLog
+            tracker.networkLog,
+            tracker.requests
         );
     },
     /**
      * Function to be executed after a test (in Mocha/Jasmine).
      */
-    afterTest: function(
+    afterTest: async function(
         test,
         context,
         { error, result, duration, passed, retries }
     ) {
+        const tracker = await deleteNetworkTracker(test);
+        if (!tracker) {
+            return;
+        }
+
         saveErrorImage(
             test,
             context,
             { error, result, duration, passed, retries },
-            this.networkLog
+            tracker.networkLog,
+            tracker.requests
         );
     },
     /**

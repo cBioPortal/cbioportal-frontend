@@ -179,12 +179,17 @@ export default class PatientViewMutationTable extends MutationTable<
         // This can lead to cases where there are multiple icons/tooltips in a single cell
         // therefore patient view needs sampleManager to indicate which values match which samples
 
-        this._columns[
-            MutationTableColumnType.CANCER_CELL_FRACTION
-        ] = getDefaultCancerCellFractionColumnDefinition(
-            this.getSamples(),
-            this.props.sampleManager
-        );
+        this._columns[MutationTableColumnType.CANCER_CELL_FRACTION] = {
+            ...getDefaultCancerCellFractionColumnDefinition(
+                this.getSamples(),
+                this.props.sampleManager
+            ),
+            // Show CCF column by default if data exists
+            visible:
+                this.props.existsSomeMutationWithAscnProperty?.[
+                    ASCNAttributes.CCF_EXPECTED_COPIES_STRING
+                ] ?? false,
+        };
 
         this._columns[
             MutationTableColumnType.CLONAL
@@ -193,12 +198,17 @@ export default class PatientViewMutationTable extends MutationTable<
             this.props.sampleManager
         );
 
-        this._columns[
-            MutationTableColumnType.EXPECTED_ALT_COPIES
-        ] = getDefaultExpectedAltCopiesColumnDefinition(
-            this.getSamples(),
-            this.props.sampleManager
-        );
+        this._columns[MutationTableColumnType.EXPECTED_ALT_COPIES] = {
+            ...getDefaultExpectedAltCopiesColumnDefinition(
+                this.getSamples(),
+                this.props.sampleManager
+            ),
+            // Show Expected Alt Copies column by default if data exists
+            visible:
+                this.props.existsSomeMutationWithAscnProperty?.[
+                    ASCNAttributes.EXPECTED_ALT_COPIES_STRING
+                ] ?? false,
+        };
 
         this._columns[
             MutationTableColumnType.ASCN_COPY_NUM

@@ -60,6 +60,7 @@ export interface ICoExpressionVizProps {
     }>;
     mutationCache?: MobxPromiseCache<{ entrezGeneId: number }, Mutation[]>;
     hidden?: boolean;
+    numSamples?: number;
 }
 
 export enum TableMode {
@@ -93,10 +94,16 @@ export class CoExpressionDataStore extends SimpleGetterLazyMobXTableApplicationD
             let selected;
             switch (this.tableMode) {
                 case TableMode.SHOW_POSITIVE:
-                    selected = d.spearmansCorrelation >= 0;
+                    selected =
+                        d.spearmansCorrelation !== null &&
+                        d.spearmansCorrelation !== undefined &&
+                        d.spearmansCorrelation >= 0;
                     break;
                 case TableMode.SHOW_NEGATIVE:
-                    selected = d.spearmansCorrelation <= 0;
+                    selected =
+                        d.spearmansCorrelation !== null &&
+                        d.spearmansCorrelation !== undefined &&
+                        d.spearmansCorrelation <= 0;
                     break;
                 default:
                     selected = true;
@@ -151,7 +158,15 @@ export default class CoExpressionViz extends React.Component<
         invoke: () => {
             const coexpressions = this.coExpressionDataPromise.result!;
 
-            const sortedByPvalue = _.sortBy(coexpressions, [
+            // Separate entries with valid pValues from those with null pValues
+            const withPValue = coexpressions.filter(
+                c => c.pValue !== null && c.pValue !== undefined
+            );
+            const withoutPValue = coexpressions.filter(
+                c => c.pValue === null || c.pValue === undefined
+            );
+
+            const sortedByPvalue = _.sortBy(withPValue, [
                 c => c.pValue,
                 c => c.geneticEntityName,
             ]);
@@ -160,7 +175,16 @@ export default class CoExpressionViz extends React.Component<
             qValues.forEach((qValue, index) => {
                 (sortedByPvalue[index] as CoExpressionWithQ).qValue = qValue;
             });
-            return Promise.resolve(sortedByPvalue as CoExpressionWithQ[]);
+
+            // Assign null qValue to entries without pValue
+            withoutPValue.forEach(c => {
+                (c as CoExpressionWithQ).qValue = null as any;
+            });
+
+            return Promise.resolve([
+                ...sortedByPvalue,
+                ...withoutPValue,
+            ] as CoExpressionWithQ[]);
         },
     });
 
@@ -567,7 +591,12 @@ export default class CoExpressionViz extends React.Component<
                     }
                     center={true}
                     size={'big'}
-                />
+                >
+                    {this.props.numSamples !== undefined &&
+                        (this.props.numSamples <= 500
+                            ? 'Computing correlations across all genes. This may take a few seconds.'
+                            : 'This study has a large number of samples. Computing correlations may take up to 2 minutes.')}
+                </LoadingIndicator>
             </div>
         );
     }

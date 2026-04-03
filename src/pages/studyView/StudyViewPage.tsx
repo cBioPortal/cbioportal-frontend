@@ -312,7 +312,6 @@ export default class StudyViewPage extends React.Component<
 
     @action.bound
     toggleVirtualStudyModal() {
-        debugger;
         this.showVirtualStudyModal = !this.showVirtualStudyModal;
     }
 
@@ -625,6 +624,8 @@ export default class StudyViewPage extends React.Component<
     }
 
     content() {
+        const hideClinicalTab =
+            getServerConfig().skin_hide_clinical_data_tab_study_view === true;
         return (
             <div className="studyView">
                 {this.showBookmarkModal && this.bookmarkModal}
@@ -705,9 +706,7 @@ export default class StudyViewPage extends React.Component<
                                             StudyViewPageTabDescriptions.SUMMARY
                                         }
                                     >
-                                        <StudySummaryTab
-                                            store={this.store}
-                                        ></StudySummaryTab>
+                                        <StudySummaryTab store={this.store} />
                                     </MSKTab>
                                     <MSKTab
                                         key={1}
@@ -718,6 +717,7 @@ export default class StudyViewPage extends React.Component<
                                             StudyViewPageTabDescriptions.CLINICAL_DATA
                                         }
                                         hide={
+                                            hideClinicalTab ||
                                             this.store.selectedSamples.result
                                                 .length === 0
                                         }

@@ -1,7 +1,11 @@
-// set missing globals to make 'import $3Dmol' work
+// set missing globals required by 3dmol in the Jest/jsdom environment:
+// jQuery ($), URL.createObjectURL, and TextEncoder/TextDecoder (for BCIF parsing)
 import $ from 'jquery';
+import { TextEncoder, TextDecoder } from 'util';
 (global as any).$ = $;
 (global as any).URL.createObjectURL = jest.fn();
+(global as any).TextEncoder = TextEncoder;
+(global as any).TextDecoder = TextDecoder;
 
 import { assert } from 'chai';
 import sinon from 'sinon';

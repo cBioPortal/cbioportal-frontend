@@ -77,6 +77,7 @@ import {
     SampleIdentifier,
     SampleMolecularIdentifier,
     SampleTreatmentRow,
+    PatientTreatmentRow,
     StructuralVariant,
     StructuralVariantFilter,
     StructuralVariantFilterQuery,
@@ -111,6 +112,7 @@ import {
 import { PatientSurvival } from 'shared/model/PatientSurvival';
 import { getPatientSurvivals } from 'pages/resultsView/SurvivalStoreHelper';
 import {
+    ALTERATION_FILTER_DEFAULTS,
     AnalysisGroup,
     annotationFilterActive,
     buildSelectedDriverTiersMap,
@@ -186,6 +188,8 @@ import {
     transformSampleDataToSelectedSampleClinicalData,
     updateCustomIntervalFilter,
     invokeGenomicDataCount,
+    invokeGenomicDataCountIncludeSampleid,
+    groupSamplesByMutationStatus,
     invokeMutationDataCount,
     invokeNamespaceDataCount,
     invokeGenericAssayDataCount,
@@ -311,10 +315,6 @@ import {
     initializeCustomDriverAnnotationSettings,
 } from 'shared/alterationFiltering/AnnotationFilteringSettings';
 import { ISettingsMenuButtonVisible } from 'shared/components/driverAnnotations/SettingsMenuButton';
-import {
-    CopyNumberEnrichmentEventType,
-    MutationEnrichmentEventType,
-} from 'shared/lib/comparison/ComparisonStoreUtils';
 import { getServerConfig, isClickhouseMode } from 'config/config';
 import {
     ChartUserSetting,
@@ -1543,7 +1543,7 @@ export class StudyViewPageStore
                 ) => {
                     const treatmentKeysMap = _.keyBy(treatmentUniqueKeys);
                     const desiredTreatments = sampleTreatments.treatments.filter(
-                        t =>
+                        (t: SampleTreatmentRow | PatientTreatmentRow) =>
                             treatmentUniqueKey(t, isPatientType) in
                             treatmentKeysMap
                     );
@@ -1559,12 +1559,17 @@ export class StudyViewPageStore
                         treatmentRows => {
                             const selectedSampleIdentifiers = _.flatMap(
                                 treatmentRows,
-                                treatmentRow => {
-                                    return treatmentRow.samples.filter(s =>
-                                        selectedSampleSet.has(s, [
-                                            'sampleId',
-                                            'studyId',
-                                        ])
+                                (
+                                    treatmentRow:
+                                        | SampleTreatmentRow
+                                        | PatientTreatmentRow
+                                ) => {
+                                    return treatmentRow.samples.filter(
+                                        (s: SampleIdentifier) =>
+                                            selectedSampleSet.has(s, [
+                                                'sampleId',
+                                                'studyId',
+                                            ])
                                     );
                                 }
                             ).map(s => ({
@@ -1634,6 +1639,81 @@ export class StudyViewPageStore
                     );
                 }
             );
+        });
+    }
+
+    private createGeneSpecificMutationComparisonSession(
+        chartMeta: ChartMeta,
+        clinicalAttributeValues: ClinicalDataCountSummary[],
+        statusCallback: (phase: LoadingPhase) => void
+    ): Promise<string> {
+        statusCallback(LoadingPhase.DOWNLOADING_GROUPS);
+
+        return new Promise<string>(resolve => {
+            onMobxPromise([this.selectedSamples], async () => {
+                const chartInfo = this._geneSpecificChartMap.get(
+                    chartMeta.uniqueKey
+                );
+                if (!chartInfo || !this.hasFilteredSamples) return;
+                const includeSampleIds = true;
+
+                const data: any[] = await invokeGenomicDataCountIncludeSampleid(
+                    chartInfo,
+                    this.filters,
+                    includeSampleIds
+                );
+
+                const lcValueToColor = _.keyBy(clinicalAttributeValues, d =>
+                    d.value.toLowerCase()
+                );
+
+                /**
+                 * Step 1:
+                 * Normalize counts into { group, SampleIdentifier } pairs
+                 */
+                const groupedSamples = groupSamplesByMutationStatus(
+                    data,
+                    this.studyIds
+                );
+
+                /**
+                 * Step 2:
+                 * Build SessionGroupData objects for each group, using the sample identifiers from step 1
+                 */
+                const groups: SessionGroupData[] = _.chain(
+                    clinicalAttributeValues
+                )
+                    .map(attrVal => {
+                        const sampleIdentifiers: SampleIdentifier[] =
+                            groupedSamples[attrVal.value];
+                        if (!sampleIdentifiers?.length) return null;
+
+                        return getGroupParameters(
+                            attrVal.value,
+                            sampleIdentifiers,
+                            this.studyIds,
+                            lcValueToColor[attrVal.value.toLowerCase()]?.color
+                        );
+                    })
+                    .compact()
+                    .slice(
+                        0,
+                        doesChartHaveComparisonGroupsLimit(chartMeta)
+                            ? MAX_GROUPS_IN_SESSION
+                            : undefined
+                    )
+                    .value();
+                statusCallback(LoadingPhase.CREATING_SESSION);
+
+                // create session and get id
+                const { id } = await comparisonClient.addComparisonSession({
+                    groups,
+                    clinicalAttributeName: chartMeta.displayName,
+                    origin: this.studyIds,
+                });
+
+                resolve(id);
+            });
         });
     }
 
@@ -1757,7 +1837,7 @@ export class StudyViewPageStore
                     values,
                 } as NamespaceComparisonFilter;
 
-                const namespaceData = await this.internalClient.getNamespaceDataUsingPOST(
+                const namespaceData = await this.internalClient.getNamespaceDataForComparisonUsingPOST(
                     {
                         namespaceComparisonFilter,
                     }
@@ -2075,11 +2155,22 @@ export class StudyViewPageStore
                         chartMeta.uniqueKey
                     )!;
 
-                    comparisonId = await this.createCnaGeneComparisonSession(
-                        chartMeta,
-                        [chartInfo.hugoGeneSymbol],
-                        statusCallback
-                    );
+                    if (
+                        chartInfo.profileType ===
+                        MolecularAlterationType_filenameSuffix.MUTATION_EXTENDED
+                    ) {
+                        comparisonId = await this.createGeneSpecificMutationComparisonSession(
+                            chartMeta,
+                            params.clinicalAttributeValues!,
+                            statusCallback
+                        );
+                    } else {
+                        comparisonId = await this.createCnaGeneComparisonSession(
+                            chartMeta,
+                            [chartInfo.hugoGeneSymbol],
+                            statusCallback
+                        );
+                    }
                 } else {
                     comparisonId = await this.createCategoricalAttributeComparisonSession(
                         chartMeta,
@@ -2477,29 +2568,23 @@ export class StudyViewPageStore
                 driverAnnotationSettings.customTiersDefault
             );
 
-            studyViewFilter.alterationFilter = ({
-                // select all CNA types
-                copyNumberAlterationEventTypes: {
-                    [CopyNumberEnrichmentEventType.AMP]: true,
-                    [CopyNumberEnrichmentEventType.HOMDEL]: true,
+            studyViewFilter.alterationFilter = _.mergeWith(
+                {},
+                ALTERATION_FILTER_DEFAULTS,
+                {
+                    includeDriver: driverAnnotationSettings.includeDriver,
+                    includeVUS: driverAnnotationSettings.includeVUS,
+                    includeUnknownOncogenicity:
+                        driverAnnotationSettings.includeUnknownOncogenicity,
+                    includeUnknownTier:
+                        driverAnnotationSettings.includeUnknownTier,
+                    tiersBooleanMap: this.selectedDriverTiersMap.isComplete
+                        ? this.selectedDriverTiersMap.result!
+                        : {},
                 },
-                // select all mutation types
-                mutationEventTypes: {
-                    [MutationEnrichmentEventType.any]: true,
-                },
-                structuralVariants: null,
-                includeDriver: driverAnnotationSettings.includeDriver,
-                includeVUS: driverAnnotationSettings.includeVUS,
-                includeUnknownOncogenicity:
-                    driverAnnotationSettings.includeUnknownOncogenicity,
-                includeUnknownTier: driverAnnotationSettings.includeUnknownTier,
-                includeGermline: true,
-                includeSomatic: true,
-                includeUnknownStatus: true,
-                tiersBooleanMap: this.selectedDriverTiersMap.isComplete
-                    ? this.selectedDriverTiersMap.result!
-                    : {},
-            } as unknown) as AlterationFilter;
+                (defaultValue, providedValue) =>
+                    providedValue !== undefined ? providedValue : defaultValue
+            );
         }
 
         //studyViewFilter can only have studyIds or sampleIdentifiers
@@ -4464,30 +4549,26 @@ export class StudyViewPageStore
             }
         }
 
-        filters.alterationFilter = ({
-            // select all CNA types
-            copyNumberAlterationEventTypes: {
-                [CopyNumberEnrichmentEventType.AMP]: true,
-                [CopyNumberEnrichmentEventType.HOMDEL]: true,
+        filters.alterationFilter = _.mergeWith(
+            {},
+            ALTERATION_FILTER_DEFAULTS,
+            {
+                includeDriver: this.driverAnnotationSettings.includeDriver,
+                includeVUS: this.driverAnnotationSettings.includeVUS,
+                includeUnknownOncogenicity: this.driverAnnotationSettings
+                    .includeUnknownOncogenicity,
+                includeUnknownTier: this.driverAnnotationSettings
+                    .includeUnknownTier,
+                includeGermline: this.includeGermlineMutations,
+                includeSomatic: this.includeSomaticMutations,
+                includeUnknownStatus: this.includeUnknownStatusMutations,
+                tiersBooleanMap: this.selectedDriverTiersMap.isComplete
+                    ? this.selectedDriverTiersMap.result!
+                    : {},
             },
-            // select all mutation types
-            mutationEventTypes: {
-                [MutationEnrichmentEventType.any]: true,
-            },
-            structuralVariants: null,
-            includeDriver: this.driverAnnotationSettings.includeDriver,
-            includeVUS: this.driverAnnotationSettings.includeVUS,
-            includeUnknownOncogenicity: this.driverAnnotationSettings
-                .includeUnknownOncogenicity,
-            includeUnknownTier: this.driverAnnotationSettings
-                .includeUnknownTier,
-            includeGermline: this.includeGermlineMutations,
-            includeSomatic: this.includeSomaticMutations,
-            includeUnknownStatus: this.includeUnknownStatusMutations,
-            tiersBooleanMap: this.selectedDriverTiersMap.isComplete
-                ? this.selectedDriverTiersMap.result!
-                : {},
-        } as unknown) as AlterationFilter;
+            (defaultValue, providedValue) =>
+                providedValue !== undefined ? providedValue : defaultValue
+        );
 
         return filters as StudyViewFilter;
     }
@@ -6186,7 +6267,7 @@ export class StudyViewPageStore
         invoke: async () => {
             if (this.queriedPhysicalStudyIds.result.length > 0) {
                 return [];
-                // return await getClient().fetchNamespaceAttributesUsingPOST({
+                // return await getClient().fetchNamespaceUsing({
                 //     studyIds: this.queriedPhysicalStudyIds.result,
                 // });
             }
@@ -8301,8 +8382,9 @@ export class StudyViewPageStore
                                     );
                                 } else if (
                                     molecularProfileOption.dataType ===
-                                    (DataTypeConstants.BINARY ||
-                                        DataTypeConstants.CATEGORICAL)
+                                        DataTypeConstants.BINARY ||
+                                    molecularProfileOption.dataType ===
+                                        DataTypeConstants.CATEGORICAL
                                 ) {
                                     this.addGenericAssayBinaryOrCategoricalCharts(
                                         [
@@ -9760,7 +9842,7 @@ export class StudyViewPageStore
                 };
             });
             let namespaceAttributes = this.namespaceAttributes.result.map(
-                namespaceAttribute => {
+                (namespaceAttribute: NamespaceAttribute) => {
                     return {
                         innerKey: namespaceAttribute.innerKey,
                         outerKey: namespaceAttribute.outerKey,
@@ -9815,12 +9897,15 @@ export class StudyViewPageStore
 
                 // Add counts for namespace data
                 if (!_.isEmpty(this.namespaceAttributesCounts.result)) {
-                    _.each(this.namespaceAttributesCounts.result, countData => {
-                        const { outerKey, innerKey, count } = countData;
-                        const uniqueKey = `${outerKey}_${innerKey}`;
-                        ret[uniqueKey] = ret[uniqueKey] || 0;
-                        ret[uniqueKey] += count;
-                    });
+                    _.each(
+                        this.namespaceAttributesCounts.result,
+                        (countData: NamespaceAttributeCount) => {
+                            const { outerKey, innerKey, count } = countData;
+                            const uniqueKey = `${outerKey}_${innerKey}`;
+                            ret[uniqueKey] = ret[uniqueKey] || 0;
+                            ret[uniqueKey] += count;
+                        }
+                    );
                 }
 
                 _.each(
@@ -10837,6 +10922,7 @@ export class StudyViewPageStore
         invoke: async () => {
             if (this.shouldDisplaySampleTreatments.result) {
                 if (isClickhouseMode()) {
+                    // @ts-ignore
                     return await this.internalClient.fetchSampleTreatmentCountsUsingPOST(
                         {
                             studyViewFilter: this.filters,

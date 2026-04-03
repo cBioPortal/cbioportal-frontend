@@ -1,6 +1,7 @@
 import { assert } from 'chai';
 import * as React from 'react';
 import {
+    ALTERATION_FILTER_DEFAULTS,
     annotationFilterActive,
     calcIntervalBinValues,
     calculateLayout,
@@ -19,6 +20,8 @@ import {
     formatFrequency,
     formatNumericalTickValues,
     formatRange,
+    ensureBackwardCompatibilityOfFilters,
+    GENE_FILTER_QUERY_DEFAULTS,
     geneFilterQueryFromOql,
     geneFilterQueryToOql,
     generateCategoricalData,
@@ -66,6 +69,7 @@ import {
     updateCustomIntervalFilter,
     updateGeneQuery,
     updateSavedUserPreferenceChartIds,
+    groupSamplesByMutationStatus,
 } from 'pages/studyView/StudyViewUtils';
 import {
     CancerStudy,
@@ -3656,6 +3660,64 @@ describe('StudyViewUtils', () => {
         });
     });
 
+    describe('groupSamplesByMutationStatus', () => {
+        const data = [
+            {
+                counts: [
+                    {
+                        value: 'NOT_PROFILED',
+                        sampleIds: ['ignore_me_001'],
+                    },
+                ],
+            },
+            {
+                counts: [
+                    {
+                        value: 'Missense_Mutation',
+                        sampleIds: ['study_ABC_123', 'study_DEF_456'],
+                    },
+                ],
+            },
+            {
+                counts: [
+                    {
+                        value: 'NOT_MUTATED',
+                        sampleIds: ['study_GHI_789'],
+                    },
+                ],
+            },
+        ] as any;
+
+        const studyId: string[] = ['study_ABC', 'study_DEF', 'study_GHI'];
+
+        it('groups and creates SampleIdentifier  by mutation status correctly', () => {
+            const result = groupSamplesByMutationStatus(data, studyId);
+            assert.deepEqual(result, {
+                MUTATED: [
+                    {
+                        studyId: 'study_ABC',
+                        sampleId: '123',
+                    },
+                    {
+                        studyId: 'study_DEF',
+                        sampleId: '456',
+                    },
+                ],
+                NOT_MUTATED: [
+                    {
+                        studyId: 'study_GHI',
+                        sampleId: '789',
+                    },
+                ],
+            });
+        });
+
+        it('handles missing or empty counts safely', () => {
+            const emptyData = [{}, { counts: [] }];
+            expect(groupSamplesByMutationStatus(emptyData, [])).toEqual({});
+        });
+    });
+
     describe('getFilteredStudiesWithSamples', () => {
         const samples: Sample[] = [
             {
@@ -4751,6 +4813,37 @@ describe('StudyViewUtils', () => {
                 geneFilterQueryFromOql('BRCA1: AMP HETLOSS ')
             );
         });
+        it('explicit false overrides default true for boolean fields', () => {
+            const result = geneFilterQueryFromOql(
+                'BRCA1',
+                false,
+                false,
+                false,
+                undefined,
+                false,
+                false,
+                false,
+                false
+            );
+            assert.isFalse(result.includeDriver);
+            assert.isFalse(result.includeVUS);
+            assert.isFalse(result.includeUnknownOncogenicity);
+            assert.isFalse(result.includeUnknownTier);
+            assert.isFalse(result.includeGermline);
+            assert.isFalse(result.includeSomatic);
+            assert.isFalse(result.includeUnknownStatus);
+        });
+        it('explicit tiersBooleanMap overrides default empty map', () => {
+            const tiers = { tier1: true, tier2: false };
+            const result = geneFilterQueryFromOql(
+                'BRCA1',
+                undefined,
+                undefined,
+                undefined,
+                tiers
+            );
+            assert.deepEqual(result.tiersBooleanMap, tiers);
+        });
     });
 
     describe('annotationFilterActive', () => {
@@ -5200,5 +5293,136 @@ describe('StudyViewUtils', () => {
                 );
             }
         );
+    });
+
+    describe('ensureBackwardCompatibilityOfFilters', () => {
+        describe('geneFilters', () => {
+            it('converts legacy string gene queries to GeneFilterQuery objects', () => {
+                const filters: any = {
+                    geneFilters: [{ geneQueries: [['BRCA1']] }],
+                };
+                const result = ensureBackwardCompatibilityOfFilters(filters);
+                assert.deepEqual(result.geneFilters![0].geneQueries[0][0], {
+                    ...GENE_FILTER_QUERY_DEFAULTS,
+                    hugoGeneSymbol: 'BRCA1',
+                });
+            });
+
+            it('fills in missing fields with defaults for existing GeneFilterQuery objects', () => {
+                const partial: any = {
+                    hugoGeneSymbol: 'TP53',
+                    entrezGeneId: 7157,
+                };
+                const filters: any = {
+                    geneFilters: [{ geneQueries: [[partial]] }],
+                };
+                const result = ensureBackwardCompatibilityOfFilters(filters);
+                const query = result.geneFilters![0].geneQueries[0][0];
+                assert.equal(query.hugoGeneSymbol, 'TP53');
+                assert.equal(query.entrezGeneId, 7157);
+                assert.isTrue(query.includeDriver);
+                assert.isTrue(query.includeGermline);
+                assert.deepEqual(query.tiersBooleanMap, {});
+            });
+
+            it('preserves explicit false values in GeneFilterQuery objects', () => {
+                const withFalse: any = {
+                    hugoGeneSymbol: 'KRAS',
+                    entrezGeneId: 0,
+                    includeDriver: false,
+                    includeVUS: false,
+                };
+                const filters: any = {
+                    geneFilters: [{ geneQueries: [[withFalse]] }],
+                };
+                const result = ensureBackwardCompatibilityOfFilters(filters);
+                const query = result.geneFilters![0].geneQueries[0][0];
+                assert.isFalse(query.includeDriver);
+                assert.isFalse(query.includeVUS);
+            });
+        });
+
+        describe('structuralVariantFilters', () => {
+            it('fills in missing fields with defaults', () => {
+                const partial: any = {
+                    gene1Query: { hugoSymbol: 'ALK' },
+                    gene2Query: { hugoSymbol: 'EML4' },
+                };
+                const filters: any = {
+                    structuralVariantFilters: [
+                        { structVarQueries: [[partial]] },
+                    ],
+                };
+                const result = ensureBackwardCompatibilityOfFilters(filters);
+                const query = result.structuralVariantFilters![0]
+                    .structVarQueries[0][0];
+                assert.isTrue(query.includeDriver);
+                assert.isTrue(query.includeGermline);
+                assert.isTrue(query.includeSomatic);
+                assert.deepEqual(query.tiersBooleanMap, {});
+            });
+
+            it('preserves explicit false values', () => {
+                const withFalse: any = {
+                    gene1Query: { hugoSymbol: 'ALK' },
+                    gene2Query: { hugoSymbol: 'EML4' },
+                    includeGermline: false,
+                    includeSomatic: false,
+                };
+                const filters: any = {
+                    structuralVariantFilters: [
+                        { structVarQueries: [[withFalse]] },
+                    ],
+                };
+                const result = ensureBackwardCompatibilityOfFilters(filters);
+                const query = result.structuralVariantFilters![0]
+                    .structVarQueries[0][0];
+                assert.isFalse(query.includeGermline);
+                assert.isFalse(query.includeSomatic);
+                assert.isTrue(query.includeDriver);
+            });
+        });
+
+        describe('alterationFilter', () => {
+            it('fills in missing fields with defaults from ALTERATION_FILTER_DEFAULTS', () => {
+                const filters: any = {
+                    alterationFilter: {},
+                };
+                const result = ensureBackwardCompatibilityOfFilters(filters);
+                assert.deepEqual(
+                    result.alterationFilter,
+                    ALTERATION_FILTER_DEFAULTS
+                );
+            });
+
+            it('preserves explicit false values', () => {
+                const filters: any = {
+                    alterationFilter: {
+                        includeDriver: false,
+                        includeGermline: false,
+                    },
+                };
+                const result = ensureBackwardCompatibilityOfFilters(filters);
+                assert.isFalse(result.alterationFilter!.includeDriver);
+                assert.isFalse(result.alterationFilter!.includeGermline);
+                assert.isTrue(result.alterationFilter!.includeVUS);
+            });
+
+            it('preserves explicit copyNumberAlterationEventTypes override', () => {
+                const filters: any = {
+                    alterationFilter: {
+                        copyNumberAlterationEventTypes: {
+                            AMP: true,
+                            HOMDEL: false,
+                        },
+                    },
+                };
+                const result = ensureBackwardCompatibilityOfFilters(filters);
+                assert.deepEqual(
+                    result.alterationFilter!.copyNumberAlterationEventTypes,
+                    { AMP: true, HOMDEL: false }
+                );
+            });
+        });
     });
 });

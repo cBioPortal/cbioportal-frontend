@@ -10,6 +10,7 @@ import { Portal } from 'react-portal';
 import { getBrowserWindow, MobxPromise } from 'cbioportal-frontend-commons';
 import ExtendedRouterStore from 'shared/lib/ExtendedRouterStore';
 import { getServerConfig } from 'config/config';
+import { STATUS_PROVIDERS } from 'shared/lib/statusProviders';
 
 export interface IUserMessage {
     dateStart?: number;
@@ -17,6 +18,7 @@ export interface IUserMessage {
     content: string | JSX.Element;
     id: string;
     showCondition?: (routingStore: ExtendedRouterStore) => void;
+    backgroundColor?: string;
 }
 
 function makeMessageKey(id: string) {
@@ -48,38 +50,7 @@ if (
         //     },
         //     id: '2024_newsletter_intro',
         // },
-        {
-            dateEnd: 1772755200000, // March 6, 2026
-            content: (
-                <>
-                    Help us improve cBioPortal by taking a 7-minute survey
-                    <a
-                        href="https://forms.microsoft.com/Pages/ResponsePage.aspx?id=tfzFk_YtUEWaEM018oXPfMGEYSmyAP5Pn3gtQdn_2L5URUU5WlUzREVYQlo1Q09HV1I1VU1NRjdYVi4u"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="btn btn-sm"
-                    >
-                        Take Survey
-                    </a>
-                </>
-            ),
-            id: '2025_user_survey',
-        },
     ];
-
-    // MSK specific messaging
-    if (
-        ['cbioportal.mskcc.org'].includes(getBrowserWindow().location.hostname)
-    ) {
-        MESSAGE_DATA.push({
-            dateEnd: 1000000000000000,
-            content: `During the MSK Epic transition, updates to de-identified
-            clinical data in cBioPortal will be delayed several months, but
-            genomics data will update regularly. For questions, please email <a
-            href="mailto:cdsi@mskcc.org">cdsi@mskcc.org</a>.`,
-            id: '2025_epic_transition_warning',
-        });
-    }
 }
 
 interface IUserMessagerProps {
@@ -96,10 +67,35 @@ export default class UserMessager extends React.Component<
         super(props);
         makeObservable(this);
         this.messageData = remoteData<IUserMessage[]>(async () => {
-            return Promise.resolve(props.messages || MESSAGE_DATA);
+            const staticMessages = props.messages || MESSAGE_DATA || [];
+
+            // Fetch messages from all status providers
+            const statusMessages = await this.fetchStatusProviderMessages();
+
+            // Combine status provider messages with static messages
+            // Status provider messages take priority (appear first)
+            return [...statusMessages, ...staticMessages];
         });
     }
     private messageData: MobxPromise<IUserMessage[]>;
+
+    /**
+     * Fetches messages from all registered status providers
+     */
+    private async fetchStatusProviderMessages(): Promise<IUserMessage[]> {
+        try {
+            // Fetch from all providers in parallel
+            const providerResults = await Promise.all(
+                STATUS_PROVIDERS.map(provider => provider.fetchMessages())
+            );
+
+            // Flatten the results into a single array
+            return _.flatten(providerResults);
+        } catch (error) {
+            console.error('Error fetching status provider messages:', error);
+            return [];
+        }
+    }
 
     @observable dismissed = false;
 
@@ -161,12 +157,21 @@ export default class UserMessager extends React.Component<
             this.messageData.isComplete &&
             this.shownMessage
         ) {
+            const bannerStyle: React.CSSProperties = this.shownMessage
+                .backgroundColor
+                ? { backgroundColor: this.shownMessage.backgroundColor }
+                : {};
+
             return (
                 <Portal
                     isOpened={true}
                     node={document.getElementById('pageTopContainer')}
                 >
-                    <div className={styles.messager} onClick={this.handleClick}>
+                    <div
+                        className={styles.messager}
+                        onClick={this.handleClick}
+                        style={bannerStyle}
+                    >
                         <i
                             className={classNames(
                                 styles.close,

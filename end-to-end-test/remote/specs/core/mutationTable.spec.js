@@ -133,7 +133,7 @@ describe('Mutation Table', function() {
             ).waitForDisplayed({ timeout: 300000 });
         });
 
-        it.skip('should show the gnomad table after mouse over the frequency in gnomad column', async () => {
+        it('should show the gnomad table after mouse over the frequency in gnomad column', async () => {
             // filter the table
             await setInputText(
                 '[class*=tableSearchInput]',
@@ -164,29 +164,24 @@ describe('Mutation Table', function() {
             // close columns menu
             await clickElement('button*=Columns');
 
-            await browser.pause(5000);
-            // find frequency
-            // TODO: not sure why this is not working
-
-            await browser.debug();
-
             const frequency =
                 '[data-test2="LUAD-B00416-Tumor"][data-test="gnomad-column"] span';
             await getElement(frequency, {
                 timeout: 10000,
             });
-            // wait for gnomad frequency show in the column
+            // wait for gnomad frequency to appear in the column (must contain a digit, not just the loading placeholder)
             await browser.waitUntil(
                 async () => {
                     const textFrequency = await (
                         await getElement(frequency)
                     ).getText();
-                    return textFrequency.length >= 1;
+                    return /\d/.test(textFrequency);
                 },
-                10000,
-                'Frequency data not in Gnoamd column'
+                30000,
+                'Frequency data not in Gnomad column'
             );
-            // mouse over the frequency
+            // scroll frequency into view and mouse over it to trigger the tooltip
+            await (await getElement(frequency)).scrollIntoView();
             await (await getElement(frequency)).moveTo();
             // wait for gnomad table showing up
             await getElement('[data-test="gnomad-table"]', { timeout: 20000 });
@@ -224,7 +219,7 @@ describe('Mutation Table', function() {
             // click on column button
             await clickElement('button*=Columns');
             // scroll down to activated "ClinVar" selection
-            browser.execute(
+            await browser.execute(
                 'document.getElementsByClassName("ReactVirtualized__Grid")[0].scroll(1000, 1000)'
             );
             // wait for clinvar checkbox to appear

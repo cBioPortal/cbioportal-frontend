@@ -43,6 +43,8 @@ import { ExtendedMutationTableColumnType } from 'shared/components/mutationTable
 import { extractColumnNames } from 'shared/components/mutationMapper/MutationMapperUtils';
 import { PatientSampleSummary } from '../querySummary/PatientSampleSummary';
 import { getServerConfig } from 'config/config';
+import { DefaultTooltip } from 'cbioportal-frontend-commons';
+import { SelectedDataTooltip } from 'shared/components/plots/SelectedDataAlert';
 
 export interface IResultsViewMutationMapperProps extends IMutationMapperProps {
     store: ResultsViewMutationMapperStore;
@@ -81,20 +83,22 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                 : '';
         if (this.props.store.queriedStudies.isComplete) {
             const linkToFilteredStudyView = (
-                <a
-                    onClick={() => {
-                        submitToStudyViewPage(
-                            this.props.store.queriedStudies.result!,
-                            dataStore.tableDataSamples,
-                            true
-                        );
-                    }}
-                >
-                    <PatientSampleSummary
-                        samples={dataStore.tableDataSamples}
-                        patients={dataStore.tableDataPatients}
-                    />
-                </a>
+                <DefaultTooltip overlay={SelectedDataTooltip}>
+                    <a
+                        onClick={() => {
+                            submitToStudyViewPage(
+                                this.props.store.queriedStudies.result!,
+                                dataStore.tableDataSamples,
+                                true
+                            );
+                        }}
+                    >
+                        <PatientSampleSummary
+                            samples={dataStore.tableDataSamples}
+                            patients={dataStore.tableDataPatients}
+                        />
+                    </a>
+                </DefaultTooltip>
             );
             filterInfo = (
                 <span>
