@@ -32,6 +32,7 @@ import {
 } from 'cbioportal-frontend-commons';
 import { IGisticData } from 'shared/model/Gistic';
 import MrnaExprRankCache from 'shared/cache/MrnaExprRankCache';
+import GeneMolecularDataCache from 'shared/cache/GeneMolecularDataCache';
 import request from 'superagent';
 import DiscreteCNACache from 'shared/cache/DiscreteCNACache';
 import {
@@ -1450,6 +1451,36 @@ export class PatientViewPageStore {
         },
         null
     );
+
+    // Raw (non-z-score) RNA-seq expression profile for showing actual distributions.
+    // Selects the first profile where:
+    //   - molecularAlterationType is MRNA_EXPRESSION (not a z-score or other derivative)
+    //   - datatype is not 'Z-SCORE' (excludes z-score normalized profiles)
+    //   - molecularProfileId contains 'rna_seq' (targets RNA-seq data, not RPPA etc.)
+    // These conventions follow the cBioPortal data import standards for expression profiles.
+    public readonly mrnaExprSourceMolecularProfileId = remoteData(
+        {
+            await: () => [this.molecularProfilesInStudy],
+            invoke: async () => {
+                const rawProfile = this.molecularProfilesInStudy.result!.find(
+                    p =>
+                        p.molecularAlterationType === 'MRNA_EXPRESSION' &&
+                        p.datatype !== 'Z-SCORE' &&
+                        /rna_seq/i.test(p.molecularProfileId)
+                );
+                return rawProfile ? rawProfile.molecularProfileId : null;
+            },
+        },
+        null
+    );
+
+    @cached @computed get mrnaExprSourceCache() {
+        const profileId = this.mrnaExprSourceMolecularProfileId.result;
+        if (!profileId) return undefined;
+        return new GeneMolecularDataCache({
+            [profileId]: { sampleListId: `${this.studyId}_all` },
+        });
+    }
 
     readonly discreteCNAData = remoteData<DiscreteCopyNumberData[]>(
         {
