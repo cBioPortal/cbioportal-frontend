@@ -44,7 +44,7 @@ const EMBEDDING_BASE_URL =
 const boehmHeData = remoteData<EmbeddingData>({
     await: () => [], // No dependencies - invoke once immediately and cache
     invoke: async () => {
-        const response = await fetch(`${EMBEDDING_BASE_URL}/umap_he.json?v=2`);
+        const response = await fetch(`${EMBEDDING_BASE_URL}/umap_he_50k.json`);
         if (!response.ok) {
             throw new Error('Failed to load H&E embedding data');
         }
