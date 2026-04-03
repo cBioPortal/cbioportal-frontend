@@ -488,7 +488,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         { value: SortByOptions.Alphabetically, label: 'Alphabetically' },
         { value: SortByOptions.SortByTotalSum, label: 'Number of samples' },
     ];
-
+    private getGenericAssayTypeFromDataType(dataType?: string) {
+        return dataType ? dataType.split('|')[0] : dataType;
+    }
     @action.bound
     private updateDropDownOptions(option: { value: string; label: string }[]) {
         this.sortByDropDownOptions = [...this.defaultOptions, ...option];
@@ -1334,9 +1336,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     // if there is a gene selected in the other axis, select the first related option in this axis
                     // this will not override the option recorded in the url
                     // 1. get genericAssayType based on selection
-                    const genericAssayType = vertical
-                        ? self.vertSelection.dataType
-                        : self.horzSelection.dataType;
+                    const genericAssayType = self.getGenericAssayTypeFromDataType(
+                        vertical
+                            ? self.vertSelection.dataType
+                            : self.horzSelection.dataType
+                    );
                     // 2. If this genericAssayType is gene-related && one gene is selected in the other axis
                     // Then find gene-related options
                     const selectedGeneRelatedOptions =
@@ -2732,12 +2736,16 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                         profile.molecularAlterationType ===
                         AlterationTypeConstants.GENERIC_ASSAY
                 )
-                .uniqBy(profile => profile.genericAssayType)
+                .uniqBy(
+                    profile =>
+                        `${profile.genericAssayType}|${profile.datatype || ''}`
+                )
                 .map(profile => ({
-                    value: profile.genericAssayType,
-                    label: deriveDisplayTextFromGenericAssayType(
+                    value: `${profile.genericAssayType}|${profile.datatype ||
+                        ''}`,
+                    label: `${deriveDisplayTextFromGenericAssayType(
                         profile.genericAssayType
-                    ),
+                    )} (${profile.datatype || 'UNSPECIFIED'})`,
                     genericAssayDataType: profile.datatype,
                 }))
                 .value();
@@ -2783,7 +2791,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                         profile.molecularAlterationType ===
                         AlterationTypeConstants.GENERIC_ASSAY
                     ) {
-                        return profile.genericAssayType;
+                        return `${
+                            profile.genericAssayType
+                        }|${profile.datatype || ''}`;
                     } else return profile.molecularAlterationType;
                 }), // create a map from profile type to list of profiles of that type
                 profilesOfType =>
@@ -3853,7 +3863,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 dataSourceLabel = `${
                     isGenericAssaySelected(axisSelection)
                         ? deriveDisplayTextFromGenericAssayType(
-                              axisSelection.dataType!
+                              this.getGenericAssayTypeFromDataType(
+                                  axisSelection.dataType
+                              )!
                           )
                         : dataTypeToDisplayType[axisSelection.dataType!]
                 } Profile`;
@@ -3932,12 +3944,14 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             axisSelection.dataType &&
             this.selectedGenericAssayEntitiesGroupedByGenericAssayTypeFromUrl &&
             this.selectedGenericAssayEntitiesGroupedByGenericAssayTypeFromUrl[
-                axisSelection.dataType
+                this.getGenericAssayTypeFromDataType(axisSelection.dataType) ||
+                    ''
             ]
         ) {
             selectedEntities = this
                 .selectedGenericAssayEntitiesGroupedByGenericAssayTypeFromUrl[
-                axisSelection.dataType
+                this.getGenericAssayTypeFromDataType(axisSelection.dataType) ||
+                    ''
             ];
         }
         let genericAssayOptionsCount: number = 0;
@@ -3951,7 +3965,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     this.props.hugoGeneSymbols,
                     this.horzSelection.selectedGeneOption?.label,
                     GENERIC_ASSAY_CONFIG.genericAssayConfigByType[
-                        axisSelection.dataType!
+                        this.getGenericAssayTypeFromDataType(
+                            axisSelection.dataType
+                        ) || ''
                     ]?.globalConfig?.geneRelatedGenericAssayType
                 ) || [];
             // generate statistics for options
@@ -4353,7 +4369,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                             <div className="form-group" style={{ opacity: 1 }}>
                                 <label>
                                     {deriveDisplayTextFromGenericAssayType(
-                                        axisSelection.dataType,
+                                        this.getGenericAssayTypeFromDataType(
+                                            axisSelection.dataType
+                                        ) || '',
                                         true
                                     )}
                                 </label>
