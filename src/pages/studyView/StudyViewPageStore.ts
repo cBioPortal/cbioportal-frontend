@@ -1123,7 +1123,7 @@ export class StudyViewPageStore
                 this.studyIds.length > 0 &&
                 (this.isLoggedIn ||
                     getServerConfig().authenticationMethod ===
-                        'noauthsessionservice') &&
+                    'noauthsessionservice') &&
                 !this.pendingDecision.result
             ) {
                 const groups = await comparisonClient.getGroupsForStudies(
@@ -1741,8 +1741,8 @@ export class StudyViewPageStore
                     const cnaByGeneAndAlteration = _.groupBy(
                         alterationTypes
                             ? cnaData.filter(d =>
-                                  alterationTypes.includes(d.value)
-                              )
+                                alterationTypes.includes(d.value)
+                            )
                             : cnaData,
                         (d: NumericGeneMolecularData) =>
                             `${d.gene.hugoGeneSymbol}:${getCNAByAlteration(
@@ -1895,7 +1895,7 @@ export class StudyViewPageStore
                             data = selectedSamples.map(sample => {
                                 const datum =
                                     sampleKeyToData[
-                                        sample.studyId + sample.sampleId
+                                    sample.studyId + sample.sampleId
                                     ];
                                 return {
                                     sampleId: sample.sampleId,
@@ -1959,13 +1959,13 @@ export class StudyViewPageStore
 
                         const keyToData = isPatientAttribute
                             ? _.keyBy(
-                                  data,
-                                  (d: GenericAssayData) => d.uniquePatientKey
-                              )
+                                data,
+                                (d: GenericAssayData) => d.uniquePatientKey
+                            )
                             : _.keyBy(
-                                  data,
-                                  (d: GenericAssayData) => d.uniqueSampleKey
-                              );
+                                data,
+                                (d: GenericAssayData) => d.uniqueSampleKey
+                            );
                         const getUniqueKeyFromSample = (sample: Sample) =>
                             isPatientAttribute
                                 ? sample.uniquePatientKey
@@ -2223,7 +2223,7 @@ export class StudyViewPageStore
                 comparisonId = await this.createNumberAttributeComparisonSession(
                     chartMeta,
                     params.categorizationType ||
-                        NumericalGroupComparisonType.QUARTILES,
+                    NumericalGroupComparisonType.QUARTILES,
                     statusCallback
                 );
                 break;
@@ -2610,8 +2610,8 @@ export class StudyViewPageStore
     private get columns(): number {
         return Math.floor(
             (windowStore.size.width - 40) /
-                (STUDY_VIEW_CONFIG.layout.grid.w +
-                    STUDY_VIEW_CONFIG.layout.gridMargin.x)
+            (STUDY_VIEW_CONFIG.layout.grid.w +
+                STUDY_VIEW_CONFIG.layout.gridMargin.x)
         );
     }
 
@@ -2984,8 +2984,8 @@ export class StudyViewPageStore
 
     @computed get defaultProfilesForOql():
         | {
-              [x: string]: MolecularProfile | undefined;
-          }
+            [x: string]: MolecularProfile | undefined;
+        }
         | undefined {
         if (this.molecularProfiles.isComplete) {
             return getDefaultProfilesForOql(this.molecularProfiles.result);
@@ -2996,7 +2996,7 @@ export class StudyViewPageStore
         return (
             this.defaultProfilesForOql &&
             this.defaultProfilesForOql[
-                AlterationTypeConstants.MUTATION_EXTENDED
+            AlterationTypeConstants.MUTATION_EXTENDED
             ]
         );
     }
@@ -3007,7 +3007,7 @@ export class StudyViewPageStore
         return (
             this.defaultProfilesForOql &&
             this.defaultProfilesForOql[
-                AlterationTypeConstants.STRUCTURAL_VARIANT
+            AlterationTypeConstants.STRUCTURAL_VARIANT
             ]
         );
     }
@@ -3016,7 +3016,7 @@ export class StudyViewPageStore
         return (
             this.defaultProfilesForOql &&
             this.defaultProfilesForOql[
-                AlterationTypeConstants.COPY_NUMBER_ALTERATION
+            AlterationTypeConstants.COPY_NUMBER_ALTERATION
             ]
         );
     }
@@ -3775,9 +3775,9 @@ export class StudyViewPageStore
                 const newGroup = next.filter(
                     StructuralVariantFilterQuery =>
                         StructuralVariantFilterQuery.gene1Query.hugoSymbol !==
-                            gene1HugoSymbol &&
+                        gene1HugoSymbol &&
                         StructuralVariantFilterQuery.gene2Query.hugoSymbol !==
-                            gene2HugoSymbol
+                        gene2HugoSymbol
                 );
                 if (newGroup.length > 0) {
                     acc.push(newGroup);
@@ -4238,7 +4238,7 @@ export class StudyViewPageStore
         } else if (this.isGenericAssayChart(uniqueKey)) {
             return (
                 this._genericAssayDataBinFilterSet.get(uniqueKey) !==
-                    undefined &&
+                undefined &&
                 !this._genericAssayDataBinFilterSet.get(uniqueKey)!
                     .disableLogScale
             );
@@ -4666,8 +4666,8 @@ export class StudyViewPageStore
     public getMutationDataFiltersByUniqueKey(uniqueKey: string): string[][] {
         return this._mutationDataFilterSet.has(uniqueKey)
             ? this._mutationDataFilterSet.get(uniqueKey)!.values.map(value => {
-                  return value.map(innerValue => innerValue.value);
-              })
+                return value.map(innerValue => innerValue.value);
+            })
             : [];
     }
 
@@ -4675,8 +4675,8 @@ export class StudyViewPageStore
     public getNamespaceDataFiltersByUniqueKey(uniqueKey: string): string[][] {
         return this._namespaceDataFilterSet.has(uniqueKey)
             ? this._namespaceDataFilterSet.get(uniqueKey)!.values.map(value => {
-                  return value.map(innerValue => innerValue.value);
-              })
+                return value.map(innerValue => innerValue.value);
+            })
             : [];
     }
 
@@ -4838,7 +4838,7 @@ export class StudyViewPageStore
             }
             return Promise.resolve([]);
         },
-        onError: () => {},
+        onError: () => { },
         onResult: data => {
             data.forEach(item => {
                 const uniqueKey = item.attributeId;
@@ -4865,7 +4865,7 @@ export class StudyViewPageStore
             }
             return Promise.resolve([]);
         },
-        onError: () => {},
+        onError: () => { },
         onResult: data => {
             data.forEach(item => {
                 const uniqueKey = item.attributeId;
@@ -4894,7 +4894,7 @@ export class StudyViewPageStore
             return Promise.resolve([]);
         },
         default: [],
-        onError: () => {},
+        onError: () => { },
         onResult: data => {
             data.forEach(item => {
                 const uniqueKey = item.attributeId;
@@ -4929,7 +4929,7 @@ export class StudyViewPageStore
             return Promise.resolve([]);
         },
         default: [],
-        onError: () => {},
+        onError: () => { },
         onResult: data => {
             _.each(
                 _.groupBy(data, item => item.id),
@@ -4968,7 +4968,7 @@ export class StudyViewPageStore
             }
             return Promise.resolve([]);
         },
-        onError: () => {},
+        onError: () => { },
         default: [],
     });
 
@@ -5098,7 +5098,7 @@ export class StudyViewPageStore
                         } else if (!isDefaultAttr && !this.chartsAreFiltered) {
                             result = [
                                 this.unfilteredClinicalDataCountCache[
-                                    uniqueKey
+                                uniqueKey
                                 ],
                             ];
                         } else {
@@ -5119,7 +5119,7 @@ export class StudyViewPageStore
                     }
                     return this.addColorToCategories(counts, attributeId);
                 },
-                onError: () => {},
+                onError: () => { },
                 default: [],
             });
         }
@@ -5141,9 +5141,9 @@ export class StudyViewPageStore
                     return this._customDataFilterSet.has(uniqueKey)
                         ? [this.selectedSamples]
                         : [
-                              this.selectedSamples,
-                              this.unfilteredCustomDataCount,
-                          ];
+                            this.selectedSamples,
+                            this.unfilteredCustomDataCount,
+                        ];
                 },
                 invoke: async () => {
                     let result: ClinicalDataCountItem[] = [];
@@ -5194,7 +5194,7 @@ export class StudyViewPageStore
                     }
                     return this.addColorToCategories(counts, attributeId);
                 },
-                onError: () => {},
+                onError: () => { },
                 default: [],
             });
         }
@@ -5227,7 +5227,7 @@ export class StudyViewPageStore
             }
             return Promise.resolve([]);
         },
-        onError: () => {},
+        onError: () => { },
         default: [],
     });
 
@@ -5256,12 +5256,12 @@ export class StudyViewPageStore
                         const values = result
                             .map(
                                 item =>
-                                    ({
-                                        start: item.start
-                                            ? item.start
-                                            : undefined,
-                                        end: item.end ? item.end : undefined,
-                                    } as DataFilterValue)
+                                ({
+                                    start: item.start
+                                        ? item.start
+                                        : undefined,
+                                    end: item.end ? item.end : undefined,
+                                } as DataFilterValue)
                             )
                             .filter(item => {
                                 if (
@@ -5319,7 +5319,7 @@ export class StudyViewPageStore
                         ) || []
                     );
                 },
-                onError: () => {},
+                onError: () => { },
                 default: [],
             });
         }
@@ -5428,7 +5428,7 @@ export class StudyViewPageStore
                     }
                     return res;
                 },
-                onError: () => {},
+                onError: () => { },
                 default: [],
             });
         }
@@ -5459,7 +5459,7 @@ export class StudyViewPageStore
                     }
                     return res;
                 },
-                onError: () => {},
+                onError: () => { },
                 default: [],
             });
         }
@@ -5491,7 +5491,7 @@ export class StudyViewPageStore
                     }
                     return res;
                 },
-                onError: () => {},
+                onError: () => { },
                 default: [],
             });
         }
@@ -5605,7 +5605,7 @@ export class StudyViewPageStore
                         ) || []
                     );
                 },
-                onError: () => {},
+                onError: () => { },
                 default: [],
             });
         }
@@ -5722,7 +5722,7 @@ export class StudyViewPageStore
             }
             return [];
         },
-        onError: () => {},
+        onError: () => { },
         default: [],
     });
 
@@ -6029,14 +6029,13 @@ export class StudyViewPageStore
             );
             return _.filter(this.studyIds, id => !_.includes(validIds, id));
         },
-        onError: () => {},
+        onError: () => { },
         onResult: unknownIds => {
             if (unknownIds.length > 0) {
                 this.pageStatusMessages['unknownIds'] = {
                     status: 'danger',
-                    message: `Unknown/Unauthorized ${
-                        unknownIds.length > 1 ? 'studies:' : 'study:'
-                    } ${unknownIds.join(', ')}`,
+                    message: `Unknown/Unauthorized ${unknownIds.length > 1 ? 'studies:' : 'study:'
+                        } ${unknownIds.join(', ')}`,
                 };
             }
         },
@@ -6053,7 +6052,7 @@ export class StudyViewPageStore
                 )
             );
         },
-        onError: error => {},
+        onError: error => { },
         default: {},
     });
 
@@ -6067,7 +6066,7 @@ export class StudyViewPageStore
                 )
             );
         },
-        onError: () => {},
+        onError: () => { },
         default: [],
     });
 
@@ -6083,7 +6082,7 @@ export class StudyViewPageStore
                 )
             );
         },
-        onError: () => {},
+        onError: () => { },
         default: [],
     });
 
@@ -6098,7 +6097,7 @@ export class StudyViewPageStore
                 )
             );
         },
-        onError: () => {},
+        onError: () => { },
         default: [],
     });
 
@@ -6243,7 +6242,7 @@ export class StudyViewPageStore
             return [];
         },
         default: [],
-        onError: () => {},
+        onError: () => { },
         onResult: clinicalAttributes => {
             clinicalAttributes.forEach((obj: ClinicalAttribute) => {
                 if (obj.datatype === DataType.NUMBER) {
@@ -6272,7 +6271,7 @@ export class StudyViewPageStore
             return [];
         },
         default: [],
-        onError: () => {},
+        onError: () => { },
     });
 
     readonly clinicalAttributeIdToClinicalAttribute = remoteData({
@@ -6313,8 +6312,8 @@ export class StudyViewPageStore
                 clinicalAttributeIdToDataType[
                     customChart.uniqueKey
                 ] = customChart.clinicalAttribute
-                    ? customChart.clinicalAttribute.datatype
-                    : DataType.STRING;
+                        ? customChart.clinicalAttribute.datatype
+                        : DataType.STRING;
             });
 
             this.clinicalAttributes.result!.forEach(clinicalAttribute => {
@@ -6329,7 +6328,7 @@ export class StudyViewPageStore
     readonly MDACCHeatmapStudyMeta = remoteData(
         {
             await: () => [this.queriedPhysicalStudyIds],
-            onError: () => {},
+            onError: () => { },
             invoke: async () => {
                 if (getServerConfig().show_mdacc_heatmap) {
                     let isSinglePhysicalStudy =
@@ -6353,7 +6352,7 @@ export class StudyViewPageStore
         invoke: async () => {
             return oncoKBClient.utilsCancerGeneListGetUsingGET_1({});
         },
-        onError: () => {},
+        onError: () => { },
         default: [],
     });
 
@@ -6364,7 +6363,7 @@ export class StudyViewPageStore
                 cancerGene => cancerGene.oncokbAnnotated
             );
         },
-        onError: () => {},
+        onError: () => { },
         default: [],
     });
 
@@ -6411,9 +6410,9 @@ export class StudyViewPageStore
     }>({
         await: () => [this.genericAssayProfiles],
         invoke: async () => {
-            return await fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecularProfileId(
-                this.genericAssayProfiles.result
-            );
+            // Disabled to prevent massive payload downloads (Issue #10373).
+            // Fetching is now handled asynchronously on-demand.
+            return {};
         },
     });
 
@@ -6422,9 +6421,9 @@ export class StudyViewPageStore
     }>({
         await: () => [this.genericAssayProfiles],
         invoke: async () => {
-            return await fetchGenericAssayMetaGroupedByMolecularProfileIdSuffix(
-                this.genericAssayProfiles.result
-            );
+            // Disabled to prevent massive payload downloads (Issue #10373).
+            // Fetching is now handled asynchronously on-demand.
+            return {};
         },
     });
 
@@ -6507,8 +6506,8 @@ export class StudyViewPageStore
     @computed get isSingleVirtualStudyPageWithoutFilter(): boolean {
         return (
             this.filteredPhysicalStudies.result.length +
-                this.filteredVirtualStudies.result.length ===
-                1 &&
+            this.filteredVirtualStudies.result.length ===
+            1 &&
             this.filteredVirtualStudies.result.length > 0 &&
             !this.chartsAreFiltered
         );
@@ -6797,7 +6796,7 @@ export class StudyViewPageStore
             this.chartsDimension.set(
                 uniqueKey,
                 STUDY_VIEW_CONFIG.layout.dimensions[
-                    ChartTypeEnum.VIOLIN_PLOT_TABLE
+                ChartTypeEnum.VIOLIN_PLOT_TABLE
                 ]
             );
         }
@@ -6859,7 +6858,7 @@ export class StudyViewPageStore
                 } else if (
                     newChart.mutationOptionType &&
                     newChart.mutationOptionType ===
-                        MutationOptionConstants.MUTATION_TYPE
+                    MutationOptionConstants.MUTATION_TYPE
                 ) {
                     this.chartsType.set(
                         uniqueKey,
@@ -6868,7 +6867,7 @@ export class StudyViewPageStore
                     this.chartsDimension.set(
                         uniqueKey,
                         STUDY_VIEW_CONFIG.layout.dimensions[
-                            ChartTypeEnum.MUTATION_TYPE_COUNTS_TABLE
+                        ChartTypeEnum.MUTATION_TYPE_COUNTS_TABLE
                         ]
                     );
                 } else {
@@ -6876,7 +6875,7 @@ export class StudyViewPageStore
                     this.chartsDimension.set(
                         uniqueKey,
                         STUDY_VIEW_CONFIG.layout.dimensions[
-                            ChartTypeEnum.PIE_CHART
+                        ChartTypeEnum.PIE_CHART
                         ]
                     );
                 }
@@ -7560,14 +7559,14 @@ export class StudyViewPageStore
                                 molecularProfileOption?.dataType ||
                                 DataType.NUMBER,
                             ...(chartUserSettings.profileType ===
-                            MolecularAlterationType_filenameSuffix.MUTATION_EXTENDED
+                                MolecularAlterationType_filenameSuffix.MUTATION_EXTENDED
                                 ? {
-                                      mutationOptionType:
-                                          chartUserSettings.chartType ===
-                                          ChartTypeEnum.MUTATION_TYPE_COUNTS_TABLE
-                                              ? MutationOptionConstants.MUTATION_TYPE
-                                              : MutationOptionConstants.MUTATED,
-                                  }
+                                    mutationOptionType:
+                                        chartUserSettings.chartType ===
+                                            ChartTypeEnum.MUTATION_TYPE_COUNTS_TABLE
+                                            ? MutationOptionConstants.MUTATION_TYPE
+                                            : MutationOptionConstants.MUTATED,
+                                }
                                 : {}),
                         },
                     ],
@@ -7704,7 +7703,7 @@ export class StudyViewPageStore
             this.chartsDimension.set(
                 SpecialChartsUniqueKeyEnum.GENOMIC_PROFILES_SAMPLE_COUNT,
                 STUDY_VIEW_CONFIG.layout.dimensions[
-                    ChartTypeEnum.GENOMIC_PROFILES_TABLE
+                ChartTypeEnum.GENOMIC_PROFILES_TABLE
                 ]
             );
             if (chartMeta && chartMeta.priority !== 0) {
@@ -7789,7 +7788,7 @@ export class StudyViewPageStore
             this.chartsDimension.set(
                 uniqueKey,
                 STUDY_VIEW_CONFIG.layout.dimensions[
-                    ChartTypeEnum.MUTATED_GENES_TABLE
+                ChartTypeEnum.MUTATED_GENES_TABLE
                 ]
             );
             if (mutatedGeneMeta && mutatedGeneMeta.priority !== 0) {
@@ -7823,7 +7822,7 @@ export class StudyViewPageStore
             this.chartsDimension.set(
                 uniqueKey,
                 STUDY_VIEW_CONFIG.layout.dimensions[
-                    ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE
+                ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE
                 ]
             );
             if (this.isStructVarTableFeatureEnabled) {
@@ -7853,7 +7852,7 @@ export class StudyViewPageStore
                 this.chartsDimension.set(
                     structVarUniqueKey,
                     STUDY_VIEW_CONFIG.layout.dimensions[
-                        ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE
+                    ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE
                     ]
                 );
             }
@@ -7872,7 +7871,7 @@ export class StudyViewPageStore
             this.chartsDimension.set(
                 uniqueKey,
                 STUDY_VIEW_CONFIG.layout.dimensions[
-                    ChartTypeEnum.CNA_GENES_TABLE
+                ChartTypeEnum.CNA_GENES_TABLE
                 ]
             );
             if (cnaGeneMeta && cnaGeneMeta.priority !== 0) {
@@ -7928,7 +7927,7 @@ export class StudyViewPageStore
             this.chartsDimension.set(
                 uniqueKey,
                 STUDY_VIEW_CONFIG.layout.dimensions[
-                    ChartTypeEnum.VARIANT_ANNOTATIONS_TABLE
+                ChartTypeEnum.VARIANT_ANNOTATIONS_TABLE
                 ]
             );
         });
@@ -8014,44 +8013,44 @@ export class StudyViewPageStore
         this.chartsDimension.set(
             SpecialChartsUniqueKeyEnum.SAMPLE_TREATMENTS,
             STUDY_VIEW_CONFIG.layout.dimensions[
-                ChartTypeEnum.SAMPLE_TREATMENTS_TABLE
+            ChartTypeEnum.SAMPLE_TREATMENTS_TABLE
             ]
         );
         this.chartsDimension.set(
             SpecialChartsUniqueKeyEnum.PATIENT_TREATMENTS,
             STUDY_VIEW_CONFIG.layout.dimensions[
-                ChartTypeEnum.PATIENT_TREATMENTS_TABLE
+            ChartTypeEnum.PATIENT_TREATMENTS_TABLE
             ]
         );
         this.chartsDimension.set(
             SpecialChartsUniqueKeyEnum.SAMPLE_TREATMENT_GROUPS,
             STUDY_VIEW_CONFIG.layout.dimensions[
-                ChartTypeEnum.SAMPLE_TREATMENT_GROUPS_TABLE
+            ChartTypeEnum.SAMPLE_TREATMENT_GROUPS_TABLE
             ]
         );
         this.chartsDimension.set(
             SpecialChartsUniqueKeyEnum.PATIENT_TREATMENT_GROUPS,
             STUDY_VIEW_CONFIG.layout.dimensions[
-                ChartTypeEnum.PATIENT_TREATMENT_GROUPS_TABLE
+            ChartTypeEnum.PATIENT_TREATMENT_GROUPS_TABLE
             ]
         );
         this.chartsDimension.set(
             SpecialChartsUniqueKeyEnum.SAMPLE_TREATMENT_TARGET,
             STUDY_VIEW_CONFIG.layout.dimensions[
-                ChartTypeEnum.SAMPLE_TREATMENT_TARGET_TABLE
+            ChartTypeEnum.SAMPLE_TREATMENT_TARGET_TABLE
             ]
         );
         this.chartsDimension.set(
             SpecialChartsUniqueKeyEnum.PATIENT_TREATMENT_TARGET,
             STUDY_VIEW_CONFIG.layout.dimensions[
-                ChartTypeEnum.PATIENT_TREATMENT_TARGET_TABLE
+            ChartTypeEnum.PATIENT_TREATMENT_TARGET_TABLE
             ]
         );
 
         this.chartsDimension.set(
             SpecialChartsUniqueKeyEnum.CLINICAL_EVENT_TYPE_COUNTS,
             STUDY_VIEW_CONFIG.layout.dimensions[
-                ChartTypeEnum.CLINICAL_EVENT_TYPE_COUNTS_TABLE
+            ChartTypeEnum.CLINICAL_EVENT_TYPE_COUNTS_TABLE
             ]
         );
         if (this.queriedPhysicalStudyIds.result.length > 1) {
@@ -8067,15 +8066,15 @@ export class StudyViewPageStore
     ): ChartDimension {
         return records <= STUDY_VIEW_CONFIG.thresholds.rowsInTableForOneGrid
             ? {
-                  w: 2,
-                  h: 1,
-                  minW: 2,
-              }
+                w: 2,
+                h: 1,
+                minW: 2,
+            }
             : {
-                  w: 2,
-                  h: 2,
-                  minW: 2,
-              };
+                w: 2,
+                h: 2,
+                minW: 2,
+            };
     }
 
     @action.bound
@@ -8159,7 +8158,7 @@ export class StudyViewPageStore
             }
             return _.uniq(filterAttributes);
         },
-        onError: () => {},
+        onError: () => { },
         default: [],
     });
 
@@ -8187,7 +8186,7 @@ export class StudyViewPageStore
                 },
             });
         },
-        onError: () => {},
+        onError: () => { },
         default: [],
     });
 
@@ -8202,7 +8201,7 @@ export class StudyViewPageStore
                 .uniqBy(attr => attr.attributeId)
                 .value();
         },
-        onError: () => {},
+        onError: () => { },
         default: [],
     });
 
@@ -8226,7 +8225,7 @@ export class StudyViewPageStore
                 convertClinicalDataBinsToDataBins(clinicalDataBinCountData)
             );
         },
-        onError: () => {},
+        onError: () => { },
         default: [],
     });
 
@@ -8262,12 +8261,12 @@ export class StudyViewPageStore
                 genomicDataFilter => {
                     if (
                         molecularProfileOptionByTypeMap[
-                            genomicDataFilter.profileType
+                        genomicDataFilter.profileType
                         ] !== undefined
                     ) {
                         const molecularProfileOption =
                             molecularProfileOptionByTypeMap[
-                                genomicDataFilter.profileType
+                            genomicDataFilter.profileType
                             ];
                         this.addGeneSpecificCharts(
                             [
@@ -8297,23 +8296,21 @@ export class StudyViewPageStore
                 mutationDataFilter => {
                     if (
                         molecularProfileOptionByTypeMap[
-                            mutationDataFilter.profileType
+                        mutationDataFilter.profileType
                         ] !== undefined
                     ) {
                         const molecularProfileOption =
                             molecularProfileOptionByTypeMap[
-                                mutationDataFilter.profileType
+                            mutationDataFilter.profileType
                             ];
                         this.addGeneSpecificCharts(
                             [
                                 {
-                                    name: `${
-                                        mutationDataFilter.hugoGeneSymbol
-                                    }: ${mutationDataFilter.profileType}: ${
-                                        MutationOptionConstantsLabel[
-                                            mutationDataFilter.categorization
+                                    name: `${mutationDataFilter.hugoGeneSymbol
+                                        }: ${mutationDataFilter.profileType}: ${MutationOptionConstantsLabel[
+                                        mutationDataFilter.categorization
                                         ]
-                                    }`,
+                                        }`,
                                     description: molecularProfileOption.label,
                                     profileType: mutationDataFilter.profileType,
                                     hugoGeneSymbol:
@@ -8347,12 +8344,12 @@ export class StudyViewPageStore
                         genericAssayDataFilter => {
                             if (
                                 molecularProfileOptionByTypeMap[
-                                    genericAssayDataFilter.profileType
+                                genericAssayDataFilter.profileType
                                 ] !== undefined
                             ) {
                                 const molecularProfileOption =
                                     molecularProfileOptionByTypeMap[
-                                        genericAssayDataFilter.profileType
+                                    genericAssayDataFilter.profileType
                                     ];
 
                                 if (
@@ -8380,9 +8377,9 @@ export class StudyViewPageStore
                                     );
                                 } else if (
                                     molecularProfileOption.dataType ===
-                                        DataTypeConstants.BINARY ||
+                                    DataTypeConstants.BINARY ||
                                     molecularProfileOption.dataType ===
-                                        DataTypeConstants.CATEGORICAL
+                                    DataTypeConstants.CATEGORICAL
                                 ) {
                                     this.addGenericAssayBinaryOrCategoricalCharts(
                                         [
@@ -8468,7 +8465,7 @@ export class StudyViewPageStore
             }
             return Promise.resolve([]);
         },
-        onError: () => {},
+        onError: () => { },
         default: [],
     });
 
@@ -8512,7 +8509,7 @@ export class StudyViewPageStore
             if (
                 this.queriedSampleIdentifiers.result.length > 0 &&
                 this.samples.result.length !==
-                    this.queriedSampleIdentifiers.result.length
+                this.queriedSampleIdentifiers.result.length
             ) {
                 let validSampleIdentifiers = _.reduce(
                     this.samples.result,
@@ -8527,15 +8524,15 @@ export class StudyViewPageStore
                     sampleIdentifier => {
                         return !validSampleIdentifiers[
                             sampleIdentifier.studyId +
-                                '_' +
-                                sampleIdentifier.sampleId
+                            '_' +
+                            sampleIdentifier.sampleId
                         ];
                     }
                 );
             }
             return [];
         },
-        onError: () => {},
+        onError: () => { },
         default: [],
     });
 
@@ -8555,7 +8552,7 @@ export class StudyViewPageStore
                 )
             );
         },
-        onError: () => {},
+        onError: () => { },
         default: [],
     });
 
@@ -8589,7 +8586,7 @@ export class StudyViewPageStore
                 return Promise.resolve(this.samples.result);
             }
         },
-        onError: () => {},
+        onError: () => { },
         default: [],
         onResult: samples => {
             if (samples.length === 0) {
@@ -8628,7 +8625,7 @@ export class StudyViewPageStore
                 )
             );
         },
-        onError: () => {},
+        onError: () => { },
         default: [],
     });
 
@@ -8678,7 +8675,7 @@ export class StudyViewPageStore
             );
             return Object.keys(unselectedPatientSet);
         },
-        onError: () => {},
+        onError: () => { },
         default: [],
     });
 
@@ -8837,12 +8834,12 @@ export class StudyViewPageStore
         await: () =>
             this.oncokbCancerGeneFilterEnabled
                 ? [
-                      this.mutationProfiles,
-                      this.oncokbAnnotatedGeneEntrezGeneIds,
-                      this.oncokbOncogeneEntrezGeneIds,
-                      this.oncokbTumorSuppressorGeneEntrezGeneIds,
-                      this.oncokbCancerGeneEntrezGeneIds,
-                  ]
+                    this.mutationProfiles,
+                    this.oncokbAnnotatedGeneEntrezGeneIds,
+                    this.oncokbOncogeneEntrezGeneIds,
+                    this.oncokbTumorSuppressorGeneEntrezGeneIds,
+                    this.oncokbCancerGeneEntrezGeneIds,
+                ]
                 : [this.mutationProfiles],
         invoke: async () => {
             if (!_.isEmpty(this.mutationProfiles.result)) {
@@ -8858,24 +8855,24 @@ export class StudyViewPageStore
                         uniqueKey: item.hugoGeneSymbol,
                         oncokbAnnotated: this.oncokbCancerGeneFilterEnabled
                             ? this.oncokbAnnotatedGeneEntrezGeneIds.result.includes(
-                                  item.entrezGeneId
-                              )
+                                item.entrezGeneId
+                            )
                             : false,
                         isOncokbOncogene: this.oncokbCancerGeneFilterEnabled
                             ? this.oncokbOncogeneEntrezGeneIds.result.includes(
-                                  item.entrezGeneId
-                              )
+                                item.entrezGeneId
+                            )
                             : false,
                         isOncokbTumorSuppressorGene: this
                             .oncokbCancerGeneFilterEnabled
                             ? this.oncokbTumorSuppressorGeneEntrezGeneIds.result.includes(
-                                  item.entrezGeneId
-                              )
+                                item.entrezGeneId
+                            )
                             : false,
                         isCancerGene: this.oncokbCancerGeneFilterEnabled
                             ? this.oncokbCancerGeneEntrezGeneIds.result.includes(
-                                  item.entrezGeneId
-                              )
+                                item.entrezGeneId
+                            )
                             : false,
                     };
                 });
@@ -8883,7 +8880,7 @@ export class StudyViewPageStore
                 return [];
             }
         },
-        onError: () => {},
+        onError: () => { },
         default: [],
     });
 
@@ -8893,12 +8890,12 @@ export class StudyViewPageStore
         await: () =>
             this.oncokbCancerGeneFilterEnabled
                 ? [
-                      this.structuralVariantProfiles,
-                      this.oncokbAnnotatedGeneEntrezGeneIds,
-                      this.oncokbOncogeneEntrezGeneIds,
-                      this.oncokbTumorSuppressorGeneEntrezGeneIds,
-                      this.oncokbCancerGeneEntrezGeneIds,
-                  ]
+                    this.structuralVariantProfiles,
+                    this.oncokbAnnotatedGeneEntrezGeneIds,
+                    this.oncokbOncogeneEntrezGeneIds,
+                    this.oncokbTumorSuppressorGeneEntrezGeneIds,
+                    this.oncokbCancerGeneEntrezGeneIds,
+                ]
                 : [this.structuralVariantProfiles],
         invoke: async () => {
             if (!_.isEmpty(this.structuralVariantProfiles.result)) {
@@ -8914,24 +8911,24 @@ export class StudyViewPageStore
                         uniqueKey: item.hugoGeneSymbol,
                         oncokbAnnotated: this.oncokbCancerGeneFilterEnabled
                             ? this.oncokbAnnotatedGeneEntrezGeneIds.result.includes(
-                                  item.entrezGeneId
-                              )
+                                item.entrezGeneId
+                            )
                             : false,
                         isOncokbOncogene: this.oncokbCancerGeneFilterEnabled
                             ? this.oncokbOncogeneEntrezGeneIds.result.includes(
-                                  item.entrezGeneId
-                              )
+                                item.entrezGeneId
+                            )
                             : false,
                         isOncokbTumorSuppressorGene: this
                             .oncokbCancerGeneFilterEnabled
                             ? this.oncokbTumorSuppressorGeneEntrezGeneIds.result.includes(
-                                  item.entrezGeneId
-                              )
+                                item.entrezGeneId
+                            )
                             : false,
                         isCancerGene: this.oncokbCancerGeneFilterEnabled
                             ? this.oncokbCancerGeneEntrezGeneIds.result.includes(
-                                  item.entrezGeneId
-                              )
+                                item.entrezGeneId
+                            )
                             : false,
                     };
                 });
@@ -8939,7 +8936,7 @@ export class StudyViewPageStore
                 return [];
             }
         },
-        onError: () => {},
+        onError: () => { },
         default: [],
     });
 
@@ -8949,12 +8946,12 @@ export class StudyViewPageStore
         await: () =>
             this.oncokbCancerGeneFilterEnabled
                 ? [
-                      this.structuralVariantProfiles,
-                      this.oncokbAnnotatedGeneEntrezGeneIds,
-                      this.oncokbOncogeneEntrezGeneIds,
-                      this.oncokbTumorSuppressorGeneEntrezGeneIds,
-                      this.oncokbCancerGeneEntrezGeneIds,
-                  ]
+                    this.structuralVariantProfiles,
+                    this.oncokbAnnotatedGeneEntrezGeneIds,
+                    this.oncokbOncogeneEntrezGeneIds,
+                    this.oncokbTumorSuppressorGeneEntrezGeneIds,
+                    this.oncokbCancerGeneEntrezGeneIds,
+                ]
                 : [this.structuralVariantProfiles],
         invoke: async () => {
             if (!_.isEmpty(this.structuralVariantProfiles.result)) {
@@ -9018,7 +9015,7 @@ export class StudyViewPageStore
                 return [];
             }
         },
-        onError: () => {},
+        onError: () => { },
         default: [],
     });
 
@@ -9026,12 +9023,12 @@ export class StudyViewPageStore
         await: () =>
             this.oncokbCancerGeneFilterEnabled
                 ? [
-                      this.cnaProfiles,
-                      this.oncokbAnnotatedGeneEntrezGeneIds,
-                      this.oncokbOncogeneEntrezGeneIds,
-                      this.oncokbTumorSuppressorGeneEntrezGeneIds,
-                      this.oncokbCancerGeneEntrezGeneIds,
-                  ]
+                    this.cnaProfiles,
+                    this.oncokbAnnotatedGeneEntrezGeneIds,
+                    this.oncokbOncogeneEntrezGeneIds,
+                    this.oncokbTumorSuppressorGeneEntrezGeneIds,
+                    this.oncokbCancerGeneEntrezGeneIds,
+                ]
                 : [this.cnaProfiles],
         invoke: async () => {
             if (!_.isEmpty(this.cnaProfiles.result)) {
@@ -9050,24 +9047,24 @@ export class StudyViewPageStore
                         ),
                         oncokbAnnotated: this.oncokbCancerGeneFilterEnabled
                             ? this.oncokbAnnotatedGeneEntrezGeneIds.result.includes(
-                                  item.entrezGeneId
-                              )
+                                item.entrezGeneId
+                            )
                             : false,
                         isOncokbOncogene: this.oncokbCancerGeneFilterEnabled
                             ? this.oncokbOncogeneEntrezGeneIds.result.includes(
-                                  item.entrezGeneId
-                              )
+                                item.entrezGeneId
+                            )
                             : false,
                         isOncokbTumorSuppressorGene: this
                             .oncokbCancerGeneFilterEnabled
                             ? this.oncokbTumorSuppressorGeneEntrezGeneIds.result.includes(
-                                  item.entrezGeneId
-                              )
+                                item.entrezGeneId
+                            )
                             : false,
                         isCancerGene: this.oncokbCancerGeneFilterEnabled
                             ? this.oncokbCancerGeneEntrezGeneIds.result.includes(
-                                  item.entrezGeneId
-                              )
+                                item.entrezGeneId
+                            )
                             : false,
                     };
                 });
@@ -9075,7 +9072,7 @@ export class StudyViewPageStore
                 return [];
             }
         },
-        onError: () => {},
+        onError: () => { },
         default: [],
     });
 
@@ -9099,7 +9096,7 @@ export class StudyViewPageStore
                     })),
                     projection: 'META',
                 })
-                .then(function(response: request.Response) {
+                .then(function (response: request.Response) {
                     const count = parseInt(response.header['total-count'], 10);
                     return count > 0;
                 });
@@ -9175,11 +9172,11 @@ export class StudyViewPageStore
                     let plotTitle = 'KM Plot: ';
                     plotTitle +=
                         this.survivalDescriptions.result &&
-                        this.survivalDescriptions.result[prefix]
+                            this.survivalDescriptions.result[prefix]
                             ? generateStudyViewSurvivalPlotTitle(
-                                  this.survivalDescriptions.result![prefix][0]
-                                      .displayName
-                              )
+                                this.survivalDescriptions.result![prefix][0]
+                                    .displayName
+                            )
                             : `${prefix}`;
                     plotTitle += ' (months)';
                     const survivalStatusAttribute = this
@@ -9454,7 +9451,7 @@ export class StudyViewPageStore
                 .keyBy(plot => plot.id)
                 .value();
         },
-        onError: () => {},
+        onError: () => { },
         default: {},
     });
 
@@ -9488,7 +9485,7 @@ export class StudyViewPageStore
             }
             return {};
         },
-        onError: () => {},
+        onError: () => { },
         default: {},
     });
 
@@ -9516,13 +9513,13 @@ export class StudyViewPageStore
                 clinicalDataMultiStudyFilter: filter,
             });
         },
-        onError: () => {},
+        onError: () => { },
         default: [],
     });
 
     readonly mutationCountVsFGAData = remoteData({
         await: () => [this.sampleMutationCountAndFractionGenomeAlteredData],
-        onError: () => {},
+        onError: () => { },
         invoke: async () => {
             return _.reduce(
                 _.groupBy(
@@ -9593,7 +9590,7 @@ export class StudyViewPageStore
         invoke: async () => {
             return Math.floor(
                 getServerConfig().clinical_attribute_product_limit /
-                    this.clinicalAttributes.result.length
+                this.clinicalAttributes.result.length
             );
         },
         default: 0,
@@ -9734,7 +9731,7 @@ export class StudyViewPageStore
 
     readonly molecularProfileSampleCountSet = remoteData({
         await: () => [this.molecularProfileSampleCounts],
-        onError: () => {},
+        onError: () => { },
         invoke: async () => {
             return _.chain(this.molecularProfileSampleCounts.result || [])
                 .keyBy(
@@ -9763,7 +9760,7 @@ export class StudyViewPageStore
 
     readonly initialMolecularProfileSampleCountSet = remoteData({
         await: () => [this.initialMolecularProfileSampleCounts],
-        onError: () => {},
+        onError: () => { },
         invoke: async () => {
             return _.chain(
                 this.initialMolecularProfileSampleCounts.result || []
@@ -9802,7 +9799,7 @@ export class StudyViewPageStore
 
     readonly clinicalAttributesCounts = remoteData({
         await: () => [this.selectedSamples],
-        onError: () => {},
+        onError: () => { },
         invoke: () => {
             if (this.selectedSamples.result.length === 0) {
                 return Promise.resolve([]);
@@ -9825,7 +9822,7 @@ export class StudyViewPageStore
 
     readonly namespaceAttributesCounts = remoteData({
         await: () => [this.selectedSamples],
-        onError: () => {},
+        onError: () => { },
         invoke: () => {
             if (
                 this.selectedSamples.result.length === 0 ||
@@ -9939,7 +9936,7 @@ export class StudyViewPageStore
                         this.mutationProfiles.result,
                         profile =>
                             molecularProfileSamplesSet[
-                                getSuffixOfMolecularProfile(profile)
+                            getSuffixOfMolecularProfile(profile)
                             ] || 0
                     );
                 }
@@ -10009,7 +10006,7 @@ export class StudyViewPageStore
                         this.structuralVariantProfiles.result,
                         profile =>
                             molecularProfileSamplesSet[
-                                getSuffixOfMolecularProfile(profile)
+                            getSuffixOfMolecularProfile(profile)
                             ] || 0
                     );
 
@@ -10036,7 +10033,7 @@ export class StudyViewPageStore
                         this.cnaProfiles.result,
                         profile =>
                             molecularProfileSamplesSet[
-                                getSuffixOfMolecularProfile(profile)
+                            getSuffixOfMolecularProfile(profile)
                             ] || 0
                     );
                 }
@@ -10055,12 +10052,12 @@ export class StudyViewPageStore
                         (acc, next) => {
                             if (
                                 mutationCountVsFractionGenomeAlteredDataSet[
-                                    next.uniqueSampleKey
+                                next.uniqueSampleKey
                                 ]
                             ) {
                                 acc.push(
                                     mutationCountVsFractionGenomeAlteredDataSet[
-                                        next.uniqueSampleKey
+                                    next.uniqueSampleKey
                                     ]
                                 );
                             }
@@ -10101,7 +10098,7 @@ export class StudyViewPageStore
                             )!;
                             acc[uniqueChartKey] =
                                 molecularProfileSamplesSet[
-                                    genomicChart.profileType
+                                genomicChart.profileType
                                 ] || 0;
                             return acc;
                         },
@@ -10119,7 +10116,7 @@ export class StudyViewPageStore
                             )!;
                             acc[uniqueChartKey] =
                                 molecularProfileSamplesSet[
-                                    genericAssayChart.profileType
+                                genericAssayChart.profileType
                                 ] || 0;
                             return acc;
                         },
@@ -10146,7 +10143,7 @@ export class StudyViewPageStore
             }
             return {};
         },
-        onError: () => {},
+        onError: () => { },
         default: {},
     });
 
@@ -10230,8 +10227,8 @@ export class StudyViewPageStore
                 _.forEach(
                     clinicalData,
                     (attr: ClinicalData) =>
-                        (sampleData[attr['clinicalAttributeId']] =
-                            attr['value'])
+                    (sampleData[attr['clinicalAttributeId']] =
+                        attr['value'])
                 );
                 acc.push(
                     _.map(
@@ -10396,7 +10393,7 @@ export class StudyViewPageStore
                 SpecialChartsUniqueKeyEnum.CANCER_STUDIES
             );
         },
-        onError: () => {},
+        onError: () => { },
         default: [],
     });
 
@@ -10518,8 +10515,8 @@ export class StudyViewPageStore
                         MolecularAlterationType_filenameSuffix.MUTATION_EXTENDED!
                     ]
                         ? this.molecularProfileSampleCountSet.result[
-                              MolecularAlterationType_filenameSuffix.MUTATION_EXTENDED!
-                          ]
+                        MolecularAlterationType_filenameSuffix.MUTATION_EXTENDED!
+                        ]
                         : 0;
                     break;
                 }
@@ -11350,7 +11347,7 @@ export class StudyViewPageStore
                     if (
                         !memo[clinicalData.uniqueSampleKey] &&
                         clinicalData.clinicalAttributeId ===
-                            'CANCER_TYPE_DETAILED'
+                        'CANCER_TYPE_DETAILED'
                     ) {
                         memo[clinicalData.uniqueSampleKey] = clinicalData.value;
                     }
@@ -11372,17 +11369,17 @@ export class StudyViewPageStore
                 ) {
                     memo[
                         sampleKeyToCancerTypeClinicalDataMap[
-                            sample.uniqueSampleKey
+                        sample.uniqueSampleKey
                         ]
                     ] =
                         memo[
-                            sampleKeyToCancerTypeClinicalDataMap[
-                                sample.uniqueSampleKey
-                            ]
+                        sampleKeyToCancerTypeClinicalDataMap[
+                        sample.uniqueSampleKey
+                        ]
                         ] || [];
                     memo[
                         sampleKeyToCancerTypeClinicalDataMap[
-                            sample.uniqueSampleKey
+                        sample.uniqueSampleKey
                         ]
                     ].push(sample);
                 } else {
@@ -11587,9 +11584,9 @@ export class StudyViewPageStore
                     .result) {
                     if (
                         molecularProfile.datatype ===
-                            DataTypeConstants.DISCRETE &&
+                        DataTypeConstants.DISCRETE &&
                         molecularProfile.molecularAlterationType ===
-                            AlterationTypeConstants.COPY_NUMBER_ALTERATION
+                        AlterationTypeConstants.COPY_NUMBER_ALTERATION
                     ) {
                         ret[molecularProfile.studyId] = molecularProfile;
                     }
@@ -11814,7 +11811,7 @@ export class StudyViewPageStore
                     molecularProfile.molecularProfileId
                 ] = this.studyToDataQueryFilter.result![
                     molecularProfile.studyId
-                ];
+                    ];
             }
             return Promise.resolve(ret);
         },
@@ -12081,7 +12078,7 @@ export class StudyViewPageStore
                         customChartSessions,
                         this.sampleMap.result!
                     );
-                } catch (e) {}
+                } catch (e) { }
             }
             return ret;
         },
@@ -12297,10 +12294,10 @@ export class StudyViewPageStore
                 );
                 const discreteCopyNumberDatum =
                     discreteCopyNumberDatumKey in
-                    this.sampleIdAndEntrezIdToDiscreteCopyNumberData
+                        this.sampleIdAndEntrezIdToDiscreteCopyNumberData
                         ? this.sampleIdAndEntrezIdToDiscreteCopyNumberData[
-                              discreteCopyNumberDatumKey
-                          ]
+                        discreteCopyNumberDatumKey
+                        ]
                         : undefined;
 
                 d.driverFilter = discreteCopyNumberDatum
@@ -12636,7 +12633,7 @@ export class StudyViewPageStore
                 );
             });
         },
-        onError: () => {},
+        onError: () => { },
     });
 
     readonly oncoKbMutationAnnotationForOncoprint = remoteData<
@@ -12647,7 +12644,7 @@ export class StudyViewPageStore
             makeGetOncoKbMutationAnnotationForOncoprint(
                 this.oncoKbDataForOncoprint
             ),
-        onError: () => {},
+        onError: () => { },
     });
 
     //we need seperate oncokb data because oncoprint requires onkb queries across cancertype
@@ -12695,7 +12692,7 @@ export class StudyViewPageStore
                     return Promise.resolve({});
                 }
             },
-            onError: e => {},
+            onError: e => { },
         },
         {}
     );
@@ -12704,13 +12701,13 @@ export class StudyViewPageStore
         ((m: Mutation) => boolean) | Error
     >({
         invoke: () => makeIsHotspotForOncoprint(this.indexedHotspotData),
-        onError: () => {},
+        onError: () => { },
     });
 
     readonly indexedHotspotData = remoteData<IHotspotIndex | undefined>({
         await: () => [this.hotspotData],
         invoke: () => Promise.resolve(indexHotspotsData(this.hotspotData)),
-        onError: () => {},
+        onError: () => { },
     });
 
     // Hotspots
@@ -12723,7 +12720,7 @@ export class StudyViewPageStore
                 this.genomeNexusInternalClient
             );
         },
-        onError: () => {},
+        onError: () => { },
     });
 
     @computed get genomeNexusInternalClient() {

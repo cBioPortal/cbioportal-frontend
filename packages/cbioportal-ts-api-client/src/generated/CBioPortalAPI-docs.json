@@ -4622,6 +4622,9 @@
         },
         "stableId": {
           "type": "string"
+        },
+        "molecularProfileId": {
+          "type": "string"
         }
       },
       "type": "object"
@@ -4634,16 +4637,25 @@
             "type": "string"
           },
           "maxItems": 10000000,
-          "minItems": 1,
           "type": "array"
+        },
+        "keyword": {
+          "type": "string"
+        },
+        "limit": {
+          "format": "int32",
+          "type": "integer"
         },
         "molecularProfileIds": {
           "items": {
             "type": "string"
           },
           "maxItems": 10000000,
-          "minItems": 1,
           "type": "array"
+        },
+        "offset": {
+          "format": "int32",
+          "type": "integer"
         }
       },
       "type": "object"

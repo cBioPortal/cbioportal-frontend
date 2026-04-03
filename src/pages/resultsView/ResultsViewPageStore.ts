@@ -435,9 +435,9 @@ const ONCOPRINT_COLOR_CONFIG = 'clinicalTracksColorConfig';
 /* tslint:disable: member-ordering */
 export class ResultsViewPageStore extends AnalysisStore
     implements
-        IAnnotationFilterSettings,
-        IResultsViewExclusionSettings,
-        ISettingsMenuButtonVisible {
+    IAnnotationFilterSettings,
+    IResultsViewExclusionSettings,
+    ISettingsMenuButtonVisible {
     private reactionDisposers: IReactionDisposer[] = [];
 
     public pageUserSession: PageUserSession<ResultPageSettings>;
@@ -615,7 +615,7 @@ export class ResultsViewPageStore extends AnalysisStore
             !color &&
             this._userSelectedStudiesToClinicalTracksColors['global'][label] &&
             this._userSelectedStudiesToClinicalTracksColors['global'][label][
-                value
+            value
             ]
         ) {
             delete this._userSelectedStudiesToClinicalTracksColors['global'][
@@ -624,7 +624,7 @@ export class ResultsViewPageStore extends AnalysisStore
         } else if (color) {
             if (
                 !this._userSelectedStudiesToClinicalTracksColors['global'][
-                    label
+                label
                 ]
             ) {
                 this._userSelectedStudiesToClinicalTracksColors['global'][
@@ -871,7 +871,7 @@ export class ResultsViewPageStore extends AnalysisStore
                         return (
                             molecularProfile !== undefined &&
                             molecularProfile.molecularAlterationType ===
-                                AlterationTypeConstants.MUTATION_EXTENDED
+                            AlterationTypeConstants.MUTATION_EXTENDED
                         );
                     }
                 );
@@ -1464,10 +1464,10 @@ export class ResultsViewPageStore extends AnalysisStore
                 );
                 const discreteCopyNumberDatum =
                     discreteCopyNumberDatumKey in
-                    this.sampleIdAndEntrezIdToDiscreteCopyNumberData
+                        this.sampleIdAndEntrezIdToDiscreteCopyNumberData
                         ? this.sampleIdAndEntrezIdToDiscreteCopyNumberData[
-                              discreteCopyNumberDatumKey
-                          ]
+                        discreteCopyNumberDatumKey
+                        ]
                         : undefined;
 
                 d.driverFilter = discreteCopyNumberDatum
@@ -1616,7 +1616,7 @@ export class ResultsViewPageStore extends AnalysisStore
                             projection: REQUEST_ARG_ENUM.PROJECTION_META,
                         }
                     )
-                    .then(function(response: request.Response) {
+                    .then(function (response: request.Response) {
                         const count = parseInt(
                             response.header['total-count'],
                             10
@@ -1777,7 +1777,7 @@ export class ResultsViewPageStore extends AnalysisStore
                                     projection,
                                 }
                             )
-                            .then(function(response: request.Response) {
+                            .then(function (response: request.Response) {
                                 const count = parseInt(
                                     response.header['sample-count'],
                                     10
@@ -1795,11 +1795,11 @@ export class ResultsViewPageStore extends AnalysisStore
                     // exclude the MUTATION_UNCALLED profile, this profile should only be used in patient view
                 } else if (
                     profile.molecularAlterationType ===
-                        AlterationTypeConstants.GENESET_SCORE ||
+                    AlterationTypeConstants.GENESET_SCORE ||
                     profile.molecularAlterationType ===
-                        AlterationTypeConstants.GENERIC_ASSAY ||
+                    AlterationTypeConstants.GENERIC_ASSAY ||
                     profile.molecularAlterationType ===
-                        AlterationTypeConstants.STRUCTURAL_VARIANT
+                    AlterationTypeConstants.STRUCTURAL_VARIANT
                 ) {
                     // geneset profile, we dont have the META projection for geneset data, so just add it
                     /*promises.push(internalClient.fetchGeneticDataItemsUsingPOST({
@@ -1828,7 +1828,7 @@ export class ResultsViewPageStore extends AnalysisStore
                                     projection,
                                 }
                             )
-                            .then(function(response: request.Response) {
+                            .then(function (response: request.Response) {
                                 const count = parseInt(
                                     response.header['total-count'],
                                     10
@@ -2522,7 +2522,7 @@ export class ResultsViewPageStore extends AnalysisStore
                 attributeNames,
                 attributeName =>
                     clinicalAttributeIdToAvailableSampleCount[attributeName] !==
-                        undefined &&
+                    undefined &&
                     clinicalAttributeIdToAvailableSampleCount[attributeName] > 0
             );
         },
@@ -2587,7 +2587,7 @@ export class ResultsViewPageStore extends AnalysisStore
                     if (
                         !memo[clinicalData.uniqueSampleKey] &&
                         clinicalData.clinicalAttributeId ===
-                            'CANCER_TYPE_DETAILED'
+                        'CANCER_TYPE_DETAILED'
                     ) {
                         memo[clinicalData.uniqueSampleKey] = clinicalData.value;
                     }
@@ -2609,17 +2609,17 @@ export class ResultsViewPageStore extends AnalysisStore
                 ) {
                     memo[
                         sampleKeyToCancerTypeClinicalDataMap[
-                            sample.uniqueSampleKey
+                        sample.uniqueSampleKey
                         ]
                     ] =
                         memo[
-                            sampleKeyToCancerTypeClinicalDataMap[
-                                sample.uniqueSampleKey
-                            ]
+                        sampleKeyToCancerTypeClinicalDataMap[
+                        sample.uniqueSampleKey
+                        ]
                         ] || [];
                     memo[
                         sampleKeyToCancerTypeClinicalDataMap[
-                            sample.uniqueSampleKey
+                        sample.uniqueSampleKey
                         ]
                     ].push(sample);
                 } else {
@@ -2679,7 +2679,7 @@ export class ResultsViewPageStore extends AnalysisStore
                 )
             );
         },
-        onError: error => {},
+        onError: error => { },
         default: [],
     });
 
@@ -2692,7 +2692,7 @@ export class ResultsViewPageStore extends AnalysisStore
                     AlterationTypeConstants.MUTATION_EXTENDED
             );
         },
-        onError: error => {},
+        onError: error => { },
         default: [],
     });
 
@@ -2702,11 +2702,11 @@ export class ResultsViewPageStore extends AnalysisStore
             return this.selectedMolecularProfiles.result!.filter(
                 profile =>
                     profile.molecularAlterationType ===
-                        AlterationTypeConstants.COPY_NUMBER_ALTERATION &&
+                    AlterationTypeConstants.COPY_NUMBER_ALTERATION &&
                     profile.datatype === DataTypeConstants.DISCRETE
             );
         },
-        onError: error => {},
+        onError: error => { },
         default: [],
     });
 
@@ -2719,7 +2719,7 @@ export class ResultsViewPageStore extends AnalysisStore
                     AlterationTypeConstants.STRUCTURAL_VARIANT
             );
         },
-        onError: error => {},
+        onError: error => { },
         default: [],
     });
 
@@ -2748,7 +2748,7 @@ export class ResultsViewPageStore extends AnalysisStore
                         customChartSessions,
                         this.sampleMap.result!
                     );
-                } catch (e) {}
+                } catch (e) { }
             }
             return ret;
         },
@@ -2858,7 +2858,7 @@ export class ResultsViewPageStore extends AnalysisStore
         if (
             scatterRequiredParams[SpecialChartsUniqueKeyEnum.MUTATION_COUNT] &&
             scatterRequiredParams[
-                SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED
+            SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED
             ]
         ) {
             _chartMetaSet[FGA_VS_MUTATION_COUNT_KEY] = {
@@ -3510,7 +3510,7 @@ export class ResultsViewPageStore extends AnalysisStore
                     if (
                         !structuralVariant.site1HugoSymbol ||
                         structuralVariant.site2HugoSymbol !==
-                            structuralVariant.site1HugoSymbol
+                        structuralVariant.site1HugoSymbol
                     ) {
                         ret[structuralVariant.site2HugoSymbol]?.data.push(
                             structuralVariant
@@ -3526,7 +3526,7 @@ export class ResultsViewPageStore extends AnalysisStore
                     if (
                         !structuralVariant.site1HugoSymbol ||
                         structuralVariant.site2HugoSymbol !==
-                            structuralVariant.site1HugoSymbol
+                        structuralVariant.site1HugoSymbol
                     ) {
                         ret[structuralVariant.site2HugoSymbol]?.vus.push(
                             structuralVariant
@@ -3542,7 +3542,7 @@ export class ResultsViewPageStore extends AnalysisStore
                     if (
                         !structuralVariant.site1HugoSymbol ||
                         structuralVariant.site2HugoSymbol !==
-                            structuralVariant.site1HugoSymbol
+                        structuralVariant.site1HugoSymbol
                     ) {
                         ret[structuralVariant.site2HugoSymbol]?.germline.push(
                             structuralVariant
@@ -3558,7 +3558,7 @@ export class ResultsViewPageStore extends AnalysisStore
                     if (
                         !structuralVariant.site1HugoSymbol ||
                         structuralVariant.site2HugoSymbol !==
-                            structuralVariant.site1HugoSymbol
+                        structuralVariant.site1HugoSymbol
                     ) {
                         ret[
                             structuralVariant.site2HugoSymbol
@@ -3872,7 +3872,7 @@ export class ResultsViewPageStore extends AnalysisStore
         ) {
             return (
                 this.mutationMapperStoreByGeneWithDriverKey[
-                    this.getGeneWithDriverKey(gene)
+                this.getGeneWithDriverKey(gene)
                 ] || this.createMutationMapperStoreForSelectedGene(gene)
             );
         }
@@ -3882,9 +3882,8 @@ export class ResultsViewPageStore extends AnalysisStore
     // Need to add "DRIVER" into key because mutation mapper store is cached
     // if we don't do this, starting with no driver then switch to driver will get wrong filter results
     private getGeneWithDriverKey(gene: Gene) {
-        return `${gene.hugoGeneSymbol}_${
-            this.isPutativeDriver ? 'DRIVER' : 'NO_DRIVER'
-        }`;
+        return `${gene.hugoGeneSymbol}_${this.isPutativeDriver ? 'DRIVER' : 'NO_DRIVER'
+            }`;
     }
 
     readonly ascnClinicalDataForSamples = remoteData<ClinicalData[]>(
@@ -4445,9 +4444,9 @@ export class ResultsViewPageStore extends AnalysisStore
                     .result) {
                     if (
                         molecularProfile.datatype ===
-                            DataTypeConstants.DISCRETE &&
+                        DataTypeConstants.DISCRETE &&
                         molecularProfile.molecularAlterationType ===
-                            AlterationTypeConstants.COPY_NUMBER_ALTERATION
+                        AlterationTypeConstants.COPY_NUMBER_ALTERATION
                     ) {
                         ret[molecularProfile.studyId] = molecularProfile;
                     }
@@ -4484,7 +4483,7 @@ export class ResultsViewPageStore extends AnalysisStore
                         // Select all methylation profiles
                         ((profile.molecularAlterationType === MRNA_EXPRESSION ||
                             profile.molecularAlterationType ===
-                                PROTEIN_LEVEL) &&
+                            PROTEIN_LEVEL) &&
                             profile.showProfileInAnalysisTab) ||
                         profile.molecularAlterationType === METHYLATION ||
                         (profile.molecularAlterationType ===
@@ -4550,7 +4549,7 @@ export class ResultsViewPageStore extends AnalysisStore
                 this.selectedMolecularProfiles.result!,
                 profile =>
                     profile.molecularAlterationType ===
-                        AlterationTypeConstants.GENESET_SCORE &&
+                    AlterationTypeConstants.GENESET_SCORE &&
                     profile.showProfileInAnalysisTab
             );
             if (applicableProfiles.length > 1) {
@@ -4605,7 +4604,7 @@ export class ResultsViewPageStore extends AnalysisStore
                     molecularProfile.molecularProfileId
                 ] = this.studyToDataQueryFilter.result![
                     molecularProfile.studyId
-                ];
+                    ];
             }
             return Promise.resolve(ret);
         },
@@ -4782,26 +4781,23 @@ export class ResultsViewPageStore extends AnalysisStore
 
     readonly genericAssayEntitiesGroupedByGenericAssayType = remoteData<{
         [genericAssayType: string]: GenericAssayMeta[];
-    }>(
-        {
-            await: () => [this.molecularProfilesInStudies],
-            invoke: async () => {
-                return await fetchGenericAssayMetaByMolecularProfileIdsGroupedByGenericAssayType(
-                    this.molecularProfilesInStudies.result
-                );
-            },
+    }>({
+        await: () => [this.genericAssayProfiles],
+        invoke: async () => {
+            // Disabled to prevent massive payload downloads (Issue #10373).
+            // Fetching is now handled asynchronously on-demand.
+            return {};
         },
-        {}
-    );
+    });
 
     readonly genericAssayEntitiesGroupByMolecularProfileId = remoteData<{
-        [profileId: string]: GenericAssayMeta[];
+        [molecularProfileId: string]: GenericAssayMeta[];
     }>({
-        await: () => [this.molecularProfilesInStudies],
+        await: () => [this.genericAssayProfiles],
         invoke: async () => {
-            return await fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecularProfileId(
-                this.molecularProfilesInStudies.result
-            );
+            // Disabled to prevent massive payload downloads (Issue #10373).
+            // Fetching is now handled asynchronously on-demand.
+            return {};
         },
     });
 
@@ -4938,7 +4934,7 @@ export class ResultsViewPageStore extends AnalysisStore
                                 profile =>
                                     this
                                         .selectedGenericAssayEntitiesGroupByMolecularProfileId[
-                                        profile.molecularProfileId
+                                    profile.molecularProfileId
                                     ]
                             )
                             .flatten()
@@ -5381,20 +5377,20 @@ export class ResultsViewPageStore extends AnalysisStore
             await: () => [this.mutations],
             invoke: async () =>
                 getServerConfig().show_transcript_dropdown &&
-                this.mutations.result
+                    this.mutations.result
                     ? await fetchVariantAnnotationsIndexedByGenomicLocation(
-                          this.mutations.result,
-                          [
-                              GENOME_NEXUS_ARG_FIELD_ENUM.ANNOTATION_SUMMARY,
-                              GENOME_NEXUS_ARG_FIELD_ENUM.HOTSPOTS,
-                              GENOME_NEXUS_ARG_FIELD_ENUM.CLINVAR,
-                              getServerConfig().show_signal
-                                  ? GENOME_NEXUS_ARG_FIELD_ENUM.SIGNAL
-                                  : '',
-                          ].filter(f => f),
-                          getServerConfig().genomenexus_isoform_override_source,
-                          this.genomeNexusClient
-                      )
+                        this.mutations.result,
+                        [
+                            GENOME_NEXUS_ARG_FIELD_ENUM.ANNOTATION_SUMMARY,
+                            GENOME_NEXUS_ARG_FIELD_ENUM.HOTSPOTS,
+                            GENOME_NEXUS_ARG_FIELD_ENUM.CLINVAR,
+                            getServerConfig().show_signal
+                                ? GENOME_NEXUS_ARG_FIELD_ENUM.SIGNAL
+                                : '',
+                        ].filter(f => f),
+                        getServerConfig().genomenexus_isoform_override_source,
+                        this.genomeNexusClient
+                    )
                     : undefined,
             onError: (err: Error) => {
                 // fail silently, leave the error handling responsibility to the data consumer
@@ -5453,7 +5449,7 @@ export class ResultsViewPageStore extends AnalysisStore
         // check in this order so that we don't trigger invoke
         return (
             this.oncoKbMutationAnnotationForOncoprint.peekStatus ===
-                'complete' &&
+            'complete' &&
             this.oncoKbMutationAnnotationForOncoprint.result instanceof Error
         );
     }
@@ -5469,8 +5465,8 @@ export class ResultsViewPageStore extends AnalysisStore
     readonly oncoKbStructuralVariantAnnotationForOncoprint = remoteData<
         | Error
         | ((
-              structuralVariant: StructuralVariant
-          ) => IndicatorQueryResp | undefined)
+            structuralVariant: StructuralVariant
+        ) => IndicatorQueryResp | undefined)
     >({
         await: () => [this.structuralVariantOncoKbDataForOncoprint],
         invoke: () => {
@@ -5917,7 +5913,7 @@ export class ResultsViewPageStore extends AnalysisStore
                     return fetchStructuralVariantOncoKbData(
                         this.uniqueSampleKeyToTumorType.result!,
                         this.oncoKbAnnotatedGenesForStructuralVariants.result ||
-                            {},
+                        {},
                         this.structuralVariantData
                     );
                 } else {
