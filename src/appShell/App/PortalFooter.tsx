@@ -250,13 +250,72 @@ export default class PortalFooter extends React.Component<
                         <div className="footer-elem">
                             <h3>CONTACT</h3>
                             <ul>
-                                <li>
+                                <li
+                                    style={{
+                                        display: 'inline-block',
+                                        marginRight: '15px',
+                                    }}
+                                >
                                     <a
                                         href={`mailto:${
                                             getServerConfig().skin_email_contact
                                         }`}
+                                        title={
+                                            getServerConfig().skin_email_contact
+                                        }
                                     >
-                                        {getServerConfig().skin_email_contact}
+                                        <i className="fa fa-envelope fa-lg"></i>
+                                    </a>
+                                </li>
+                                <li
+                                    style={{
+                                        display: 'inline-block',
+                                        marginRight: '15px',
+                                    }}
+                                >
+                                    <a
+                                        href="https://github.com/cBioPortal"
+                                        target="_blank"
+                                        title="GitHub"
+                                    >
+                                        <i className="fab fa-github fa-lg"></i>
+                                    </a>
+                                </li>
+                                <li
+                                    style={{
+                                        display: 'inline-block',
+                                        marginRight: '15px',
+                                    }}
+                                >
+                                    <a
+                                        href="https://www.linkedin.com/company/cbioportal"
+                                        target="_blank"
+                                        title="LinkedIn"
+                                    >
+                                        <i className="fab fa-linkedin fa-lg"></i>
+                                    </a>
+                                </li>
+                                <li
+                                    style={{
+                                        display: 'inline-block',
+                                        marginRight: '15px',
+                                    }}
+                                >
+                                    <a
+                                        href="https://x.com/cbioportal"
+                                        target="_blank"
+                                        title="X (Twitter)"
+                                    >
+                                        <i className="fab fa-twitter fa-lg"></i>
+                                    </a>
+                                </li>
+                                <li style={{ display: 'inline-block' }}>
+                                    <a
+                                        href="https://www.cbioportal.org"
+                                        target="_blank"
+                                        title="cBioPortal Public Site"
+                                    >
+                                        <i className="fas fa-globe fa-lg"></i>
                                     </a>
                                 </li>
                             </ul>
