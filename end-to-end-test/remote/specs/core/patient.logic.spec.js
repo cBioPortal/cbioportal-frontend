@@ -1,3 +1,5 @@
+var assert = require('assert');
+
 const {
     goToUrlAndSetLocalStorage,
     getElementByTestHandle,
@@ -28,5 +30,34 @@ describe('patient page', () => {
         await (
             await getElementByTestHandle('patientview-mutation-table')
         ).waitForDisplayed();
+    });
+
+    it('should display TMB-H biomarker annotation inline in the sample header', async () => {
+        await goToUrlAndSetLocalStorage(
+            `${CBIOPORTAL_URL}/patient?studyId=msk_impact_50k_2026&caseId=P-0002435`
+        );
+
+        // Wait for clinical spans to be visible
+        const clinicalSpans = await getElementByTestHandle(
+            'patientSamplesClinicalSpans'
+        );
+        await clinicalSpans.waitForDisplayed({ timeout: 20000 });
+
+        // Find the TMB-H biomarker annotation span nested within clinical spans
+        const tmbhAnnotation = await clinicalSpans.$('.clinical-spans');
+        await tmbhAnnotation.waitForExist({ timeout: 10000 });
+
+        // Verify TMB-H text is present in the annotation
+        const text = await tmbhAnnotation.getText();
+        assert(text.includes('TMB-H'), `Expected TMB-H in annotation text, got: ${text}`);
+
+        // Verify the annotation is rendered as inline-flex (not block-level flex,
+        // which would cause the biomarker to wrap onto a new line)
+        const display = await tmbhAnnotation.getCSSProperty('display');
+        assert.strictEqual(
+            display.value,
+            'inline-flex',
+            `Expected TMB-H annotation display to be inline-flex, got: ${display.value}`
+        );
     });
 });

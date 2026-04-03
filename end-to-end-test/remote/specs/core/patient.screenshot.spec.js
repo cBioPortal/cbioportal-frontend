@@ -6,6 +6,7 @@ const {
     waitForNetworkQuiet,
     goToUrlAndSetLocalStorage,
     checkElementWithMouseDisabled,
+    getElementByTestHandle,
 } = require('../../../shared/specUtils_Async');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
@@ -33,5 +34,27 @@ describe('Patient Cohort View Custom Tab Tests', () => {
         // check that it matches again
         const res2 = await checkElementWithMouseDisabled('body', 500);
         assertScreenShotMatch(res2);
+    });
+});
+
+describe('Patient View Sample Header Screenshot Tests', () => {
+    const patientUrl = `${CBIOPORTAL_URL}/patient?studyId=msk_impact_50k_2026&caseId=P-0002435`;
+
+    before(async () => {
+        await goToUrlAndSetLocalStorage(patientUrl);
+        const clinicalSpans = await getElementByTestHandle(
+            'patientSamplesClinicalSpans'
+        );
+        await clinicalSpans.waitForDisplayed({ timeout: 20000 });
+        await waitForNetworkQuiet(10000);
+    });
+
+    it('TMB-H biomarker annotation renders inline in the sample header', async () => {
+        const res = await checkElementWithMouseDisabled(
+            '[data-test="patientSamplesClinicalSpans"]',
+            0,
+            { hide: ['.qtip'] }
+        );
+        assertScreenShotMatch(res);
     });
 });
