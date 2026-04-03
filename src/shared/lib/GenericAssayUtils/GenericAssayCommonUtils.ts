@@ -1,4 +1,4 @@
-import client from 'shared/api/cbioportalClientInstance';
+import { getClient } from 'shared/api/cbioportalClientInstance';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
 import {
     GenericAssayMetaFilter,
@@ -162,7 +162,7 @@ export function fetchGenericAssayMetaByProfileIds(
     genericAssayProfileIds: string[]
 ) {
     if (genericAssayProfileIds.length > 0) {
-        return client.fetchGenericAssayMetaUsingPOST({
+        return getClient().fetchGenericAssayMetaUsingPOST({
             genericAssayMetaFilter: {
                 molecularProfileIds: genericAssayProfileIds,
                 // the Swagger-generated type expected by the client method below
@@ -176,7 +176,7 @@ export function fetchGenericAssayMetaByProfileIds(
 
 export function fetchGenericAssayMetaByEntityIds(entityIds: string[]) {
     if (entityIds.length > 0) {
-        return client.fetchGenericAssayMetaUsingPOST({
+        return getClient().fetchGenericAssayMetaUsingPOST({
             genericAssayMetaFilter: {
                 genericAssayStableIds: entityIds,
                 // the Swagger-generated type expected by the client method below
@@ -215,7 +215,7 @@ export async function fetchGenericAssayData(
         ) {
             return Promise.resolve([]);
         } else {
-            return client.fetchGenericAssayDataInMolecularProfileUsingPOST(
+            return getClient().fetchGenericAssayDataInMolecularProfileUsingPOST(
                 param
             );
         }
@@ -228,7 +228,7 @@ export function fetchGenericAssayDataByStableIdsAndMolecularIds(
     stableIds: string[],
     molecularProfileIds: string[]
 ) {
-    return client.fetchGenericAssayDataInMultipleMolecularProfilesUsingPOST({
+    return getClient().fetchGenericAssayDataInMultipleMolecularProfilesUsingPOST({
         genericAssayDataMultipleStudyFilter: {
             genericAssayStableIds: stableIds,
             molecularProfileIds: molecularProfileIds,

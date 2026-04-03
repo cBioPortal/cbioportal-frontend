@@ -20,5 +20,8 @@ proxyColumnStore(clientColumnStore, 'getSampleInStudy');
 proxyColumnStore(clientColumnStore, 'getAllSamplesInStudy');
 proxyColumnStore(clientColumnStore, 'getAllSamplesOfPatientInStudy');
 proxyColumnStore(clientColumnStore, 'getAllStudies');
+proxyColumnStore(clientColumnStore, 'fetchGenericAssayMeta');
+proxyColumnStore(clientColumnStore, 'getGenericAssayMeta');
+proxyColumnStore(clientColumnStore, 'getGenericAssayMeta_ga');
 
 export default client;
