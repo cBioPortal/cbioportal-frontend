@@ -2,7 +2,6 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import { FusionViewerStore } from './FusionViewerStore';
 import { TranscriptData, COLOR_5PRIME, COLOR_3PRIME } from './data/types';
-import { GenomeBuild } from './data/genomeNexusTranscriptService';
 import { inlineStyles } from './FusionInfoBarStyles';
 
 interface IFusionInfoBarProps {
@@ -10,34 +9,6 @@ interface IFusionInfoBarProps {
 }
 
 const FORTE_STAR = '\u2605';
-
-function GenomeBuildToggle({
-    currentBuild,
-    onChange,
-}: {
-    currentBuild: GenomeBuild;
-    onChange: (build: GenomeBuild) => void;
-}) {
-    const builds: GenomeBuild[] = ['GRCh38', 'GRCh37'];
-    return (
-        <div style={inlineStyles.buildToggle}>
-            {builds.map(build => (
-                <button
-                    key={build}
-                    style={{
-                        ...inlineStyles.buildButton,
-                        ...(build === currentBuild
-                            ? inlineStyles.buildButtonActive
-                            : {}),
-                    }}
-                    onClick={() => onChange(build)}
-                >
-                    {build}
-                </button>
-            ))}
-        </div>
-    );
-}
 
 function TranscriptCheckboxList({
     transcripts,
@@ -202,10 +173,9 @@ export class FusionInfoBar extends React.Component<IFusionInfoBarProps> {
                         />
                     )}
 
-                    <GenomeBuildToggle
-                        currentBuild={store.genomeBuild}
-                        onChange={build => store.setGenomeBuild(build)}
-                    />
+                    <span style={inlineStyles.genomeBuildLabel}>
+                        {store.genomeBuild}
+                    </span>
                 </div>
             </div>
         );
