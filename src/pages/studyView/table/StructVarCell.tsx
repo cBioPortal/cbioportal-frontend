@@ -90,9 +90,19 @@ export class StructVarCell extends React.Component<IStructVarCellProps, {}> {
                 <div
                     data-test="structVarNameCell"
                     className={classnames(styles.displayFlex)}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Select structural variant ${this.props.label ||
+                        `${this.props.gene1SymbolOrOql}::${this.props.gene2SymbolOrOql}`}`}
                     onMouseEnter={() => this.onHover(true)}
                     onMouseLeave={() => this.onHover(false)}
                     onClick={this.onStructVarSelect}
+                    onKeyDown={(e: React.KeyboardEvent) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            this.onStructVarSelect();
+                        }
+                    }}
                 >
                     <If condition={this.props.label}>
                         <EllipsisTextTooltip text={this.props.label} />

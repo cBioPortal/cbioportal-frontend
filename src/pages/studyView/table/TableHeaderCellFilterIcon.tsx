@@ -34,6 +34,22 @@ export class TableHeaderCellFilterIcon extends React.Component<
                     >
                         <div
                             onClick={this.props.onClickCallback}
+                            onKeyDown={(e: React.KeyboardEvent) => {
+                                if (
+                                    (e.key === 'Enter' || e.key === ' ') &&
+                                    this.props.onClickCallback
+                                ) {
+                                    e.preventDefault();
+                                    this.props.onClickCallback(e);
+                                }
+                            }}
+                            role="button"
+                            tabIndex={0}
+                            aria-label={
+                                this.props.isFiltered
+                                    ? 'Remove filter'
+                                    : 'Apply filter'
+                            }
                             className={styles.displayFlex}
                         >
                             <span
@@ -47,6 +63,7 @@ export class TableHeaderCellFilterIcon extends React.Component<
                                         ? ICON_FILTER_ON
                                         : ICON_FILTER_OFF,
                                 }}
+                                aria-hidden="true"
                             >
                                 <i className="fa fa-filter" />
                             </span>
