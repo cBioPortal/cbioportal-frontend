@@ -1,0 +1,272 @@
+name: Build, Push, and Test Docker Images
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  release:
+    types: [published]
+
+env:
+  FRONTEND_DEV_REPO: cbioportal/cbioportal-frontend-dev
+  FRONTEND_PROD_REPO: cbioportal/cbioportal-frontend
+  E2E_RUNNER_REPO: cbioportal/e2e-runner
+  BACKEND_IMAGE: cbioportal/cbioportal:6.4.1
+  DB_IMAGE: cbioportal/clickhouse:test-data
+
+jobs:
+  # ─── Build Images ──────────────────────────────────────────────
+  build-frontend-image:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      image: ${{ steps.tags.outputs.image }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set tags
+        id: tags
+        run: |
+          SHA=${{ github.sha }}
+          if [ "${{ github.event_name }}" = "release" ]; then
+            VERSION=${{ github.event.release.tag_name }}
+            echo "tags=${{ env.FRONTEND_PROD_REPO }}:${VERSION},${{ env.FRONTEND_PROD_REPO }}:latest" >> $GITHUB_OUTPUT
+            echo "image=${{ env.FRONTEND_PROD_REPO }}:${VERSION}" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "tags=${{ env.FRONTEND_DEV_REPO }}:pr-${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
+            echo "image=${{ env.FRONTEND_DEV_REPO }}:pr-${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
+          else
+            echo "tags=${{ env.FRONTEND_DEV_REPO }}:${SHA},${{ env.FRONTEND_DEV_REPO }}:latest" >> $GITHUB_OUTPUT
+            echo "image=${{ env.FRONTEND_DEV_REPO }}:${SHA}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Login to Docker Hub
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          load: ${{ github.event_name == 'pull_request' }}
+          tags: ${{ steps.tags.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # For PRs: save image as artifact so e2e jobs can use it
+      - name: Save image for PR
+        if: github.event_name == 'pull_request'
+        run: docker save ${{ steps.tags.outputs.image }} | gzip > /tmp/frontend-image.tar.gz
+
+      - name: Upload image artifact
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-image
+          path: /tmp/frontend-image.tar.gz
+          retention-days: 1
+
+  build-e2e-runner-image:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      image: ${{ steps.tags.outputs.image }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set tags
+        id: tags
+        run: |
+          SHA=${{ github.sha }}
+          echo "tags=${{ env.E2E_RUNNER_REPO }}:${SHA},${{ env.E2E_RUNNER_REPO }}:latest" >> $GITHUB_OUTPUT
+          echo "image=${{ env.E2E_RUNNER_REPO }}:${SHA}" >> $GITHUB_OUTPUT
+
+      - name: Login to Docker Hub
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build e2e runner image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: end-to-end-test/Dockerfile.e2e-runner
+          push: ${{ github.event_name != 'pull_request' }}
+          load: ${{ github.event_name == 'pull_request' }}
+          tags: ${{ steps.tags.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Save image for PR
+        if: github.event_name == 'pull_request'
+        run: docker save ${{ steps.tags.outputs.image }} | gzip > /tmp/e2e-runner-image.tar.gz
+
+      - name: Upload image artifact
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-runner-image
+          path: /tmp/e2e-runner-image.tar.gz
+          retention-days: 1
+
+  # ─── E2E Local Tests ───────────────────────────────────────────
+  e2e-localdb:
+    needs: [build-frontend-image, build-e2e-runner-image]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    services:
+      database:
+        image: cbioportal/clickhouse:test-data
+        ports:
+          - 9000:9000
+          - 8123:8123
+        options: >-
+          --health-cmd "clickhouse-client --query 'SELECT 1'"
+          --health-interval 5s
+          --health-retries 10
+      backend:
+        image: cbioportal/cbioportal:6.4.1
+        ports:
+          - 8080:8080
+        env:
+          CLICKHOUSE_MODE: "true"
+          AUTHENTICATE: "false"
+        options: >-
+          --health-cmd "curl -sf http://localhost:8080/api/health || exit 1"
+          --health-interval 10s
+          --health-retries 30
+          --health-start-period 60s
+    steps:
+      # Load images for PRs (from artifacts) or pull for pushes (from registry)
+      - name: Download frontend image (PR)
+        if: github.event_name == 'pull_request'
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-image
+          path: /tmp
+
+      - name: Download e2e runner image (PR)
+        if: github.event_name == 'pull_request'
+        uses: actions/download-artifact@v4
+        with:
+          name: e2e-runner-image
+          path: /tmp
+
+      - name: Load images (PR)
+        if: github.event_name == 'pull_request'
+        run: |
+          gunzip -c /tmp/frontend-image.tar.gz | docker load
+          gunzip -c /tmp/e2e-runner-image.tar.gz | docker load
+
+      - name: Start frontend
+        run: |
+          docker run -d --name frontend --network host \
+            -e SERVER_PORT=3000 \
+            ${{ needs.build-frontend-image.outputs.image }}
+          sleep 3
+          curl -sf http://localhost:3000/ > /dev/null
+
+      - name: Start proxy
+        run: |
+          cat > /tmp/Caddyfile << 'EOF'
+          :80
+          handle /api/* {
+            reverse_proxy localhost:8080
+          }
+          handle /config_service {
+            reverse_proxy localhost:8080
+          }
+          handle /health {
+            reverse_proxy localhost:8080
+          }
+          handle {
+            reverse_proxy localhost:3000
+          }
+          EOF
+          docker run -d --network host \
+            -v /tmp/Caddyfile:/etc/caddy/Caddyfile:ro \
+            caddy:2-alpine
+          sleep 2
+          curl -sf http://localhost/health
+
+      - name: Run e2e local tests
+        run: |
+          mkdir -p ${{ github.workspace }}/e2e-results
+          docker run --network host \
+            --shm-size=2G \
+            -e CBIOPORTAL_URL=http://localhost \
+            -e SPEC_FILE_PATTERN="./local/specs/**/*.spec.js" \
+            -e SKIP_KEYCLOAK=true \
+            -v ${{ github.workspace }}/e2e-results:/tests/local/junit \
+            ${{ needs.build-e2e-runner-image.outputs.image }} || true
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-localdb-results
+          path: e2e-results/
+
+      - name: Test report
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: E2E LocalDB Results
+          path: e2e-results/*.xml
+          reporter: java-junit
+          fail-on-error: false
+
+  # ─── E2E Remote Tests ──────────────────────────────────────────
+  e2e-remote:
+    needs: [build-e2e-runner-image]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Download e2e runner image (PR)
+        if: github.event_name == 'pull_request'
+        uses: actions/download-artifact@v4
+        with:
+          name: e2e-runner-image
+          path: /tmp
+
+      - name: Load image (PR)
+        if: github.event_name == 'pull_request'
+        run: gunzip -c /tmp/e2e-runner-image.tar.gz | docker load
+
+      - name: Run e2e remote tests
+        run: |
+          mkdir -p ${{ github.workspace }}/e2e-results
+          docker run --network host \
+            --shm-size=2G \
+            -e CBIOPORTAL_URL=https://www.cbioportal.org \
+            -e SPEC_FILE_PATTERN="./remote/specs/**/*.spec.js" \
+            -v ${{ github.workspace }}/e2e-results:/tests/remote/junit \
+            ${{ needs.build-e2e-runner-image.outputs.image }} || true
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-remote-results
+          path: e2e-results/
+
+      - name: Test report
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: E2E Remote Results
+          path: e2e-results/*.xml
+          reporter: java-junit
+          fail-on-error: false
