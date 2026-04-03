@@ -690,7 +690,7 @@
           "Generic Assays"
         ],
         "description": "Fetch meta data for generic-assay by ID",
-        "operationId": "getGenericAssayMeta_gaUsingGET"
+        "operationId": "getGenericAssayMetaByStableIdUsingGET"
       }
     },
     "/api/generic-assay-meta/{molecularProfileId}": {
