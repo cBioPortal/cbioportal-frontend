@@ -125,6 +125,12 @@ describe('patient view page', function() {
         });
 
         it('show stacked bar chart for patient who has significant ID signatures', async () => {
+            await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
+            await (
+                await $(
+                    'div[data-test="SignificantMutationalSignaturesTooltip"]'
+                )
+            ).waitForDisplayed({ timeout: 5000, reverse: true });
             await selectMutationalSignaturesVersionID();
 
             await (await $('div.patientSamples')).waitForDisplayed({
@@ -157,6 +163,12 @@ describe('patient view page', function() {
         });
 
         it('show stacked bar chart for patient who has significant DBS signatures', async () => {
+            await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
+            await (
+                await $(
+                    'div[data-test="SignificantMutationalSignaturesTooltip"]'
+                )
+            ).waitForDisplayed({ timeout: 5000, reverse: true });
             await selectMutationalSignaturesVersionDBS();
             await (await $('div.patientSamples')).waitForDisplayed({
                 timeout: 20000,
@@ -186,6 +198,12 @@ describe('patient view page', function() {
         });
 
         it('show mutational signatures table for patient who has significant ID signatures', async () => {
+            await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
+            await (
+                await $(
+                    'div[data-test="SignificantMutationalSignaturesTooltip"]'
+                )
+            ).waitForDisplayed({ timeout: 5000, reverse: true });
             await selectMutationalSignaturesVersionID();
             var res = await browser.checkElement(
                 'div[data-test="MutationalSignaturesContainer"]'
