@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { computed, makeObservable } from 'mobx';
+import { makeObservable } from 'mobx';
 import MultipleCategoryBarPlot, {
     IMultipleCategoryBarPlotProps,
 } from 'shared/components/plots/MultipleCategoryBarPlot';
@@ -25,16 +25,13 @@ export enum CategoryPlotType {
 }
 
 @observer
-export default class CategoryPlot extends React.Component<
-    IMultipleCategoryPlotProps,
-    {}
-> {
-    constructor(props: any) {
+export default class CategoryPlot extends React.Component<IMultipleCategoryPlotProps> {
+    private oncoprintJs: OncoprintJS | null = null;
+
+    constructor(props: IMultipleCategoryPlotProps) {
         super(props);
         makeObservable(this);
     }
-
-    private oncoprintJs: OncoprintJS | null = null;
 
     @autobind
     private oncoprintJsRef(oncoprint: OncoprintJS) {
@@ -43,32 +40,40 @@ export default class CategoryPlot extends React.Component<
     }
 
     render() {
-        switch (this.props.type) {
+        const { type } = this.props;
+
+        if (!this.props.horzData || !this.props.vertData) {
+            return null; // safe fallback
+        }
+
+        switch (type) {
             case CategoryPlotType.Heatmap:
-                return <>{this.heatmap}</>;
+                return this.renderHeatmap();
             case CategoryPlotType.Table:
-                return <>{this.table}</>;
+                return this.renderTable();
             default:
-                return <>{this.barchart}</>;
+                return this.renderBarChart();
         }
     }
 
-    @computed get table() {
-        const plotData = makePlotData(
-            this.props.horzData!,
-            this.props.vertData!,
-            false
-        );
+    private getPlotData() {
+        const { horzData, vertData } = this.props;
+        if (!horzData || !vertData) return [];
+
+        return makePlotData(horzData, vertData, false);
+    }
+
+    private renderTable() {
         return (
             <CategoryTable
-                data={plotData}
-                labels={this.props.horzCategoryOrder!}
+                data={this.getPlotData()}
+                labels={this.props.horzCategoryOrder || []}
                 category={this.props.axisLabelY}
             />
         );
     }
 
-    @computed get heatmap() {
+    private renderHeatmap() {
         return (
             <MultipleCategoryHeatmap
                 horzData={this.props.horzData}
@@ -81,7 +86,7 @@ export default class CategoryPlot extends React.Component<
         );
     }
 
-    @computed get barchart() {
+    private renderBarChart() {
         return (
             <MultipleCategoryBarPlot
                 svgId={this.props.svgId}
@@ -95,18 +100,14 @@ export default class CategoryPlot extends React.Component<
                 chartBase={this.props.chartBase}
                 axisLabelX={this.props.axisLabelX}
                 axisLabelY={this.props.axisLabelY}
-                legendLocationWidthThreshold={
-                    this.props.legendLocationWidthThreshold
-                }
+                legendLocationWidthThreshold={this.props.legendLocationWidthThreshold}
                 ticksCount={this.props.ticksCount}
                 horizontalBars={this.props.horizontalBars}
                 percentage={this.props.percentage}
                 stacked={this.props.stacked}
                 pValue={this.props.pValue}
                 qValue={this.props.qValue}
-                key={`categoryPlot-${
-                    this.props.horizontalBars ? 'horizontal' : 'vertical'
-                }`}
+                key={`categoryPlot-${this.props.horizontalBars ? 'horizontal' : 'vertical'}`}
             />
         );
     }
