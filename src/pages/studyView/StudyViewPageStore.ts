@@ -204,7 +204,7 @@ import {
     getUniqueNamespaceKey,
     getMutationDataAsClinicalData,
 } from './StudyViewUtils';
-import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
+import { SingleGeneQuery, MergedGeneQuery } from 'shared/lib/oql/oql-parser';
 import autobind from 'autobind-decorator';
 import {
     isQueriedStudyAuthorized,
@@ -216,7 +216,9 @@ import {
     createStructuralVariantQuery,
     parseOQLQuery,
     queryContainsStructVarAlteration,
+    unparseOQLQuery,
     unparseOQLQueryLine,
+    parseMergedTrackOQLQuery,
 } from 'shared/lib/oql/oqlfilter';
 import sessionServiceClient from 'shared/api//sessionServiceInstance';
 import windowStore from 'shared/components/window/WindowStore';
@@ -10342,9 +10344,7 @@ export class StudyViewPageStore
         let url = '/';
         if (!_.isEmpty(this.geneQueries)) {
             formOps.Action = 'Submit';
-            formOps.gene_list = this.geneQueries
-                .map(query => unparseOQLQueryLine(query))
-                .join('\n');
+            formOps.gene_list = unparseOQLQuery(this.geneQueriesWithTracks);
             url = '/results';
         }
         submitToPage(url, formOps, '_blank');
@@ -12748,5 +12748,15 @@ export class StudyViewPageStore
             throw new Error('Failed to get studies');
         }
         return getGenomeNexusUrl(this.displayedStudies.result);
+    }
+
+    @computed get geneQueriesWithTracks(): (
+        | SingleGeneQuery
+        | MergedGeneQuery
+    )[] {
+        if (!this.geneQueryStr) {
+            return [];
+        }
+        return parseMergedTrackOQLQuery(this.geneQueryStr);
     }
 }

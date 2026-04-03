@@ -12,6 +12,8 @@ import {
     STRUCTVARAnyGeneStr,
     STRUCTVARNullGeneStr,
     queryContainsStructVarAlteration,
+    parseMergedTrackOQLQuery,
+    unparseOQLQuery,
 } from './oqlfilter';
 import {
     NumericGeneMolecularData,
@@ -1002,5 +1004,37 @@ describe('queryContainsStructVarAlteration', () => {
             ),
             expected
         );
+    });
+});
+
+describe('unparseOQLQuery', () => {
+    it('should correctly backtranslate a track group', () => {
+        const inputString = '["My fav genes" TP53: HOMDEL, BRAF: MUT=V600E]';
+
+        const parsed = parseMergedTrackOQLQuery(inputString);
+        const result = unparseOQLQuery(parsed);
+
+        assert.equal(result, '["My fav genes" TP53: HOMDEL; BRAF: MUT=V600E;]');
+    });
+
+    it('should correctly backtranslate a mix of track groups and single genes', () => {
+        const inputString =
+            '["My mutated genes" IDH1: MUT, TP53: MUT]\nEGFR: AMP';
+
+        const parsed = parseMergedTrackOQLQuery(inputString);
+        const result = unparseOQLQuery(parsed);
+
+        assert.equal(
+            result,
+            '["My mutated genes" IDH1: MUT; TP53: MUT;]\nEGFR: AMP;'
+        );
+    });
+    it('should correctly backtranslate an unlabeled track group', () => {
+        const inputString = '[TP53: HOMDEL, BRAF: MUT]';
+
+        const parsed = parseMergedTrackOQLQuery(inputString);
+        const result = unparseOQLQuery(parsed);
+
+        assert.equal(result, '[TP53: HOMDEL; BRAF: MUT;]');
     });
 });
