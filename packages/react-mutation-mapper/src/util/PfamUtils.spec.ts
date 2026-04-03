@@ -51,9 +51,9 @@ describe('PfamUtils', () => {
             'number of colors should be equal to the number of unique domains'
         );
 
-        assert.equal(colorMap['PF0001'], '#2dcf00');
-        assert.equal(colorMap['PF0002'], '#ff5353');
-        assert.equal(colorMap['PF0003'], '#5b5bff');
-        assert.equal(colorMap['PF0004'], '#ebd61d');
+        assert.equal(colorMap['PF0001'], '#229e00');
+        assert.equal(colorMap['PF0002'], '#ff3d3d');
+        assert.equal(colorMap['PF0003'], '#6161ff');
+        assert.equal(colorMap['PF0004'], '#a3950f');
     });
 });

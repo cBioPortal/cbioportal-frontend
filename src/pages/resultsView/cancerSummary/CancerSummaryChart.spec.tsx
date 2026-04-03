@@ -224,12 +224,12 @@ describe('CancerSummaryChart', () => {
             },
             isPercentage: true,
             colors: {
-                mutated: '#008000',
+                mutated: '#008001',
                 amp: '#ff0000',
                 homdel: 'rgb(0,0,255)',
                 hetloss: '#000',
                 gain: 'rgb(255,182,193)',
-                fusion: '#8B00C9',
+                fusion: '#8B00C8',
                 mrnaExpressionHigh: '#FF989A',
                 mrnaExpressionLow: '#529AC8',
                 protExpressionHigh: '#FF989A',
@@ -270,7 +270,7 @@ describe('CancerSummaryChart', () => {
         ).instance() as CancerSummaryChart;
 
         const result = [
-            { name: 'Mutation', symbol: { fill: '#008000' } },
+            { name: 'Mutation', symbol: { fill: '#008001' } },
             { name: 'Amplification', symbol: { fill: '#ff0000' } },
             { name: 'Deep Deletion', symbol: { fill: 'rgb(0,0,255)' } },
             { name: 'Multiple Alterations', symbol: { fill: '#666' } },

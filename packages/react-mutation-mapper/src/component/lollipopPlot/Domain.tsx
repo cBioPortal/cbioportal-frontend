@@ -98,7 +98,7 @@ export default class Domain extends React.Component<DomainProps, {}> {
             y: this.centerY,
             textAnchor: 'middle',
             dy: '0.3em',
-            fill: this.props.labelColor || '#FFFFFF',
+            fill: this.props.labelColor || '#000000',
             style: {
                 fontSize: '12px',
                 fontFamily: 'arial',

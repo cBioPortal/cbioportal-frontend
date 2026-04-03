@@ -452,6 +452,7 @@ export default class QuickSearch extends React.Component<QuickSearchProps, {}> {
                     onSelectResetsInput={false}
                     menuIsOpen={this.menuIsOpen}
                     maxMenuHeight={550}
+                    aria-label="Quick Search Input"
                     styles={{
                         dropdownIndicator: () => {
                             return { display: 'none' };
@@ -474,11 +475,23 @@ export default class QuickSearch extends React.Component<QuickSearchProps, {}> {
                                 ...base,
                             };
                         },
+                        placeholder: (styles: any) => ({
+                            ...styles,
+                            color: '#757575',
+                        }),
+                        noOptionsMessage: (styles: any) => ({
+                            ...styles,
+                            color: '#757575',
+                        }),
+                        loadingMessage: (styles: any) => ({
+                            ...styles,
+                            color: '#757575',
+                        }),
                     }}
                 />
                 <p
                     style={{
-                        fontSize: 'x-small',
+                        fontSize: 'small',
                         textAlign: 'center',
                         paddingTop: 15,
                     }}
