@@ -35,6 +35,13 @@ import {
     DataTypeFilter,
     IFilterDef,
 } from 'shared/components/query/DataTypeFilter';
+import { ReferenceGenomeFilter } from 'shared/components/query/ReferenceGenomeFilter';
+import { createQueryUpdate } from 'shared/components/query/filteredSearch/field/CheckboxFilterField';
+import {
+    addClauses,
+    removePhrase,
+    toQueryString,
+} from 'shared/lib/query/textQueryUtils';
 import {
     getSampleCountsPerFilter,
     getStudyCountPerFilter,
@@ -182,6 +189,48 @@ export default class CancerStudySelector extends React.Component<
         if (option) {
             option.checked = !option.checked;
         }
+    }
+
+    @action
+    toggleReferenceGenome(genome: string) {
+        const current = this.selectedReferenceGenomes;
+        const isSelected = current.includes(genome);
+        const newSelected = isSelected
+            ? current.filter(g => g !== genome)
+            : [...current, genome];
+
+        // Remove existing reference-genome clauses from search text
+        let queryString = toQueryString(this.store.searchClauses);
+        queryString = queryString.replace(/reference-genome:\S+/g, '').trim();
+
+        // Add new ones
+        if (newSelected.length > 0) {
+            const additions = newSelected
+                .map(g => `reference-genome:${g}`)
+                .join(' ');
+            queryString = queryString
+                ? `${queryString} ${additions}`
+                : additions;
+        }
+
+        this.store.searchClauses = this.store.queryParser.parseSearchQuery(
+            queryString
+        );
+    }
+
+    @computed
+    get selectedReferenceGenomes(): string[] {
+        const prefix = 'reference-genome';
+        const selected: string[] = [];
+        for (const clause of this.store.searchClauses) {
+            for (const phrase of clause.getPhrases()) {
+                if ((phrase as any).prefix === prefix) {
+                    const list = (phrase as any).phraseList || [];
+                    selected.push(...list);
+                }
+            }
+        }
+        return selected;
     }
 
     private computeCountsForFilterOptions(
@@ -357,6 +406,26 @@ export default class CancerStudySelector extends React.Component<
                                             isLoading={
                                                 !this.store.resourceDefinitions
                                                     .isComplete
+                                            }
+                                        />
+                                    </div>
+                                    <div
+                                        style={{
+                                            display: 'inline-block',
+                                            alignItems: 'center',
+                                        }}
+                                    >
+                                        <ReferenceGenomeFilter
+                                            referenceGenomes={[
+                                                ...this.store.referenceGenomes,
+                                            ]}
+                                            selectedGenomes={
+                                                this.selectedReferenceGenomes
+                                            }
+                                            onToggle={(genome: string) =>
+                                                this.toggleReferenceGenome(
+                                                    genome
+                                                )
                                             }
                                         />
                                     </div>
