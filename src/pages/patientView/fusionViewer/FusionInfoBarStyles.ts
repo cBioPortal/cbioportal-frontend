@@ -92,27 +92,13 @@ export const inlineStyles = {
         gap: 6,
         paddingTop: 4,
     },
-    buildToggle: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: 2,
+    genomeBuildLabel: {
+        fontSize: 11,
+        fontWeight: 600 as const,
+        color: '#666',
+        padding: '2px 8px',
+        backgroundColor: '#f5f5f5',
         border: '1px solid #ccc',
         borderRadius: 3,
-        overflow: 'hidden' as const,
-        fontSize: 11,
-        fontWeight: 600 as const,
-    },
-    buildButton: {
-        padding: '2px 8px',
-        cursor: 'pointer',
-        border: 'none',
-        backgroundColor: '#f5f5f5',
-        color: '#666',
-        fontSize: 11,
-        fontWeight: 600 as const,
-    },
-    buildButtonActive: {
-        backgroundColor: '#337ab7',
-        color: '#fff',
     },
 };
