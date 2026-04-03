@@ -2834,4 +2834,12 @@ export class PatientViewPageStore {
         default: {},
         onError: () => {},
     });
+
+    readonly aiData = remoteData<any>({
+        invoke: async () =>
+            fetch('https://cbio-case-summarizer.surge.sh/P04.json').then(res =>
+                res.json()
+            ),
+        onError: () => {},
+    });
 }
