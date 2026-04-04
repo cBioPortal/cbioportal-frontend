@@ -12,6 +12,36 @@ import { PageType } from 'shared/userSession/PageType';
 import { PageSettingsIdentifier } from 'shared/userSession/PageSettingsIdentifier';
 import _ from 'lodash';
 
+/**
+ * Session service validates clinical track objects strictly. The oncoprint can
+ * attach gapMode (numeric enum); the API expects gapOn (boolean) only.
+ * Unknown keys (e.g. gapMode) can cause 400 Bad Request on POST /settings.
+ */
+function sanitizePageSettingsPayload(
+    data: PageSettingsUpdateRequest
+): PageSettingsUpdateRequest {
+    const d = { ...data } as Record<string, unknown>;
+    if (Array.isArray(d.clinicallist)) {
+        d.clinicallist = d.clinicallist.map((t: any) => {
+            const o: Record<string, unknown> = { stableId: t.stableId };
+            if (t.sortOrder != null && t.sortOrder !== '') {
+                o.sortOrder = t.sortOrder;
+            }
+            let gapOn: boolean | undefined;
+            if (t.gapMode != null && t.gapMode !== undefined) {
+                gapOn = t.gapMode !== 0;
+            } else if (t.gapOn === true || t.gapOn === false) {
+                gapOn = t.gapOn;
+            }
+            if (gapOn !== undefined) {
+                o.gapOn = gapOn;
+            }
+            return o;
+        });
+    }
+    return d as PageSettingsUpdateRequest;
+}
+
 export default class sessionServiceAPI {
     getVirtualStudyServiceUrl() {
         return `${getSessionUrl()}/virtual_study`;
@@ -162,10 +192,11 @@ export default class sessionServiceAPI {
     }
 
     updateUserSettings(data: PageSettingsUpdateRequest) {
+        const payload = sanitizePageSettingsPayload(data);
         return (
             request
                 .post(this.getUserSettingUrl())
-                .send(data)
+                .send(payload)
                 // @ts-ignore: this method comes from caching plugin and isn't in typing
                 .forceUpdate(true)
                 .then((res: any) => {
