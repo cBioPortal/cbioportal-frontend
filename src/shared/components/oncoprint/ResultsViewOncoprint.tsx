@@ -1688,8 +1688,7 @@ export default class ResultsViewOncoprint extends React.Component<
             this.oncoprint.getTrackSpecKey(trackId) || ''
         );
         const isClinicalTrack =
-            stableId &&
-            _.keys(clinicalTracksMap).some(ctg => ctg === stableId);
+            stableId && _.keys(clinicalTracksMap).some(ctg => ctg === stableId);
         if (!isClinicalTrack) {
             return;
         }
