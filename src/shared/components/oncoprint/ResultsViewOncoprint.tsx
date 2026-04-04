@@ -1683,21 +1683,28 @@ export default class ResultsViewOncoprint extends React.Component<
         if (!this.oncoprint || !this.oncoprintJs) {
             return;
         }
-        const clinicalTracks = _.clone(this.selectedClinicalTrackConfig);
+        const clinicalTracksMap = this.selectedClinicalTrackConfig;
         const stableId = this.clinicalTrackKeyToAttributeId(
             this.oncoprint.getTrackSpecKey(trackId) || ''
         );
         const isClinicalTrack =
-            stableId && _.keys(clinicalTracks).some(ctg => ctg === stableId);
+            stableId &&
+            _.keys(clinicalTracksMap).some(ctg => ctg === stableId);
         if (!isClinicalTrack) {
             return;
         }
-        Object.assign(clinicalTracks[stableId], change);
+        // Must not mutate track objects in place: after session load,
+        // _userSettings and _savedUserSettings can share the same references,
+        // so in-place mutation would keep isEqual true and hide "Save tracks".
+        const prev = clinicalTracksMap[stableId];
+        const next = new ClinicalTrackConfig(prev.stableId);
+        Object.assign(next, prev, change);
+        const nextMap = { ...clinicalTracksMap, [stableId]: next };
 
         const session = this.props.store.pageUserSession;
         session.userSettings = {
             ...session.userSettings,
-            clinicallist: _.values(clinicalTracks),
+            clinicallist: _.values(nextMap),
         };
     }
 
