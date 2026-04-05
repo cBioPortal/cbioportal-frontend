@@ -172,37 +172,95 @@ export function downsampleBoxScatterPointsByCategory<
         .map(Number)
         .sort((a, b) => a - b);
 
+    const categoryCount = categoryIndices.length;
     const samplesByCategory: Record<number, number> = {};
-    const remainders: Array<{ categoryIndex: number; remainder: number }> =
-        [];
-    let allocatedSamples = 0;
 
-    for (const categoryIndex of categoryIndices) {
-        const categoryPoints = grouped[String(categoryIndex)] as T[];
-        const categorySize = categoryPoints.length;
-        const exact = (categorySize * maxPoints) / points.length;
-        const base = Math.floor(exact);
-        samplesByCategory[categoryIndex] = base;
-        allocatedSamples += base;
-        remainders.push({
-            categoryIndex,
-            remainder: exact - base,
-        });
-    }
+    // If we have enough budget, guarantee every category gets at least 1 point
+    if (categoryCount <= maxPoints) {
+        let remainingBudget = maxPoints;
 
-    if (allocatedSamples < maxPoints) {
-        remainders
-            .sort((a, b) => {
-                const remainderCompare = b.remainder - a.remainder;
-                if (remainderCompare !== 0) {
-                    return remainderCompare;
-                }
-                return a.categoryIndex - b.categoryIndex;
-            })
-            .slice(0, maxPoints - allocatedSamples)
-            .forEach(({ categoryIndex }) => {
-                samplesByCategory[categoryIndex] += 1;
+        // First pass: allocate 1 point to each category
+        for (const categoryIndex of categoryIndices) {
+            samplesByCategory[categoryIndex] = 1;
+            remainingBudget -= 1;
+        }
+
+        // Second pass: distribute remaining budget proportionally
+        if (remainingBudget > 0) {
+            const remainders: Array<{
+                categoryIndex: number;
+                remainder: number;
+            }> = [];
+
+            for (const categoryIndex of categoryIndices) {
+                const categoryPoints = grouped[String(categoryIndex)] as T[];
+                const categorySize = categoryPoints.length;
+                // Allocate remaining budget proportionally based on size
+                const exact =
+                    (categorySize * remainingBudget) / points.length;
+                const base = Math.floor(exact);
+                samplesByCategory[categoryIndex] += base;
+                remainders.push({
+                    categoryIndex,
+                    remainder: exact - base,
+                });
+            }
+
+            // Distribute leftover points by largest remainder
+            const allocated = Object.values(
+                samplesByCategory
+            ).reduce((a, b) => a + b, 0);
+            if (allocated < maxPoints) {
+                remainders
+                    .sort((a, b) => {
+                        const remainderCompare =
+                            b.remainder - a.remainder;
+                        if (remainderCompare !== 0) {
+                            return remainderCompare;
+                        }
+                        return a.categoryIndex - b.categoryIndex;
+                    })
+                    .slice(0, maxPoints - allocated)
+                    .forEach(({ categoryIndex }) => {
+                        samplesByCategory[categoryIndex] += 1;
+                    });
+            }
+        }
+    } else {
+        // Not enough budget for every category: pure proportional allocation
+        const remainders: Array<{
+            categoryIndex: number;
+            remainder: number;
+        }> = [];
+        let allocatedSamples = 0;
+
+        for (const categoryIndex of categoryIndices) {
+            const categoryPoints = grouped[String(categoryIndex)] as T[];
+            const categorySize = categoryPoints.length;
+            const exact = (categorySize * maxPoints) / points.length;
+            const base = Math.floor(exact);
+            samplesByCategory[categoryIndex] = base;
+            allocatedSamples += base;
+            remainders.push({
+                categoryIndex,
+                remainder: exact - base,
             });
+        }
+
+        if (allocatedSamples < maxPoints) {
+            remainders
+                .sort((a, b) => {
+                    const remainderCompare = b.remainder - a.remainder;
+                    if (remainderCompare !== 0) {
+                        return remainderCompare;
+                    }
+                    return a.categoryIndex - b.categoryIndex;
+                })
+                .slice(0, maxPoints - allocatedSamples)
+                .forEach(({ categoryIndex }) => {
+                    samplesByCategory[categoryIndex] += 1;
+                });
+        }
     }
 
     const sampledPoints: T[] = [];
