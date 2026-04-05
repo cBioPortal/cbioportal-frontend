@@ -81,4 +81,36 @@ describe('BoxScatterPlot large-dataset downsampling', () => {
         assert.isAbove(counts[1], counts[2]);
         assert.equal(sampled.length, 1000);
     });
+
+    it('preserves visibility for small-but-nonempty categories in skewed datasets', () => {
+        const points: Array<{ id: number; categoryIndex: number }> = [];
+        let id = 0;
+        const largeCategorySize = 10000;
+        const singletonCategoryCount = 25;
+
+        // Create one large category and 25 singleton categories
+        for (let i = 0; i < largeCategorySize; i++) {
+            points.push({ id: id++, categoryIndex: 0 });
+        }
+        for (let categoryIndex = 1; categoryIndex <= singletonCategoryCount; categoryIndex++) {
+            points.push({ id: id++, categoryIndex });
+        }
+
+        // Downsample with 100-point budget (plenty for all 26 categories)
+        const sampled = downsampleBoxScatterPointsByCategory(
+            points,
+            100, // maxPoints
+            2000 // threshold
+        );
+
+        // Verify all categories are represented
+        const categoriesPresent = new Set(sampled.map(point => point.categoryIndex));
+        assert.equal(sampled.length, 100);
+        assert.equal(categoriesPresent.size, singletonCategoryCount + 1);
+
+        // Verify every category has at least 1 point
+        for (let categoryIndex = 0; categoryIndex <= singletonCategoryCount; categoryIndex++) {
+            assert.isTrue(categoriesPresent.has(categoryIndex));
+        }
+    });
 });
