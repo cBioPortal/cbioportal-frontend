@@ -132,6 +132,151 @@ const BOTTOM_LEGEND_PADDING = 15;
 const HORIZONTAL_OFFSET = 8;
 const VERTICAL_OFFSET = 17;
 const UTILITIES_MENU_HEIGHT = 20;
+const LARGE_BOX_SCATTER_DATASET_THRESHOLD = 20000;
+const MAX_RENDERED_BOX_SCATTER_POINTS = 5000;
+
+type PointWithCategoryIndex = {
+    categoryIndex: number;
+};
+
+export function sampleEvenly<T>(points: T[], sampleSize: number): T[] {
+    if (sampleSize <= 0) {
+        return [];
+    }
+    if (sampleSize >= points.length) {
+        return points;
+    }
+
+    const sampled: T[] = [];
+    const n = points.length;
+    for (let i = 0; i < sampleSize; i++) {
+        const index = Math.floor((i * n) / sampleSize);
+        sampled.push(points[index]);
+    }
+    return sampled;
+}
+
+export function downsampleBoxScatterPointsByCategory<
+    T extends PointWithCategoryIndex
+>(
+    points: T[],
+    maxPoints: number = MAX_RENDERED_BOX_SCATTER_POINTS,
+    threshold: number = LARGE_BOX_SCATTER_DATASET_THRESHOLD
+): T[] {
+    if (points.length <= threshold || points.length <= maxPoints) {
+        return points;
+    }
+
+    const grouped = _.groupBy(points, (point: T) => point.categoryIndex);
+    const categoryIndices = Object.keys(grouped)
+        .map(Number)
+        .sort((a, b) => a - b);
+
+    const categoryCount = categoryIndices.length;
+    const samplesByCategory: Record<number, number> = {};
+
+    // If we have enough budget, guarantee every category gets at least 1 point
+    if (categoryCount <= maxPoints) {
+        let remainingBudget = maxPoints;
+
+        // First pass: allocate 1 point to each category
+        for (const categoryIndex of categoryIndices) {
+            samplesByCategory[categoryIndex] = 1;
+            remainingBudget -= 1;
+        }
+
+        // Second pass: distribute remaining budget proportionally
+        if (remainingBudget > 0) {
+            const remainders: Array<{
+                categoryIndex: number;
+                remainder: number;
+            }> = [];
+
+            for (const categoryIndex of categoryIndices) {
+                const categoryPoints = grouped[String(categoryIndex)] as T[];
+                const categorySize = categoryPoints.length;
+                // Allocate remaining budget proportionally based on size
+                const exact =
+                    (categorySize * remainingBudget) / points.length;
+                const base = Math.floor(exact);
+                samplesByCategory[categoryIndex] += base;
+                remainders.push({
+                    categoryIndex,
+                    remainder: exact - base,
+                });
+            }
+
+            // Distribute leftover points by largest remainder
+            const allocated = Object.values(
+                samplesByCategory
+            ).reduce((a, b) => a + b, 0);
+            if (allocated < maxPoints) {
+                remainders
+                    .sort((a, b) => {
+                        const remainderCompare =
+                            b.remainder - a.remainder;
+                        if (remainderCompare !== 0) {
+                            return remainderCompare;
+                        }
+                        return a.categoryIndex - b.categoryIndex;
+                    })
+                    .slice(0, maxPoints - allocated)
+                    .forEach(({ categoryIndex }) => {
+                        samplesByCategory[categoryIndex] += 1;
+                    });
+            }
+        }
+    } else {
+        // Not enough budget for every category: pure proportional allocation
+        const remainders: Array<{
+            categoryIndex: number;
+            remainder: number;
+        }> = [];
+        let allocatedSamples = 0;
+
+        for (const categoryIndex of categoryIndices) {
+            const categoryPoints = grouped[String(categoryIndex)] as T[];
+            const categorySize = categoryPoints.length;
+            const exact = (categorySize * maxPoints) / points.length;
+            const base = Math.floor(exact);
+            samplesByCategory[categoryIndex] = base;
+            allocatedSamples += base;
+            remainders.push({
+                categoryIndex,
+                remainder: exact - base,
+            });
+        }
+
+        if (allocatedSamples < maxPoints) {
+            remainders
+                .sort((a, b) => {
+                    const remainderCompare = b.remainder - a.remainder;
+                    if (remainderCompare !== 0) {
+                        return remainderCompare;
+                    }
+                    return a.categoryIndex - b.categoryIndex;
+                })
+                .slice(0, maxPoints - allocatedSamples)
+                .forEach(({ categoryIndex }) => {
+                    samplesByCategory[categoryIndex] += 1;
+                });
+        }
+    }
+
+    const sampledPoints: T[] = [];
+    for (const categoryIndex of categoryIndices) {
+        const categoryPoints = grouped[String(categoryIndex)] as T[];
+        const targetCount = Math.min(
+            categoryPoints.length,
+            samplesByCategory[categoryIndex] || 0
+        );
+        if (targetCount > 0) {
+            sampledPoints.push(...sampleEvenly(categoryPoints, targetCount));
+        }
+    }
+
+    return sampledPoints;
+}
 
 /*
     This component exists to provide a mouseover target for tooltips
@@ -773,7 +918,8 @@ export default class BoxScatterPlot<
     @computed get scatterPlotData() {
         let dataAxis: 'x' | 'y' = this.props.horizontal ? 'x' : 'y';
         let categoryAxis: 'x' | 'y' = this.props.horizontal ? 'y' : 'x';
-        const data: (D & { x: number; y: number })[] = [];
+        const data: (D & { x: number; y: number; categoryIndex: number })[] =
+            [];
         for (let i = 0; i < this.props.data.length; i++) {
             const categoryCoord = this.categoryCoord(i);
             for (const d of this.props.data[i].data) {
@@ -781,12 +927,15 @@ export default class BoxScatterPlot<
                     Object.assign({}, d, {
                         [dataAxis]: d.value,
                         [categoryAxis]: categoryCoord,
-                    } as { x: number; y: number })
+                        categoryIndex: i,
+                    } as { x: number; y: number; categoryIndex: number })
                 );
             }
         }
+
+        const renderData = downsampleBoxScatterPointsByCategory(data);
         return separateScatterDataByAppearance<D>(
-            data,
+            renderData,
             ifNotDefined(this.props.fill, '0x000000'),
             ifNotDefined(this.props.stroke, '0x000000'),
             ifNotDefined(this.props.strokeWidth, 0),
