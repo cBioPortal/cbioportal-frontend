@@ -85,13 +85,6 @@ describe('patient view page', function() {
     describe('patient view mutational signatures', () => {
         beforeEach(async () => {
             await goToUrlAndSetLocalStorage(genericAssayPatientViewUrl, true);
-            //waitForPatientView();
-            await (
-                await $('a.tabAnchor_mutationalSignatures')
-            ).waitForDisplayed({
-                timeout: 20000,
-            });
-            await (await $('a.tabAnchor_mutationalSignatures')).click();
             await (
                 await $('div[data-test="MutationalSignaturesContainer"]')
             ).waitForDisplayed({
@@ -143,8 +136,6 @@ describe('patient view page', function() {
         });
 
         it('show tooltip for patient who has significant ID signatures', async () => {
-            //browser.debug();
-
             await selectMutationalSignaturesVersionID();
             await (await $('div.progress')).waitForDisplayed({
                 timeout: 20000,
@@ -214,12 +205,6 @@ describe('patient view page', function() {
     describe('test the mutational bar chart', () => {
         before(async () => {
             await goToUrlAndSetLocalStorage(genericAssayPatientViewUrl, true);
-            await (
-                await $('a.tabAnchor_mutationalSignatures')
-            ).waitForDisplayed({
-                timeout: 20000,
-            });
-            await (await $('a.tabAnchor_mutationalSignatures')).click();
             await (
                 await $('div[data-test="MutationalSignaturesContainer"]')
             ).waitForDisplayed({
