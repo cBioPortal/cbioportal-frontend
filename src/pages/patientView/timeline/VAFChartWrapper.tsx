@@ -296,19 +296,24 @@ export default class VAFChartWrapper extends React.Component<
             // if in sequential mode, compute x coordinates using effective samples
             // (only selected samples), so they are evenly distributed
             const effectiveSamples = this.effectiveSamples;
-            sequentialDistance =
-                effectiveSamples.length > 1
-                    ? (this.store.pixelWidth - sequentialPadding * 2) /
-                      (effectiveSamples.length - 1)
-                    : 0;
+            if (effectiveSamples.length === 1) {
+                samplePosition = {
+                    [effectiveSamples[0].sampleId]:
+                        this.store.pixelWidth / 2,
+                };
+            } else {
+                sequentialDistance =
+                    (this.store.pixelWidth - sequentialPadding * 2) /
+                    (effectiveSamples.length - 1);
 
-            samplePosition = effectiveSamples.reduce((map, sample) => {
-                map[sample.sampleId] =
-                    this.effectiveSampleIdOrder[sample.sampleId] *
-                        sequentialDistance +
-                    sequentialPadding;
-                return map;
-            }, {} as { [sampleId: string]: number });
+                samplePosition = effectiveSamples.reduce((map, sample) => {
+                    map[sample.sampleId] =
+                        this.effectiveSampleIdOrder[sample.sampleId] *
+                            sequentialDistance +
+                        sequentialPadding;
+                    return map;
+                }, {} as { [sampleId: string]: number });
+            }
         } else {
             // if not in sequential mode, we use sample event data to compute position
             samplePosition = this.store.sampleEvents.reduce((map, sample) => {

@@ -32,9 +32,7 @@ const VAFChartControls: React.FunctionComponent<IVAFChartControlsProps> = observ
         const numSelected = selectedSampleValues.length;
         const numTotal = sampleOptions.length;
         const samplePlaceholder =
-            numSelected === numTotal
-                ? 'Select Samples: All'
-                : `Select Samples: ${numSelected}/${numTotal}`;
+            numSelected === numTotal ? 'All' : `${numSelected}/${numTotal}`;
 
         const groupByOptions = [
             {
