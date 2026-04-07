@@ -1479,12 +1479,10 @@ export default class ResultsViewOncoprint extends React.Component<
             let json: GeneticTrackConfigMap = _.clone(
                 this.selectedGeneticTrackConfig
             );
-            json = _.omitBy(json, entry =>
-                genesToDelete.some(
-                    gene =>
-                        entry.stableId.toUpperCase() === gene.toUpperCase()
-                )
-            ) as GeneticTrackConfigMap;
+            json = _.omitBy(json, entry => {
+                const stableIdUpper = entry.stableId.toUpperCase();
+                return genesToDelete.some(gene => stableIdUpper === gene);
+            }) as GeneticTrackConfigMap;
             const session = this.props.store.pageUserSession;
             session.userSettings = {
                 ...session.userSettings,
