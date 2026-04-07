@@ -862,6 +862,92 @@ describe('GroupComparisonUtils', () => {
                 ]
             );
         });
+        it('Primary sorts before Metastasis', () => {
+            assert.deepEqual(
+                defaultGroupOrder([
+                    { name: 'Metastasis' },
+                    { name: 'Primary' },
+                ]),
+                [{ name: 'Primary' }, { name: 'Metastasis' }]
+            );
+        });
+        it('Primary sorts before Metastatic', () => {
+            assert.deepEqual(
+                defaultGroupOrder([
+                    { name: 'Metastatic' },
+                    { name: 'Primary' },
+                ]),
+                [{ name: 'Primary' }, { name: 'Metastatic' }]
+            );
+        });
+        it('Pre-treatment sorts before Post-treatment', () => {
+            assert.deepEqual(
+                defaultGroupOrder([
+                    { name: 'Post-treatment' },
+                    { name: 'Pre-treatment' },
+                ]),
+                [{ name: 'Pre-treatment' }, { name: 'Post-treatment' }]
+            );
+        });
+        it('pretreatment (no hyphen) sorts before posttreatment (no hyphen)', () => {
+            assert.deepEqual(
+                defaultGroupOrder([
+                    { name: 'posttreatment' },
+                    { name: 'pretreatment' },
+                ]),
+                [{ name: 'pretreatment' }, { name: 'posttreatment' }]
+            );
+        });
+        it('pre sorts before post', () => {
+            assert.deepEqual(
+                defaultGroupOrder([{ name: 'post' }, { name: 'pre' }]),
+                [{ name: 'pre' }, { name: 'post' }]
+            );
+        });
+        it('Primary, Control, Metastasis - Primary first, Metastasis last, Control in between', () => {
+            assert.deepEqual(
+                defaultGroupOrder([
+                    { name: 'Metastasis' },
+                    { name: 'Control' },
+                    { name: 'Primary' },
+                ]),
+                [
+                    { name: 'Primary' },
+                    { name: 'Control' },
+                    { name: 'Metastasis' },
+                ]
+            );
+        });
+        it('clinical priority ordering with NA at end', () => {
+            assert.deepEqual(
+                defaultGroupOrder([
+                    { name: 'NA' },
+                    { name: 'Metastasis' },
+                    { name: 'Post-treatment' },
+                    { name: 'Control' },
+                    { name: 'Pre-treatment' },
+                    { name: 'Primary' },
+                ]),
+                [
+                    { name: 'Primary' },
+                    { name: 'Pre-treatment' },
+                    { name: 'Control' },
+                    { name: 'Post-treatment' },
+                    { name: 'Metastasis' },
+                    { name: 'NA' },
+                ]
+            );
+        });
+        it('non-matching group names still sort alphabetically', () => {
+            assert.deepEqual(
+                defaultGroupOrder([
+                    { name: 'Zebra' },
+                    { name: 'Alpha' },
+                    { name: 'Middle' },
+                ]),
+                [{ name: 'Alpha' }, { name: 'Middle' }, { name: 'Zebra' }]
+            );
+        });
     });
     describe('getOrdinals', () => {
         it('correct values', () => {

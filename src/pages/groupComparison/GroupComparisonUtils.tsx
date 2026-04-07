@@ -90,12 +90,39 @@ export type CopyNumberEnrichment = AlterationEnrichmentWithQ & {
     value: number;
 };
 
+// Priority rules for clinically meaningful group ordering.
+// Groups matching an earlier rule sort before groups matching a later rule.
+// Groups not matching any rule get the DEFAULT_GROUP_SORT_PRIORITY and
+// are sorted alphabetically among themselves.
+const GROUP_SORT_PRIORITY_RULES: { pattern: RegExp; priority: number }[] = [
+    { pattern: /\bprimary\b/i, priority: 0 },
+    { pattern: /\bpre\b/i, priority: 1 }, // matches "pre", "pre-treatment", "pre-surgery", etc.
+    { pattern: /\bpretreatment\b/i, priority: 1 }, // matches "pretreatment" (no hyphen/space)
+    { pattern: /\bpost\b/i, priority: 3 }, // matches "post", "post-treatment", "post-surgery", etc.
+    { pattern: /\bposttreatment\b/i, priority: 3 }, // matches "posttreatment" (no hyphen/space)
+    { pattern: /\bmetastas(is|tic)\b/i, priority: 4 }, // matches "metastasis" or "metastatic"
+];
+const DEFAULT_GROUP_SORT_PRIORITY = 2;
+
+function getGroupNameSortPriority(name: string): number {
+    for (const rule of GROUP_SORT_PRIORITY_RULES) {
+        if (rule.pattern.test(name)) {
+            return rule.priority;
+        }
+    }
+    return DEFAULT_GROUP_SORT_PRIORITY;
+}
+
 export function defaultGroupOrder<T extends Pick<ComparisonGroup, 'name'>>(
     groups: T[]
 ) {
-    // sort alphabetically, except NA goes last
+    // sort by clinical priority then alphabetically, except NA goes last
     const isNA = _.partition(groups, g => g.name.toLowerCase() === 'na');
-    return _.sortBy(isNA[1], g => g.name.toLowerCase()).concat(isNA[0]);
+    const sorted = _.sortBy(isNA[1], [
+        g => getGroupNameSortPriority(g.name),
+        g => g.name.toLowerCase(),
+    ]);
+    return sorted.concat(isNA[0]);
 }
 
 export const MAX_GROUPS_IN_SESSION = 20;
