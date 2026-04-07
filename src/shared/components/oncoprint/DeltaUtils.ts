@@ -1179,7 +1179,7 @@ function transitionGeneticTrack(
                         return; // skip deletion — can't determine correct index
                     }
                     const trackIndex = parseInt(match[1], 10);
-                    nextProps.onDeleteGeneticTrack(nextSpec.label, trackIndex);
+                    nextProps.onDeleteGeneticTrack(trackIndex);
                 }
             },
             expandCallback: nextSpec.expansionCallback || undefined,

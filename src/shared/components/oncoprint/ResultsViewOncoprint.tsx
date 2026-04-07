@@ -1462,10 +1462,7 @@ export default class ResultsViewOncoprint extends React.Component<
         }
     }
 
-    private onDeleteGeneticTrack(
-        geneticTrackLabel: string,
-        trackIndex: number
-    ): void {
+    private onDeleteGeneticTrack(trackIndex: number): void {
         if (!this.isHidden) {
             const currentGeneList =
                 this.urlWrapper.query.gene_list || '';
