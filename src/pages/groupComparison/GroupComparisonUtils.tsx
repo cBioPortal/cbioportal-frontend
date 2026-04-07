@@ -96,10 +96,10 @@ export type CopyNumberEnrichment = AlterationEnrichmentWithQ & {
 // are sorted alphabetically among themselves.
 const GROUP_SORT_PRIORITY_RULES: { pattern: RegExp; priority: number }[] = [
     { pattern: /\bprimary\b/i, priority: 0 },
-    { pattern: /\bpre\b/i, priority: 1 }, // matches "pre", "pre-treatment", "pre-surgery", etc.
-    { pattern: /\bpretreatment\b/i, priority: 1 }, // matches "pretreatment" (no hyphen/space)
-    { pattern: /\bpost\b/i, priority: 3 }, // matches "post", "post-treatment", "post-surgery", etc.
-    { pattern: /\bposttreatment\b/i, priority: 3 }, // matches "posttreatment" (no hyphen/space)
+    // matches "pre", "pre-treatment", "pre-surgery", "pretreatment", etc.
+    { pattern: /\bpre(?:treatment)?\b/i, priority: 1 },
+    // matches "post", "post-treatment", "post-surgery", "posttreatment", etc.
+    { pattern: /\bpost(?:treatment)?\b/i, priority: 3 },
     { pattern: /\bmetastas(is|tic)\b/i, priority: 4 }, // matches "metastasis" or "metastatic"
 ];
 const DEFAULT_GROUP_SORT_PRIORITY = 2;
