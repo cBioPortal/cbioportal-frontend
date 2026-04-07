@@ -1240,7 +1240,15 @@ export const structVarOQLSpecialValues = [
  * string unchanged if parsing fails or the index is out of range.
  *
  * This is the correct primitive for "Remove track" in the Oncoprint: the
- * track key `GENETICTRACK_N` corresponds to index N in the parsed gene list.
+ * track key `GENETICTRACK_N` corresponds to index N in the parsed gene list
+ * (after DATATYPES statements have been consumed).
+ *
+ * Handles all input formats accepted by the OQL parser:
+ * - Newline-separated: `KRAS\nNRAS\nBRAF`
+ * - Space-separated (e.g. homepage URLs): `KRAS NRAS BRAF`
+ * - OQL-qualified genes: `BRAF:V600E`
+ * - Merged tracks: `[KRAS NRAS]` or `["label" KRAS NRAS]`
+ * - DATATYPES statements (preserved in output, skipped in index count)
  */
 export function removeIndexFromGeneList(
     geneList: string,
@@ -1253,48 +1261,59 @@ export function removeIndexFromGeneList(
         return geneList;
     }
 
-    const lines = geneList.split(/\r?\n/);
-
-    let currentTrackIndex = 0;
-    let lineIndexToRemove = -1;
-
-    for (let i = 0; i < lines.length; i++) {
-        const trimmed = lines[i].trim();
-
-        // Skip empty lines
-        if (!trimmed) {
-            continue;
-        }
-
-        // Skip comment lines (starting with '#')
-        if (trimmed.startsWith('#')) {
-            continue;
-        }
-
-        // Skip DATATYPES lines from track index mapping, but keep them in output
-        if (/^DATATYPES\b/i.test(trimmed)) {
-            continue;
-        }
-
-        if (currentTrackIndex === indexToRemove) {
-            lineIndexToRemove = i;
-            break;
-        }
-
-        currentTrackIndex++;
-    }
-
-    if (lineIndexToRemove === -1) {
+    let rawParsed: (SingleGeneQuery | MergedGeneQuery)[];
+    try {
+        rawParsed = (oql_parser.parse(geneList) ||
+            []) as (SingleGeneQuery | MergedGeneQuery)[];
+    } catch (e) {
         console.warn(
-            `removeIndexFromGeneList: index ${indexToRemove} is out of range ` +
-                `for gene list with ${currentTrackIndex} entries`
+            'removeIndexFromGeneList: failed to parse gene list:',
+            e
         );
         return geneList;
     }
 
-    lines.splice(lineIndexToRemove, 1);
+    // Build a mapping from track index to raw-parsed-array index, skipping
+    // DATATYPES statements.  The oncoprint track index (GENETICTRACK_N) is
+    // based on the gene list after DATATYPES statements have been consumed by
+    // the OQL processor, so we must skip them when counting.
+    const trackIndices: number[] = [];
+    for (let i = 0; i < rawParsed.length; i++) {
+        const entry = rawParsed[i];
+        if (
+            !isMergedGeneQuery(entry) &&
+            (entry as SingleGeneQuery).gene?.toUpperCase() === 'DATATYPES'
+        ) {
+            continue;
+        }
+        trackIndices.push(i);
+    }
 
-    return lines.join('\n');
+    if (indexToRemove >= trackIndices.length) {
+        console.warn(
+            `removeIndexFromGeneList: index ${indexToRemove} is out of range ` +
+                `for gene list with ${trackIndices.length} entries`
+        );
+        return geneList;
+    }
+
+    const rawIndexToRemove = trackIndices[indexToRemove];
+    return rawParsed
+        .filter((_, i) => i !== rawIndexToRemove)
+        .map(entry => {
+            if (isMergedGeneQuery(entry)) {
+                // Merged track: use the OQL parser's label syntax, which is a
+                // quoted label as the first token inside brackets:
+                //   ["My label" GENE1 GENE2]
+                // (no colon after the label — a colon would produce invalid OQL)
+                const label = entry.label ? `"${entry.label}" ` : '';
+                return `[${label}${entry.list
+                    .map(unparseOQLQueryLine)
+                    .join(' ')}]`;
+            }
+            return unparseOQLQueryLine(entry as SingleGeneQuery);
+        })
+        .join('\n');
 }
 
 export function uniqueGenesInOQLQuery(oql_query: string): string[] {
