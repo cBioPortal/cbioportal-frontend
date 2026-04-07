@@ -1263,8 +1263,12 @@ export function removeIndexFromGeneList(
 
     let rawParsed: (SingleGeneQuery | MergedGeneQuery)[];
     try {
-        rawParsed = (oql_parser.parse(geneList) ||
-            []) as (SingleGeneQuery | MergedGeneQuery)[];
+        const parseResult = oql_parser.parse(geneList);
+        rawParsed = (parseResult || []) as (SingleGeneQuery | MergedGeneQuery)[];
+        if (!parseResult) {
+            // Empty or null result means empty gene list — nothing to remove
+            return geneList;
+        }
     } catch (e) {
         console.warn(
             'removeIndexFromGeneList: failed to parse gene list:',
@@ -1282,7 +1286,8 @@ export function removeIndexFromGeneList(
         const entry = rawParsed[i];
         if (
             !isMergedGeneQuery(entry) &&
-            (entry as SingleGeneQuery).gene?.toUpperCase() === 'DATATYPES'
+            'gene' in entry &&
+            (entry as SingleGeneQuery).gene.toUpperCase() === 'DATATYPES'
         ) {
             continue;
         }
@@ -1311,6 +1316,7 @@ export function removeIndexFromGeneList(
                     .map(unparseOQLQueryLine)
                     .join(' ')}]`;
             }
+            // At this point entry is a SingleGeneQuery (not a MergedGeneQuery)
             return unparseOQLQueryLine(entry as SingleGeneQuery);
         })
         .join('\n');
