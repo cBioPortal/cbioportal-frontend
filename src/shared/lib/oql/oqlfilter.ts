@@ -1246,36 +1246,55 @@ export function removeIndexFromGeneList(
     geneList: string,
     indexToRemove: number
 ): string {
-    let parsed: (SingleGeneQuery | MergedGeneQuery)[];
-    try {
-        parsed = (oql_parser.parse(geneList) ||
-            []) as (SingleGeneQuery | MergedGeneQuery)[];
-    } catch (e) {
+    if (indexToRemove < 0) {
         console.warn(
-            'removeIndexFromGeneList: failed to parse gene list:',
-            e
+            `removeIndexFromGeneList: index ${indexToRemove} is out of range`
         );
         return geneList;
     }
-    if (indexToRemove < 0 || indexToRemove >= parsed.length) {
+
+    const lines = geneList.split(/\r?\n/);
+
+    let currentTrackIndex = 0;
+    let lineIndexToRemove = -1;
+
+    for (let i = 0; i < lines.length; i++) {
+        const trimmed = lines[i].trim();
+
+        // Skip empty lines
+        if (!trimmed) {
+            continue;
+        }
+
+        // Skip comment lines (starting with '#')
+        if (trimmed.startsWith('#')) {
+            continue;
+        }
+
+        // Skip DATATYPES lines from track index mapping, but keep them in output
+        if (/^DATATYPES\b/i.test(trimmed)) {
+            continue;
+        }
+
+        if (currentTrackIndex === indexToRemove) {
+            lineIndexToRemove = i;
+            break;
+        }
+
+        currentTrackIndex++;
+    }
+
+    if (lineIndexToRemove === -1) {
         console.warn(
             `removeIndexFromGeneList: index ${indexToRemove} is out of range ` +
-                `for gene list with ${parsed.length} entries`
+                `for gene list with ${currentTrackIndex} entries`
         );
         return geneList;
     }
-    return parsed
-        .filter((_, i) => i !== indexToRemove)
-        .map(entry => {
-            if (isMergedGeneQuery(entry)) {
-                const label = entry.label ? `${entry.label}: ` : '';
-                return `[${label}${entry.list
-                    .map(unparseOQLQueryLine)
-                    .join(' ')}]`;
-            }
-            return unparseOQLQueryLine(entry);
-        })
-        .join('\n');
+
+    lines.splice(lineIndexToRemove, 1);
+
+    return lines.join('\n');
 }
 
 export function uniqueGenesInOQLQuery(oql_query: string): string[] {
