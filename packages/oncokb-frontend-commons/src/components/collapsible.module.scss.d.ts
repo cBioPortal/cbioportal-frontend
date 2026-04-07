@@ -3,4 +3,3 @@ declare const styles: {
   readonly "levels-collapse": string;
 };
 export = styles;
-
