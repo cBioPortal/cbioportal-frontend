@@ -1322,6 +1322,55 @@ export function removeIndexFromGeneList(
         .join('\n');
 }
 
+/**
+ * Returns the Hugo gene symbols for the OQL entry at the given track index
+ * (after skipping DATATYPES statements). For a simple gene returns a
+ * single-element array; for a merged track returns all gene symbols in the
+ * group.  Returns an empty array if the index is out of range or parsing
+ * fails.
+ */
+export function getGeneSymbolsAtIndex(
+    geneList: string,
+    trackIndex: number
+): string[] {
+    if (trackIndex < 0) {
+        return [];
+    }
+
+    let rawParsed: (SingleGeneQuery | MergedGeneQuery)[];
+    try {
+        const parseResult = oql_parser.parse(geneList);
+        if (!parseResult) {
+            return [];
+        }
+        rawParsed = parseResult as (SingleGeneQuery | MergedGeneQuery)[];
+    } catch (e) {
+        return [];
+    }
+
+    // Skip DATATYPES entries when counting track indices (same logic as
+    // removeIndexFromGeneList)
+    let currentTrackIndex = 0;
+    for (const entry of rawParsed) {
+        if (
+            !isMergedGeneQuery(entry) &&
+            'gene' in entry &&
+            (entry as SingleGeneQuery).gene.toUpperCase() === 'DATATYPES'
+        ) {
+            continue;
+        }
+        if (currentTrackIndex === trackIndex) {
+            if (isMergedGeneQuery(entry)) {
+                return entry.list.map(g => g.gene.toUpperCase());
+            }
+            return [(entry as SingleGeneQuery).gene.toUpperCase()];
+        }
+        currentTrackIndex++;
+    }
+
+    return [];
+}
+
 export function uniqueGenesInOQLQuery(oql_query: string): string[] {
     const parse_result: SingleGeneQuery[] = parseOQLQuery(oql_query);
     const genes = parse_result

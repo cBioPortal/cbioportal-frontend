@@ -81,6 +81,7 @@ import autobind from 'autobind-decorator';
 import {
     parseOQLQuery,
     removeIndexFromGeneList,
+    getGeneSymbolsAtIndex,
 } from '../../lib/oql/oqlfilter';
 import AlterationFilterWarning from '../banners/AlterationFilterWarning';
 import WindowStore from '../window/WindowStore';
@@ -1466,20 +1467,29 @@ export default class ResultsViewOncoprint extends React.Component<
         trackIndex: number
     ): void {
         if (!this.isHidden) {
+            const currentGeneList =
+                this.urlWrapper.query.gene_list || '';
+            // Derive the genes to remove from the parsed gene_list at
+            // trackIndex — this correctly handles merged tracks where the
+            // display label is not a plain space-separated gene list.
+            const genesToDelete = getGeneSymbolsAtIndex(
+                currentGeneList,
+                trackIndex
+            );
             let json: GeneticTrackConfigMap = _.clone(
                 this.selectedGeneticTrackConfig
             );
-            const genesToDelete = geneticTrackLabel.split(' ');
             json = _.omitBy(json, entry =>
-                genesToDelete.some(gene => entry.stableId.includes(gene.trim()))
+                genesToDelete.some(
+                    gene =>
+                        entry.stableId.toUpperCase() === gene.toUpperCase()
+                )
             ) as GeneticTrackConfigMap;
             const session = this.props.store.pageUserSession;
             session.userSettings = {
                 ...session.userSettings,
                 geneticlist: _.values(json),
             };
-            const currentGeneList =
-                this.urlWrapper.query.gene_list || '';
             const newGeneList = removeIndexFromGeneList(
                 currentGeneList,
                 trackIndex
