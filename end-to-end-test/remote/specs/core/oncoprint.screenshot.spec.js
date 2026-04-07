@@ -372,17 +372,33 @@ describe('sorting', () => {
                 '/index.do?cancer_study_id=gbm_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=gbm_tcga_pub_cnaseq&gene_list=TP53%20MDM2%20MDM4&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=gbm_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=gbm_tcga_pub_cna_rae&clinicallist=FRACTION_GENOME_ALTERED%2CDFS_MONTHS%2CKARNOFSKY_PERFORMANCE_SCORE%2COS_STATUS&heatmap_track_groups=gbm_tcga_pub_mrna_median_Zscores%2CTP53%2CMDM2%2CMDM4%3Bgbm_tcga_pub_mrna_merged_median_Zscores%2CTP53%2CMDM2%2CMDM4'
         );
         await waitForOncoprint();
-        // first get rid of the Profiled track
+        // Remove the "Profiled in..." clinical track if present at position 5.
+        // When clinicallist is explicitly set in the URL, the Profiled-in track
+        // is not shown, so position 5 will be the first genetic track (TP53).
+        // We detect the track type by checking for sort options in the dropdown:
+        // clinical tracks have "Sort a-Z"; genetic tracks do not.
         const profiledElements = await getNthOncoprintTrackOptionsElements(5);
         await (await getElement(profiledElements.button_selector)).moveTo();
         await clickElement(profiledElements.button_selector);
         await waitForElementDisplayed(profiledElements.dropdown_selector, {
             timeout: 1000,
         }); // wait for menu to appear
-        await clickElement(
-            profiledElements.dropdown_selector + ' li:nth-child(3)'
-        ); // Click Remove Track
-        await waitForOncoprint();
+        const $dropdown = await $(profiledElements.dropdown_selector);
+        const $sortAZ = await $dropdown.$('li=Sort a-Z');
+        if (await $sortAZ.isExisting()) {
+            // It is a sortable clinical track — remove it
+            await clickElement(
+                profiledElements.dropdown_selector + ' li:nth-child(3)'
+            ); // Click Remove Track
+            await waitForOncoprint();
+        } else {
+            // It is a genetic track (no Profiled-in track exists for this URL);
+            // close the dropdown by clicking the button again (toggle)
+            await clickElement(profiledElements.button_selector);
+            await (
+                await $(profiledElements.dropdown_selector)
+            ).waitForDisplayed({ timeout: 1000, reverse: true });
+        }
 
         const res = await checkOncoprintElement('.oncoprintContainer');
         assertScreenShotMatch(res);
