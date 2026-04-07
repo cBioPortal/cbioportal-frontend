@@ -6,6 +6,7 @@ import SampleManager, {
 } from '../SampleManager';
 import LabeledCheckbox from '../../../shared/components/labeledCheckbox/LabeledCheckbox';
 import VAFChartWrapperStore from './VAFChartWrapperStore';
+import { CheckedSelect, Option } from 'cbioportal-frontend-commons';
 
 interface IVAFChartControlsProps {
     wrapperStore: VAFChartWrapperStore;
@@ -16,6 +17,25 @@ export const GROUP_BY_NONE = 'None';
 
 const VAFChartControls: React.FunctionComponent<IVAFChartControlsProps> = observer(
     function({ wrapperStore, sampleManager }) {
+        const sampleOptions: Option[] = sampleManager.samples.map(sample => ({
+            value: sample.id,
+            label: sample.id,
+        }));
+
+        const selectedSampleValues: { value: string }[] =
+            wrapperStore.selectedSampleIds === null
+                ? sampleOptions
+                : sampleOptions.filter(o =>
+                      wrapperStore.selectedSampleIds!.includes(o.value)
+                  );
+
+        const numSelected = selectedSampleValues.length;
+        const numTotal = sampleOptions.length;
+        const samplePlaceholder =
+            numSelected === numTotal
+                ? 'Select Samples: All'
+                : `Select Samples: ${numSelected}/${numTotal}`;
+
         const groupByOptions = [
             {
                 label: GROUP_BY_NONE,
@@ -44,6 +64,26 @@ const VAFChartControls: React.FunctionComponent<IVAFChartControlsProps> = observ
 
         return (
             <div className={'VAFChartControls'} data-test={'VAFChartControls'}>
+                <label>
+                    Select Samples:&nbsp;
+                    <span style={{ display: 'inline-block', width: 250 }}>
+                        <CheckedSelect
+                            name={'select-samples'}
+                            placeholder={samplePlaceholder}
+                            value={selectedSampleValues}
+                            options={sampleOptions}
+                            onChange={(options: { value: string }[]) => {
+                                if (options.length === sampleOptions.length) {
+                                    wrapperStore.setSelectedSampleIds(null);
+                                } else {
+                                    wrapperStore.setSelectedSampleIds(
+                                        options.map(o => o.value)
+                                    );
+                                }
+                            }}
+                        />
+                    </span>
+                </label>
                 <label>
                     Group by:&nbsp;
                     <ReactSelect

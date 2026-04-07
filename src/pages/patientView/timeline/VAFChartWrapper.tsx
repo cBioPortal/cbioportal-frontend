@@ -175,10 +175,39 @@ export default class VAFChartWrapper extends React.Component<
         }
     }
 
+    @computed get effectiveSamples() {
+        const selectedSampleIds = this.props.wrapperStore.selectedSampleIds;
+        if (selectedSampleIds === null) {
+            return this.props.samples;
+        }
+        const selectedSet = new Set(selectedSampleIds);
+        return this.props.samples.filter(s => selectedSet.has(s.sampleId));
+    }
+
+    @computed get effectiveSampleIdOrder() {
+        return stringListToIndexSet(
+            this.effectiveSamples.map(s => s.sampleId)
+        );
+    }
+
     @computed get lineData() {
+        const selectedSampleIds = this.props.wrapperStore.selectedSampleIds;
+        let samples = this.props.samples;
+        let mutations = this.mutations;
+
+        if (selectedSampleIds !== null) {
+            const selectedSet = new Set(selectedSampleIds);
+            samples = samples.filter(s => selectedSet.has(s.sampleId));
+            mutations = mutations
+                .map(mutArr =>
+                    mutArr.filter(m => selectedSet.has(m.sampleId))
+                )
+                .filter(mutArr => mutArr.length > 0);
+        }
+
         return computeRenderData(
-            this.props.samples,
-            this.mutations,
+            samples,
+            mutations,
             this.props.sampleManager.sampleIdToIndexMap,
             this.props.mutationProfileId,
             this.props.coverageInformation,
@@ -264,15 +293,19 @@ export default class VAFChartWrapper extends React.Component<
         let sequentialPadding: number = 20;
         let samplePosition: { [sampleId: string]: number };
         if (this.props.wrapperStore.showSequentialMode) {
-            // if in sequential mode, compute x coordinates using samples array,
-            //  since we may not have sample event data
+            // if in sequential mode, compute x coordinates using effective samples
+            // (only selected samples), so they are evenly distributed
+            const effectiveSamples = this.effectiveSamples;
             sequentialDistance =
-                (this.store.pixelWidth - sequentialPadding * 2) /
-                (this.props.samples.length - 1);
+                effectiveSamples.length > 1
+                    ? (this.store.pixelWidth - sequentialPadding * 2) /
+                      (effectiveSamples.length - 1)
+                    : 0;
 
-            samplePosition = this.props.samples.reduce((map, sample) => {
+            samplePosition = effectiveSamples.reduce((map, sample) => {
                 map[sample.sampleId] =
-                    this.sampleIdOrder[sample.sampleId] * sequentialDistance +
+                    this.effectiveSampleIdOrder[sample.sampleId] *
+                        sequentialDistance +
                     sequentialPadding;
                 return map;
             }, {} as { [sampleId: string]: number });
@@ -386,7 +419,7 @@ export default class VAFChartWrapper extends React.Component<
     }
 
     @computed get sampleIds() {
-        return this.props.samples.map(s => s.sampleId);
+        return this.effectiveSamples.map(s => s.sampleId);
     }
 
     @computed get sampleGroups() {
