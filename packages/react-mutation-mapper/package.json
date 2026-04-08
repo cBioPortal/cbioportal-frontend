@@ -1,6 +1,6 @@
 {
   "name": "react-mutation-mapper",
-  "version": "0.8.121",
+  "version": "0.9.0-beta.1",
   "description": "Generic Mutation Mapper",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
@@ -9,7 +9,7 @@
   "styles": "dist/styles.css",
   "engines": {
     "node": "22.18.0",
-    "yarn":"1.22.22"
+    "yarn": "1.22.22"
   },
   "files": [
     "dist"

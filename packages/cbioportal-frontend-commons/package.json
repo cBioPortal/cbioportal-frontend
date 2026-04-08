@@ -1,7 +1,7 @@
 {
   "name": "cbioportal-frontend-commons",
   "description": "cBioPortal Frontend Modules",
-  "version": "0.5.77",
+  "version": "0.6.0-beta.1",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
   "jsnext:main": "dist/index.es.js",
@@ -9,7 +9,7 @@
   "styles": "dist/styles.css",
   "engines": {
     "node": "22.18.0",
-    "yarn":"1.22.22"
+    "yarn": "1.22.22"
   },
   "files": [
     "dist"

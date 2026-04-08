@@ -1,6 +1,6 @@
 {
   "name": "react-variant-view",
-  "version": "0.3.124",
+  "version": "0.4.0-beta.1",
   "description": "cBioPortal Variant Viewer",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
@@ -9,7 +9,7 @@
   "styles": "dist/styles.css",
   "engines": {
     "node": "22.18.0",
-    "yarn":"1.22.22"
+    "yarn": "1.22.22"
   },
   "files": [
     "dist"
