@@ -83,7 +83,15 @@ import { getCategoryOrderByGenericAssayType } from 'shared/lib/GenericAssayUtils
 import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
 import { AnnotatedNumericGeneMolecularData } from 'shared/model/AnnotatedNumericGeneMolecularData';
 import { CustomDriverNumericGeneMolecularData } from 'shared/model/CustomDriverNumericGeneMolecularData';
-import { getVariantAlleleFrequency, VAFReport } from 'shared/lib/MutationUtils';
+import {
+    getVariantAlleleFrequency,
+    hasASCNProperty,
+    VAFReport,
+} from 'shared/lib/MutationUtils';
+import {
+    getClonalValue,
+    ClonalValue,
+} from 'shared/components/mutationTable/column/clonal/ClonalColumnFormatter';
 
 export const CLIN_ATTR_DATA_TYPE = 'clinical_attribute';
 export const CUSTOM_ATTR_DATA_TYPE = 'custom_attribute';
@@ -1234,6 +1242,42 @@ export function makeAxisDataPromise_Molecular_MakeMutationData(
                     }
                     break;
 
+                case MutationCountBy.CancerCellFraction:
+                    if (!sampleMutations) {
+                        return null;
+                    } else {
+                        const ccfValues: number[] = _(sampleMutations)
+                            .map(m =>
+                                hasASCNProperty(m as any, 'ccfExpectedCopies')
+                                    ? (m as any).alleleSpecificCopyNumber
+                                          .ccfExpectedCopies
+                                    : null
+                            )
+                            .compact()
+                            .value();
+                        if (ccfValues.length === 0) {
+                            return null;
+                        }
+                        value = ccfValues;
+                    }
+                    break;
+
+                case MutationCountBy.Clonality:
+                    if (!sampleMutations) {
+                        value = isProfiled
+                            ? MUT_PROFILE_COUNT_NOT_MUTATED
+                            : MUT_PROFILE_COUNT_NOT_PROFILED;
+                    } else {
+                        const clonalValues = _.uniq(
+                            sampleMutations.map(m => getClonalValue(m as any))
+                        );
+                        value =
+                            clonalValues.length > 1
+                                ? ClonalValue.INDETERMINATE
+                                : clonalValues;
+                    }
+                    break;
+
                 case MutationCountBy.MutatedVsWildType:
                 default:
                     if (!sampleMutations) {
@@ -1266,6 +1310,16 @@ export function makeAxisDataPromise_Molecular_MakeMutationData(
             hugoGeneSymbol,
             datatype: 'number',
         } as INumberAxisData;
+    } else if (mutationCountBy === MutationCountBy.CancerCellFraction) {
+        const hasCCFData = mutations.some(m =>
+            hasASCNProperty(m as any, 'ccfExpectedCopies')
+        );
+
+        return {
+            data: hasCCFData ? data : [],
+            hugoGeneSymbol,
+            datatype: 'number',
+        } as INumberAxisData;
     } else {
         let categoryOrder: string[] = [];
         switch (mutationCountBy) {
@@ -1274,6 +1328,9 @@ export function makeAxisDataPromise_Molecular_MakeMutationData(
                 break;
             case MutationCountBy.DriverVsVUS:
                 categoryOrder = mutDriverVsVUSCategoryOrder;
+                break;
+            case MutationCountBy.Clonality:
+                categoryOrder = mutClonalityCategoryOrder;
                 break;
             case MutationCountBy.MutatedVsWildType:
             default:
@@ -1706,6 +1763,12 @@ export function getAxisLabel(
                         case MutationCountBy.VariantAlleleFrequency:
                             label = `${geneSymbol}: Variant Allele Frequency`;
                             break;
+                        case MutationCountBy.CancerCellFraction:
+                            label = `${geneSymbol}: Cancer Cell Fraction`;
+                            break;
+                        case MutationCountBy.Clonality:
+                            label = `${geneSymbol}: Clonality`;
+                            break;
                         case MutationCountBy.MutatedVsWildType:
                             label = `${geneSymbol}: Mutated vs Wild Type`;
                             break;
@@ -2103,6 +2166,13 @@ export const mutVsWildCategoryOrder = [
 export const mutDriverVsVUSCategoryOrder = [
     MUT_PROFILE_COUNT_DRIVER,
     MUT_PROFILE_COUNT_VUS,
+    MUT_PROFILE_COUNT_NOT_MUTATED,
+    MUT_PROFILE_COUNT_NOT_PROFILED,
+];
+export const mutClonalityCategoryOrder = [
+    ClonalValue.CLONAL,
+    ClonalValue.SUBCLONAL,
+    ClonalValue.INDETERMINATE,
     MUT_PROFILE_COUNT_NOT_MUTATED,
     MUT_PROFILE_COUNT_NOT_PROFILED,
 ];

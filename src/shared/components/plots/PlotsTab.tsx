@@ -222,6 +222,8 @@ export enum MutationCountBy {
     MutatedVsWildType = 'MutatedVsWildType',
     DriverVsVUS = 'DriverVsVUS',
     VariantAlleleFrequency = 'VariantAlleleFrequency',
+    CancerCellFraction = 'CancerCellFraction',
+    Clonality = 'Clonality',
 }
 
 export enum StructuralVariantCountBy {
@@ -955,10 +957,38 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.vertSelection.mutationCountBy ===
                 MutationCountBy.VariantAlleleFrequency;
 
+        const isHorzAxisCCF =
+            this.horzSelection.dataType ===
+                AlterationTypeConstants.MUTATION_EXTENDED &&
+            this.horzSelection.mutationCountBy ===
+                MutationCountBy.CancerCellFraction;
+
+        const isVertAxisCCF =
+            this.vertSelection.dataType ===
+                AlterationTypeConstants.MUTATION_EXTENDED &&
+            this.vertSelection.mutationCountBy ===
+                MutationCountBy.CancerCellFraction;
+
+        const isHorzAxisClonality =
+            this.horzSelection.dataType ===
+                AlterationTypeConstants.MUTATION_EXTENDED &&
+            this.horzSelection.mutationCountBy === MutationCountBy.Clonality;
+
+        const isVertAxisClonality =
+            this.vertSelection.dataType ===
+                AlterationTypeConstants.MUTATION_EXTENDED &&
+            this.vertSelection.mutationCountBy === MutationCountBy.Clonality;
+
         let mainMessage = `Showing ${axisOverlapSampleCount} samples with data in both profiles (axes)`;
         if (isHorzAxisVAF || isVertAxisVAF) {
             mainMessage +=
                 '. Samples without mutations or Variant Allele Frequency data are excluded from the plot';
+        } else if (isHorzAxisCCF || isVertAxisCCF) {
+            mainMessage +=
+                '. Samples without mutations or Cancer Cell Fraction data are excluded from the plot';
+        } else if (isHorzAxisClonality || isVertAxisClonality) {
+            mainMessage +=
+                '. Samples without mutations or Clonality data are excluded from the plot';
         }
 
         components = [
@@ -3824,6 +3854,39 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
               )
             : structuralVariantCountByOptions;
 
+        // CCF and Clonality are only available when the selected gene has ASCN
+        // data (alleleSpecificCopyNumber), so we only add them to the dropdown
+        // when that data is present.
+        const entrezGeneId = axisSelection.entrezGeneId;
+        let cachedMutations = undefined;
+        if (entrezGeneId !== undefined) {
+            const cacheEntry = this.props.annotatedMutationCache.get({
+                entrezGeneId,
+            });
+            if (cacheEntry !== undefined) {
+                cachedMutations = cacheEntry.result;
+            }
+        }
+        let hasASCNData = false;
+        if (cachedMutations !== undefined && cachedMutations.length > 0) {
+            // ASCN data is all-or-nothing, so checking the first mutation is sufficient
+            hasASCNData =
+                cachedMutations[0].alleleSpecificCopyNumber !== undefined;
+        }
+
+        const availableMutationCountByOptions = [...mutationCountByOptions];
+        // If ASCN data is available, add Cancer Cell Fraction and Clonality as plot options
+        if (hasASCNData) {
+            availableMutationCountByOptions.push({
+                value: MutationCountBy.CancerCellFraction,
+                label: 'Cancer Cell Fraction',
+            });
+            availableMutationCountByOptions.push({
+                value: MutationCountBy.Clonality,
+                label: 'Clonality',
+            });
+        }
+
         switch (axisSelection.dataType) {
             case CUSTOM_ATTR_DATA_TYPE:
                 dataSourceLabel = 'Custom Attribute';
@@ -3834,7 +3897,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             case AlterationTypeConstants.MUTATION_EXTENDED:
                 dataSourceLabel = 'Plot Mutations by';
                 dataSourceValue = axisSelection.mutationCountBy;
-                dataSourceOptions = mutationCountByOptions;
+                dataSourceOptions = availableMutationCountByOptions;
                 onDataSourceChange = vertical
                     ? this.onVerticalAxisMutationCountBySelect
                     : this.onHorizontalAxisMutationCountBySelect;
