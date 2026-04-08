@@ -809,7 +809,10 @@ export function genomicLineToType2(
     const transcript = summary.transcriptConsequenceSummary;
     if (!transcript || !transcript.hugoGeneSymbol) return null;
 
+    // hgvspShort is the protein change (e.g. "p.R248W") from Genome Nexus annotation
     const proteinChange = transcript.hgvspShort || '';
+    // variantClassification is the mutation type (e.g. "Missense_Mutation") -
+    // getOncoprintMutationType maps it to an OncoprintMutationType (e.g. 'missense', 'trunc', etc.)
     const mutationType = transcript.variantClassification || '';
     const alteration = getOncoprintMutationType({
         proteinChange,

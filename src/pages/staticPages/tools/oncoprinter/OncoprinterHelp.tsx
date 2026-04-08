@@ -28,9 +28,11 @@ export const GenomicFormatHelp = (
         <code>Reference_Allele</code>&#9;
         <code>Variant_Allele</code>
         <br />
-        (Format 3 is the same as MutationMapper input. Mutations will be
-        annotated with Genome Nexus to determine gene and protein change.
-        Variants have to be reported for genome build GRCh37 / hg19.)
+        Format 3 is the same as MutationMapper input. Mutations will be
+        annotated with Genome Nexus to determine gene and protein change.{' '}
+        <strong>
+            Variants must be reported for genome build GRCh37 / hg19.
+        </strong>
         <br />
         {/*<strong>(3) (MAF format, mutation only)</strong> <code>Sample</code>, <code>Cancer Type</code>, <code>Protein Change</code>, <code>Mutation Type</code>,	<code>Chromosome</code>,
         <code>Start position</code>, <code>End position</code>, <code>Reference allele</code>,	<code>Variant allele</code><br/>
