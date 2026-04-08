@@ -9,7 +9,7 @@ import * as React from 'react';
 export const GenomicFormatHelp = (
     <div className={styles.dataFormatHelp}>
         <h4>Genomic data format</h4>
-        Each row of the data can take one of two formats, with tab- or
+        Each row of the data can take one of the following formats, with tab- or
         space-delimited columns:
         <br />
         <strong>(1)</strong> <code>Sample</code> only (e.g. so that percent
@@ -20,6 +20,17 @@ export const GenomicFormatHelp = (
         <code>Alteration</code>&#9;
         <code>Type</code>&#9;
         <code>Track Name (optional)</code>
+        <br />
+        <strong>(3)</strong> <code>Sample</code>&#9;
+        <code>Chromosome</code>&#9;
+        <code>Start_Position</code>&#9;
+        <code>End_Position</code>&#9;
+        <code>Reference_Allele</code>&#9;
+        <code>Variant_Allele</code>
+        <br />
+        (Format 3 is the same as MutationMapper input. Mutations will be
+        annotated with Genome Nexus to determine gene and protein change.
+        Variants have to be reported for genome build GRCh37 / hg19.)
         <br />
         {/*<strong>(3) (MAF format, mutation only)</strong> <code>Sample</code>, <code>Cancer Type</code>, <code>Protein Change</code>, <code>Mutation Type</code>,	<code>Chromosome</code>,
         <code>Start position</code>, <code>End position</code>, <code>Reference allele</code>,	<code>Variant allele</code><br/>

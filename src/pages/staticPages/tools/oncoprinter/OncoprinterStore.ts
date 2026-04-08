@@ -5,6 +5,7 @@ import {
     annotateGeneticTrackData,
     fetchOncoKbDataForCna,
     fetchOncoKbDataForMutations,
+    genomicLineToType2,
     getGeneSymbols,
     getGeneticTracks,
     getGeneticOncoprintData,
@@ -13,6 +14,8 @@ import {
     initDriverAnnotationSettings,
     isAltered,
     isType2,
+    isType3Genomic,
+    OncoprinterGeneticInputLine,
     parseGeneticInput,
 } from './OncoprinterGeneticUtils';
 import { remoteData } from 'cbioportal-frontend-commons';
@@ -24,6 +27,7 @@ import {
     ONCOKB_DEFAULT,
 } from '../../../../shared/lib/StoreUtils';
 import client from '../../../../shared/api/cbioportalClientInstance';
+import genomeNexusClient from '../../../../shared/api/genomeNexusClientInstance';
 import _ from 'lodash';
 import {
     countMutations,
@@ -40,20 +44,12 @@ import {
 } from './OncoprinterClinicalAndHeatmapUtils';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
 import { RGBAColor } from 'oncoprintjs';
+import { GenomicLocation } from 'genome-nexus-ts-api-client';
 
 export type OncoprinterDriverAnnotationSettings = Pick<
     DriverAnnotationSettings,
     'includeVUS' | 'customBinary' | 'hotspots' | 'oncoKb' | 'driversAnnotated'
 >;
-
-/* Leaving commented only for reference, this will be replaced by unified input strategy
-function genomeNexusKey(l:OncoprinterInputLineType3_Incomplete){
-    return `${l.chromosome}_${l.startPosition}_${l.endPosition}_${l.referenceAllele}_${l.variantAllele}`;
-}
-
-function genomeNexusKey2(l:{chromosome:string, start:number, end:number, referenceAllele:string, variantAllele:string}){
-    return `${l.chromosome}_${l.start}_${l.end}_${l.referenceAllele}_${l.variantAllele}`;
-}*/
 
 const ONCOPRINTER_COLOR_CONFIG = 'oncoprinterClinicalTracksColorConfig';
 
@@ -225,7 +221,7 @@ export default class OncoprinterStore {
         if (!this._geneticDataInput) {
             return {
                 error: null,
-                result: [],
+                result: [] as OncoprinterGeneticInputLine[],
             };
         }
 
@@ -242,6 +238,67 @@ export default class OncoprinterStore {
             };
         }
     }
+
+    readonly genomeNexusAnnotations = remoteData({
+        invoke: async () => {
+            const lines = this.parsedGeneticInputLines.result;
+            if (!lines) return {};
+            const type3Lines = lines.filter(isType3Genomic);
+            if (type3Lines.length === 0) return {};
+
+            const genomicLocations: GenomicLocation[] = type3Lines.map(l => ({
+                chromosome: l.chromosome,
+                start: l.startPosition,
+                end: l.endPosition,
+                referenceAllele: l.referenceAllele,
+                variantAllele: l.variantAllele,
+            }));
+
+            const annotations = await genomeNexusClient.fetchVariantAnnotationByGenomicLocationPOST(
+                {
+                    genomicLocations,
+                    fields: 'annotation_summary',
+                }
+            );
+
+            return _.keyBy(
+                annotations,
+                a =>
+                    `${a.annotation_summary?.genomicLocation?.chromosome},${a.annotation_summary?.genomicLocation?.start},${a.annotation_summary?.genomicLocation?.end},${a.annotation_summary?.genomicLocation?.referenceAllele},${a.annotation_summary?.genomicLocation?.variantAllele}`
+            );
+        },
+        default: {},
+    });
+
+    readonly resolvedGeneticInputLines = remoteData({
+        await: () => [this.genomeNexusAnnotations],
+        invoke: async () => {
+            const lines = this.parsedGeneticInputLines.result;
+            if (!lines) return [];
+
+            const annotations = this.genomeNexusAnnotations.result!;
+
+            return lines
+                .map(line => {
+                    if (!isType3Genomic(line)) return line;
+                    const key = `${line.chromosome},${line.startPosition},${line.endPosition},${line.referenceAllele},${line.variantAllele}`;
+                    const annotation = annotations[key];
+                    if (!annotation) {
+                        // If annotation not found, return a type-1 line (sample only)
+                        return { sampleId: line.sampleId };
+                    }
+                    const type2 = genomicLineToType2(line, annotation);
+                    if (!type2) {
+                        return { sampleId: line.sampleId };
+                    }
+                    return type2;
+                })
+                .filter(
+                    (x): x is OncoprinterGeneticInputLine => x !== null
+                );
+        },
+        default: [],
+    });
 
     @computed get parsedClinicalInputLines() {
         if (!this._clinicalDataInput) {
@@ -302,9 +359,32 @@ export default class OncoprinterStore {
         return errors;
     }
 
+    @computed get hasGenomicLocationLines() {
+        return !!(
+            this.parsedGeneticInputLines.result &&
+            this.parsedGeneticInputLines.result.some(isType3Genomic)
+        );
+    }
+
+    @computed get isAnnotatingWithGenomeNexus() {
+        return (
+            this.hasGenomicLocationLines &&
+            this.genomeNexusAnnotations.status === 'pending'
+        );
+    }
+
+    @computed get genomeNexusAnnotationError() {
+        return (
+            this.hasGenomicLocationLines &&
+            this.genomeNexusAnnotations.status === 'error'
+        );
+    }
+
     @computed get hugoGeneSymbols() {
         if (this.geneOrder) {
             return this.geneOrder;
+        } else if (this.resolvedGeneticInputLines.result) {
+            return getGeneSymbols(this.resolvedGeneticInputLines.result);
         } else if (this.parsedGeneticInputLines.result) {
             return getGeneSymbols(this.parsedGeneticInputLines.result);
         } else {
@@ -322,6 +402,7 @@ export default class OncoprinterStore {
     }
 
     readonly hugoGeneSymbolToGene = remoteData({
+        await: () => [this.resolvedGeneticInputLines],
         invoke: async () => {
             const geneIds = this.hugoGeneSymbols;
             if (geneIds.length > 0) {
@@ -539,11 +620,11 @@ export default class OncoprinterStore {
     }
 
     readonly nonAnnotatedGeneticTrackData = remoteData({
-        await: () => [this.hugoGeneSymbolToGene],
+        await: () => [this.hugoGeneSymbolToGene, this.resolvedGeneticInputLines],
         invoke: async () => {
-            if (this.parsedGeneticInputLines.result) {
+            if (this.resolvedGeneticInputLines.result) {
                 return getSampleGeneticTrackData(
-                    this.parsedGeneticInputLines.result,
+                    this.resolvedGeneticInputLines.result,
                     this.hugoGeneSymbolToGene.result!,
                     this.hideGermlineMutations
                 );
