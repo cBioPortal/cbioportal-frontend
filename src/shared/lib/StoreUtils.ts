@@ -67,6 +67,7 @@ import {
     CLINICAL_ATTRIBUTE_ID_ENUM,
     DataTypeConstants,
     GENOME_NEXUS_ARG_FIELD_ENUM,
+    TMB_CLINICAL_ATTRIBUTE_IDS,
 } from 'shared/constants';
 import { normalizeMutations } from '../components/mutationMapper/MutationMapperUtils';
 import { getServerConfig } from 'config/config';
@@ -1707,13 +1708,16 @@ export function makeGetOncoKbCnaAnnotationForOncoprint(
 
 export function getSampleClinicalDataMapByThreshold(
     clinicalData: ClinicalData[],
-    clinicalAttributeId: string,
+    clinicalAttributeId: string | readonly string[],
     threshold: number
 ) {
+    const ids = Array.isArray(clinicalAttributeId)
+        ? (clinicalAttributeId as readonly string[])
+        : [clinicalAttributeId as string];
     return _.reduce(
         clinicalData,
         (acc, next) => {
-            if (next.clinicalAttributeId === clinicalAttributeId) {
+            if (ids.includes(next.clinicalAttributeId)) {
                 const value = getNumericalClinicalDataValue(next);
                 if (value && value >= threshold) {
                     acc[next.sampleId] = next;
@@ -1766,6 +1770,33 @@ export function getSampleNumericalClinicalDataValue(
     );
     if (sampleMsiData) {
         return getNumericalClinicalDataValue(sampleMsiData);
+    }
+    return undefined;
+}
+
+/**
+ * Returns the ClinicalData entry for the first TMB attribute found for the
+ * given sample, checking all supported TMB attribute IDs in a single pass.
+ * Priority order (CVR_TMB_SCORE then TMB_NONSYNONYMOUS) is enforced after
+ * the scan by picking the highest-priority match.
+ * Returns undefined if no TMB attribute is present for the sample.
+ */
+export function getSampleTmbClinicalData(
+    clinicalData: ClinicalData[],
+    sampleId: string
+): ClinicalData | undefined {
+    const tmbAttrIdSet = new Set<string>(TMB_CLINICAL_ATTRIBUTE_IDS);
+    const candidates = new Map<string, ClinicalData>();
+    for (const d of clinicalData) {
+        if (d.sampleId === sampleId && tmbAttrIdSet.has(d.clinicalAttributeId)) {
+            candidates.set(d.clinicalAttributeId, d);
+        }
+    }
+    // Return in priority order
+    for (const attrId of TMB_CLINICAL_ATTRIBUTE_IDS) {
+        if (candidates.has(attrId)) {
+            return candidates.get(attrId);
+        }
     }
     return undefined;
 }

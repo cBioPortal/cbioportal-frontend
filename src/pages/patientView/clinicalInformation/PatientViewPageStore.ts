@@ -170,6 +170,7 @@ import {
     MIS_TYPE_VALUE,
     GENOME_NEXUS_ARG_FIELD_ENUM,
     TMB_H_THRESHOLD,
+    TMB_CLINICAL_ATTRIBUTE_IDS,
     AlterationTypeConstants,
     DataTypeConstants,
 } from 'shared/constants';
@@ -2754,7 +2755,7 @@ export class PatientViewPageStore {
     @computed get sampleTmbHInfo() {
         return getSampleClinicalDataMapByThreshold(
             this.clinicalDataForSamples.result,
-            CLINICAL_ATTRIBUTE_ID_ENUM.TMB_SCORE,
+            TMB_CLINICAL_ATTRIBUTE_IDS,
             TMB_H_THRESHOLD
         );
     }

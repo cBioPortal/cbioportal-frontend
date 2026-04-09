@@ -12,6 +12,8 @@ import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicato
 import {
     getSampleNumericalClinicalDataValue,
     OTHER_BIOMARKERS_CLINICAL_ATTR,
+    getSampleTmbClinicalData,
+    getNumericalClinicalDataValue,
 } from 'shared/lib/StoreUtils';
 import { OtherBiomarkersQueryType } from 'oncokb-frontend-commons';
 import { OtherBiomarkerAnnotation } from '../oncokb/OtherBiomarkerAnnotation';
@@ -43,11 +45,25 @@ export default class SampleSummaryList extends React.Component<
         type: OtherBiomarkersQueryType,
         sampleId: string
     ) {
-        const numericalData = getSampleNumericalClinicalDataValue(
-            this.props.patientViewPageStore.clinicalDataForSamples.result,
-            sampleId,
-            OTHER_BIOMARKERS_CLINICAL_ATTR[type]
-        );
+        // For TMBH, resolve both the attribute ID and its numeric value in a
+        // single array scan (CVR_TMB_SCORE preferred over TMB_NONSYNONYMOUS).
+        // For all other biomarker types use the static attribute mapping.
+        let numericalData: number | undefined;
+        if (type === OtherBiomarkersQueryType.TMBH) {
+            const tmbClinicalData = getSampleTmbClinicalData(
+                this.props.patientViewPageStore.clinicalDataForSamples.result,
+                sampleId
+            );
+            numericalData = tmbClinicalData
+                ? getNumericalClinicalDataValue(tmbClinicalData)
+                : undefined;
+        } else {
+            numericalData = getSampleNumericalClinicalDataValue(
+                this.props.patientViewPageStore.clinicalDataForSamples.result,
+                sampleId,
+                OTHER_BIOMARKERS_CLINICAL_ATTR[type]
+            );
+        }
 
         return this.props.patientViewPageStore.getOtherBiomarkersOncoKbData
             .result[sampleId][type] && numericalData !== undefined ? (
