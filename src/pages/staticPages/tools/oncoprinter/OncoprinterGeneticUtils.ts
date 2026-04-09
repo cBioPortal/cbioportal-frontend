@@ -848,23 +848,50 @@ export function parseGeneticInput(
         'reference_allele',
         'variant_allele',
     ];
+    const genomicFormatHeaderColumnsWithCancerType = [
+        'sample',
+        'cancer_type',
+        'chromosome',
+        'start_position',
+        'end_position',
+        'reference_allele',
+        'variant_allele',
+    ];
     const genomicFormatHeaderColumnAliases: { [col: string]: string[] } = {
+        sample: ['sample_id'],
         chromosome: ['chr'],
         start_position: ['start'],
         end_position: ['end'],
         reference_allele: ['ref'],
         variant_allele: ['alt'],
     };
-    function isGenomicFormatHeader(line: string[]) {
-        if (line.length < 6) return false;
-        return genomicFormatHeaderColumns.every((col, i) => {
-            const lc = line[i].toLowerCase();
-            return (
-                lc === col ||
-                (genomicFormatHeaderColumnAliases[col] || []).includes(lc)
-            );
-        });
+    function colMatches(expected: string, actual: string) {
+        const lc = actual.toLowerCase();
+        return (
+            lc === expected ||
+            (genomicFormatHeaderColumnAliases[expected] || []).includes(lc)
+        );
     }
+    function isGenomicFormatHeader(line: string[]) {
+        if (line.length === 6) {
+            return genomicFormatHeaderColumns.every((col, i) =>
+                colMatches(col, line[i])
+            );
+        }
+        if (line.length === 7) {
+            return genomicFormatHeaderColumnsWithCancerType.every((col, i) =>
+                colMatches(col, line[i])
+            );
+        }
+        return false;
+    }
+
+    // Determine if data lines should use the cancer_type offset (column 2 for chr instead of 1)
+    // This is true when the first line is a 7-column genomic header with cancer_type
+    const hasCancerTypeColumn =
+        lines.length > 0 &&
+        lines[0].length === 7 &&
+        isGenomicFormatHeader(lines[0]);
 
     try {
         const result = lines.map((line, lineIndex) => {
@@ -887,14 +914,16 @@ export function parseGeneticInput(
             if (line.length === 1) {
                 // Type 1 line
                 return { sampleId: line[0] };
-            } else if (line.length === 6) {
-                // Type 3 line: Sample Chromosome Start_Position End_Position Reference_Allele Variant_Allele
+            } else if (line.length === 6 || (line.length === 7 && hasCancerTypeColumn)) {
+                // Type 3 line: Sample [Cancer_Type] Chromosome Start_Position End_Position Reference_Allele Variant_Allele
+                // When cancer_type column is present (7 columns), offset = 1; otherwise offset = 0
+                const offset = line.length === 7 ? 1 : 0;
                 const sampleId = line[0];
-                const chromosome = line[1].replace(/^chr/i, '');
-                const startPositionStr = line[2];
-                const endPositionStr = line[3];
-                const referenceAllele = line[4];
-                const variantAllele = line[5];
+                const chromosome = line[1 + offset].replace(/^chr/i, '');
+                const startPositionStr = line[2 + offset];
+                const endPositionStr = line[3 + offset];
+                const referenceAllele = line[4 + offset];
+                const variantAllele = line[5 + offset];
                 const startPosition = parseInt(startPositionStr, 10);
                 const endPosition = parseInt(endPositionStr, 10);
                 if (isNaN(startPosition)) {
@@ -1039,7 +1068,7 @@ export function parseGeneticInput(
                 return ret as OncoprinterGeneticInputLineType2;
             } else {
                 throw new Error(
-                    `${errorPrefix}input lines must have either 1, 4, or 6 columns.`
+                    `${errorPrefix}input lines must have either 1, 4, or 6 columns (or 7 columns when including Cancer_Type).`
                 );
             }
         });

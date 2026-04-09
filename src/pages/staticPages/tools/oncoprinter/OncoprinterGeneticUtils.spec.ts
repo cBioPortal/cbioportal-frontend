@@ -343,6 +343,34 @@ describe('OncoprinterGeneticUtils', () => {
                 }
             );
         });
+        it('parses genomic location format with Cancer_Type column (7-col header)', () => {
+            assert.deepEqual(
+                parseGeneticInput(
+                    'Sample_ID\tCancer_Type\tChromosome\tStart_Position\tEnd_Position\tReference_Allele\tVariant_Allele\nTCGA-01-0001\tOvarian\t17\t7577539\t7577539\tG\tA'
+                ),
+                {
+                    parseSuccess: true,
+                    result: [
+                        {
+                            sampleId: 'TCGA-01-0001',
+                            chromosome: '17',
+                            startPosition: 7577539,
+                            endPosition: 7577539,
+                            referenceAllele: 'G',
+                            variantAllele: 'A',
+                        },
+                    ],
+                    error: undefined,
+                }
+            );
+        });
+        it('skips 7-col header line with Cancer_Type', () => {
+            const result = parseGeneticInput(
+                'Sample_ID\tCancer_Type\tChromosome\tStart_Position\tEnd_Position\tReference_Allele\tVariant_Allele'
+            );
+            assert.equal(result.parseSuccess, true);
+            assert.deepEqual(result.result, []);
+        });
     });
 
     describe('genomicLineToType2', () => {

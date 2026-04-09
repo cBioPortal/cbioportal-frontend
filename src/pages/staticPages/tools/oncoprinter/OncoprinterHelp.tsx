@@ -22,6 +22,7 @@ export const GenomicFormatHelp = (
         <code>Track Name (optional)</code>
         <br />
         <strong>(3)</strong> <code>Sample</code>&#9;
+        <code>Cancer_Type (optional)</code>&#9;
         <code>Chromosome</code>&#9;
         <code>Start_Position</code>&#9;
         <code>End_Position</code>&#9;
