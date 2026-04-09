@@ -980,15 +980,17 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.vertSelection.mutationCountBy === MutationCountBy.Clonality;
 
         let mainMessage = `Showing ${axisOverlapSampleCount} samples with data in both profiles (axes)`;
+        const exclusionMessages: string[] = [];
         if (isHorzAxisVAF || isVertAxisVAF) {
-            mainMessage +=
-                '. Samples without mutations or Variant Allele Frequency data are excluded from the plot';
-        } else if (isHorzAxisCCF || isVertAxisCCF) {
-            mainMessage +=
-                '. Samples without mutations or Cancer Cell Fraction data are excluded from the plot';
-        } else if (isHorzAxisClonality || isVertAxisClonality) {
-            mainMessage +=
-                '. Samples without mutations or Clonality data are excluded from the plot';
+            exclusionMessages.push('Variant Allele Frequency');
+        }
+        if (isHorzAxisCCF || isVertAxisCCF) {
+            exclusionMessages.push('Cancer Cell Fraction');
+        }
+        if (exclusionMessages.length > 0) {
+            mainMessage += `. Samples without mutations or ${exclusionMessages.join(
+                ' or '
+            )} data are excluded from the plot`;
         }
 
         components = [
