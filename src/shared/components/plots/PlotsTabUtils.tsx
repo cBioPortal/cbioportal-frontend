@@ -1257,7 +1257,10 @@ export function makeAxisDataPromise_Molecular_MakeMutationData(
                                           .ccfExpectedCopies
                                     : null
                             )
-                            .compact()
+                            .filter(
+                                (v): v is number =>
+                                    v !== null && v !== undefined
+                            )
                             .value();
                         if (ccfValues.length === 0) {
                             return null;
