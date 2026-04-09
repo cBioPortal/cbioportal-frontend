@@ -3900,6 +3900,15 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             });
         }
 
+        // If the current selection is no longer available (e.g. user switched to
+        // a gene without ASCN data), reset to the default mutation count option.
+        const currentSelectionIsValid = availableMutationCountByOptions.some(
+            o => o.value === axisSelection.mutationCountBy
+        );
+        if (!currentSelectionIsValid) {
+            axisSelection.mutationCountBy = MutationCountBy.MutationType;
+        }
+
         switch (axisSelection.dataType) {
             case CUSTOM_ATTR_DATA_TYPE:
                 dataSourceLabel = 'Custom Attribute';
