@@ -1248,8 +1248,12 @@ export function makeAxisDataPromise_Molecular_MakeMutationData(
                     } else {
                         const ccfValues: number[] = _(sampleMutations)
                             .map(m =>
-                                hasASCNProperty(m as any, 'ccfExpectedCopies')
-                                    ? (m as any).alleleSpecificCopyNumber
+                                hasASCNProperty(
+                                    m as AnnotatedMutation,
+                                    'ccfExpectedCopies'
+                                )
+                                    ? (m as AnnotatedMutation)
+                                          .alleleSpecificCopyNumber
                                           .ccfExpectedCopies
                                     : null
                             )
@@ -1269,7 +1273,9 @@ export function makeAxisDataPromise_Molecular_MakeMutationData(
                             : MUT_PROFILE_COUNT_NOT_PROFILED;
                     } else {
                         const clonalValues = _.uniq(
-                            sampleMutations.map(m => getClonalValue(m as any))
+                            sampleMutations.map(m =>
+                                getClonalValue(m as AnnotatedMutation)
+                            )
                         );
                         value =
                             clonalValues.length > 1
@@ -1312,7 +1318,7 @@ export function makeAxisDataPromise_Molecular_MakeMutationData(
         } as INumberAxisData;
     } else if (mutationCountBy === MutationCountBy.CancerCellFraction) {
         const hasCCFData = mutations.some(m =>
-            hasASCNProperty(m as any, 'ccfExpectedCopies')
+            hasASCNProperty(m as AnnotatedMutation, 'ccfExpectedCopies')
         );
 
         return {
