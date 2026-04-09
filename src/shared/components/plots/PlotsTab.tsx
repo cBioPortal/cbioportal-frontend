@@ -3854,9 +3854,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
               )
             : structuralVariantCountByOptions;
 
-        // CCF and Clonality are only available when the selected gene has ASCN
-        // data (alleleSpecificCopyNumber), so we only add them to the dropdown
-        // when that data is present.
+        // CCF and Clonality are only available when the selected gene has the
+        // relevant ASCN data, so we only add them to the dropdown when present.
+        // We check each independently since a study may have one but not the other.
         const entrezGeneId = axisSelection.entrezGeneId;
         let cachedMutations = undefined;
         if (entrezGeneId !== undefined) {
@@ -3867,20 +3867,31 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 cachedMutations = cacheEntry.result;
             }
         }
-        let hasASCNData = false;
-        if (cachedMutations !== undefined && cachedMutations.length > 0) {
-            // ASCN data is all-or-nothing, so checking the first mutation is sufficient
-            hasASCNData =
-                cachedMutations[0].alleleSpecificCopyNumber !== undefined;
+
+        let hasCancerCellFractionData = false;
+        let hasClonalityData = false;
+        if (cachedMutations !== undefined) {
+            hasCancerCellFractionData = cachedMutations.some(
+                m =>
+                    m.alleleSpecificCopyNumber !== undefined &&
+                    m.alleleSpecificCopyNumber.ccfExpectedCopies !== undefined
+            );
+            hasClonalityData = cachedMutations.some(
+                m =>
+                    m.alleleSpecificCopyNumber !== undefined &&
+                    m.alleleSpecificCopyNumber.clonal !== undefined
+            );
         }
 
         const availableMutationCountByOptions = [...mutationCountByOptions];
-        // If ASCN data is available, add Cancer Cell Fraction and Clonality as plot options
-        if (hasASCNData) {
+        // Add Cancer Cell Fraction and Clonality options only when data is available
+        if (hasCancerCellFractionData) {
             availableMutationCountByOptions.push({
                 value: MutationCountBy.CancerCellFraction,
                 label: 'Cancer Cell Fraction',
             });
+        }
+        if (hasClonalityData) {
             availableMutationCountByOptions.push({
                 value: MutationCountBy.Clonality,
                 label: 'Clonality',
