@@ -1276,10 +1276,16 @@ export function makeAxisDataPromise_Molecular_MakeMutationData(
                             : MUT_PROFILE_COUNT_NOT_PROFILED;
                     } else {
                         const clonalValues = _.uniq(
-                            sampleMutations.map(m =>
-                                getClonalValue(m as AnnotatedMutation)
-                            )
+                            sampleMutations
+                                .map(m =>
+                                    getClonalValue(m as AnnotatedMutation)
+                                )
+                                .filter(v => v !== ClonalValue.NA)
                         );
+                        // Exclude sample if all mutations have no clonality data
+                        if (clonalValues.length === 0) {
+                            return null;
+                        }
                         value =
                             clonalValues.length > 1
                                 ? ClonalValue.INDETERMINATE
