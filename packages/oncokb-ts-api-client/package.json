@@ -1,7 +1,7 @@
 {
   "name": "oncokb-ts-api-client",
   "description": "OncoKB API Client for TypeScript",
-  "version": "1.3.8",
+  "version": "1.3.9",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
   "jsnext:main": "dist/index.es.js",
@@ -9,7 +9,7 @@
   "styles": "dist/styles.css",
   "engines": {
     "node": "22.18.0",
-    "yarn":"1.22.22"
+    "yarn": "1.22.22"
   },
   "files": [
     "dist"

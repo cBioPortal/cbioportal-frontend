@@ -99,6 +99,49 @@
         "summary": "Clear and reinitialize caches"
       }
     },
+    "/api/cache/{studyId}": {
+      "delete": {
+        "produces": [
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "description": "Secret API key passed in HTTP header. The key is configured in application.properties of the portal instance.",
+            "in": "header",
+            "name": "X-API-KEY",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "path",
+            "name": "studyId",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "default": true,
+            "description": "Clear Spring-managed caches",
+            "in": "query",
+            "name": "springManagedCache",
+            "required": false,
+            "type": "boolean"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "tags": [
+          "Cache"
+        ],
+        "operationId": "clearCachesForStudyUsingDELETE",
+        "summary": "Clear and reinitialize caches after import/removal/update of a study"
+      }
+    },
     "/api/clinical-attributes/counts/fetch": {
       "post": {
         "consumes": [
