@@ -19,6 +19,33 @@ export function genomicToSvgX(
     );
 }
 
+/**
+ * Compute the x position and width of the retained-exon shade rect.
+ * For + strand the retained half is left of the breakpoint.
+ * For - strand the retained half is right of the breakpoint.
+ */
+export function computeRetainedShadeX(
+    strand: '+' | '-',
+    bpX: number,
+    drawX: number,
+    drawWidth: number
+): { x: number; width: number } {
+    const trackEnd = drawX + drawWidth;
+    if (strand === '+') {
+        // For + strand, retained region is from drawX to min(bpX, trackEnd)
+        return {
+            x: drawX,
+            width: Math.min(drawWidth, Math.max(0, bpX - drawX)),
+        };
+    } else {
+        // For - strand, retained region is from bpX to trackEnd
+        return {
+            x: bpX,
+            width: Math.max(0, trackEnd - bpX),
+        };
+    }
+}
+
 const FORTE_TRACK_HEIGHT = 40;
 const USER_TRACK_HEIGHT = 30;
 const LABEL_HEIGHT = 30;
