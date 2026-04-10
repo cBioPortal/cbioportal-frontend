@@ -499,18 +499,16 @@ function getOncogeneFromOncokbGenesMap(
     oncokbGenesMap: { [hugoSymbol: string]: CuratedGene },
     gene?: string
 ): string | null {
-    return gene &&
-        oncokbGenesMap[gene] &&
-        oncokbGenesMap[gene].oncogene === true
-        ? 'Oncogene'
-        : null;
+    const curated = gene && oncokbGenesMap[gene];
+    const gt = curated && curated.geneType;
+    return gt === 'ONCOGENE' || gt === 'ONCOGENE_AND_TSG' ? 'Oncogene' : null;
 }
 
 function getTsgFromOncokbGenesMap(
     oncokbGenesMap: { [hugoSymbol: string]: CuratedGene },
     gene?: string
 ): string | null {
-    return gene && oncokbGenesMap[gene] && oncokbGenesMap[gene].tsg === true
-        ? 'TSG'
-        : null;
+    const curated = gene && oncokbGenesMap[gene];
+    const gt = curated && curated.geneType;
+    return gt === 'TSG' || gt === 'ONCOGENE_AND_TSG' ? 'TSG' : null;
 }
