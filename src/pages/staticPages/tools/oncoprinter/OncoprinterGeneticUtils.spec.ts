@@ -364,6 +364,37 @@ describe('OncoprinterGeneticUtils', () => {
                 }
             );
         });
+        it('parses genomic location format with multi-word Cancer_Type value (tab-delimited)', () => {
+            assert.deepEqual(
+                parseGeneticInput(
+                    'Sample_ID\tCancer_Type\tChromosome\tStart_Position\tEnd_Position\tReference_Allele\tVariant_Allele\n' +
+                        'TCGA-49-4494-01\tLung Adenocarcinoma\t7\t55249071\t55249071\tC\tT\n' +
+                        'TCGA-L9-A50W-01\tLung Adenocarcinoma\t7\t55249071\t55249071\tC\tT'
+                ),
+                {
+                    parseSuccess: true,
+                    result: [
+                        {
+                            sampleId: 'TCGA-49-4494-01',
+                            chromosome: '7',
+                            startPosition: 55249071,
+                            endPosition: 55249071,
+                            referenceAllele: 'C',
+                            variantAllele: 'T',
+                        },
+                        {
+                            sampleId: 'TCGA-L9-A50W-01',
+                            chromosome: '7',
+                            startPosition: 55249071,
+                            endPosition: 55249071,
+                            referenceAllele: 'C',
+                            variantAllele: 'T',
+                        },
+                    ],
+                    error: undefined,
+                }
+            );
+        });
         it('skips 7-col header line with Cancer_Type', () => {
             const result = parseGeneticInput(
                 'Sample_ID\tCancer_Type\tChromosome\tStart_Position\tEnd_Position\tReference_Allele\tVariant_Allele'

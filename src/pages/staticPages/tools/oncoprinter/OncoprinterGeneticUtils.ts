@@ -839,7 +839,15 @@ export function parseGeneticInput(
     const lines = input
         .trim()
         .split('\n')
-        .map(line => line.trim().split(/\s+/));
+        .map(line =>
+            // If a line contains a tab, split strictly on tabs (preserving multi-word
+            // values such as "Lung Adenocarcinoma" in the Cancer_Type column).
+            // Otherwise fall back to whitespace splitting for backward compatibility
+            // with space-delimited input.
+            line.includes('\t')
+                ? line.trim().split('\t')
+                : line.trim().split(/\s+/)
+        );
     const genomicFormatHeaderColumns = [
         'sample',
         'chromosome',
