@@ -1373,10 +1373,7 @@ describe('StoreUtils', () => {
                 } as IndicatorQueryResp),
                 ''
             );
-            assert.equal(
-                getOncoKbOncogenic({ oncogenic: '' } as IndicatorQueryResp),
-                ''
-            );
+            assert.equal(getOncoKbOncogenic({ oncogenic: '' } as any), '');
             assert.equal(
                 getOncoKbOncogenic({
                     oncogenic: 'asdfasdfasefawer',

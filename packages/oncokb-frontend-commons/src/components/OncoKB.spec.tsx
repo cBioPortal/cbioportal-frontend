@@ -21,13 +21,13 @@ function emptyQueryIndicator(): IndicatorQueryResp {
         // lastUpdate: "",
         mutationEffect: {
             description: '',
-            knownEffect: '',
+            knownEffect: 'Unknown',
             citations: {
                 abstracts: [],
                 pmids: [],
             },
         },
-        oncogenic: '',
+        oncogenic: 'Unknown',
         // otherSignificantResistanceLevels: [],
         // otherSignificantSensitiveLevels: [],
         query: {
