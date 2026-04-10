@@ -3902,10 +3902,14 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
 
         // If the current selection is no longer available (e.g. user switched to
         // a gene without ASCN data), reset to the default mutation count option.
+        // Only reset once mutations have loaded (cachedMutations !== undefined);
+        // while loading the cache returns undefined, so we must not reset then
+        // or we would clobber a valid URL-specified selection (e.g. Clonality)
+        // before the data has had a chance to confirm it is available.
         const currentSelectionIsValid = availableMutationCountByOptions.some(
             o => o.value === axisSelection.mutationCountBy
         );
-        if (!currentSelectionIsValid) {
+        if (!currentSelectionIsValid && cachedMutations !== undefined) {
             axisSelection.mutationCountBy = MutationCountBy.MutationType;
         }
 
