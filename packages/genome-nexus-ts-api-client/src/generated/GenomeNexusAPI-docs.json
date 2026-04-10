@@ -2078,6 +2078,10 @@
           "type": "string",
           "description": "Ensembl Transcript Id"
         },
+        "transcriptIdVersion": {
+          "type": "string",
+          "description": "Ensembl Transcript Id Version"
+        },
         "truncatingCount": {
           "type": "integer",
           "format": "int32",
@@ -3354,6 +3358,10 @@
           "type": "string",
           "description": "Ensembl transcript id"
         },
+        "transcript_id_version": {
+          "type": "string",
+          "description": "Ensembl transcript id version"
+        },
         "uniprotId": {
           "type": "string"
         },
@@ -3447,6 +3455,10 @@
         "transcriptId": {
           "type": "string",
           "description": "Transcript id"
+        },
+        "transcriptIdVersion": {
+          "type": "string",
+          "description": "Transcript id version"
         },
         "uniprotId": {
           "type": "string",

@@ -374,6 +374,8 @@ export type Hotspot = {
 
         'transcriptId': string
 
+        'transcriptIdVersion': string
+
         'truncatingCount': number
 
         'tumorCount': number
@@ -864,6 +866,8 @@ export type TranscriptConsequence = {
 
         'transcript_id': string
 
+        'transcript_id_version': string
+
         'uniprotId': string
 
         'variant_allele': string
@@ -909,6 +913,8 @@ export type TranscriptConsequenceSummary = {
         'siftScore': number
 
         'transcriptId': string
+
+        'transcriptIdVersion': string
 
         'uniprotId': string
 
