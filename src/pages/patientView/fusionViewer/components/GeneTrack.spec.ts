@@ -11,6 +11,7 @@ describe('computeRetainedShadeX', () => {
 
         it('clamps to 0 when breakpoint is left of drawX', () => {
             const result = computeRetainedShadeX('+', 10, 20, 300);
+            assert.equal(result.x, 20);
             assert.equal(result.width, 0);
         });
 
@@ -35,8 +36,8 @@ describe('computeRetainedShadeX', () => {
 
         it('returns full width when breakpoint is left of drawX', () => {
             const result = computeRetainedShadeX('-', 10, 20, 300);
-            assert.equal(result.x, 10);
-            assert.equal(result.width, 310); // (20 + 300) - 10
+            assert.equal(result.x, 20); // clamped to drawX
+            assert.equal(result.width, 300); // (20 + 300) - 20
         });
     });
 });

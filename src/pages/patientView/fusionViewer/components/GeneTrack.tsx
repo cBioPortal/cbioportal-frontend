@@ -39,9 +39,10 @@ export function computeRetainedShadeX(
         };
     } else {
         // For - strand, retained region is from bpX to trackEnd
+        const clampedBpX = Math.max(drawX, bpX);
         return {
-            x: bpX,
-            width: Math.max(0, trackEnd - bpX),
+            x: clampedBpX,
+            width: Math.max(0, trackEnd - clampedBpX),
         };
     }
 }
