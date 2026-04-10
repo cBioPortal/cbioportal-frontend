@@ -65,11 +65,10 @@ export const ONCOKB_URL = 'https://www.oncokb.org';
 @observer
 export default class Oncokb extends React.Component<IOncokbProps> {
     public oncogenicity(oncokb?: IndicatorQueryResp) {
-        if (oncokb && oncokb.oncogenic && oncokb.oncogenic !== '') {
+        if (oncokb?.oncogenic) {
             return oncokb.oncogenic;
-        } else {
-            return null;
         }
+        return null;
     }
     public oncokbTooltip(oncokbUrl: string) {
         return (
@@ -104,15 +103,11 @@ export default class Oncokb extends React.Component<IOncokbProps> {
     }
 
     public mutationEffect(oncokb?: IndicatorQueryResp) {
-        if (
-            oncokb &&
-            oncokb.mutationEffect &&
-            oncokb.mutationEffect.knownEffect !== ''
-        ) {
-            return oncokb.mutationEffect.knownEffect;
-        } else {
-            return null;
+        const knownEffect = oncokb?.mutationEffect?.knownEffect;
+        if (knownEffect) {
+            return knownEffect;
         }
+        return null;
     }
 
     public render() {
