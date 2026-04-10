@@ -6390,7 +6390,11 @@ export class StudyViewPageStore
         await: () => [this.oncokbGenes],
         invoke: async () => {
             return this.oncokbGenes.result
-                .filter(gene => gene.oncogene)
+                .filter(
+                    gene =>
+                        gene.geneType === 'ONCOGENE' ||
+                        gene.geneType === 'ONCOGENE_AND_TSG'
+                )
                 .map(gene => gene.entrezGeneId);
         },
         default: [],
@@ -6400,7 +6404,11 @@ export class StudyViewPageStore
         await: () => [this.oncokbGenes],
         invoke: async () => {
             return this.oncokbGenes.result
-                .filter(gene => gene.tsg)
+                .filter(
+                    gene =>
+                        gene.geneType === 'TSG' ||
+                        gene.geneType === 'ONCOGENE_AND_TSG'
+                )
                 .map(gene => gene.entrezGeneId);
         },
         default: [],
