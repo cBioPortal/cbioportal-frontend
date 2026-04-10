@@ -107,7 +107,7 @@ export default class Oncokb extends React.Component<IOncokbProps> {
         if (
             oncokb &&
             oncokb.mutationEffect &&
-            oncokb.mutationEffect.knownEffect !== ''
+            oncokb.mutationEffect.knownEffect
         ) {
             return oncokb.mutationEffect.knownEffect;
         } else {
