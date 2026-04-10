@@ -50,6 +50,14 @@ if (
         //     },
         //     id: '2024_newsletter_intro',
         // },
+        {
+            dateEnd: 1782864000000, // July 1, 2026
+            content: `New: <b>Cancer Cell Fraction</b> and <b>Clonality</b> are now available as "Plot Mutations By" options in the Plots Tab! For studies with allele-specific copy number (ASCN) data, you can now plot mutations by their cancer cell fraction (0–1) or clonality status (CLONAL/SUBCLONAL/INDETERMINATE)—helping distinguish clonal cancer drivers from subclonal passengers. <a href="https://github.com/cBioPortal/cbioportal-frontend/pull/5492" target="_blank">Learn more</a>`,
+            showCondition: routingStore => {
+                return getServerConfig().app_name === 'public-portal';
+            },
+            id: '2026_clonality_plots_tab',
+        },
     ];
 
 }
