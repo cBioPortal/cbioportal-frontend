@@ -86,6 +86,9 @@ export interface GeneTrackProps {
     is5Prime: boolean;
     /** Overall track height (max of both genes) so breakpoint line spans full height */
     trackHeight?: number;
+    /** Exon numbers (by `exon.number`) that are retained in the fusion product.
+     *  When undefined, all exons render as normal (no highlighting). */
+    retainedExonNumbers?: Set<number>;
 }
 
 // ---------------------------------------------------------------------------
@@ -96,6 +99,7 @@ const INTRON_Y_OFFSET = EXON_HEIGHT / 2;
 const LABEL_FONT_SIZE = 13;
 const COORD_FONT_SIZE = 9;
 const TRACK_PADDING = 10;
+const EXON_LABEL_OFFSET = 9; // px gap between exon bottom and E-number label
 
 // ---------------------------------------------------------------------------
 // Component
@@ -115,6 +119,7 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
     width,
     is5Prime,
     trackHeight,
+    retainedExonNumbers,
 }) => {
     // Resolve: prefer array prop, fall back to single
     const userTranscripts: TranscriptData[] = userTranscriptsProp
@@ -186,6 +191,10 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
         exons.forEach(exon => {
             const ex = toSvg(exon.start);
             const ew = Math.max(2, toSvg(exon.end) - ex);
+            const isRetained =
+                !retainedExonNumbers || retainedExonNumbers.has(exon.number);
+
+            // Base exon rect
             elements.push(
                 <ExonTooltip
                     key={`exon-${transcript.transcriptId}-${exon.number}`}
@@ -197,17 +206,47 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
                         y={yPos}
                         width={ew}
                         height={EXON_HEIGHT}
-                        fill={color}
-                        stroke={color}
+                        fill={isRetained ? color : '#ddd'}
+                        stroke={isRetained ? color : '#ddd'}
                         strokeWidth={strokeWidth}
-                        opacity={opacity}
+                        opacity={isRetained ? opacity : 1}
                         rx={1}
                     />
                 </ExonTooltip>
             );
+
+            // Hatch overlay for discarded exons
+            if (!isRetained) {
+                elements.push(
+                    <rect
+                        key={`hatch-${transcript.transcriptId}-${exon.number}`}
+                        x={ex}
+                        y={yPos}
+                        width={ew}
+                        height={EXON_HEIGHT}
+                        fill={`url(#hatch-${symbol})`}
+                        rx={1}
+                        style={{ pointerEvents: 'none' }}
+                    />
+                );
+            }
+
+            // Exon number label below the exon block
+            elements.push(
+                <text
+                    key={`exon-label-${transcript.transcriptId}-${exon.number}`}
+                    x={ex + ew / 2}
+                    y={yPos + EXON_HEIGHT + EXON_LABEL_OFFSET}
+                    textAnchor="middle"
+                    fontSize={7}
+                    fill={isRetained ? color : '#aaa'}
+                    opacity={isRetained ? opacity : 0.7}
+                >
+                    E{exon.number}
+                </text>
+            );
         });
 
-        // Label for user transcripts
         if (labelText) {
             elements.push(
                 <text
@@ -233,8 +272,34 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
         ? y + trackHeight - BREAKPOINT_EXTRA + 4
         : forteY + FORTE_TRACK_HEIGHT + totalUserHeight + 4;
 
+    // ---- Shade rect bounds (strand-aware) ----
+    const { x: shadeX, width: shadeW } = computeRetainedShadeX(
+        strand,
+        bpX,
+        drawX,
+        drawWidth
+    );
+    const shadeHeight =
+        FORTE_TRACK_HEIGHT + userTranscripts.length * USER_TRACK_HEIGHT;
+
     return (
         <g>
+            {/* Hatch pattern for discarded exons */}
+            <defs>
+                <pattern
+                    id={`hatch-${symbol}`}
+                    patternUnits="userSpaceOnUse"
+                    width={5}
+                    height={5}
+                >
+                    <path
+                        d="M-1,1 l2,-2 M0,5 l5,-5 M4,6 l2,-2"
+                        stroke="#aaa"
+                        strokeWidth={1.2}
+                    />
+                </pattern>
+            </defs>
+
             {/* Gene label */}
             <text
                 x={drawX}
@@ -258,6 +323,20 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
             >
                 {forteTranscript.displayName}
             </text>
+
+            {/* Retained region shade (behind exon blocks) */}
+            {retainedExonNumbers && shadeW > 0 && (
+                <rect
+                    x={shadeX}
+                    y={forteY}
+                    width={shadeW}
+                    height={shadeHeight}
+                    fill={color}
+                    opacity={0.08}
+                    rx={3}
+                    style={{ pointerEvents: 'none' }}
+                />
+            )}
 
             {/* FORTE transcript */}
             {renderTranscript(sortedForte, forteTranscript, forteY, 1.0, 2)}
@@ -301,7 +380,7 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
                 />
             </BreakpointTooltip>
 
-            {/* Breakpoint coordinate label — clamp anchor to avoid clipping */}
+            {/* Breakpoint coordinate label */}
             <text
                 x={bpX}
                 y={bpLineBottom + 10}
