@@ -3706,6 +3706,40 @@ export function getAxisDataOverlapSampleCount(
     ).length;
 }
 
+export function getAxisDataOverlapPatientCount(
+    firstAxisData: IAxisData,
+    secondAxisData: IAxisData,
+    sampleKeyToSample: _.Dictionary<Sample>
+): number {
+    if (firstAxisData.data.length === 0) {
+        return _.uniq(
+            secondAxisData.data
+                .map(d => sampleKeyToSample[d.uniqueSampleKey]?.patientId)
+                .filter(Boolean)
+        ).length;
+    } else if (secondAxisData.data.length === 0) {
+        return _.uniq(
+            firstAxisData.data
+                .map(d => sampleKeyToSample[d.uniqueSampleKey]?.patientId)
+                .filter(Boolean)
+        ).length;
+    }
+
+    const firstPatientIds = _.uniq(
+        firstAxisData.data
+            .map(d => sampleKeyToSample[d.uniqueSampleKey]?.patientId)
+            .filter(Boolean)
+    );
+
+    const secondPatientIds = _.uniq(
+        secondAxisData.data
+            .map(d => sampleKeyToSample[d.uniqueSampleKey]?.patientId)
+            .filter(Boolean)
+    );
+
+    return _.intersection(firstPatientIds, secondPatientIds).length;
+}
+
 export function getLimitValues(data: any[]): string[] {
     return _(data)
         .filter(d => {
