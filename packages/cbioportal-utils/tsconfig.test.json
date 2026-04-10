@@ -1,3 +1,10 @@
 {
-  "extends": "../config/tsconfig.test.json"
+  "extends": "../config/tsconfig.test.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "genome-nexus-ts-api-client": ["../genome-nexus-ts-api-client/dist/index.d.ts"],
+      "oncokb-ts-api-client": ["../oncokb-ts-api-client/dist/index.d.ts"]
+    }
+  }
 }
