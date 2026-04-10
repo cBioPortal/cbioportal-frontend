@@ -65,7 +65,7 @@ export const ONCOKB_URL = 'https://www.oncokb.org';
 @observer
 export default class Oncokb extends React.Component<IOncokbProps> {
     public oncogenicity(oncokb?: IndicatorQueryResp) {
-        if (oncokb && oncokb.oncogenic && oncokb.oncogenic !== '') {
+        if (oncokb && oncokb.oncogenic) {
             return oncokb.oncogenic;
         } else {
             return null;
