@@ -601,3 +601,12 @@ describe('plots tab multiple studies screenshot tests', () => {
         await waitForAndCheckPlotsTab();
     });
 });
+
+describe('plots tab clonality screenshot tests', () => {
+    it('plots tab clonality vs cancer type detailed stacked bar plot', async () => {
+        await goToUrlAndSetLocalStorage(
+            `${CBIOPORTAL_URL}/results/plots?plots_horz_selection=%7B"dataType"%3A"clinical_attribute"%2C"selectedDataSourceOption"%3A"CANCER_TYPE_DETAILED"%7D&plots_vert_selection=%7B"selectedGeneOption"%3A5290%2C"dataType"%3A"MUTATION_EXTENDED"%2C"mutationCountBy"%3A"Clonality"%7D&plots_coloring_selection=%7B%7D&tab_index=tab_visualize&Action=Submit&session_id=69d62fbd75150c634a9f0318`
+        );
+        await waitForAndCheckPlotsTab();
+    });
+});
