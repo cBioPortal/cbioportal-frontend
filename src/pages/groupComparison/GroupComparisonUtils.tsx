@@ -974,6 +974,10 @@ export const GetHazardRatioCautionInfo: React.FunctionComponent = () => {
     );
 };
 
+// Above LoadingIndicator.centered (z-index 10000) so click-triggered menus are not covered;
+// WebdriverIO treats obscured overlays as not displayed (e2e: AlterationTypeSelectorMenu).
+const COMPARISON_ALTERATION_TOOLTIP_Z_INDEX = 10050;
+
 export const AlterationFilterMenuSection: React.FunctionComponent<{
     store: ComparisonStore;
     updateSelectedEnrichmentEventTypes: (t: EnrichmentEventType[]) => void;
@@ -983,6 +987,7 @@ export const AlterationFilterMenuSection: React.FunctionComponent<{
             <DefaultTooltip
                 trigger={['click']}
                 placement={'bottomRight'}
+                overlayStyle={{ zIndex: COMPARISON_ALTERATION_TOOLTIP_Z_INDEX }}
                 overlay={
                     <AlterationEnrichmentTypeSelector
                         classNames={styles.buttonAlterationTypeSelectorMenu}
@@ -1007,6 +1012,7 @@ export const AlterationFilterMenuSection: React.FunctionComponent<{
             <DefaultTooltip
                 trigger={['click']}
                 placement={'bottomRight'}
+                overlayStyle={{ zIndex: COMPARISON_ALTERATION_TOOLTIP_Z_INDEX }}
                 overlay={
                     <SettingsMenu
                         store={store}
