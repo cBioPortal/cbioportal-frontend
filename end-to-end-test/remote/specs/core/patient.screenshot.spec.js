@@ -6,10 +6,16 @@ const {
     waitForNetworkQuiet,
     goToUrlAndSetLocalStorage,
     checkElementWithMouseDisabled,
-    getElementByTestHandle,
 } = require('../../../shared/specUtils_Async');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
+
+// Several samples each have [data-test=patientSamplesClinicalSpans]; TMB-H / MSI-H
+// render inside OtherBiomarkerAnnotation as span.clinical-spans only after OncoKB
+// data loads, and not necessarily on the *first* sample. Target the header that
+// actually contains the biomarker row (Chrome supports :has in querySelector).
+const SAMPLE_HEADER_WITH_OTHER_BIOMARKER =
+    '[data-test="patientSamplesClinicalSpans"]:has(span.clinical-spans)';
 
 describe('Patient Cohort View Custom Tab Tests', () => {
     const patientUrl = `${CBIOPORTAL_URL}/patient?studyId=coadread_tcga_pub&caseId=TCGA-A6-2670#navCaseIds=coadread_tcga_pub:TCGA-A6-2670,coadread_tcga_pub:TCGA-A6-2672`;
@@ -42,16 +48,15 @@ describe('Patient View Sample Header Screenshot Tests', () => {
 
     before(async () => {
         await goToUrlAndSetLocalStorage(patientUrl);
-        const clinicalSpans = await getElementByTestHandle(
-            'patientSamplesClinicalSpans'
-        );
-        await clinicalSpans.waitForDisplayed({ timeout: 20000 });
+        const headerWithBiomarker = await $(SAMPLE_HEADER_WITH_OTHER_BIOMARKER);
+        await headerWithBiomarker.waitForExist({ timeout: 25000 });
+        await headerWithBiomarker.waitForDisplayed({ timeout: 10000 });
         await waitForNetworkQuiet(10000);
     });
 
     it('TMB-H biomarker annotation renders inline in the sample header', async () => {
         const res = await checkElementWithMouseDisabled(
-            '[data-test="patientSamplesClinicalSpans"]',
+            SAMPLE_HEADER_WITH_OTHER_BIOMARKER,
             0,
             { hide: ['.qtip'] }
         );
