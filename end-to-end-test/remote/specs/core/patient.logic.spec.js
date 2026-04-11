@@ -37,19 +37,20 @@ describe('patient page', () => {
             `${CBIOPORTAL_URL}/patient?studyId=msk_impact_50k_2026&caseId=P-0002435`
         );
 
-        // Wait for clinical spans to be visible
-        const clinicalSpans = await getElementByTestHandle(
-            'patientSamplesClinicalSpans'
+        // Several samples share data-test=patientSamplesClinicalSpans; TMB-H only appears on
+        // rows where OncoKB other-biomarker data exists (span.clinical-spans from OtherBiomarkerAnnotation).
+        const tmbhAnnotation = await $(
+            '[data-test="patientSamplesClinicalSpans"] span.clinical-spans'
         );
-        await clinicalSpans.waitForDisplayed({ timeout: 20000 });
-
-        // Find the TMB-H biomarker annotation span nested within clinical spans
-        const tmbhAnnotation = await clinicalSpans.$('.clinical-spans');
-        await tmbhAnnotation.waitForExist({ timeout: 10000 });
+        await tmbhAnnotation.waitForExist({ timeout: 25000 });
+        await tmbhAnnotation.waitForDisplayed({ timeout: 10000 });
 
         // Verify TMB-H text is present in the annotation
         const text = await tmbhAnnotation.getText();
-        assert(text.includes('TMB-H'), `Expected TMB-H in annotation text, got: ${text}`);
+        assert(
+            text.includes('TMB-H'),
+            `Expected TMB-H in annotation text, got: ${text}`
+        );
 
         // Verify the annotation is rendered as inline-flex (not block-level flex,
         // which would cause the biomarker to wrap onto a new line)

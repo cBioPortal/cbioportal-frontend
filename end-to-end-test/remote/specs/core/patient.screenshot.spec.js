@@ -12,10 +12,10 @@ const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
 // Several samples each have [data-test=patientSamplesClinicalSpans]; TMB-H / MSI-H
 // render inside OtherBiomarkerAnnotation as span.clinical-spans only after OncoKB
-// data loads, and not necessarily on the *first* sample. Target the header that
-// actually contains the biomarker row (Chrome supports :has in querySelector).
+// data loads, and not necessarily on the *first* sample. Use XPath (not CSS :has) so
+// WebDriver reliably finds the header that contains the biomarker span.
 const SAMPLE_HEADER_WITH_OTHER_BIOMARKER =
-    '[data-test="patientSamplesClinicalSpans"]:has(span.clinical-spans)';
+    '//*[@data-test="patientSamplesClinicalSpans"][.//span[contains(@class,"clinical-spans")]]';
 
 describe('Patient Cohort View Custom Tab Tests', () => {
     const patientUrl = `${CBIOPORTAL_URL}/patient?studyId=coadread_tcga_pub&caseId=TCGA-A6-2670#navCaseIds=coadread_tcga_pub:TCGA-A6-2670,coadread_tcga_pub:TCGA-A6-2672`;

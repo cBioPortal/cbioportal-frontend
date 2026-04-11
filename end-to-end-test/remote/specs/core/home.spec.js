@@ -234,7 +234,7 @@ describe('case set selection in front page query form', function() {
         async function searchAndSelectStudy(
             studyName,
             checkboxSelector,
-            expectedText
+            expectedMatch
         ) {
             await getElement(searchInputSelector, { timeout: 20000 });
             await setInputText(searchInputSelector, studyName);
@@ -254,14 +254,16 @@ describe('case set selection in front page query form', function() {
                 const selectedText = (
                     await getText(selectedCaseSet_sel)
                 ).trim();
-                return selectedText === expectedText;
+                return typeof expectedMatch === 'string'
+                    ? selectedText === expectedMatch
+                    : expectedMatch.test(selectedText);
             }, 30000);
         }
-        // Phase 1: Select Ampullary Carcinoma
+        // Phase 1: Select Ampullary Carcinoma (sample counts drift on public data)
         await searchAndSelectStudy(
             'ampullary baylor',
             '[data-test="StudySelect"] input',
-            'Samples with mutation data (160)'
+            /^Samples with mutation data \(\d+\)$/
         );
         await browser.pause(2000);
         await clickModifyStudySelectionButton();
@@ -269,7 +271,7 @@ describe('case set selection in front page query form', function() {
         await searchAndSelectStudy(
             'adrenocortical carcinoma tcga firehose legacy',
             '.studyItem_acc_tcga',
-            'All (252)'
+            /^All \(\d+\)$/
         );
         await clickModifyStudySelectionButton();
         await browser.pause(500);
@@ -286,10 +288,11 @@ describe('case set selection in front page query form', function() {
         //await browser.debug();
 
         await browser.waitUntil(async () => {
-            const expectedText = 'Samples with mutation and CNA data (88)';
             const selectedText = (await getText(selectedCaseSet_sel)).trim();
-            return selectedText === expectedText;
-        }, 10000);
+            return /^Samples with mutation and CNA data \(\d+\)$/.test(
+                selectedText
+            );
+        }, 30000);
     });
 });
 
