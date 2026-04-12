@@ -69,7 +69,7 @@
           {
             "name": "isoformOverrideSource",
             "in": "query",
-            "description": "Isoform override source. For example uniprot",
+            "description": "Isoform override source. For example mskcc",
             "required": false,
             "type": "string"
           },
@@ -157,7 +157,7 @@
           {
             "name": "isoformOverrideSource",
             "in": "query",
-            "description": "Isoform override source. For example uniprot",
+            "description": "Isoform override source. For example mskcc",
             "required": false,
             "type": "string"
           },
@@ -240,7 +240,7 @@
           {
             "name": "isoformOverrideSource",
             "in": "query",
-            "description": "Isoform override source. For example uniprot",
+            "description": "Isoform override source. For example mskcc",
             "required": false,
             "type": "string"
           },
@@ -325,7 +325,7 @@
           {
             "name": "isoformOverrideSource",
             "in": "query",
-            "description": "Isoform override source. For example uniprot",
+            "description": "Isoform override source. For example mskcc",
             "required": false,
             "type": "string"
           },
@@ -408,7 +408,7 @@
           {
             "name": "isoformOverrideSource",
             "in": "query",
-            "description": "Isoform override source. For example uniprot",
+            "description": "Isoform override source. For example mskcc",
             "required": false,
             "type": "string"
           },
@@ -488,7 +488,7 @@
           {
             "name": "isoformOverrideSource",
             "in": "query",
-            "description": "Isoform override source. For example uniprot",
+            "description": "Isoform override source. For example mskcc",
             "required": false,
             "type": "string"
           },
@@ -717,10 +717,10 @@
           {
             "name": "isoformOverrideSource",
             "in": "query",
-            "description": "Isoform override source. For example uniprot",
+            "description": "Isoform override source. For example mskcc",
             "required": false,
             "type": "string",
-            "default": "uniprot"
+            "default": "mskcc"
           }
         ],
         "responses": {
@@ -760,10 +760,10 @@
           {
             "name": "isoformOverrideSource",
             "in": "query",
-            "description": "Isoform override source. For example uniprot",
+            "description": "Isoform override source. For example mskcc",
             "required": false,
             "type": "string",
-            "default": "uniprot"
+            "default": "mskcc"
           }
         ],
         "responses": {
@@ -1701,6 +1701,10 @@
           "type": "string",
           "description": "Ensembl transcript id"
         },
+        "transcriptIdVersion": {
+          "type": "string",
+          "description": "Ensembl transcript id version"
+        },
         "geneId": {
           "type": "string",
           "description": "Ensembl gene id"
@@ -2073,6 +2077,10 @@
         "transcriptId": {
           "type": "string",
           "description": "Ensembl Transcript Id"
+        },
+        "transcriptIdVersion": {
+          "type": "string",
+          "description": "Ensembl Transcript Id Version"
         },
         "truncatingCount": {
           "type": "integer",
@@ -3350,6 +3358,10 @@
           "type": "string",
           "description": "Ensembl transcript id"
         },
+        "transcript_id_version": {
+          "type": "string",
+          "description": "Ensembl transcript id version"
+        },
         "uniprotId": {
           "type": "string"
         },
@@ -3443,6 +3455,10 @@
         "transcriptId": {
           "type": "string",
           "description": "Transcript id"
+        },
+        "transcriptIdVersion": {
+          "type": "string",
+          "description": "Transcript id version"
         },
         "uniprotId": {
           "type": "string",

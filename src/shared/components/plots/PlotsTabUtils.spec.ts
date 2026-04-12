@@ -19,8 +19,10 @@ import {
     MUT_PROFILE_COUNT_DRIVER,
     MUT_PROFILE_COUNT_VUS,
     mutDriverVsVUSCategoryOrder,
+    mutClonalityCategoryOrder,
     logScalePossible,
 } from './PlotsTabUtils';
+import { ClonalValue } from 'shared/components/mutationTable/column/clonal/ClonalColumnFormatter';
 import { Mutation, Sample, Gene } from 'cbioportal-ts-api-client';
 import { AlterationTypeConstants, DataTypeConstants } from 'shared/constants';
 import { MutationCountBy, AxisMenuSelection } from './PlotsTab';
@@ -730,6 +732,155 @@ describe('PlotsTabUtils', () => {
                 }
             );
         });
+        it('gives the correct result for cancer cell fraction', () => {
+            const ascnMutations = [
+                {
+                    uniqueSampleKey: 'sample1',
+                    proteinChange: '',
+                    mutationType: 'missense',
+                    putativeDriver: true,
+                    tumorAltCount: 12,
+                    tumorRefCount: 88,
+                    alleleSpecificCopyNumber: { ccfExpectedCopies: 0.8 } as any,
+                },
+                {
+                    uniqueSampleKey: 'sample1',
+                    proteinChange: '',
+                    mutationType: 'missense',
+                    putativeDriver: true,
+                    tumorAltCount: 10,
+                    tumorRefCount: 90,
+                    alleleSpecificCopyNumber: { ccfExpectedCopies: 0.6 } as any,
+                },
+                {
+                    uniqueSampleKey: 'sample2',
+                    proteinChange: '',
+                    mutationType: 'missense',
+                    putativeDriver: false,
+                    tumorAltCount: 5,
+                    tumorRefCount: 95,
+                    alleleSpecificCopyNumber: { ccfExpectedCopies: 0.4 } as any,
+                },
+                {
+                    // sample3 has a mutation but no ASCN data - should be excluded
+                    uniqueSampleKey: 'sample3',
+                    proteinChange: '',
+                    mutationType: 'missense',
+                    putativeDriver: false,
+                    tumorAltCount: 15,
+                    tumorRefCount: 85,
+                },
+            ];
+            assert.deepEqual(
+                makeAxisDataPromise_Molecular_MakeMutationData(
+                    [molecularProfileId],
+                    'BRCA1',
+                    ascnMutations,
+                    coverageInformation,
+                    MutationCountBy.CancerCellFraction,
+                    samples
+                ),
+                {
+                    data: [
+                        {
+                            uniqueSampleKey: 'sample1',
+                            value: [0.8, 0.6],
+                        },
+                        {
+                            uniqueSampleKey: 'sample2',
+                            value: [0.4],
+                        },
+                        // sample3 excluded (no CCF data), sample4/5/6 excluded (no mutations)
+                    ],
+                    hugoGeneSymbol: 'BRCA1',
+                    datatype: 'number',
+                }
+            );
+        });
+
+        it('gives the correct result for clonality', () => {
+            const ascnMutations = [
+                {
+                    uniqueSampleKey: 'sample1',
+                    proteinChange: '',
+                    mutationType: 'missense',
+                    putativeDriver: true,
+                    tumorAltCount: 12,
+                    tumorRefCount: 88,
+                    alleleSpecificCopyNumber: { clonal: 'CLONAL' } as any,
+                },
+                {
+                    uniqueSampleKey: 'sample2',
+                    proteinChange: '',
+                    mutationType: 'missense',
+                    putativeDriver: false,
+                    tumorAltCount: 5,
+                    tumorRefCount: 95,
+                    alleleSpecificCopyNumber: { clonal: 'SUBCLONAL' } as any,
+                },
+                {
+                    // sample3 has two mutations with different clonal values -> INDETERMINATE
+                    uniqueSampleKey: 'sample3',
+                    proteinChange: '',
+                    mutationType: 'missense',
+                    putativeDriver: false,
+                    tumorAltCount: 15,
+                    tumorRefCount: 85,
+                    alleleSpecificCopyNumber: { clonal: 'CLONAL' } as any,
+                },
+                {
+                    uniqueSampleKey: 'sample3',
+                    proteinChange: '',
+                    mutationType: 'missense',
+                    putativeDriver: false,
+                    tumorAltCount: 15,
+                    tumorRefCount: 85,
+                    alleleSpecificCopyNumber: { clonal: 'SUBCLONAL' } as any,
+                },
+            ];
+            assert.deepEqual(
+                makeAxisDataPromise_Molecular_MakeMutationData(
+                    [molecularProfileId],
+                    'BRCA1',
+                    ascnMutations,
+                    coverageInformation,
+                    MutationCountBy.Clonality,
+                    samples
+                ),
+                {
+                    data: [
+                        {
+                            uniqueSampleKey: 'sample1',
+                            value: [ClonalValue.CLONAL],
+                        },
+                        {
+                            uniqueSampleKey: 'sample2',
+                            value: [ClonalValue.SUBCLONAL],
+                        },
+                        {
+                            uniqueSampleKey: 'sample3',
+                            value: ClonalValue.INDETERMINATE,
+                        },
+                        {
+                            uniqueSampleKey: 'sample4',
+                            value: MUT_PROFILE_COUNT_NOT_MUTATED,
+                        },
+                        {
+                            uniqueSampleKey: 'sample5',
+                            value: MUT_PROFILE_COUNT_NOT_PROFILED,
+                        },
+                        {
+                            uniqueSampleKey: 'sample6',
+                            value: MUT_PROFILE_COUNT_NOT_PROFILED,
+                        },
+                    ],
+                    hugoGeneSymbol: 'BRCA1',
+                    datatype: 'string',
+                    categoryOrder: mutClonalityCategoryOrder,
+                }
+            );
+        });
+
         it('gives the correct result for mutation type data', () => {
             assert.deepEqual(
                 makeAxisDataPromise_Molecular_MakeMutationData(

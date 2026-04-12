@@ -717,6 +717,7 @@ async function closeOtherTabs() {
 async function openGroupComparison(studyViewUrl, chartDataTest, timeout) {
     await goToUrlAndSetLocalStorage(studyViewUrl, true);
     await waitForElementDisplayed('[data-test=summary-tab-content]');
+
     await waitForNetworkQuiet(20000);
 
     // needed to switch to group comparison tab later on:
@@ -749,6 +750,10 @@ async function openGroupComparison(studyViewUrl, chartDataTest, timeout) {
 
     const chartHamburgerIcon = await getNestedElement([chart, hamburgerIcon]);
     await chartHamburgerIcon.waitForDisplayed();
+
+    await (
+        await (await getElement(chartHamburgerIcon)).$$('li')
+    )[1].waitForClickable();
 
     await (await (await getElement(chartHamburgerIcon)).$$('li'))[1].click();
 

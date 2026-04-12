@@ -6,6 +6,7 @@ export function overrideApiRequestForColumnStore(client: any) {
     const oldRequest = client.request;
     client.request = function(...args: any) {
         args[1] = args[1].replace(/column-store\/api/, 'column-store');
+        args[1] = args[1].replace(/generic_assay_meta/, 'generic-assay-meta');
         // Compress request body if enabled
         if (getServerConfig().enable_request_body_gzip_compression) {
             if (args[0] === 'POST' && !_.isEmpty(args[2])) {

@@ -304,7 +304,6 @@ export default class StudyViewPage extends React.Component<
 
     @action.bound
     toggleVirtualStudyModal() {
-        debugger;
         this.showVirtualStudyModal = !this.showVirtualStudyModal;
     }
 
