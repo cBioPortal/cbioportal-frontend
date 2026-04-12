@@ -54,9 +54,9 @@ class TranscriptSummaryTable extends React.Component<
         );
 
         const canonicalTranscript = {
-            transcript:
-                transcriptConsequenceSummary.transcriptIdVersion ||
-                transcriptConsequenceSummary.transcriptId,
+            transcript: transcriptConsequenceSummary.transcriptIdVersion
+                ? `${transcriptConsequenceSummary.transcriptId}.${transcriptConsequenceSummary.transcriptIdVersion}`
+                : transcriptConsequenceSummary.transcriptId,
             transcriptIdUnversioned: transcriptConsequenceSummary.transcriptId,
             hugoGeneSymbol: transcriptConsequenceSummary.hugoGeneSymbol,
             hgvsShort: transcriptConsequenceSummary.hgvspShort,
@@ -85,9 +85,9 @@ class TranscriptSummaryTable extends React.Component<
             annotation.transcriptConsequenceSummaries.forEach(transcript => {
                 if (transcript.transcriptId !== canonicalTranscriptId) {
                     otherTranscript.push({
-                        transcript:
-                            transcript.transcriptIdVersion ||
-                            transcript.transcriptId,
+                        transcript: transcript.transcriptIdVersion
+                            ? `${transcript.transcriptId}.${transcript.transcriptIdVersion}`
+                            : transcript.transcriptId,
                         transcriptIdUnversioned: transcript.transcriptId,
                         hugoGeneSymbol: transcript.hugoGeneSymbol,
                         hgvsShort: transcript.hgvspShort,
