@@ -35,6 +35,7 @@ import {
 import CoExpressionTab from './coExpression/CoExpressionTab';
 import Helmet from 'react-helmet';
 import {
+    addGenesToQuery,
     parseConfigDisabledTabs,
     ResultsViewTab,
 } from './ResultsViewPageHelpers';
@@ -166,11 +167,57 @@ export default class ResultsViewPage extends React.Component<
         const newParams = _.clone(this.routing.query);
         newParams[USER_SETTINGS_QUERY_PARAM] = undefined;
         this.routing.updateRoute(newParams);
+
+        this.registerWebMCPTools();
     }
 
     componentWillUnmount() {
+        this.unregisterWebMCPTools();
         this.resultsViewPageStore.destroy();
         this.urlWrapper.destroy();
+    }
+
+    private registerWebMCPTools() {
+        if (!navigator.modelContext) {
+            return;
+        }
+
+        const urlWrapper = this.urlWrapper;
+
+        navigator.modelContext.registerTool({
+            name: 'add-gene',
+            description:
+                'Add a gene to the oncoprint query. Takes a HUGO gene symbol (e.g. TP53, BRCA1) and appends it to the current gene list.',
+            inputSchema: {
+                type: 'object',
+                properties: {
+                    gene: {
+                        type: 'string',
+                        description: 'HUGO gene symbol to add (e.g. TP53)',
+                    },
+                },
+                required: ['gene'],
+            },
+            async execute(params) {
+                const gene = String(params.gene).toUpperCase();
+                addGenesToQuery(urlWrapper, [gene]);
+                return {
+                    content: [
+                        {
+                            type: 'text',
+                            text: `Added ${gene} to the oncoprint query.`,
+                        },
+                    ],
+                };
+            },
+        });
+    }
+
+    private unregisterWebMCPTools() {
+        if (!navigator.modelContext) {
+            return;
+        }
+        navigator.modelContext.unregisterTool('add-gene');
     }
 
     @computed
