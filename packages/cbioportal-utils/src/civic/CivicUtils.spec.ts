@@ -69,7 +69,6 @@ describe('CivicUtils', () => {
                     E545K: {
                         id: 104,
                         name: 'E545K',
-                        geneId: 37,
                         description:
                             'PIK3CA E545K/E542K are the second most recurrent PIK3CA mutations in breast cancer, and are highly recurrent mutations in many other cancer types. E545K, and possibly the other mutations in the E545 region, may present patients with a poorer prognosis than patients with either patients with other PIK3CA variant or wild-type PIK3CA. There is also data to suggest that E545/542 mutations may confer resistance to EGFR inhibitors like cetuximab. While very prevalent, targeted therapies for variants in PIK3CA are still in early clinical trial phases.',
                         url: 'https://civicdb.org/variants/104/summary',
@@ -96,7 +95,6 @@ describe('CivicUtils', () => {
                     AMPLIFICATION: {
                         id: 591,
                         name: 'AMPLIFICATION',
-                        geneId: 4767,
                         description: '',
                         url: 'https://civicdb.org/variants/591/summary',
                         evidenceCounts: {
