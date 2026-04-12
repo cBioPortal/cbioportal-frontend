@@ -114,6 +114,8 @@ export default class TranscriptDropdown extends React.Component<
     ) {
         const activeRefseqMrnaId =
             transcriptsByTranscriptId[activeTranscript].refseqMrnaId;
+        const activeTranscriptVersion =
+            transcriptsByTranscriptId[activeTranscript].transcriptIdVersion;
         return (
             <div>
                 <Select
@@ -121,7 +123,7 @@ export default class TranscriptDropdown extends React.Component<
                     value={{
                         label: activeRefseqMrnaId
                             ? activeRefseqMrnaId
-                            : activeTranscript,
+                            : activeTranscriptVersion || activeTranscript,
                         value: activeTranscript,
                     }}
                     clearable={false}
@@ -134,6 +136,9 @@ export default class TranscriptDropdown extends React.Component<
                                 transcriptsByTranscriptId[t].proteinLength;
                             const refseqMrnaId =
                                 transcriptsByTranscriptId[t].refseqMrnaId;
+                            const transcriptVersion =
+                                transcriptsByTranscriptId[t]
+                                    .transcriptIdVersion;
                             const ccdsId = transcriptsByTranscriptId[t].ccdsId;
                             const nrOfMutations =
                                 mutationsByTranscriptId &&
@@ -141,9 +146,9 @@ export default class TranscriptDropdown extends React.Component<
                                 mutationsByTranscriptId[t].length;
                             const label = `${
                                 refseqMrnaId ? `${refseqMrnaId} / ` : ''
-                            }${t} ${ccdsId ? `(${ccdsId})` : ''} ${
-                                length ? `(${length} amino acids)` : ''
-                            } ${
+                            }${transcriptVersion || t} ${
+                                ccdsId ? `(${ccdsId})` : ''
+                            } ${length ? `(${length} amino acids)` : ''} ${
                                 nrOfMutations
                                     ? `(${nrOfMutations} mutations)`
                                     : ''

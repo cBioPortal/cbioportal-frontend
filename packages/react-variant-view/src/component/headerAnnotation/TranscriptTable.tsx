@@ -108,10 +108,14 @@ class TranscriptTable extends React.Component<ITranscriptTableProps> {
                             <tbody>
                                 {allTranscripts.map((transcript, index) => {
                                     return (
-                                        <tr key={transcript.transcript}>
+                                        <tr
+                                            key={
+                                                transcript.transcriptIdUnversioned
+                                            }
+                                        >
                                             <td>{index + 1}</td>
                                             {this.props.allValidTranscripts.includes(
-                                                transcript.transcript!
+                                                transcript.transcriptIdUnversioned!
                                             ) ? (
                                                 <td>
                                                     <div>
