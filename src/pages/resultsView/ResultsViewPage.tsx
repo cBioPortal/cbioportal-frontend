@@ -198,9 +198,11 @@ export default class ResultsViewPage extends React.Component<
                 },
                 required: ['gene'],
             },
-            async execute(params) {
+            execute(params) {
                 const gene = String(params.gene).toUpperCase();
-                addGenesToQuery(urlWrapper, [gene]);
+                setTimeout(() => {
+                    addGenesToQuery(urlWrapper, [gene]);
+                }, 0);
                 return {
                     content: [
                         {
