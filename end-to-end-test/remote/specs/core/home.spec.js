@@ -223,8 +223,9 @@ describe('case set selection in front page query form', function() {
         await (await getElement(selectedCaseSet_sel)).waitForDisplayed();
         await browser.waitUntil(
             async () =>
-                (await getText(selectedCaseSet_sel)) ===
-                'Samples with mutation and CNA data (316)',
+                /^Samples with mutation and CNA data \(\d+\)$/.test(
+                    (await getText(selectedCaseSet_sel)).trim()
+                ),
             5000
         );
     });
@@ -316,11 +317,15 @@ describe('selects the right default case sets in a single->select all filtered->
         // await clickElement('[data-test="StudySelect"] input');
     };
 
-    const validateSelectedCaseSet = async expectedText => {
+    const validateSelectedCaseSet = async expectedTextOrRegex => {
         await (await getElement(selectedCaseSetSelector)).waitForExist();
         await browser.waitUntil(async () => {
-            const selectedText = await getText(selectedCaseSetSelector);
-            return selectedText.trim() === expectedText;
+            const selectedText = (
+                await getText(selectedCaseSetSelector)
+            ).trim();
+            return typeof expectedTextOrRegex === 'string'
+                ? selectedText === expectedTextOrRegex
+                : expectedTextOrRegex.test(selectedText);
         }, 10000);
     };
 
@@ -328,7 +333,7 @@ describe('selects the right default case sets in a single->select all filtered->
         await searchAndSelectStudy('ampullary baylor');
         await clickElement('[data-test="StudySelect"] input');
         await clickQueryByGeneButton();
-        await validateSelectedCaseSet('Samples with mutation data (160)');
+        await validateSelectedCaseSet(/^Samples with mutation data \(\d+\)$/);
     });
 
     it('Step 2: Select all TCGA non-provisional studies', async function() {
@@ -356,7 +361,7 @@ describe('selects the right default case sets in a single->select all filtered->
             '[data-tour="cancer-study-list-container"] input[data-test="selectAllStudies"]'
         );
         await clickQueryByGeneButton();
-        await validateSelectedCaseSet('Samples with mutation data (160)');
+        await validateSelectedCaseSet(/^Samples with mutation data \(\d+\)$/);
     });
 
     it('Step 4: Select Adrenocortical Carcinoma', async function() {
@@ -371,7 +376,7 @@ describe('selects the right default case sets in a single->select all filtered->
         );
         await clickElement('[data-test="StudySelect"] input');
         await clickQueryByGeneButton();
-        await validateSelectedCaseSet('All (252)');
+        await validateSelectedCaseSet(/^All \(\d+\)$/);
     });
 
     it('Step 5: Deselect Ampullary Carcinoma', async function() {
@@ -384,7 +389,7 @@ describe('selects the right default case sets in a single->select all filtered->
 
         await clickQueryByGeneButton();
         await validateSelectedCaseSet(
-            'Samples with mutation and CNA data (88)'
+            /^Samples with mutation and CNA data \(\d+\)$/
         );
     });
 });

@@ -38,9 +38,9 @@ describe('patient page', () => {
         );
 
         // Several samples share data-test=patientSamplesClinicalSpans; TMB-H only appears on
-        // rows where OncoKB other-biomarker data exists (span.clinical-spans from OtherBiomarkerAnnotation).
+        // some rows. Target the span that actually contains TMB-H (not the first .clinical-spans).
         const tmbhAnnotation = await $(
-            '[data-test="patientSamplesClinicalSpans"] span.clinical-spans'
+            '//*[@data-test="patientSamplesClinicalSpans"]//span[contains(@class,"clinical-spans")][contains(., "TMB-H")]'
         );
         await tmbhAnnotation.waitForExist({ timeout: 25000 });
         await tmbhAnnotation.waitForDisplayed({ timeout: 10000 });

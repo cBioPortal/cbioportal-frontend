@@ -29,7 +29,7 @@ run_and_check_diff() {
 # dir of bash script http://stackoverflow.com/questions/59895
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # move to root dir
-cd ${DIR}/../..
+cd "${DIR}/../.."
 
 echo "Test if dependency API docs (OncoKB, GenomeNexus) are same as those in repo (fail with exit code > 0)"
 OUT_OF_SYNC_MSG="out of sync"
