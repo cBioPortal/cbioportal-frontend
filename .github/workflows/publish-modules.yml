@@ -19,7 +19,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.LERNA_PUBLISH_BOT_GITHUB_TOKEN }}
       # lerna needs tags to be able to determine what's changed
       - run: git fetch origin +refs/tags/*:refs/tags/*
       - uses: actions/setup-node@v4
