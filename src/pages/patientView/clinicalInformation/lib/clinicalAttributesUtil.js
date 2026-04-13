@@ -1,5 +1,5 @@
 import * as $ from 'jquery';
-import _ from 'underscore';
+import _ from 'lodash';
 import * as React from 'react';
 import * as styleConsts from './clinicalAttributesStyleConsts.ts';
 import { getServerConfig, ServerConfigHelpers } from 'config/config';
