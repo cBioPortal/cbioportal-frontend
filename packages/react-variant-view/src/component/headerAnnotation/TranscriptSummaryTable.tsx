@@ -77,7 +77,7 @@ class TranscriptSummaryTable extends React.Component<
         const otherTranscript: ITranscript[] = [];
         const canonicalTranscriptId = this.putCanonicalTranscriptInTable(
             annotation
-        ).transcript;
+        ).transcriptIdUnversioned;
         if (
             annotation !== undefined &&
             annotation.transcriptConsequenceSummaries
