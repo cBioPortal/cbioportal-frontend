@@ -14,7 +14,7 @@ interface ITranscriptSummaryTableProps {
 
 export interface ITranscript {
     transcript: string | undefined;
-    transcriptIdUnversioned: string | undefined;
+    transcriptVersioned: string | undefined;
     hugoGeneSymbol: string | undefined;
     hgvsShort: string | undefined;
     refSeq: string | undefined;
@@ -54,10 +54,10 @@ class TranscriptSummaryTable extends React.Component<
         );
 
         const canonicalTranscript = {
-            transcript: transcriptConsequenceSummary.transcriptIdVersion
+            transcript: transcriptConsequenceSummary.transcriptId,
+            transcriptVersioned: transcriptConsequenceSummary.transcriptIdVersion
                 ? `${transcriptConsequenceSummary.transcriptId}.${transcriptConsequenceSummary.transcriptIdVersion}`
                 : transcriptConsequenceSummary.transcriptId,
-            transcriptIdUnversioned: transcriptConsequenceSummary.transcriptId,
             hugoGeneSymbol: transcriptConsequenceSummary.hugoGeneSymbol,
             hgvsShort: transcriptConsequenceSummary.hgvspShort,
             refSeq: transcriptConsequenceSummary.refSeq,
@@ -77,7 +77,7 @@ class TranscriptSummaryTable extends React.Component<
         const otherTranscript: ITranscript[] = [];
         const canonicalTranscriptId = this.putCanonicalTranscriptInTable(
             annotation
-        ).transcriptIdUnversioned;
+        ).transcript;
         if (
             annotation !== undefined &&
             annotation.transcriptConsequenceSummaries
@@ -85,10 +85,10 @@ class TranscriptSummaryTable extends React.Component<
             annotation.transcriptConsequenceSummaries.forEach(transcript => {
                 if (transcript.transcriptId !== canonicalTranscriptId) {
                     otherTranscript.push({
-                        transcript: transcript.transcriptIdVersion
+                        transcript: transcript.transcriptId,
+                        transcriptVersioned: transcript.transcriptIdVersion
                             ? `${transcript.transcriptId}.${transcript.transcriptIdVersion}`
                             : transcript.transcriptId,
-                        transcriptIdUnversioned: transcript.transcriptId,
                         hugoGeneSymbol: transcript.hugoGeneSymbol,
                         hgvsShort: transcript.hgvspShort,
                         refSeq: transcript.refSeq,

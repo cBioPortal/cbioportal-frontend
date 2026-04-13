@@ -41,7 +41,7 @@ class TranscriptTable extends React.Component<ITranscriptTableProps> {
                                     <td>
                                         {
                                             this.props.canonicalTranscript
-                                                .transcript
+                                                .transcriptVersioned
                                         }
                                     </td>
                                     <td>
@@ -108,22 +108,24 @@ class TranscriptTable extends React.Component<ITranscriptTableProps> {
                             <tbody>
                                 {allTranscripts.map((transcript, index) => {
                                     return (
-                                        <tr
-                                            key={
-                                                transcript.transcriptIdUnversioned
-                                            }
-                                        >
+                                        <tr key={transcript.transcript}>
                                             <td>{index + 1}</td>
                                             {this.props.allValidTranscripts.includes(
-                                                transcript.transcriptIdUnversioned!
+                                                transcript.transcript!
                                             ) ? (
                                                 <td>
                                                     <div>
-                                                        {transcript.transcript}
+                                                        {
+                                                            transcript.transcriptVersioned
+                                                        }
                                                     </div>
                                                 </td>
                                             ) : (
-                                                <td>{transcript.transcript}</td>
+                                                <td>
+                                                    {
+                                                        transcript.transcriptVersioned
+                                                    }
+                                                </td>
                                             )}
                                             <td>{transcript.hugoGeneSymbol}</td>
                                             <td>{transcript.hgvsShort}</td>
