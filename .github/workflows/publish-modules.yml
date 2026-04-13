@@ -1,0 +1,35 @@
+# Publish modules under packages directory to npm registry
+name: cBioPortal Frontend Module Publish
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  build:
+    # Only run on push events triggered by the Lerna Publish Bot, or when manually dispatched
+    if: github.event_name == 'workflow_dispatch' || github.actor == 'cbioportal-devops'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.LERNA_PUBLISH_BOT_GITHUB_TOKEN }}
+      # lerna needs tags to be able to determine what's changed
+      - run: git fetch origin +refs/tags/*:refs/tags/*
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.18.0'
+          registry-url: 'https://registry.npmjs.org'
+      - run: yarn policies set-version 1.22.22
+      - run: yarn --frozen-lockfile
+      - run: yarn buildModules
+      - run: yarn publishModulesFromPackages
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: 'true'
