@@ -305,6 +305,8 @@
     "chai": "^4.3.4",
     "chai-enzyme": "^1.0.0-beta.1",
     "cheerio": "^1.0.0-rc.5",
+    "argparse": "^1.0.9",
+    "colors": "^1.1.2",
     "concurrently": "^5.2.0",
     "deep-equal-in-any-order": "^1.0.10",
     "expect": "^1.20.2",
