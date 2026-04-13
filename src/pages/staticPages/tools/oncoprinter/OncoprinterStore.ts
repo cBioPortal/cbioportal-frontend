@@ -19,7 +19,11 @@ import {
     parseGeneticInput,
 } from './OncoprinterGeneticUtils';
 import { remoteData } from 'cbioportal-frontend-commons';
-import { IOncoKbData } from 'cbioportal-utils';
+import {
+    IOncoKbData,
+    indexAnnotationsByGenomicLocation,
+} from 'cbioportal-utils';
+import { genomicLocationString } from 'shared/lib/MutationUtils';
 import { CancerGene } from 'oncokb-ts-api-client';
 
 import {
@@ -246,28 +250,30 @@ export default class OncoprinterStore {
             const type3Lines = lines.filter(isType3Genomic);
             if (type3Lines.length === 0) return {};
 
-            const genomicLocations: GenomicLocation[] = type3Lines.map(l => ({
-                chromosome: l.chromosome,
-                start: l.startPosition,
-                end: l.endPosition,
-                referenceAllele: l.referenceAllele,
-                variantAllele: l.variantAllele,
-            }));
+            // Build GenomicLocation objects and de-duplicate by genomicLocationString
+            const uniqueLocationsMap: { [key: string]: GenomicLocation } = {};
+            for (const l of type3Lines) {
+                const loc: GenomicLocation = {
+                    chromosome: l.chromosome,
+                    start: l.startPosition,
+                    end: l.endPosition,
+                    referenceAllele: l.referenceAllele,
+                    variantAllele: l.variantAllele,
+                };
+                uniqueLocationsMap[genomicLocationString(loc)] = loc;
+            }
+            const genomicLocations = Object.values(uniqueLocationsMap);
 
             const annotations = await genomeNexusClient.fetchVariantAnnotationByGenomicLocationPOST(
                 {
                     genomicLocations,
-                    fields: 'annotation_summary',
-                    isoformOverrideSource:
-                        getServerConfig().genomenexus_isoform_override_source,
+                    fields: 'annotation_summary' as any,
+                    isoformOverrideSource: getServerConfig()
+                        .genomenexus_isoform_override_source,
                 }
             );
 
-            return _.keyBy(
-                annotations,
-                a =>
-                    `${a.annotation_summary?.genomicLocation?.chromosome},${a.annotation_summary?.genomicLocation?.start},${a.annotation_summary?.genomicLocation?.end},${a.annotation_summary?.genomicLocation?.referenceAllele},${a.annotation_summary?.genomicLocation?.variantAllele}`
-            );
+            return indexAnnotationsByGenomicLocation(annotations);
         },
         default: {},
     });
@@ -283,15 +289,25 @@ export default class OncoprinterStore {
             return lines
                 .map(line => {
                     if (!isType3Genomic(line)) return line;
-                    const key = `${line.chromosome},${line.startPosition},${line.endPosition},${line.referenceAllele},${line.variantAllele}`;
+                    const loc: GenomicLocation = {
+                        chromosome: line.chromosome,
+                        start: line.startPosition,
+                        end: line.endPosition,
+                        referenceAllele: line.referenceAllele,
+                        variantAllele: line.variantAllele,
+                    };
+                    const key = genomicLocationString(loc);
                     const annotation = annotations[key];
                     if (!annotation) {
-                        // If annotation not found, return a type-1 line (sample only)
-                        return { sampleId: line.sampleId };
+                        throw new Error(
+                            `Unable to resolve genomic input for sample "${line.sampleId}" at ${line.chromosome}:${line.startPosition}-${line.endPosition} ${line.referenceAllele}>${line.variantAllele}: no Genome Nexus annotation was found for the provided coordinates and alleles.`
+                        );
                     }
                     const type2 = genomicLineToType2(line, annotation);
                     if (!type2) {
-                        return { sampleId: line.sampleId };
+                        throw new Error(
+                            `Unable to resolve genomic input for sample "${line.sampleId}" at ${line.chromosome}:${line.startPosition}-${line.endPosition} ${line.referenceAllele}>${line.variantAllele}: the annotated variant could not be converted into an OncoPrinter mutation entry.`
+                        );
                     }
                     return type2;
                 })
@@ -371,15 +387,20 @@ export default class OncoprinterStore {
     @computed get isAnnotatingWithGenomeNexus() {
         return (
             this.hasGenomicLocationLines &&
-            this.genomeNexusAnnotations.status === 'pending'
+            (this.genomeNexusAnnotations.status === 'pending' ||
+                this.resolvedGeneticInputLines.status === 'pending')
         );
     }
 
     @computed get genomeNexusAnnotationError() {
-        return (
-            this.hasGenomicLocationLines &&
-            this.genomeNexusAnnotations.status === 'error'
-        );
+        if (!this.hasGenomicLocationLines) return null;
+        if (this.genomeNexusAnnotations.status === 'error') {
+            return this.genomeNexusAnnotations.error || true;
+        }
+        if (this.resolvedGeneticInputLines.status === 'error') {
+            return this.resolvedGeneticInputLines.error || true;
+        }
+        return null;
     }
 
     @computed get hugoGeneSymbols() {
