@@ -19,10 +19,7 @@
     "test": "cross-env jest $GREP --env=jsdom --runInBand --ci --reporters=default --reporters=jest-junit --passWithNoTests",
     "test:watch": "yarn run test --watch"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/cBioPortal/oncoprintjs.git"
-  },
+  "repository": "cBioPortal/cbioportal-frontend",
   "keywords": [
     "cancer",
     "genomics",
