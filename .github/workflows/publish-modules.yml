@@ -19,7 +19,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      # lerna needs tags to be able to determine what's changed
+      # `publishModulesFromPackages` publishes from package versions, not git tags.
+      # Keep fetching tags only as a compatibility measure for any downstream tooling that may inspect them.
       - run: git fetch origin +refs/tags/*:refs/tags/*
       - uses: actions/setup-node@v4
         with:
