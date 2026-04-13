@@ -258,6 +258,8 @@ export default class OncoprinterStore {
                 {
                     genomicLocations,
                     fields: 'annotation_summary',
+                    isoformOverrideSource:
+                        getServerConfig().genomenexus_isoform_override_source,
                 }
             );
 
