@@ -51,9 +51,7 @@ const GeneSummaryInfo: React.FunctionComponent<GeneSummaryProps> = ({
         transcript && transcript.transcriptIdVersion
             ? `${transcript.transcriptId}.${transcript.transcriptIdVersion}`
             : null;
-    const rawCcdsId = transcript && transcript.ccdsId;
-    const ccdsId =
-        rawCcdsId && rawCcdsId !== activeTranscript ? rawCcdsId : null;
+    const ccdsId = transcript && transcript.ccdsId;
 
     const refSeq = refseqMrnaId ? (
         <a href={getNCBIlink(`/nuccore/${refseqMrnaId}`)} target="_blank">

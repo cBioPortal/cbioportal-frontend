@@ -145,10 +145,7 @@ export default class TranscriptDropdown extends React.Component<
                             const versionedId = versionSuffix
                                 ? `${t}.${versionSuffix}`
                                 : t;
-                            const rawCcdsId =
-                                transcriptsByTranscriptId[t].ccdsId;
-                            const ccdsId =
-                                rawCcdsId && rawCcdsId !== t ? rawCcdsId : null;
+                            const ccdsId = transcriptsByTranscriptId[t].ccdsId;
                             const nrOfMutations =
                                 mutationsByTranscriptId &&
                                 mutationsByTranscriptId[t] &&
