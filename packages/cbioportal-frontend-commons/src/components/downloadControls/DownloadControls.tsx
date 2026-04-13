@@ -11,7 +11,7 @@ import { saveSvg, saveSvgAsPng } from 'save-svg-as-png';
 import svgToPdfDownload from '../../lib/svgToPdfDownload';
 import { CSSProperties } from 'react';
 import { isPromiseLike } from 'cbioportal-utils';
-import juice from 'juice';
+import inlineCssInSvg from '../../lib/inlineCssInSvg';
 
 type ButtonSpec = {
     key: string;
@@ -131,7 +131,7 @@ export default class DownloadControls extends React.Component<
                 } else {
                     // using serlizer to convert svg to string
                     let serializer = new XMLSerializer();
-                    const inlinedSVG = juice(
+                    const inlinedSVG = inlineCssInSvg(
                         serializer.serializeToString(result)
                     );
 

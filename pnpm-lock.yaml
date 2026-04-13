@@ -829,9 +829,6 @@ importers:
       jquery:
         specifier: ^3.2.1
         version: 3.6.0
-      juice:
-        specifier: ^10.0.0
-        version: 10.0.0(encoding@0.1.13)
       lodash:
         specifier: ^4.17.21
         version: 4.18.1
@@ -954,7 +951,7 @@ importers:
         version: 0.31.5(react-dom@16.14.0(react@16.14.0))(react@16.14.0)
       react-collapse:
         specifier: ^4.0.3
-        version: 4.0.3(react-motion@0.4.8(react@16.14.0))(react@16.14.0)
+        version: 4.0.3(react-motion@0.5.2(react@16.14.0))(react@16.14.0)
       react-if:
         specifier: ^2.1.0
         version: 2.2.2(prop-types@15.7.2)(react@16.14.0)
