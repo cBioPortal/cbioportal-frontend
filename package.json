@@ -280,6 +280,7 @@
     "seamless-immutable": "^7.0.1",
     "source-map-loader": "^0.1.6",
     "style-loader": "^4.0.0",
+    "styled-components": "^4.2.1",
     "superagent": "^3.8.3",
     "superagent-cache": "^3.0.1",
     "svg2pdf.js": "github:cbioportal/svg2pdf.js#v1.3.3-cbio-patch-1",
