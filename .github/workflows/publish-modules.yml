@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  publish:
     # Only run on push events triggered by the Lerna Publish Bot, or when manually dispatched
     if: github.event_name == 'workflow_dispatch' || github.actor == 'cbioportal-devops'
     runs-on: ubuntu-latest
