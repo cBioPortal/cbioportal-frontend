@@ -1121,37 +1121,37 @@
   dependencies:
     "@jridgewell/trace-mapping" "0.3.9"
 
-"@datadog/browser-core@5.28.0":
-  version "5.28.0"
-  resolved "https://registry.yarnpkg.com/@datadog/browser-core/-/browser-core-5.28.0.tgz#bd4677eeb08fcd3c98eba0600e34a2d8bc347ee2"
-  integrity sha512-aLYXaTkbZQIpyx+mxRGnj3Es6njoac8VhBaGr27KPuvwb/xJlBgAt5K/xdGxAPO135mdfq5evmguWuMpffE4Og==
+"@datadog/browser-core@5.35.1":
+  version "5.35.1"
+  resolved "https://registry.yarnpkg.com/@datadog/browser-core/-/browser-core-5.35.1.tgz#532fef34c8334e2ae0e1f72ff318e0c98a903ca2"
+  integrity sha512-zjmw3WkF5syMq5+2jneSgSILxO3DTS+hKw270tzk/yQUfJIGInyGrkHUYYGLmZaVuVp+6F7iO3tUAwIqQYGBFw==
 
-"@datadog/browser-core@6.26.0":
-  version "6.26.0"
-  resolved "https://registry.yarnpkg.com/@datadog/browser-core/-/browser-core-6.26.0.tgz#59a39c93478e0989aab89c02814c02c970b0a26c"
-  integrity sha512-F0KDzcmhpXPO3lr7uIMOc7t3rdvWqL3Jg/YQbODplwDGZYh99rtfU6M/6onDuImr4tsbiGtBJVcGdDj3rmJibQ==
+"@datadog/browser-core@6.32.0":
+  version "6.32.0"
+  resolved "https://registry.yarnpkg.com/@datadog/browser-core/-/browser-core-6.32.0.tgz#a112ffe281114327a605c398248db542386e0d13"
+  integrity sha512-ikok4zYmoZFcOcIlzFFtImgJXUzAKc1j2zQ6JvAMso7L9xs0BmgFPF1E2Kag03PJ6jddB7QJ7ADjiOTwt6hW+Q==
 
 "@datadog/browser-logs@^5.28.0":
-  version "5.28.0"
-  resolved "https://registry.yarnpkg.com/@datadog/browser-logs/-/browser-logs-5.28.0.tgz#9f86067c0482d0ea01a86a185aff511252d52307"
-  integrity sha512-MdmgRnYgxkqHBYQ6nv9VDGLRQcqPgs68PLV6vj1uR1d36F6ZU2r6Blta8qhw3tWyopipw6y08MRuZ4XR2HLtQQ==
+  version "5.35.1"
+  resolved "https://registry.yarnpkg.com/@datadog/browser-logs/-/browser-logs-5.35.1.tgz#963f50a43043b41f6e461dcad009c3d989bb7ab4"
+  integrity sha512-UghvsmCy1dTBVTicdDSXxk3l+xMdKKWLbyrwdoQJaqId3qAJ3vMez1UdOL2XulQTw1cy28DTzYy2EHK+ngfahA==
   dependencies:
-    "@datadog/browser-core" "5.28.0"
+    "@datadog/browser-core" "5.35.1"
 
-"@datadog/browser-rum-core@6.26.0":
-  version "6.26.0"
-  resolved "https://registry.yarnpkg.com/@datadog/browser-rum-core/-/browser-rum-core-6.26.0.tgz#45fe525b7ccc774d5f172dfd4735939490ea654d"
-  integrity sha512-2JFFGZ2TUoaWiSVBSBFJoy0j9QAqHSg8Kv6goRJc0XLK6OTNsStPZMVzRNKa4qtbsYQmRtdgFqo33JQEEXziGA==
+"@datadog/browser-rum-core@6.32.0":
+  version "6.32.0"
+  resolved "https://registry.yarnpkg.com/@datadog/browser-rum-core/-/browser-rum-core-6.32.0.tgz#c45712da70ed1a56db9fb90db8ae196ce99355c9"
+  integrity sha512-VK1xa4bd8zxkbkkh53yhbiKy0rPqOP+YWcqGHoJguhRuUwY45rBa+iBSCn+MBdPmTI1cbfBjc6hxNuBxWHkN1Q==
   dependencies:
-    "@datadog/browser-core" "6.26.0"
+    "@datadog/browser-core" "6.32.0"
 
 "@datadog/browser-rum@^6.26.0":
-  version "6.26.0"
-  resolved "https://registry.yarnpkg.com/@datadog/browser-rum/-/browser-rum-6.26.0.tgz#7bf0d961b460037e17f1cf4cfa5303400f660118"
-  integrity sha512-4UtsEh5cgeYX5g60cVxviOc/4mZgECoIbsJEtMln88YoXxbgzqoSCoR3XssmNEv7NhG17OJjyXsuxtItg+kQIA==
+  version "6.32.0"
+  resolved "https://registry.yarnpkg.com/@datadog/browser-rum/-/browser-rum-6.32.0.tgz#b7bf2e059cc37720eac99e6f45a7b6bb650ee695"
+  integrity sha512-frBWGQSbxMmE9nA0A2PF9Y4kHe4MjaFQxSmFrJUCAVEkwQh//Cp1+vW+FoxIJaR14Sah9zIWzIQF3DiuBzMCqw==
   dependencies:
-    "@datadog/browser-core" "6.26.0"
-    "@datadog/browser-rum-core" "6.26.0"
+    "@datadog/browser-core" "6.32.0"
+    "@datadog/browser-rum-core" "6.32.0"
 
 "@datastructures-js/max-heap@^2.0.0":
   version "2.0.0"
@@ -2491,24 +2491,24 @@
   integrity sha512-RbzJvlNzmRq5c3O09UipeuXno4tA1FE6ikOjxZK0tuxVv3412l64l5t1W5pj4+rJq9vpkm/kwiR07aZXnsKPxw==
 
 "@tsconfig/node10@^1.0.7":
-  version "1.0.8"
-  resolved "https://registry.yarnpkg.com/@tsconfig/node10/-/node10-1.0.8.tgz#c1e4e80d6f964fbecb3359c43bd48b40f7cadad9"
-  integrity sha512-6XFfSQmMgq0CFLY1MslA/CPUfhIL919M1rMsa5lP2P097N2Wd1sSX0tx1u4olM16fLNhtHZpRhedZJphNJqmZg==
+  version "1.0.12"
+  resolved "https://registry.yarnpkg.com/@tsconfig/node10/-/node10-1.0.12.tgz#be57ceac1e4692b41be9de6be8c32a106636dba4"
+  integrity sha512-UCYBaeFvM11aU2y3YPZ//O5Rhj+xKyzy7mvcIoAjASbigy8mHMryP5cK7dgjlz2hWxh1g5pLw084E0a/wlUSFQ==
 
 "@tsconfig/node12@^1.0.7":
-  version "1.0.9"
-  resolved "https://registry.yarnpkg.com/@tsconfig/node12/-/node12-1.0.9.tgz#62c1f6dee2ebd9aead80dc3afa56810e58e1a04c"
-  integrity sha512-/yBMcem+fbvhSREH+s14YJi18sp7J9jpuhYByADT2rypfajMZZN4WQ6zBGgBKp53NKmqI36wFYDb3yaMPurITw==
+  version "1.0.11"
+  resolved "https://registry.yarnpkg.com/@tsconfig/node12/-/node12-1.0.11.tgz#ee3def1f27d9ed66dac6e46a295cffb0152e058d"
+  integrity sha512-cqefuRsh12pWyGsIoBKJA9luFu3mRxCA+ORZvA4ktLSzIuCUtWVxGIuXigEwO5/ywWFMZ2QEGKWvkZG1zDMTag==
 
 "@tsconfig/node14@^1.0.0":
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/@tsconfig/node14/-/node14-1.0.1.tgz#95f2d167ffb9b8d2068b0b235302fafd4df711f2"
-  integrity sha512-509r2+yARFfHHE7T6Puu2jjkoycftovhXRqW328PDXTVGKihlb1P8Z9mMZH04ebyajfRY7dedfGynlrFHJUQCg==
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/@tsconfig/node14/-/node14-1.0.3.tgz#e4386316284f00b98435bf40f72f75a09dabf6c1"
+  integrity sha512-ysT8mhdixWK6Hw3i1V2AeRqZ5WfXg1G43mqoYlM2nc6388Fq5jcXyr5mRsqViLx/GJYdoL0bfXD8nmF+Zn/Iow==
 
 "@tsconfig/node16@^1.0.2":
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/@tsconfig/node16/-/node16-1.0.2.tgz#423c77877d0569db20e1fc80885ac4118314010e"
-  integrity sha512-eZxlbI8GZscaGS7kkc/trHTT5xgrjH3/1n2JDwusC9iahPKWMRvRjJSAN5mCXviuTGQ/lHnhvv8Q1YTpnfz9gA==
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/@tsconfig/node16/-/node16-1.0.4.tgz#0b92dcc0cc1c81f6f306a381f28e31b1a56536e9"
+  integrity sha512-vxhUy4J8lyeyinH7Azl1pdd43GJhZH/tP2weN8TntQblOY+A0XbT8DJk1/oCPuOOyg/Ja757rG0CgHcWC8OfMA==
 
 "@tufjs/canonical-json@2.0.0":
   version "2.0.0"
@@ -4671,9 +4671,11 @@ acorn-walk@^7.1.1:
   integrity sha512-OPdCF6GsMIP+Az+aWfAAOEt2/+iVDKE7oy6lJ098aoe59oAmK76qV6Gw60SbZ8jHuG2wH058GF4pLFbYamYrVA==
 
 acorn-walk@^8.1.1:
-  version "8.2.0"
-  resolved "https://registry.yarnpkg.com/acorn-walk/-/acorn-walk-8.2.0.tgz#741210f2e2426454508853a2f44d0ab83b7f69c1"
-  integrity sha512-k+iyHEuPgSw6SbuDpGQM+06HQUa04DZ3o+F6CSzXMvvI5KMvnaEqXe+YVe555R9nn6GPt404fos4wcgpw12SDA==
+  version "8.3.5"
+  resolved "https://registry.yarnpkg.com/acorn-walk/-/acorn-walk-8.3.5.tgz#8a6b8ca8fc5b34685af15dabb44118663c296496"
+  integrity sha512-HEHNfbars9v4pgpW6SO1KSPkfoS0xVOM/9UzkJltjlsHZmJasxg8aXkuZa7SMf8vKGIBhpUsPluQSqhJFCqebw==
+  dependencies:
+    acorn "^8.11.0"
 
 acorn@^2.1.0, acorn@^2.4.0:
   version "2.7.0"
@@ -4695,7 +4697,12 @@ acorn@^7.1.1:
   resolved "https://registry.yarnpkg.com/acorn/-/acorn-7.4.1.tgz#feaed255973d2e77555b83dbc08851a6c63520fa"
   integrity sha512-nQyp0o1/mNdbTO1PO6kHkwSrmgZ0MT/jCCpNiwbUjGoRN4dlBhqJtoQuCnEOKzgTVwg0ZWiCoQy6SxMebQVh8A==
 
-acorn@^8.14.0, acorn@^8.15.0, acorn@^8.2.4, acorn@^8.4.1:
+acorn@^8.11.0, acorn@^8.4.1:
+  version "8.16.0"
+  resolved "https://registry.yarnpkg.com/acorn/-/acorn-8.16.0.tgz#4ce79c89be40afe7afe8f3adb902a1f1ce9ac08a"
+  integrity sha512-UVJyE9MttOsBQIDKw1skb9nAwQuR5wuGD3+82K6JgJlm/Y+KI92oNsMNGZCYdDsVtRHSak0pcV5Dno5+4jh9sw==
+
+acorn@^8.14.0, acorn@^8.15.0, acorn@^8.2.4:
   version "8.15.0"
   resolved "https://registry.yarnpkg.com/acorn/-/acorn-8.15.0.tgz#a360898bc415edaac46c8241f6383975b930b816"
   integrity sha512-NZyJarBfL7nWwIq+FDL6Zp/yHEhePMNnnJ0y3qfieCrmNvYct8uvtiV41UvlSe6apAfk0fY1FbWx+NwfmpvtTg==
@@ -8879,9 +8886,9 @@ diff@^3.1.0:
   integrity sha512-A46qtFgd+g7pDZinpnwiRJtxbC1hpgf0uzP3iG89scHk0AUC7A1TGxf5OiiOUv/JMZR8GOt8hL900hV0bOy5xA==
 
 diff@^4.0.1:
-  version "4.0.1"
-  resolved "https://registry.yarnpkg.com/diff/-/diff-4.0.1.tgz#0c667cb467ebbb5cea7f14f135cc2dba7780a8ff"
-  integrity sha512-s2+XdvhPCOF01LRQBC8hf4vhbVmI2CGS5aZnxLJlT5FtdhPCDFq80q++zK2KlrVorVDdL5BOGZ/VfLrVtYNF+Q==
+  version "4.0.4"
+  resolved "https://registry.yarnpkg.com/diff/-/diff-4.0.4.tgz#7a6dbfda325f25f07517e9b518f897c08332e07d"
+  integrity sha512-X07nttJQkwkfKfvTPG/KSnE2OMdcUCao6+eXF3wmnIQRn2aPAHH3VxDbDOdegkd6JbPsXqShpvEOHfAT+nCNwQ==
 
 diff@^5.0.0:
   version "5.0.0"
