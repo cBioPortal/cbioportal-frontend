@@ -1,4 +1,4 @@
-import client from 'shared/api/cbioportalClientInstance';
+import { getClient } from 'shared/api/cbioportalClientInstance';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
 import {
     GenericAssayMetaFilter,
@@ -92,21 +92,36 @@ export async function fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecular
         return profile.molecularAlterationType === 'GENERIC_ASSAY';
     });
 
-    const genericAssayMetaGroupByMolecularProfileId: {
-        [molecularProfileId: string]: GenericAssayMeta[];
-    } = {};
+    // Group profiles by suffix — profiles with the same suffix across
+    // different studies share the same entity set (e.g.
+    // "study_a_methylation_hm450" and "study_b_methylation_hm450" both share the suffix "methylation_hm450").
+    const profilesGroupedBySuffix = _.groupBy(
+        genericAssayProfiles,
+        getSuffixOfMolecularProfile
+    );
 
+    // One API call per unique suffix instead of one per profile
+    const metaBySuffix: { [suffix: string]: GenericAssayMeta[] } = {};
     await Promise.all(
-        genericAssayProfiles.map(profile =>
-            fetchGenericAssayMetaByProfileIds([
-                profile.molecularProfileId,
-            ]).then(genericAssayMeta => {
-                genericAssayMetaGroupByMolecularProfileId[
-                    profile.molecularProfileId
-                ] = genericAssayMeta;
+        _.map(profilesGroupedBySuffix, (profiles, suffix) =>
+            fetchGenericAssayMetaByProfileIds(
+                profiles.map(p => p.molecularProfileId)
+            ).then(meta => {
+                metaBySuffix[suffix] = meta;
             })
         )
     );
+
+    // Map results back to individual profile IDs
+    const genericAssayMetaGroupByMolecularProfileId: {
+        [molecularProfileId: string]: GenericAssayMeta[];
+    } = {};
+    for (const profile of genericAssayProfiles) {
+        const suffix = getSuffixOfMolecularProfile(profile);
+        genericAssayMetaGroupByMolecularProfileId[
+            profile.molecularProfileId
+        ] = metaBySuffix[suffix] || [];
+    }
 
     return genericAssayMetaGroupByMolecularProfileId;
 }
@@ -147,7 +162,7 @@ export function fetchGenericAssayMetaByProfileIds(
     genericAssayProfileIds: string[]
 ) {
     if (genericAssayProfileIds.length > 0) {
-        return client.fetchGenericAssayMetaUsingPOST({
+        return getClient().fetchGenericAssayMetaUsingPOST({
             genericAssayMetaFilter: {
                 molecularProfileIds: genericAssayProfileIds,
                 // the Swagger-generated type expected by the client method below
@@ -161,7 +176,7 @@ export function fetchGenericAssayMetaByProfileIds(
 
 export function fetchGenericAssayMetaByEntityIds(entityIds: string[]) {
     if (entityIds.length > 0) {
-        return client.fetchGenericAssayMetaUsingPOST({
+        return getClient().fetchGenericAssayMetaUsingPOST({
             genericAssayMetaFilter: {
                 genericAssayStableIds: entityIds,
                 // the Swagger-generated type expected by the client method below
@@ -200,7 +215,7 @@ export async function fetchGenericAssayData(
         ) {
             return Promise.resolve([]);
         } else {
-            return client.fetchGenericAssayDataInMolecularProfileUsingPOST(
+            return getClient().fetchGenericAssayDataInMolecularProfileUsingPOST(
                 param
             );
         }
@@ -213,7 +228,7 @@ export function fetchGenericAssayDataByStableIdsAndMolecularIds(
     stableIds: string[],
     molecularProfileIds: string[]
 ) {
-    return client.fetchGenericAssayDataInMultipleMolecularProfilesUsingPOST({
+    return getClient().fetchGenericAssayDataInMultipleMolecularProfilesUsingPOST({
         genericAssayDataMultipleStudyFilter: {
             genericAssayStableIds: stableIds,
             molecularProfileIds: molecularProfileIds,

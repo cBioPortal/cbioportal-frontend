@@ -47,8 +47,8 @@ export default class RightBar extends React.Component<
     public newsContent = remoteData(async () => {
         await sleep(3000);
         return fetch('https://docs.cbioportal.org/news/')
-            .then((d) => d.text())
-            .then((d) => {
+            .then(d => d.text())
+            .then(d => {
                 return parseNews(d);
             });
     });
@@ -66,7 +66,7 @@ export default class RightBar extends React.Component<
     private CancerTypeDescendantStudies(cancerList: CancerType[]) {
         return cancerList
             .filter(
-                (cancer) =>
+                cancer =>
                     cancer.cancerTypeId !== 'other' &&
                     cancer.cancerTypeId !== 'mixed'
             )
@@ -135,9 +135,9 @@ export default class RightBar extends React.Component<
                                     title="Follow us on Twitter"
                                 >
                                     <i
-                                        className="fa-brands fa-twitter"
+                                        className="fa-brands fa-x-twitter"
                                         aria-hidden="true"
-                                        style={{ color: '#1DA1F2' }}
+                                        style={{ color: '#000000' }}
                                     ></i>
                                 </a>
                                 <a

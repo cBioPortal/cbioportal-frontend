@@ -23,7 +23,7 @@ import {
     findUpdatedResidues,
 } from './PdbResidueUtils';
 
-import $3Dmol from '3dmol';
+import * as $3Dmol from '3dmol';
 
 // ideally these types should be defined in 3Dmol.js lib.
 // manually adding complete style and selector models is quite complicated,

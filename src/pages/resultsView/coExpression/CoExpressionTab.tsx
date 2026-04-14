@@ -7,12 +7,8 @@ import {
     GeneticEntityType,
 } from '../ResultsViewPageStore';
 import Select from 'react-select1';
-import internalClient from '../../../shared/api/cbioportalInternalClientInstance';
-import {
-    CoExpression,
-    CoExpressionFilter,
-    Geneset,
-} from 'cbioportal-ts-api-client';
+import { getInternalClient } from '../../../shared/api/cbioportalInternalClientInstance';
+import { CoExpressionFilter, Geneset } from 'cbioportal-ts-api-client';
 import _ from 'lodash';
 import { MSKTab, MSKTabs } from '../../../shared/components/MSKTabs/MSKTabs';
 import CoExpressionViz from './CoExpressionViz';
@@ -322,7 +318,7 @@ export default class CoExpressionTab extends React.Component<
                     //         ? 'https://master.cbioportal.org/api'
                     //         : undefined;
 
-                    const data = await internalClient.fetchCoExpressionsUsingPOST(
+                    const data = await getInternalClient().fetchCoExpressionsUsingPOST(
                         {
                             molecularProfileIdA: q.profileX.molecularProfileId,
                             molecularProfileIdB: q.profileY.molecularProfileId,
@@ -341,7 +337,7 @@ export default class CoExpressionTab extends React.Component<
                             .map(datum => datum.geneticEntityId)
                             .uniq()
                             .value();
-                        const genesets = await internalClient.fetchGenesetsUsingPOST(
+                        const genesets = await getInternalClient().fetchGenesetsUsingPOST(
                             {
                                 genesetIds,
                             }
@@ -525,7 +521,9 @@ export default class CoExpressionTab extends React.Component<
             this.selectedProfileX.isComplete &&
             this.selectedProfileY.isComplete &&
             this.props.store.geneticEntities.isComplete &&
-            this.props.store.coexpressionTabMolecularProfiles.isComplete
+            this.props.store.coexpressionTabMolecularProfiles.isComplete &&
+            this.props.store.molecularProfileIdToProfiledFilteredSamples
+                .isComplete
         ) {
             const coExpressionVizElements = [];
             for (const geneticEntity of this.props.store.geneticEntities
@@ -542,6 +540,9 @@ export default class CoExpressionTab extends React.Component<
                       )) {
                     for (const profileY of this.props.store
                         .coexpressionTabMolecularProfiles.result) {
+                        const profileXSamples = this.props.store
+                            .molecularProfileIdToProfiledFilteredSamples
+                            .result![profileX.molecularProfileId];
                         coExpressionVizElements.push(
                             <CoExpressionViz
                                 key={`${geneticEntity.geneticEntityId},${profileX.molecularProfileId},${profileY.molecularProfileId}`}
@@ -579,6 +580,11 @@ export default class CoExpressionTab extends React.Component<
                                 studyToMutationMolecularProfile={
                                     this.props.store
                                         .studyToMutationMolecularProfile
+                                }
+                                numSamples={
+                                    profileXSamples
+                                        ? profileXSamples.length
+                                        : undefined
                                 }
                             />
                         );

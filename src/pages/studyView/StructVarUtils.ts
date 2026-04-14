@@ -17,6 +17,7 @@ import {
     StructuralVariantGeneSubQuery,
     StructuralVariantFilterQuery,
 } from 'cbioportal-ts-api-client';
+import { STRUCTURAL_VARIANT_FILTER_QUERY_DEFAULTS } from './StudyViewUtils';
 
 export type StructVarGenePair = {
     gene1HugoSymbolOrOql: string;
@@ -164,26 +165,24 @@ export function StructuralVariantFilterQueryFromOql(
         );
     }
 
-    return {
-        gene1Query: createStructVarGeneSubQuery(gene1HugoSymbol),
-        gene2Query: createStructVarGeneSubQuery(gene2HugoSymbol),
-        includeDriver: includeDriver === undefined ? true : includeDriver,
-        includeVUS: includeVUS === undefined ? true : includeVUS,
-        includeUnknownOncogenicity:
-            includeUnknownOncogenicity === undefined
-                ? true
-                : includeUnknownOncogenicity,
-        tiersBooleanMap:
-            selectedDriverTiers || ({} as { [tier: string]: boolean }),
-        includeUnknownTier:
-            includeUnknownDriverTier === undefined
-                ? true
-                : includeUnknownDriverTier,
-        includeGermline: includeGermline === undefined ? true : includeGermline,
-        includeSomatic: includeSomatic === undefined ? true : includeSomatic,
-        includeUnknownStatus:
-            includeUnknownStatus === undefined ? true : includeUnknownStatus,
-    };
+    return _.mergeWith(
+        {},
+        STRUCTURAL_VARIANT_FILTER_QUERY_DEFAULTS,
+        {
+            gene1Query: createStructVarGeneSubQuery(gene1HugoSymbol),
+            gene2Query: createStructVarGeneSubQuery(gene2HugoSymbol),
+            includeDriver,
+            includeVUS,
+            includeUnknownOncogenicity,
+            tiersBooleanMap: selectedDriverTiers,
+            includeUnknownTier: includeUnknownDriverTier,
+            includeGermline,
+            includeSomatic,
+            includeUnknownStatus,
+        },
+        (defaultValue, providedValue) =>
+            providedValue !== undefined ? providedValue : defaultValue
+    );
 }
 
 function createStructVarGeneSubQuery(

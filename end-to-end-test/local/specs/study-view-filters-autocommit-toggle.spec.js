@@ -93,7 +93,7 @@ describe('Toggling of study view filters autosubmit', function() {
             'pending'
         );
         assert(isFilterQueued);
-        const isFilterDeleted = hasFilterClass(
+        const isFilterDeleted = await hasFilterClass(
             submittedFilterInHeader,
             'pendingDelete'
         );
@@ -156,7 +156,7 @@ async function selectSamples() {
  * Execute in browser to be able to use parentElement.closest()
  */
 async function hasFilterClass(queuedFilterInHeader, toInclude) {
-    return browser.execute(
+    return await browser.execute(
         (queuedFilterInHeader, toInclude, PILL_TAG) => {
             return queuedFilterInHeader.parentElement
                 .closest(PILL_TAG)

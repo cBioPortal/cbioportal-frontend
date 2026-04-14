@@ -181,10 +181,17 @@ export default class PatientViewMutationTable extends MutationTable<
 
         this._columns[
             MutationTableColumnType.CANCER_CELL_FRACTION
-        ] = getDefaultCancerCellFractionColumnDefinition(
-            this.getSamples(),
-            this.props.sampleManager
-        );
+        ] = {
+            ...getDefaultCancerCellFractionColumnDefinition(
+                this.getSamples(),
+                this.props.sampleManager
+            ),
+            // Show CCF column by default if data exists
+            visible:
+                this.props.existsSomeMutationWithAscnProperty?.[
+                    ASCNAttributes.CCF_EXPECTED_COPIES_STRING
+                ] ?? false,
+        };
 
         this._columns[
             MutationTableColumnType.CLONAL
@@ -195,10 +202,17 @@ export default class PatientViewMutationTable extends MutationTable<
 
         this._columns[
             MutationTableColumnType.EXPECTED_ALT_COPIES
-        ] = getDefaultExpectedAltCopiesColumnDefinition(
-            this.getSamples(),
-            this.props.sampleManager
-        );
+        ] = {
+            ...getDefaultExpectedAltCopiesColumnDefinition(
+                this.getSamples(),
+                this.props.sampleManager
+            ),
+            // Show Expected Alt Copies column by default if data exists
+            visible:
+                this.props.existsSomeMutationWithAscnProperty?.[
+                    ASCNAttributes.EXPECTED_ALT_COPIES_STRING
+                ] ?? false,
+        };
 
         this._columns[
             MutationTableColumnType.ASCN_COPY_NUM

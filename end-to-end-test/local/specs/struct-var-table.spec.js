@@ -64,7 +64,7 @@ describe('study view structural variant table', function() {
         await getElement(structVarNameCell, {
             waitForExist: true,
         });
-        const gene1Cell = getNthElements(structVarNameCell, 1);
+        const gene1Cell = await getNthElements(structVarNameCell, 1);
         await movePointerWithRetry(
             gene1Cell,
             async () => await waitForElementDisplayed(uncheckedSvIcon)
@@ -111,7 +111,7 @@ describe('study view structural variant table', function() {
         await getElement(structVarNameCell, {
             waitForExist: true,
         });
-        const gene1Cell = getNthElements(structVarNameCell, 1);
+        const gene1Cell = await getNthElements(structVarNameCell, 1);
         await movePointerWithRetry(
             gene1Cell,
             async () => await waitForElementDisplayed(uncheckedSvIcon)
@@ -167,7 +167,7 @@ async function showSvPane() {
 }
 
 async function openResultViewQueryBox() {
-    const resultsViewQueryBox = getElement('[data-test=geneSet]');
+    const resultsViewQueryBox = await getElement('[data-test=geneSet]');
     await resultsViewQueryBox.waitForClickable();
     await resultsViewQueryBox.click();
     return resultsViewQueryBox;

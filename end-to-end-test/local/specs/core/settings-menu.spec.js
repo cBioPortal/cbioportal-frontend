@@ -52,7 +52,7 @@ describe('results view settings/annotation menu', function() {
         });
 
         it('does select custom driver annotations by default when property set', async () => {
-            openOncoprint(oncoprintTabUrl, {
+            await openOncoprint(oncoprintTabUrl, {
                 oncoprint_oncokb_default: false,
                 oncoprint_hotspots_default: false,
                 oncoprint_custom_driver_annotation_binary_default: true,

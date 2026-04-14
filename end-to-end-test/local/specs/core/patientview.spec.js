@@ -7,6 +7,7 @@ const {
     waitForPatientView,
     getNestedElement,
     getElement,
+    setCheckboxChecked,
 } = require('../../../shared/specUtils_Async');
 
 const _ = require('lodash');
@@ -309,7 +310,9 @@ describe('patient view page', function() {
         });
 
         it('toggles gene panel modal from patient header', async () => {
-            await (await $('.patientSamples .clinical-spans svg')).moveTo();
+            await (
+                await $('[data-test="patientSamplesClinicalSpans"] svg')
+            ).moveTo();
 
             await clickOnGenePanelLinks();
 
@@ -403,24 +406,30 @@ describe('patient view page', function() {
             await goToUrlAndSetLocalStorage(ascnPatientViewUrl, true);
             await waitForPatientView();
             const mutationsTable = '[data-test=patientview-mutation-table]';
+
+            // make sure "Clonal", "Mutant Integer Copy #", "CCF", and "Total Integer Copy #" columns are visible
+
             await (
                 await $(`${mutationsTable} button#dropdown-custom-1`)
             ).click();
-            await (
-                await (await $(`${mutationsTable} ul.dropdown-menu`)).$$(
-                    'li label input'
-                )
-            )[21].click();
-            await (
-                await (await $(`${mutationsTable} ul.dropdown-menu`)).$$(
-                    'li label input'
-                )
-            )[22].click();
-            await (
-                await (await $(`${mutationsTable} ul.dropdown-menu`)).$$(
-                    'li label input'
-                )
-            )[23].click();
+
+            const clonalCheckboxSelector = `${mutationsTable} ul.dropdown-menu li label input[data-id="Clonal"]`;
+            if (!(await $(clonalCheckboxSelector).isSelected())) {
+                await setCheckboxChecked(true, clonalCheckboxSelector);
+            }
+            const mutantIntCopyCheckboxSelector = `${mutationsTable} ul.dropdown-menu li label input[data-id="Mutant Integer Copy #"]`;
+            if (!(await $(mutantIntCopyCheckboxSelector).isSelected())) {
+                await setCheckboxChecked(true, mutantIntCopyCheckboxSelector);
+            }
+            const ccfCheckboxSelector = `${mutationsTable} ul.dropdown-menu li label input[data-id="CCF"]`;
+            if (!(await $(ccfCheckboxSelector).isSelected())) {
+                await setCheckboxChecked(true, ccfCheckboxSelector);
+            }
+            const totalIntCopyCheckboxSelector = `${mutationsTable} ul.dropdown-menu li label input[data-id="Total Integer Copy #"]`;
+            if (!(await $(totalIntCopyCheckboxSelector).isSelected())) {
+                await setCheckboxChecked(true, totalIntCopyCheckboxSelector);
+            }
+
             await (
                 await $(`${mutationsTable} button#dropdown-custom-1`)
             ).click();
@@ -565,7 +574,8 @@ async function testSampleIcon(
     );
     const icons = await samplesCell.$$('li');
 
-    sampleIconTypes.forEach(async (desiredDataType, i) => {
+    for (let i = 0; i < sampleIconTypes.length; i++) {
+        const desiredDataType = sampleIconTypes[i];
         const isExpectedIcon = await (
             await icons[i].$('svg[data-test=' + desiredDataType + ']')
         ).isExisting();
@@ -580,9 +590,10 @@ async function testSampleIcon(
                 desiredDataType +
                 '`'
         );
-    });
+    }
 
-    sampleVisibilities.forEach(async (desiredVisibility, i) => {
+    for (let i = 0; i < sampleVisibilities.length; i++) {
+        const desiredVisibility = sampleVisibilities[i];
         const actualVisibility = await icons[i].isDisplayed();
         assert.equal(
             actualVisibility,
@@ -597,5 +608,5 @@ async function testSampleIcon(
                 actualVisibility +
                 '`'
         );
-    });
+    }
 }

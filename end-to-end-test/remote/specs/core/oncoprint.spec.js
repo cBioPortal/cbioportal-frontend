@@ -38,10 +38,10 @@ describe('merged tracks', () => {
         });
         // click expand
         await clickElement(
-            trackOptionsElts.dropdown_selector + ' li:nth-child(3)'
+            $(trackOptionsElts.dropdown_selector).$('li=Expand')
         );
 
-        browser.pause(10000); // give time for track to expand
+        await browser.pause(10000); // give time for track to expand
 
         const res = await browser.checkElement('.oncoprintContainer', '', {
             hide: ['.oncoprint__controls'],

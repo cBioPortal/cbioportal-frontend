@@ -12,6 +12,7 @@
         "experimentalDecorators": true,
         "allowSyntheticDefaultImports": true,
         "moduleResolution": "node",
+        "skipLibCheck": true,
         "baseUrl": ".",
         "paths": {
             "*": [

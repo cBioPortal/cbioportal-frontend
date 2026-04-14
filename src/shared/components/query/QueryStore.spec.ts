@@ -79,7 +79,7 @@ describe('QueryStore', () => {
                 sessionServiceClient,
                 'deleteVirtualStudy'
             ).callsFake(function fakeFn(id: string) {
-                return new Promise((resolve, reject) => {
+                return new Promise<void>((resolve, reject) => {
                     resolve();
                 });
             });
@@ -87,7 +87,7 @@ describe('QueryStore', () => {
                 sessionServiceClient,
                 'addVirtualStudy'
             ).callsFake(function fakeFn(id: string) {
-                return new Promise((resolve, reject) => {
+                return new Promise<void>((resolve, reject) => {
                     resolve();
                 });
             });

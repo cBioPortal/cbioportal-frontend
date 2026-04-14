@@ -177,8 +177,12 @@ describe('group comparison mutations tab tests', () => {
 
     describe('adding annotation tracks', () => {
         it('track visibility stays on gene change', async () => {
-            await clickElement('div.annotation-track-selector');
-            await (await getElementByTestHandle('CancerHotspots')).click();
+            await clickElement('div.annotation-track-selector', {
+                moveTo: true,
+            });
+            //await (await getElementByTestHandle('')).click();
+            await clickElement('handle=CancerHotspots', { moveTo: true });
+
             await waitForElementDisplayed('a.tabAnchor_APC');
             await clickElement('a.tabAnchor_APC');
             await (
@@ -602,11 +606,9 @@ describe('group comparison mutations tab tests', () => {
 
     describe('protein only selecting', () => {
         it('clicking protein driver/vus badge only button selects protein driver/vus, deselects others', async () => {
-            // await browser.debug();
-            // TODO: i can't find the element with the app
-            await (
-                await getElementByTestHandle('badge-splice_putative_driver')
-            ).click();
+            await clickElement('handle=badge-splice_putative_driver', {
+                moveTo: true,
+            });
 
             assert.equal(
                 await getColorByTestHandle('badge-splice_putative_driver'),
@@ -640,7 +642,8 @@ describe('group comparison mutations tab tests', () => {
         });
 
         it('clicking protein type badge only button selects both protein driver and vus, deselects others', async () => {
-            await (await getElementByTestHandle('missense_only')).click();
+            await clickElement('handle=missense_only', { moveTo: true });
+
             assert.equal(
                 await getColorByTestHandle('badge-missense_putative_driver'),
                 await getColorOfNthElement(
@@ -679,8 +682,13 @@ describe('group comparison mutations tab tests', () => {
 
         it('clicking driver/vus badge only button selects all protein driver/vus badges, deselects protein vus/driver badges', async () => {
             // selecting vus badge, then driver only button
-            await (await getElementByTestHandle('badge-VUS')).click();
-            await (await getElementByTestHandle('driver_only')).click();
+            //await (await getElementByTestHandle('badge-VUS')).click();
+
+            await clickElement('handle=badge-VUS', { moveTo: true });
+
+            //await (await getElementByTestHandle('driver_only')).click();
+
+            await clickElement('handle=driver_only', { moveTo: true });
 
             assert.equal(
                 await getColorOfNthElement('[data-test="badge-driver"]', 1),
@@ -764,7 +772,7 @@ describe('group comparison mutations tab tests', () => {
             );
 
             // selecting vus only button
-            await (await getElementByTestHandle('VUS_only')).click();
+            await clickElement('handle=VUS_only', { moveTo: true });
 
             assert.equal(
                 await getColorByTestHandle('badge-VUS'),
@@ -862,9 +870,10 @@ describe('group comparison mutations tab tests', () => {
             );
 
             // selecting driver badge
-            await (
-                await getNthElements('[data-test="badge-driver"]', 1)
-            ).click();
+            await clickElement(
+                await getNthElements('[data-test="badge-driver"]', 1),
+                { moveTo: true }
+            );
 
             assert.equal(
                 await (
@@ -887,9 +896,9 @@ describe('group comparison mutations tab tests', () => {
 
         it('fisher test text and tooltip dynamically changes when filtering and selecting', async () => {
             // filter value
-            await (
-                await getElementByTestHandle('missense_putative_driver_only')
-            ).click();
+            await clickElement('handle=missense_putative_driver_only', {
+                moveTo: true,
+            });
 
             assert.equal(
                 await (

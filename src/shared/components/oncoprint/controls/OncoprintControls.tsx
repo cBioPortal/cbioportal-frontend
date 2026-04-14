@@ -43,6 +43,7 @@ import {
     ClinicalTrackConfigMap,
 } from 'shared/components/oncoprint/Oncoprint';
 import { getServerConfig } from 'config/config';
+import { AlterationTypeConstants } from 'shared/constants';
 
 export interface IOncoprintControlsHandlers
     extends IDriverAnnotationControlsHandlers {
@@ -88,7 +89,7 @@ export interface IOncoprintControlsHandlers
     onClickAddGenericAssays?: (info: GenericAssayTrackInfo[]) => void;
     onSelectHeatmapProfile?: (molecularProfileId: string) => void;
     onChangeHeatmapGeneInputValue?: (value: string) => void;
-    onClickNGCHM: () => void;
+    onClickNGCHM?: () => void;
     onSetHorzZoom: (z: number) => void;
     onClickZoomIn: () => void;
     onClickZoomOut: () => void;
@@ -474,11 +475,21 @@ export default class OncoprintControls extends React.Component<
         ) {
             return _.map(
                 this.props.state.heatmapProfilesPromise.result,
-                profile => ({
-                    label: profile.name,
-                    value: profile.molecularProfileId,
-                    type: profile.molecularAlterationType,
-                })
+                profile => {
+                    let label = profile.name;
+                    if (
+                        profile.molecularAlterationType ===
+                        AlterationTypeConstants.MUTATION_EXTENDED
+                    ) {
+                        label = `Variant Allele Frequency in Selected Mutations Profile`;
+                    }
+
+                    return {
+                        label,
+                        value: profile.molecularProfileId,
+                        type: profile.molecularAlterationType,
+                    };
+                }
             );
         } else {
             return [];
@@ -1274,11 +1285,13 @@ export default class OncoprintControls extends React.Component<
                     <this.DownloadMenu />
                     <this.HorzZoomControls />
                     {this.minimapButton}
-                    <ConfirmNgchmModal
-                        show={this.showConfirmNgchmModal}
-                        onHide={() => (this.showConfirmNgchmModal = false)}
-                        openNgchmWindow={this.props.handlers.onClickNGCHM}
-                    />
+                    {this.props.handlers.onClickNGCHM && (
+                        <ConfirmNgchmModal
+                            show={this.showConfirmNgchmModal}
+                            onHide={() => (this.showConfirmNgchmModal = false)}
+                            openNgchmWindow={this.props.handlers.onClickNGCHM}
+                        />
+                    )}
                 </ButtonGroup>
             </div>
         );

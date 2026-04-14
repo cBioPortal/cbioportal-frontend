@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import {
+    AlterationFilter,
     BinsGeneratorConfig,
     CancerStudy,
     CBioPortalAPIInternal,
@@ -26,6 +27,8 @@ import {
     MolecularProfile,
     MutationMultipleStudyFilter,
     NamespaceAttribute,
+    NamespaceDataCount,
+    NamespaceDataCountItem,
     NamespaceDataFilter,
     NumericGeneMolecularData,
     OredPatientTreatmentFilters,
@@ -880,7 +883,7 @@ export function getUniqueKeyFromMolecularProfileIds(
     chartType?: ChartTypeEnum
 ) {
     const returnValue = _(molecularProfileIds)
-        .sortBy(molecularProfileIds)
+        .sortBy()
         .join(UNIQUE_KEY_SEPARATOR);
     return chartType
         ? chartType + CHART_TYPE_SEPARATOR + returnValue
@@ -3585,6 +3588,75 @@ export function geneFilterQueryToOql(query: GeneFilterQuery): string {
         : query.hugoGeneSymbol;
 }
 
+/**
+ * Default values for all GeneFilterQuery parameters.
+ * Used in both construction (geneFilterQueryFromOql) and parsing (ensureBackwardCompatibilityOfFilters).
+ * Provides complete defaults for all fields to ensure type safety.
+ */
+export const GENE_FILTER_QUERY_DEFAULTS = {
+    hugoGeneSymbol: '',
+    entrezGeneId: 0,
+    alterations: [] as ('HOMDEL' | 'AMP' | 'GAIN' | 'DIPLOID' | 'HETLOSS')[],
+    includeDriver: true,
+    includeVUS: true,
+    includeUnknownOncogenicity: true,
+    includeUnknownTier: true,
+    includeGermline: true,
+    includeSomatic: true,
+    includeUnknownStatus: true,
+    tiersBooleanMap: {},
+};
+
+/**
+ * Default values for all StructuralVariantFilterQuery parameters.
+ * Used in both construction (StructuralVariantFilterQueryFromOql) and parsing (ensureBackwardCompatibilityOfFilters).
+ * Provides complete defaults for all fields to ensure type safety.
+ */
+export const STRUCTURAL_VARIANT_FILTER_QUERY_DEFAULTS = {
+    gene1Query: {
+        hugoSymbol: '',
+        entrezId: 0,
+        specialValue: 'NO_GENE' as 'ANY_GENE' | 'NO_GENE',
+    },
+    gene2Query: {
+        hugoSymbol: '',
+        entrezId: 0,
+        specialValue: 'NO_GENE' as 'ANY_GENE' | 'NO_GENE',
+    },
+    includeDriver: true,
+    includeVUS: true,
+    includeUnknownOncogenicity: true,
+    includeUnknownTier: true,
+    includeGermline: true,
+    includeSomatic: true,
+    includeUnknownStatus: true,
+    tiersBooleanMap: {},
+};
+
+/**
+ * Default values for AlterationFilter.
+ * Used in both construction and parsing (ensureBackwardCompatibilityOfFilters).
+ * Provides complete defaults for all fields to ensure type safety.
+ */
+export const ALTERATION_FILTER_DEFAULTS: AlterationFilter = ({
+    copyNumberAlterationEventTypes: {
+        AMP: true,
+        HOMDEL: true,
+    },
+    mutationEventTypes: {
+        any: true,
+    },
+    structuralVariants: null,
+    includeDriver: true,
+    includeVUS: true,
+    includeUnknownOncogenicity: true,
+    includeUnknownTier: true,
+    includeGermline: true,
+    includeSomatic: true,
+    includeUnknownStatus: true,
+    tiersBooleanMap: {},
+} as any) as AlterationFilter;
+
 export function geneFilterQueryFromOql(
     oql: string,
     includeDriver?: boolean,
@@ -3597,52 +3669,94 @@ export function geneFilterQueryFromOql(
     includeUnknownStatus?: boolean
 ): GeneFilterQuery {
     const [part1, part2]: string[] = oql.split(':');
-    const alterations = part2 ? part2.trim().split(' ') : [];
-    const hugoGeneSymbol = part1.trim();
-    return {
-        hugoGeneSymbol,
-        entrezGeneId: 0,
-        alterations: alterations as (
-            | 'HOMDEL'
-            | 'AMP'
-            | 'GAIN'
-            | 'DIPLOID'
-            | 'HETLOSS'
-        )[],
-        includeDriver: includeDriver === undefined ? true : includeDriver,
-        includeVUS: includeVUS === undefined ? true : includeVUS,
-        includeUnknownOncogenicity:
-            includeUnknownOncogenicity === undefined
-                ? true
-                : includeUnknownOncogenicity,
-        tiersBooleanMap:
-            selectedDriverTiers || ({} as { [tier: string]: boolean }),
-        includeUnknownTier:
-            includeUnknownDriverTier === undefined
-                ? true
-                : includeUnknownDriverTier,
-        includeGermline: includeGermline === undefined ? true : includeGermline,
-        includeSomatic: includeSomatic === undefined ? true : includeSomatic,
-        includeUnknownStatus:
-            includeUnknownStatus === undefined ? true : includeUnknownStatus,
-    };
+
+    return _.mergeWith(
+        {},
+        GENE_FILTER_QUERY_DEFAULTS,
+        {
+            hugoGeneSymbol: part1.trim(),
+            alterations: (part2 ? part2.trim().split(' ') : []) as (
+                | 'HOMDEL'
+                | 'AMP'
+                | 'GAIN'
+                | 'DIPLOID'
+                | 'HETLOSS'
+            )[],
+            includeDriver,
+            includeVUS,
+            includeUnknownOncogenicity,
+            tiersBooleanMap: selectedDriverTiers,
+            includeUnknownTier: includeUnknownDriverTier,
+            includeGermline,
+            includeSomatic,
+            includeUnknownStatus,
+        },
+        (defaultValue, providedValue) =>
+            providedValue !== undefined ? providedValue : defaultValue
+    );
 }
 
 export function ensureBackwardCompatibilityOfFilters(
     filters: Partial<StudyViewFilter>
 ) {
+    // Handle geneFilters
     if (filters.geneFilters && filters.geneFilters.length) {
         filters.geneFilters.forEach(f => {
             f.geneQueries = f.geneQueries.map(arr => {
                 return arr.map(inner => {
                     if (typeof inner === 'string') {
+                        // Backward compatibility: convert string to object
                         return geneFilterQueryFromOql(inner);
                     } else {
-                        return inner;
+                        // Merge with defaults: defaults first, then overrides from parsed object
+                        return _.mergeWith(
+                            {},
+                            GENE_FILTER_QUERY_DEFAULTS,
+                            inner,
+                            (defaultValue, providedValue) =>
+                                providedValue !== undefined
+                                    ? providedValue
+                                    : defaultValue
+                        );
                     }
                 });
             });
         });
+    }
+
+    // Handle structuralVariantFilters
+    if (
+        filters.structuralVariantFilters &&
+        filters.structuralVariantFilters.length
+    ) {
+        filters.structuralVariantFilters.forEach(f => {
+            f.structVarQueries = f.structVarQueries.map(arr => {
+                return arr.map(inner =>
+                    // Merge with defaults: defaults first, then overrides from parsed object
+                    _.mergeWith(
+                        {},
+                        STRUCTURAL_VARIANT_FILTER_QUERY_DEFAULTS,
+                        inner,
+                        (defaultValue, providedValue) =>
+                            providedValue !== undefined
+                                ? providedValue
+                                : defaultValue
+                    )
+                );
+            });
+        });
+    }
+
+    // Handle alterationFilter
+    if (filters.alterationFilter) {
+        // Merge with defaults: defaults first, then overrides from parsed object
+        filters.alterationFilter = _.mergeWith(
+            {},
+            ALTERATION_FILTER_DEFAULTS,
+            filters.alterationFilter,
+            (defaultValue, providedValue) =>
+                providedValue !== undefined ? providedValue : defaultValue
+        );
     }
 
     return filters;
@@ -4252,6 +4366,77 @@ export async function invokeGenericAssayDataCount(
     return undefined;
 }
 
+export function invokeGenomicDataCountIncludeSampleid(
+    chartInfo: GenomicChart,
+    filters: StudyViewFilter,
+    includeSampleIds: boolean
+) {
+    const params = {
+        genomicDataCountFilter: {
+            genomicDataFilters: [
+                {
+                    hugoGeneSymbol: chartInfo.hugoGeneSymbol,
+                    profileType: chartInfo.profileType,
+                } as GenomicDataFilter,
+            ],
+            studyViewFilter: filters,
+        },
+        $queryParameters: {
+            projection: 'DETAILED',
+            includeSampleIds,
+        },
+    };
+
+    return getInternalClient().fetchMutationDataCountsUsingPOST(params);
+}
+
+export function groupSamplesByMutationStatus(data: any[], studyIds: string[]) {
+    const SKIP_VALUES = new Set(['NOT_PROFILED']);
+    const NON_MUTATION_VALUES = new Set(['NOT_MUTATED']);
+
+    return (
+        _.chain(data)
+            .flatMap(d => d.counts ?? [])
+            // Skip bins with 'NOT_PROFILED' or empty sampleIds
+            .filter(c => !SKIP_VALUES.has(c.value) && c.sampleIds?.length > 0)
+            .flatMap(c => {
+                const group = NON_MUTATION_VALUES.has(c.value)
+                    ? c.value
+                    : 'MUTATED';
+
+                // Map sampleIds to structured objects and remove unmatched samples if any
+                return _.compact(
+                    c.sampleIds.map((rawId: string) => {
+                        const matchedStudyId = studyIds.find(studyId =>
+                            rawId.startsWith(studyId + '_')
+                        );
+
+                        if (!matchedStudyId) return null;
+
+                        return {
+                            group,
+                            studyId: matchedStudyId,
+                            sampleId: rawId.substring(
+                                matchedStudyId.length + 1
+                            ),
+                        };
+                    })
+                );
+            })
+            .groupBy('group')
+            .mapValues(items =>
+                _.uniqBy(
+                    items.map(({ studyId, sampleId }) => ({
+                        studyId,
+                        sampleId,
+                    })),
+                    i => i.sampleId // for now using sampleId as unique identifier, but may need to switch to using sampleId + studyId if there are duplicate sampleIds across studies
+                )
+            )
+            .value()
+    );
+}
+
 export async function invokeGenomicDataCount(
     chartInfo: GenomicChart,
     filters: StudyViewFilter
@@ -4397,14 +4582,14 @@ export async function invokeNamespaceDataCount(
     );
 
     const data = result.find(
-        d =>
+        (d: NamespaceDataCountItem) =>
             d.outerKey === chartMeta.namespaceAttribute!.outerKey &&
             d.innerKey === chartMeta.namespaceAttribute!.innerKey
     );
 
     let counts: MultiSelectionTableRow[] = [];
     if (data !== undefined) {
-        counts = data.counts.map(c => {
+        counts = data.counts.map((c: NamespaceDataCount) => {
             return {
                 uniqueKey: c.value,
                 label: c.value,

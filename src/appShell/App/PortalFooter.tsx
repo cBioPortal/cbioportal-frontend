@@ -163,6 +163,21 @@ export default class PortalFooter extends React.Component<
                                     <If
                                         condition={
                                             getServerConfig()
+                                                .skin_show_roadmap_tab
+                                        }
+                                    >
+                                        <li>
+                                            <a
+                                                target={'_blank'}
+                                                href="https://about.cbioportal.org/roadmap"
+                                            >
+                                                Roadmap
+                                            </a>
+                                        </li>
+                                    </If>
+                                    <If
+                                        condition={
+                                            getServerConfig()
                                                 .skin_show_r_matlab_tab ||
                                             getServerConfig()
                                                 .skin_show_web_api_tab

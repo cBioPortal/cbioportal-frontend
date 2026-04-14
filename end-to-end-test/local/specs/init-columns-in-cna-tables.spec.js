@@ -78,7 +78,7 @@ const defaultColumnsAreDisplayed = async () => {
 };
 
 async function columnIsDisplayed(column) {
-    return getNestedElement([patientCnaTable, `span=${column}`]);
+    return await getNestedElement([patientCnaTable, `span=${column}`]);
 }
 
 async function columnIsNotDisplayed(column) {

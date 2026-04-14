@@ -415,9 +415,11 @@ export function getGenericAssayEnrichmentRowData(
     return genericAssayEnrichments.map(genericAssayEnrichment => {
         let enrichedGroup = '';
         // fallback to stable id if name is not specified
-        let entityName =
+        let entityName: string =
             'NAME' in genericAssayEnrichment.genericEntityMetaProperties
-                ? genericAssayEnrichment.genericEntityMetaProperties['NAME']
+                ? (genericAssayEnrichment.genericEntityMetaProperties[
+                      'NAME'
+                  ] as string)
                 : genericAssayEnrichment.stableId;
         let logRatio: number | undefined = undefined;
         let groupsSet = _.keyBy(
@@ -473,11 +475,11 @@ export function getGenericAssayBinaryEnrichmentRowData(
         );
         let enrichedGroup = '';
         // fallback to stable id if name is not specified
-        let entityName =
+        let entityName: string =
             'NAME' in genericAssayBinaryEnrichment.genericEntityMetaProperties
-                ? genericAssayBinaryEnrichment.genericEntityMetaProperties[
+                ? (genericAssayBinaryEnrichment.genericEntityMetaProperties[
                       'NAME'
-                  ]
+                  ] as string)
                 : genericAssayBinaryEnrichment.stableId;
         let logRatio: number | undefined = undefined;
         let groupsSet = _.keyBy(
@@ -527,11 +529,11 @@ export function getGenericAssayCategoricalEnrichmentRowData(
         genericAssayCategoricalEnrichment => {
             let enrichedGroup = '';
             // fallback to stable id if name is not specified
-            let entityName =
+            let entityName: string =
                 'NAME' in
                 genericAssayCategoricalEnrichment.genericEntityMetaProperties
-                    ? genericAssayCategoricalEnrichment
-                          .genericEntityMetaProperties['NAME']
+                    ? (genericAssayCategoricalEnrichment
+                          .genericEntityMetaProperties['NAME'] as string)
                     : genericAssayCategoricalEnrichment.stableId;
             let logRatio: number | undefined = undefined;
             let groupsSet = _.keyBy(

@@ -28,12 +28,10 @@ export default class PathologyReport extends React.Component<
     }
 
     buildPDFUrl(url: string): string {
-        return `https://docs.google.com/viewerng/viewer?url=${url}?pid=explorer&efh=false&a=v&chrome=false&embedded=true`;
+        return `https://docs.google.com/viewerng/viewer?url=${encodeURIComponent(
+            url
+        )}&pid=explorer&efh=false&a=v&chrome=false&embedded=true`;
     }
-
-    // shouldComponentUpdate(nextProps: IPathologyReportProps){
-    //     return nextProps === this.props;
-    // }
 
     handleSelection() {
         this.setState({

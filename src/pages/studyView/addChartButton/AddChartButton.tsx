@@ -1164,8 +1164,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                                         this.props.showResetPopup();
                                     }}
                                 >
-                                    <i className={'fa fa-undo'}></i> Reset
-                                    charts
+                                    <i className={'fa fa-undo'}></i>Reset charts
                                 </button>
                             }
                         ></MSKTab>

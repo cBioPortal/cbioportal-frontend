@@ -1508,7 +1508,8 @@ export class PatientViewPageStore {
 
     readonly clinicalEvents = remoteData(
         {
-            await: () => [this.patientViewData],
+            await: () =>
+                this.pageMode === 'patient' ? [] : [this.derivedPatientId],
             invoke: async () => {
                 const events = await internalClient.getAllClinicalEventsOfPatientInStudyUsingGET(
                     {

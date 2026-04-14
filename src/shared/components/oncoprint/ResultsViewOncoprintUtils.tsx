@@ -329,31 +329,53 @@ export function makeTrackGroupHeaders(
     getClusteredTrackGroupIndex: () => number | undefined,
     onClickClusterCallback: (index: TrackGroupIndex) => void,
     onClickDontClusterCallback: () => void,
-    onClickDeleteCallback: (index: TrackGroupIndex) => void
+    onClickDeleteCallback: (index: TrackGroupIndex) => void,
+    queryContainsOql?: boolean,
+    useOqlFilteringForVafHeatmap?: boolean,
+    onToggleOqlFilterCallback?: () => void
 ): { [trackGroupIndex: number]: TrackGroupHeader } {
     var headers = _.reduce(
         molecularProfileIdToAdditionalTracks,
         (headerMap, nextEntry) => {
-            let type: 'categorical' | 'heatmap';
+            let type: 'categorical' | 'heatmap' | 'vaf';
             const profile =
                 molecularProfileIdToMolecularProfile[
                     nextEntry.molecularProfileId
                 ];
             if (isGenericAssayCategoricalProfile(profile)) {
                 type = 'categorical';
+            } else if (
+                profile.molecularAlterationType ===
+                AlterationTypeConstants.MUTATION_EXTENDED
+            ) {
+                type = 'vaf';
             } else {
                 type = 'heatmap';
             }
-            headerMap[nextEntry.trackGroupIndex] = makeTrackGroupHeader(
-                type,
+
+            let headerText =
                 molecularProfileIdToMolecularProfile[
                     nextEntry.molecularProfileId
-                ].name,
+                ].name;
+
+            if (
+                profile.molecularAlterationType ===
+                AlterationTypeConstants.MUTATION_EXTENDED
+            ) {
+                headerText = 'Variant Allele Frequency';
+            }
+
+            headerMap[nextEntry.trackGroupIndex] = makeTrackGroupHeader(
+                type,
+                headerText,
                 nextEntry.trackGroupIndex,
                 onClickDeleteCallback,
                 getClusteredTrackGroupIndex,
                 onClickClusterCallback,
-                onClickDontClusterCallback
+                onClickDontClusterCallback,
+                queryContainsOql,
+                useOqlFilteringForVafHeatmap,
+                onToggleOqlFilterCallback
             );
             return headerMap;
         },
@@ -376,13 +398,16 @@ export function makeTrackGroupHeaders(
 }
 
 function makeTrackGroupHeader(
-    type: 'heatmap' | 'geneset' | 'categorical',
+    type: 'heatmap' | 'geneset' | 'categorical' | 'vaf',
     text: string,
     trackGroupIndex: number,
     onClickDeleteCallback: (index: TrackGroupIndex) => void,
     getClusteredTrackGroupIndex: () => number | undefined,
     onClickClusterCallback?: (index: TrackGroupIndex) => void,
-    onClickDontClusterCallback?: () => void
+    onClickDontClusterCallback?: () => void,
+    queryContainsOql?: boolean,
+    useOqlFilteringForVafHeatmap?: boolean,
+    onToggleOqlFilterCallback?: () => void
 ): TrackGroupHeader {
     const header = {
         label: { text: text },
@@ -414,6 +439,35 @@ function makeTrackGroupHeader(
                     } else {
                         return 'bold';
                     }
+                },
+            }
+        );
+    }
+    if (type === 'vaf' && queryContainsOql && onToggleOqlFilterCallback) {
+        header.options.push({
+            separator: true,
+        });
+        header.options.push(
+            {
+                label: 'Apply OQL filter',
+                onClick: () => {
+                    if (!useOqlFilteringForVafHeatmap) {
+                        onToggleOqlFilterCallback();
+                    }
+                },
+                weight: () => {
+                    return useOqlFilteringForVafHeatmap ? 'bold' : 'normal';
+                },
+            },
+            {
+                label: 'Show all mutations',
+                onClick: () => {
+                    if (useOqlFilteringForVafHeatmap) {
+                        onToggleOqlFilterCallback();
+                    }
+                },
+                weight: () => {
+                    return useOqlFilteringForVafHeatmap ? 'normal' : 'bold';
                 },
             }
         );

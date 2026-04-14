@@ -20,6 +20,8 @@ import { IGenePanelModal } from 'pages/patientView/PatientViewPage';
 import mouseIcon from './mouse_icon.svg';
 import organoidIcon from './organoid_icon.svg';
 
+import styles from '../patientHeader/style/clinicalAttributes.module.scss';
+
 export type ISampleSummaryListProps = {
     sampleManager: SampleManager;
     patientViewPageStore: PatientViewPageStore;
@@ -105,7 +107,10 @@ export default class SampleSummaryList extends React.Component<
 
                 return (
                     <div className="patientSample">
-                        <span className="clinical-spans">
+                        <span
+                            data-test="patientSamplesClinicalSpans"
+                            className={styles['clinical-spans']}
+                        >
                             {this.props.sampleManager.getComponentForSample(
                                 sample.id,
                                 1,

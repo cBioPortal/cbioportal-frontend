@@ -25,6 +25,7 @@ import {
     SpecialAttribute,
 } from '../../../../shared/cache/ClinicalDataCache';
 import { PUTATIVE_DRIVER } from 'shared/lib/StoreUtils';
+import { ONCOKB_ONCOGENIC_LOWERCASE } from 'pages/resultsView/ResultsViewPageStoreUtils';
 
 const geneticAlterationToDataType: {
     [alterationType in OncoprinterGeneticInputLineType2['alteration']]: string;
@@ -73,10 +74,16 @@ function getOncoprinterParsedGeneticInputLine(
         const oncoprinterInput: Partial<OncoprinterGeneticInputLineType2> = {};
         oncoprinterInput.sampleId = caseId;
 
-        if (d.alterationType === AlterationTypeConstants.STRUCTURAL_VARIANT) {
-            // fix typing so it can accomodate SV
-            oncoprinterInput.hugoGeneSymbol /* @ts-ignore */ =
-                d.site1HugoSymbol || d.site2HugoSymbol;
+        if (
+            d.molecularProfileAlterationType ===
+            AlterationTypeConstants.STRUCTURAL_VARIANT
+        ) {
+            // For structural variants, combine both gene symbols if available
+            // This ensures proper OncoKB annotation for fusions
+            const genes = [];
+            if (d.site1HugoSymbol) genes.push(d.site1HugoSymbol);
+            if (d.site2HugoSymbol) genes.push(d.site2HugoSymbol);
+            oncoprinterInput.hugoGeneSymbol /* @ts-ignore */ = genes.join('-');
         } else {
             oncoprinterInput.hugoGeneSymbol = d.hugoGeneSymbol;
         }
@@ -86,7 +93,17 @@ function getOncoprinterParsedGeneticInputLine(
         oncoprinterInput.proteinChange = d.proteinChange;
         oncoprinterInput.eventInfo = d.eventInfo;
         oncoprinterInput.isGermline = !isNotGermlineMutation(d);
-        oncoprinterInput.isCustomDriver = d.driverFilter === PUTATIVE_DRIVER;
+        // Check for driver status from multiple sources:
+        // 1. driverFilter for custom driver annotations on mutations
+        // 2. putativeDriver boolean computed during annotation
+        // 3. oncoKbOncogenic for OncoKB-annotated drivers (especially for SVs)
+        const isOncoKbDriver =
+            !!d.oncoKbOncogenic &&
+            ONCOKB_ONCOGENIC_LOWERCASE.includes(d.oncoKbOncogenic.toLowerCase());
+        oncoprinterInput.isCustomDriver =
+            d.driverFilter === PUTATIVE_DRIVER ||
+            d.putativeDriver === true ||
+            isOncoKbDriver;
         return oncoprinterInput as OncoprinterGeneticInputLineType2;
     } else {
         return { sampleId: caseId };
@@ -152,7 +169,7 @@ function getOncoprinterGeneticInputLine(parsed: OncoprinterGeneticInputLine) {
                 break;
             case AlterationTypeConstants.STRUCTURAL_VARIANT:
                 line.push(parsed.eventInfo || 'structural_variant');
-                line.push('FUSION');
+                line.push('FUSION' + (parsed.isCustomDriver ? '_DRIVER' : ''));
                 break;
         }
         if (parsed.trackName) {
