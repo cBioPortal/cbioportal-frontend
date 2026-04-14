@@ -59,6 +59,14 @@ const config = {
     devtool: sourceMap,
     stats: 'detailed',
     plugins: [],
+
+    cache: {
+        type: 'filesystem',
+        cacheDirectory: path.resolve(__dirname, '.webpack_cache_dll'),
+        buildDependencies: {
+            config: [__filename],
+        },
+    },
 };
 
 config.resolve = {

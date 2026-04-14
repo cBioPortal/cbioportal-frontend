@@ -16,6 +16,7 @@ packages/cbioportal-frontend-commons/dist
 .sass-cache
 .rpt2_cache
 .webpack_cache
+.webpack_cache_dll
 frontend-cbioportal.iml
 test/
 .classpath

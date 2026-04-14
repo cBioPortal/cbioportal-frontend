@@ -324,6 +324,12 @@ jobs:
           keys:
             - v11-dependencies-plus-dist-{{ checksum "cbioportal-frontend/has_source_changed" }}
             - v11-dependencies-{{ checksum "cbioportal-frontend/yarn.lock" }}
+      - restore_cache:
+          name: Restore webpack filesystem cache (branch-prefix fallback)
+          keys:
+            - v1-webpack-cache-{{ .Branch }}-{{ .Revision }}
+            - v1-webpack-cache-{{ .Branch }}-
+            - v1-webpack-cache-master-
       - run:
           name: Download dependencies
           command: |
@@ -358,6 +364,12 @@ jobs:
             - cbioportal-frontend/dist
             - cbioportal-frontend/common-dist
             - cbioportal-frontend/packages
+      - save_cache:
+          name: Save webpack filesystem cache
+          key: v1-webpack-cache-{{ .Branch }}-{{ .Revision }}
+          paths:
+            - cbioportal-frontend/.webpack_cache
+            - cbioportal-frontend/.webpack_cache_dll
       - persist_to_workspace:
           root: /tmp/repo
           paths:
