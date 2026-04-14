@@ -100,7 +100,7 @@ export default class Container extends React.Component<IContainerProps, {}> {
             <AppContext.Provider value={this.appContext}>
                 <ErrorBoundary>
                     <div>
-                        <a href="#main-content" className="skip-nav">
+                        <a href="#mainColumn" className="skip-nav">
                             Skip to main content
                         </a>
                         <ToastContainer />

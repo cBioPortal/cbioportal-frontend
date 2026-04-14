@@ -27,7 +27,7 @@ export class PageLayout extends React.Component<IPageLayout, {}> {
                         noMargin
                     )}
                 >
-                    <main id="main-content" data-tour="mainColumn">
+                    <main id="mainColumn" data-tour="mainColumn">
                         <div>{this.props.children}</div>
                     </main>
                     {this.props.rightBar && (
