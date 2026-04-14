@@ -76,6 +76,8 @@ This skips `yarn run clean` (which deletes `dist/` and `common-dist/`, invalidat
 
 **Full cold build (only when required):** `yarn run buildAll` — use after pulling new deps, changing workspace package sources, or changing `webpack.config.js`/`vendor-bundles.webpack.config.js`.
 
+**Faster cold build (opt-in):** set `USE_SWC=true` to swap `babel-loader + ts-loader` for `swc-loader` (~2.4x faster transpile; main webpack drops from ~3m30s to ~1m30s cold). Output is not byte-identical to babel, so don't use this for release artifacts until validated. Good for local/agent iteration.
+
 **Type checking is not part of the webpack build** (`TRANSPILE_ONLY=true`). Run separately: `yarn run checkTS`.
 
 **What NOT to do:** don't run `yarn run clean` between iterations, don't delete `.webpack_cache/`, don't commit `.webpack_cache/` (it's in `.gitignore`).

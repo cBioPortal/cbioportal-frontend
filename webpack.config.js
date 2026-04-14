@@ -69,6 +69,13 @@ let transpileOnly = process.env.TRANSPILE_ONLY === 'true';
 
 console.log('transpileOnly', transpileOnly);
 
+// Fast-transpile toggles. USE_SWC=true swaps babel-loader + ts-loader for
+// swc-loader (~5-10x faster). USE_ESBUILD=true uses esbuild-loader
+// (faster still, but its TSX parser mishandles some `<`/`>` comparisons).
+const useSwc = process.env.USE_SWC === 'true';
+const useEsbuild = process.env.USE_ESBUILD === 'true';
+console.log('useSwc', useSwc, 'useEsbuild', useEsbuild);
+
 // we don't need sourcemaps on circleci
 const sourceMap = process.env.DISABLE_SOURCEMAP ? false : 'source-map';
 
@@ -210,41 +217,109 @@ var config = {
         rules: [
             {
                 test: /\.tsx?$/,
-                use: [
-                    {
-                        loader: 'babel-loader',
-                        options: {
-                            presets: [
-                                '@babel/preset-env',
-                                '@babel/preset-react',
-                            ],
-                            plugins: ['syntax-dynamic-import'],
+                use: useSwc
+                    ? [
+                          {
+                              loader: 'swc-loader',
+                              options: {
+                                  jsc: {
+                                      parser: {
+                                          syntax: 'typescript',
+                                          tsx: true,
+                                          decorators: true,
+                                      },
+                                      transform: {
+                                          legacyDecorator: true,
+                                          useDefineForClassFields: true,
+                                          react: {
+                                              runtime: 'classic',
+                                          },
+                                      },
+                                      target: 'es2015',
+                                  },
+                              },
+                          },
+                      ]
+                    : useEsbuild
+                    ? [
+                          {
+                              loader: 'esbuild-loader',
+                              options: {
+                                  loader: 'tsx',
+                                  target: 'es2015',
+                                  tsconfigRaw: {
+                                      compilerOptions: {
+                                          experimentalDecorators: true,
+                                          useDefineForClassFields: true,
+                                          jsx: 'react',
+                                      },
+                                  },
+                              },
+                          },
+                      ]
+                    : [
+                          {
+                              loader: 'babel-loader',
+                              options: {
+                                  presets: [
+                                      '@babel/preset-env',
+                                      '@babel/preset-react',
+                                  ],
+                                  plugins: ['syntax-dynamic-import'],
 
-                            cacheDirectory: babelCacheFolder,
-                        },
-                    },
-                    {
-                        loader: 'ts-loader',
-                        options: {
-                            transpileOnly: transpileOnly,
-                        },
-                    },
-                ],
+                                  cacheDirectory: babelCacheFolder,
+                              },
+                          },
+                          {
+                              loader: 'ts-loader',
+                              options: {
+                                  transpileOnly: transpileOnly,
+                              },
+                          },
+                      ],
                 exclude: /node_modules/,
             },
             {
                 test: /\.(js|jsx|babel)$/,
-                use: [
-                    {
-                        loader: 'babel-loader',
-                        options: {
-                            presets: [
-                                '@babel/preset-env',
-                                '@babel/preset-react',
-                            ],
-                        },
-                    },
-                ],
+                use: useSwc
+                    ? [
+                          {
+                              loader: 'swc-loader',
+                              options: {
+                                  jsc: {
+                                      parser: {
+                                          syntax: 'ecmascript',
+                                          jsx: true,
+                                      },
+                                      transform: {
+                                          react: { runtime: 'classic' },
+                                      },
+                                      target: 'es2015',
+                                  },
+                              },
+                          },
+                      ]
+                    : useEsbuild
+                    ? [
+                          {
+                              loader: 'esbuild-loader',
+                              options: {
+                                  loader: 'jsx',
+                                  target: 'es2015',
+                              },
+                          },
+                      ]
+                    : [
+                          {
+                              loader: 'babel-loader',
+                              options: {
+                                  presets: [
+                                      '@babel/preset-env',
+                                      '@babel/preset-react',
+                                  ],
+                              },
+                          },
+                      ],
                 exclude: function(modulePath) {
                     return (
                         /node_modules/.test(modulePath) &&
