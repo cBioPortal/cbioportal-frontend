@@ -29,7 +29,16 @@ body {
 }
 
 // Keyboard focus indicators (visible only for keyboard navigation, not mouse clicks)
+:focus:not(:focus-visible) {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
 button:focus-visible,
+a:focus-visible,
+[role='tab']:focus-visible,
+[role='button']:focus-visible,
+[tabindex]:focus-visible,
 div:focus-visible {
     outline: 2px solid #1a74c6;
     outline-offset: 2px;
