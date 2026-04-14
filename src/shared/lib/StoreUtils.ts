@@ -72,8 +72,10 @@ import { normalizeMutations } from '../components/mutationMapper/MutationMapperU
 import { getServerConfig } from 'config/config';
 import {
     AnnotateCopyNumberAlterationQuery,
+    AnnotateMutationByGenomicChangeQuery,
     AnnotateStructuralVariantQuery,
     CancerGene,
+    GermlineIndicatorQueryResp,
     IndicatorQueryResp,
     OncoKbAPI,
     OncoKBInfo,
@@ -777,8 +779,15 @@ export async function fetchOncoKbData(
             !!annotatedGenes[m.entrezGeneId]
     );
 
-    return queryOncoKbData(
-        mutationsToQuery.map(mutation => {
+    const somaticMutations = mutationsToQuery.filter(m =>
+        isNotGermlineMutation(m)
+    );
+    const germlineMutations = mutationsToQuery.filter(
+        m => !isNotGermlineMutation(m)
+    );
+
+    const somaticDataPromise = queryOncoKbData(
+        somaticMutations.map(mutation => {
             return {
                 entrezGeneId: mutation.entrezGeneId,
                 alteration: mutation.proteinChange,
@@ -793,6 +802,33 @@ export async function fetchOncoKbData(
         }),
         client
     );
+
+    const germlineDataPromise =
+        germlineMutations.length > 0
+            ? queryOncoKbGermlineData(
+                  germlineMutations.map(mutation => {
+                      return {
+                          entrezGeneId: mutation.entrezGeneId,
+                          tumorType: cancerTypeForOncoKb(
+                              mutation.uniqueSampleKey,
+                              uniqueSampleKeyToTumorType
+                          ),
+                          mutation,
+                      };
+                  }),
+                  client
+              ).catch(() => ({ germlineIndicatorMap: {} }))
+            : Promise.resolve({ germlineIndicatorMap: {} });
+
+    const [somaticData, germlineData] = await Promise.all([
+        somaticDataPromise,
+        germlineDataPromise,
+    ]);
+
+    return {
+        indicatorMap: somaticData.indicatorMap,
+        germlineIndicatorMap: germlineData.germlineIndicatorMap,
+    };
 }
 
 export async function fetchCnaOncoKbData(
@@ -949,8 +985,68 @@ export async function queryOncoKbData(
     const oncoKbData: IOncoKbData = {
         indicatorMap: generateIdToIndicatorMap(mutationQueryResult),
     };
-
     return oncoKbData;
+}
+
+export function generateGermlineGenomicChangeQuery(
+    entrezGeneId: number,
+    tumorType: string | null,
+    mutation: Mutation
+): AnnotateMutationByGenomicChangeQuery | null {
+    const genomicLocation = extractGenomicLocation(mutation);
+    if (genomicLocation) {
+        const id = generateQueryVariantId(
+            entrezGeneId,
+            tumorType,
+            genomicLocationString(genomicLocation)
+        );
+        return {
+            id,
+            genomicLocation: genomicLocationString(genomicLocation),
+            tumorType: tumorType || undefined,
+            evidenceTypes: [],
+            germline: true,
+            referenceGenome:
+                genomicLocation.referenceGenome === 'GRCh38'
+                    ? 'GRCh38'
+                    : 'GRCh37',
+        } as AnnotateMutationByGenomicChangeQuery;
+    }
+    return null;
+}
+
+export async function queryOncoKbGermlineData(
+    annotationQueries: {
+        entrezGeneId: number;
+        tumorType: string | null;
+        mutation: Mutation;
+    }[],
+    client: OncoKbAPI = oncokbClient
+) {
+    const germlineQueryVariants = _.compact(
+        annotationQueries.map(q =>
+            generateGermlineGenomicChangeQuery(
+                q.entrezGeneId,
+                q.tumorType,
+                q.mutation
+            )
+        )
+    );
+
+    const germlineQueryResult: GermlineIndicatorQueryResp[] = await chunkCalls(
+        chunk =>
+            client.annotateMutationsByGenomicChangePostUsingPOST_3({
+                body: chunk,
+            }),
+        germlineQueryVariants,
+        250
+    );
+
+    return {
+        germlineIndicatorMap: generateIdToIndicatorMap(
+            germlineQueryResult
+        ) as any,
+    };
 }
 
 export async function queryOncoKbCopyNumberAlterationData(

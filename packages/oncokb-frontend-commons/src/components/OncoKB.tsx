@@ -1,5 +1,5 @@
 import { OncoKbCardDataType } from 'cbioportal-utils';
-import { IndicatorQueryResp } from 'oncokb-ts-api-client';
+import { IndicatorQueryResp, GermlineIndicatorQueryResp } from 'oncokb-ts-api-client';
 import * as React from 'react';
 
 import {
@@ -24,6 +24,7 @@ import 'oncokb-styles/dist/oncokb.css';
 export interface IOncoKbProps {
     status: 'pending' | 'error' | 'complete';
     indicator?: IndicatorQueryResp;
+    germlineIndicator?: GermlineIndicatorQueryResp;
     availableDataTypes?: OncoKbCardDataType[];
     mergeAnnotationIcons?: boolean;
     usingPublicOncoKbInstance?: boolean;
@@ -128,6 +129,17 @@ function multiAnnotationIcon(
                 availableDataTypes={props.availableDataTypes}
             />
             {levelIcons(props, handleFeedbackOpen)}
+            {props.germlineIndicator && (
+                <AnnotationIcon
+                    type={OncoKbCardDataType.BIOLOGICAL}
+                    tooltipOverlay={tooltipContent(
+                        OncoKbCardDataType.BIOLOGICAL,
+                        props,
+                        handleFeedbackOpen
+                    )}
+                    germlineIndicator={props.germlineIndicator}
+                />
+            )}
         </span>
     );
 }
@@ -211,6 +223,7 @@ function tooltipContent(
             geneNotExist={props.geneNotExist}
             isCancerGene={props.isCancerGene}
             indicator={props.indicator || undefined}
+            germlineIndicator={props.germlineIndicator || undefined}
             handleFeedbackOpen={
                 props.disableFeedback ? undefined : handleFeedbackOpen
             }

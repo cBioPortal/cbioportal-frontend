@@ -41,7 +41,7 @@
     "extendSwagger2Converter": "node scripts/extend_converter.js packages/cbioportal-ts-api-client/src/generated CBioPortalAPI CBioPortalAPIInternal",
     "buildAPI": "node scripts/generate-api.js packages/cbioportal-ts-api-client/src/generated CBioPortalAPI CBioPortalAPIInternal",
     "updateOncoKbAPI": "yarn run fetchOncoKbAPI && yarn run buildOncoKbAPI",
-    "fetchOncoKbAPI": "curl -s -k https://www.oncokb.org/api/v1/v2/api-docs?group=Public%20APIs | json | grep -v basePath | grep -v termsOfService | grep -v host > packages/oncokb-ts-api-client/src/generated/OncoKbAPI-docs.json",
+    "fetchOncoKbAPI": "curl -s -k https://beta.oncokb.org/api/v1/v2/api-docs?group=Public%20APIs | json | grep -v basePath | grep -v termsOfService | grep -v host > packages/oncokb-ts-api-client/src/generated/OncoKbAPI-docs.json",
     "buildOncoKbAPI": "node scripts/generate-api.js packages/oncokb-ts-api-client/src/generated OncoKbAPI",
     "updateG2SAPI": "yarn run fetchG2SAPI && yarn run buildG2SAPI",
     "fetchG2SAPI": "curl -s -k http://g2s.genomenexus.org/v2/api-docs?group=api > packages/genome-nexus-ts-api-client/src/generated/Genome2StructureAPI-docs.json",

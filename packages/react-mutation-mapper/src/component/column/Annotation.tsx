@@ -14,7 +14,7 @@ import {
     OncoKbCardDataType,
     RemoteData,
 } from 'cbioportal-utils';
-import { CancerGene, IndicatorQueryResp } from 'oncokb-ts-api-client';
+import { CancerGene, IndicatorQueryResp, GermlineIndicatorQueryResp } from 'oncokb-ts-api-client';
 import _ from 'lodash';
 import { observer } from 'mobx-react';
 import * as React from 'react';
@@ -22,6 +22,7 @@ import * as React from 'react';
 import {
     getIndicatorData,
     calculateOncoKbAvailableDataType,
+    getGermlineIndicatorData,
 } from 'oncokb-frontend-commons';
 import { defaultArraySortMethod } from 'cbioportal-utils';
 import Civic, { sortValue as civicSortValue } from '../civic/Civic';
@@ -80,6 +81,7 @@ export interface IAnnotation {
     is3dHotspot: boolean;
     hotspotStatus: 'pending' | 'error' | 'complete';
     oncoKbIndicator?: IndicatorQueryResp;
+    oncoKbGermlineIndicator?: GermlineIndicatorQueryResp;
     oncoKbAvailableDataTypes: OncoKbCardDataType[];
     oncoKbStatus: 'pending' | 'error' | 'complete';
     oncoKbGeneExist: boolean;
@@ -249,20 +251,33 @@ export function getAnnotationData(
                     resolveTumorType,
                     resolveEntrezGeneId
                 );
+                const oncoKbGermlineIndicator = getGermlineIndicatorData(
+                    mutation,
+                    oncoKbData.result,
+                    resolveTumorType,
+                    resolveEntrezGeneId
+                );
                 oncoKbAvailableDataTypes = _.uniq([
                     ...oncoKbAvailableDataTypes,
                     ...calculateOncoKbAvailableDataType(
                         _.values(oncoKbData.result.indicatorMap)
                     ),
                 ]);
+                value = {
+                    ...value,
+                    oncoKbStatus: oncoKbData ? oncoKbData.status : 'pending',
+                    oncoKbIndicator,
+                    oncoKbGermlineIndicator,
+                    oncoKbAvailableDataTypes,
+                };
+            } else {
+                value = {
+                    ...value,
+                    oncoKbStatus: oncoKbData ? oncoKbData.status : 'pending',
+                    oncoKbIndicator,
+                    oncoKbAvailableDataTypes,
+                };
             }
-
-            value = {
-                ...value,
-                oncoKbStatus: oncoKbData ? oncoKbData.status : 'pending',
-                oncoKbIndicator,
-                oncoKbAvailableDataTypes,
-            };
         } else if (oncoKbData && oncoKbData.isPending) {
             value = {
                 ...value,
@@ -326,6 +341,7 @@ export function GenericAnnotation(props: GenericAnnotationProps): JSX.Element {
                     isCancerGene={annotation.isOncoKbCancerGene}
                     status={annotation.oncoKbStatus}
                     indicator={annotation.oncoKbIndicator}
+                    germlineIndicator={annotation.oncoKbGermlineIndicator}
                     availableDataTypes={annotation.oncoKbAvailableDataTypes}
                     mergeAnnotationIcons={mergeOncoKbIcons}
                     userDisplayName={userDisplayName}

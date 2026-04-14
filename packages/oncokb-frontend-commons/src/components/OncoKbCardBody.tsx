@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Tab, Tabs } from 'react-bootstrap';
 import classnames from 'classnames';
-import { IndicatorQueryResp, MutationEffectResp } from 'oncokb-ts-api-client';
+import { IndicatorQueryResp, GermlineIndicatorQueryResp, MutationEffectResp } from 'oncokb-ts-api-client';
 import Tooltip from 'rc-tooltip';
 import { OncoKbCardDataType } from 'cbioportal-utils';
 
@@ -62,6 +62,7 @@ export type OncoKbCardBodyProps = {
     isCancerGene: boolean;
     hugoSymbol: string;
     indicator?: IndicatorQueryResp;
+    germlineIndicator?: GermlineIndicatorQueryResp;
     usingPublicOncoKbInstance: boolean;
     displayHighestLevelInTabTitle?: boolean;
 };
@@ -353,6 +354,16 @@ export const OncoKbCardBody: React.FunctionComponent<OncoKbCardBodyProps> = prop
         <>
             {!props.geneNotExist && (
                 <div>
+                    {props.germlineIndicator && (
+                        <div className={mainStyles['biological-info']}>
+                            <div style={{ flexGrow: 1 }}>
+                                {props.germlineIndicator.pathogenic || 'Unknown Pathogenicity'}
+                            </div>
+                            <div style={{ flexGrow: 1 }}>
+                                {props.germlineIndicator.penetrance || 'Unknown Penetrance'}
+                            </div>
+                        </div>
+                    )}
                     {props.indicator && (
                         <>
                             <div className={mainStyles['biological-info']}>
@@ -370,6 +381,17 @@ export const OncoKbCardBody: React.FunctionComponent<OncoKbCardBodyProps> = prop
                                 {getBody(props.type, props.indicator)}
                             </div>
                         </>
+                    )}
+                    {!props.indicator && props.germlineIndicator && (
+                         <div
+                            className={mainStyles['oncokb-card']}
+                            data-test="oncokb-card"
+                        >
+                             <div style={{ padding: '10px' }}>
+                                <p>{props.germlineIndicator.penetranceSummary}</p>
+                                <p>{props.germlineIndicator.variantSummary || props.germlineIndicator.mutationEffect?.description}</p>
+                             </div>
+                        </div>
                     )}
                     {!props.usingPublicOncoKbInstance && (
                         <>

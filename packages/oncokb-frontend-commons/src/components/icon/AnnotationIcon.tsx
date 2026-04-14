@@ -1,7 +1,7 @@
 import React from 'react';
 import Tooltip from 'rc-tooltip';
 import { OncoKbCardDataType } from 'cbioportal-utils';
-import { IndicatorQueryResp } from 'oncokb-ts-api-client';
+import { IndicatorQueryResp, GermlineIndicatorQueryResp } from 'oncokb-ts-api-client';
 
 import {
     annotationIconClassNames,
@@ -19,6 +19,7 @@ export const AnnotationIcon: React.FunctionComponent<{
     type: OncoKbCardDataType;
     tooltipOverlay?: JSX.Element;
     indicator?: IndicatorQueryResp;
+    germlineIndicator?: GermlineIndicatorQueryResp;
     availableDataTypes?: OncoKbCardDataType[];
 }> = props => {
     if (
@@ -27,7 +28,11 @@ export const AnnotationIcon: React.FunctionComponent<{
     ) {
         return null;
     }
-    const highestLevel = calcHighestIndicatorLevel(props.type, props.indicator);
+    const highestLevel = calcHighestIndicatorLevel(
+        props.type,
+        props.indicator,
+        props.germlineIndicator
+    );
 
     return (
         <AnnotationIconWithTooltip
@@ -37,7 +42,7 @@ export const AnnotationIcon: React.FunctionComponent<{
                     className={annotationIconClassNames(
                         props.type,
                         highestLevel,
-                        props.indicator
+                        props.indicator || (props.germlineIndicator as any)
                     )}
                     data-test="oncogenic-icon-image"
                 />

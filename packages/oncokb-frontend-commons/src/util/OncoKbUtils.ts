@@ -10,6 +10,9 @@ import {
 import { Mutation } from 'cbioportal-utils';
 import { StructuralVariant } from 'cbioportal-ts-api-client';
 import { EvidenceType, IOncoKbData, OncoKbCardDataType } from '../model/OncoKB';
+import { extractGenomicLocation } from 'cbioportal-utils';
+import { genomicLocationString } from 'shared/lib/MutationUtils';
+import { GermlineIndicatorQueryResp } from 'oncokb-ts-api-client';
 
 export const LEVELS = {
     sensitivity: ['4', '3B', '3A', '2', '1', '0'],
@@ -436,7 +439,8 @@ export function annotationIconClassNames(
 
 export function calcHighestIndicatorLevel(
     type: OncoKbCardDataType,
-    indicator?: IndicatorQueryResp
+    indicator?: IndicatorQueryResp,
+    germlineIndicator?: GermlineIndicatorQueryResp
 ) {
     let highestLevel = '';
 
@@ -455,6 +459,10 @@ export function calcHighestIndicatorLevel(
                 highestLevel = indicator.highestPrognosticImplicationLevel;
                 break;
         }
+    }
+
+    if (!highestLevel && germlineIndicator) {
+        highestLevel = germlineIndicator.pathogenic;
     }
 
     return highestLevel;
@@ -603,6 +611,30 @@ export function getPositionalVariant(alteration: string) {
         return `${result[1][0]}${result[2]}`;
     }
     return undefined;
+}
+
+export function getGermlineIndicatorData(
+    mutation: Mutation,
+    oncoKbData: IOncoKbData,
+    getTumorType: (mutation: Mutation) => string,
+    getEntrezGeneId: (mutation: Mutation) => number
+): GermlineIndicatorQueryResp | undefined {
+    if (!oncoKbData.germlineIndicatorMap) {
+        return undefined;
+    }
+
+    const genomicLocation = extractGenomicLocation(mutation);
+    if (!genomicLocation) {
+        return undefined;
+    }
+
+    const id = generateQueryVariantId(
+        getEntrezGeneId(mutation),
+        getTumorType(mutation),
+        genomicLocationString(genomicLocation)
+    );
+
+    return oncoKbData.germlineIndicatorMap[id];
 }
 
 export function getTumorTypeName(tumorType?: TumorType) {

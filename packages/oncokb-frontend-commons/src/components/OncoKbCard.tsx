@@ -1,4 +1,4 @@
-import { IndicatorQueryResp } from 'oncokb-ts-api-client';
+import { IndicatorQueryResp, GermlineIndicatorQueryResp } from 'oncokb-ts-api-client';
 import * as React from 'react';
 
 import mainStyles from './main.module.scss';
@@ -14,6 +14,7 @@ export type OncoKbCardProps = {
     isCancerGene: boolean;
     usingPublicOncoKbInstance: boolean;
     indicator?: IndicatorQueryResp;
+    germlineIndicator?: GermlineIndicatorQueryResp;
     displayHighestLevelInTabTitle?: boolean;
     handleFeedbackOpen?: React.EventHandler<any>;
     hasMultipleCancerTypes?: boolean;
@@ -58,6 +59,7 @@ export const OncoKbCard: React.FunctionComponent<OncoKbCardProps> = (
                 <OncoKbCardBody
                     type={props.type}
                     indicator={props.indicator}
+                    germlineIndicator={props.germlineIndicator}
                     geneNotExist={props.geneNotExist}
                     isCancerGene={props.isCancerGene}
                     hugoSymbol={props.hugoSymbol}
