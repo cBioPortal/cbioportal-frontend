@@ -111,9 +111,17 @@ var config = {
     optimization: {
         minimizer: [
             new TerserPlugin({
-                parallel: false,
+                parallel: true,
             }),
         ],
+    },
+
+    cache: {
+        type: 'filesystem',
+        cacheDirectory: path.resolve(__dirname, '.webpack_cache'),
+        buildDependencies: {
+            config: [__filename],
+        },
     },
 
     resolve: {

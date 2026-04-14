@@ -51,6 +51,35 @@ This repository contains the frontend code for cBioPortal, a comprehensive cance
 3. Build packages: `yarn run buildModules`
 4. Start dev server: `yarn run start`
 
+### Fast build loop (for agent iteration)
+
+**Do not run `yarn run buildAll` to verify a single-file change** — it runs `clean` + rebuilds the vendor DLL + rebuilds all workspace packages (~7 min cold). Use one of these instead:
+
+**Preferred — dev server with HMR (near-instant):**
+```bash
+yarn start           # or yarn startSSL for HTTPS
+```
+Edits to `src/` hot-reload in <1s at `https://localhost:3000`.
+
+**Incremental webpack rebuild (~10-15s warm) — use when you need a production `dist/`:**
+```bash
+# One-time full build first (populates cache)
+yarn run buildAll
+
+# Each subsequent change — hits the webpack filesystem cache at .webpack_cache/
+NODE_OPTIONS="--openssl-legacy-provider --max-old-space-size=4096" \
+DISABLE_SOURCEMAP=true TRANSPILE_ONLY=true NODE_ENV=production \
+npx webpack
+```
+
+This skips `yarn run clean` (which deletes `dist/` and `common-dist/`, invalidating the vendor DLL) and reuses the webpack 5 filesystem cache. Measured ~9s warm vs ~3m30s cold main webpack.
+
+**Full cold build (only when required):** `yarn run buildAll` — use after pulling new deps, changing workspace package sources, or changing `webpack.config.js`/`vendor-bundles.webpack.config.js`.
+
+**Type checking is not part of the webpack build** (`TRANSPILE_ONLY=true`). Run separately: `yarn run checkTS`.
+
+**What NOT to do:** don't run `yarn run clean` between iterations, don't delete `.webpack_cache/`, don't commit `.webpack_cache/` (it's in `.gitignore`).
+
 ### Environment Variables
 - Set `BRANCH_ENV` to `master` or `rc` based on the branch you're working from
 - Custom API URLs can be configured in `env/custom.sh`
