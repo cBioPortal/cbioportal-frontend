@@ -1,3 +1,5 @@
+// trivial edit to invalidate plus-dist cache and exercise the
+// branch-fallback webpack filesystem cache restore on CI
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { configure, toJS } from 'mobx';
