@@ -26,6 +26,7 @@
     "build": "./scripts/env_vars.sh && eval \"$(./scripts/env_vars.sh)\" && yarn run buildAll",
     "buildAll": "yarn run buildModules && yarn run buildMain",
     "buildMain": "yarn run clean && yarn run compileOqlParser && yarn run buildDLL:prod && cross-env NODE_ENV=production NODE_OPTIONS=--openssl-legacy-provider --max-old-space-size=4096 webpack",
+    "buildQuick": "cross-env NODE_ENV=production NODE_OPTIONS=--openssl-legacy-provider\\ --max-old-space-size=4096 DISABLE_SOURCEMAP=true TRANSPILE_ONLY=true webpack",
     "buildModules": "lerna run build --ignore=cbioportal-frontend --stream --concurrency=4",
     "publishModules": "lerna publish from-git --yes --concurrency 1",
     "checkTS": "npx tsc --noEmit --skipLibCheck; for config in packages/*/tsconfig.json; do echo \"Checking $config\"; npx tsc --noEmit --skipLibCheck -p \"$config\"; done",
