@@ -9,6 +9,11 @@ on:
     paths:
       - 'packages/**/*'
   workflow_dispatch:
+    inputs:
+      skip_version_update:
+        description: 'Skip version update (publish current package versions as-is)'
+        type: boolean
+        default: false
 
 jobs:
   publish:
@@ -34,6 +39,7 @@ jobs:
       - run: corepack enable
       - run: yarn --frozen-lockfile
       - run: yarn updatePackageVersion
+        if: github.event_name == 'push' || inputs.skip_version_update == false
         env:
           GITHUB_TOKEN: ${{ secrets.LERNA_PUBLISH_BOT_GITHUB_TOKEN }}
       - run: yarn buildModules
