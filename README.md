@@ -177,7 +177,7 @@ pnpm run e2e:remote --grep=some.spec*
 ```
 
 ### Mount of frontend onto HTTPS backend
-A custom frontend can be tested against any backend in the web browser using a local node server (command `pnpm run start`) and the `localdev` flag passed to the browser (see section 'Check in cBioPortal context'). For remote backends that communicate over HTTP over SSL (https) connection (e.g., cbioportal.org or rc.cbioportal.org), the frontend has to be served over SSL as well. In this case run `pnpm run startSSL` instead of `pnpm run start`.
+A custom frontend can be tested against any backend in the web browser using a local node server (command `pnpm run start`) and the `localdev` flag passed to the browser (see section 'Check in cBioPortal context'). For remote backends served over HTTPS (e.g. cbioportal.org or rc.cbioportal.org), the frontend has to be served over SSL as well. In this case run `pnpm run startSSL` instead of `pnpm run start`.
 
 ## Run of `localdb` e2e-tests
 To enable e2e-tests on for features that depend on data that are not included in studies served by the public cBioPortal instance, cbioportal-frontend provides the `e2e local database` (refered to as _e2e-localdb_ or _local e2e_ in this text) facility that allows developers to load custom studies in any backend version used for e2e-tests. CircleCI runs the `e2e-localdb` tests as a separate job.

@@ -34,6 +34,7 @@ export HEADLESS_CHROME=true
 
 
 cd /cbioportal-frontend
+corepack enable
 pnpm run serveDistLocalDb &
 
 cd /cbioportal-frontend/
