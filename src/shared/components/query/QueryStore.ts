@@ -66,10 +66,7 @@ import {
     ResultsViewURLQueryEnum,
 } from 'pages/resultsView/ResultsViewURLWrapper';
 import { isMixedReferenceGenome } from 'shared/lib/referenceGenomeUtils';
-import {
-    getSingleSelectableProfileSuffixIfUnique,
-    getSuffixOfMolecularProfile,
-} from 'shared/lib/molecularProfileUtils';
+import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
 import { VirtualStudy } from 'shared/api/session-service/sessionServiceModels';
 import { isQueriedStudyAuthorized } from 'pages/studyView/StudyViewUtils';
 import { toQueryString } from 'shared/lib/query/textQueryUtils';
@@ -466,24 +463,6 @@ export class QueryStore {
                 }
             } else {
                 selectedIdSet = _.fromPairs(this.profileFilterSet.toJSON());
-            }
-        }
-        // #11569: default-select the only molecular profile when nothing else
-        // matched (e.g. RNA-only studies). Only when selection is still empty so we
-        // do not override mutation/CNA/SV defaults in mixed cohorts (see PR #5462).
-        if (
-            this.profileFilterSet === undefined &&
-            this.validProfileIdSetForSelectedStudies.isComplete &&
-            _.isEmpty(selectedIdSet) &&
-            _.isEmpty(this.profileFilterSetFromUrl) &&
-            _.isEmpty(this.profileIdsFromUrl)
-        ) {
-            const singleSuffix = getSingleSelectableProfileSuffixIfUnique(
-                this.molecularProfilesInSelectedStudies.result || [],
-                { forDownloadTab: this.forDownloadTab }
-            );
-            if (singleSuffix) {
-                selectedIdSet[singleSuffix] = true;
             }
         }
         return selectedIdSet;
