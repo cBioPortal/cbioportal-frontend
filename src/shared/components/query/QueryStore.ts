@@ -2275,6 +2275,7 @@ export class QueryStore {
         );
 
         this.profileIdsFromUrl = _.compact(profileIds);
+        this.profileFilterSetFromUrl = undefined;
         this.zScoreThreshold = params.Z_SCORE_THRESHOLD || '2.0';
         this.rppaScoreThreshold = params.RPPA_SCORE_THRESHOLD || '2.0';
         if (params.data_priority) {
@@ -2282,7 +2283,9 @@ export class QueryStore {
         }
         if (params.profileFilter) {
             if (isNaN(parseInt(params.profileFilter, 10))) {
-                this.profileFilterSetFromUrl = params.profileFilter.split(',');
+                this.profileFilterSetFromUrl = _.compact(
+                    params.profileFilter.split(',')
+                );
             }
         }
 
