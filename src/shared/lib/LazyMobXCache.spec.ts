@@ -1,7 +1,6 @@
 import { assert } from 'chai';
 import { default as sinon, SinonSpy } from 'sinon';
-import lolex from 'lolex';
-import { Clock } from 'lolex';
+import FakeTimers, { Clock } from '@sinonjs/fake-timers';
 import { default as LazyMobXCache, CacheData } from './LazyMobXCache';
 import mobx, { autorun } from 'mobx';
 
@@ -16,7 +15,7 @@ type Query = {
 };
 
 function useFakeClock(callback: (clock: Clock) => void) {
-    let clock = lolex.install();
+    let clock = FakeTimers.install();
     callback(clock);
     clock.uninstall();
 }
