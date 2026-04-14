@@ -400,7 +400,11 @@ var config = {
 
         noParse: [/3Dmol-nojquery.js/, /jspdf/],
     },
+    experiments: {
+        lazyCompilation: false,
+    },
     devServer: {
+        compress: true,
         static: {
             directory: path.resolve(__dirname, 'dist'),
         },
