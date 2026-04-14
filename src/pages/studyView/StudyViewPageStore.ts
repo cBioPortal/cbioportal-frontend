@@ -2655,7 +2655,7 @@ export class StudyViewPageStore
      * Tracks the last chart settings that were explicitly saved to session service.
      * Used to determine whether the "Save settings" button should be enabled.
      */
-    @observable private _lastSavedChartSettings: {
+    @observable.ref private _lastSavedChartSettings: {
         [id: string]: ChartUserSetting;
     } = {};
 
