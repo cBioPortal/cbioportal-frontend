@@ -20,11 +20,7 @@
     "suppressImplicitAnyIndexErrors": false,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
-    "experimentalDecorators": true,
-    "typeRoots": [
-      "node_modules/@types",
-      "../../node_modules/@types"
-    ]
+    "experimentalDecorators": true
   },
   "exclude": ["node_modules", "build", "dist", "example", "rollup.config.js"]
 }

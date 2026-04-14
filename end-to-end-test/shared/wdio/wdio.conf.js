@@ -443,6 +443,9 @@ exports.config = {
             browserName: 'chrome',
             'goog:chromeOptions': {
                 args: chromeArgs,
+                ...(process.env.CHROME_BIN
+                    ? { binary: process.env.CHROME_BIN }
+                    : {}),
             },
             'goog:loggingPrefs': { browser: 'SEVERE' },
             acceptInsecureCerts: true,
