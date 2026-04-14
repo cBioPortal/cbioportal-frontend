@@ -241,7 +241,7 @@ export default class ProteinChainPanel extends React.Component<
             length => {
                 if (
                     length > 0 &&
-                    !this.props.store.pdbChainDataStore.selectedUid
+                    this.props.store.pdbChainDataStore.selectedUid === ''
                 ) {
                     onNextRenderFrame(() =>
                         this.props.store.pdbChainDataStore.selectFirstChain()
