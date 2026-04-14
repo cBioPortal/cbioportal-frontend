@@ -894,13 +894,6 @@ export function parseGeneticInput(
         return false;
     }
 
-    // Determine if data lines should use the cancer_type offset (column 2 for chr instead of 1)
-    // This is true when the first line is a 7-column genomic header with cancer_type
-    const hasCancerTypeColumn =
-        lines.length > 0 &&
-        lines[0].length === 7 &&
-        isGenomicFormatHeader(lines[0]);
-
     try {
         const result = lines.map((line, lineIndex) => {
             if (
@@ -922,7 +915,7 @@ export function parseGeneticInput(
             if (line.length === 1) {
                 // Type 1 line
                 return { sampleId: line[0] };
-            } else if (line.length === 6 || (line.length === 7 && hasCancerTypeColumn)) {
+            } else if (line.length === 6 || line.length === 7) {
                 // Type 3 line: Sample [Cancer_Type] Chromosome Start_Position End_Position Reference_Allele Variant_Allele
                 // When cancer_type column is present (7 columns), offset = 1; otherwise offset = 0
                 const offset = line.length === 7 ? 1 : 0;
@@ -1076,7 +1069,7 @@ export function parseGeneticInput(
                 return ret as OncoprinterGeneticInputLineType2;
             } else {
                 throw new Error(
-                    `${errorPrefix}input lines must have either 1, 4, or 6 columns (or 7 columns when including Cancer_Type).`
+                    `${errorPrefix}input lines must have either 1, 4, 6, or 7 columns.`
                 );
             }
         });

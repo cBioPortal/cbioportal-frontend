@@ -402,6 +402,27 @@ describe('OncoprinterGeneticUtils', () => {
             assert.equal(result.parseSuccess, true);
             assert.deepEqual(result.result, []);
         });
+        it('parses 7-col genomic rows without a header (Cancer_Type column unconditionally accepted)', () => {
+            assert.deepEqual(
+                parseGeneticInput(
+                    'TCGA-01-0001\tOvarian\t17\t7577539\t7577539\tG\tA'
+                ),
+                {
+                    parseSuccess: true,
+                    result: [
+                        {
+                            sampleId: 'TCGA-01-0001',
+                            chromosome: '17',
+                            startPosition: 7577539,
+                            endPosition: 7577539,
+                            referenceAllele: 'G',
+                            variantAllele: 'A',
+                        },
+                    ],
+                    error: undefined,
+                }
+            );
+        });
     });
 
     describe('genomicLineToType2', () => {
