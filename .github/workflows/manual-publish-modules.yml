@@ -1,0 +1,30 @@
+# Manually publish modules under packages directory to npm registry (without version update)
+name: cBioPortal Frontend Module Publish (Manual)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      # `publishModulesFromPackages` publishes from package versions, not git tags.
+      # Keep fetching tags only as a compatibility measure for any downstream tooling that may inspect them.
+      - run: git fetch origin +refs/tags/*:refs/tags/*
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.18.0'
+          registry-url: 'https://registry.npmjs.org'
+      - run: corepack enable
+      - run: yarn --frozen-lockfile
+      - run: yarn buildModules
+      - run: yarn publishModulesFromPackages
+        env:
+          # Publish with provenance attestations linking the package to its source repository and build
+          NPM_CONFIG_PROVENANCE: 'true'
