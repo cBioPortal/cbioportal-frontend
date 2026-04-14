@@ -139,11 +139,7 @@ export default class MutationMapper<
 
         if (
             hotspotDataStatus === 'complete' &&
-            // TODO temporary workaround for initial load time, and filtering performance
-            //  the this.props.store.hotspotsByPosition seems very costly,
-            //  we can re-enable it if we can optimize the function
-            // _.isEmpty(this.props.store.hotspotsByPosition)
-            _.isEmpty(this.props.store.indexedHotspotData.result)
+            _.isEmpty(this.props.store.hotspotsByPosition)
         ) {
             hotspotDataStatus = 'empty';
         }
