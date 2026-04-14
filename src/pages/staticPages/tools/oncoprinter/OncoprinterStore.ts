@@ -296,24 +296,24 @@ export default class OncoprinterStore {
                         referenceAllele: line.referenceAllele,
                         variantAllele: line.variantAllele,
                     };
-                    const key = genomicLocationString(loc);
-                    const annotation = annotations[key];
-                    if (!annotation) {
-                        throw new Error(
-                            `Unable to resolve genomic input for sample "${line.sampleId}" at ${line.chromosome}:${line.startPosition}-${line.endPosition} ${line.referenceAllele}>${line.variantAllele}: no Genome Nexus annotation was found for the provided coordinates and alleles.`
-                        );
-                    }
-                    const type2 = genomicLineToType2(line, annotation);
-                    if (!type2) {
-                        throw new Error(
-                            `Unable to resolve genomic input for sample "${line.sampleId}" at ${line.chromosome}:${line.startPosition}-${line.endPosition} ${line.referenceAllele}>${line.variantAllele}: the annotated variant could not be converted into an OncoPrinter mutation entry.`
-                        );
-                    }
-                    return type2;
-                })
-                .filter(
-                    (x): x is OncoprinterGeneticInputLine => x !== null
-                );
+            return lines.map(line => {
+                if (!isType3Genomic(line)) return line;
+                const key = `${line.chromosome},${line.startPosition},${line.endPosition},${line.referenceAllele},${line.variantAllele}`;
+                const rowDescription = `sample "${line.sampleId}" at ${line.chromosome}:${line.startPosition}-${line.endPosition} ${line.referenceAllele}>${line.variantAllele}`;
+                const annotation = annotations[key];
+                if (!annotation) {
+                    throw new Error(
+                        `Unable to resolve genomic input for ${rowDescription}: no Genome Nexus annotation was found for the provided coordinates and alleles.`
+                    );
+                }
+                const type2 = genomicLineToType2(line, annotation);
+                if (!type2) {
+                    throw new Error(
+                        `Unable to resolve genomic input for ${rowDescription}: the annotated variant could not be converted into an OncoPrinter mutation entry.`
+                    );
+                }
+                return type2;
+            });
         },
         default: [],
     });
