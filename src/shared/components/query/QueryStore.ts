@@ -472,7 +472,6 @@ export class QueryStore {
         // matched (e.g. RNA-only studies). Only when selection is still empty so we
         // do not override mutation/CNA/SV defaults in mixed cohorts (see PR #5462).
         if (
-            this.profileFilterSet === undefined &&
             this.validProfileIdSetForSelectedStudies.isComplete &&
             _.isEmpty(selectedIdSet) &&
             _.isEmpty(this.profileFilterSetFromUrl) &&
