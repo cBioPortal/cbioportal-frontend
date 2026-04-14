@@ -1,16 +1,11 @@
-# Publish modules under packages directory to npm registry
+# Manually publish modules under packages directory to npm registry
 name: cBioPortal Frontend Module Publish
 
 on:
-  push:
-    branches:
-      - master
   workflow_dispatch:
 
 jobs:
   publish:
-    # Only run on push events triggered by the Lerna Publish Bot, or when manually dispatched
-    if: github.event_name == 'workflow_dispatch' || github.actor == 'cbioportal-devops'
     runs-on: ubuntu-latest
     permissions:
       contents: read
