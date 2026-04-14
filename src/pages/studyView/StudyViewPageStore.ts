@@ -7262,7 +7262,7 @@ export class StudyViewPageStore
      */
     @action.bound
     public saveChartSettings() {
-        this._lastSavedChartSettings = { ...this.currentChartSettingsMap };
+        this._lastSavedChartSettings = _.cloneDeep(this.currentChartSettingsMap);
         sessionServiceClient.updateUserSettings({
             page: PageType.STUDY_VIEW,
             origin: toJS(this.studyIds),
