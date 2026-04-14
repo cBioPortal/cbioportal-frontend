@@ -1663,6 +1663,8 @@ describe('DataUtils', () => {
                 }
             );
 
+            // contradictory values (mix of positive and negative) are reported
+            // via `contradictoryValues` with an empty cell (profile_data: null)
             data = [{ value: -10 }, { value: 3 }, { value: 4 }];
             assert.deepEqual(
                 fillHeatmapTrackDatum<
@@ -1679,7 +1681,53 @@ describe('DataUtils', () => {
                     hugo_gene_symbol: 'gene',
                     study_id: 'study',
                     na: false,
-                    profile_data: -10,
+                    profile_data: null,
+                    contradictoryValues: [-10, 3, 4],
+                }
+            );
+        });
+
+        it('returns empty cell with contradictoryValues when patient samples have mixed signs', () => {
+            const data: any[] = [{ value: 2.1 }, { value: -1.5 }];
+            assert.deepEqual(
+                fillHeatmapTrackDatum<
+                    IGeneHeatmapTrackDatum,
+                    'hugo_gene_symbol'
+                >(
+                    {},
+                    'hugo_gene_symbol',
+                    'gene',
+                    { patientId: 'patient', studyId: 'study' } as Sample,
+                    data
+                ),
+                {
+                    hugo_gene_symbol: 'gene',
+                    study_id: 'study',
+                    na: false,
+                    profile_data: null,
+                    contradictoryValues: [2.1, -1.5],
+                }
+            );
+        });
+
+        it('does not flag contradictory when all patient values share a sign (incl. zero)', () => {
+            const data: any[] = [{ value: 0 }, { value: 3 }];
+            assert.deepEqual(
+                fillHeatmapTrackDatum<
+                    IGeneHeatmapTrackDatum,
+                    'hugo_gene_symbol'
+                >(
+                    {},
+                    'hugo_gene_symbol',
+                    'gene',
+                    { patientId: 'patient', studyId: 'study' } as Sample,
+                    data
+                ),
+                {
+                    hugo_gene_symbol: 'gene',
+                    study_id: 'study',
+                    na: false,
+                    profile_data: 3,
                 }
             );
         });
@@ -1865,7 +1913,7 @@ describe('DataUtils', () => {
         it('Prefers largest non-threshold absolute value when no sort order provided', () => {
             let data: HeatmapCaseDatum[] = [
                 {
-                    value: -10,
+                    value: 10,
                     uniquePatientKey: 'patient_key',
                     uniqueSampleKey: 'sample_key_1',
                 },
@@ -1888,7 +1936,7 @@ describe('DataUtils', () => {
                 entityId: 'GENERIC_ASSAY_ID_1',
                 study_id: 'study',
                 na: false,
-                profile_data: -10,
+                profile_data: 10,
             });
         });
     });
