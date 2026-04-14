@@ -28,6 +28,7 @@ export default class SaveChartSettingsButton extends React.Component<SaveChartSe
             >
                 <button
                     data-test="save-chart-settings-to-session"
+                    disabled={!enabled}
                     style={{
                         width: 'fit-content',
                         position: 'relative',

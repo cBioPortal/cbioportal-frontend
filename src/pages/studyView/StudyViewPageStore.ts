@@ -7248,10 +7248,12 @@ export class StudyViewPageStore
     }
 
     public updateUserSettings() {
+        // When auto-saving group colors, use the last explicitly saved chart settings
+        // to avoid persisting unsaved chart layout changes as a side effect.
         sessionServiceClient.updateUserSettings({
             page: PageType.STUDY_VIEW,
             origin: toJS(this.studyIds),
-            chartSettings: _.values(this.currentChartSettingsMap),
+            chartSettings: _.values(this._lastSavedChartSettings),
             groupColors: toJS(this.userGroupColors),
         });
     }
@@ -7259,16 +7261,18 @@ export class StudyViewPageStore
     /**
      * Saves current chart settings to session service and marks them as saved.
      * This is triggered by user action (e.g. clicking "Save settings" button).
+     * Only updates _lastSavedChartSettings on successful server response.
      */
     @action.bound
-    public saveChartSettings() {
-        this._lastSavedChartSettings = _.cloneDeep(this.currentChartSettingsMap);
-        sessionServiceClient.updateUserSettings({
+    public async saveChartSettings() {
+        const settingsToSave = _.cloneDeep(this.currentChartSettingsMap);
+        await sessionServiceClient.updateUserSettings({
             page: PageType.STUDY_VIEW,
             origin: toJS(this.studyIds),
-            chartSettings: _.values(this.currentChartSettingsMap),
+            chartSettings: _.values(settingsToSave),
             groupColors: toJS(this.userGroupColors),
         });
+        this._lastSavedChartSettings = settingsToSave;
     }
 
     /**
@@ -7378,11 +7382,12 @@ export class StudyViewPageStore
                     this.userSettings.result!.chartSettings,
                     chartSetting => chartSetting.id
                 );
-                this._lastSavedChartSettings = _.keyBy(
-                    this.userSettings.result!.chartSettings,
-                    chartSetting => chartSetting.id
-                );
             }
+            // always track what is loaded from session as the last saved state
+            this._lastSavedChartSettings = _.keyBy(
+                this.userSettings.result!.chartSettings,
+                chartSetting => chartSetting.id
+            );
         }
     }
 
