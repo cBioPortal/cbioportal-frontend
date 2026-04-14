@@ -152,6 +152,14 @@ export default class ProteinChainPanel extends React.Component<
         if (this.autoSelectFirstChainReaction) {
             this.autoSelectFirstChainReaction();
         }
+        if (this.expandTimeout !== null) {
+            clearTimeout(this.expandTimeout);
+            this.expandTimeout = null;
+        }
+        if (this.collapseTimeout !== null) {
+            clearTimeout(this.collapseTimeout);
+            this.collapseTimeout = null;
+        }
     }
 
     @computed get chainScrollY() {
