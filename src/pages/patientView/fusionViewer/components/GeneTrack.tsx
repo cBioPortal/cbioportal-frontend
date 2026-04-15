@@ -21,24 +21,28 @@ export function genomicToSvgX(
 
 /**
  * Compute the x position and width of the retained-exon shade rect.
- * For + strand the retained half is left of the breakpoint.
- * For - strand the retained half is right of the breakpoint.
+ *
+ * The retained side depends on both strand and whether this is the 5′ or 3′ gene:
+ *   5′ gene + strand → shade LEFT  (start <= bp)
+ *   5′ gene − strand → shade RIGHT (end   >= bp)
+ *   3′ gene + strand → shade RIGHT (end   >= bp)
+ *   3′ gene − strand → shade LEFT  (start <= bp)
  */
 export function computeRetainedShadeX(
     strand: '+' | '-',
+    is5Prime: boolean,
     bpX: number,
     drawX: number,
     drawWidth: number
 ): { x: number; width: number } {
     const trackEnd = drawX + drawWidth;
-    if (strand === '+') {
-        // For + strand, retained region is from drawX to min(bpX, trackEnd)
+    const shadeLeft = is5Prime ? strand === '+' : strand === '-';
+    if (shadeLeft) {
         return {
             x: drawX,
             width: Math.min(drawWidth, Math.max(0, bpX - drawX)),
         };
     } else {
-        // For - strand, retained region is from bpX to trackEnd
         const clampedBpX = Math.max(drawX, bpX);
         return {
             x: clampedBpX,
@@ -277,6 +281,7 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
     // ---- Shade rect bounds (strand-aware) ----
     const { x: shadeX, width: shadeW } = computeRetainedShadeX(
         strand,
+        is5Prime,
         bpX,
         drawX,
         drawWidth
