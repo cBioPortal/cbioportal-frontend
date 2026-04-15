@@ -121,6 +121,14 @@ var config = {
             react: path.resolve(__dirname, 'node_modules/react'),
             'react-dom': path.resolve(__dirname, 'node_modules/react-dom'),
             'react-is': path.resolve(__dirname, 'node_modules/react-is'),
+            'react-router': path.resolve(
+                __dirname,
+                'node_modules/react-router'
+            ),
+            'react-router-dom': path.resolve(
+                __dirname,
+                'node_modules/react-router-dom'
+            ),
             mobx: path.resolve(__dirname, 'node_modules/mobx'),
             'mobx-react': path.resolve(__dirname, 'node_modules/mobx-react'),
             'mobx-react-lite': path.resolve(
