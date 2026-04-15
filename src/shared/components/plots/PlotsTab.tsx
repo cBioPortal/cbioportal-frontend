@@ -222,6 +222,8 @@ export enum MutationCountBy {
     MutatedVsWildType = 'MutatedVsWildType',
     DriverVsVUS = 'DriverVsVUS',
     VariantAlleleFrequency = 'VariantAlleleFrequency',
+    CancerCellFraction = 'CancerCellFraction',
+    Clonality = 'Clonality',
 }
 
 export enum StructuralVariantCountBy {
@@ -955,10 +957,40 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.vertSelection.mutationCountBy ===
                 MutationCountBy.VariantAlleleFrequency;
 
+        const isHorzAxisCCF =
+            this.horzSelection.dataType ===
+                AlterationTypeConstants.MUTATION_EXTENDED &&
+            this.horzSelection.mutationCountBy ===
+                MutationCountBy.CancerCellFraction;
+
+        const isVertAxisCCF =
+            this.vertSelection.dataType ===
+                AlterationTypeConstants.MUTATION_EXTENDED &&
+            this.vertSelection.mutationCountBy ===
+                MutationCountBy.CancerCellFraction;
+
+        const isHorzAxisClonality =
+            this.horzSelection.dataType ===
+                AlterationTypeConstants.MUTATION_EXTENDED &&
+            this.horzSelection.mutationCountBy === MutationCountBy.Clonality;
+
+        const isVertAxisClonality =
+            this.vertSelection.dataType ===
+                AlterationTypeConstants.MUTATION_EXTENDED &&
+            this.vertSelection.mutationCountBy === MutationCountBy.Clonality;
+
         let mainMessage = `Showing ${axisOverlapSampleCount} samples with data in both profiles (axes)`;
+        const exclusionMessages: string[] = [];
         if (isHorzAxisVAF || isVertAxisVAF) {
-            mainMessage +=
-                '. Samples without mutations or Variant Allele Frequency data are excluded from the plot';
+            exclusionMessages.push('Variant Allele Frequency');
+        }
+        if (isHorzAxisCCF || isVertAxisCCF) {
+            exclusionMessages.push('Cancer Cell Fraction');
+        }
+        if (exclusionMessages.length > 0) {
+            mainMessage += `. Samples without mutations or ${exclusionMessages.join(
+                ' or '
+            )} data are excluded from the plot`;
         }
 
         components = [
@@ -3824,6 +3856,63 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
               )
             : structuralVariantCountByOptions;
 
+        // CCF and Clonality are only available when the selected gene has the
+        // relevant ASCN data, so we only add them to the dropdown when present.
+        // We check each independently since a study may have one but not the other.
+        const entrezGeneId = axisSelection.entrezGeneId;
+        let cachedMutations = undefined;
+        if (entrezGeneId !== undefined) {
+            const cacheEntry = this.props.annotatedMutationCache.get({
+                entrezGeneId,
+            });
+            if (cacheEntry !== undefined) {
+                cachedMutations = cacheEntry.result;
+            }
+        }
+
+        let hasCancerCellFractionData = false;
+        let hasClonalityData = false;
+        if (cachedMutations !== undefined) {
+            hasCancerCellFractionData = cachedMutations.some(
+                m =>
+                    m.alleleSpecificCopyNumber !== undefined &&
+                    m.alleleSpecificCopyNumber.ccfExpectedCopies !== undefined
+            );
+            hasClonalityData = cachedMutations.some(
+                m =>
+                    m.alleleSpecificCopyNumber !== undefined &&
+                    m.alleleSpecificCopyNumber.clonal !== undefined
+            );
+        }
+
+        const availableMutationCountByOptions = [...mutationCountByOptions];
+        // Add Cancer Cell Fraction and Clonality options only when data is available
+        if (hasCancerCellFractionData) {
+            availableMutationCountByOptions.push({
+                value: MutationCountBy.CancerCellFraction,
+                label: 'Cancer Cell Fraction',
+            });
+        }
+        if (hasClonalityData) {
+            availableMutationCountByOptions.push({
+                value: MutationCountBy.Clonality,
+                label: 'Clonality',
+            });
+        }
+
+        // If the current selection is no longer available (e.g. user switched to
+        // a gene without ASCN data), reset to the default mutation count option.
+        // Only reset once mutations have loaded (cachedMutations !== undefined);
+        // while loading the cache returns undefined, so we must not reset then
+        // or we would clobber a valid URL-specified selection (e.g. Clonality)
+        // before the data has had a chance to confirm it is available.
+        const currentSelectionIsValid = availableMutationCountByOptions.some(
+            o => o.value === axisSelection.mutationCountBy
+        );
+        if (!currentSelectionIsValid && cachedMutations !== undefined) {
+            axisSelection.mutationCountBy = MutationCountBy.MutationType;
+        }
+
         switch (axisSelection.dataType) {
             case CUSTOM_ATTR_DATA_TYPE:
                 dataSourceLabel = 'Custom Attribute';
@@ -3834,7 +3923,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             case AlterationTypeConstants.MUTATION_EXTENDED:
                 dataSourceLabel = 'Plot Mutations by';
                 dataSourceValue = axisSelection.mutationCountBy;
-                dataSourceOptions = mutationCountByOptions;
+                dataSourceOptions = availableMutationCountByOptions;
                 onDataSourceChange = vertical
                     ? this.onVerticalAxisMutationCountBySelect
                     : this.onHorizontalAxisMutationCountBySelect;

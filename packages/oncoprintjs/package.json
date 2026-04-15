@@ -1,6 +1,6 @@
 {
   "name": "oncoprintjs",
-  "version": "6.0.8",
+  "version": "6.1.1",
   "description": "A data visualization for cancer genomic data.",
   "types": "./dist/js/oncoprint.d.ts",
   "main": "dist/index.js",
@@ -19,10 +19,7 @@
     "test": "cross-env jest $GREP --env=jsdom --runInBand --ci --reporters=default --reporters=jest-junit --passWithNoTests",
     "test:watch": "yarn run test --watch"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/cBioPortal/oncoprintjs.git"
-  },
+  "repository": "cBioPortal/cbioportal-frontend",
   "keywords": [
     "cancer",
     "genomics",
@@ -49,9 +46,9 @@
   ],
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/cBioPortal/oncoprintjs/issues"
+    "url": "https://github.com/cBioPortal/cbioportal-frontend/issues"
   },
-  "homepage": "https://github.com/cBioPortal/oncoprintjs",
+  "homepage": "https://github.com/cBioPortal/cbioportal-frontend",
   "dependencies": {
     "gl-matrix": "2.3.2",
     "jquery": "^3.2.1",

@@ -53,6 +53,18 @@ export const ONCOKB_DEFAULT_INFO: OncoKBInfo = {
         version: 'v2.0',
         date: '12/19/2019',
     },
+    genomeNexus: {
+        grch37: {
+            genomeNexusVepVersion: '',
+            genomeNexusVersion: '',
+            vepVersion: '',
+        },
+        grch38: {
+            genomeNexusVepVersion: '',
+            genomeNexusVersion: '',
+            vepVersion: '',
+        },
+    },
     levels: [],
     ncitVersion: '19.03d',
     oncoTreeVersion: 'oncotree_2019_12_01',

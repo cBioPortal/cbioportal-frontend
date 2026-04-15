@@ -1849,6 +1849,107 @@ export default class CBioPortalAPIInternal {
             return response.body;
         });
     };
+    clearCachesForStudyUsingDELETEURL(parameters: {
+        'xApiKey': string,
+        'studyId': string,
+        'springManagedCache' ? : boolean,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/api/cache/{studyId}';
+
+        path = path.replace('{studyId}', parameters['studyId'] + '');
+        if (parameters['springManagedCache'] !== undefined) {
+            queryParameters['springManagedCache'] = parameters['springManagedCache'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Clear and reinitialize caches after import/removal/update of a study
+     * @method
+     * @name CBioPortalAPIInternal#clearCachesForStudyUsingDELETE
+     * @param {string} xApiKey - Secret API key passed in HTTP header. The key is configured in application.properties of the portal instance.
+     * @param {string} studyId - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {boolean} springManagedCache - Clear Spring-managed caches
+     */
+    clearCachesForStudyUsingDELETEWithHttpInfo(parameters: {
+        'xApiKey': string,
+        'studyId': string,
+        'springManagedCache' ? : boolean,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/api/cache/{studyId}';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'text/plain';
+
+            if (parameters['xApiKey'] !== undefined) {
+                headers['X-API-KEY'] = parameters['xApiKey'];
+            }
+
+            if (parameters['xApiKey'] === undefined) {
+                reject(new Error('Missing required  parameter: xApiKey'));
+                return;
+            }
+
+            path = path.replace('{studyId}', parameters['studyId'] + '');
+
+            if (parameters['studyId'] === undefined) {
+                reject(new Error('Missing required  parameter: studyId'));
+                return;
+            }
+
+            if (parameters['springManagedCache'] !== undefined) {
+                queryParameters['springManagedCache'] = parameters['springManagedCache'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('DELETE', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Clear and reinitialize caches after import/removal/update of a study
+     * @method
+     * @name CBioPortalAPIInternal#clearCachesForStudyUsingDELETE
+     * @param {string} xApiKey - Secret API key passed in HTTP header. The key is configured in application.properties of the portal instance.
+     * @param {string} studyId - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {boolean} springManagedCache - Clear Spring-managed caches
+     */
+    clearCachesForStudyUsingDELETE(parameters: {
+        'xApiKey': string,
+        'studyId': string,
+        'springManagedCache' ? : boolean,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < string > {
+        return this.clearCachesForStudyUsingDELETEWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
     getClinicalAttributeCountsUsingPOSTURL(parameters: {
         'clinicalAttributeCountFilter' ? : ClinicalAttributeCountFilter,
         $queryParameters ? : any

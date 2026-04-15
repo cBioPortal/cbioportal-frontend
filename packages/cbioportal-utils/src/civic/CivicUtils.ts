@@ -102,6 +102,9 @@ export function getCivicVariants(
                         variantName == CivicAlterationType.AMPLIFICATION ||
                         variantName == CivicAlterationType.DELETION
                     ) {
+                        if (!civicVariants[geneSymbol]) {
+                            civicVariants[geneSymbol] = {};
+                        }
                         civicVariants[geneSymbol][variantName] =
                             geneVariants[variantName];
                     }

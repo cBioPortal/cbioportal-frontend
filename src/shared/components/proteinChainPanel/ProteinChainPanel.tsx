@@ -50,6 +50,7 @@ export default class ProteinChainPanel extends React.Component<
     private expandTimeout: number | null = null;
     private chainUidToY: { [uid: string]: number } = {};
     private onChainSelectReaction: IReactionDisposer;
+    private autoSelectFirstChainReaction: IReactionDisposer | null = null;
 
     private expandDelayMs = 750;
     private collapseDelayMs = 3000;
@@ -148,6 +149,17 @@ export default class ProteinChainPanel extends React.Component<
 
     componentWillUnmount() {
         this.onChainSelectReaction();
+        if (this.autoSelectFirstChainReaction) {
+            this.autoSelectFirstChainReaction();
+        }
+        if (this.expandTimeout !== null) {
+            clearTimeout(this.expandTimeout);
+            this.expandTimeout = null;
+        }
+        if (this.collapseTimeout !== null) {
+            clearTimeout(this.collapseTimeout);
+            this.collapseTimeout = null;
+        }
     }
 
     @computed get chainScrollY() {
@@ -232,8 +244,19 @@ export default class ProteinChainPanel extends React.Component<
     }
 
     componentDidMount() {
-        onNextRenderFrame(() =>
-            this.props.store.pdbChainDataStore.selectFirstChain()
+        this.autoSelectFirstChainReaction = reaction(
+            () => this.props.store.pdbChainDataStore.allData.length,
+            length => {
+                if (
+                    length > 0 &&
+                    this.props.store.pdbChainDataStore.selectedUid === ''
+                ) {
+                    onNextRenderFrame(() =>
+                        this.props.store.pdbChainDataStore.selectFirstChain()
+                    );
+                }
+            },
+            { fireImmediately: true }
         );
     }
 

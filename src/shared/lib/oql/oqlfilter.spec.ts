@@ -12,6 +12,8 @@ import {
     STRUCTVARAnyGeneStr,
     STRUCTVARNullGeneStr,
     queryContainsStructVarAlteration,
+    removeIndexFromGeneList,
+    getGeneSymbolsAtIndex,
 } from './oqlfilter';
 import {
     NumericGeneMolecularData,
@@ -1002,5 +1004,152 @@ describe('queryContainsStructVarAlteration', () => {
             ),
             expected
         );
+    });
+});
+
+describe('removeIndexFromGeneList', () => {
+    it('removes a gene from a newline-separated list', () => {
+        assert.equal(
+            removeIndexFromGeneList('KRAS\nNRAS\nBRAF', 2),
+            'KRAS\nNRAS'
+        );
+        assert.equal(
+            removeIndexFromGeneList('KRAS\nNRAS\nBRAF', 0),
+            'NRAS\nBRAF'
+        );
+        assert.equal(
+            removeIndexFromGeneList('KRAS\nNRAS\nBRAF', 1),
+            'KRAS\nBRAF'
+        );
+    });
+
+    it('removes a gene from a space-separated single-line list (homepage URL format)', () => {
+        assert.equal(
+            removeIndexFromGeneList('KRAS NRAS BRAF', 2),
+            'KRAS\nNRAS'
+        );
+        assert.equal(
+            removeIndexFromGeneList('KRAS NRAS BRAF', 0),
+            'NRAS\nBRAF'
+        );
+        assert.equal(
+            removeIndexFromGeneList('KRAS NRAS BRAF', 1),
+            'KRAS\nBRAF'
+        );
+    });
+
+    it('removes an OQL-qualified gene (e.g. BRAF:V600E)', () => {
+        const result = removeIndexFromGeneList(
+            'KRAS\nNRAS\nBRAF: MUT=V600E',
+            2
+        );
+        assert.equal(result, 'KRAS\nNRAS');
+    });
+
+    it('plain genes serialize back without OQL qualifiers', () => {
+        const result = removeIndexFromGeneList('KRAS\nNRAS\nBRAF', 2);
+        assert.equal(result, 'KRAS\nNRAS', 'should not add MUT/AMP/HOMDEL');
+        assert.ok(
+            !result.includes('MUT') && !result.includes('AMP'),
+            'no default OQL qualifiers in output'
+        );
+    });
+
+    it('removes a merged track (unlabeled)', () => {
+        const result = removeIndexFromGeneList('[KRAS NRAS]\nBRAF', 0);
+        assert.equal(result, 'BRAF');
+    });
+
+    it('removes a merged track (labeled)', () => {
+        const result = removeIndexFromGeneList(
+            '["My set" KRAS NRAS]\nBRAF',
+            0
+        );
+        assert.equal(result, 'BRAF');
+    });
+
+    it('preserves labeled merged tracks with correct OQL syntax', () => {
+        // Labeled merged tracks must use ["label" GENE1 GENE2] syntax (quoted label, no colon)
+        const result = removeIndexFromGeneList(
+            'TP53\n["My set" KRAS NRAS]',
+            0
+        );
+        assert.equal(result, '["My set" KRAS NRAS]');
+    });
+
+    it('skips DATATYPES statements in index count and preserves them in output', () => {
+        const geneList = 'DATATYPES: MUT;\nKRAS\nNRAS\nBRAF';
+        // DATATYPES is not a track, so index 0 = KRAS, index 1 = NRAS, index 2 = BRAF
+        assert.equal(
+            removeIndexFromGeneList(geneList, 0),
+            'DATATYPES: MUT;\nNRAS\nBRAF'
+        );
+        assert.equal(
+            removeIndexFromGeneList(geneList, 2),
+            'DATATYPES: MUT;\nKRAS\nNRAS'
+        );
+    });
+
+    it('returns original string if index is out of range', () => {
+        const geneList = 'KRAS\nNRAS';
+        assert.equal(removeIndexFromGeneList(geneList, 5), geneList);
+        assert.equal(removeIndexFromGeneList(geneList, -1), geneList);
+    });
+
+    it('handles a single gene list', () => {
+        assert.equal(removeIndexFromGeneList('KRAS', 0), '');
+    });
+});
+
+describe('getGeneSymbolsAtIndex', () => {
+    it('returns the gene symbol for a simple gene at the given index', () => {
+        assert.deepEqual(
+            getGeneSymbolsAtIndex('KRAS\nNRAS\nBRAF', 0),
+            ['KRAS']
+        );
+        assert.deepEqual(
+            getGeneSymbolsAtIndex('KRAS\nNRAS\nBRAF', 2),
+            ['BRAF']
+        );
+    });
+
+    it('returns the gene symbol from a space-separated list (homepage URL format)', () => {
+        assert.deepEqual(
+            getGeneSymbolsAtIndex('KRAS NRAS BRAF', 1),
+            ['NRAS']
+        );
+    });
+
+    it('returns the gene symbol for an OQL-qualified gene', () => {
+        assert.deepEqual(
+            getGeneSymbolsAtIndex('KRAS\nBRAF: MUT=V600E', 1),
+            ['BRAF']
+        );
+    });
+
+    it('returns all gene symbols for a merged track', () => {
+        assert.deepEqual(
+            getGeneSymbolsAtIndex('[KRAS NRAS]\nBRAF', 0),
+            ['KRAS', 'NRAS']
+        );
+    });
+
+    it('returns all gene symbols for a labeled merged track', () => {
+        assert.deepEqual(
+            getGeneSymbolsAtIndex('["My set" KRAS NRAS]\nBRAF', 0),
+            ['KRAS', 'NRAS']
+        );
+    });
+
+    it('skips DATATYPES statements in index count', () => {
+        const geneList = 'DATATYPES: MUT;\nKRAS\nNRAS\nBRAF';
+        // index 0 = KRAS (DATATYPES is skipped)
+        assert.deepEqual(getGeneSymbolsAtIndex(geneList, 0), ['KRAS']);
+        assert.deepEqual(getGeneSymbolsAtIndex(geneList, 2), ['BRAF']);
+    });
+
+    it('returns empty array for out-of-range index', () => {
+        assert.deepEqual(getGeneSymbolsAtIndex('KRAS\nNRAS', 5), []);
+        assert.deepEqual(getGeneSymbolsAtIndex('KRAS\nNRAS', -1), []);
     });
 });
