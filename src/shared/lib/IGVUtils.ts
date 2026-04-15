@@ -153,18 +153,21 @@ export function generateSegmentFileContent(segments: CopyNumberSeg[]): string {
 export function generateSegmentFeatures(
     segments: CopyNumberSeg[]
 ): SegmentTrackFeatures[] {
-    return segments.map(segment => ({
-        chr: normalizeChromosome(segment.chromosome),
-        start: segment.start,
-        end: segment.end,
-        value: segment.segmentMean,
-        sample: segment.sampleId,
-        patient: segment.patientId,
-        study: segment.studyId,
-        numberOfProbes: segment.numberOfProbes,
-        sampleKey: segment.sampleId,
-        popupData: () => segmentPopupData(segment),
-    }));
+    return _.sortBy(
+        segments.map(segment => ({
+            chr: normalizeChromosome(segment.chromosome),
+            start: segment.start,
+            end: segment.end,
+            value: segment.segmentMean,
+            sample: segment.sampleId,
+            patient: segment.patientId,
+            study: segment.studyId,
+            numberOfProbes: segment.numberOfProbes,
+            sampleKey: segment.sampleId,
+            popupData: () => segmentPopupData(segment),
+        })),
+        ['sampleKey', 'chr', 'start', 'end']
+    );
 }
 
 export function generateMutationFeatures(

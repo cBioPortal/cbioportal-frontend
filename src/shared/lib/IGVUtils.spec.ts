@@ -142,6 +142,43 @@ describe('IGVUtils', () => {
             assert.equal(generateSegmentFeatures([]).length, 0);
         });
 
+        it('sorts segment features deterministically by sample and locus', () => {
+            const shuffledSegments = [segments[3], segments[0], segments[2]];
+
+            const generated = featuresWithoutFunctions(
+                generateSegmentFeatures(shuffledSegments)
+            );
+
+            assert.deepEqual(
+                generated.map(feature => ({
+                    sampleKey: feature.sampleKey,
+                    chr: feature.chr,
+                    start: feature.start,
+                    end: feature.end,
+                })),
+                [
+                    {
+                        sampleKey: 'TCGA-13-1510-01',
+                        chr: '1',
+                        start: 3218610,
+                        end: 4734076,
+                    },
+                    {
+                        sampleKey: 'TCGA-13-1510-01',
+                        chr: '1',
+                        start: 4735908,
+                        end: 12155936,
+                    },
+                    {
+                        sampleKey: 'TCGA-13-1510-01',
+                        chr: '1',
+                        start: 12156236,
+                        end: 12262792,
+                    },
+                ]
+            );
+        });
+
         it('generates proper segment features for non-empty input', () => {
             assert.deepEqual(
                 featuresWithoutFunctions(generateSegmentFeatures(segments)),
