@@ -9,6 +9,7 @@ import {
     calcIgvTrackHeight,
     defaultSegmentTrackProps,
     generateSegmentFeatures,
+    WHOLE_GENOME,
 } from 'shared/lib/IGVUtils';
 import { DEFAULT_GENOME } from '../../resultsView/ResultsViewPageStoreUtils';
 import ProgressIndicator, {
@@ -45,6 +46,10 @@ export default class CNSegments extends React.Component<
     @autobind
     private updateLastSelectedLocus(str: string) {
         this.lastSelectedLocus = str;
+    }
+
+    @computed get activeLocus() {
+        return this.lastSelectedLocus || WHOLE_GENOME;
     }
 
     @computed get segmentTrackHeight() {
@@ -189,7 +194,7 @@ export default class CNSegments extends React.Component<
                             },
                         ]}
                         genome={this.genome}
-                        locus={this.lastSelectedLocus}
+                        locus={this.activeLocus}
                         onLocusChange={this.updateLastSelectedLocus}
                         onRenderingStart={this.onIgvRenderingStart}
                         onRenderingComplete={this.onIgvRenderingComplete}
