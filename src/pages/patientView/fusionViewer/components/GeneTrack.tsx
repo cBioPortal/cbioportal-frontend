@@ -169,6 +169,7 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
         labelText?: string
     ) => {
         const intronY = yPos + INTRON_Y_OFFSET;
+        const hatchId = `hatch-${symbol}-${is5Prime ? '5p' : '3p'}`;
         const elements: React.ReactNode[] = [];
 
         for (let i = 0; i < exons.length - 1; i++) {
@@ -224,27 +225,29 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
                         y={yPos}
                         width={ew}
                         height={EXON_HEIGHT}
-                        fill={`url(#hatch-${symbol})`}
+                        fill={`url(#${hatchId})`}
                         rx={1}
                         style={{ pointerEvents: 'none' }}
                     />
                 );
             }
 
-            // Exon number label below the exon block
-            elements.push(
-                <text
-                    key={`exon-label-${transcript.transcriptId}-${exon.number}`}
-                    x={ex + ew / 2}
-                    y={yPos + EXON_HEIGHT + EXON_LABEL_OFFSET}
-                    textAnchor="middle"
-                    fontSize={7}
-                    fill={isRetained ? color : '#aaa'}
-                    opacity={isRetained ? opacity : 0.7}
-                >
-                    E{exon.number}
-                </text>
-            );
+            // Exon number label below the exon block — only when highlighting is active
+            if (retainedExonNumbers !== undefined) {
+                elements.push(
+                    <text
+                        key={`exon-label-${transcript.transcriptId}-${exon.number}`}
+                        x={ex + ew / 2}
+                        y={yPos + EXON_HEIGHT + EXON_LABEL_OFFSET}
+                        textAnchor="middle"
+                        fontSize={7}
+                        fill={isRetained ? color : '#aaa'}
+                        opacity={isRetained ? opacity : 0.7}
+                    >
+                        E{exon.number}
+                    </text>
+                );
+            }
         });
 
         if (labelText) {
@@ -282,23 +285,27 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
     const shadeHeight =
         FORTE_TRACK_HEIGHT + userTranscripts.length * USER_TRACK_HEIGHT;
 
+    const hatchId = `hatch-${symbol}-${is5Prime ? '5p' : '3p'}`;
+
     return (
         <g>
-            {/* Hatch pattern for discarded exons */}
-            <defs>
-                <pattern
-                    id={`hatch-${symbol}`}
-                    patternUnits="userSpaceOnUse"
-                    width={5}
-                    height={5}
-                >
-                    <path
-                        d="M-1,1 l2,-2 M0,5 l5,-5 M4,6 l2,-2"
-                        stroke="#aaa"
-                        strokeWidth={1.2}
-                    />
-                </pattern>
-            </defs>
+            {/* Hatch pattern for discarded exons — only defined when highlighting is active */}
+            {retainedExonNumbers && (
+                <defs>
+                    <pattern
+                        id={hatchId}
+                        patternUnits="userSpaceOnUse"
+                        width={5}
+                        height={5}
+                    >
+                        <path
+                            d="M-1,1 l2,-2 M0,5 l5,-5 M4,6 l2,-2"
+                            stroke="#aaa"
+                            strokeWidth={1.2}
+                        />
+                    </pattern>
+                </defs>
+            )}
 
             {/* Gene label */}
             <text
@@ -380,7 +387,7 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
                 />
             </BreakpointTooltip>
 
-            {/* Breakpoint coordinate label */}
+            {/* Breakpoint coordinate label — clamp anchor to avoid clipping */}
             <text
                 x={bpX}
                 y={bpLineBottom + 10}
