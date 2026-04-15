@@ -195,8 +195,19 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
         exons.forEach(exon => {
             const ex = toSvg(exon.start);
             const ew = Math.max(2, toSvg(exon.end) - ex);
+            // Use genomic position to determine retention — exon.number is not
+            // consistent across alternative transcripts, so we match the same
+            // logic used in select5PrimeExons / select3PrimeExons.
             const isRetained =
-                !retainedExonNumbers || retainedExonNumbers.has(exon.number);
+                retainedExonNumbers === undefined
+                    ? true
+                    : is5Prime
+                    ? strand === '+'
+                        ? exon.start <= position
+                        : exon.end >= position
+                    : strand === '+'
+                    ? exon.end >= position
+                    : exon.start <= position;
 
             // Base exon rect
             elements.push(

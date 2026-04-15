@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { COLOR_5PRIME, COLOR_3PRIME, COLOR_BREAKPOINT } from '../data/types';
+import { COLOR_5PRIME, COLOR_3PRIME } from '../data/types';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -66,15 +66,6 @@ export const ConnectingArcs: React.FC<ConnectingArcsProps> = ({
                 strokeWidth={1.5}
                 strokeDasharray="6 3"
                 opacity={0.5}
-            />
-
-            {/* Junction point circle */}
-            <circle
-                cx={fusionJunctionX}
-                cy={fusionProductTopY}
-                r={4}
-                fill={COLOR_BREAKPOINT}
-                opacity={0.8}
             />
         </g>
     );
