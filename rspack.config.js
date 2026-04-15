@@ -400,9 +400,7 @@ var config = {
 
         noParse: [/3Dmol-nojquery.js/, /jspdf/],
     },
-    experiments: {
-        lazyCompilation: false,
-    },
+    lazyCompilation: false,
     devServer: {
         compress: true,
         static: {
@@ -572,6 +570,11 @@ if (isDev || isTest) {
 
     config.devServer.port = devPort;
     //config.devServer.hostname = devHost;
+
+    // In dev, let rspack share modules between main bundle and React.lazy
+    // chunks. Prod keeps splitChunks: false because the cBioPortal backend
+    // HTML hardcodes main.app.js/common.bundle.js/styles.css filenames.
+    delete config.optimization.splitChunks;
 
     // force hot module reloader to hit absolute path so it can load
     // from dev server
