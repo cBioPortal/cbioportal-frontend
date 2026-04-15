@@ -169,7 +169,6 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
         labelText?: string
     ) => {
         const intronY = yPos + INTRON_Y_OFFSET;
-        const hatchId = `hatch-${symbol}-${is5Prime ? '5p' : '3p'}`;
         const elements: React.ReactNode[] = [];
 
         for (let i = 0; i < exons.length - 1; i++) {
