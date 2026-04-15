@@ -121,13 +121,16 @@ function updateChromosomeTrack(
         rulerTrackView.setTrackHeight(trackHeight);
         const rulerTrackStyle = rulerTrackView.viewports[0]?.contentDiv?.style;
 
-        if (
-            rulerTrackStyle &&
-            (locus === WHOLE_GENOME || locus === undefined)
-        ) {
-            rulerTrackStyle.top = compactRulerTrack
-                ? `-${RULER_TRACK_FULL_HEIGHT / 4}px`
-                : 0;
+        if (rulerTrackStyle) {
+            // Always normalize top offset to avoid stale style values carrying
+            // over between locus changes/refreshes.
+            if (locus === WHOLE_GENOME || locus === undefined) {
+                rulerTrackStyle.top = compactRulerTrack
+                    ? `-${RULER_TRACK_FULL_HEIGHT / 4}px`
+                    : '0px';
+            } else {
+                rulerTrackStyle.top = '0px';
+            }
         }
     }
 }
@@ -233,6 +236,12 @@ export default class IntegrativeGenomicsViewer extends React.Component<
                     browser.removeTrackByName(SEQUENCE_TRACK_NAME);
                 }
 
+                updateChromosomeTrack(
+                    browser,
+                    this.props.locus,
+                    this.props.compactRulerTrack
+                );
+
                 // deep clone, because loadTrackList method mutates the tracks object
                 this.loadTrackList(
                     browser,
@@ -282,6 +291,11 @@ export default class IntegrativeGenomicsViewer extends React.Component<
         // update locus
         if (this.igvBrowser && this.props.locus) {
             this.igvBrowser.search(this.props.locus);
+            updateChromosomeTrack(
+                this.igvBrowser,
+                this.props.locus,
+                this.props.compactRulerTrack
+            );
         }
 
         // update tracks
