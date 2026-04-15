@@ -281,8 +281,12 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
         drawX,
         drawWidth
     );
+    // Add EXON_LABEL_OFFSET as a buffer so the shade comfortably covers
+    // the E-number labels below the last transcript row's exon blocks.
     const shadeHeight =
-        FORTE_TRACK_HEIGHT + userTranscripts.length * USER_TRACK_HEIGHT;
+        FORTE_TRACK_HEIGHT +
+        userTranscripts.length * USER_TRACK_HEIGHT +
+        EXON_LABEL_OFFSET;
 
     const hatchId = `hatch-${symbol}-${is5Prime ? '5p' : '3p'}`;
 
