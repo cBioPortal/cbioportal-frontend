@@ -75,6 +75,9 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
         const has3pUser = filtered3p.length > 0;
 
         // ---- Compute retained exon number sets for gene track highlighting ----
+        // Sorted by exon.number (biological order) before calling the helpers.
+        // The helpers filter by genomic position so sort order doesn't affect
+        // which exons are selected, but consistent order avoids confusion.
         const retained5pNums = new Set(
             select5PrimeExons(
                 [...forteTranscript5p.exons].sort(
