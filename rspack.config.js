@@ -102,7 +102,10 @@ var config = {
     entry: [`babel-polyfill`, `${path.join(src, 'appBootstrapper.tsx')}`],
     output: {
         path: path.resolve(__dirname, 'dist'),
-        filename: 'reactapp/[name].app.js',
+        filename: pathData =>
+            pathData.chunk.name === 'common'
+                ? 'reactapp/common.bundle.js'
+                : 'reactapp/[name].app.js',
         chunkFilename: 'reactapp/[name].[chunkhash].chunk.js',
         // cssFilename: 'reactapp/app.css',
         // hash: false,
@@ -110,7 +113,20 @@ var config = {
     },
 
     optimization: {
-        splitChunks: false,
+        splitChunks: {
+            cacheGroups: {
+                // Backend HTML hardcodes common.bundle.js; see output.filename.
+                common: {
+                    type: 'javascript/auto',
+                    test: /[\\/]node_modules[\\/]/,
+                    name: 'common',
+                    chunks: 'initial',
+                    enforce: true,
+                },
+                default: false,
+                defaultVendors: false,
+            },
+        },
     },
 
     resolve: {
@@ -578,11 +594,6 @@ if (isDev || isTest) {
 
     config.devServer.port = devPort;
     //config.devServer.hostname = devHost;
-
-    // In dev, let rspack share modules between main bundle and React.lazy
-    // chunks. Prod keeps splitChunks: false because the cBioPortal backend
-    // HTML hardcodes main.app.js/common.bundle.js/styles.css filenames.
-    delete config.optimization.splitChunks;
 
     // force hot module reloader to hit absolute path so it can load
     // from dev server
