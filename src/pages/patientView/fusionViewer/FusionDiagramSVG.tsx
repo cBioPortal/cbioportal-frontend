@@ -17,6 +17,10 @@ import {
     computeJunctionX,
 } from './components/FusionProduct';
 import {
+    select5PrimeExons,
+    select3PrimeExons,
+} from './components/fusionProductHelpers';
+import {
     ProteinDomainTrack,
     getProteinDomainTrackHeight,
 } from './components/ProteinDomainTrack';
@@ -69,6 +73,30 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
 
         const has5pUser = filtered5p.length > 0;
         const has3pUser = filtered3p.length > 0;
+
+        // ---- Compute retained exon number sets for gene track highlighting ----
+        const retained5pNums = new Set(
+            select5PrimeExons(
+                [...forteTranscript5p.exons].sort(
+                    (a, b) => a.number - b.number
+                ),
+                gene1.position,
+                gene1.strand
+            ).map(e => e.number)
+        );
+
+        const retained3pNums =
+            gene2 && forteTranscript3p
+                ? new Set(
+                      select3PrimeExons(
+                          [...forteTranscript3p.exons].sort(
+                              (a, b) => a.number - b.number
+                          ),
+                          gene2.position,
+                          gene2.strand
+                      ).map(e => e.number)
+                  )
+                : undefined;
 
         // ---- Calculate heights ----
         const geneTrackHeight5p = getGeneTrackHeight(
@@ -195,6 +223,7 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
                     width={GENE_TRACK_WIDTH}
                     is5Prime={true}
                     trackHeight={geneTrackHeight}
+                    retainedExonNumbers={retained5pNums}
                 />
 
                 {/* 3-prime gene track or intergenic placeholder */}
@@ -213,6 +242,7 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
                         width={GENE_TRACK_WIDTH}
                         is5Prime={false}
                         trackHeight={geneTrackHeight}
+                        retainedExonNumbers={retained3pNums}
                     />
                 ) : (
                     <g>
