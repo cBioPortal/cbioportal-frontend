@@ -28,10 +28,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          fetch-tags: true
           # Use the bot PAT so that lerna can push version bumps and tags back to master
           token: ${{ secrets.LERNA_PUBLISH_BOT_GITHUB_TOKEN }}
-      # lerna needs tags to be able to determine what's changed
-      - run: git fetch origin +refs/tags/*:refs/tags/*
       - uses: actions/setup-node@v4
         with:
           node-version: '22.18.0'
@@ -39,7 +38,7 @@ jobs:
       - run: corepack enable
       - run: yarn --frozen-lockfile
       - run: yarn updatePackageVersion
-        if: github.event_name == 'push' || inputs.skip_version_update == false
+        if: github.event_name == 'push' || !inputs.skip_version_update
         env:
           GITHUB_TOKEN: ${{ secrets.LERNA_PUBLISH_BOT_GITHUB_TOKEN }}
       - run: yarn buildModules
