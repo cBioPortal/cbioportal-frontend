@@ -338,7 +338,7 @@ export default class URLWrapper<
                 /* keep an ordering token to make sure
                     that async session response matches the
                     current session and hasn't been invalidated by a subsequent session
-                    (stored in localSessionData.timeStamp for backwards compatibility)
+                    (stored in localSessionData.timeStamp to keep the existing PortalSession field name)
                 */
                 const sessionRequestToken = ++this.nextSessionRequestToken;
                 this.localSessionData = {
