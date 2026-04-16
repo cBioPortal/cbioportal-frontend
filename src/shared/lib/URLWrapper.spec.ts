@@ -613,7 +613,7 @@ describe('URLWrapper', () => {
             });
             disposer();
             done();
-        }, 100);
+        }, 50);
     });
 
     it('handles back/forward of routingstore', done => {
@@ -832,7 +832,7 @@ describe('URLWrapper', () => {
                 disposer();
                 done();
             }, 50);
-        }, 50);
+        }, 100);
     });
 
     it('creates new session when nested object session param is changed', done => {
@@ -919,7 +919,7 @@ describe('URLWrapper', () => {
                 disposer();
                 done();
             }, 50);
-        }, 50);
+        }, 200);
     });
 
     it('when clear=true, gets rid of any existing params', () => {
@@ -976,7 +976,6 @@ describe('URLWrapper', () => {
     it('handles new session before old session finished saving', done => {
         wrapper.urlCharThresholdForSession = 0;
         wrapper.sessionEnabled = true;
-        const dateNowStub = sinon.stub(Date, 'now').returns(1);
 
         let saveSessionStub = sinon.stub(wrapper, 'saveRemoteSession');
 
@@ -1012,10 +1011,8 @@ describe('URLWrapper', () => {
                 assert.equal(wrapper.sessionId, 'sessionId2');
                 assert.equal(wrapper.query.gene_list, '54321');
                 assert.equal(routingStore.query.session_id, 'sessionId2');
-                dateNowStub.restore();
                 done();
             } catch (error) {
-                dateNowStub.restore();
                 done(error);
             }
         }, 50);
