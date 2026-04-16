@@ -389,6 +389,7 @@ describe('group comparison page screenshot tests', () => {
                     'div[data-test="GroupComparisonMRNAEnrichments"]'
                 )
             ).waitForDisplayed({ timeout: 10000 });
+
             await (await getElement('b=RBMX2')).waitForDisplayed({
                 timeout: 10000,
             });

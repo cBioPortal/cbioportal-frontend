@@ -822,6 +822,8 @@ async function getElement(selector, options = {}) {
         el = await $(selector);
     }
 
+    await el.scrollIntoView();
+
     if (options.timeout) {
         await el.waitForExist(options);
     }
