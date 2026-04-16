@@ -15,6 +15,10 @@ on:
         type: boolean
         default: false
 
+concurrency:
+  group: publish-modules
+  cancel-in-progress: false
+
 jobs:
   publish:
     # Do not run on forked repos
