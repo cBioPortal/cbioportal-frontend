@@ -286,16 +286,6 @@ export default class OncoprinterStore {
 
             const annotations = this.genomeNexusAnnotations.result!;
 
-            return lines
-                .map(line => {
-                    if (!isType3Genomic(line)) return line;
-                    const loc: GenomicLocation = {
-                        chromosome: line.chromosome,
-                        start: line.startPosition,
-                        end: line.endPosition,
-                        referenceAllele: line.referenceAllele,
-                        variantAllele: line.variantAllele,
-                    };
             return lines.map(line => {
                 if (!isType3Genomic(line)) return line;
                 const key = `${line.chromosome},${line.startPosition},${line.endPosition},${line.referenceAllele},${line.variantAllele}`;
