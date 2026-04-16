@@ -976,6 +976,7 @@ describe('URLWrapper', () => {
     it('handles new session before old session finished saving', done => {
         wrapper.urlCharThresholdForSession = 0;
         wrapper.sessionEnabled = true;
+        const dateNowStub = sinon.stub(Date, 'now').returns(1);
 
         let saveSessionStub = sinon.stub(wrapper, 'saveRemoteSession');
 
@@ -1007,11 +1008,17 @@ describe('URLWrapper', () => {
         // i.e. first session should have been cancelled by second
         // even though second response sooner
         setTimeout(() => {
-            assert.equal(wrapper.sessionId, 'sessionId2');
-            assert.equal(wrapper.query.gene_list, '54321');
-            assert.equal(routingStore.query.session_id, 'sessionId2');
-            done();
-        }, 1000);
+            try {
+                assert.equal(wrapper.sessionId, 'sessionId2');
+                assert.equal(wrapper.query.gene_list, '54321');
+                assert.equal(routingStore.query.session_id, 'sessionId2');
+                dateNowStub.restore();
+                done();
+            } catch (error) {
+                dateNowStub.restore();
+                done(error);
+            }
+        }, 50);
     });
 
     it('#needToLoadSession obeys rules', () => {
