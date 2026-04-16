@@ -29,7 +29,16 @@ export const enum CLINICAL_ATTRIBUTE_ID_ENUM {
     MSI_SCORE = 'MSI_SCORE',
     MSI_TYPE = 'MSI_TYPE',
     TMB_SCORE = 'CVR_TMB_SCORE',
+    TMB_NONSYNONYMOUS = 'TMB_NONSYNONYMOUS',
 }
+
+// Priority-ordered list of supported TMB clinical attribute IDs.
+// CVR_TMB_SCORE is preferred (MSK-specific); TMB_NONSYNONYMOUS is the
+// public/general equivalent used by non-MSK studies.
+export const TMB_CLINICAL_ATTRIBUTE_IDS = [
+    CLINICAL_ATTRIBUTE_ID_ENUM.TMB_SCORE,
+    CLINICAL_ATTRIBUTE_ID_ENUM.TMB_NONSYNONYMOUS,
+] as const;
 
 export const enum MIS_TYPE_VALUE {
     INSTABLE = 'Instable',

@@ -11,6 +11,8 @@ import {
     generateMutationIdByEvent,
     generateMutationIdByGeneAndProteinChangeAndEvent,
     getOncoKbOncogenic,
+    getSampleClinicalDataMapByThreshold,
+    getSampleTmbClinicalData,
     makeStudyToCancerTypeMap,
     mergeMutationsIncludingUncalled,
     noGenePanelUsed,
@@ -1432,6 +1434,149 @@ describe('StoreUtils', () => {
             ];
 
             assert.equal(findMrnaRankMolecularProfileId(list), null);
+        });
+    });
+
+    describe('getSampleClinicalDataMapByThreshold', () => {
+        const clinicalData = [
+            {
+                sampleId: 's1',
+                clinicalAttributeId: 'CVR_TMB_SCORE',
+                value: '15',
+            },
+            {
+                sampleId: 's2',
+                clinicalAttributeId: 'TMB_NONSYNONYMOUS',
+                value: '12',
+            },
+            {
+                sampleId: 's3',
+                clinicalAttributeId: 'CVR_TMB_SCORE',
+                value: '5',
+            },
+            {
+                sampleId: 's4',
+                clinicalAttributeId: 'MSI_SCORE',
+                value: '20',
+            },
+        ] as ClinicalData[];
+
+        it('returns matching samples when passed a single attribute ID string', () => {
+            const result = getSampleClinicalDataMapByThreshold(
+                clinicalData,
+                'CVR_TMB_SCORE',
+                10
+            );
+            assert.deepEqual(Object.keys(result), ['s1']);
+            assert.equal(result['s1'].value, '15');
+        });
+
+        it('returns matching samples when passed an array of attribute IDs', () => {
+            const result = getSampleClinicalDataMapByThreshold(
+                clinicalData,
+                ['CVR_TMB_SCORE', 'TMB_NONSYNONYMOUS'],
+                10
+            );
+            assert.deepEqual(Object.keys(result).sort(), ['s1', 's2']);
+        });
+
+        it('excludes samples below the threshold', () => {
+            const result = getSampleClinicalDataMapByThreshold(
+                clinicalData,
+                ['CVR_TMB_SCORE', 'TMB_NONSYNONYMOUS'],
+                10
+            );
+            assert.notProperty(result, 's3');
+        });
+
+        it('does not match unrelated attribute IDs', () => {
+            const result = getSampleClinicalDataMapByThreshold(
+                clinicalData,
+                ['CVR_TMB_SCORE', 'TMB_NONSYNONYMOUS'],
+                10
+            );
+            assert.notProperty(result, 's4');
+        });
+
+        it('returns empty map when no samples meet the threshold', () => {
+            const result = getSampleClinicalDataMapByThreshold(
+                clinicalData,
+                ['CVR_TMB_SCORE', 'TMB_NONSYNONYMOUS'],
+                100
+            );
+            assert.deepEqual(result, {});
+        });
+    });
+
+    describe('getSampleTmbClinicalData', () => {
+        it('returns CVR_TMB_SCORE entry when only CVR_TMB_SCORE is present', () => {
+            const clinicalData = [
+                {
+                    sampleId: 's1',
+                    clinicalAttributeId: 'CVR_TMB_SCORE',
+                    value: '15',
+                },
+            ] as ClinicalData[];
+            const result = getSampleTmbClinicalData(clinicalData, 's1');
+            assert.isDefined(result);
+            assert.equal(result!.clinicalAttributeId, 'CVR_TMB_SCORE');
+            assert.equal(result!.value, '15');
+        });
+
+        it('returns TMB_NONSYNONYMOUS entry when only TMB_NONSYNONYMOUS is present', () => {
+            const clinicalData = [
+                {
+                    sampleId: 's1',
+                    clinicalAttributeId: 'TMB_NONSYNONYMOUS',
+                    value: '12',
+                },
+            ] as ClinicalData[];
+            const result = getSampleTmbClinicalData(clinicalData, 's1');
+            assert.isDefined(result);
+            assert.equal(result!.clinicalAttributeId, 'TMB_NONSYNONYMOUS');
+            assert.equal(result!.value, '12');
+        });
+
+        it('prefers CVR_TMB_SCORE over TMB_NONSYNONYMOUS when both are present', () => {
+            const clinicalData = [
+                {
+                    sampleId: 's1',
+                    clinicalAttributeId: 'TMB_NONSYNONYMOUS',
+                    value: '12',
+                },
+                {
+                    sampleId: 's1',
+                    clinicalAttributeId: 'CVR_TMB_SCORE',
+                    value: '15',
+                },
+            ] as ClinicalData[];
+            const result = getSampleTmbClinicalData(clinicalData, 's1');
+            assert.isDefined(result);
+            assert.equal(result!.clinicalAttributeId, 'CVR_TMB_SCORE');
+        });
+
+        it('returns undefined when no TMB attribute is present for the sample', () => {
+            const clinicalData = [
+                {
+                    sampleId: 's1',
+                    clinicalAttributeId: 'MSI_SCORE',
+                    value: '5',
+                },
+            ] as ClinicalData[];
+            const result = getSampleTmbClinicalData(clinicalData, 's1');
+            assert.isUndefined(result);
+        });
+
+        it('returns undefined when clinical data is for a different sample', () => {
+            const clinicalData = [
+                {
+                    sampleId: 's2',
+                    clinicalAttributeId: 'CVR_TMB_SCORE',
+                    value: '15',
+                },
+            ] as ClinicalData[];
+            const result = getSampleTmbClinicalData(clinicalData, 's1');
+            assert.isUndefined(result);
         });
     });
 });
