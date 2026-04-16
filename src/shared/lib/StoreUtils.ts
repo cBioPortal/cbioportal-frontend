@@ -1711,15 +1711,17 @@ export function getSampleClinicalDataMapByThreshold(
     clinicalAttributeId: string | readonly string[],
     threshold: number
 ) {
-    const ids = Array.isArray(clinicalAttributeId)
-        ? (clinicalAttributeId as readonly string[])
-        : [clinicalAttributeId as string];
+    const ids = new Set<string>(
+        Array.isArray(clinicalAttributeId)
+            ? (clinicalAttributeId as readonly string[])
+            : [clinicalAttributeId as string]
+    );
     return _.reduce(
         clinicalData,
         (acc, next) => {
-            if (ids.includes(next.clinicalAttributeId)) {
+            if (ids.has(next.clinicalAttributeId)) {
                 const value = getNumericalClinicalDataValue(next);
-                if (value && value >= threshold) {
+                if (Number.isFinite(value) && value! >= threshold) {
                     acc[next.sampleId] = next;
                 }
             }
