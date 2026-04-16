@@ -735,4 +735,77 @@ describe('oncoprint', function() {
             );
         });
     });
+
+    describe('Open in Oncoprinter button', () => {
+        // Regression for a bug where the click handler awaited a promise
+        // (mutationsByGene) that is not needed for the Oncoprinter launch.
+        // When that promise stayed pending — which happened in production for
+        // many studies — window.open was never called and the button did
+        // nothing.
+        it('calls window.open with the Oncoprinter URL and posts genetic data', async () => {
+            await goToUrlAndSetLocalStorage(
+                `${CBIOPORTAL_URL}/results?cancer_study_list=coadread_tcga_pub&cancer_study_id=coadread_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&Z_SCORE_THRESHOLD=2.0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS%20NRAS%20BRAF&gene_set_choice=user-defined-list`
+            );
+            await waitForOncoprint();
+
+            // Stub window.open so we capture the call without actually opening
+            // a new tab, and so we can observe the clientPostedData assignment.
+            await browser.execute(() => {
+                window.__openedOncoprinterUrls = [];
+                window.__openedOncoprinterPostedData = null;
+                window.open = function(url) {
+                    window.__openedOncoprinterUrls.push(url);
+                    const fake = {};
+                    Object.defineProperty(fake, 'clientPostedData', {
+                        set(v) {
+                            window.__openedOncoprinterPostedData = v;
+                        },
+                        get() {
+                            return window.__openedOncoprinterPostedData;
+                        },
+                    });
+                    return fake;
+                };
+            });
+
+            // Open the Download dropdown, then click "Open in Oncoprinter".
+            // The button is identified by the EVENT_KEY value (`29.1`).
+            await clickElement('#downloadDropdownButton');
+            await clickElement('button[name="29.1"]');
+
+            // If the handler is broken and never reaches window.open, this
+            // waitUntil times out — the assertion the regression needs.
+            await browser.waitUntil(
+                async () => {
+                    const urls = await browser.execute(
+                        () => window.__openedOncoprinterUrls
+                    );
+                    return urls && urls.length > 0;
+                },
+                {
+                    timeout: 15000,
+                    timeoutMsg:
+                        'window.open was never called after clicking "Open in Oncoprinter"',
+                }
+            );
+
+            const openedUrl = await browser.execute(
+                () => window.__openedOncoprinterUrls[0]
+            );
+            assert.match(
+                openedUrl,
+                /\/oncoprinter(\?|#|$)/,
+                `expected opened URL to target /oncoprinter, got: ${openedUrl}`
+            );
+
+            const posted = await browser.execute(
+                () => window.__openedOncoprinterPostedData
+            );
+            assert(posted, 'clientPostedData should have been set');
+            assert(
+                typeof posted.genetic === 'string' && posted.genetic.length > 0,
+                'posted genetic input should be non-empty'
+            );
+        });
+    });
 });

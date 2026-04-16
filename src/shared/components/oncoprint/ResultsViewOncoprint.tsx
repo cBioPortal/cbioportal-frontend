@@ -1078,7 +1078,6 @@ export default class ResultsViewOncoprint extends React.Component<
                                 this.genesetHeatmapTracks,
                                 this.props.store
                                     .clinicalAttributeIdToClinicalAttribute,
-                                this.props.store.mutationsByGene,
                                 this.props.store.studyIds,
                             ],
                             (
@@ -1090,9 +1089,6 @@ export default class ResultsViewOncoprint extends React.Component<
                                 genesetHeatmapTracks: IGenesetHeatmapTrackSpec[],
                                 attributeIdToAttribute: {
                                     [attributeId: string]: ClinicalAttribute;
-                                },
-                                mutationsByGenes: {
-                                    [gene: string]: Mutation[];
                                 },
                                 studyIds: string[]
                             ) => {
@@ -1147,7 +1143,16 @@ export default class ResultsViewOncoprint extends React.Component<
                                     buildCBioPortalPageUrl('/oncoprinter')
                                 ) as any;
 
-                                // extra data that needs to be send for jupyter-notebook
+                                // Optional enrichment for the Jupyter-notebook
+                                // button on the Oncoprinter page. Read
+                                // opportunistically so the Oncoprinter launch
+                                // is not blocked by a still-pending
+                                // mutationsByGene query.
+                                const mutationsByGenes: {
+                                    [gene: string]: Mutation[];
+                                } =
+                                    this.props.store.mutationsByGene.result ||
+                                    {};
                                 const allMutations = Object.values(
                                     mutationsByGenes
                                 ).reduce(
@@ -1464,8 +1469,7 @@ export default class ResultsViewOncoprint extends React.Component<
 
     private onDeleteGeneticTrack(trackIndex: number): void {
         if (!this.isHidden) {
-            const currentGeneList =
-                this.urlWrapper.query.gene_list || '';
+            const currentGeneList = this.urlWrapper.query.gene_list || '';
             // Derive the genes to remove from the parsed gene_list at
             // trackIndex — this correctly handles merged tracks where the
             // display label is not a plain space-separated gene list.
