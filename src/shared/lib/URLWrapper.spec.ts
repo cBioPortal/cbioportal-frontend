@@ -973,49 +973,41 @@ describe('URLWrapper', () => {
         assert.equal(wrapper.query.cancer_study_list, '789');
     });
 
-    it('handles new session before old session finished saving', done => {
+    it('handles new session before old session finished saving', async () => {
         wrapper.urlCharThresholdForSession = 0;
         wrapper.sessionEnabled = true;
 
         let saveSessionStub = sinon.stub(wrapper, 'saveRemoteSession');
+        const saveSessionPromises: Array<Promise<{ id: string }>> = [];
 
-        saveSessionStub.callsFake(function(sessionData) {
-            return new Promise(resolve => {
+        saveSessionStub.callsFake(function() {
+            const saveSessionPromise = new Promise<{ id: string }>(resolve => {
+                const isFirstCall = saveSessionStub.callCount === 1;
                 setTimeout(() => {
-                    return resolve({ id: 'sessionId1' });
-                }, 10);
+                    return resolve({
+                        id: isFirstCall ? 'sessionId1' : 'sessionId2',
+                    });
+                }, isFirstCall ? 10 : 5);
             });
+            saveSessionPromises.push(saveSessionPromise);
+            return saveSessionPromise;
         });
 
         wrapper.updateURL({ gene_list: '12345' });
 
         assert.isTrue(saveSessionStub.called);
 
-        saveSessionStub.callsFake(function(sessionData) {
-            return new Promise(resolve => {
-                setTimeout(() => {
-                    return resolve({ id: 'sessionId2' });
-                }, 5);
-            });
-        });
-
         wrapper.updateURL({ gene_list: '54321' });
 
         assert.isTrue(saveSessionStub.calledTwice);
+        await Promise.all(saveSessionPromises);
 
         // should reflect sequence of sessions, not response
         // i.e. first session should have been cancelled by second
         // even though second response sooner
-        setTimeout(() => {
-            try {
-                assert.equal(wrapper.sessionId, 'sessionId2');
-                assert.equal(wrapper.query.gene_list, '54321');
-                assert.equal(routingStore.query.session_id, 'sessionId2');
-                done();
-            } catch (error) {
-                done(error);
-            }
-        }, 50);
+        assert.equal(wrapper.sessionId, 'sessionId2');
+        assert.equal(wrapper.query.gene_list, '54321');
+        assert.equal(routingStore.query.session_id, 'sessionId2');
     });
 
     it('#needToLoadSession obeys rules', () => {

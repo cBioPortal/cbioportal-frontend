@@ -53,7 +53,7 @@ export default class URLWrapper<
     QueryParamsType extends { [key: string]: string | Object | undefined }
 > {
     protected _query: QueryParamsType;
-    private nextSessionRequestTimestamp = 0;
+    private nextSessionRequestToken = 0;
     public reactionDisposer: IReactionDisposer;
     protected pathContext: string;
     protected readonly properties: Property<QueryParamsType>[];
@@ -335,17 +335,18 @@ export default class URLWrapper<
         // otherwise just update the URL
         if (inSessionMode) {
             if (sessionParametersChanged) {
-                /* keep a timestamp to make sure
+                /* keep an ordering token to make sure
                     that async session response matches the
-                    current session and hasn't been invalidated by subsequent session
+                    current session and hasn't been invalidated by a subsequent session
+                    (stored in localSessionData.timeStamp for backwards compatibility)
                 */
-                const timeStamp = ++this.nextSessionRequestTimestamp;
+                const sessionRequestToken = ++this.nextSessionRequestToken;
                 this.localSessionData = {
                     id: 'pending',
                     query: this.stringifyProps(paramsMap.sessionProps),
                     path: path || this.pathName,
                     version: 3,
-                    timeStamp,
+                    timeStamp: sessionRequestToken,
                 };
 
                 // we need to make a new session
@@ -368,9 +369,12 @@ export default class URLWrapper<
                     this.stringifyProps(paramsMap.sessionProps)
                 ).then(
                     action((data: any) => {
-                        // Make sure that timestamp
+                        // Make sure that ordering token
                         //  on the session hasn't been changed since it started
-                        if (timeStamp !== this.localSessionData?.timeStamp) {
+                        if (
+                            sessionRequestToken !==
+                            this.localSessionData?.timeStamp
+                        ) {
                             return;
                         }
 
