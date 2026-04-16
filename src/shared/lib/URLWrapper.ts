@@ -53,7 +53,7 @@ export default class URLWrapper<
     QueryParamsType extends { [key: string]: string | Object | undefined }
 > {
     protected _query: QueryParamsType;
-    private nextSessionRequestTimeStamp = 0;
+    private nextSessionRequestTimestamp = 0;
     public reactionDisposer: IReactionDisposer;
     protected pathContext: string;
     protected readonly properties: Property<QueryParamsType>[];
@@ -339,7 +339,7 @@ export default class URLWrapper<
                     that async session response matches the
                     current session and hasn't been invalidated by subsequent session
                 */
-                const timeStamp = ++this.nextSessionRequestTimeStamp;
+                const timeStamp = ++this.nextSessionRequestTimestamp;
                 this.localSessionData = {
                     id: 'pending',
                     query: this.stringifyProps(paramsMap.sessionProps),
