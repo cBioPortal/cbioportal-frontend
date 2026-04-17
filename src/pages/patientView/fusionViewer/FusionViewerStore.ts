@@ -31,6 +31,12 @@ export class FusionViewerStore {
         string
     > = observable.set<string>();
 
+    // Click-to-activate: the transcript that drives the fusion product +
+    // protein domain track on each side. Defaults to FORTE, falls back
+    // when invalidated by a fusion switch or refetch.
+    @observable public activeTranscript5pId: string = '';
+    @observable public activeTranscript3pId: string = '';
+
     // Genome build selection (GRCh38 or GRCh37)
     @observable public genomeBuild: GenomeBuild = 'GRCh38';
 
@@ -164,6 +170,16 @@ export class FusionViewerStore {
         }
     }
 
+    @action
+    public setActiveTranscript5p(transcriptId: string): void {
+        this.activeTranscript5pId = transcriptId;
+    }
+
+    @action
+    public setActiveTranscript3p(transcriptId: string): void {
+        this.activeTranscript3pId = transcriptId;
+    }
+
     // -----------------------------------------------------------------------
     // Computed
     // -----------------------------------------------------------------------
@@ -215,6 +231,22 @@ export class FusionViewerStore {
     public get selectedTranscript3p(): TranscriptData | undefined {
         return this.gene2Transcripts.find(
             t => t.transcriptId === this.selectedTranscript3pId
+        );
+    }
+
+    @computed
+    public get activeTranscript5p(): TranscriptData | undefined {
+        if (!this.activeTranscript5pId) return undefined;
+        return this.gene1Transcripts.find(
+            t => t.transcriptId === this.activeTranscript5pId
+        );
+    }
+
+    @computed
+    public get activeTranscript3p(): TranscriptData | undefined {
+        if (!this.activeTranscript3pId) return undefined;
+        return this.gene2Transcripts.find(
+            t => t.transcriptId === this.activeTranscript3pId
         );
     }
 
