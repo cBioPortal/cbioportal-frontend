@@ -168,6 +168,21 @@ export async function setServerConfiguration(
     }, props);
 }
 
+/**
+ * Set a checkbox to the desired state, clicking only if its current
+ * state doesn't match. Mirrors the wdio `setCheckboxChecked` helper.
+ */
+export async function setCheckboxChecked(
+    page: Page,
+    checked: boolean,
+    selector: string
+) {
+    const cb = page.locator(selector);
+    await cb.waitFor({ state: 'visible' });
+    const isChecked = await cb.isChecked();
+    if (isChecked !== checked) await cb.click();
+}
+
 /** Wait for the comparison-tab overlap chart to render. */
 export async function waitForGroupComparisonTabOpen(
     page: Page,
