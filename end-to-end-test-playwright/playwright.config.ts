@@ -22,6 +22,12 @@ export default defineConfig({
 
     snapshotPathTemplate: `{testDir}/${SNAPSHOT_DIR}/{testFilePath}/{arg}{ext}`,
 
+    // Some screenshot tests (group comparison enrichments, oncoprint
+    // tracks, pathway mapper) include long backend round-trips followed
+    // by stable-frame waits — give them comfortable headroom over the
+    // default 30s.
+    timeout: 120_000,
+
     expect: {
         toHaveScreenshot: {
             maxDiffPixelRatio: 0.01,
