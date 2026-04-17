@@ -577,5 +577,57 @@ describe('FusionViewerStore', () => {
 
             assert.equal(store.activeTranscript3pId, 'ENST_3P_FORTE');
         });
+
+        it('toggleTranscript5p falls back activeTranscript5pId when un-checking the active one', async () => {
+            const forteT = makeTranscript({
+                transcriptId: 'ENST_FORTE',
+                isForteSelected: true,
+            });
+            const otherT = makeTranscript({
+                transcriptId: 'ENST_OTHER',
+                isForteSelected: false,
+            });
+            mockFetchTranscripts.mockResolvedValue([forteT, otherT]);
+
+            store.setStructuralVariants([makeFusion({ id: 'f1' })] as any);
+            await new Promise(r => setTimeout(r, 50));
+
+            store.selectedTranscript5pIds.add('ENST_OTHER');
+            store.setActiveTranscript5p('ENST_OTHER');
+
+            // Un-check the currently-active transcript
+            store.toggleTranscript5p('ENST_OTHER');
+
+            assert.isFalse(store.selectedTranscript5pIds.has('ENST_OTHER'));
+            assert.equal(store.activeTranscript5pId, 'ENST_FORTE');
+        });
+
+        it('toggleTranscript3p falls back activeTranscript3pId when un-checking the active one', async () => {
+            const forte5p = makeTranscript({
+                transcriptId: 'ENST_5P',
+                isForteSelected: true,
+            });
+            const forte3p = makeTranscript({
+                transcriptId: 'ENST_3P_FORTE',
+                isForteSelected: true,
+            });
+            const other3p = makeTranscript({
+                transcriptId: 'ENST_3P_OTHER',
+                isForteSelected: false,
+            });
+            mockFetchTranscripts
+                .mockResolvedValueOnce([forte5p])
+                .mockResolvedValueOnce([forte3p, other3p]);
+
+            store.setStructuralVariants([makeFusion({ id: 'f1' })] as any);
+            await new Promise(r => setTimeout(r, 50));
+
+            store.selectedTranscript3pIds.add('ENST_3P_OTHER');
+            store.setActiveTranscript3p('ENST_3P_OTHER');
+
+            store.toggleTranscript3p('ENST_3P_OTHER');
+
+            assert.equal(store.activeTranscript3pId, 'ENST_3P_FORTE');
+        });
     });
 });
