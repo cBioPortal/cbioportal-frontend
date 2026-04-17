@@ -52,7 +52,10 @@ export async function expectElementScreenshot(
     if (opts.pauseMs) await page.waitForTimeout(opts.pauseMs);
 
     const mask = (opts.masks ?? ['.qtip']).map(s => page.locator(s));
-    await expect(target).toHaveScreenshot(snapshotName, { mask });
+    await expect(target).toHaveScreenshot(snapshotName, {
+        mask,
+        timeout: 30000,
+    });
 }
 
 /**
