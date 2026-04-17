@@ -167,6 +167,13 @@ export class FusionViewerStore {
             // Don't allow deselecting the last one
             if (this.selectedTranscript5pIds.size > 1) {
                 this.selectedTranscript5pIds.delete(transcriptId);
+                // If the active driver was just un-checked, fall back.
+                if (this.activeTranscript5pId === transcriptId) {
+                    this.activeTranscript5pId = resolveActiveId(
+                        '',
+                        this.gene1Transcripts
+                    );
+                }
             }
         } else {
             this.selectedTranscript5pIds.add(transcriptId);
@@ -178,6 +185,12 @@ export class FusionViewerStore {
         if (this.selectedTranscript3pIds.has(transcriptId)) {
             if (this.selectedTranscript3pIds.size > 1) {
                 this.selectedTranscript3pIds.delete(transcriptId);
+                if (this.activeTranscript3pId === transcriptId) {
+                    this.activeTranscript3pId = resolveActiveId(
+                        '',
+                        this.gene2Transcripts
+                    );
+                }
             }
         } else {
             this.selectedTranscript3pIds.add(transcriptId);
