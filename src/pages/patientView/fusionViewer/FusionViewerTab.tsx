@@ -88,6 +88,20 @@ export class FusionViewerTab extends React.Component<IFusionViewerTabProps> {
                                 userTranscripts3p={
                                     this.store.allSelectedTranscripts3p
                                 }
+                                activeTranscript5p={
+                                    this.store.activeTranscript5p ||
+                                    this.store.forteTranscript5p
+                                }
+                                activeTranscript3p={
+                                    this.store.activeTranscript3p ||
+                                    this.store.forteTranscript3p
+                                }
+                                onActivate5p={id =>
+                                    this.store.setActiveTranscript5p(id)
+                                }
+                                onActivate3p={id =>
+                                    this.store.setActiveTranscript3p(id)
+                                }
                             />
                         ) : (
                             <div
