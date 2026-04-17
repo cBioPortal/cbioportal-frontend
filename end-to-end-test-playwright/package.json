@@ -10,6 +10,8 @@
     "test": "playwright test",
     "test:update": "playwright test --update-snapshots",
     "test:ui": "playwright test --ui",
+    "test:docker": "./scripts/docker-test.sh",
+    "test:docker:update": "./scripts/docker-test.sh --update-snapshots",
     "report": "playwright show-report"
   },
   "keywords": [],
