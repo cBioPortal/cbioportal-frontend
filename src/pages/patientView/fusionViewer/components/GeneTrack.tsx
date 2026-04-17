@@ -109,6 +109,20 @@ const COORD_FONT_SIZE = 9;
 const TRACK_PADDING = 10;
 const EXON_LABEL_OFFSET = 9; // px gap between exon bottom and E-number label
 
+// Active-row outline + "DRIVING FUSION" badge styling
+const ACTIVE_COLOR = '#e03131';
+const ACTIVE_OUTLINE_DASH = '5 3';
+const ACTIVE_OUTLINE_STROKE_WIDTH = 2;
+const ACTIVE_OUTLINE_RX = 3;
+const ACTIVE_OUTLINE_X_PAD = 3;
+const ACTIVE_OUTLINE_Y_PAD = 4;
+const ACTIVE_OUTLINE_BOTTOM_PAD = 2; // extra height beyond rowHeight
+const BADGE_WIDTH = 74;
+const BADGE_HEIGHT = 12;
+const BADGE_Y_OFFSET = -14;
+const BADGE_TEXT_Y_OFFSET = 9; // baseline offset within badge rect
+const BADGE_LABEL = 'DRIVING FUSION';
+
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -293,20 +307,20 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
                 <rect
                     key={`active-outline-${transcript.transcriptId}`}
                     data-testid={`gene-track-active-outline-${transcript.transcriptId}`}
-                    x={drawX - 3}
-                    y={yPos - 4}
-                    width={drawWidth + 6}
-                    height={rowHeight + 2}
+                    x={drawX - ACTIVE_OUTLINE_X_PAD}
+                    y={yPos - ACTIVE_OUTLINE_Y_PAD}
+                    width={drawWidth + 2 * ACTIVE_OUTLINE_X_PAD}
+                    height={rowHeight + ACTIVE_OUTLINE_BOTTOM_PAD}
                     fill="none"
-                    stroke={'#e03131'}
-                    strokeWidth={2}
-                    strokeDasharray="5 3"
-                    rx={3}
+                    stroke={ACTIVE_COLOR}
+                    strokeWidth={ACTIVE_OUTLINE_STROKE_WIDTH}
+                    strokeDasharray={ACTIVE_OUTLINE_DASH}
+                    rx={ACTIVE_OUTLINE_RX}
                     style={{ pointerEvents: 'none' }}
                 />
             );
-            const badgeX = drawX + drawWidth - 74;
-            const badgeY = yPos - 14;
+            const badgeX = Math.max(drawX, drawX + drawWidth - BADGE_WIDTH);
+            const badgeY = yPos + BADGE_Y_OFFSET;
             elements.push(
                 <g
                     key={`badge-${transcript.transcriptId}`}
@@ -316,20 +330,20 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
                     <rect
                         x={badgeX}
                         y={badgeY}
-                        width={74}
-                        height={12}
+                        width={BADGE_WIDTH}
+                        height={BADGE_HEIGHT}
                         rx={2}
-                        fill="#e03131"
+                        fill={ACTIVE_COLOR}
                     />
                     <text
-                        x={badgeX + 37}
-                        y={badgeY + 9}
+                        x={badgeX + BADGE_WIDTH / 2}
+                        y={badgeY + BADGE_TEXT_Y_OFFSET}
                         textAnchor="middle"
                         fontSize={8}
                         fontWeight={700}
                         fill="#fff"
                     >
-                        DRIVING FUSION
+                        {BADGE_LABEL}
                     </text>
                 </g>
             );
@@ -338,10 +352,10 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
         const hit = (
             <rect
                 key={`hit-${transcript.transcriptId}`}
-                x={drawX - 3}
-                y={yPos - 4}
-                width={drawWidth + 6}
-                height={rowHeight + 2}
+                x={drawX - ACTIVE_OUTLINE_X_PAD}
+                y={yPos - ACTIVE_OUTLINE_Y_PAD}
+                width={drawWidth + 2 * ACTIVE_OUTLINE_X_PAD}
+                height={rowHeight + ACTIVE_OUTLINE_BOTTOM_PAD}
                 fill="transparent"
                 style={{ pointerEvents: 'all' }}
             />
