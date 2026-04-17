@@ -46,6 +46,14 @@ export interface FusionDiagramSVGProps {
     userTranscripts5p?: TranscriptData[];
     /** Multiple user-selected transcripts for 3' gene */
     userTranscripts3p?: TranscriptData[];
+    /** Currently-active 5' transcript that drives the fusion product + domains. */
+    activeTranscript5p: TranscriptData;
+    /** Currently-active 3' transcript (omit when gene2 is null). */
+    activeTranscript3p?: TranscriptData;
+    /** Called when the user clicks a 5' track to activate it. */
+    onActivate5p: (transcriptId: string) => void;
+    /** Called when the user clicks a 3' track to activate it. */
+    onActivate3p: (transcriptId: string) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -54,7 +62,15 @@ export interface FusionDiagramSVGProps {
 @observer
 export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
     render() {
-        const { fusion, forteTranscript5p, forteTranscript3p } = this.props;
+        const {
+            fusion,
+            forteTranscript5p,
+            forteTranscript3p,
+            activeTranscript5p,
+            activeTranscript3p,
+            onActivate5p,
+            onActivate3p,
+        } = this.props;
 
         const userTranscripts5p = this.props.userTranscripts5p || [];
         const userTranscripts3p = this.props.userTranscripts3p || [];
@@ -115,11 +131,11 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
         const fusionProductHeight = getFusionProductHeight();
 
         const hasDomains =
-            (forteTranscript5p.domains &&
-                forteTranscript5p.domains.length > 0) ||
-            (forteTranscript3p &&
-                forteTranscript3p.domains &&
-                forteTranscript3p.domains.length > 0);
+            (activeTranscript5p.domains &&
+                activeTranscript5p.domains.length > 0) ||
+            (activeTranscript3p &&
+                activeTranscript3p.domains &&
+                activeTranscript3p.domains.length > 0);
         const domainTrackHeight = hasDomains
             ? getProteinDomainTrackHeight()
             : 0;
@@ -175,16 +191,16 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
         };
 
         const bp5pX = computeBreakpointX(
-            forteTranscript5p,
+            activeTranscript5p,
             gene1.position,
             gene5pX,
             GENE_TRACK_WIDTH
         );
 
         const bp3pX =
-            gene2 && forteTranscript3p
+            gene2 && activeTranscript3p
                 ? computeBreakpointX(
-                      forteTranscript3p,
+                      activeTranscript3p,
                       gene2.position,
                       gene3pX,
                       GENE_TRACK_WIDTH
@@ -194,8 +210,8 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
         const junctionX = computeJunctionX(
             gene1,
             gene2,
-            forteTranscript5p,
-            forteTranscript3p,
+            activeTranscript5p,
+            activeTranscript3p,
             fusionProductX,
             fusionProductWidth
         );
@@ -227,6 +243,8 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
                     is5Prime={true}
                     trackHeight={geneTrackHeight}
                     retainedExonNumbers={retained5pNums}
+                    activeTranscriptId={activeTranscript5p.transcriptId}
+                    onActivateTranscript={onActivate5p}
                 />
 
                 {/* 3-prime gene track or intergenic placeholder */}
@@ -246,6 +264,12 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
                         is5Prime={false}
                         trackHeight={geneTrackHeight}
                         retainedExonNumbers={retained3pNums}
+                        activeTranscriptId={
+                            activeTranscript3p
+                                ? activeTranscript3p.transcriptId
+                                : ''
+                        }
+                        onActivateTranscript={onActivate3p}
                     />
                 ) : (
                     <g>
@@ -287,8 +311,8 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
                 <FusionProduct
                     gene1={gene1}
                     gene2={gene2}
-                    forteTranscript5p={forteTranscript5p}
-                    forteTranscript3p={forteTranscript3p}
+                    forteTranscript5p={activeTranscript5p}
+                    forteTranscript3p={activeTranscript3p}
                     note={fusion.note}
                     x={fusionProductX}
                     y={fusionProductY}
@@ -298,8 +322,8 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
                 {/* Protein domain track */}
                 {hasDomains && (
                     <ProteinDomainTrack
-                        forteTranscript5p={forteTranscript5p}
-                        forteTranscript3p={forteTranscript3p}
+                        forteTranscript5p={activeTranscript5p}
+                        forteTranscript3p={activeTranscript3p}
                         x={fusionProductX}
                         y={domainTrackY}
                         width={fusionProductWidth}
