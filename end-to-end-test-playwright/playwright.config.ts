@@ -20,7 +20,7 @@ export default defineConfig({
     workers: 1,
     reporter: [['list'], ['html', { open: 'never' }]],
 
-    snapshotPathTemplate: `{testFileDir}/${SNAPSHOT_DIR}/{testFileName}/{arg}{ext}`,
+    snapshotPathTemplate: `{testDir}/${SNAPSHOT_DIR}/{testFilePath}/{arg}{ext}`,
 
     expect: {
         toHaveScreenshot: {
