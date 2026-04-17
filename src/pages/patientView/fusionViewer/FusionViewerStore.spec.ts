@@ -477,5 +477,27 @@ describe('FusionViewerStore', () => {
         it('activeTranscript5p returns undefined when id is empty', () => {
             assert.isUndefined(store.activeTranscript5p);
         });
+
+        it('selectFusion resets activeTranscript5pId and activeTranscript3pId to empty', () => {
+            const f = makeFusion({ id: 'f1' });
+            store.structuralVariants = [f] as any;
+            store.activeTranscript5pId = 'ENST_STALE_5';
+            store.activeTranscript3pId = 'ENST_STALE_3';
+
+            store.selectFusion('f1');
+
+            assert.equal(store.activeTranscript5pId, '');
+            assert.equal(store.activeTranscript3pId, '');
+        });
+
+        it('setStructuralVariants clears active IDs along with selections', () => {
+            store.activeTranscript5pId = 'ENST_STALE';
+            store.activeTranscript3pId = 'ENST_STALE_3';
+
+            store.setStructuralVariants([] as any);
+
+            assert.equal(store.activeTranscript5pId, '');
+            assert.equal(store.activeTranscript3pId, '');
+        });
     });
 });
