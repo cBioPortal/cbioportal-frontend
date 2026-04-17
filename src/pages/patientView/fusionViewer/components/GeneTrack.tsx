@@ -93,6 +93,10 @@ export interface GeneTrackProps {
     /** Exon numbers (by `exon.number`) that are retained in the fusion product.
      *  When undefined, all exons render as normal (no highlighting). */
     retainedExonNumbers?: Set<number>;
+    /** Transcript ID currently driving the fusion product (active). */
+    activeTranscriptId?: string;
+    /** Called with a transcript ID when the user clicks its row to activate it. */
+    onActivateTranscript?: (transcriptId: string) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -124,6 +128,8 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
     is5Prime,
     trackHeight,
     retainedExonNumbers,
+    activeTranscriptId,
+    onActivateTranscript,
 }) => {
     // Resolve: prefer array prop, fall back to single
     const userTranscripts: TranscriptData[] = userTranscriptsProp
@@ -170,7 +176,8 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
         yPos: number,
         opacity: number,
         strokeWidth: number,
-        labelText?: string
+        labelText?: string,
+        rowHeight: number = USER_TRACK_HEIGHT
     ) => {
         const intronY = yPos + INTRON_Y_OFFSET;
         const elements: React.ReactNode[] = [];
@@ -279,7 +286,83 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
             );
         }
 
-        return elements;
+        const isActive = transcript.transcriptId === activeTranscriptId;
+
+        if (isActive) {
+            elements.unshift(
+                <rect
+                    key={`active-outline-${transcript.transcriptId}`}
+                    data-testid={`gene-track-active-outline-${transcript.transcriptId}`}
+                    x={drawX - 3}
+                    y={yPos - 4}
+                    width={drawWidth + 6}
+                    height={rowHeight + 2}
+                    fill="none"
+                    stroke={'#e03131'}
+                    strokeWidth={2}
+                    strokeDasharray="5 3"
+                    rx={3}
+                    style={{ pointerEvents: 'none' }}
+                />
+            );
+            const badgeX = drawX + drawWidth - 74;
+            const badgeY = yPos - 14;
+            elements.push(
+                <g
+                    key={`badge-${transcript.transcriptId}`}
+                    data-testid={`gene-track-badge-${transcript.transcriptId}`}
+                    style={{ pointerEvents: 'none' }}
+                >
+                    <rect
+                        x={badgeX}
+                        y={badgeY}
+                        width={74}
+                        height={12}
+                        rx={2}
+                        fill="#e03131"
+                    />
+                    <text
+                        x={badgeX + 37}
+                        y={badgeY + 9}
+                        textAnchor="middle"
+                        fontSize={8}
+                        fontWeight={700}
+                        fill="#fff"
+                    >
+                        DRIVING FUSION
+                    </text>
+                </g>
+            );
+        }
+
+        const hit = (
+            <rect
+                key={`hit-${transcript.transcriptId}`}
+                x={drawX - 3}
+                y={yPos - 4}
+                width={drawWidth + 6}
+                height={rowHeight + 2}
+                fill="transparent"
+                style={{ pointerEvents: 'all' }}
+            />
+        );
+
+        return (
+            <g
+                key={`row-${transcript.transcriptId}`}
+                data-testid={`gene-track-row-${transcript.transcriptId}`}
+                style={{
+                    cursor: onActivateTranscript ? 'pointer' : 'default',
+                }}
+                onClick={() =>
+                    onActivateTranscript &&
+                    onActivateTranscript(transcript.transcriptId)
+                }
+            >
+                {hit}
+                {elements}
+            </g>
+        );
     };
 
     // ---- Breakpoint line ----
@@ -365,7 +448,15 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
             )}
 
             {/* FORTE transcript */}
-            {renderTranscript(sortedForte, forteTranscript, forteY, 1.0, 2)}
+            {renderTranscript(
+                sortedForte,
+                forteTranscript,
+                forteY,
+                1.0,
+                2,
+                undefined,
+                FORTE_TRACK_HEIGHT
+            )}
 
             {/* User transcripts (stacked below FORTE) */}
             {userTranscripts.map((ut, index) => {
@@ -383,7 +474,8 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
                             utY,
                             opacity,
                             1,
-                            ut.displayName
+                            ut.displayName,
+                            USER_TRACK_HEIGHT
                         )}
                     </React.Fragment>
                 );
