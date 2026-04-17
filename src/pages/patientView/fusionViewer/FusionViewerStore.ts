@@ -61,6 +61,10 @@ export class FusionViewerStore {
         onResult: (result?: TranscriptData[]) => {
             if (!result) return;
             pruneAndFallback(this.selectedTranscript5pIds, result);
+            this.activeTranscript5pId = resolveActiveId(
+                this.activeTranscript5pId,
+                result
+            );
         },
         default: [],
     });
@@ -78,6 +82,10 @@ export class FusionViewerStore {
         onResult: (result?: TranscriptData[]) => {
             if (!result || !this.selectedFusion?.gene2) return;
             pruneAndFallback(this.selectedTranscript3pIds, result);
+            this.activeTranscript3pId = resolveActiveId(
+                this.activeTranscript3pId,
+                result
+            );
         },
         default: [],
     });
@@ -314,4 +322,18 @@ function pruneAndFallback(
         const forte = result.find(t => t.isForteSelected);
         selectedIds.add(forte ? forte.transcriptId : result[0].transcriptId);
     }
+}
+
+/**
+ * Ensure an active-transcript ID points to a transcript in `result`.
+ * If the current ID is empty or not present, pick the FORTE-selected
+ * transcript, else the first result, else leave as empty string.
+ */
+function resolveActiveId(currentId: string, result: TranscriptData[]): string {
+    if (result.length === 0) return '';
+    if (currentId && result.some(t => t.transcriptId === currentId)) {
+        return currentId;
+    }
+    const forte = result.find(t => t.isForteSelected);
+    return forte ? forte.transcriptId : result[0].transcriptId;
 }

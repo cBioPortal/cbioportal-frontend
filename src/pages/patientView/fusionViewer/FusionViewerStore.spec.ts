@@ -499,5 +499,83 @@ describe('FusionViewerStore', () => {
             assert.equal(store.activeTranscript5pId, '');
             assert.equal(store.activeTranscript3pId, '');
         });
+
+        it('gene1TranscriptsRemote.onResult sets activeTranscript5pId to FORTE when invalid', async () => {
+            const forteT = makeTranscript({
+                transcriptId: 'ENST_FORTE',
+                isForteSelected: true,
+            });
+            const otherT = makeTranscript({
+                transcriptId: 'ENST_OTHER',
+                isForteSelected: false,
+            });
+            mockFetchTranscripts.mockResolvedValue([otherT, forteT]);
+
+            store.setStructuralVariants([makeFusion({ id: 'f1' })] as any);
+            await new Promise(r => setTimeout(r, 50));
+
+            assert.equal(store.activeTranscript5pId, 'ENST_FORTE');
+        });
+
+        it('gene1TranscriptsRemote.onResult falls back to first transcript when no FORTE', async () => {
+            const t1 = makeTranscript({
+                transcriptId: 'ENST_FIRST',
+                isForteSelected: false,
+            });
+            const t2 = makeTranscript({
+                transcriptId: 'ENST_SECOND',
+                isForteSelected: false,
+            });
+            mockFetchTranscripts.mockResolvedValue([t1, t2]);
+
+            store.setStructuralVariants([makeFusion({ id: 'f1' })] as any);
+            await new Promise(r => setTimeout(r, 50));
+
+            assert.equal(store.activeTranscript5pId, 'ENST_FIRST');
+        });
+
+        it('gene1TranscriptsRemote.onResult backfills active ID after switching fusions', async () => {
+            const f1Forte = makeTranscript({
+                transcriptId: 'ENST_F1_FORTE',
+                isForteSelected: true,
+            });
+            const f2Forte = makeTranscript({
+                transcriptId: 'ENST_F2_FORTE',
+                isForteSelected: true,
+            });
+            mockFetchTranscripts.mockResolvedValueOnce([f1Forte]);
+
+            const f1 = makeFusion({ id: 'f1' });
+            const f2 = makeFusion({ id: 'f2' });
+            store.setStructuralVariants([f1, f2] as any);
+            await new Promise(r => setTimeout(r, 50));
+
+            assert.equal(store.activeTranscript5pId, 'ENST_F1_FORTE');
+
+            mockFetchTranscripts.mockResolvedValueOnce([f2Forte]);
+            store.selectFusion('f2');
+            await new Promise(r => setTimeout(r, 50));
+
+            assert.equal(store.activeTranscript5pId, 'ENST_F2_FORTE');
+        });
+
+        it('gene2TranscriptsRemote.onResult sets activeTranscript3pId to FORTE when invalid', async () => {
+            const forte5p = makeTranscript({
+                transcriptId: 'ENST_5P',
+                isForteSelected: true,
+            });
+            const forte3p = makeTranscript({
+                transcriptId: 'ENST_3P_FORTE',
+                isForteSelected: true,
+            });
+            mockFetchTranscripts
+                .mockResolvedValueOnce([forte5p])
+                .mockResolvedValueOnce([forte3p]);
+
+            store.setStructuralVariants([makeFusion({ id: 'f1' })] as any);
+            await new Promise(r => setTimeout(r, 50));
+
+            assert.equal(store.activeTranscript3pId, 'ENST_3P_FORTE');
+        });
     });
 });
