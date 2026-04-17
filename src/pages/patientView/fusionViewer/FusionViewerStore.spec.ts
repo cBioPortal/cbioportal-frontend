@@ -442,4 +442,40 @@ describe('FusionViewerStore', () => {
             assert.isTrue(store.selectedTranscript5pIds.has('ENST_FORTE'));
         });
     });
+
+    // -------------------------------------------------------------------
+    // active transcript observables & setters
+    // -------------------------------------------------------------------
+    describe('active transcript state', () => {
+        it('defaults activeTranscript5pId and activeTranscript3pId to empty string', () => {
+            assert.equal(store.activeTranscript5pId, '');
+            assert.equal(store.activeTranscript3pId, '');
+        });
+
+        it('setActiveTranscript5p updates activeTranscript5pId', () => {
+            store.setActiveTranscript5p('ENST_X');
+            assert.equal(store.activeTranscript5pId, 'ENST_X');
+        });
+
+        it('setActiveTranscript3p updates activeTranscript3pId', () => {
+            store.setActiveTranscript3p('ENST_Y');
+            assert.equal(store.activeTranscript3pId, 'ENST_Y');
+        });
+
+        it('activeTranscript5p computes from gene1Transcripts by activeTranscript5pId', async () => {
+            const t1 = makeTranscript({ transcriptId: 'ENST_A' });
+            const t2 = makeTranscript({ transcriptId: 'ENST_B' });
+            mockFetchTranscripts.mockResolvedValue([t1, t2]);
+
+            store.setStructuralVariants([makeFusion({ id: 'f1' })] as any);
+            await new Promise(r => setTimeout(r, 50));
+
+            store.setActiveTranscript5p('ENST_B');
+            assert.equal(store.activeTranscript5p!.transcriptId, 'ENST_B');
+        });
+
+        it('activeTranscript5p returns undefined when id is empty', () => {
+            assert.isUndefined(store.activeTranscript5p);
+        });
+    });
 });
