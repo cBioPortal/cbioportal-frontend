@@ -113,6 +113,8 @@ export class FusionViewerStore {
         this.selectedFusionId = '';
         this.selectedTranscript5pIds.clear();
         this.selectedTranscript3pIds.clear();
+        this.activeTranscript5pId = '';
+        this.activeTranscript3pId = '';
         const fusions = this.fusions;
         if (fusions.length > 0) {
             this.selectFusion(fusions[0].id);
@@ -129,6 +131,10 @@ export class FusionViewerStore {
         // Reset transcript selections
         this.selectedTranscript5pIds.clear();
         this.selectedTranscript3pIds.clear();
+
+        // Reset active drivers; they'll be backfilled by gene*TranscriptsRemote.onResult
+        this.activeTranscript5pId = '';
+        this.activeTranscript3pId = '';
 
         const default5pId = stripVersionSuffix(
             fusion.gene1.selectedTranscriptId
