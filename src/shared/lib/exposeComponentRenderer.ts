@@ -1,5 +1,6 @@
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
+import { flushSync } from 'react-dom';
+import { createRoot } from 'react-dom/client';
 
 export default function(
     name: string,
@@ -15,7 +16,10 @@ export default function(
         ): void => {
             let el = React.createElement(Comp as any, props);
 
-            ReactDOM.render(el, mountNode);
+            const root = createRoot(mountNode);
+            flushSync(() => {
+                root.render(el);
+            });
         };
     }
 }
