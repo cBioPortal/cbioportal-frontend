@@ -188,6 +188,10 @@ var config = {
                 },
                 { from: './src/shared/legacy/igv.css', to: 'reactapp/igv.css' },
                 {
+                    from: './src/shared/components/cellExplorerEmbed/vendor',
+                    to: 'reactapp/cell-explorer',
+                },
+                {
                     from: './src/globalStyles/prefixed-bootstrap.min.css.map',
                     to: 'reactapp/prefixed-bootstrap.min.css.map',
                 },

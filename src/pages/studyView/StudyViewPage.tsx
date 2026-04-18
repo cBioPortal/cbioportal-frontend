@@ -24,7 +24,7 @@ import {
 } from 'cbioportal-frontend-commons';
 import { PageLayout } from '../../shared/components/PageLayout/PageLayout';
 import IFrameLoader from '../../shared/components/iframeLoader/IFrameLoader';
-import IFramePostMessageLoader from '../../shared/components/iframeLoader/IFramePostMessageLoader';
+import CellExplorerEmbed from '../../shared/components/cellExplorerEmbed/CellExplorerEmbed';
 import { StudySummaryTab } from 'pages/studyView/tabs/SummaryTab';
 import StudyPageHeader from './studyPageHeader/StudyPageHeader';
 import CNSegments from './tabs/CNSegments';
@@ -599,25 +599,29 @@ export default class StudyViewPage extends React.Component<
         default: [],
     });
 
-    @computed get ccePostMessageData() {
-        const selectedNames = this.selectedPatientDisplayNames.result || [];
+    private static readonly CELL_EXPLORER_ZARR_URL =
+        'https://cbioportal-public-imaging.assets.cbioportal.org/msk_spectrum_tme_2022/zarr/spectrum_all_cells-f16-zstd-c1s30-v3.zarr/';
 
+    @computed get cceFilterConfig() {
+        const selectedNames = this.selectedPatientDisplayNames.result || [];
         return {
-            type: 'applyConfig',
-            payload: {
-                url:
-                    'https://cbioportal-public-imaging.assets.cbioportal.org/msk_spectrum_tme_2022/zarr/spectrum_all_cells-f16-zstd-c1s30-v3.zarr/',
-                embedding: 'X_umap50',
-                colorBy: 'category',
-                category: 'cell_type',
-                filter: {
-                    ids: selectedNames,
-                    obsColumn: 'donor_id',
-                },
-                summaryObsColumns: ['cell_type', 'phase'],
-                summaryGenes: ['dapl1', 'cetn2'],
-                showDatasetDropdown: false,
+            defaults: {
+                embedding_key: 'X_umap50',
+                color_by: { type: 'category', value: 'cell_type' },
             },
+            initial_view: 0,
+            saved_views: [
+                {
+                    name: 'Selected patients',
+                    embedding_key: 'X_umap50',
+                    selection: {
+                        type: 'category',
+                        target: 'donor_id',
+                        values: selectedNames,
+                    },
+                    color_by: { type: 'category', value: 'cell_type' },
+                },
+            ],
         };
     }
 
@@ -640,11 +644,11 @@ export default class StudyViewPage extends React.Component<
             >
                 <Observer>
                     {() => (
-                        <IFramePostMessageLoader
-                            url="https://cbioportal.github.io/cbioportal-cell-explorer/view"
+                        <CellExplorerEmbed
+                            url={StudyViewPage.CELL_EXPLORER_ZARR_URL}
+                            filterConfig={this.cceFilterConfig}
                             height={window.innerHeight}
                             width="100%"
-                            postMessageData={this.ccePostMessageData}
                         />
                     )}
                 </Observer>
