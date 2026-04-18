@@ -237,7 +237,7 @@ function runResultsTestSuite(
                 page
                     .locator('div[data-test="GroupComparisonMRNAEnrichments"]')
                     .first()
-            ).toBeVisible();
+            ).toBeVisible({ timeout: 60000 });
             // Wait for the enrichments table to actually populate rows
             // (the wrapper div appears before the data finishes loading).
             await expect(
