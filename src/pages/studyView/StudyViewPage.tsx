@@ -62,6 +62,7 @@ import ResourceTab from '../../shared/components/resources/ResourceTab';
 import StudyViewURLWrapper from './StudyViewURLWrapper';
 import ResourcesTab, { RESOURCES_TAB_NAME } from './resources/ResourcesTab';
 import { ClinicalDataFilter, ResourceData } from 'cbioportal-ts-api-client';
+import { getClient } from 'shared/api/cbioportalClientInstance';
 import $ from 'jquery';
 import { StudyViewComparisonGroup } from 'pages/groupComparison/GroupComparisonUtils';
 import { parse } from 'query-string';
@@ -599,30 +600,89 @@ export default class StudyViewPage extends React.Component<
         default: [],
     });
 
+    readonly consensusSignatureMapping = remoteData<Record<string, string>>({
+        await: () => [
+            this.store.queriedPhysicalStudyIds,
+            this.store.selectedSamples,
+        ],
+        invoke: async () => {
+            const studyIds = this.store.queriedPhysicalStudyIds.result!;
+            if (!studyIds.includes('msk_spectrum_tme_2022')) {
+                return {};
+            }
+
+            const samples = this.store.selectedSamples.result!;
+            // Get unique patient IDs
+            const patientIds = _.uniq(samples.map(s => s.patientId));
+
+            // Fetch PATIENT_DISPLAY_NAME and CONSENSUS_SIGNATURE for all patients
+            const clinicalData = await getClient().fetchClinicalDataUsingPOST({
+                clinicalDataType: 'PATIENT',
+                clinicalDataMultiStudyFilter: {
+                    attributeIds: [
+                        'PATIENT_DISPLAY_NAME',
+                        'CONSENSUS_SIGNATURE',
+                    ],
+                    identifiers: patientIds.map(pid => ({
+                        entityId: pid,
+                        studyId: 'msk_spectrum_tme_2022',
+                    })),
+                },
+            });
+
+            // Build per-patient maps
+            const displayNameByPatient: Record<string, string> = {};
+            const signatureByPatient: Record<string, string> = {};
+            for (const d of clinicalData) {
+                if (d.clinicalAttributeId === 'PATIENT_DISPLAY_NAME') {
+                    displayNameByPatient[d.patientId] = d.value;
+                } else if (d.clinicalAttributeId === 'CONSENSUS_SIGNATURE') {
+                    signatureByPatient[d.patientId] = d.value;
+                }
+            }
+
+            // Build displayName → signature mapping
+            const mapping: Record<string, string> = {};
+            for (const pid of patientIds) {
+                const displayName = displayNameByPatient[pid];
+                const signature = signatureByPatient[pid];
+                if (displayName && signature) {
+                    mapping[displayName] = signature;
+                }
+            }
+            return mapping;
+        },
+        default: {},
+    });
+
     private static readonly CELL_EXPLORER_ZARR_URL =
         'https://cbioportal-public-imaging.assets.cbioportal.org/msk_spectrum_tme_2022/zarr/spectrum_all_cells-f16-zstd-c1s30-v3.zarr/';
 
     @computed get cceFilterConfig() {
         const selectedNames = this.selectedPatientDisplayNames.result || [];
-        return {
-            defaults: {
-                embedding_key: 'X_umap50',
-                color_by: { type: 'category', value: 'cell_type' },
-            },
-            initial_view: 0,
-            saved_views: [
-                {
-                    name: 'Selected patients',
-                    embedding_key: 'X_umap50',
-                    selection: {
-                        type: 'category',
-                        target: 'donor_id',
-                        values: selectedNames,
-                    },
-                    color_by: { type: 'category', value: 'cell_type' },
-                },
-            ],
+        const signatureMapping = this.consensusSignatureMapping.result || {};
+
+        const config: any = {
+            embedding_key: 'X_umap50',
+            color_by: { type: 'category', value: 'cell_type' },
         };
+
+        if (selectedNames.length > 0) {
+            config.ids = selectedNames;
+            config.obsColumn = 'donor_id';
+        }
+
+        if (Object.keys(signatureMapping).length > 0) {
+            config.mapped_columns = [
+                {
+                    label: 'Consensus Signature',
+                    source_column: 'donor_id',
+                    mapping: signatureMapping,
+                },
+            ];
+        }
+
+        return config;
     }
 
     @computed get cceTab(): JSX.Element | null {
