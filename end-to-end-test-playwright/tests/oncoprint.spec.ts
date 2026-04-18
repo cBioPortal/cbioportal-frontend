@@ -535,7 +535,12 @@ test.describe('custom case list sorting', () => {
         await queryButton.click();
         await page.waitForTimeout(200);
 
-        // Get back to the oncoprint tab.
+        // Get back to the oncoprint tab. Under parallel load this anchor
+        // can take a moment to attach after the requery — wait explicitly
+        // before clicking.
+        await page
+            .locator('a.tabAnchor_oncoprint')
+            .waitFor({ state: 'visible', timeout: 30000 });
         await page.locator('a.tabAnchor_oncoprint').click();
 
         await doCustomCaseOrderCheck();
