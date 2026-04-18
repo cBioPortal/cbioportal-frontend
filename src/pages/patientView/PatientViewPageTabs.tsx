@@ -37,6 +37,7 @@ import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
 import MutationTableWrapper from './mutation/MutationTableWrapper';
 import { PatientViewPageInner } from 'pages/patientView/PatientViewPage';
 import { Else, If } from 'react-if';
+import { FusionViewerTab } from './fusionViewer/FusionViewerTab';
 
 export enum PatientViewPageTabs {
     Summary = 'summary',
@@ -49,6 +50,7 @@ export enum PatientViewPageTabs {
     TrialMatchTab = 'trialMatchTab',
     MutationalSignatures = 'mutationalSignatures',
     PathwayMapper = 'pathways',
+    FusionViewer = 'fusionViewer',
 }
 
 export const PatientViewResourceTabPrefix = 'openResource_';
@@ -708,6 +710,27 @@ export function tabs(
     pageComponent.resourceTabs.component &&
         /* @ts-ignore */
         tabs.push(...pageComponent.resourceTabs.component);
+
+    const svData = pageComponent.patientViewPageStore.structuralVariantData;
+    const hideFusionViewer =
+        svData.isPending || !svData.result || svData.result.length === 0;
+
+    tabs.push(
+        <MSKTab
+            key={9}
+            id={PatientViewPageTabs.FusionViewer}
+            linkText="Fusion Viewer"
+            hide={hideFusionViewer}
+        >
+            <FusionViewerTab
+                structuralVariants={svData.result || []}
+                referenceGenome={
+                    pageComponent.patientViewPageStore.studies.result[0]
+                        ?.referenceGenome
+                }
+            />
+        </MSKTab>
+    );
 
     tabs.push(...buildCustomTabs(pageComponent.customTabs));
 

@@ -68,3 +68,4 @@ junit.xml
 .luarc.json
 api-e2e/validation.js
 .vs/
+src/pages/patientView/fusionViewer/TEST_CASES.md
