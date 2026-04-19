@@ -1,9 +1,6 @@
 import * as React from 'react';
 import { Button, Space, Tooltip } from 'antd';
 import {
-    DragOutlined,
-    GatewayOutlined,
-    EditOutlined,
     EyeOutlined,
     EyeInvisibleOutlined,
     BarChartOutlined,
@@ -12,6 +9,26 @@ import {
 } from '@ant-design/icons';
 import useAppStore, { CUSTOM_GROUP_ID } from '../store/useAppStore';
 import type { SelectionTool } from '../store/useAppStore';
+
+// Icons matching PR #5224's Embeddings tab: Font Awesome's hand for Pan and
+// an inline dashed-circle SVG for Select. cBioPortal already loads FA 6 CSS
+// globally (see my-index.ejs), so the `<i>` tag renders without extra setup.
+const PanIcon = () => <i className="fa-regular fa-hand" aria-hidden="true" />;
+const SelectIcon = () => (
+    <svg
+        width="12"
+        height="12"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeDasharray="3 2"
+        aria-hidden="true"
+        style={{ display: 'inline-block', verticalAlign: '-2px' }}
+    >
+        <circle cx="12" cy="12" r="9" />
+    </svg>
+);
 
 const TOOL_OPTIONS: {
     value: SelectionTool;
@@ -22,19 +39,13 @@ const TOOL_OPTIONS: {
     {
         value: 'pan',
         label: 'Pan',
-        icon: <DragOutlined />,
+        icon: <PanIcon />,
         tooltip: 'Pan & zoom (Esc)',
     },
     {
-        value: 'rectangle',
-        label: 'Rectangle',
-        icon: <GatewayOutlined />,
-        tooltip: 'Rectangle select',
-    },
-    {
         value: 'lasso',
-        label: 'Lasso',
-        icon: <EditOutlined />,
+        label: 'Select',
+        icon: <SelectIcon />,
         tooltip: 'Lasso select',
     },
 ];
