@@ -134,6 +134,9 @@ export default class StudyViewPage extends React.Component<
         StudyViewPageTabKeyEnum.SUMMARY,
         StudyViewPageTabKeyEnum.CLINICAL_DATA,
         StudyViewPageTabKeyEnum.CN_SEGMENTS,
+        StudyViewPageTabKeyEnum.FILES_AND_LINKS,
+        StudyViewPageTabKeyEnum.PLOTS,
+        StudyViewPageTabKeyEnum.CELL_EXPLORER,
     ];
     private enableAddChartInTabs = [
         StudyViewPageTabKeyEnum.SUMMARY,
@@ -689,6 +692,46 @@ export default class StudyViewPage extends React.Component<
         default: { attributes: [], byAttr: {} },
     });
 
+    @autobind
+    handleCellExplorerLassoSelection(displayNames: string[]): void {
+        // Cell explorer gives us values from the cells' `sourceColumn`
+        // (e.g. donor_id), which correspond to a clinical-attribute display
+        // name. Reverse-map to cBioPortal patientIds, then expand to samples,
+        // and drop into the Study View's CUSTOM_SELECT filter so the existing
+        // "Selected: N patients | M samples" counter updates.
+        const config = this.cceConfig;
+        const data = this.cellExplorerPatientAttributeData.result;
+        const samples = this.store.samples.result;
+        if (!config || !data || !samples || displayNames.length === 0) return;
+        const identifierAttr = config.patientIdentifier.clinicalAttributeId;
+        const displayNameByPatient = data.byAttr[identifierAttr] || {};
+        const displayNameSet = new Set(displayNames);
+        const matchedPatientIds = new Set(
+            Object.keys(displayNameByPatient).filter(pid =>
+                displayNameSet.has(displayNameByPatient[pid])
+            )
+        );
+        if (matchedPatientIds.size === 0) return;
+        const matchedSamples = samples.filter(s =>
+            matchedPatientIds.has(s.patientId)
+        );
+        if (matchedSamples.length === 0) return;
+        this.store.updateCustomSelect({
+            origin: ['Cell Explorer'],
+            displayName: 'Cell Explorer Selection',
+            description: 'Samples selected from the Cell Explorer viewer',
+            datatype: 'STRING',
+            patientAttribute: true,
+            priority: 1,
+            data: matchedSamples.map(s => ({
+                studyId: s.studyId,
+                patientId: s.patientId,
+                sampleId: s.sampleId,
+                value: 'Selected',
+            })),
+        });
+    }
+
     @computed get cellExplorerMappedColumns(): MappedColumnSpec[] {
         const config = this.cceConfig;
         const data = this.cellExplorerPatientAttributeData.result;
@@ -946,8 +989,15 @@ export default class StudyViewPage extends React.Component<
                                                 this.cellExplorerMappedColumns
                                             }
                                             selectedDisplayNames={
-                                                this.selectedPatientDisplayNames
-                                                    .result
+                                                this.store.chartsAreFiltered
+                                                    ? this
+                                                          .selectedPatientDisplayNames
+                                                          .result
+                                                    : undefined
+                                            }
+                                            onLassoSelectionChange={
+                                                this
+                                                    .handleCellExplorerLassoSelection
                                             }
                                         />
                                     </MSKTab>

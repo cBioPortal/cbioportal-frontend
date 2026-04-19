@@ -50,12 +50,14 @@ interface CellExplorerTabProps {
     studyId?: string;
     mappedColumns?: MappedColumnSpec[];
     selectedDisplayNames?: string[];
+    onLassoSelectionChange?: (patientIds: string[]) => void;
 }
 
 export const CellExplorerTab: React.FunctionComponent<CellExplorerTabProps> = ({
     studyId,
     mappedColumns,
     selectedDisplayNames,
+    onLassoSelectionChange,
 }) => {
     const config = getCellExplorerConfig(studyId);
     const datasetUrl = config?.datasetUrl;
@@ -93,13 +95,48 @@ export const CellExplorerTab: React.FunctionComponent<CellExplorerTabProps> = ({
         () => JSON.stringify(selectedDisplayNames ?? []),
         [selectedDisplayNames]
     );
+    // Register the "apply current spatial selection to Study View" action on
+    // the store so the toolbar button can invoke it. The translation
+    // (cell sourceColumn values → clinical patient identifier) stays in the
+    // host because the mapping lives here.
     React.useEffect(() => {
-        if (
-            !selectedDisplayNames ||
-            selectedDisplayNames.length === 0 ||
-            !dimmingColumn
-        )
+        if (!onLassoSelectionChange || !dimmingColumn) {
+            useAppStore.getState().setApplySelectionHandler(null);
             return;
+        }
+        useAppStore.getState().setApplySelectionHandler(async () => {
+            const counts = await useAppStore
+                .getState()
+                .getSelectedValueCountsForColumn(dimmingColumn);
+            if (counts.size === 0) return;
+            // Drop "straggler" donors that contribute a trivial fraction of
+            // the lasso — these are usually UMAP-overlap noise, not intended.
+            // Require each donor to account for ≥1% OR ≥10 cells of the
+            // selection (whichever is higher).
+            const total = Array.from(counts.values()).reduce(
+                (a, b) => a + b,
+                0
+            );
+            const threshold = Math.max(10, Math.ceil(total * 0.01));
+            const filtered = Array.from(counts.entries())
+                .filter(([, count]) => count >= threshold)
+                .map(([id]) => id);
+            if (filtered.length > 0) onLassoSelectionChange(filtered);
+        });
+        return () => {
+            useAppStore.getState().setApplySelectionHandler(null);
+        };
+    }, [onLassoSelectionChange, dimmingColumn]);
+
+    React.useEffect(() => {
+        if (!dimmingColumn) return;
+        if (!selectedDisplayNames || selectedDisplayNames.length === 0) {
+            // No active Study View filter → drop any custom group we may
+            // have created earlier, so the cell explorer doesn't echo
+            // "all patients" back as a redundant selection.
+            useAppStore.getState().clearCustomGroup();
+            return;
+        }
         useAppStore.getState().selectByIds(dimmingColumn, selectedDisplayNames);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedDisplayNamesKey, dimmingColumn]);

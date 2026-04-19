@@ -151,6 +151,10 @@ export interface AppState {
   clearAllSelections: () => void
   loadCustomGroupColumn: (column: string) => void
   selectByIds: (column: string, ids: string[]) => void
+  getSelectedValuesForColumn: (column: string) => Promise<string[]>
+  getSelectedValueCountsForColumn: (column: string) => Promise<Map<string, number>>
+  applySelectionHandler: (() => void | Promise<void>) | null
+  setApplySelectionHandler: (fn: (() => void | Promise<void>) | null) => void
   clearCustomGroup: () => void
   toggleCustomGroupId: (id: string) => void
   setAllCustomGroupIds: (enabled: boolean) => void
@@ -362,6 +366,7 @@ const useAppStore = create<AppState>((set, get) => ({
   customGroupEnabledIds: new Set(),
   customGroupCommittedCount: 0,
   customGroupPreviousEnabledIds: null,
+  applySelectionHandler: null,
 
   // UI toggles
   showHeader: true,
@@ -670,6 +675,32 @@ const useAppStore = create<AppState>((set, get) => ({
           get()._mergeFilterBuffer()
         })
     })
+  },
+
+  getSelectedValuesForColumn: async (column) => {
+    const counts = await get().getSelectedValueCountsForColumn(column)
+    return Array.from(counts.keys())
+  },
+
+  getSelectedValueCountsForColumn: async (column) => {
+    const { adata, selectionGroups } = get()
+    const counts = new Map<string, number>()
+    if (!adata) return counts
+    // Only spatial groups — custom groups derive from `column` already.
+    const spatialGroups = selectionGroups.filter((g) => g.id !== CUSTOM_GROUP_ID)
+    if (spatialGroups.length === 0) return counts
+    const values = await adata.obsColumn(column)
+    const valuesArray = Array.isArray(values) ? values : Array.from(values as Iterable<string | number | null>)
+    for (const group of spatialGroups) {
+      for (let i = 0; i < group.indices.length; i++) {
+        const v = valuesArray[group.indices[i]]
+        if (v !== null && v !== undefined && v !== '') {
+          const key = String(v)
+          counts.set(key, (counts.get(key) ?? 0) + 1)
+        }
+      }
+    }
+    return counts
   },
 
   clearCustomGroup: () => {
@@ -1074,6 +1105,10 @@ const useAppStore = create<AppState>((set, get) => ({
       _colorAbort: null,
     })
     get().rebuildColorBuffer()
+  },
+
+  setApplySelectionHandler: (fn) => {
+    set({ applySelectionHandler: fn })
   },
 
   setMappedColumns: (specs) => {

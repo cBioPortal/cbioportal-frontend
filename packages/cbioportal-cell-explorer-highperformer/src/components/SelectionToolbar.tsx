@@ -6,6 +6,7 @@ import {
     BarChartOutlined,
     ClearOutlined,
     CloseOutlined,
+    FilterOutlined,
 } from '@ant-design/icons';
 import useAppStore, { CUSTOM_GROUP_ID } from '../store/useAppStore';
 import type { SelectionTool } from '../store/useAppStore';
@@ -13,21 +14,28 @@ import type { SelectionTool } from '../store/useAppStore';
 // Icons matching PR #5224's Embeddings tab: Font Awesome's hand for Pan and
 // an inline dashed-circle SVG for Select. cBioPortal already loads FA 6 CSS
 // globally (see my-index.ejs), so the `<i>` tag renders without extra setup.
-const PanIcon = () => <i className="fa-regular fa-hand" aria-hidden="true" />;
+// The `anticon` class signals to antd that this is an icon, which gives it
+// the standard margin-right before the button label.
+const PanIcon = () => (
+    <span className="anticon" aria-hidden="true">
+        <i className="fa-regular fa-hand" />
+    </span>
+);
 const SelectIcon = () => (
-    <svg
-        width="12"
-        height="12"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeDasharray="3 2"
-        aria-hidden="true"
-        style={{ display: 'inline-block', verticalAlign: '-2px' }}
-    >
-        <circle cx="12" cy="12" r="9" />
-    </svg>
+    <span className="anticon" aria-hidden="true">
+        <svg
+            width="12"
+            height="12"
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.4"
+            strokeDasharray="1.4 1.4"
+            style={{ display: 'block' }}
+        >
+            <circle cx="8" cy="8" r="6" />
+        </svg>
+    </span>
 );
 
 const TOOL_OPTIONS: {
@@ -65,8 +73,10 @@ export default function SelectionToolbar() {
     const customGroupCount = useCustomGroupCount();
     const summaryPanelOpen = useAppStore(s => s.summaryPanelOpen);
     const setSummaryPanelOpen = useAppStore(s => s.setSummaryPanelOpen);
+    const applySelectionHandler = useAppStore(s => s.applySelectionHandler);
 
     const hasSelection = selectionGroups.length > 0;
+    const hasSpatialSelection = selectionGroups.some(g => g.type !== 'custom');
 
     return (
         <div
@@ -77,18 +87,21 @@ export default function SelectionToolbar() {
                 zIndex: 3,
                 display: 'flex',
                 flexDirection: 'column',
-                alignItems: 'flex-start',
+                alignItems: 'stretch',
                 gap: 8,
+                width: 90,
             }}
         >
-            <Space size={4}>
+            <Space direction="vertical" size={4} style={{ width: '100%' }}>
                 {TOOL_OPTIONS.map(opt => (
                     <Tooltip
                         key={opt.value}
                         title={opt.tooltip}
-                        placement="bottom"
+                        placement="right"
                     >
                         <Button
+                            block
+                            style={{ textAlign: 'left' }}
                             type={
                                 selectionTool === opt.value
                                     ? 'primary'
@@ -104,16 +117,18 @@ export default function SelectionToolbar() {
             </Space>
 
             {hasSelection && (
-                <Space size={4}>
+                <Space direction="vertical" size={4} style={{ width: '100%' }}>
                     <Tooltip
                         title={
                             selectionDisplayMode === 'dim'
                                 ? 'Hide unselected'
                                 : 'Dim unselected'
                         }
-                        placement="bottom"
+                        placement="right"
                     >
                         <Button
+                            block
+                            style={{ textAlign: 'left' }}
                             icon={
                                 selectionDisplayMode === 'dim' ? (
                                     <EyeOutlined />
@@ -132,20 +147,40 @@ export default function SelectionToolbar() {
                             {selectionDisplayMode === 'dim' ? 'Hide' : 'Dim'}
                         </Button>
                     </Tooltip>
-                    <Tooltip title="Clear all selections" placement="bottom">
+                    <Tooltip title="Clear all selections" placement="right">
                         <Button
+                            block
+                            style={{ textAlign: 'left' }}
                             icon={<ClearOutlined />}
                             onClick={clearAllSelections}
                         >
                             Clear
                         </Button>
                     </Tooltip>
+                    {applySelectionHandler && hasSpatialSelection && (
+                        <Tooltip
+                            title="Restrict Study View to the patients inside the current spatial selection"
+                            placement="right"
+                        >
+                            <Button
+                                block
+                                type="primary"
+                                style={{ textAlign: 'left' }}
+                                icon={<FilterOutlined />}
+                                onClick={() => applySelectionHandler()}
+                            >
+                                Filter
+                            </Button>
+                        </Tooltip>
+                    )}
                 </Space>
             )}
 
             {!summaryPanelOpen && (
-                <Tooltip title="Show summary panel" placement="bottom">
+                <Tooltip title="Show summary panel" placement="right">
                     <Button
+                        block
+                        style={{ textAlign: 'left' }}
                         icon={<BarChartOutlined />}
                         onClick={() => setSummaryPanelOpen(true)}
                     >
