@@ -62,6 +62,7 @@ export default function ColorBySection() {
   const colorMode = useAppStore((s) => s.colorMode)
   const setColorMode = useAppStore((s) => s.setColorMode)
   const obsColumnNames = useAppStore((s) => s.obsColumnNames)
+  const mappedColumns = useAppStore((s) => s.mappedColumns)
   const varNames = useAppStore((s) => s.varNames)
   const selectedObsColumn = useAppStore((s) => s.selectedObsColumn)
   const selectedGene = useAppStore((s) => s.selectedGene)
@@ -75,7 +76,10 @@ export default function ColorBySection() {
   const [categoryOpen, setCategoryOpen] = useState(false)
   const [geneSearchText, setGeneSearchText] = useState('')
 
-  const columnOptions = obsColumnNames.map((name) => ({ value: name, label: name }))
+  const virtualLabels = mappedColumns
+    .filter((m) => Object.keys(m.mapping).length > 0)
+    .map((m) => m.label)
+  const columnOptions = [...virtualLabels, ...obsColumnNames].map((name) => ({ value: name, label: name }))
 
   const geneAvailable = geneSearchText
     ? varNames.filter((varIndex) => {
