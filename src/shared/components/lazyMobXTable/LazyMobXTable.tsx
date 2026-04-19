@@ -970,7 +970,6 @@ export default class LazyMobXTable<T> extends React.Component<
 
     constructor(props: LazyMobXTableProps<T>) {
         super(props);
-        makeObservable(this);
         this.store = new LazyMobXTableStore<T>(props);
 
         this.handlers = {
