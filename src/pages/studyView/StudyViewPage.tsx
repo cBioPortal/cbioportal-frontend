@@ -27,6 +27,10 @@ import IFrameLoader from '../../shared/components/iframeLoader/IFrameLoader';
 import { StudySummaryTab } from 'pages/studyView/tabs/SummaryTab';
 import StudyPageHeader from './studyPageHeader/StudyPageHeader';
 import CNSegments from './tabs/CNSegments';
+import {
+    CellExplorerTab,
+    hasCellExplorerDataset,
+} from './tabs/CellExplorerTab';
 import { getInternalClient } from 'shared/api/cbioportalInternalClientInstance';
 import AddChartButton from './addChartButton/AddChartButton';
 import { sleep } from '../../shared/lib/TimeUtils';
@@ -764,6 +768,25 @@ export default class StudyViewPage extends React.Component<
                                         <PlotsTabWrapper
                                             store={this.store}
                                             urlWrapper={this.urlWrapper}
+                                        />
+                                    </MSKTab>
+
+                                    <MSKTab
+                                        key={6}
+                                        id={
+                                            StudyViewPageTabKeyEnum.CELL_EXPLORER
+                                        }
+                                        linkText={
+                                            StudyViewPageTabDescriptions.CELL_EXPLORER
+                                        }
+                                        hide={
+                                            !hasCellExplorerDataset(
+                                                this.store.studyIds[0]
+                                            )
+                                        }
+                                    >
+                                        <CellExplorerTab
+                                            studyId={this.store.studyIds[0]}
                                         />
                                     </MSKTab>
 

@@ -1,0 +1,16 @@
+{
+  "extends": "../config/tsconfig.json",
+  "compilerOptions": {
+    "target": "es2017",
+    "lib": ["es2020", "dom", "dom.iterable"],
+    "jsx": "react",
+    "strictNullChecks": false,
+    "noImplicitAny": false,
+    "noImplicitReturns": false,
+    "importHelpers": false
+  },
+  "include": [
+    "src",
+    "../typings/**/*"
+  ]
+}
