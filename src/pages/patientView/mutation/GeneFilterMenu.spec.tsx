@@ -1,23 +1,23 @@
 import React from 'react';
-import { shallow } from 'enzyme';
+import { mount } from 'enzyme';
 import { assert } from 'chai';
 import GeneFilterMenu, { GeneFilterOption } from './GeneFilterMenu';
 import sinon from 'sinon';
 
 describe('GeneFilterOptions', () => {
     const callback = sinon.spy();
-    const wrapper = shallow(
+    const wrapper = mount(
         <GeneFilterMenu
             currentSelection={GeneFilterOption.ALL_SAMPLES}
             onOptionChanged={callback}
         />
     );
-    const allGenesRadioButton = wrapper
-        .dive()
-        .find('[value="' + GeneFilterOption.ALL_SAMPLES + '"]');
-    const anyGenesRadioButton = wrapper
-        .dive()
-        .find('[value="' + GeneFilterOption.ANY_SAMPLE + '"]');
+    const allGenesRadioButton = wrapper.find(
+        'input[value="' + GeneFilterOption.ALL_SAMPLES + '"]'
+    );
+    const anyGenesRadioButton = wrapper.find(
+        'input[value="' + GeneFilterOption.ANY_SAMPLE + '"]'
+    );
 
     it('Selects correct option on init', () => {
         const propertiesAll = allGenesRadioButton.props() as any;

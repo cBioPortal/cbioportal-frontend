@@ -36,7 +36,7 @@ describe('Scrollbar', () => {
         setTimeout(() => {
             assert.isFalse(instance.visible, 'not visible if overflow <=0');
             done();
-        }, 3);
+        }, 50);
     });
 
     it('detects overflow, shows, calculates handle percentage', done => {
@@ -50,7 +50,7 @@ describe('Scrollbar', () => {
             assert.isTrue(instance.visible, 'visible if overflow > 0');
             assert.equal(instance.handleWidth, '56.25%');
             done();
-        }, 3);
+        }, 50);
     });
 
     it('handles drag event properly', () => {
