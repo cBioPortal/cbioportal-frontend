@@ -65,7 +65,11 @@ import { MakeMobxView } from '../../shared/components/MobxView';
 import ResourceTab from '../../shared/components/resources/ResourceTab';
 import StudyViewURLWrapper from './StudyViewURLWrapper';
 import ResourcesTab, { RESOURCES_TAB_NAME } from './resources/ResourcesTab';
-import { ClinicalDataFilter, ResourceData } from 'cbioportal-ts-api-client';
+import {
+    ClinicalAttribute,
+    ClinicalDataFilter,
+    ResourceData,
+} from 'cbioportal-ts-api-client';
 import { getResourceConfig } from 'shared/lib/ResourceConfig';
 import { getClient } from 'shared/api/cbioportalClientInstance';
 import { MappedColumnSpec } from 'cbioportal-cell-explorer-highperformer';
@@ -95,34 +99,6 @@ export interface IStudyViewPageProps {
 }
 
 export const MAX_URL_LENGTH = 300000;
-
-// SNAKE_CASE_ID → "Snake Case Id". Used for Cell Explorer clinical-attribute
-// display labels until we wire in the real displayName from the
-// clinical-attributes endpoint. Keeps known acronyms upper-cased.
-const CCE_ATTR_ACRONYMS = new Set([
-    'HR',
-    'WGS',
-    'BRCA',
-    'HER2',
-    'EGFR',
-    'CNV',
-    'MSI',
-    'HRD',
-    'FBI',
-    'ID',
-    'TMB',
-]);
-function humanizeAttributeId(attrId: string): string {
-    return attrId
-        .split('_')
-        .map(w => {
-            if (!w) return '';
-            const upper = w.toUpperCase();
-            if (CCE_ATTR_ACRONYMS.has(upper)) return upper;
-            return upper[0] + w.slice(1).toLowerCase();
-        })
-        .join(' ');
-}
 
 @observer
 export class StudyResultsSummary extends React.Component<
@@ -654,29 +630,40 @@ export default class StudyViewPage extends React.Component<
         default: [],
     });
 
-    readonly cellExplorerPatientAttributeData = remoteData<
-        Record<string, Record<string, string>>
-    >({
+    readonly cellExplorerPatientAttributeData = remoteData<{
+        attributes: ClinicalAttribute[];
+        byAttr: Record<string, Record<string, string>>;
+    }>({
         await: () => [
             this.store.queriedPhysicalStudyIds,
             this.store.selectedSamples,
+            this.store.clinicalAttributes,
         ],
         invoke: async () => {
             const config = this.cceConfig;
             const studyId = this.cceStudyId;
-            if (!config || !studyId || config.patientAttributes.length === 0) {
-                return {};
+            if (!config || !studyId) return { attributes: [], byAttr: {} };
+
+            const identifierAttr = config.patientIdentifier.clinicalAttributeId;
+            const patientAttrs = this.store.clinicalAttributes.result!.filter(
+                a =>
+                    a.patientAttribute &&
+                    a.clinicalAttributeId !== identifierAttr
+            );
+            if (patientAttrs.length === 0) {
+                return { attributes: [], byAttr: {} };
             }
 
             const samples = this.store.selectedSamples.result!;
             const patientIds = _.uniq(samples.map(s => s.patientId));
-            if (patientIds.length === 0) return {};
+            if (patientIds.length === 0) {
+                return { attributes: patientAttrs, byAttr: {} };
+            }
 
-            const identifierAttr = config.patientIdentifier.clinicalAttributeId;
-            const attributeIds = _.uniq([
+            const attributeIds = [
                 identifierAttr,
-                ...config.patientAttributes,
-            ]);
+                ...patientAttrs.map(a => a.clinicalAttributeId),
+            ];
 
             const clinicalData = await getClient().fetchClinicalDataUsingPOST({
                 clinicalDataType: 'PATIENT',
@@ -697,23 +684,24 @@ export default class StudyViewPage extends React.Component<
                 }
                 byAttr[d.clinicalAttributeId][d.patientId] = d.value;
             }
-            return byAttr;
+            return { attributes: patientAttrs, byAttr };
         },
-        default: {},
+        default: { attributes: [], byAttr: {} },
     });
 
     @computed get cellExplorerMappedColumns(): MappedColumnSpec[] {
         const config = this.cceConfig;
-        const byAttr = this.cellExplorerPatientAttributeData.result;
-        if (!config || !byAttr) return [];
+        const data = this.cellExplorerPatientAttributeData.result;
+        if (!config || !data) return [];
 
         const identifierAttr = config.patientIdentifier.clinicalAttributeId;
         const sourceColumn = config.patientIdentifier.sourceColumn;
-        const identifierByPatient = byAttr[identifierAttr] || {};
+        const identifierByPatient = data.byAttr[identifierAttr] || {};
+        if (Object.keys(identifierByPatient).length === 0) return [];
 
         const specs: MappedColumnSpec[] = [];
-        for (const attrId of config.patientAttributes) {
-            const valueByPatient = byAttr[attrId];
+        for (const attr of data.attributes) {
+            const valueByPatient = data.byAttr[attr.clinicalAttributeId];
             if (!valueByPatient) continue;
             const mapping: Record<string, string> = {};
             for (const patientId of Object.keys(valueByPatient)) {
@@ -723,7 +711,7 @@ export default class StudyViewPage extends React.Component<
             }
             if (Object.keys(mapping).length > 0) {
                 specs.push({
-                    label: humanizeAttributeId(attrId),
+                    label: attr.displayName || attr.clinicalAttributeId,
                     sourceColumn,
                     mapping,
                 });

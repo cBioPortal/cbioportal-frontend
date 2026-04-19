@@ -1,9 +1,8 @@
 import * as React from "react";
-import { useState } from 'react'
-import { Segmented, Select, Tag, Alert, Button, Popover, Space } from 'antd'
+import { useMemo, useState } from 'react'
+import { Select, Alert, Button, Popover } from 'antd'
 import { SettingOutlined } from '@ant-design/icons'
 import useAppStore from '../store/useAppStore'
-import type { ColorMode } from '../store/useAppStore'
 import { COLOR_SCALES } from '../utils/colors'
 import CategoricalLegend from './CategoricalLegend'
 import ContinuousLegend from './ContinuousLegend'
@@ -12,6 +11,17 @@ const scaleOptions = Object.keys(COLOR_SCALES).map((name) => ({
   value: name,
   label: name.charAt(0).toUpperCase() + name.slice(1),
 }))
+
+// How the dropdown encodes each option value. The Select sees a single string
+// per option, so we prefix with the kind to disambiguate on selection.
+type OptionKind = 'clinical' | 'obs' | 'gene'
+const encodeValue = (kind: OptionKind, payload: string) => `${kind}:${payload}`
+const decodeValue = (v: string): { kind: OptionKind; payload: string } => {
+  const colon = v.indexOf(':')
+  return { kind: v.slice(0, colon) as OptionKind, payload: v.slice(colon + 1) }
+}
+
+const GENE_SEARCH_LIMIT = 50
 
 function ScaleSettingsButton() {
   const colorScaleName = useAppStore((s) => s.colorScaleName)
@@ -73,143 +83,185 @@ export default function ColorBySection() {
   const categoryWarning = useAppStore((s) => s.categoryWarning)
   const geneLabelMap = useAppStore((s) => s.geneLabelMap)
 
-  const [categoryOpen, setCategoryOpen] = useState(false)
-  const [geneSearchText, setGeneSearchText] = useState('')
+  const [searchValue, setSearchValue] = useState('')
 
-  const virtualLabels = mappedColumns
-    .filter((m) => Object.keys(m.mapping).length > 0)
-    .map((m) => m.label)
-  const columnOptions = [...virtualLabels, ...obsColumnNames].map((name) => ({ value: name, label: name }))
-
-  const geneAvailable = geneSearchText
-    ? varNames.filter((varIndex) => {
-        if (varIndex === selectedGene) return false
-        const display = geneLabelMap?.get(varIndex) ?? varIndex
-        const lower = geneSearchText.toLowerCase()
-        return display.toLowerCase().includes(lower) || varIndex.toLowerCase().includes(lower)
-      }).slice(0, 50)
-    : []
-
-  const pillTagRender = ({ value, closable, onClose }: { label?: React.ReactNode; value: string | number; closable: boolean; onClose: () => void }) => (
-    <Tag
-      color="blue"
-      closable={closable}
-      onClose={onClose}
-      style={{ marginRight: 4, fontSize: 11 }}
-    >
-      {value as string}
-    </Tag>
+  const clinicalLabels = useMemo(
+    () =>
+      mappedColumns
+        .filter((m) => Object.keys(m.mapping).length > 0)
+        .map((m) => m.label),
+    [mappedColumns]
   )
+
+  // Gene matches are computed from the search string and capped so the dropdown
+  // doesn't try to render 30k+ options. Until the user types, the Genes group
+  // is hidden entirely.
+  const geneMatches = useMemo(() => {
+    if (!searchValue) return []
+    const lower = searchValue.toLowerCase()
+    const matches: { varIndex: string; display: string }[] = []
+    for (const varIndex of varNames) {
+      const display = geneLabelMap?.get(varIndex) ?? varIndex
+      if (
+        display.toLowerCase().includes(lower) ||
+        varIndex.toLowerCase().includes(lower)
+      ) {
+        matches.push({ varIndex, display })
+        if (matches.length >= GENE_SEARCH_LIMIT) break
+      }
+    }
+    return matches
+  }, [searchValue, varNames, geneLabelMap])
+
+  // Filter clinical + obs groups by searchValue ourselves so antd's own
+  // filterOption stays out of our way; the Genes group is already search-
+  // dependent (built from `geneMatches`).
+  const groupedOptions = useMemo(() => {
+    const input = searchValue.trim().toLowerCase()
+    const labelMatches = (label: string) =>
+      !input || label.toLowerCase().includes(input)
+
+    const groups: { label: React.ReactNode; options: { value: string; label: React.ReactNode; title?: string }[] }[] = []
+
+    const clinicalFiltered = clinicalLabels.filter(labelMatches)
+    if (clinicalFiltered.length > 0) {
+      groups.push({
+        label: 'Clinical attributes',
+        options: clinicalFiltered.map((label) => ({
+          value: encodeValue('clinical', label),
+          label,
+          title: label,
+        })),
+      })
+    }
+
+    const obsFiltered = obsColumnNames.filter(labelMatches)
+    if (obsFiltered.length > 0) {
+      groups.push({
+        label: 'Obs columns',
+        options: obsFiltered.map((name) => ({
+          value: encodeValue('obs', name),
+          label: name,
+          title: name,
+        })),
+      })
+    }
+
+    if (geneMatches.length > 0) {
+      groups.push({
+        label: 'Genes',
+        options: geneMatches.map(({ varIndex, display }) => ({
+          value: encodeValue('gene', varIndex),
+          label: display,
+          title: display,
+        })),
+      })
+    }
+    return groups
+  }, [clinicalLabels, obsColumnNames, geneMatches, searchValue])
+
+  // `labelInValue` lets us pair the encoded value with its display label
+  // directly on the Select's value, so the selected option still renders
+  // with a human label even when its option isn't in the currently-shown
+  // options list (e.g. the gene group is empty until the user searches).
+  const currentDisplay: string | undefined =
+    colorMode === 'gene' && selectedGene
+      ? geneLabelMap?.get(selectedGene) ?? selectedGene
+      : selectedObsColumn ?? undefined
+
+  const currentValue: { value: string; label: string } | undefined = useMemo(() => {
+    if (colorMode === 'gene' && selectedGene) {
+      return {
+        value: encodeValue('gene', selectedGene),
+        label: geneLabelMap?.get(selectedGene) ?? selectedGene,
+      }
+    }
+    if (selectedObsColumn) {
+      const isClinical = clinicalLabels.includes(selectedObsColumn)
+      return {
+        value: encodeValue(isClinical ? 'clinical' : 'obs', selectedObsColumn),
+        label: selectedObsColumn,
+      }
+    }
+    return undefined
+  }, [colorMode, selectedGene, selectedObsColumn, clinicalLabels, geneLabelMap])
+
+  const handleChange = (
+    next: { value: string; label: React.ReactNode } | undefined
+  ) => {
+    if (!next) {
+      if (colorMode === 'gene') clearGene()
+      else clearObsColumn()
+      setSearchValue('')
+      return
+    }
+    const { kind, payload } = decodeValue(next.value)
+    if (kind === 'gene') {
+      // Coming from a non-gene selection: clear the old obs selection so the
+      // legend + summary state reflect only the gene.
+      if (colorMode !== 'gene' && selectedObsColumn) clearObsColumn()
+      setColorMode('gene')
+      selectGene(payload)
+    } else {
+      if (colorMode === 'gene' && selectedGene) clearGene()
+      setColorMode('category')
+      selectObsColumn(payload)
+    }
+    setSearchValue('')
+  }
 
   return (
     <div style={{ padding: '12px 16px', borderBottom: '1px solid #f0f0f0' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-        <div style={{ fontSize: 12, fontWeight: 600, color: '#666', textTransform: 'uppercase' }}>Color By</div>
-        <Segmented
-          value={colorMode}
-          onChange={(value) => setColorMode(value as ColorMode)}
-          size="small"
-          options={[{ value: 'category', label: 'Category' }, { value: 'gene', label: 'Gene' }]}
-        />
+      <div style={{ fontSize: 12, fontWeight: 600, color: '#666', textTransform: 'uppercase', marginBottom: 8 }}>
+        Color By
       </div>
 
-      {colorMode === 'category' && (
-        <div style={{ marginBottom: 8 }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: '#888', textTransform: 'uppercase', marginBottom: 4 }}>
-            Category {selectedObsColumn && <span style={{ fontWeight: 400, textTransform: 'none' }}>(max 1)</span>}
-          </div>
-          <Select
-            mode="multiple"
-            showSearch
-            allowClear
-            placeholder="Select column..."
-            open={categoryOpen}
-            onDropdownVisibleChange={setCategoryOpen}
-            value={selectedObsColumn ? [selectedObsColumn] : []}
-            onChange={(values: string[]) => {
-              if (values.length === 0) {
-                clearObsColumn()
-              } else {
-                // Always take the most recently added value (replaces previous)
-                const added = values.find((v) => v !== selectedObsColumn)
-                selectObsColumn(added ?? values[0])
-              }
-              setCategoryOpen(false)
-            }}
-            tagRender={pillTagRender}
-            filterOption={(input, option) => {
-              const label = (option?.label as string ?? '').toLowerCase()
-              return label.includes(input.toLowerCase())
-            }}
-            options={columnOptions}
-            style={{ width: '100%' }}
-            size="small"
-          />
-          {categoryWarning && (
-            <Alert
-              message={categoryWarning}
-              type="warning"
-              showIcon
-              style={{ marginTop: 8, fontSize: 12 }}
-            />
-          )}
+      <div style={{ display: 'flex', gap: 4 }}>
+        <Select
+          showSearch
+          allowClear
+          labelInValue
+          placeholder="Select clinical attribute, obs column, or gene…"
+          value={currentValue}
+          searchValue={searchValue}
+          onSearch={setSearchValue}
+          onChange={handleChange}
+          options={groupedOptions}
+          // We filter the option groups ourselves (see `groupedOptions` above)
+          // so antd's own filter stays out of the way — otherwise grouped
+          // labels don't get filtered consistently.
+          filterOption={false}
+          notFoundContent={
+            searchValue ? 'No matches — try typing a gene symbol.' : null
+          }
+          style={{ flex: 1, minWidth: 0 }}
+          size="small"
+          dropdownMatchSelectWidth={false}
+          listHeight={320}
+          dropdownStyle={{ maxWidth: 360 }}
+        />
+        {colorMode === 'gene' && <ScaleSettingsButton />}
+      </div>
+
+      {currentDisplay && (
+        <div style={{ marginTop: 4, fontSize: 11, color: '#999' }}>
+          Coloring by <span style={{ color: '#555' }}>{currentDisplay}</span>
         </div>
       )}
 
-      {colorMode === 'gene' && (
-        <div style={{ marginBottom: 8 }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: '#888', textTransform: 'uppercase', marginBottom: 4 }}>
-            Gene {selectedGene && <span style={{ fontWeight: 400, textTransform: 'none' }}>(max 1)</span>}
-          </div>
-          <Space.Compact style={{ width: '100%' }}>
-            <Select
-              mode="multiple"
-              showSearch
-              allowClear
-              suffixIcon={null}
-              placeholder="Search gene..."
-              value={selectedGene ? [selectedGene] : []}
-              searchValue={geneSearchText}
-              onSearch={setGeneSearchText}
-              open={geneSearchText.length > 0 && geneAvailable.length > 0}
-              onChange={(values: string[]) => {
-                if (values.length === 0) {
-                  clearGene()
-                } else {
-                  const added = values.find((v) => v !== selectedGene)
-                  if (added) selectGene(added)
-                }
-                setGeneSearchText('')
-              }}
-              tagRender={({ value, closable, onClose }) => {
-                const raw = value as string
-                const display = geneLabelMap?.get(raw) ?? raw
-                return (
-                  <Tag
-                    color="blue"
-                    closable={closable}
-                    onClose={onClose}
-                    style={{ marginRight: 4, fontSize: 11 }}
-                  >
-                    {display}
-                  </Tag>
-                )
-              }}
-              filterOption={false}
-              options={geneAvailable.map((varIndex) => ({
-                label: geneLabelMap?.get(varIndex) ?? varIndex,
-                value: varIndex,
-              }))}
-              style={{ flex: 1 }}
-              size="small"
-            />
-            <ScaleSettingsButton />
-          </Space.Compact>
-        </div>
+      {categoryWarning && (
+        <Alert
+          message={categoryWarning}
+          type="warning"
+          showIcon
+          style={{ marginTop: 8, fontSize: 12 }}
+        />
       )}
 
-      {colorMode === 'category' && <CategoricalLegend />}
-      {colorMode === 'gene' && <ContinuousLegend />}
+      <div style={{ marginTop: 8 }}>
+        {colorMode === 'category' && <CategoricalLegend />}
+        {colorMode === 'gene' && <ContinuousLegend />}
+      </div>
     </div>
   )
 }

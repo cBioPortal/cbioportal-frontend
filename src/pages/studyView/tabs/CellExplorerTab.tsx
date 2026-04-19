@@ -11,22 +11,15 @@ import './CellExplorerTab.css';
 // the backend (e.g. on the study metadata). It declares:
 //   - the zarr dataset URL,
 //   - how patient-level cBioPortal clinical data joins to the zarr (which
-//     clinical attribute's value matches which zarr obs column),
-//   - which clinical attributes are exposed as Color By options.
-// Sample-level joins are structurally supported; for MSK SPECTRUM we don't yet
-// have a confirmed zarr↔clinical sample-ID column, so `sampleAttributes` is
-// left empty until that mapping is verified.
-export interface CellExplorerIdentifier {
-    clinicalAttributeId: string; // e.g. PATIENT_DISPLAY_NAME
-    sourceColumn: string; // matching zarr obs column, e.g. donor_id
-}
-
+//     clinical attribute's value matches which zarr obs column).
+// Patient attributes are discovered dynamically from the study's clinical-
+// attribute list — no hardcoded allowlist here.
 export interface CellExplorerStudyConfig {
     datasetUrl: string;
-    patientIdentifier: CellExplorerIdentifier;
-    sampleIdentifier?: CellExplorerIdentifier;
-    patientAttributes: string[];
-    sampleAttributes: string[];
+    patientIdentifier: {
+        clinicalAttributeId: string; // e.g. PATIENT_DISPLAY_NAME
+        sourceColumn: string; // matching zarr obs column, e.g. donor_id
+    };
 }
 
 export const CELL_EXPLORER_STUDY_CONFIGS: Record<
@@ -40,14 +33,6 @@ export const CELL_EXPLORER_STUDY_CONFIGS: Record<
             clinicalAttributeId: 'PATIENT_DISPLAY_NAME',
             sourceColumn: 'donor_id',
         },
-        patientAttributes: [
-            'CONSENSUS_SIGNATURE',
-            'CONSENSUS_HR_STATUS',
-            'MYRIAD_SIGNATURE',
-            'WGS_SIGNATURE',
-            'GYN_DIAGNOSIS_HISTOLOGY',
-        ],
-        sampleAttributes: [],
     },
 };
 
