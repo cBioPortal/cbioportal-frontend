@@ -81,7 +81,7 @@ export default function SelectionToolbar() {
                 gap: 8,
             }}
         >
-            <Space.Compact size="small">
+            <Space size={4}>
                 {TOOL_OPTIONS.map(opt => (
                     <Tooltip
                         key={opt.value}
@@ -101,10 +101,10 @@ export default function SelectionToolbar() {
                         </Button>
                     </Tooltip>
                 ))}
-            </Space.Compact>
+            </Space>
 
             {hasSelection && (
-                <Space.Compact size="small">
+                <Space size={4}>
                     <Tooltip
                         title={
                             selectionDisplayMode === 'dim'
@@ -140,13 +140,12 @@ export default function SelectionToolbar() {
                             Clear
                         </Button>
                     </Tooltip>
-                </Space.Compact>
+                </Space>
             )}
 
             {!summaryPanelOpen && (
                 <Tooltip title="Show summary panel" placement="bottom">
                     <Button
-                        size="small"
                         icon={<BarChartOutlined />}
                         onClick={() => setSummaryPanelOpen(true)}
                     >
