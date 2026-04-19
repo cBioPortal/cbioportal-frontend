@@ -50,6 +50,18 @@ export interface CustomSelectionGroup {
 
 export type SelectionGroup = SpatialSelectionGroup | CustomSelectionGroup
 
+// Host-injected virtual categorical obs columns. The store expands each spec
+// at color-select time by reading `sourceColumn` from the zarr and mapping
+// every cell's value through `mapping`; the result is fed through the same
+// encodeCategories → _categoryCodes → color-buffer pipeline as native obs
+// columns. Used by cbioportal-frontend to surface clinical attributes
+// (e.g. CONSENSUS_SIGNATURE) without baking them into the zarr.
+export interface MappedColumnSpec {
+  label: string
+  sourceColumn: string
+  mapping: Record<string, string>
+}
+
 export interface AppState {
   // Dataset
   datasetUrl: string | null
@@ -95,6 +107,7 @@ export interface AppState {
   categoryMap: { label: string; color: RGB }[]
   expressionRange: { min: number; max: number } | null
   categoryWarning: string | null
+  mappedColumns: MappedColumnSpec[]
 
   // Gene label resolution
   varColumns: string[]
@@ -184,6 +197,7 @@ export interface AppState {
   setColorMode: (mode: ColorMode) => void
   selectObsColumn: (name: string) => void
   clearObsColumn: () => void
+  setMappedColumns: (specs: MappedColumnSpec[]) => void
   selectGene: (name: string) => void
   clearGene: () => void
   toggleCategoryHighlight: (code: number) => void
@@ -317,6 +331,7 @@ const useAppStore = create<AppState>((set, get) => ({
   categoryMap: [],
   expressionRange: null,
   categoryWarning: null,
+  mappedColumns: [],
 
   // Gene label resolution
   varColumns: [],
@@ -983,7 +998,7 @@ const useAppStore = create<AppState>((set, get) => ({
   },
 
   selectObsColumn: (name) => {
-    const { adata, _colorAbort } = get()
+    const { adata, _colorAbort, mappedColumns } = get()
     if (!adata) return
 
     if (_colorAbort) _colorAbort.abort()
@@ -996,9 +1011,17 @@ const useAppStore = create<AppState>((set, get) => ({
       _colorAbort: abortController,
     })
 
-    adata.obsColumn(name, abortController.signal).then((values) => {
+    // Virtual (host-injected) columns are expanded on the fly from an
+    // existing zarr column by applying the spec's mapping per cell.
+    const spec = mappedColumns.find((m) => m.label === name)
+    const fetchColumn = spec ? spec.sourceColumn : name
+
+    adata.obsColumn(fetchColumn, abortController.signal).then((values) => {
       const valuesArray = Array.isArray(values) ? values : Array.from(values as Iterable<number>)
-      const { codes, categoryMap, uniqueCount } = encodeCategories(valuesArray as (string | number | null)[])
+      const rawValues = spec
+        ? valuesArray.map((v) => spec.mapping[String(v)] ?? null)
+        : (valuesArray as (string | number | null)[])
+      const { codes, categoryMap, uniqueCount } = encodeCategories(rawValues)
 
       if (uniqueCount > MAX_CATEGORIES) {
         set({
@@ -1043,6 +1066,16 @@ const useAppStore = create<AppState>((set, get) => ({
       _colorAbort: null,
     })
     get().rebuildColorBuffer()
+  },
+
+  setMappedColumns: (specs) => {
+    set({ mappedColumns: specs })
+    // If the currently-selected color column is a mapped label, rebuild so
+    // the mapping update (or arrival) takes effect without user re-selecting.
+    const selected = get().selectedObsColumn
+    if (selected && specs.some((s) => s.label === selected)) {
+      get().selectObsColumn(selected)
+    }
   },
 
   selectGene: (name) => {

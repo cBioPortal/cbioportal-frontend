@@ -64,7 +64,9 @@ import { MakeMobxView } from '../../shared/components/MobxView';
 import ResourceTab from '../../shared/components/resources/ResourceTab';
 import StudyViewURLWrapper from './StudyViewURLWrapper';
 import ResourcesTab, { RESOURCES_TAB_NAME } from './resources/ResourcesTab';
-import { ResourceData } from 'cbioportal-ts-api-client';
+import { ClinicalDataFilter, ResourceData } from 'cbioportal-ts-api-client';
+import { getClient } from 'shared/api/cbioportalClientInstance';
+import { MappedColumnSpec } from 'cbioportal-cell-explorer-highperformer';
 import $ from 'jquery';
 import { StudyViewComparisonGroup } from 'pages/groupComparison/GroupComparisonUtils';
 import { parse } from 'query-string';
@@ -565,6 +567,108 @@ export default class StudyViewPage extends React.Component<
         },
     });
 
+    // ---- Cell Explorer: host-injected clinical-attribute coloring ----
+    //
+    // Ports PR #5535's "Color by Consensus Signature" into this branch's
+    // in-process Cell Explorer (option 3a). Still prototype scoping: only
+    // msk_spectrum_tme_2022 has the CONSENSUS_SIGNATURE attribute, and the
+    // zarr's donor_id obs column is keyed on PATIENT_DISPLAY_NAME values.
+
+    private cceIsMskSpectrum(): boolean {
+        return !!this.store.queriedPhysicalStudyIds.result?.includes(
+            'msk_spectrum_tme_2022'
+        );
+    }
+
+    readonly selectedPatientDisplayNames = remoteData<string[]>({
+        await: () => [
+            this.store.queriedPhysicalStudyIds,
+            this.store.selectedSamples,
+        ],
+        invoke: async () => {
+            if (!this.cceIsMskSpectrum()) return [];
+            const result = await this.store.internalClient.fetchClinicalDataCountsUsingPOST(
+                {
+                    clinicalDataCountFilter: {
+                        attributes: [
+                            {
+                                attributeId: 'PATIENT_DISPLAY_NAME',
+                            } as ClinicalDataFilter,
+                        ],
+                        studyViewFilter: this.store.filters,
+                    },
+                }
+            );
+            const item = _.find(result, {
+                attributeId: 'PATIENT_DISPLAY_NAME',
+            });
+            return item
+                ? item.counts.map((c: { value: string }) => c.value)
+                : [];
+        },
+        default: [],
+    });
+
+    readonly consensusSignatureMapping = remoteData<Record<string, string>>({
+        await: () => [
+            this.store.queriedPhysicalStudyIds,
+            this.store.selectedSamples,
+        ],
+        invoke: async () => {
+            if (!this.cceIsMskSpectrum()) return {};
+            const samples = this.store.selectedSamples.result!;
+            const patientIds = _.uniq(samples.map(s => s.patientId));
+            if (patientIds.length === 0) return {};
+
+            const clinicalData = await getClient().fetchClinicalDataUsingPOST({
+                clinicalDataType: 'PATIENT',
+                clinicalDataMultiStudyFilter: {
+                    attributeIds: [
+                        'PATIENT_DISPLAY_NAME',
+                        'CONSENSUS_SIGNATURE',
+                    ],
+                    identifiers: patientIds.map(pid => ({
+                        entityId: pid,
+                        studyId: 'msk_spectrum_tme_2022',
+                    })),
+                },
+            });
+
+            const displayNameByPatient: Record<string, string> = {};
+            const signatureByPatient: Record<string, string> = {};
+            for (const d of clinicalData) {
+                if (d.clinicalAttributeId === 'PATIENT_DISPLAY_NAME') {
+                    displayNameByPatient[d.patientId] = d.value;
+                } else if (d.clinicalAttributeId === 'CONSENSUS_SIGNATURE') {
+                    signatureByPatient[d.patientId] = d.value;
+                }
+            }
+
+            const mapping: Record<string, string> = {};
+            for (const pid of patientIds) {
+                const displayName = displayNameByPatient[pid];
+                const signature = signatureByPatient[pid];
+                if (displayName && signature) {
+                    mapping[displayName] = signature;
+                }
+            }
+            return mapping;
+        },
+        default: {},
+    });
+
+    @computed get cellExplorerMappedColumns(): MappedColumnSpec[] {
+        const mapping = this.consensusSignatureMapping.result;
+        if (!mapping || Object.keys(mapping).length === 0) return [];
+        return [
+            {
+                label: 'Consensus Signature',
+                sourceColumn: 'donor_id',
+                mapping,
+            },
+        ];
+    }
+
     @computed get customTabs() {
         return buildCustomTabs(this.customTabsConfigs);
     }
@@ -787,6 +891,13 @@ export default class StudyViewPage extends React.Component<
                                     >
                                         <CellExplorerTab
                                             studyId={this.store.studyIds[0]}
+                                            mappedColumns={
+                                                this.cellExplorerMappedColumns
+                                            }
+                                            selectedDisplayNames={
+                                                this.selectedPatientDisplayNames
+                                                    .result
+                                            }
                                         />
                                     </MSKTab>
 
