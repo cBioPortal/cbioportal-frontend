@@ -4,6 +4,7 @@ import {
     useAppStore,
 } from 'cbioportal-cell-explorer-highperformer';
 import 'antd/dist/antd.css';
+import './CellExplorerTab.css';
 
 // Prototype study→dataset mapping. Real integration would fetch this from the
 // backend (e.g. via a `cellExplorerDataset` field on the study metadata).
