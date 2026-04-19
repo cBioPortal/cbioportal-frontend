@@ -107,7 +107,15 @@ export const CellExplorerTab: React.FunctionComponent<CellExplorerTabProps> = ({
     if (!datasetUrl) return null;
 
     return (
-        <div style={{ height: 'calc(100vh - 180px)', minHeight: 500 }}>
+        <div
+            style={{
+                height: 'calc(100vh - 180px)',
+                minHeight: 500,
+                display: 'flex',
+                flexDirection: 'column',
+                background: '#fff',
+            }}
+        >
             <CellExplorerView />
         </div>
     );

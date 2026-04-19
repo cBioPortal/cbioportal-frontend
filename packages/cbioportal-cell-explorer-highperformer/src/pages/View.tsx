@@ -600,7 +600,7 @@ function Visualization({ deckRef }: { deckRef: React.RefObject<any> }) {
   )
 
   return (
-    <div ref={containerRef} style={{ position: 'relative', width: '100%', height: '100%' }}>
+    <div ref={containerRef} style={{ position: 'relative', width: '100%', height: '100%', background: '#fff' }}>
       <DeckGL
         ref={deckRef}
         key={deckKey}
@@ -740,7 +740,7 @@ function View() {
   }
 
   return (
-    <Layout style={{ height: '100vh', background: '#fff' }}>
+    <Layout style={{ height: '100%', background: '#fff' }}>
       <Layout style={{ flex: 1, overflow: 'hidden', paddingBottom: ENABLE_PROFILER ? PROFILE_BAR_HEIGHT : 0 }}>
         <Sider
           width={LEFT_SIDEBAR_WIDTH}
@@ -753,7 +753,7 @@ function View() {
         >
           {leftCollapsed ? <CollapsedSidebar onExpand={() => setLeftCollapsed(false)} /> : <LeftSidebarContent />}
         </Sider>
-        <Content style={{ position: 'relative' }}>
+        <Content style={{ position: 'relative', background: '#fff' }}>
           <EdgeTab
             side="left"
             onClick={() => setLeftCollapsed((c) => !c)}

@@ -11,6 +11,33 @@ import {
     CloseOutlined,
 } from '@ant-design/icons';
 import useAppStore, { CUSTOM_GROUP_ID } from '../store/useAppStore';
+import type { SelectionTool } from '../store/useAppStore';
+
+const TOOL_OPTIONS: {
+    value: SelectionTool;
+    label: string;
+    icon: React.ReactNode;
+    tooltip: string;
+}[] = [
+    {
+        value: 'pan',
+        label: 'Pan',
+        icon: <DragOutlined />,
+        tooltip: 'Pan & zoom (Esc)',
+    },
+    {
+        value: 'rectangle',
+        label: 'Rectangle',
+        icon: <GatewayOutlined />,
+        tooltip: 'Rectangle select',
+    },
+    {
+        value: 'lasso',
+        label: 'Lasso',
+        icon: <EditOutlined />,
+        tooltip: 'Lasso select',
+    },
+];
 
 function useCustomGroupCount() {
     return useAppStore(s => s.customGroupCommittedCount);
@@ -34,51 +61,46 @@ export default function SelectionToolbar() {
         <div
             style={{
                 position: 'absolute',
-                top: 48,
+                top: 12,
                 left: 12,
                 zIndex: 3,
                 display: 'flex',
                 flexDirection: 'column',
-                gap: 4,
+                alignItems: 'flex-start',
+                gap: 8,
             }}
         >
-            <Space direction="vertical" size="small">
-                <Tooltip title="Pan & Zoom (Esc)" placement="right">
-                    <Button
-                        icon={<DragOutlined />}
-                        type={selectionTool === 'pan' ? 'primary' : 'default'}
-                        onClick={() => setSelectionTool('pan')}
-                    />
-                </Tooltip>
-                <Tooltip title="Rectangle select" placement="right">
-                    <Button
-                        icon={<GatewayOutlined />}
-                        type={
-                            selectionTool === 'rectangle'
-                                ? 'primary'
-                                : 'default'
-                        }
-                        onClick={() => setSelectionTool('rectangle')}
-                    />
-                </Tooltip>
-                <Tooltip title="Lasso select" placement="right">
-                    <Button
-                        icon={<EditOutlined />}
-                        type={selectionTool === 'lasso' ? 'primary' : 'default'}
-                        onClick={() => setSelectionTool('lasso')}
-                    />
-                </Tooltip>
-            </Space>
+            <Space.Compact size="small">
+                {TOOL_OPTIONS.map(opt => (
+                    <Tooltip
+                        key={opt.value}
+                        title={opt.tooltip}
+                        placement="bottom"
+                    >
+                        <Button
+                            type={
+                                selectionTool === opt.value
+                                    ? 'primary'
+                                    : 'default'
+                            }
+                            icon={opt.icon}
+                            onClick={() => setSelectionTool(opt.value)}
+                        >
+                            {opt.label}
+                        </Button>
+                    </Tooltip>
+                ))}
+            </Space.Compact>
 
             {hasSelection && (
-                <Space direction="vertical" size="small">
+                <Space.Compact size="small">
                     <Tooltip
                         title={
                             selectionDisplayMode === 'dim'
                                 ? 'Hide unselected'
                                 : 'Dim unselected'
                         }
-                        placement="right"
+                        placement="bottom"
                     >
                         <Button
                             icon={
@@ -95,24 +117,30 @@ export default function SelectionToolbar() {
                                         : 'dim'
                                 )
                             }
-                        />
+                        >
+                            {selectionDisplayMode === 'dim' ? 'Hide' : 'Dim'}
+                        </Button>
                     </Tooltip>
-                    <Tooltip title="Clear all selections" placement="right">
+                    <Tooltip title="Clear all selections" placement="bottom">
                         <Button
                             icon={<ClearOutlined />}
                             onClick={clearAllSelections}
-                        />
+                        >
+                            Clear
+                        </Button>
                     </Tooltip>
-                </Space>
+                </Space.Compact>
             )}
 
             {!summaryPanelOpen && (
-                <Tooltip title="Show summary panel" placement="right">
+                <Tooltip title="Show summary panel" placement="bottom">
                     <Button
-                        icon={<BarChartOutlined />}
                         size="small"
+                        icon={<BarChartOutlined />}
                         onClick={() => setSummaryPanelOpen(true)}
-                    />
+                    >
+                        Summary
+                    </Button>
                 </Tooltip>
             )}
 
@@ -124,7 +152,6 @@ export default function SelectionToolbar() {
                         flexDirection: 'column',
                         alignItems: 'flex-start',
                         gap: 2,
-                        marginTop: 4,
                     }}
                 >
                     {selectionGroups.map(group => (
