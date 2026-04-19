@@ -1,15 +1,14 @@
 import { assert } from 'chai';
 import accumulatingDebounce from './accumulatingDebounce';
 import sinon from 'sinon';
-import lolex from 'lolex';
-import { Clock } from 'lolex';
+import FakeTimers, { Clock } from '@sinonjs/fake-timers';
 import { AccumulatingDebouncedFunction } from './accumulatingDebounce';
 
 describe('accumulatingDebounce', () => {
     let clock: Clock;
 
     beforeAll(() => {
-        clock = lolex.install();
+        clock = FakeTimers.install();
     });
 
     afterAll(() => {

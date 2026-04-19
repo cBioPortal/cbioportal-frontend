@@ -13,7 +13,7 @@ import SimpleTable from '../simpleTable/SimpleTable';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import expect from 'expect';
 import expectJSX from 'expect-jsx';
-import lolex, { Clock } from 'lolex';
+import FakeTimers, { Clock } from '@sinonjs/fake-timers';
 import {
     PaginationControls,
     SHOW_ALL_PAGE_SIZE,
@@ -371,7 +371,7 @@ describe('LazyMobXTable', () => {
 
     let clock: Clock;
     beforeAll(() => {
-        clock = lolex.install();
+        clock = FakeTimers.install();
         simpleColumns = [
             {
                 name: 'ID',

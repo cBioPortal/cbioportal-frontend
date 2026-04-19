@@ -7,7 +7,6 @@ import Oncoprint, {
 } from './Oncoprint';
 import fileDownload from 'react-file-download';
 import ifNotDefined from '../../lib/ifNotDefined';
-import { string } from 'yargs';
 
 export function getTabularDownloadData(
     geneticTracks: GeneticTrackSpec[],
