@@ -185,6 +185,8 @@ export interface AppState {
   showLeftSidebar: boolean
   showRightSidebar: boolean
   showDatasetDropdown: boolean
+  showDatasetSection: boolean
+  setEmbeddedMode: (embedded: boolean) => void
 
   // Error state
   loadingError: string | null
@@ -366,6 +368,12 @@ const useAppStore = create<AppState>((set, get) => ({
   showLeftSidebar: true,
   showRightSidebar: true,
   showDatasetDropdown: true,
+  showDatasetSection: true,
+  setEmbeddedMode: (embedded) =>
+    set({
+      showHeader: !embedded,
+      showDatasetSection: !embedded,
+    }),
 
   // Error state
   loadingError: null,

@@ -257,6 +257,7 @@ function LeftSidebarContent() {
   const datasetUrl = useAppStore((s) => s.datasetUrl)
   const showHeader = useAppStore((s) => s.showHeader)
   const showDatasetDropdown = useAppStore((s) => s.showDatasetDropdown)
+  const showDatasetSection = useAppStore((s) => s.showDatasetSection)
   const nObs = useAppStore((s) => s.nObs)
   const nVar = useAppStore((s) => s.nVar)
   const obsmKeys = useAppStore((s) => s.obsmKeys)
@@ -279,35 +280,37 @@ function LeftSidebarContent() {
       <div style={{ flex: 1, overflow: 'auto' }}>
         {showHeader && <BrandingHeader />}
 
-        <div style={sectionStyle}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', ...labelStyle }}>
-            <span>
-              Dataset
-              {datasetUrl && (
-                <ShareLinkPopover datasetUrl={datasetUrl} />
+        {showDatasetSection && (
+          <div style={sectionStyle}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', ...labelStyle }}>
+              <span>
+                Dataset
+                {datasetUrl && (
+                  <ShareLinkPopover datasetUrl={datasetUrl} />
+                )}
+              </span>
+              {nObs != null && (
+                <Typography.Text type="secondary" style={{ fontSize: 11, fontWeight: 400, textTransform: 'none' }}>
+                  {nObs.toLocaleString()} cells &middot; {(nVar ?? 0).toLocaleString()} genes
+                </Typography.Text>
               )}
-            </span>
-            {nObs != null && (
-              <Typography.Text type="secondary" style={{ fontSize: 11, fontWeight: 400, textTransform: 'none' }}>
-                {nObs.toLocaleString()} cells &middot; {(nVar ?? 0).toLocaleString()} genes
+            </div>
+            {showDatasetDropdown ? (
+              <Select
+                style={{ width: '100%' }}
+                size="small"
+                placeholder="Select dataset"
+                value={datasetUrl}
+                onChange={(url: string) => navigate(`/view?url=${encodeURIComponent(url)}`)}
+                options={datasetOptions.map((url) => ({ label: urlLabel(url), value: url }))}
+              />
+            ) : (
+              <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                {datasetUrl ? urlLabel(datasetUrl) : 'No dataset'}
               </Typography.Text>
             )}
           </div>
-          {showDatasetDropdown ? (
-            <Select
-              style={{ width: '100%' }}
-              size="small"
-              placeholder="Select dataset"
-              value={datasetUrl}
-              onChange={(url: string) => navigate(`/view?url=${encodeURIComponent(url)}`)}
-              options={datasetOptions.map((url) => ({ label: urlLabel(url), value: url }))}
-            />
-          ) : (
-            <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-              {datasetUrl ? urlLabel(datasetUrl) : 'No dataset'}
-            </Typography.Text>
-          )}
-        </div>
+        )}
 
         <div style={sectionStyle}>
           <div style={labelStyle}>Embedding</div>

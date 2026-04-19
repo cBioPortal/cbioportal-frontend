@@ -29,6 +29,7 @@ import StudyPageHeader from './studyPageHeader/StudyPageHeader';
 import CNSegments from './tabs/CNSegments';
 import {
     CellExplorerTab,
+    getCellExplorerConfig,
     hasCellExplorerDataset,
 } from './tabs/CellExplorerTab';
 import { getInternalClient } from 'shared/api/cbioportalInternalClientInstance';
@@ -94,6 +95,34 @@ export interface IStudyViewPageProps {
 }
 
 export const MAX_URL_LENGTH = 300000;
+
+// SNAKE_CASE_ID → "Snake Case Id". Used for Cell Explorer clinical-attribute
+// display labels until we wire in the real displayName from the
+// clinical-attributes endpoint. Keeps known acronyms upper-cased.
+const CCE_ATTR_ACRONYMS = new Set([
+    'HR',
+    'WGS',
+    'BRCA',
+    'HER2',
+    'EGFR',
+    'CNV',
+    'MSI',
+    'HRD',
+    'FBI',
+    'ID',
+    'TMB',
+]);
+function humanizeAttributeId(attrId: string): string {
+    return attrId
+        .split('_')
+        .map(w => {
+            if (!w) return '';
+            const upper = w.toUpperCase();
+            if (CCE_ATTR_ACRONYMS.has(upper)) return upper;
+            return upper[0] + w.slice(1).toLowerCase();
+        })
+        .join(' ');
+}
 
 @observer
 export class StudyResultsSummary extends React.Component<
@@ -578,15 +607,19 @@ export default class StudyViewPage extends React.Component<
 
     // ---- Cell Explorer: host-injected clinical-attribute coloring ----
     //
-    // Ports PR #5535's "Color by Consensus Signature" into this branch's
-    // in-process Cell Explorer (option 3a). Still prototype scoping: only
-    // msk_spectrum_tme_2022 has the CONSENSUS_SIGNATURE attribute, and the
-    // zarr's donor_id obs column is keyed on PATIENT_DISPLAY_NAME values.
+    // Ports PR #5535's "Color by clinical attributes" into this branch's
+    // in-process Cell Explorer (option 3a). Driven by the per-study config in
+    // CellExplorerTab.tsx: the config declares the zarr ↔ clinical identifier
+    // (e.g. PATIENT_DISPLAY_NAME → donor_id) and which clinical attributes
+    // should surface as Color By options. To add another attribute, edit the
+    // config array — no changes here.
 
-    private cceIsMskSpectrum(): boolean {
-        return !!this.store.queriedPhysicalStudyIds.result?.includes(
-            'msk_spectrum_tme_2022'
-        );
+    @computed private get cceStudyId(): string | undefined {
+        return this.store.queriedPhysicalStudyIds.result?.[0];
+    }
+
+    @computed private get cceConfig() {
+        return getCellExplorerConfig(this.cceStudyId);
     }
 
     readonly selectedPatientDisplayNames = remoteData<string[]>({
@@ -595,13 +628,16 @@ export default class StudyViewPage extends React.Component<
             this.store.selectedSamples,
         ],
         invoke: async () => {
-            if (!this.cceIsMskSpectrum()) return [];
+            const config = this.cceConfig;
+            if (!config) return [];
             const result = await this.store.internalClient.fetchClinicalDataCountsUsingPOST(
                 {
                     clinicalDataCountFilter: {
                         attributes: [
                             {
-                                attributeId: 'PATIENT_DISPLAY_NAME',
+                                attributeId:
+                                    config.patientIdentifier
+                                        .clinicalAttributeId,
                             } as ClinicalDataFilter,
                         ],
                         studyViewFilter: this.store.filters,
@@ -609,7 +645,7 @@ export default class StudyViewPage extends React.Component<
                 }
             );
             const item = _.find(result, {
-                attributeId: 'PATIENT_DISPLAY_NAME',
+                attributeId: config.patientIdentifier.clinicalAttributeId,
             });
             return item
                 ? item.counts.map((c: { value: string }) => c.value)
@@ -618,64 +654,82 @@ export default class StudyViewPage extends React.Component<
         default: [],
     });
 
-    readonly consensusSignatureMapping = remoteData<Record<string, string>>({
+    readonly cellExplorerPatientAttributeData = remoteData<
+        Record<string, Record<string, string>>
+    >({
         await: () => [
             this.store.queriedPhysicalStudyIds,
             this.store.selectedSamples,
         ],
         invoke: async () => {
-            if (!this.cceIsMskSpectrum()) return {};
+            const config = this.cceConfig;
+            const studyId = this.cceStudyId;
+            if (!config || !studyId || config.patientAttributes.length === 0) {
+                return {};
+            }
+
             const samples = this.store.selectedSamples.result!;
             const patientIds = _.uniq(samples.map(s => s.patientId));
             if (patientIds.length === 0) return {};
 
+            const identifierAttr = config.patientIdentifier.clinicalAttributeId;
+            const attributeIds = _.uniq([
+                identifierAttr,
+                ...config.patientAttributes,
+            ]);
+
             const clinicalData = await getClient().fetchClinicalDataUsingPOST({
                 clinicalDataType: 'PATIENT',
                 clinicalDataMultiStudyFilter: {
-                    attributeIds: [
-                        'PATIENT_DISPLAY_NAME',
-                        'CONSENSUS_SIGNATURE',
-                    ],
+                    attributeIds,
                     identifiers: patientIds.map(pid => ({
                         entityId: pid,
-                        studyId: 'msk_spectrum_tme_2022',
+                        studyId,
                     })),
                 },
             });
 
-            const displayNameByPatient: Record<string, string> = {};
-            const signatureByPatient: Record<string, string> = {};
+            // Pivot to { attributeId: { patientId: value } }
+            const byAttr: Record<string, Record<string, string>> = {};
             for (const d of clinicalData) {
-                if (d.clinicalAttributeId === 'PATIENT_DISPLAY_NAME') {
-                    displayNameByPatient[d.patientId] = d.value;
-                } else if (d.clinicalAttributeId === 'CONSENSUS_SIGNATURE') {
-                    signatureByPatient[d.patientId] = d.value;
+                if (!byAttr[d.clinicalAttributeId]) {
+                    byAttr[d.clinicalAttributeId] = {};
                 }
+                byAttr[d.clinicalAttributeId][d.patientId] = d.value;
             }
-
-            const mapping: Record<string, string> = {};
-            for (const pid of patientIds) {
-                const displayName = displayNameByPatient[pid];
-                const signature = signatureByPatient[pid];
-                if (displayName && signature) {
-                    mapping[displayName] = signature;
-                }
-            }
-            return mapping;
+            return byAttr;
         },
         default: {},
     });
 
     @computed get cellExplorerMappedColumns(): MappedColumnSpec[] {
-        const mapping = this.consensusSignatureMapping.result;
-        if (!mapping || Object.keys(mapping).length === 0) return [];
-        return [
-            {
-                label: 'Consensus Signature',
-                sourceColumn: 'donor_id',
-                mapping,
-            },
-        ];
+        const config = this.cceConfig;
+        const byAttr = this.cellExplorerPatientAttributeData.result;
+        if (!config || !byAttr) return [];
+
+        const identifierAttr = config.patientIdentifier.clinicalAttributeId;
+        const sourceColumn = config.patientIdentifier.sourceColumn;
+        const identifierByPatient = byAttr[identifierAttr] || {};
+
+        const specs: MappedColumnSpec[] = [];
+        for (const attrId of config.patientAttributes) {
+            const valueByPatient = byAttr[attrId];
+            if (!valueByPatient) continue;
+            const mapping: Record<string, string> = {};
+            for (const patientId of Object.keys(valueByPatient)) {
+                const identifier = identifierByPatient[patientId];
+                const value = valueByPatient[patientId];
+                if (identifier && value) mapping[identifier] = value;
+            }
+            if (Object.keys(mapping).length > 0) {
+                specs.push({
+                    label: humanizeAttributeId(attrId),
+                    sourceColumn,
+                    mapping,
+                });
+            }
+        }
+        return specs;
     }
 
     @computed get customTabs() {

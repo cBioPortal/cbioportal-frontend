@@ -7,20 +7,58 @@ import {
 import 'antd/dist/antd.css';
 import './CellExplorerTab.css';
 
-// Prototype study→dataset mapping. Real integration would fetch this from the
-// backend (e.g. via a `cellExplorerDataset` field on the study metadata).
-const STUDY_TO_DATASET: Record<string, string> = {
-    msk_spectrum_tme_2022:
-        'https://cbioportal-public-imaging.assets.cbioportal.org/msk_spectrum_tme_2022/zarr/spectrum_all_cells-f16-zstd-c1s30-v3.zarr/',
+// Prototype per-study configuration. Real integration would fetch this from
+// the backend (e.g. on the study metadata). It declares:
+//   - the zarr dataset URL,
+//   - how patient-level cBioPortal clinical data joins to the zarr (which
+//     clinical attribute's value matches which zarr obs column),
+//   - which clinical attributes are exposed as Color By options.
+// Sample-level joins are structurally supported; for MSK SPECTRUM we don't yet
+// have a confirmed zarr↔clinical sample-ID column, so `sampleAttributes` is
+// left empty until that mapping is verified.
+export interface CellExplorerIdentifier {
+    clinicalAttributeId: string; // e.g. PATIENT_DISPLAY_NAME
+    sourceColumn: string; // matching zarr obs column, e.g. donor_id
+}
+
+export interface CellExplorerStudyConfig {
+    datasetUrl: string;
+    patientIdentifier: CellExplorerIdentifier;
+    sampleIdentifier?: CellExplorerIdentifier;
+    patientAttributes: string[];
+    sampleAttributes: string[];
+}
+
+export const CELL_EXPLORER_STUDY_CONFIGS: Record<
+    string,
+    CellExplorerStudyConfig
+> = {
+    msk_spectrum_tme_2022: {
+        datasetUrl:
+            'https://cbioportal-public-imaging.assets.cbioportal.org/msk_spectrum_tme_2022/zarr/spectrum_all_cells-f16-zstd-c1s30-v3.zarr/',
+        patientIdentifier: {
+            clinicalAttributeId: 'PATIENT_DISPLAY_NAME',
+            sourceColumn: 'donor_id',
+        },
+        patientAttributes: [
+            'CONSENSUS_SIGNATURE',
+            'CONSENSUS_HR_STATUS',
+            'MYRIAD_SIGNATURE',
+            'WGS_SIGNATURE',
+            'GYN_DIAGNOSIS_HISTOLOGY',
+        ],
+        sampleAttributes: [],
+    },
 };
 
-// The zarr obs column whose values are matched against the host's clinical
-// identifiers (PATIENT_DISPLAY_NAME). MSK SPECTRUM–specific; mirrors the
-// hardcoding in PR #5535.
-const DIMMING_OBS_COLUMN = 'donor_id';
+export function getCellExplorerConfig(
+    studyId: string | undefined
+): CellExplorerStudyConfig | undefined {
+    return studyId ? CELL_EXPLORER_STUDY_CONFIGS[studyId] : undefined;
+}
 
 export function hasCellExplorerDataset(studyId: string | undefined): boolean {
-    return !!studyId && studyId in STUDY_TO_DATASET;
+    return !!getCellExplorerConfig(studyId);
 }
 
 interface CellExplorerTabProps {
@@ -34,8 +72,16 @@ export const CellExplorerTab: React.FunctionComponent<CellExplorerTabProps> = ({
     mappedColumns,
     selectedDisplayNames,
 }) => {
-    const datasetUrl = studyId ? STUDY_TO_DATASET[studyId] : undefined;
+    const config = getCellExplorerConfig(studyId);
+    const datasetUrl = config?.datasetUrl;
+    const dimmingColumn = config?.patientIdentifier.sourceColumn;
     const [loadedUrl, setLoadedUrl] = React.useState<string | null>(null);
+
+    React.useEffect(() => {
+        // Hide the standalone app's branding + dataset picker — inside cBioPortal
+        // we already have a tab title and are showing a known dataset.
+        useAppStore.getState().setEmbeddedMode(true);
+    }, []);
 
     React.useEffect(() => {
         if (!datasetUrl || loadedUrl === datasetUrl) return;
@@ -63,12 +109,15 @@ export const CellExplorerTab: React.FunctionComponent<CellExplorerTabProps> = ({
         [selectedDisplayNames]
     );
     React.useEffect(() => {
-        if (!selectedDisplayNames || selectedDisplayNames.length === 0) return;
-        useAppStore
-            .getState()
-            .selectByIds(DIMMING_OBS_COLUMN, selectedDisplayNames);
+        if (
+            !selectedDisplayNames ||
+            selectedDisplayNames.length === 0 ||
+            !dimmingColumn
+        )
+            return;
+        useAppStore.getState().selectByIds(dimmingColumn, selectedDisplayNames);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedDisplayNamesKey]);
+    }, [selectedDisplayNamesKey, dimmingColumn]);
 
     if (!datasetUrl) return null;
 
