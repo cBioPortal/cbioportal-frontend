@@ -1,6 +1,7 @@
 import { assert } from 'chai';
 import { mount } from 'enzyme';
 import * as React from 'react';
+import { act } from 'react-dom/test-utils';
 import GeneSymbolValidator, {
     IGeneSymbolValidatorProps,
 } from './GeneSymbolValidator';
@@ -63,7 +64,10 @@ describe('GeneSymbolValidator', () => {
             };
         });
 
-        instance.forceUpdate();
+        act(() => {
+            instance.forceUpdate();
+        });
+        wrapper.update();
 
         assert.equal(
             wrapper.find('#geneBoxValidationStatus').text(),
@@ -83,7 +87,10 @@ describe('GeneSymbolValidator', () => {
             };
         });
 
-        instance.forceUpdate();
+        act(() => {
+            instance.forceUpdate();
+        });
+        wrapper.update();
 
         assert.equal(
             wrapper.find('#geneBoxValidationStatus').text(),
