@@ -1,0 +1,32 @@
+{
+  "name": "cbioportal-cell-explorer-zarrstore",
+  "description": "Zarr/AnnData store utilities from cBioPortal cell-explorer",
+  "version": "0.1.0",
+  "main": "dist/index.js",
+  "module": "dist/index.es.js",
+  "jsnext:main": "dist/index.es.js",
+  "typings": "dist/index.d.ts",
+  "engines": {
+    "node": "22.18.0"
+  },
+  "files": [
+    "dist"
+  ],
+  "author": "cBioPortal",
+  "license": "AGPL-3.0-or-later",
+  "repository": "cBioPortal/cbioportal-frontend",
+  "scripts": {
+    "build": "cross-env NODE_ENV=production NODE_OPTIONS=--max-old-space-size=2048 pnpm run rollup",
+    "start": "pnpm run watch",
+    "watch": "pnpm run rollup:watch",
+    "watchSSL": "pnpm run watch",
+    "rollup": "rollup -c rollup.config.ts",
+    "rollup:watch": "rollup -c rollup.config.ts -w",
+    "prepare": "pnpm run build",
+    "test": "cross-env jest $GREP --env=jsdom --runInBand --ci --reporters=default --reporters=jest-junit --passWithNoTests",
+    "test:watch": "pnpm run test --watch"
+  },
+  "dependencies": {
+    "zarrita": "^0.6.1"
+  }
+}
