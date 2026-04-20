@@ -3,8 +3,10 @@ import {
     ComparisonGroup,
     EnrichmentAnalysisComparisonGroup,
     getGroupsDownloadData,
+    getNonOverlappingGroupStudiesAttr,
     getNumSamples,
     getOverlapComputations,
+    getOverlappingGroupStudiesAttr,
     getSampleIdentifiers,
     getStudyIds,
     getStudyMutationEnrichmentProfileMap,
@@ -320,6 +322,62 @@ export default abstract class ComparisonStore extends AnalysisStore
         newSession.groups = newSession.groups.filter(g => g.name !== name);
 
         this.saveAndGoToSession(newSession);
+    }
+
+    public async startNonOverlappingComparison() {
+        this.newSessionPending = true;
+        const overlapInfo = this.overlapComputations.result!;
+        const selectedGroups = this._selectedGroups.result!;
+        const sampleMap = this.sampleMap.result!;
+
+        const newSession = _.cloneDeep(this._session.result!);
+        // Replace groups in new session with only the selected groups, overlap removed
+        newSession.groups = selectedGroups.map(group => {
+            const sessionGroup = newSession.groups.find(
+                g => g.name === group.name
+            );
+            return {
+                ...(sessionGroup || {}),
+                name: group.name,
+                description: (sessionGroup && sessionGroup.description) || '',
+                origin: this._session.result!.origin,
+                studies: getNonOverlappingGroupStudiesAttr(
+                    group.studies,
+                    overlapInfo.overlappingSamplesSet,
+                    overlapInfo.overlappingPatientsSet,
+                    sampleMap
+                ),
+            } as SessionGroupData;
+        });
+
+        await this.saveAndGoToSession(newSession);
+    }
+
+    public async startOverlappingComparison() {
+        this.newSessionPending = true;
+        const overlapInfo = this.overlapComputations.result!;
+        const selectedGroups = this._selectedGroups.result!;
+        const sampleMap = this.sampleMap.result!;
+
+        const newSession = _.cloneDeep(this._session.result!);
+        newSession.groups = selectedGroups.map(group => {
+            const sessionGroup = newSession.groups.find(
+                g => g.name === group.name
+            );
+            return {
+                ...(sessionGroup || {}),
+                name: group.name,
+                description: (sessionGroup && sessionGroup.description) || '',
+                origin: this._session.result!.origin,
+                studies: getOverlappingGroupStudiesAttr(
+                    group.studies,
+                    overlapInfo.overlappingPatientsSet,
+                    sampleMap
+                ),
+            } as SessionGroupData;
+        });
+
+        await this.saveAndGoToSession(newSession);
     }
 
     readonly origin = remoteData({

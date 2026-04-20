@@ -938,6 +938,62 @@ export function getGroupsDownloadData(
     return lines.map(line => line.join('\t')).join('\n');
 }
 
+/**
+ * Computes the studies attr for a group restricted to only non-overlapping
+ * samples/patients. Removes samples that directly overlap (appear in multiple
+ * groups) as well as samples whose patient overlaps across groups.
+ */
+export function getNonOverlappingGroupStudiesAttr(
+    groupStudies: { id: string; samples: string[] }[],
+    overlappingSamplesSet: ComplexKeySet,
+    overlappingPatientsSet: ComplexKeySet,
+    sampleMap: ComplexKeyMap<Pick<Sample, 'patientId'>>
+): { id: string; samples: string[] }[] {
+    return groupStudies
+        .map(study => {
+            const studyId = study.id;
+            const nonOverlappingSamples = study.samples.filter(sampleId => {
+                // Exclude sample if it directly overlaps
+                if (overlappingSamplesSet.has({ studyId, sampleId }))
+                    return false;
+                // Exclude sample if its patient overlaps across groups
+                const sample = sampleMap.get({ studyId, sampleId });
+                if (!sample) return false;
+                return !overlappingPatientsSet.has({
+                    studyId,
+                    patientId: sample.patientId,
+                });
+            });
+            return { id: studyId, samples: nonOverlappingSamples };
+        })
+        .filter(study => study.samples.length > 0);
+}
+
+/**
+ * Computes the studies attr for a group restricted to only samples whose
+ * patient overlaps across groups (for overlapping-only comparison).
+ */
+export function getOverlappingGroupStudiesAttr(
+    groupStudies: { id: string; samples: string[] }[],
+    overlappingPatientsSet: ComplexKeySet,
+    sampleMap: ComplexKeyMap<Pick<Sample, 'patientId'>>
+): { id: string; samples: string[] }[] {
+    return groupStudies
+        .map(study => {
+            const studyId = study.id;
+            const samplesInOverlap = study.samples.filter(sampleId => {
+                const sample = sampleMap.get({ studyId, sampleId });
+                if (!sample) return false;
+                return overlappingPatientsSet.has({
+                    studyId,
+                    patientId: sample.patientId,
+                });
+            });
+            return { id: studyId, samples: samplesInOverlap };
+        })
+        .filter(study => study.samples.length > 0);
+}
+
 export const GetStatisticalCautionInfo: React.FunctionComponent = () => {
     return (
         <div className="alert alert-info">
