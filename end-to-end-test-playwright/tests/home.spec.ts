@@ -175,7 +175,7 @@ test.describe('select all/deselect all functionality in study selector', () => {
     });
 });
 
-test.describe.serial('case set selection in front page query form', () => {
+test.describe('case set selection in front page query form', () => {
     test('default case set for single-study selection', async ({ page }) => {
         await page.goto('/');
         await expect(page.locator(SEARCH_INPUT)).toBeVisible({
@@ -190,11 +190,12 @@ test.describe.serial('case set selection in front page query form', () => {
 
         await clickQueryByGeneButton(page);
 
-        await expect(
-            page.locator(SELECTED_CASE_SET)
-        ).toHaveText('Samples with mutation and CNA data (316)', {
-            timeout: 10000,
-        });
+        await expect(page.locator(SELECTED_CASE_SET)).toHaveText(
+            'Samples with mutation and CNA data (316)',
+            {
+                timeout: 10000,
+            }
+        );
     });
 
     test('default case sets across single->multi->single flow', async ({
@@ -255,11 +256,12 @@ test.describe.serial('case set selection in front page query form', () => {
             .click();
         await clickQueryByGeneButton(page);
 
-        await expect(
-            page.locator(SELECTED_CASE_SET)
-        ).toHaveText('Samples with mutation and CNA data (88)', {
-            timeout: 15000,
-        });
+        await expect(page.locator(SELECTED_CASE_SET)).toHaveText(
+            'Samples with mutation and CNA data (88)',
+            {
+                timeout: 15000,
+            }
+        );
     });
 });
 
@@ -304,11 +306,12 @@ test.describe.serial(
                 .first()
                 .click();
             await clickQueryByGeneButton(page);
-            await expect(
-                page.locator(SELECTED_CASE_SET)
-            ).toHaveText('Samples with mutation data (160)', {
-                timeout: 10000,
-            });
+            await expect(page.locator(SELECTED_CASE_SET)).toHaveText(
+                'Samples with mutation data (160)',
+                {
+                    timeout: 10000,
+                }
+            );
         });
 
         test('step 2: select all TCGA non-provisional studies', async () => {
@@ -342,11 +345,12 @@ test.describe.serial(
                 )
                 .click();
             await clickQueryByGeneButton(page);
-            await expect(
-                page.locator(SELECTED_CASE_SET)
-            ).toHaveText('Samples with mutation data (160)', {
-                timeout: 10000,
-            });
+            await expect(page.locator(SELECTED_CASE_SET)).toHaveText(
+                'Samples with mutation data (160)',
+                {
+                    timeout: 10000,
+                }
+            );
         });
 
         test('step 4: select Adrenocortical Carcinoma', async () => {
@@ -375,11 +379,12 @@ test.describe.serial(
                 )
                 .click();
             await clickQueryByGeneButton(page);
-            await expect(
-                page.locator(SELECTED_CASE_SET)
-            ).toHaveText('Samples with mutation and CNA data (88)', {
-                timeout: 10000,
-            });
+            await expect(page.locator(SELECTED_CASE_SET)).toHaveText(
+                'Samples with mutation and CNA data (88)',
+                {
+                    timeout: 10000,
+                }
+            );
         });
     }
 );

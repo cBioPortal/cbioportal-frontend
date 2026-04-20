@@ -587,25 +587,22 @@ test.describe('studyview tests', () => {
         });
     });
 
-    test.describe.serial('cancer gene filter', () => {
-        let page: Page;
-        test.beforeAll(async ({ browser }) => {
-            page = await browser.newPage({
-                viewport: { width: 1600, height: 1000 },
-            });
-            await page.goto('/study?id=laml_tcga');
-        });
-        test.afterAll(async () => {
-            await page.close();
-        });
+    test.describe('cancer gene filter', () => {
+        test.use({ viewport: { width: 1600, height: 1000 } });
 
-        test('the cancer gene filter should be, by default, disabled', async () => {
+        test.beforeEach(async ({ page }) => {
+            await page.goto('/study?id=laml_tcga');
             await page
                 .locator(`${CNA_GENES_TABLE} [data-test="gene-column-header"]`)
                 .waitFor({
                     state: 'visible',
                     timeout: WAIT_FOR_VISIBLE_TIMEOUT,
                 });
+        });
+
+        test('the cancer gene filter should be, by default, disabled', async ({
+            page,
+        }) => {
             await expect(
                 page.locator(`${CNA_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`)
             ).toHaveCount(1);
@@ -618,7 +615,9 @@ test.describe('studyview tests', () => {
             ).toBe('#bebebe');
         });
 
-        test('non cancer gene should show up when the cancer gene filter is disabled', async () => {
+        test('non cancer gene should show up when the cancer gene filter is disabled', async ({
+            page,
+        }) => {
             await expectElementScreenshot(
                 page,
                 CNA_GENES_TABLE,
@@ -626,7 +625,9 @@ test.describe('studyview tests', () => {
             );
         });
 
-        test('the cancer gene filter should remove non cancer gene', async () => {
+        test('the cancer gene filter should remove non cancer gene', async ({
+            page,
+        }) => {
             await page
                 .locator(`${CNA_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`)
                 .click();
@@ -723,25 +724,22 @@ test.describe('studyview tests', () => {
         });
     });
 
-    test.describe.serial('study view lgg_tcga study tests', () => {
+    test.describe('study view lgg_tcga study tests', () => {
         const pieChart = '[data-test="chart-container-SEX"]';
         const table = '[data-test="chart-container-CANCER_TYPE_DETAILED"]';
-        let page: Page;
-        test.beforeAll(async ({ browser }) => {
-            page = await browser.newPage({
-                viewport: { width: 1600, height: 1000 },
-            });
+        test.use({ viewport: { width: 1600, height: 1000 } });
+
+        test.beforeEach(async ({ page }) => {
             await page.goto('/study?id=lgg_tcga');
             await toStudyViewSummaryTab(page);
             await waitForNetworkQuiet(page);
         });
-        test.afterAll(async () => {
-            await page.close();
-        });
 
         test.describe('bar chart', () => {
             const barChart = '[data-test="chart-container-DAYS_TO_COLLECTION"]';
-            test('the log scale should be used for Sample Collection', async () => {
+            test('the log scale should be used for Sample Collection', async ({
+                page,
+            }) => {
                 await page.locator(barChart).waitFor({
                     state: 'visible',
                     timeout: WAIT_FOR_VISIBLE_TIMEOUT,
@@ -772,7 +770,7 @@ test.describe('studyview tests', () => {
 
         test.describe('pie chart', () => {
             test.describe('chart controls', () => {
-                test('the table icon should be available', async () => {
+                test('the table icon should be available', async ({ page }) => {
                     await page.locator(pieChart).waitFor({
                         state: 'visible',
                         timeout: WAIT_FOR_VISIBLE_TIMEOUT,
@@ -790,8 +788,8 @@ test.describe('studyview tests', () => {
         });
 
         test.describe('table', () => {
-            test.describe.serial('chart controls', () => {
-                test('the pie icon should be available', async () => {
+            test.describe('chart controls', () => {
+                test('the pie icon should be available', async ({ page }) => {
                     await page.locator(table).waitFor({
                         state: 'visible',
                         timeout: WAIT_FOR_VISIBLE_TIMEOUT,
@@ -806,7 +804,9 @@ test.describe('studyview tests', () => {
                     ).toHaveCount(1);
                 });
 
-                test('table should be sorted by Freq in the default setting', async () => {
+                test('table should be sorted by Freq in the default setting', async ({
+                    page,
+                }) => {
                     await setDropdownOpen(
                         page,
                         true,
@@ -884,20 +884,15 @@ test.describe('studyview tests', () => {
         });
     });
 
-    test.describe.serial('multi studies', () => {
-        let page: Page;
-        test.beforeAll(async ({ browser }) => {
-            page = await browser.newPage({
-                viewport: { width: 1600, height: 1000 },
-            });
+    test.describe('multi studies', () => {
+        test.use({ viewport: { width: 1600, height: 1000 } });
+
+        test.beforeEach(async ({ page }) => {
             await page.goto('/study?id=acc_tcga,lgg_tcga');
             await waitForNetworkQuiet(page);
         });
-        test.afterAll(async () => {
-            await page.close();
-        });
 
-        test('check for survival plots', async () => {
+        test('check for survival plots', async ({ page }) => {
             await expectElementScreenshot(
                 page,
                 '#mainColumn',
@@ -905,7 +900,9 @@ test.describe('studyview tests', () => {
             );
         });
 
-        test('multi studies view should not have the raw data available', async () => {
+        test('multi studies view should not have the raw data available', async ({
+            page,
+        }) => {
             await expect(
                 page.locator(STUDY_SUMMARY_RAW_DATA_DOWNLOAD)
             ).toHaveCount(0);
