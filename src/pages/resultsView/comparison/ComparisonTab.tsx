@@ -33,7 +33,7 @@ import GenericAssayEnrichmentCollections from 'pages/groupComparison/GenericAssa
 import AlterationEnrichmentTypeSelector from 'shared/lib/comparison/AlterationEnrichmentTypeSelector';
 import styles from 'pages/resultsView/comparison/styles.module.scss';
 import { getServerConfig } from 'config/config';
-import { AlterationFilterMenuSection } from 'pages/groupComparison/GroupComparisonUtils';
+import { AlterationFilterMenuSection, buildOverlapComparisonActionOptions, getOverlapStrategyOptionLabels, OVERLAP_COMPARISON_ACTION_NON_OVERLAPPING, OVERLAP_COMPARISON_ACTION_OVERLAPPING } from 'pages/groupComparison/GroupComparisonUtils';
 import { getSortedGenericAssayAllTabSpecs } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 
 export interface IComparisonTabProps {
@@ -67,21 +67,40 @@ export default class ComparisonTab extends React.Component<
     readonly overlapStrategySelector = MakeMobxView({
         await: () => [this.store.overlapComputations],
         render: () => {
+            const overlapInfo = this.store.overlapComputations.result!;
             if (
-                !this.store.overlapComputations.result!.totalSampleOverlap &&
-                !this.store.overlapComputations.result!.totalPatientOverlap
+                !overlapInfo.totalSampleOverlap &&
+                !overlapInfo.totalPatientOverlap
             ) {
                 return null;
             } else {
-                const includeLabel = 'Include overlapping samples and patients';
-                const excludeLabel = 'Exclude overlapping samples and patients';
+                const hasSampleOverlap = overlapInfo.totalSampleOverlap > 0;
+                const hasPatientOverlap = overlapInfo.totalPatientOverlap > 0;
+                const {
+                    includeLabel,
+                    excludeLabel,
+                } = getOverlapStrategyOptionLabels(
+                    hasSampleOverlap,
+                    hasPatientOverlap
+                );
                 return (
                     <div style={{ minWidth: 355, width: 355, zIndex: 20 }}>
                         <ReactSelect
                             aria-label="Overlap Strategy Selection"
                             name="select overlap strategy"
                             onChange={(option: any | null) => {
-                                if (option) {
+                                if (!option) return;
+                                if (
+                                    option.value ===
+                                    OVERLAP_COMPARISON_ACTION_NON_OVERLAPPING
+                                ) {
+                                    this.store.startNonOverlappingComparison();
+                                } else if (
+                                    option.value ===
+                                    OVERLAP_COMPARISON_ACTION_OVERLAPPING
+                                ) {
+                                    this.store.startOverlappingComparison();
+                                } else {
                                     this.onOverlapStrategySelect(option);
                                 }
                             }}
@@ -94,6 +113,9 @@ export default class ComparisonTab extends React.Component<
                                     label: excludeLabel,
                                     value: OverlapStrategy.EXCLUDE,
                                 },
+                                ...buildOverlapComparisonActionOptions(
+                                    hasPatientOverlap
+                                ),
                             ]}
                             clearable={false}
                             searchable={false}

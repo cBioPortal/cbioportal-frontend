@@ -1282,3 +1282,49 @@ export function getStudyMutationEnrichmentProfileMap(
         return {};
     }
 }
+
+/** Action value constants used in the overlap strategy dropdown for starting new comparisons. */
+export const OVERLAP_COMPARISON_ACTION_NON_OVERLAPPING = 'startNonOverlapping';
+export const OVERLAP_COMPARISON_ACTION_OVERLAPPING = 'startOverlapping';
+
+/**
+ * Returns dynamic Include/Exclude labels for the overlap strategy dropdown,
+ * tailored to only mention the overlap type(s) that actually exist.
+ */
+export function getOverlapStrategyOptionLabels(
+    hasSampleOverlap: boolean,
+    hasPatientOverlap: boolean
+): { includeLabel: string; excludeLabel: string } {
+    const overlapSubject =
+        hasSampleOverlap && hasPatientOverlap
+            ? 'samples and patients'
+            : hasSampleOverlap
+            ? 'samples'
+            : 'patients';
+    return {
+        includeLabel: `Include overlapping ${overlapSubject}`,
+        excludeLabel: `Exclude overlapping ${overlapSubject}`,
+    };
+}
+
+/**
+ * Builds the comparison-action options (non-overlapping / overlapping-only)
+ * to append to the overlap strategy dropdown.
+ */
+export function buildOverlapComparisonActionOptions(
+    hasPatientOverlap: boolean
+): { label: string; value: string }[] {
+    const options: { label: string; value: string }[] = [
+        {
+            label: 'Compare non-overlapping groups',
+            value: OVERLAP_COMPARISON_ACTION_NON_OVERLAPPING,
+        },
+    ];
+    if (hasPatientOverlap) {
+        options.push({
+            label: 'Compare overlapping groups only',
+            value: OVERLAP_COMPARISON_ACTION_OVERLAPPING,
+        });
+    }
+    return options;
+}
