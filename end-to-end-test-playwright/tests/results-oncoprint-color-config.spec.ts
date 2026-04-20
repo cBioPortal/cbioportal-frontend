@@ -50,11 +50,14 @@ test.describe.serial(
         });
 
         /**
-         * Find the track index (1-indexed) whose options menu contains
-         * "Edit Colors" — that's the clinical-track Mutation Spectrum we
-         * just added. wdio hardcoded nth-5 but the app's default track
-         * count has drifted over time (clinical "# Samples per Patient"
-         * now renders first), so probe at runtime.
+         * Find the track index (1-indexed) for the "Mutation spectrum"
+         * clinical track. wdio hardcoded nth-5, but the default track
+         * count has drifted. Several default clinical tracks (e.g.
+         * "Profiled in Mutations") also carry "Edit Colors", so simply
+         * matching on that menu item matches the wrong track. We open
+         * each candidate's Edit-Colors modal and check the dialog title
+         * — the Mutation Spectrum modal reads "Color Configuration:
+         * Mutation spectrum".
          */
         async function findMutationSpectrumTrackIndex(): Promise<number> {
             const buttons = page.locator(
@@ -66,18 +69,23 @@ test.describe.serial(
                 await page.locator(opts.button).hover();
                 await page.locator(opts.button).click();
                 await expect(page.locator(opts.dropdown)).toBeVisible();
-                const hasEdit =
-                    (await page
-                        .locator(`${opts.dropdown} li`, {
-                            hasText: 'Edit Colors',
-                        })
-                        .count()) > 0;
-                // close it
-                await page.locator(opts.button).click();
-                await expect(page.locator(opts.dropdown)).toBeHidden();
-                if (hasEdit) return i;
+                const editColors = page.locator(`${opts.dropdown} li`, {
+                    hasText: 'Edit Colors',
+                });
+                if ((await editColors.count()) === 0) {
+                    await page.locator(opts.button).click();
+                    await expect(page.locator(opts.dropdown)).toBeHidden();
+                    continue;
+                }
+                await editColors.click();
+                const title = page.locator('.modal-dialog h4');
+                await expect(title).toBeVisible();
+                const titleText = (await title.textContent()) || '';
+                await page.locator('.modal button.close').click();
+                await expect(page.locator('.modal-dialog')).toHaveCount(0);
+                if (/mutation spectrum/i.test(titleText)) return i;
             }
-            throw new Error('No track with "Edit Colors" option');
+            throw new Error('No Mutation Spectrum track found');
         }
 
         async function openColorEditor() {
