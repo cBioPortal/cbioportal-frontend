@@ -27,7 +27,6 @@
     "buildModules": "turbo run build --filter=./packages/*",
     "publishModules": "lerna publish from-git --yes --concurrency 1",
     "publishModulesFromPackages": "lerna publish from-package --yes --concurrency 1",
-    "checkTS": "npx tsc --noEmit --skipLibCheck; for config in packages/*/tsconfig.json; do echo \"Checking $config\"; npx tsc --noEmit --skipLibCheck -p \"$config\"; done",
     "build:size": "pnpm run clean && cross-env NODE_ENV=production rspack build -c rspack.config.js --json > stats.json",
     "buildBootstrap": "sass --style :compressed src/globalStyles/bootstrap-entry.scss src/globalStyles/prefixed-bootstrap.min.css",
     "heroku-postbuild": "pnpm run build && pnpm add pushstate-server@3.0.1 -g",

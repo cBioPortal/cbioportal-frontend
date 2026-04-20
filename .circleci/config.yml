@@ -230,19 +230,6 @@ jobs:
             corepack enable
             pnpm run checkIncorrectImportStatements
 
-  check_typescript:
-    <<: *defaults
-    resource_class: large
-    steps:
-      - attach_workspace:
-          at: /tmp/repo
-      - run:
-          name: "Run TypeScript type checking"
-          command: |
-            cd cbioportal-frontend
-            corepack enable
-            pnpm run checkTS
-
   e2e_tests:
     machine:
       image: ubuntu-2204:2024.08.1
@@ -496,9 +483,6 @@ workflows:
           requires:
             - build_frontend
       - unit_tests_main:
-          requires:
-            - build_frontend
-      - check_typescript:
           requires:
             - build_frontend
 

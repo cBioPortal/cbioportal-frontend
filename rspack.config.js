@@ -487,6 +487,20 @@ config.plugins = [
 ].concat(config.plugins);
 // END ENV variables
 
+// Type-check in a worker so the build fails on TS errors even when
+// ts-loader runs with transpileOnly. Async in dev, sync in production.
+config.plugins.push(
+    new ForkTsCheckerWebpackPlugin({
+        typescript: {
+            configOverwrite: {
+                compilerOptions: {
+                    skipLibCheck: true,
+                },
+            },
+        },
+    })
+);
+
 // include jquery when we load boostrap-sass
 config.module.rules.push({
     test: /bootstrap-sass[\/\\]assets[\/\\]javascripts[\/\\]/,
@@ -520,18 +534,6 @@ if (isDev || isTest) {
     config.resolve.alias['react-twitter-widgets'] = join(
         src,
         'shared/Empty.tsx'
-    );
-
-    config.plugins.push(
-        new ForkTsCheckerWebpackPlugin({
-            typescript: {
-                configOverwrite: {
-                    compilerOptions: {
-                        skipLibCheck: true,
-                    },
-                },
-            },
-        })
     );
 
     // css modules for any scss matching test
