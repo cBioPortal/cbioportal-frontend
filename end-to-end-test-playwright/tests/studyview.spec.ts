@@ -157,6 +157,7 @@ test.describe('studyview tests', () => {
         });
 
         test('study should have the raw data available', async () => {
+            await toStudyViewSummaryTab(page);
             await expect(
                 page.locator(STUDY_SUMMARY_RAW_DATA_DOWNLOAD)
             ).toHaveCount(1);

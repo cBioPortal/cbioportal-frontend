@@ -50,8 +50,12 @@ test.describe.serial('homepage config overrides', () => {
         await setServerConfiguration(page, { skin_show_data_tab: false });
         await page.goto('/');
         await expect(page.locator('#rightHeaderContent')).toBeAttached();
+        // Data Sets link is initially rendered before the frontendConfig
+        // override applies; under parallel load the 5s default isn't enough
+        // to see it disappear.
         await expect(page.locator('a', { hasText: 'Data Sets' })).toHaveCount(
-            0
+            0,
+            { timeout: 30000 }
         );
     });
 

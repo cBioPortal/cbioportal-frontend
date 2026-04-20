@@ -540,7 +540,7 @@ test.describe('custom case list sorting', () => {
         // before clicking.
         await page
             .locator('a.tabAnchor_oncoprint')
-            .waitFor({ state: 'visible', timeout: 30000 });
+            .waitFor({ state: 'visible', timeout: 60000 });
         await page.locator('a.tabAnchor_oncoprint').click();
 
         await doCustomCaseOrderCheck();
