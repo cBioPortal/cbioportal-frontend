@@ -22,7 +22,7 @@ async function resetLocalStorage(page: Page) {
     });
 }
 
-test.describe.serial('homepage config overrides', () => {
+test.describe('homepage config overrides', () => {
     test.beforeEach(async ({ page }) => {
         await resetLocalStorage(page);
     });
