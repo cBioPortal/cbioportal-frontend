@@ -33,7 +33,6 @@ export interface GenePartner {
     symbol: string;
     chromosome: string;
     position: number;
-    strand: '+' | '-';
     selectedTranscriptId: string;
     siteDescription: string;
 }

@@ -10,7 +10,7 @@ import {
  * Only override the fields relevant to each test.
  */
 function makeSV(overrides: Partial<StructuralVariant>): StructuralVariant {
-    return {
+    return ({
         // Required identifiers
         uniqueSampleKey: 'key',
         uniquePatientKey: 'pkey',
@@ -60,7 +60,7 @@ function makeSV(overrides: Partial<StructuralVariant>): StructuralVariant {
         normalReadCount: 0,
         tumorReadCount: 0,
         ...overrides,
-    } as unknown as StructuralVariant;
+    } as unknown) as StructuralVariant;
 }
 
 describe('structuralVariantAdapter', () => {
@@ -103,48 +103,6 @@ describe('structuralVariantAdapter', () => {
 
             assert.equal(fe.gene1.selectedTranscriptId, 'ENST00000111');
             assert.equal(fe.gene2!.selectedTranscriptId, 'ENST00000222');
-        });
-
-        // --- Strand inference from connectionType ---
-
-        it('infers strands from "5to3"', () => {
-            const sv = makeSV({ connectionType: '5to3' });
-            const fe = convertStructuralVariantToFusionEvent(sv);
-
-            assert.equal(fe.gene1.strand, '+');
-            assert.equal(fe.gene2!.strand, '-');
-        });
-
-        it('infers strands from "3to5"', () => {
-            const sv = makeSV({ connectionType: '3to5' });
-            const fe = convertStructuralVariantToFusionEvent(sv);
-
-            assert.equal(fe.gene1.strand, '-');
-            assert.equal(fe.gene2!.strand, '+');
-        });
-
-        it('infers strands from "5to5"', () => {
-            const sv = makeSV({ connectionType: '5to5' });
-            const fe = convertStructuralVariantToFusionEvent(sv);
-
-            assert.equal(fe.gene1.strand, '+');
-            assert.equal(fe.gene2!.strand, '+');
-        });
-
-        it('infers strands from "3to3"', () => {
-            const sv = makeSV({ connectionType: '3to3' });
-            const fe = convertStructuralVariantToFusionEvent(sv);
-
-            assert.equal(fe.gene1.strand, '-');
-            assert.equal(fe.gene2!.strand, '-');
-        });
-
-        it('defaults to + strand when connectionType is empty', () => {
-            const sv = makeSV({ connectionType: '' });
-            const fe = convertStructuralVariantToFusionEvent(sv);
-
-            assert.equal(fe.gene1.strand, '+');
-            assert.equal(fe.gene2!.strand, '+');
         });
 
         // --- Read support ---

@@ -1,4 +1,6 @@
 import * as React from 'react';
+import { useLayoutEffect, useRef } from 'react';
+import { gsap } from 'gsap';
 import { Exon, TranscriptData, COLOR_BREAKPOINT } from '../data/types';
 import { ExonTooltip, BreakpointTooltip } from './ExonTooltip';
 
@@ -17,6 +19,24 @@ export function genomicToSvgX(
     return (
         svgX + ((genomicPos - genomeMin) / (genomeMax - genomeMin)) * svgWidth
     );
+}
+
+/**
+ * Compute the padded genomic range used by a gene track.
+ * Shared by GeneTrack (for positioning the breakpoint line) and by
+ * FusionDiagramSVG (for positioning the arc origin) so the two stay aligned
+ * regardless of which transcript drives the fusion.
+ */
+export function computeGeneTrackRange(
+    exons: Exon[],
+    breakpointPos: number
+): { gMin: number; gMax: number } {
+    const allStarts = exons.map(e => e.start);
+    const allEnds = exons.map(e => e.end);
+    const genomeMin = Math.min(...allStarts, breakpointPos);
+    const genomeMax = Math.max(...allEnds, breakpointPos);
+    const padBp = Math.max(1, Math.round((genomeMax - genomeMin) * 0.03));
+    return { gMin: genomeMin - padBp, gMax: genomeMax + padBp };
 }
 
 /**
@@ -51,9 +71,11 @@ export function computeRetainedShadeX(
     }
 }
 
-const FORTE_TRACK_HEIGHT = 40;
-const USER_TRACK_HEIGHT = 30;
-const LABEL_HEIGHT = 30;
+const FORTE_TRACK_HEIGHT = 48;
+const USER_TRACK_HEIGHT = 42;
+// Header (gene symbol + transcript ID) height. Includes 6px of bottom gap
+// so the FORTE row's active-outline doesn't clip the transcript ID text.
+const LABEL_HEIGHT = 36;
 const BREAKPOINT_EXTRA = 20;
 
 export function getGeneTrackHeight(
@@ -116,12 +138,19 @@ const ACTIVE_OUTLINE_STROKE_WIDTH = 2;
 const ACTIVE_OUTLINE_RX = 3;
 const ACTIVE_OUTLINE_X_PAD = 3;
 const ACTIVE_OUTLINE_Y_PAD = 4;
-const ACTIVE_OUTLINE_BOTTOM_PAD = 2; // extra height beyond rowHeight
+// Active outline extends this far below yPos — covers exons + exon-number
+// labels plus a small margin. Deliberately smaller than rowHeight so the
+// stacked row below (whose transcript-name label sits at yPos_next - 3)
+// doesn't fall inside the active row's dashed box.
+const ACTIVE_OUTLINE_CONTENT_BELOW = 22;
 const BADGE_WIDTH = 74;
 const BADGE_HEIGHT = 12;
 const BADGE_Y_OFFSET = -14;
 const BADGE_TEXT_Y_OFFSET = 9; // baseline offset within badge rect
 const BADGE_LABEL = 'DRIVING FUSION';
+// Transcript-name pill on the active row — mirrors the DRIVING FUSION badge
+// on the right, replaces the default gray label/header transcript ID.
+const NAME_PILL_WIDTH = 160;
 
 // ---------------------------------------------------------------------------
 // Component
@@ -157,14 +186,7 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
         ...forteTranscript.exons,
         ...userTranscripts.flatMap(t => t.exons),
     ];
-    const allStarts = allExons.map(e => e.start);
-    const allEnds = allExons.map(e => e.end);
-    const genomeMin = Math.min(...allStarts, position);
-    const genomeMax = Math.max(...allEnds, position);
-
-    const padBp = Math.max(1, Math.round((genomeMax - genomeMin) * 0.03));
-    const gMin = genomeMin - padBp;
-    const gMax = genomeMax + padBp;
+    const { gMin, gMax } = computeGeneTrackRange(allExons, position);
 
     const drawX = x + TRACK_PADDING;
     const drawWidth = width - TRACK_PADDING * 2;
@@ -182,6 +204,45 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
 
     const strandArrow = strand === '+' ? ' \u25B6' : ' \u25C0';
     const bpX = toSvg(position);
+
+    // ---- Active transcript row geometry (for GSAP-animated chrome) ----
+    const rowList: { transcript: TranscriptData; yPos: number }[] = [
+        { transcript: forteTranscript, yPos: forteY },
+    ];
+    userTranscripts.forEach((ut, i) => {
+        rowList.push({
+            transcript: ut,
+            yPos: forteY + FORTE_TRACK_HEIGHT + i * USER_TRACK_HEIGHT,
+        });
+    });
+    const activeRow = rowList.find(
+        r => r.transcript.transcriptId === activeTranscriptId
+    );
+    const activeYPos = activeRow?.yPos;
+    const activeTranscript = activeRow?.transcript;
+
+    const activeGroupRef = useRef<SVGGElement | null>(null);
+    const prevActiveYPos = useRef<number | null>(null);
+
+    useLayoutEffect(() => {
+        const el = activeGroupRef.current;
+        if (!el || activeYPos === undefined) {
+            prevActiveYPos.current = null;
+            return;
+        }
+        if (prevActiveYPos.current === null) {
+            // First render with an active row — snap into place, don't animate.
+            gsap.set(el, { y: activeYPos });
+        } else if (prevActiveYPos.current !== activeYPos) {
+            gsap.killTweensOf(el);
+            gsap.to(el, {
+                y: activeYPos,
+                duration: 0.35,
+                ease: 'power2.out',
+            });
+        }
+        prevActiveYPos.current = activeYPos;
+    }, [activeYPos]);
 
     // ---- Render a transcript row ----
     const renderTranscript = (
@@ -213,9 +274,14 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
             );
         }
 
-        exons.forEach(exon => {
+        // Display number follows the strand arrow: E1 at the transcript's 5'
+        // end. On minus-strand tracks the exons are drawn right-to-left in
+        // transcription order, so we invert the index for numbering.
+        const totalExons = exons.length;
+        exons.forEach((exon, idx) => {
             const ex = toSvg(exon.start);
             const ew = Math.max(2, toSvg(exon.end) - ex);
+            const displayNumber = strand === '-' ? totalExons - idx : idx + 1;
             // Use genomic position to determine retention — exon.number is not
             // consistent across alternative transcripts, so we match the same
             // logic used in select5PrimeExons / select3PrimeExons.
@@ -233,9 +299,9 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
             // Base exon rect
             elements.push(
                 <ExonTooltip
-                    key={`exon-${transcript.transcriptId}-${exon.number}`}
+                    key={`exon-${transcript.transcriptId}-${displayNumber}`}
                     gene={symbol}
-                    exon={exon}
+                    exon={{ ...exon, number: displayNumber }}
                 >
                     <rect
                         x={ex}
@@ -251,27 +317,11 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
                 </ExonTooltip>
             );
 
-            // Hatch overlay for discarded exons
-            if (!isRetained) {
-                elements.push(
-                    <rect
-                        key={`hatch-${transcript.transcriptId}-${exon.number}`}
-                        x={ex}
-                        y={yPos}
-                        width={ew}
-                        height={EXON_HEIGHT}
-                        fill={`url(#${hatchId})`}
-                        rx={1}
-                        style={{ pointerEvents: 'none' }}
-                    />
-                );
-            }
-
             // Exon number label below the exon block — only when highlighting is active
             if (retainedExonNumbers !== undefined) {
                 elements.push(
                     <text
-                        key={`exon-label-${transcript.transcriptId}-${exon.number}`}
+                        key={`exon-label-${transcript.transcriptId}-${displayNumber}`}
                         x={ex + ew / 2}
                         y={yPos + EXON_HEIGHT + EXON_LABEL_OFFSET}
                         textAnchor="middle"
@@ -279,13 +329,17 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
                         fill={isRetained ? color : '#aaa'}
                         opacity={isRetained ? opacity : 0.7}
                     >
-                        E{exon.number}
+                        E{displayNumber}
                     </text>
                 );
             }
         });
 
-        if (labelText) {
+        const isActive = transcript.transcriptId === activeTranscriptId;
+
+        // Inactive rows: the regular gray label above the exons.
+        // Active rows show a red+white transcript-name pill instead (below).
+        if (labelText && !isActive) {
             elements.push(
                 <text
                     key={`label-${transcript.transcriptId}`}
@@ -300,54 +354,10 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
             );
         }
 
-        const isActive = transcript.transcriptId === activeTranscriptId;
-
-        if (isActive) {
-            elements.unshift(
-                <rect
-                    key={`active-outline-${transcript.transcriptId}`}
-                    data-testid={`gene-track-active-outline-${transcript.transcriptId}`}
-                    x={drawX - ACTIVE_OUTLINE_X_PAD}
-                    y={yPos - ACTIVE_OUTLINE_Y_PAD}
-                    width={drawWidth + 2 * ACTIVE_OUTLINE_X_PAD}
-                    height={rowHeight + ACTIVE_OUTLINE_BOTTOM_PAD}
-                    fill="none"
-                    stroke={ACTIVE_COLOR}
-                    strokeWidth={ACTIVE_OUTLINE_STROKE_WIDTH}
-                    strokeDasharray={ACTIVE_OUTLINE_DASH}
-                    rx={ACTIVE_OUTLINE_RX}
-                    style={{ pointerEvents: 'none' }}
-                />
-            );
-            const badgeX = Math.max(drawX, drawX + drawWidth - BADGE_WIDTH);
-            const badgeY = yPos + BADGE_Y_OFFSET;
-            elements.push(
-                <g
-                    key={`badge-${transcript.transcriptId}`}
-                    data-testid={`gene-track-badge-${transcript.transcriptId}`}
-                    style={{ pointerEvents: 'none' }}
-                >
-                    <rect
-                        x={badgeX}
-                        y={badgeY}
-                        width={BADGE_WIDTH}
-                        height={BADGE_HEIGHT}
-                        rx={2}
-                        fill={ACTIVE_COLOR}
-                    />
-                    <text
-                        x={badgeX + BADGE_WIDTH / 2}
-                        y={badgeY + BADGE_TEXT_Y_OFFSET}
-                        textAnchor="middle"
-                        fontSize={8}
-                        fontWeight={700}
-                        fill="#fff"
-                    >
-                        {BADGE_LABEL}
-                    </text>
-                </g>
-            );
-        }
+        // Active chrome (outline, name pill, DRIVING FUSION badge) is rendered
+        // once at the GeneTrack top level and animated with GSAP on change —
+        // see the activeGroupRef block below. Individual rows only control
+        // their own exon rendering and the gray inactive label.
 
         const hit = (
             <rect
@@ -355,7 +365,7 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
                 x={drawX - ACTIVE_OUTLINE_X_PAD}
                 y={yPos - ACTIVE_OUTLINE_Y_PAD}
                 width={drawWidth + 2 * ACTIVE_OUTLINE_X_PAD}
-                height={rowHeight + ACTIVE_OUTLINE_BOTTOM_PAD}
+                height={rowHeight}
                 fill="transparent"
                 style={{ pointerEvents: 'all' }}
             />
@@ -401,28 +411,8 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
         userTranscripts.length * USER_TRACK_HEIGHT +
         EXON_LABEL_OFFSET;
 
-    const hatchId = `hatch-${symbol}-${is5Prime ? '5p' : '3p'}`;
-
     return (
         <g>
-            {/* Hatch pattern for discarded exons — only defined when highlighting is active */}
-            {retainedExonNumbers && (
-                <defs>
-                    <pattern
-                        id={hatchId}
-                        patternUnits="userSpaceOnUse"
-                        width={5}
-                        height={5}
-                    >
-                        <path
-                            d="M-1,1 l2,-2 M0,5 l5,-5 M4,6 l2,-2"
-                            stroke="#aaa"
-                            strokeWidth={1.2}
-                        />
-                    </pattern>
-                </defs>
-            )}
-
             {/* Gene label */}
             <text
                 x={drawX}
@@ -437,15 +427,18 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
                 </tspan>
             </text>
 
-            {/* Transcript ID label */}
-            <text
-                x={drawX}
-                y={labelY + LABEL_FONT_SIZE + 13}
-                fontSize={9}
-                fill="#999"
-            >
-                {forteTranscript.displayName}
-            </text>
+            {/* Transcript ID label — hidden when FORTE is the active row;
+                the red+white pill inside its active outline shows the name. */}
+            {forteTranscript.transcriptId !== activeTranscriptId && (
+                <text
+                    x={drawX}
+                    y={labelY + LABEL_FONT_SIZE + 13}
+                    fontSize={9}
+                    fill="#999"
+                >
+                    {forteTranscript.displayName}
+                </text>
+            )}
 
             {/* Retained region shade (behind exon blocks) */}
             {retainedExonNumbers && shadeW > 0 && (
@@ -494,6 +487,78 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
                     </React.Fragment>
                 );
             })}
+
+            {/* Active-transcript chrome (dashed outline + name pill + DRIVING
+                FUSION badge). Rendered once and re-positioned via GSAP when
+                the active transcript changes, so the transition is smooth. */}
+            {activeTranscript && activeYPos !== undefined && (
+                <g ref={activeGroupRef} style={{ pointerEvents: 'none' }}>
+                    <rect
+                        data-testid={`gene-track-active-outline-${activeTranscript.transcriptId}`}
+                        x={drawX - ACTIVE_OUTLINE_X_PAD}
+                        y={-ACTIVE_OUTLINE_Y_PAD}
+                        width={drawWidth + 2 * ACTIVE_OUTLINE_X_PAD}
+                        height={
+                            ACTIVE_OUTLINE_Y_PAD + ACTIVE_OUTLINE_CONTENT_BELOW
+                        }
+                        fill="none"
+                        stroke={ACTIVE_COLOR}
+                        strokeWidth={ACTIVE_OUTLINE_STROKE_WIDTH}
+                        strokeDasharray={ACTIVE_OUTLINE_DASH}
+                        rx={ACTIVE_OUTLINE_RX}
+                    />
+                    <g
+                        data-testid={`gene-track-transcript-name-${activeTranscript.transcriptId}`}
+                    >
+                        <rect
+                            x={drawX}
+                            y={BADGE_Y_OFFSET}
+                            width={NAME_PILL_WIDTH}
+                            height={BADGE_HEIGHT}
+                            rx={2}
+                            fill={ACTIVE_COLOR}
+                        />
+                        <text
+                            x={drawX + NAME_PILL_WIDTH / 2}
+                            y={BADGE_Y_OFFSET + BADGE_TEXT_Y_OFFSET}
+                            textAnchor="middle"
+                            fontSize={8}
+                            fontWeight={700}
+                            fill="#fff"
+                        >
+                            {activeTranscript.displayName}
+                        </text>
+                    </g>
+                    <g
+                        data-testid={`gene-track-badge-${activeTranscript.transcriptId}`}
+                    >
+                        <rect
+                            x={Math.max(drawX, drawX + drawWidth - BADGE_WIDTH)}
+                            y={BADGE_Y_OFFSET}
+                            width={BADGE_WIDTH}
+                            height={BADGE_HEIGHT}
+                            rx={2}
+                            fill={ACTIVE_COLOR}
+                        />
+                        <text
+                            x={
+                                Math.max(
+                                    drawX,
+                                    drawX + drawWidth - BADGE_WIDTH
+                                ) +
+                                BADGE_WIDTH / 2
+                            }
+                            y={BADGE_Y_OFFSET + BADGE_TEXT_Y_OFFSET}
+                            textAnchor="middle"
+                            fontSize={8}
+                            fontWeight={700}
+                            fill="#fff"
+                        >
+                            {BADGE_LABEL}
+                        </text>
+                    </g>
+                </g>
+            )}
 
             {/* Breakpoint dashed line */}
             <BreakpointTooltip
