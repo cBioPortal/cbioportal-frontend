@@ -59,23 +59,37 @@ export function runResultsTestSuite(
         preLoad?: (page: Page) => Promise<void>;
     } = {}
 ) {
-    test.describe.serial(`${prefix} results-page screenshots`, () => {
-        let page: Page;
+    test.describe(`${prefix} results-page screenshots`, () => {
+        test.use({ viewport: { width: 1600, height: 1000 } });
 
-        test.beforeAll(async ({ browser }) => {
-            page = await browser.newPage({
-                viewport: { width: 1600, height: 1000 },
-            });
+        test.beforeEach(async ({ page }) => {
             await page.goto(url);
             await waitForOncoprint(page);
             if (opts.preLoad) await opts.preLoad(page);
         });
 
-        test.afterAll(async () => {
-            await page.close();
-        });
+        const openComparison = async (page: Page) => {
+            await page.locator('a.tabAnchor_comparison').click();
+            await expect(
+                page.locator('div[data-test="ComparisonPageOverlapTabContent"]')
+            ).toBeVisible();
+        };
 
-        test('oncoprint', async () => {
+        const openComparisonAlterations = async (page: Page) => {
+            await openComparison(page);
+            await page
+                .locator('.comparisonTabSubTabs .tabAnchor_alterations')
+                .click();
+            await expect(
+                page
+                    .locator(
+                        'div[data-test="GroupComparisonAlterationEnrichments"]'
+                    )
+                    .first()
+            ).toBeVisible({ timeout: 60000 });
+        };
+
+        test('oncoprint', async ({ page }) => {
             await waitForOncoprint(page);
             await page.waitForTimeout(100);
             await snapshot(
@@ -85,12 +99,9 @@ export function runResultsTestSuite(
             );
         });
 
-        test('igv tab', async () => {
+        test('igv tab', async ({ page }) => {
             await page.locator('a.tabAnchor_cnSegments').click();
             await expect(page.locator('.igv-column-container')).toBeVisible();
-            // IGV loads tracks asynchronously and `.pillTabs` keeps growing
-            // as tracks render. Wait for the network to quiet then for the
-            // element height to stabilize before snapshotting.
             await waitForNetworkQuiet(page);
             await page.waitForFunction(
                 () => {
@@ -108,7 +119,7 @@ export function runResultsTestSuite(
             await snapshot(page, '.pillTabs', `${prefix}-igv.png`);
         });
 
-        test('cancer type summary', async () => {
+        test('cancer type summary', async ({ page }) => {
             await page.locator('a.tabAnchor_cancerTypesSummary').click();
             await expect(
                 page.locator('[data-test="cancerTypeSummaryChart"]')
@@ -123,7 +134,7 @@ export function runResultsTestSuite(
             );
         });
 
-        test('mutex tab', async () => {
+        test('mutex tab', async ({ page }) => {
             await page.locator('a.tabAnchor_mutualExclusivity').click();
             await snapshot(
                 page,
@@ -132,7 +143,7 @@ export function runResultsTestSuite(
             );
         });
 
-        test('plots tab', async () => {
+        test('plots tab', async ({ page }) => {
             await page.locator('a.tabAnchor_plots').click();
             await expect(
                 page.locator('div[data-test="PlotsTabPlotDiv"]')
@@ -144,7 +155,7 @@ export function runResultsTestSuite(
             );
         });
 
-        test('mutation tab', async () => {
+        test('mutation tab', async ({ page }) => {
             await page.locator('a.tabAnchor_mutations').click();
             await expect(
                 page.locator('div[data-test="LollipopPlot"]')
@@ -156,7 +167,7 @@ export function runResultsTestSuite(
             );
         });
 
-        test('coexpression tab', async () => {
+        test('coexpression tab', async ({ page }) => {
             await page.locator('a.tabAnchor_coexpression').click();
             await expect(
                 page.locator('div[data-test="CoExpressionPlot"]')
@@ -168,11 +179,8 @@ export function runResultsTestSuite(
             );
         });
 
-        test('comparison overlap', async () => {
-            await page.locator('a.tabAnchor_comparison').click();
-            await expect(
-                page.locator('div[data-test="ComparisonPageOverlapTabContent"]')
-            ).toBeVisible();
+        test('comparison overlap', async ({ page }) => {
+            await openComparison(page);
             await snapshot(
                 page,
                 'div[data-test="ComparisonTabDiv"]',
@@ -180,7 +188,8 @@ export function runResultsTestSuite(
             );
         });
 
-        test('comparison clinical', async () => {
+        test('comparison clinical', async ({ page }) => {
+            await openComparison(page);
             await page
                 .locator('.comparisonTabSubTabs .tabAnchor_clinical')
                 .click();
@@ -194,17 +203,8 @@ export function runResultsTestSuite(
             );
         });
 
-        test('comparison alterations sample mode', async () => {
-            await page
-                .locator('.comparisonTabSubTabs .tabAnchor_alterations')
-                .click();
-            await expect(
-                page
-                    .locator(
-                        'div[data-test="GroupComparisonAlterationEnrichments"]'
-                    )
-                    .first()
-            ).toBeVisible({ timeout: 60000 });
+        test('comparison alterations sample mode', async ({ page }) => {
+            await openComparisonAlterations(page);
             await waitForNetworkQuiet(page);
             await page.waitForTimeout(500);
             await snapshot(
@@ -215,7 +215,8 @@ export function runResultsTestSuite(
             );
         });
 
-        test('comparison alterations patient mode', async () => {
+        test('comparison alterations patient mode', async ({ page }) => {
+            await openComparisonAlterations(page);
             await page.evaluate(() => {
                 (window as any).comparisonTab.store.setUsePatientLevelEnrichments(
                     true
@@ -238,15 +239,14 @@ export function runResultsTestSuite(
             );
         });
 
-        test('comparison mrna enrichments', async () => {
+        test('comparison mrna enrichments', async ({ page }) => {
+            await openComparison(page);
             await page.locator('.comparisonTabSubTabs .tabAnchor_mrna').click();
             await expect(
                 page
                     .locator('div[data-test="GroupComparisonMRNAEnrichments"]')
                     .first()
             ).toBeVisible({ timeout: 60000 });
-            // Wait for the enrichments table to actually populate rows
-            // (the wrapper div appears before the data finishes loading).
             await expect(
                 page
                     .locator(
@@ -274,7 +274,8 @@ export function runResultsTestSuite(
             );
         });
 
-        test('survival tab', async () => {
+        test('survival tab', async ({ page }) => {
+            await openComparison(page);
             await page
                 .locator('.comparisonTabSubTabs a.tabAnchor_survival')
                 .click();
@@ -290,7 +291,7 @@ export function runResultsTestSuite(
             );
         });
 
-        test('pathwaymapper tab', async () => {
+        test('pathwaymapper tab', async ({ page }) => {
             await expect(page.locator('a.tabAnchor_pathways')).toBeVisible();
             await page.locator('a.tabAnchor_pathways').click();
             await expect(page.locator('#cy')).toBeVisible({ timeout: 10000 });
@@ -303,13 +304,11 @@ export function runResultsTestSuite(
             );
         });
 
-        test('data_download tab', async () => {
+        test('data_download tab', async ({ page }) => {
             await page.locator('a.tabAnchor_download').click();
             await expect(
                 page.locator("[data-test='downloadTabDiv']")
             ).toBeVisible({ timeout: 20000 });
-            // Tab becomes visible before its tables finish loading — without
-            // this wait the snapshot can race the final table render.
             await waitForNetworkQuiet(page, 30000);
             await snapshot(
                 page,
