@@ -477,24 +477,14 @@ test.describe('results view comparison tab screenshot tests', () => {
     });
 
     test.describe('overlap venn diagram', () => {
-        test.describe.serial('disjoint diagram', () => {
-            let page: Page;
+        test.describe('disjoint diagram', () => {
+            test.use({ viewport: { width: 1600, height: 1000 } });
 
-            test.beforeAll(async ({ browser }) => {
-                page = await browser.newPage({
-                    viewport: { width: 1600, height: 1000 },
-                });
+            test('disjoint venn diagram view', async ({ page }) => {
                 await page.goto(DISJOINT_VENN_URL);
                 await expect(page.locator(OVERLAP_DIV)).toBeVisible({
                     timeout: 20000,
                 });
-            });
-
-            test.afterAll(async () => {
-                await page.close();
-            });
-
-            test('disjoint venn diagram view', async () => {
                 await snapWithFrozenHover(
                     page,
                     OVERLAP_DIV,
@@ -502,7 +492,13 @@ test.describe('results view comparison tab screenshot tests', () => {
                 );
             });
 
-            test('disjoint venn diagram with a group selected view', async () => {
+            test('disjoint venn diagram with a group selected view', async ({
+                page,
+            }) => {
+                await page.goto(DISJOINT_VENN_URL);
+                await expect(page.locator(OVERLAP_DIV)).toBeVisible({
+                    timeout: 20000,
+                });
                 await expect(
                     page.locator('svg#comparison-tab-overlap-svg')
                 ).toBeVisible({ timeout: 6000 });
@@ -517,7 +513,7 @@ test.describe('results view comparison tab screenshot tests', () => {
                 );
             });
 
-            test('3 disjoint venn diagram', async () => {
+            test('3 disjoint venn diagram', async ({ page }) => {
                 await page.goto(THREE_DISJOINT_VENN_URL);
                 await expect(page.locator(OVERLAP_DIV)).toBeVisible({
                     timeout: 20000,

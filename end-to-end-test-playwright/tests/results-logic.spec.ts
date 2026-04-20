@@ -275,11 +275,12 @@ test.describe('case set selection in modify query form', () => {
         });
         await page.locator('#modifyQueryBtn').click();
 
-        await expect(
-            page.locator(SELECTED_CASE_SET_SEL)
-        ).toHaveText('Samples with protein data (RPPA) (196)', {
-            timeout: 10000,
-        });
+        await expect(page.locator(SELECTED_CASE_SET_SEL)).toHaveText(
+            'Samples with protein data (RPPA) (196)',
+            {
+                timeout: 10000,
+            }
+        );
 
         // Add a second study (ACC TCGA Firehose Legacy).
         await page
@@ -300,11 +301,12 @@ test.describe('case set selection in modify query form', () => {
 
         // Uncheck the second study; revert to single-study default.
         await page.locator('[data-test="StudySelect"] input').click();
-        await expect(
-            page.locator(SELECTED_CASE_SET_SEL)
-        ).toHaveText('Samples with mutation and CNA data (212)', {
-            timeout: 10000,
-        });
+        await expect(page.locator(SELECTED_CASE_SET_SEL)).toHaveText(
+            'Samples with mutation and CNA data (212)',
+            {
+                timeout: 10000,
+            }
+        );
         await page.close();
     });
 
@@ -318,11 +320,12 @@ test.describe('case set selection in modify query form', () => {
         });
         await page.locator('#modifyQueryBtn').click();
 
-        await expect(
-            page.locator(SELECTED_CASE_SET_SEL)
-        ).toHaveText('Samples with protein data (RPPA) (196)', {
-            timeout: 10000,
-        });
+        await expect(page.locator(SELECTED_CASE_SET_SEL)).toHaveText(
+            'Samples with protein data (RPPA) (196)',
+            {
+                timeout: 10000,
+            }
+        );
 
         await page
             .locator('div[data-test=study-search] input[type=text]')
@@ -351,11 +354,12 @@ test.describe('case set selection in modify query form', () => {
                 'div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]'
             )
             .click();
-        await expect(
-            page.locator(SELECTED_CASE_SET_SEL)
-        ).toHaveText('Samples with mutation and CNA data (212)', {
-            timeout: 10000,
-        });
+        await expect(page.locator(SELECTED_CASE_SET_SEL)).toHaveText(
+            'Samples with mutation and CNA data (212)',
+            {
+                timeout: 10000,
+            }
+        );
         await page.close();
     });
 });
@@ -486,25 +490,18 @@ test.describe('genetic profile selection in modify query form', () => {
     });
 });
 
-test.describe.serial('invalid query from URL', () => {
-    let page: Page;
+test.describe('invalid query from URL', () => {
+    const invalidQueryUrl =
+        '/results/oncoprint?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0' +
+        '&cancer_study_list=mixed_pipseq_2017&case_set_id=mixed_pipseq_2017_sequenced' +
+        '&clinicallist=NUM_SAMPLES_PER_PATIENT&data_priority=0&gene_list=RB&geneset_list=%20' +
+        '&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=mixed_pipseq_2017_mutations' +
+        '&show_samples=false&tab_index=tab_visualize';
 
-    test.beforeAll(async ({ browser }) => {
-        page = await browser.newPage();
-    });
-
-    test.afterAll(async () => {
-        await page.close();
-    });
-
-    test('shows invalid query alert when URL contains invalid gene "RB"', async () => {
-        await page.goto(
-            '/results/oncoprint?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0' +
-                '&cancer_study_list=mixed_pipseq_2017&case_set_id=mixed_pipseq_2017_sequenced' +
-                '&clinicallist=NUM_SAMPLES_PER_PATIENT&data_priority=0&gene_list=RB&geneset_list=%20' +
-                '&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=mixed_pipseq_2017_mutations' +
-                '&show_samples=false&tab_index=tab_visualize'
-        );
+    test('shows invalid query alert when URL contains invalid gene "RB"', async ({
+        page,
+    }) => {
+        await page.goto(invalidQueryUrl);
         const alert = page.locator('[data-test=invalidQueryAlert]');
         await expect(alert).toBeVisible({ timeout: 60000 });
         const text = (await alert.textContent())?.trim();
@@ -513,7 +510,13 @@ test.describe.serial('invalid query from URL', () => {
         );
     });
 
-    test('correcting RB to RB1 lands on results-view oncoprint', async () => {
+    test('correcting RB to RB1 lands on results-view oncoprint', async ({
+        page,
+    }) => {
+        await page.goto(invalidQueryUrl);
+        await expect(
+            page.locator('[data-test=invalidQueryAlert]')
+        ).toBeVisible({ timeout: 60000 });
         const textarea = page.locator('[data-test=geneSet]');
         await textarea.fill('RB1');
         const queryBtn = page.locator('[data-test=queryButton]');

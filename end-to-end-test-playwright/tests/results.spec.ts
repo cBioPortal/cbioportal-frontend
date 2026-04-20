@@ -16,36 +16,32 @@ import { waitForOncoprint } from './helpers/oncoprint';
  *      results-view sub-tab.
  */
 
-test.describe.serial('Cancer Type Summary Bar Chart', () => {
-    test.describe.serial('single study query with four genes', () => {
-        let page: Page;
+test.describe('Cancer Type Summary Bar Chart', () => {
+    test.describe('single study query with four genes', () => {
+        const url =
+            '/results/cancerTypesSummary?tab_index=tab_visualize' +
+            '&cancer_study_list=coadread_tcga_pub&cancer_study_id=coadread_tcga_pub' +
+            '&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations' +
+            '&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic' +
+            '&Z_SCORE_THRESHOLD=2.0&case_set_id=coadread_tcga_pub_nonhypermut' +
+            '&gene_list=BRAF+KRAS+NRAS&gene_set_choice=user-defined-list&Action=Submit';
 
-        test.beforeAll(async ({ browser }) => {
-            page = await browser.newPage();
-            await page.goto(
-                '/results/cancerTypesSummary?tab_index=tab_visualize' +
-                    '&cancer_study_list=coadread_tcga_pub&cancer_study_id=coadread_tcga_pub' +
-                    '&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations' +
-                    '&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic' +
-                    '&Z_SCORE_THRESHOLD=2.0&case_set_id=coadread_tcga_pub_nonhypermut' +
-                    '&gene_list=BRAF+KRAS+NRAS&gene_set_choice=user-defined-list&Action=Submit'
-            );
+        test.beforeEach(async ({ page }) => {
+            await page.goto(url);
             await expect(
                 page.locator('[data-test="cancerTypeSummaryChart"]').first()
             ).toBeVisible({ timeout: 30000 });
         });
 
-        test.afterAll(async () => {
-            await page.close();
-        });
-
-        test('defaults to cancerTypeDetailed', async () => {
+        test('defaults to cancerTypeDetailed', async ({ page }) => {
             await expect(
                 page.locator('[data-value="cancerTypeDetailed"]')
             ).toBeChecked();
         });
 
-        test('three gene tabs plus "all genes" equals four total tabs, in order of OQL', async () => {
+        test('three gene tabs plus "all genes" equals four total tabs, in order of OQL', async ({
+            page,
+        }) => {
             const tabs = page.locator(
                 "[data-test='cancerTypeSummaryWrapper'] .nav li a"
             );
@@ -331,7 +327,7 @@ test.describe('Mutations Tab', () => {
     });
 });
 
-test.describe.serial('oql status banner', () => {
+test.describe('oql status banner', () => {
     const yesBanner = 'div[data-test="OqlStatusBannerYes"]';
     const noBanner = 'div[data-test="OqlStatusBannerNo"]';
     const unaffectedBanner = 'div[data-test="OqlStatusBannerUnaffected"]';
@@ -349,20 +345,13 @@ test.describe.serial('oql status banner', () => {
         '&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations' +
         '&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic';
 
-    let page: Page;
+    test.describe('with simple query (no banners on any tab)', () => {
+        test.beforeEach(async ({ page }) => {
+            await page.goto(SIMPLE);
+            await waitForOncoprint(page);
+        });
 
-    test.beforeAll(async ({ browser }) => {
-        page = await browser.newPage();
-        await page.goto(SIMPLE);
-        await waitForOncoprint(page);
-    });
-
-    test.afterAll(async () => {
-        await page.close();
-    });
-
-    test.describe.serial('with simple query (no banners on any tab)', () => {
-        test('not present in oncoprint tab', async () => {
+        test('not present in oncoprint tab', async ({ page }) => {
             await expect(
                 page.locator(`${yesBanner}.oncoprint-oql-status-banner`)
             ).toBeHidden();
@@ -371,7 +360,7 @@ test.describe.serial('oql status banner', () => {
             ).toBeHidden();
         });
 
-        test('not present in cancer types summary', async () => {
+        test('not present in cancer types summary', async ({ page }) => {
             await page.locator('.tabAnchor_cancerTypesSummary').click();
             await page.waitForTimeout(500);
             await expect(
@@ -386,7 +375,7 @@ test.describe.serial('oql status banner', () => {
             ).toBeHidden();
         });
 
-        test('not present in mutual exclusivity tab', async () => {
+        test('not present in mutual exclusivity tab', async ({ page }) => {
             await page.locator('.tabAnchor_mutualExclusivity').click();
             await page.waitForTimeout(500);
             await expect(
@@ -397,7 +386,7 @@ test.describe.serial('oql status banner', () => {
             ).toBeHidden();
         });
 
-        test('not present in plots tab', async () => {
+        test('not present in plots tab', async ({ page }) => {
             await page.locator('.tabAnchor_plots').click();
             await page.waitForTimeout(500);
             await expect(
@@ -408,7 +397,7 @@ test.describe.serial('oql status banner', () => {
             ).toBeHidden();
         });
 
-        test('not present in mutations tab', async () => {
+        test('not present in mutations tab', async ({ page }) => {
             await page.locator('.tabAnchor_mutations').click();
             await page.waitForTimeout(500);
             await expect(
@@ -422,7 +411,7 @@ test.describe.serial('oql status banner', () => {
             ).toBeHidden();
         });
 
-        test('not present in coexpression tab', async () => {
+        test('not present in coexpression tab', async ({ page }) => {
             await page.locator('.tabAnchor_coexpression').click();
             await page.waitForTimeout(500);
             await expect(
@@ -433,7 +422,7 @@ test.describe.serial('oql status banner', () => {
             ).toBeHidden();
         });
 
-        test('not present in alteration enrichments tab', async () => {
+        test('not present in alteration enrichments tab', async ({ page }) => {
             await page.locator('.tabAnchor_comparison').click();
             await expect(
                 page.locator('.comparisonTabSubTabs .tabAnchor_alterations')
@@ -450,7 +439,11 @@ test.describe.serial('oql status banner', () => {
             ).toBeHidden();
         });
 
-        test('not present in survival tab', async () => {
+        test('not present in survival tab', async ({ page }) => {
+            await page.locator('.tabAnchor_comparison').click();
+            await expect(
+                page.locator('.comparisonTabSubTabs .tabAnchor_survival')
+            ).toBeVisible({ timeout: 30000 });
             await page
                 .locator('.comparisonTabSubTabs .tabAnchor_survival')
                 .click();
@@ -463,7 +456,7 @@ test.describe.serial('oql status banner', () => {
             ).toBeHidden();
         });
 
-        test('not present in download tab', async () => {
+        test('not present in download tab', async ({ page }) => {
             await page.locator('.tabAnchor_download').click();
             await page.waitForTimeout(500);
             await expect(
@@ -475,10 +468,13 @@ test.describe.serial('oql status banner', () => {
         });
     });
 
-    test.describe.serial('with explicit query (banners appear)', () => {
-        test('present in oncoprint tab', async () => {
+    test.describe('with explicit query (banners appear)', () => {
+        test.beforeEach(async ({ page }) => {
             await page.goto(EXPLICIT);
             await waitForOncoprint(page);
+        });
+
+        test('present in oncoprint tab', async ({ page }) => {
             await page.waitForTimeout(2000);
             await expect(
                 page.locator(`${yesBanner}.oncoprint-oql-status-banner`)
@@ -488,7 +484,7 @@ test.describe.serial('oql status banner', () => {
             ).toBeHidden();
         });
 
-        test('present in cancer types summary', async () => {
+        test('present in cancer types summary', async ({ page }) => {
             await page.locator('.tabAnchor_cancerTypesSummary').click();
             await expect(
                 page.locator(
@@ -502,7 +498,7 @@ test.describe.serial('oql status banner', () => {
             ).toBeHidden();
         });
 
-        test('present in mutual exclusivity tab', async () => {
+        test('present in mutual exclusivity tab', async ({ page }) => {
             await page.locator('.tabAnchor_mutualExclusivity').click();
             await expect(
                 page.locator(`${yesBanner}.mutex-oql-status-banner`)
@@ -512,7 +508,9 @@ test.describe.serial('oql status banner', () => {
             ).toBeHidden();
         });
 
-        test('present in plots tab (no banner is the explicit "no" variant)', async () => {
+        test('present in plots tab (no banner is the explicit "no" variant)', async ({
+            page,
+        }) => {
             await page.locator('.tabAnchor_plots').click();
             await expect(
                 page.locator(`${noBanner}.plots-oql-status-banner`)
@@ -522,7 +520,7 @@ test.describe.serial('oql status banner', () => {
             ).toBeHidden();
         });
 
-        test('present in alterations tab', async () => {
+        test('present in alterations tab', async ({ page }) => {
             await page.locator('.tabAnchor_comparison').click();
             await expect(
                 page.locator('.tabAnchor_alterations').first()
@@ -542,7 +540,9 @@ test.describe.serial('oql status banner', () => {
             ).toBeHidden();
         });
 
-        test('present in coexpression tab (explicit "no" variant)', async () => {
+        test('present in coexpression tab (explicit "no" variant)', async ({
+            page,
+        }) => {
             await page.locator('.tabAnchor_coexpression').click();
             await expect(
                 page.locator(`${noBanner}.coexp-oql-status-banner`)
@@ -552,7 +552,7 @@ test.describe.serial('oql status banner', () => {
             ).toBeHidden();
         });
 
-        test('present in alteration enrichments tab', async () => {
+        test('present in alteration enrichments tab', async ({ page }) => {
             await page.locator('.tabAnchor_comparison').click();
             await expect(
                 page.locator('.comparisonTabSubTabs .tabAnchor_alterations')
@@ -568,7 +568,11 @@ test.describe.serial('oql status banner', () => {
             ).toBeHidden();
         });
 
-        test('present in survival tab', async () => {
+        test('present in survival tab', async ({ page }) => {
+            await page.locator('.tabAnchor_comparison').click();
+            await expect(
+                page.locator('.comparisonTabSubTabs .tabAnchor_survival')
+            ).toBeVisible({ timeout: 30000 });
             await page
                 .locator('.comparisonTabSubTabs .tabAnchor_survival')
                 .click();
@@ -580,7 +584,7 @@ test.describe.serial('oql status banner', () => {
             ).toBeHidden();
         });
 
-        test('present in download tab', async () => {
+        test('present in download tab', async ({ page }) => {
             await page.locator('.tabAnchor_download').click();
             await expect(
                 page.locator(`${yesBanner}.download-oql-status-banner`)
