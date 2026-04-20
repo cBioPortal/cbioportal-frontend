@@ -65,12 +65,7 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
                 // dont bother loading data for and computing overlap if not enough groups for it
                 return [this.props.store._selectedGroups];
             } else {
-                return [
-                    this.props.store._selectedGroups,
-                    this.props.store.overlapComputations,
-                    this.props.store.sampleMap,
-                    this.overlapUI,
-                ];
+                return [this.props.store._selectedGroups, this.overlapUI];
             }
         },
         render: () => {
@@ -79,13 +74,6 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
             if (this.props.store._selectedGroups.result!.length < 2) {
                 content.push(<span>{OVERLAP_NOT_ENOUGH_GROUPS_MSG}</span>);
             } else {
-                const overlapInfo = this.props.store.overlapComputations.result!;
-                const hasOverlap =
-                    overlapInfo.totalSampleOverlap > 0 ||
-                    overlapInfo.totalPatientOverlap > 0;
-                const hasPatientOverlap =
-                    overlapInfo.totalPatientOverlap > 0;
-
                 content.push(
                     <OverlapExclusionIndicator
                         overlapTabMode={true}
@@ -101,40 +89,6 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
                     );
                 }
                 content.push(this.overlapUI.component);
-                if (hasOverlap) {
-                    content.push(
-                        <div
-                            style={{
-                                display: 'flex',
-                                gap: 10,
-                                marginTop: 15,
-                                flexWrap: 'wrap',
-                            }}
-                            data-test="ComparisonPageOverlapButtons"
-                        >
-                            <button
-                                className="btn btn-md btn-primary"
-                                onClick={() =>
-                                    this.props.store.startNonOverlappingComparison()
-                                }
-                                data-test="ComparisonPageOverlapNonOverlappingButton"
-                            >
-                                Compare non-overlapping groups
-                            </button>
-                            {hasPatientOverlap && (
-                                <button
-                                    className="btn btn-md btn-primary"
-                                    onClick={() =>
-                                        this.props.store.startOverlappingComparison()
-                                    }
-                                    data-test="ComparisonPageOverlapOverlappingButton"
-                                >
-                                    Compare overlapping groups only
-                                </button>
-                            )}
-                        </div>
-                    );
-                }
             }
             return <div data-test="ComparisonPageOverlapTabDiv">{content}</div>;
         },
@@ -423,32 +377,81 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
     });
 
     readonly overlapUI = MakeMobxView({
-        await: () => [this.plot],
-        render: () => (
-            <div
-                data-test="ComparisonPageOverlapTabContent"
-                className="borderedChart posRelative"
-            >
-                {this.plotExists && (
-                    <DownloadControls
-                        getSvg={this.getSvg}
-                        getData={this.props.store.getGroupsDownloadDataPromise}
-                        buttons={['SVG', 'PNG', 'PDF', 'Data']}
-                        filename={'overlap'}
-                        dontFade={true}
-                        style={{ position: 'absolute', right: 10, top: 10 }}
-                        type="button"
-                        showDownload={
-                            getServerConfig().skin_hide_download_controls ===
-                            DownloadControlOption.SHOW_ALL
-                        }
-                    />
-                )}
-                <div style={{ position: 'relative', display: 'inline-block' }}>
-                    {this.plot.component}
+        await: () => [
+            this.plot,
+            this.props.store.overlapComputations,
+            this.props.store._selectedGroups,
+        ],
+        render: () => {
+            const selectedGroups = this.props.store._selectedGroups.result!;
+            const overlapInfo = this.props.store.overlapComputations.result!;
+            const hasOverlap =
+                selectedGroups.length >= 2 &&
+                (overlapInfo.totalSampleOverlap > 0 ||
+                    overlapInfo.totalPatientOverlap > 0);
+            const hasPatientOverlap = overlapInfo.totalPatientOverlap > 0;
+            return (
+                <div
+                    data-test="ComparisonPageOverlapTabContent"
+                    className="borderedChart posRelative"
+                >
+                    {this.plotExists && (
+                        <DownloadControls
+                            getSvg={this.getSvg}
+                            getData={
+                                this.props.store.getGroupsDownloadDataPromise
+                            }
+                            buttons={['SVG', 'PNG', 'PDF', 'Data']}
+                            filename={'overlap'}
+                            dontFade={true}
+                            style={{ position: 'absolute', right: 10, top: 10 }}
+                            type="button"
+                            showDownload={
+                                getServerConfig()
+                                    .skin_hide_download_controls ===
+                                DownloadControlOption.SHOW_ALL
+                            }
+                        />
+                    )}
+                    <div style={{ position: 'relative', display: 'inline-block' }}>
+                        {this.plot.component}
+                    </div>
+                    {hasOverlap && (
+                        <div
+                            style={{
+                                display: 'flex',
+                                gap: 10,
+                                marginTop: 15,
+                                padding: '0 10px 10px',
+                                flexWrap: 'wrap',
+                            }}
+                            data-test="ComparisonPageOverlapButtons"
+                        >
+                            <button
+                                className="btn btn-md btn-primary"
+                                onClick={() =>
+                                    this.props.store.startNonOverlappingComparison()
+                                }
+                                data-test="ComparisonPageOverlapNonOverlappingButton"
+                            >
+                                Compare non-overlapping groups
+                            </button>
+                            {hasPatientOverlap && (
+                                <button
+                                    className="btn btn-md btn-primary"
+                                    onClick={() =>
+                                        this.props.store.startOverlappingComparison()
+                                    }
+                                    data-test="ComparisonPageOverlapOverlappingButton"
+                                >
+                                    Compare overlapping groups only
+                                </button>
+                            )}
+                        </div>
+                    )}
                 </div>
-            </div>
-        ),
+            );
+        },
         renderPending: () => (
             <LoadingIndicator
                 isLoading={true}
