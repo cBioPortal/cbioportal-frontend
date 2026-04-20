@@ -25,6 +25,7 @@ import OverlapExclusionIndicator from './OverlapExclusionIndicator';
 import OverlapUpset from './OverlapUpset';
 import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
 import { getServerConfig } from 'config/config';
+import ReactSelect from 'react-select';
 
 export interface IOverlapProps {
     store: ComparisonStore;
@@ -93,32 +94,44 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
                     />
                 );
                 if (hasOverlap) {
+                    const nonOverlappingOption = {
+                        label: 'Compare non-overlapping groups',
+                        value: 'nonOverlapping' as const,
+                    };
+                    const overlappingOption = {
+                        label: 'Compare overlapping groups only',
+                        value: 'overlapping' as const,
+                    };
+                    const options = hasPatientOverlap
+                        ? [nonOverlappingOption, overlappingOption]
+                        : [nonOverlappingOption];
                     content.push(
                         <div
-                            style={{ marginBottom: 10 }}
+                            style={{
+                                minWidth: 355,
+                                width: 355,
+                                zIndex: 20,
+                                marginBottom: 10,
+                            }}
                             data-test="ComparisonPageOverlapButtons"
                         >
-                            <button
-                                className="btn btn-sm btn-primary"
-                                style={{ marginRight: 10 }}
-                                onClick={() =>
-                                    this.props.store.startNonOverlappingComparison()
-                                }
-                                data-test="startNonOverlappingComparison"
-                            >
-                                Compare non-overlapping groups
-                            </button>
-                            {hasPatientOverlap && (
-                                <button
-                                    className="btn btn-sm btn-primary"
-                                    onClick={() =>
-                                        this.props.store.startOverlappingComparison()
+                            <ReactSelect
+                                aria-label="Start a new comparison"
+                                name="start-new-comparison"
+                                placeholder="Start a new comparison..."
+                                options={options}
+                                onChange={(option: any | null) => {
+                                    if (!option) return;
+                                    if (option.value === 'nonOverlapping') {
+                                        this.props.store.startNonOverlappingComparison();
+                                    } else {
+                                        this.props.store.startOverlappingComparison();
                                     }
-                                    data-test="startOverlappingComparison"
-                                >
-                                    Compare overlapping groups only
-                                </button>
-                            )}
+                                }}
+                                value={null}
+                                clearable={false}
+                                searchable={false}
+                            />
                         </div>
                     );
                 }
