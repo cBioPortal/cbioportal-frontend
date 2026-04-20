@@ -2,12 +2,37 @@ import { assert } from 'chai';
 import {
     select5PrimeExons,
     select3PrimeExons,
+    select5PrimeDomains,
+    select3PrimeDomains,
     computeJunctionX,
     PRODUCT_HEIGHT,
     EXON_GAP,
     DIAMOND_SIZE,
 } from './fusionProductHelpers';
-import { Exon, TranscriptData, GenePartner } from '../data/types';
+import {
+    Exon,
+    ProteinDomain,
+    TranscriptData,
+    GenePartner,
+} from '../data/types';
+
+function makeDomain(
+    name: string,
+    startGenomic: number,
+    endGenomic: number,
+    startAA = 1,
+    endAA = 100
+): ProteinDomain {
+    return {
+        name,
+        pfamId: `PF_${name}`,
+        startGenomic,
+        endGenomic,
+        startAA,
+        endAA,
+        source: 'Pfam',
+    };
+}
 
 // ---------------------------------------------------------------------------
 // Test data
@@ -44,7 +69,6 @@ function makeGene(overrides: Partial<GenePartner> = {}): GenePartner {
         symbol: 'GENE',
         chromosome: '1',
         position: 5000,
-        strand: '+',
         selectedTranscriptId: 'ENST00000001',
         siteDescription: '',
         ...overrides,
@@ -206,6 +230,94 @@ describe('fusionProductHelpers', () => {
     });
 
     // -------------------------------------------------------------------
+    // select5PrimeDomains / select3PrimeDomains
+    // -------------------------------------------------------------------
+    describe('select5PrimeDomains / select3PrimeDomains', () => {
+        // Simulated EGFR-like layout on + strand: domains ordered by coord.
+        const domains = [
+            makeDomain('RecepL_1', 55210000, 55215000),
+            makeDomain('Furin', 55215500, 55222000),
+            makeDomain('RecepL_2', 55225000, 55230000),
+            makeDomain('Pkinase', 55240000, 55250000),
+        ];
+
+        describe('+ strand', () => {
+            it('5p retains domains whose startGenomic <= breakpoint', () => {
+                // EGFRvIII-like 5p breakpoint before all coding domains
+                const result = select5PrimeDomains(domains, 55206630, '+');
+                assert.equal(result.length, 0);
+            });
+
+            it('5p includes partial-overlap domain (start upstream)', () => {
+                // Breakpoint mid-Furin → Furin has upstream portion, is retained
+                const result = select5PrimeDomains(domains, 55220000, '+');
+                assert.deepEqual(
+                    result.map(d => d.name),
+                    ['RecepL_1', 'Furin']
+                );
+            });
+
+            it('3p retains domains whose endGenomic >= breakpoint', () => {
+                // EGFRvIII-like 3p breakpoint drops L1 and most of Furin
+                const result = select3PrimeDomains(domains, 55223152, '+');
+                assert.deepEqual(
+                    result.map(d => d.name),
+                    ['RecepL_2', 'Pkinase']
+                );
+            });
+
+            it('3p includes partial-overlap domain (end downstream)', () => {
+                const result = select3PrimeDomains(domains, 55220000, '+');
+                assert.deepEqual(
+                    result.map(d => d.name),
+                    ['Furin', 'RecepL_2', 'Pkinase']
+                );
+            });
+        });
+
+        describe('- strand', () => {
+            // For minus strand, 5' of gene is at HIGH genomic coords.
+            const minusDomains = [
+                makeDomain('KinaseC_terminal', 29420000, 29425000),
+                makeDomain('Pkinase', 29440000, 29460000),
+                makeDomain('MAM', 29800000, 29820000),
+            ];
+
+            it('5p retains domains whose endGenomic >= breakpoint', () => {
+                // Minus-strand 5p partner: retained region is upstream in tx
+                // direction = higher coords. Breakpoint at 29,446,700 keeps
+                // Pkinase (overlaps) and MAM (upstream); drops KinaseC_term.
+                const result = select5PrimeDomains(minusDomains, 29446700, '-');
+                assert.deepEqual(
+                    result.map(d => d.name),
+                    ['Pkinase', 'MAM']
+                );
+            });
+
+            it('3p retains domains whose startGenomic <= breakpoint', () => {
+                // Minus-strand 3p partner: retained region is downstream in
+                // tx direction = lower coords.
+                const result = select3PrimeDomains(minusDomains, 29446700, '-');
+                assert.deepEqual(
+                    result.map(d => d.name),
+                    ['KinaseC_terminal', 'Pkinase']
+                );
+            });
+        });
+
+        it('5p/3p symmetry matches exon selector rule', () => {
+            // Same rule as exon selector: 5p(+) ≡ 3p(-), 5p(-) ≡ 3p(+).
+            const f5p = select5PrimeDomains(domains, 55220000, '+');
+            const f3m = select3PrimeDomains(domains, 55220000, '-');
+            assert.deepEqual(f5p, f3m);
+
+            const f5m = select5PrimeDomains(domains, 55220000, '-');
+            const f3p = select3PrimeDomains(domains, 55220000, '+');
+            assert.deepEqual(f5m, f3p);
+        });
+    });
+
+    // -------------------------------------------------------------------
     // computeJunctionX
     // -------------------------------------------------------------------
     describe('computeJunctionX', () => {
@@ -235,14 +347,7 @@ describe('fusionProductHelpers', () => {
                 '+'
             );
 
-            const jx = computeJunctionX(
-                gene1,
-                gene2,
-                t5p,
-                undefined,
-                0,
-                500
-            );
+            const jx = computeJunctionX(gene1, gene2, t5p, undefined, 0, 500);
 
             assert.equal(jx, 250);
         });
@@ -250,14 +355,8 @@ describe('fusionProductHelpers', () => {
         it('returns center when no exons are retained', () => {
             const gene1 = makeGene({ position: 50 }); // before all exons
             const gene2 = makeGene({ position: 9999 }); // after all exons on +
-            const t5p = makeTranscript(
-                makeExons([[1, 100, 200]]),
-                '+'
-            );
-            const t3p = makeTranscript(
-                makeExons([[1, 100, 200]]),
-                '+'
-            );
+            const t5p = makeTranscript(makeExons([[1, 100, 200]]), '+');
+            const t3p = makeTranscript(makeExons([[1, 100, 200]]), '+');
 
             // gene1 at 50 on + strand: no exon starts <= 50
             // gene2 at 9999 on + strand: exon end 200 < 9999 → wait, 200 >= 9999? No.
@@ -269,11 +368,10 @@ describe('fusionProductHelpers', () => {
         });
 
         it('computes junction position between retained 5p and 3p exons', () => {
-            const gene1 = makeGene({ position: 250, strand: '+' });
+            const gene1 = makeGene({ position: 250 });
             const gene2 = makeGene({
                 symbol: 'GENE_B',
                 position: 350,
-                strand: '+',
             });
 
             const exons5p = makeExons([

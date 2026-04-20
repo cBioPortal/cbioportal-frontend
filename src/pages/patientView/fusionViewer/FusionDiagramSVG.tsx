@@ -10,6 +10,7 @@ import {
     GeneTrack,
     getGeneTrackHeight,
     genomicToSvgX,
+    computeGeneTrackRange,
 } from './components/GeneTrack';
 import {
     FusionProduct,
@@ -29,9 +30,9 @@ import { ConnectingArcs } from './components/ConnectingArcs';
 // ---------------------------------------------------------------------------
 // Layout constants
 // ---------------------------------------------------------------------------
-const SVG_WIDTH = 900;
-const GENE_TRACK_WIDTH = 420;
-const GENE_TRACK_GAP = 60;
+const SVG_WIDTH = 1300;
+const GENE_TRACK_WIDTH = 580;
+const GENE_TRACK_GAP = 80;
 const SECTION_GAP = 16;
 const TOP_MARGIN = 10;
 
@@ -66,11 +67,24 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
             fusion,
             forteTranscript5p,
             forteTranscript3p,
-            activeTranscript5p,
-            activeTranscript3p,
             onActivate5p,
             onActivate3p,
         } = this.props;
+
+        // Fall back to FORTE if the active transcript is missing the
+        // shape the fusion-product + domain renderers need (exons array).
+        const activeTranscript5p =
+            this.props.activeTranscript5p &&
+            this.props.activeTranscript5p.exons &&
+            this.props.activeTranscript5p.exons.length > 0
+                ? this.props.activeTranscript5p
+                : forteTranscript5p;
+        const activeTranscript3p =
+            this.props.activeTranscript3p &&
+            this.props.activeTranscript3p.exons &&
+            this.props.activeTranscript3p.exons.length > 0
+                ? this.props.activeTranscript3p
+                : forteTranscript3p;
 
         const userTranscripts5p = this.props.userTranscripts5p || [];
         const userTranscripts3p = this.props.userTranscripts3p || [];
@@ -100,7 +114,7 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
                     (a, b) => a.number - b.number
                 ),
                 gene1.position,
-                gene1.strand
+                forteTranscript5p.strand
             ).map(e => e.number)
         );
 
@@ -112,7 +126,7 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
                               (a, b) => a.number - b.number
                           ),
                           gene2.position,
-                          gene2.strand
+                          forteTranscript3p.strand
                       ).map(e => e.number)
                   )
                 : undefined;
@@ -161,25 +175,24 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
         const domainTrackY = fusionProductY + fusionProductHeight + SECTION_GAP;
 
         // ---- Compute breakpoint x positions ----
+        // Must use the SAME combined exon set that GeneTrack uses so the arc
+        // origin lines up with the breakpoint line regardless of which
+        // transcript is the active driver.
         const computeBreakpointX = (
-            transcript: TranscriptData,
+            forteTranscript: TranscriptData,
+            userTranscripts: TranscriptData[],
             breakpointPos: number,
             trackX: number,
             trackWidth: number
         ): number => {
-            const allExons = transcript.exons;
-            const allStarts = allExons.map(e => e.start);
-            const allEnds = allExons.map(e => e.end);
-            const padBp = Math.max(
-                1,
-                Math.round(
-                    (Math.max(...allEnds, breakpointPos) -
-                        Math.min(...allStarts, breakpointPos)) *
-                        0.03
-                )
+            const allExons = [
+                ...forteTranscript.exons,
+                ...userTranscripts.flatMap(t => t.exons),
+            ];
+            const { gMin, gMax } = computeGeneTrackRange(
+                allExons,
+                breakpointPos
             );
-            const gMin = Math.min(...allStarts, breakpointPos) - padBp;
-            const gMax = Math.max(...allEnds, breakpointPos) + padBp;
             const padding = 10;
             return genomicToSvgX(
                 breakpointPos,
@@ -191,16 +204,18 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
         };
 
         const bp5pX = computeBreakpointX(
-            activeTranscript5p,
+            forteTranscript5p,
+            has5pUser ? filtered5p : [],
             gene1.position,
             gene5pX,
             GENE_TRACK_WIDTH
         );
 
         const bp3pX =
-            gene2 && activeTranscript3p
+            gene2 && forteTranscript3p
                 ? computeBreakpointX(
-                      activeTranscript3p,
+                      forteTranscript3p,
+                      has3pUser ? filtered3p : [],
                       gene2.position,
                       gene3pX,
                       GENE_TRACK_WIDTH
@@ -232,7 +247,7 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
                     symbol={gene1.symbol}
                     chromosome={gene1.chromosome}
                     position={gene1.position}
-                    strand={gene1.strand}
+                    strand={forteTranscript5p.strand}
                     siteDescription={gene1.siteDescription}
                     forteTranscript={forteTranscript5p}
                     userTranscripts={has5pUser ? filtered5p : undefined}
@@ -253,7 +268,7 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
                         symbol={gene2.symbol}
                         chromosome={gene2.chromosome}
                         position={gene2.position}
-                        strand={gene2.strand}
+                        strand={forteTranscript3p.strand}
                         siteDescription={gene2.siteDescription}
                         forteTranscript={forteTranscript3p}
                         userTranscripts={has3pUser ? filtered3p : undefined}
@@ -324,6 +339,8 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
                     <ProteinDomainTrack
                         forteTranscript5p={activeTranscript5p}
                         forteTranscript3p={activeTranscript3p}
+                        breakpoint5p={gene1.position}
+                        breakpoint3p={gene2 ? gene2.position : undefined}
                         x={fusionProductX}
                         y={domainTrackY}
                         width={fusionProductWidth}

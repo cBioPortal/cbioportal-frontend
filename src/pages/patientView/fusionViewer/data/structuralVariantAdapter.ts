@@ -33,34 +33,6 @@ function stripTranscriptVersion(transcriptId: string): string {
 }
 
 /**
- * Infer strand orientation for site1 and site2 from the connectionType field.
- *
- * connectionType values: '3to5', '5to3', '5to5', '3to3'
- * - Site1 strand: '5to*' -> '+', '3to*' -> '-'
- * - Site2 strand: '*to5' -> '+', '*to3' -> '-'
- */
-function inferStrands(
-    connectionType: string
-): {
-    site1Strand: '+' | '-';
-    site2Strand: '+' | '-';
-} {
-    const ct = safeString(connectionType).toLowerCase();
-
-    let site1Strand: '+' | '-' = '+';
-    let site2Strand: '+' | '-' = '+';
-
-    if (ct.startsWith('3')) {
-        site1Strand = '-';
-    }
-    if (ct.endsWith('3')) {
-        site2Strand = '-';
-    }
-
-    return { site1Strand, site2Strand };
-}
-
-/**
  * Build a position summary string from site descriptions.
  */
 function buildPositionString(sv: StructuralVariant): string {
@@ -127,13 +99,10 @@ function hasValidSite2Gene(sv: StructuralVariant): boolean {
 export function convertStructuralVariantToFusionEvent(
     sv: StructuralVariant
 ): FusionEvent {
-    const { site1Strand, site2Strand } = inferStrands(sv.connectionType);
-
     const gene1: GenePartner = {
         symbol: safeString(sv.site1HugoSymbol),
         chromosome: safeString(sv.site1Chromosome),
         position: safeNumber(sv.site1Position),
-        strand: site1Strand,
         selectedTranscriptId: stripTranscriptVersion(
             safeString(sv.site1EnsemblTranscriptId)
         ),
@@ -145,7 +114,6 @@ export function convertStructuralVariantToFusionEvent(
               symbol: safeString(sv.site2HugoSymbol),
               chromosome: safeString(sv.site2Chromosome),
               position: safeNumber(sv.site2Position),
-              strand: site2Strand,
               selectedTranscriptId: stripTranscriptVersion(
                   safeString(sv.site2EnsemblTranscriptId)
               ),

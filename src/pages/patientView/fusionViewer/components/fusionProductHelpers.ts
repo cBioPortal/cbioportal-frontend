@@ -1,4 +1,9 @@
-import { Exon, TranscriptData, GenePartner } from '../data/types';
+import {
+    Exon,
+    ProteinDomain,
+    TranscriptData,
+    GenePartner,
+} from '../data/types';
 
 // ---------------------------------------------------------------------------
 // Layout constants
@@ -48,6 +53,43 @@ export function select3PrimeExons(
 }
 
 /**
+ * Select protein domains retained on the 5-prime side of a fusion.
+ *
+ * A domain is retained if any portion of its genomic footprint lies on the
+ * 5-prime side of the breakpoint, using the same inclusive rule as
+ * select5PrimeExons:
+ *   + strand: startGenomic <= breakpoint
+ *   - strand: endGenomic   >= breakpoint
+ */
+export function select5PrimeDomains(
+    domains: ProteinDomain[],
+    breakpointPos: number,
+    strand: '+' | '-'
+): ProteinDomain[] {
+    if (strand === '+') {
+        return domains.filter(d => d.startGenomic <= breakpointPos);
+    }
+    return domains.filter(d => d.endGenomic >= breakpointPos);
+}
+
+/**
+ * Select protein domains retained on the 3-prime side of a fusion.
+ *
+ *   + strand: endGenomic   >= breakpoint
+ *   - strand: startGenomic <= breakpoint
+ */
+export function select3PrimeDomains(
+    domains: ProteinDomain[],
+    breakpointPos: number,
+    strand: '+' | '-'
+): ProteinDomain[] {
+    if (strand === '+') {
+        return domains.filter(d => d.endGenomic >= breakpointPos);
+    }
+    return domains.filter(d => d.startGenomic <= breakpointPos);
+}
+
+/**
  * Compute the junction x position for connecting arcs.
  * Mirrors the internal logic so the parent orchestrator can position arcs.
  */
@@ -73,12 +115,12 @@ export function computeJunctionX(
     const retained5p = select5PrimeExons(
         sorted5p,
         gene1.position,
-        gene1.strand
+        forteTranscript5p.strand
     );
     const retained3p = select3PrimeExons(
         sorted3p,
         gene2.position,
-        gene2.strand
+        forteTranscript3p.strand
     );
 
     const totalExons = retained5p.length + retained3p.length;

@@ -173,6 +173,106 @@ describe('genomeNexusTranscriptService', () => {
             assert.equal(result[0].domains[0].pfamId, 'PF00069');
         });
 
+        it('computes domain genomic coords by walking CDS, skipping UTRs (+ strand)', async () => {
+            const gene = uniqueGene();
+            // Two exons on + strand:
+            //   E1: 1000-1099 (100 bp), 5' UTR covers 1000-1039 (40 bp)
+            //   E2: 2000-2099 (100 bp), all CDS
+            // CDS bp in tx order: E1[1040-1099]=60 bp, E2[2000-2099]=100 bp.
+            // aa 1 starts at CDS nt 0 → genomic 1040.
+            // aa 21 (nt 60 → first nt of E2) → genomic 2000.
+            // aa 40 (nt 117) → genomic 2000 + 117 - 60 = 2057.
+            const transcript = {
+                transcriptId: 'ENST00000999.1',
+                hugoSymbols: ['TEST_GENE'],
+                proteinLength: 53,
+                exons: [
+                    {
+                        rank: 1,
+                        exonStart: 1000,
+                        exonEnd: 1099,
+                        exonId: 'E1',
+                        strand: 1,
+                    },
+                    {
+                        rank: 2,
+                        exonStart: 2000,
+                        exonEnd: 2099,
+                        exonId: 'E2',
+                        strand: 1,
+                    },
+                ],
+                utrs: [{ type: '5_prime_UTR', start: 1000, end: 1039 }],
+                pfamDomains: [
+                    {
+                        pfamDomainId: 'PF_TEST',
+                        pfamDomainStart: 1,
+                        pfamDomainEnd: 40,
+                    },
+                ],
+            };
+            mockFetchTranscripts.mockResolvedValue([transcript]);
+            mockFetchCanonical.mockResolvedValue(null);
+            mockFetchPfam.mockResolvedValue([]);
+
+            const result = await fetchTranscriptsFromEnsembl(gene, 'GRCh38');
+            const d = result[0].domains[0];
+
+            assert.equal(d.startGenomic, 1040); // aa 1 → start of CDS
+            assert.equal(d.endGenomic, 2057); // aa 40 → mid-E2
+        });
+
+        it('computes domain genomic coords on − strand (walks high→low)', async () => {
+            const gene = uniqueGene();
+            // − strand: transcription runs high→low.
+            //   E1 (rank 1): 2000-2099, 5' UTR at 2080-2099 (20 bp).
+            //   E2 (rank 2): 1000-1099, all CDS.
+            // CDS bp in tx order: E1[2000-2079]=80 bp, E2[1000-1099]=100 bp.
+            // aa 1 → CDS nt 0 → genomic 2079 (top of E1 CDS).
+            // aa 27 → nt 78 → 2079 - 78 = 2001.
+            // aa 28 → nt 81 → 1 bp into E2 → genomic 1099 - 1 = 1098.
+            const transcript = {
+                transcriptId: 'ENST00000888.1',
+                hugoSymbols: ['TEST_GENE'],
+                proteinLength: 60,
+                exons: [
+                    {
+                        rank: 1,
+                        exonStart: 2000,
+                        exonEnd: 2099,
+                        exonId: 'E1',
+                        strand: -1,
+                    },
+                    {
+                        rank: 2,
+                        exonStart: 1000,
+                        exonEnd: 1099,
+                        exonId: 'E2',
+                        strand: -1,
+                    },
+                ],
+                utrs: [{ type: '5_prime_UTR', start: 2080, end: 2099 }],
+                pfamDomains: [
+                    {
+                        pfamDomainId: 'PF_TEST',
+                        pfamDomainStart: 1,
+                        pfamDomainEnd: 28,
+                    },
+                ],
+            };
+            mockFetchTranscripts.mockResolvedValue([transcript]);
+            mockFetchCanonical.mockResolvedValue(null);
+            mockFetchPfam.mockResolvedValue([]);
+
+            const result = await fetchTranscriptsFromEnsembl(gene, 'GRCh38');
+            const d = result[0].domains[0];
+
+            // Minus strand: aa1 maps higher than aa28, but we canonicalize
+            // as [min, max] so downstream filters work uniformly.
+            assert.equal(d.startGenomic, 1098); // min coord (aa 28 side)
+            assert.equal(d.endGenomic, 2079); // max coord (aa 1 side)
+        });
+
         it('returns empty array when no transcripts found', async () => {
             const gene = uniqueGene();
             mockFetchTranscripts.mockResolvedValue([]);

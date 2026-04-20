@@ -2,6 +2,7 @@ import {
     GenomeNexusAPI,
     EnsemblTranscript as GNEnsemblTranscript,
     Exon as GNExon,
+    UntranslatedRegion,
     PfamDomainRange,
     PfamDomain,
 } from 'genome-nexus-ts-api-client';
@@ -59,19 +60,107 @@ function mapExons(gnExons: GNExon[]): Exon[] {
         }));
 }
 
+/**
+ * Genomic interval of CDS within a single exon (UTR regions removed).
+ * Both strands: start <= end. Transcription-order is handled separately.
+ */
+interface CdsSegment {
+    start: number;
+    end: number;
+}
+
+/**
+ * Build CDS-only genomic segments for a transcript in transcription order.
+ *
+ * Each exon is clipped against every UTR range; the resulting pieces are
+ * emitted in transcription order (low→high coord on + strand, high→low
+ * on − strand) so walking the list accumulates coding bp in the correct
+ * direction.
+ */
+function buildCdsSegments(
+    gnExons: GNExon[],
+    utrs: UntranslatedRegion[],
+    strand: '+' | '-'
+): CdsSegment[] {
+    const sortedExons = [...gnExons].sort((a, b) =>
+        strand === '+' ? a.exonStart - b.exonStart : b.exonStart - a.exonStart
+    );
+
+    const segments: CdsSegment[] = [];
+    for (const exon of sortedExons) {
+        let parts: CdsSegment[] = [
+            { start: exon.exonStart, end: exon.exonEnd },
+        ];
+        for (const utr of utrs) {
+            const next: CdsSegment[] = [];
+            for (const p of parts) {
+                if (utr.end < p.start || utr.start > p.end) {
+                    next.push(p);
+                    continue;
+                }
+                if (utr.start > p.start) {
+                    next.push({ start: p.start, end: utr.start - 1 });
+                }
+                if (utr.end < p.end) {
+                    next.push({ start: utr.end + 1, end: p.end });
+                }
+            }
+            parts = next;
+        }
+        parts.sort((a, b) =>
+            strand === '+' ? a.start - b.start : b.start - a.start
+        );
+        segments.push(...parts);
+    }
+    return segments;
+}
+
+/**
+ * Map a 1-indexed amino-acid position to its genomic coordinate by
+ * walking CDS bp in transcription direction. The start of aa N is at
+ * CDS nt offset (N - 1) * 3.
+ */
+function aaToGenomic(
+    aa: number,
+    cdsSegments: CdsSegment[],
+    strand: '+' | '-'
+): number {
+    if (cdsSegments.length === 0 || aa < 1) return 0;
+    const targetNt = (aa - 1) * 3;
+    let cumulative = 0;
+    for (const seg of cdsSegments) {
+        const segLen = seg.end - seg.start + 1;
+        if (cumulative + segLen > targetNt) {
+            const offset = targetNt - cumulative;
+            return strand === '+' ? seg.start + offset : seg.end - offset;
+        }
+        cumulative += segLen;
+    }
+    const last = cdsSegments[cdsSegments.length - 1];
+    return strand === '+' ? last.end : last.start;
+}
+
 function mapDomains(
     pfamRanges: PfamDomainRange[],
-    pfamLookup: Record<string, PfamDomain>
+    pfamLookup: Record<string, PfamDomain>,
+    cdsSegments: CdsSegment[],
+    strand: '+' | '-'
 ): ProteinDomain[] {
-    return pfamRanges.map(range => ({
-        pfamId: range.pfamDomainId,
-        name: pfamLookup[range.pfamDomainId]?.name || range.pfamDomainId,
-        startAA: range.pfamDomainStart,
-        endAA: range.pfamDomainEnd,
-        startGenomic: 0,
-        endGenomic: 0,
-        source: 'Pfam',
-    }));
+    return pfamRanges.map(range => {
+        // Map aa range to two genomic coords; canonicalize as [min, max]
+        // so downstream filters can treat start <= end regardless of strand.
+        const g1 = aaToGenomic(range.pfamDomainStart, cdsSegments, strand);
+        const g2 = aaToGenomic(range.pfamDomainEnd, cdsSegments, strand);
+        return {
+            pfamId: range.pfamDomainId,
+            name: pfamLookup[range.pfamDomainId]?.name || range.pfamDomainId,
+            startAA: range.pfamDomainStart,
+            endAA: range.pfamDomainEnd,
+            startGenomic: Math.min(g1, g2),
+            endGenomic: Math.max(g1, g2),
+            source: 'Pfam',
+        };
+    });
 }
 
 function mapTranscript(
@@ -88,6 +177,8 @@ function mapTranscript(
     const allStarts = exons.map(e => e.start);
     const allEnds = exons.map(e => e.end);
 
+    const cdsSegments = buildCdsSegments(gn.exons || [], gn.utrs || [], strand);
+
     return {
         transcriptId: stripVersion(gn.transcriptId),
         displayName: gn.transcriptId,
@@ -100,7 +191,12 @@ function mapTranscript(
         exons,
         isForteSelected: false,
         proteinLength: gn.proteinLength > 0 ? gn.proteinLength : undefined,
-        domains: mapDomains(gn.pfamDomains || [], pfamLookup),
+        domains: mapDomains(
+            gn.pfamDomains || [],
+            pfamLookup,
+            cdsSegments,
+            strand
+        ),
     };
 }
 
