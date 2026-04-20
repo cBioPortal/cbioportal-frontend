@@ -200,7 +200,9 @@ test.describe('oncoprint URL catalog', () => {
     for (const entry of URL_CATALOG) {
         test(entry.title, async ({ page }) => {
             await page.goto(entry.url);
-            await waitForOncoprint(page);
+            // Catalog queries include large MSK / multi-study configs that
+            // exceed the default 20s under parallel load.
+            await waitForOncoprint(page, 60000);
             // Some of the combined-study / heatmap configs render progressively;
             // a short settle lets the final layout stabilize before capture.
             await page.waitForTimeout(1000);

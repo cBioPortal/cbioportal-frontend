@@ -206,11 +206,11 @@ test.describe('enrichments tab screenshot tests', () => {
         await page.locator('.comparisonTabSubTabs .tabAnchor_mrna').click();
         await expect(
             page.locator('div[data-test="GroupComparisonMRNAEnrichments"]')
-        ).toBeVisible();
+        ).toBeVisible({ timeout: 60000 });
         await page.locator('b:text-is("MERTK")').click();
-        await expect(
-            page.locator('div[data-test="MiniBoxPlot"]')
-        ).toBeVisible();
+        await expect(page.locator('div[data-test="MiniBoxPlot"]')).toBeVisible({
+            timeout: 60000,
+        });
         await snapshot(
             page,
             'div[data-test="ComparisonTabDiv"]',

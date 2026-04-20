@@ -308,6 +308,9 @@ export function runResultsTestSuite(
             await expect(
                 page.locator("[data-test='downloadTabDiv']")
             ).toBeVisible({ timeout: 20000 });
+            // Tab becomes visible before its tables finish loading — without
+            // this wait the snapshot can race the final table render.
+            await waitForNetworkQuiet(page, 30000);
             await snapshot(
                 page,
                 "[data-test='downloadTabDiv']",
