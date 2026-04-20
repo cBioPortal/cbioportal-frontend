@@ -23,7 +23,9 @@ import WindowStore from 'shared/components/window/WindowStore';
 import { getPatientIdentifiers } from '../studyView/StudyViewUtils';
 import OverlapExclusionIndicator from './OverlapExclusionIndicator';
 import OverlapUpset from './OverlapUpset';
-import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
+import ComparisonStore, {
+    OverlapStrategy,
+} from '../../shared/lib/comparison/ComparisonStore';
 import { getServerConfig } from 'config/config';
 
 export interface IOverlapProps {
@@ -380,15 +382,9 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
         await: () => [
             this.plot,
             this.props.store.overlapComputations,
-            this.props.store._selectedGroups,
         ],
         render: () => {
-            const selectedGroups = this.props.store._selectedGroups.result!;
             const overlapInfo = this.props.store.overlapComputations.result!;
-            const hasOverlap =
-                selectedGroups.length >= 2 &&
-                (overlapInfo.totalSampleOverlap > 0 ||
-                    overlapInfo.totalPatientOverlap > 0);
             const hasPatientOverlap = overlapInfo.totalPatientOverlap > 0;
             return (
                 <div
@@ -416,7 +412,7 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
                     <div style={{ position: 'relative', display: 'inline-block' }}>
                         {this.plot.component}
                     </div>
-                    {hasOverlap && (
+                    {hasPatientOverlap && (
                         <div
                             style={{
                                 display: 'flex',
@@ -430,23 +426,14 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
                             <button
                                 className="btn btn-md btn-primary"
                                 onClick={() =>
-                                    this.props.store.startNonOverlappingComparison()
+                                    this.props.store.updateOverlapStrategy(
+                                        OverlapStrategy.OVERLAP_ONLY
+                                    )
                                 }
-                                data-test="ComparisonPageOverlapNonOverlappingButton"
+                                data-test="ComparisonPageOverlapOverlappingButton"
                             >
-                                Compare non-overlapping groups
+                                Compare overlapping patients
                             </button>
-                            {hasPatientOverlap && (
-                                <button
-                                    className="btn btn-md btn-primary"
-                                    onClick={() =>
-                                        this.props.store.startOverlappingComparison()
-                                    }
-                                    data-test="ComparisonPageOverlapOverlappingButton"
-                                >
-                                    Compare overlapping groups only
-                                </button>
-                            )}
                         </div>
                     )}
                 </div>

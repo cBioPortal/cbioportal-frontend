@@ -1288,22 +1288,24 @@ export const OVERLAP_COMPARISON_ACTION_NON_OVERLAPPING = 'startNonOverlapping';
 export const OVERLAP_COMPARISON_ACTION_OVERLAPPING = 'startOverlapping';
 
 /**
- * Returns dynamic Include/Exclude labels for the overlap strategy dropdown,
+ * Returns dynamic Include/Exclude/OverlapOnly labels for the overlap strategy dropdown,
  * tailored to only mention the overlap type(s) that actually exist.
  */
 export function getOverlapStrategyOptionLabels(
     hasSampleOverlap: boolean,
     hasPatientOverlap: boolean
-): { includeLabel: string; excludeLabel: string } {
+): { includeLabel: string; excludeLabel: string; overlapOnlyLabel: string } {
     const overlapSubject =
         hasSampleOverlap && hasPatientOverlap
             ? 'samples and patients'
             : hasSampleOverlap
             ? 'samples'
             : 'patients';
+    const overlapOnlySubject = hasPatientOverlap ? 'patients' : 'samples';
     return {
         includeLabel: `Include overlapping ${overlapSubject}`,
         excludeLabel: `Exclude overlapping ${overlapSubject}`,
+        overlapOnlyLabel: `Compare overlapping ${overlapOnlySubject}`,
     };
 }
 

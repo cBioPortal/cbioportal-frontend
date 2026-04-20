@@ -33,7 +33,7 @@ import GenericAssayEnrichmentCollections from 'pages/groupComparison/GenericAssa
 import AlterationEnrichmentTypeSelector from 'shared/lib/comparison/AlterationEnrichmentTypeSelector';
 import styles from 'pages/resultsView/comparison/styles.module.scss';
 import { getServerConfig } from 'config/config';
-import { AlterationFilterMenuSection, buildOverlapComparisonActionOptions, getOverlapStrategyOptionLabels, OVERLAP_COMPARISON_ACTION_NON_OVERLAPPING, OVERLAP_COMPARISON_ACTION_OVERLAPPING } from 'pages/groupComparison/GroupComparisonUtils';
+import { AlterationFilterMenuSection, getOverlapStrategyOptionLabels } from 'pages/groupComparison/GroupComparisonUtils';
 import { getSortedGenericAssayAllTabSpecs } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 
 export interface IComparisonTabProps {
@@ -79,10 +79,18 @@ export default class ComparisonTab extends React.Component<
                 const {
                     includeLabel,
                     excludeLabel,
+                    overlapOnlyLabel,
                 } = getOverlapStrategyOptionLabels(
                     hasSampleOverlap,
                     hasPatientOverlap
                 );
+                const currentStrategy = this.store.overlapStrategy;
+                const currentLabel =
+                    currentStrategy === OverlapStrategy.EXCLUDE
+                        ? excludeLabel
+                        : currentStrategy === OverlapStrategy.OVERLAP_ONLY
+                        ? overlapOnlyLabel
+                        : includeLabel;
                 return (
                     <div style={{ minWidth: 355, width: 355, zIndex: 20 }}>
                         <ReactSelect
@@ -90,19 +98,7 @@ export default class ComparisonTab extends React.Component<
                             name="select overlap strategy"
                             onChange={(option: any | null) => {
                                 if (!option) return;
-                                if (
-                                    option.value ===
-                                    OVERLAP_COMPARISON_ACTION_NON_OVERLAPPING
-                                ) {
-                                    this.store.startNonOverlappingComparison();
-                                } else if (
-                                    option.value ===
-                                    OVERLAP_COMPARISON_ACTION_OVERLAPPING
-                                ) {
-                                    this.store.startOverlappingComparison();
-                                } else {
-                                    this.onOverlapStrategySelect(option);
-                                }
+                                this.onOverlapStrategySelect(option);
                             }}
                             options={[
                                 {
@@ -113,19 +109,21 @@ export default class ComparisonTab extends React.Component<
                                     label: excludeLabel,
                                     value: OverlapStrategy.EXCLUDE,
                                 },
-                                ...buildOverlapComparisonActionOptions(
-                                    hasPatientOverlap
-                                ),
+                                ...(hasPatientOverlap
+                                    ? [
+                                          {
+                                              label: overlapOnlyLabel,
+                                              value:
+                                                  OverlapStrategy.OVERLAP_ONLY,
+                                          },
+                                      ]
+                                    : []),
                             ]}
                             clearable={false}
                             searchable={false}
                             value={{
-                                label:
-                                    this.store.overlapStrategy ===
-                                    OverlapStrategy.EXCLUDE
-                                        ? excludeLabel
-                                        : includeLabel,
-                                value: this.store.overlapStrategy,
+                                label: currentLabel,
+                                value: currentStrategy,
                             }}
                         />
                     </div>

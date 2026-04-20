@@ -121,6 +121,7 @@ import { FeatureFlagEnum } from 'shared/featureFlags';
 export enum OverlapStrategy {
     INCLUDE = 'Include',
     EXCLUDE = 'Exclude',
+    OVERLAP_ONLY = 'OverlapOnly',
 }
 
 export default abstract class ComparisonStore extends AnalysisStore
@@ -433,12 +434,19 @@ export default abstract class ComparisonStore extends AnalysisStore
     });
 
     readonly availableGroups = remoteData<ComparisonGroup[]>({
-        await: () => [this._originalGroups, this._originalGroupsOverlapRemoved],
+        await: () => [
+            this._originalGroups,
+            this._originalGroupsOverlapRemoved,
+            this._originalGroupsOverlapOnly,
+        ],
         invoke: () => {
             let ret: ComparisonGroup[];
             switch (this.overlapStrategy) {
                 case OverlapStrategy.INCLUDE:
                     ret = this._originalGroups.result!;
+                    break;
+                case OverlapStrategy.OVERLAP_ONLY:
+                    ret = this._originalGroupsOverlapOnly.result!;
                     break;
                 case OverlapStrategy.EXCLUDE:
                 default:
@@ -492,6 +500,28 @@ export default abstract class ComparisonStore extends AnalysisStore
         },
     });
 
+    readonly _originalGroupsOverlapOnly = remoteData<ComparisonGroup[]>({
+        await: () => [
+            this._originalGroups,
+            this.overlapComputations,
+            this.sampleMap,
+        ],
+        invoke: () => {
+            const overlapInfo = this.overlapComputations.result!;
+            const sampleMap = this.sampleMap.result!;
+            return Promise.resolve(
+                this._originalGroups.result!.map(group => ({
+                    ...group,
+                    studies: getOverlappingGroupStudiesAttr(
+                        group.studies,
+                        overlapInfo.overlappingPatientsSet,
+                        sampleMap
+                    ),
+                }))
+            );
+        },
+    });
+
     readonly _originalGroupsOverlapRemoved = remoteData<ComparisonGroup[]>({
         await: () => [this.overlapComputations, this._originalGroups],
         invoke: () => Promise.resolve(this.overlapComputations.result!.groups),
@@ -513,7 +543,10 @@ export default abstract class ComparisonStore extends AnalysisStore
         invoke: () => {
             let excludedGroups = this.overlapComputations.result!
                 .excludedFromAnalysis;
-            if (this.overlapStrategy === OverlapStrategy.INCLUDE) {
+            if (
+                this.overlapStrategy === OverlapStrategy.INCLUDE ||
+                this.overlapStrategy === OverlapStrategy.OVERLAP_ONLY
+            ) {
                 excludedGroups = {};
             }
             return Promise.resolve(
