@@ -79,8 +79,7 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
             if (this.props.store._selectedGroups.result!.length < 2) {
                 content.push(<span>{OVERLAP_NOT_ENOUGH_GROUPS_MSG}</span>);
             } else {
-                const overlapInfo = this.props.store.overlapComputations
-                    .result!;
+                const overlapInfo = this.props.store.overlapComputations.result!;
                 const hasOverlap =
                     overlapInfo.totalSampleOverlap > 0 ||
                     overlapInfo.totalPatientOverlap > 0;

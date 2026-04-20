@@ -324,6 +324,12 @@ export default abstract class ComparisonStore extends AnalysisStore
         this.saveAndGoToSession(newSession);
     }
 
+    /**
+     * Creates a new comparison session where overlapping samples and patients
+     * are removed from each selected group. Removes samples that directly
+     * overlap across groups, as well as samples whose patient appears in
+     * multiple groups, enabling a clean non-overlapping comparison.
+     */
     public async startNonOverlappingComparison() {
         this.newSessionPending = true;
         const overlapInfo = this.overlapComputations.result!;
@@ -353,6 +359,13 @@ export default abstract class ComparisonStore extends AnalysisStore
         await this.saveAndGoToSession(newSession);
     }
 
+    /**
+     * Creates a new comparison session restricted to only the cases that
+     * overlap across groups. For each group, keeps only samples whose patient
+     * appears in multiple groups. This is useful for comparing sample types
+     * (e.g., primary vs. metastasis) within patients that have samples in
+     * more than one group.
+     */
     public async startOverlappingComparison() {
         this.newSessionPending = true;
         const overlapInfo = this.overlapComputations.result!;
