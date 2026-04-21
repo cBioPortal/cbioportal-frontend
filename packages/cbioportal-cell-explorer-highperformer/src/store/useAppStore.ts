@@ -961,6 +961,22 @@ const useAppStore = create<AppState>((set, get) => ({
 
         set({ obsColumnNames, varNames, varColumns: varCols, geneLabelColumn: detectedCol })
         if (detectedCol) get()._resolveGeneLabels()
+
+        // Auto-pick a default Color By if nothing is selected yet. Prefer
+        // author_cell_type, fall back to cell_type — these are the
+        // conventional cell-type annotation columns in AnnData.
+        const { selectedObsColumn, selectedGene } = get()
+        if (!selectedObsColumn && !selectedGene) {
+          const defaultCandidates = ['author_cell_type', 'cell_type']
+          const lowerNames = obsColumnNames.map((n) => n.toLowerCase())
+          for (const candidate of defaultCandidates) {
+            const idx = lowerNames.indexOf(candidate.toLowerCase())
+            if (idx !== -1) {
+              get().selectObsColumn(obsColumnNames[idx])
+              break
+            }
+          }
+        }
       })
     } catch (err) {
       if (err instanceof Error && err.name !== 'AbortError') {
