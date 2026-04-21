@@ -7,7 +7,7 @@
   TRANSPILE_ONLY="true"
 
 [build]
-  command = "corepack enable && pnpm install --frozen-lockfile && pnpm run build"
+  command = "rm -rf node_modules && corepack enable && pnpm install --frozen-lockfile --force && pnpm run build"
 
 [[headers]]
 for = "/*.otf"

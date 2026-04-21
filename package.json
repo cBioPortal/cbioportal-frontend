@@ -338,6 +338,8 @@
   "packageManager": "pnpm@10.33.0+sha512.10568bb4a6afb58c9eb3630da90cc9516417abebd3fabbe6739f0ae795728da1491e9db5a544c76ad8eb7570f5c4bb3d6c637b2cb41bfdcdb47fa823c8649319",
   "pnpm": {
     "overrides": {
+      "@babel/traverse": "7.28.5",
+      "@babel/types": "7.29.0",
       "@types/express-serve-static-core": "4.19.8",
       "picomatch": "2.3.0",
       "@types/react-router-dom>@types/react-router": "5.1.8",
