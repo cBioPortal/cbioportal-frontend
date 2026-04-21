@@ -337,3 +337,11 @@ export const categoricalTrackSortComparator = (() => {
         mandatory: comparator,
     };
 })();
+
+export function makeStackedBarTrackSortComparator(categories: string[]) {
+    const comparator = makeCountsMapClinicalComparator(categories);
+    return {
+        preferred: alphabeticalDefault(comparator),
+        mandatory: comparator,
+    };
+}

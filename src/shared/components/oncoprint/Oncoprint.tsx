@@ -232,6 +232,7 @@ export interface IHeatmapTrackSpec extends IBaseHeatmapTrackSpec {
     maxProfileValue?: number;
     minProfileValue?: number;
     customNaShapes?: ShapeParams[];
+    customOptions?: CustomTrackOption[];
 }
 export interface IGenesetHeatmapTrackSpec extends IBaseHeatmapTrackSpec {
     data: IGenesetHeatmapTrackDatum[];
@@ -256,6 +257,20 @@ export interface ICategoricalTrackSpec {
     naLegendLabel?: string;
     description?: string;
     info?: string;
+    customOptions?: CustomTrackOption[];
+    // When true, render as a stacked bar track rather than a single-category track.
+    // The per-datum `attr_val` is expected to be an object `{ [category]: number }`.
+    stackedBar?: boolean;
+    stackedBarCategories?: string[];
+    stackedBarFills?: [number, number, number, number][];
+    // When set, bar heights are scaled against this constant across all data
+    // (absolute-magnitude view, e.g. "No. cells") instead of each sample's own
+    // total (composition view). Typically computed as the max per-sample total.
+    stackedBarMaxTotal?: number;
+    // When two stacked-bar tracks on the same generic-assay type render side
+    // by side (absolute + composition view of the same cell types), only one
+    // track needs to contribute the category legend.
+    stackedBarExcludeFromLegend?: boolean;
 }
 
 export const GENETIC_TRACK_GROUP_INDEX = 1;

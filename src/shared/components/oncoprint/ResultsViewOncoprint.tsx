@@ -24,6 +24,7 @@ import Oncoprint, {
     GeneticTrackSpec,
     IGenesetHeatmapTrackSpec,
     IHeatmapTrackSpec,
+    ICategoricalTrackSpec,
     ClinicalTrackConfigChange,
     GeneticTrackConfigMap,
     GeneticTrackConfig,
@@ -48,6 +49,7 @@ import {
     makeClinicalTracksMobxPromise,
     makeGenericAssayProfileCategoricalTracksMobxPromise,
     makeGenericAssayProfileHeatmapTracksMobxPromise,
+    makeGenericAssayProfileStackedBarTracksMobxPromise,
     makeGenesetHeatmapExpansionsMobxPromise,
     makeGenesetHeatmapTracksMobxPromise,
     makeGeneticTracksMobxPromise,
@@ -1292,8 +1294,76 @@ export default class ResultsViewOncoprint extends React.Component<
             .map(group => group.join(','))
             .join(';');
 
+        const updates: any = { generic_assay_groups };
+
+        // If the profile has no entities left, drop it from both stacked sets.
+        if (entities.length === 0) {
+            if (this.genericAssayStackedProfiles[molecularProfileId]) {
+                updates.generic_assay_stacked_profiles = this.serializeStackedProfiles(
+                    _.omit(this.genericAssayStackedProfiles, molecularProfileId)
+                );
+            }
+            if (this.genericAssayStackedAbsoluteProfiles[molecularProfileId]) {
+                updates.generic_assay_stacked_absolute_profiles = this.serializeStackedProfiles(
+                    _.omit(
+                        this.genericAssayStackedAbsoluteProfiles,
+                        molecularProfileId
+                    )
+                );
+            }
+        }
+
+        this.urlWrapper.updateURL(updates);
+    }
+
+    @computed get genericAssayStackedProfiles(): { [profileId: string]: true } {
+        const raw = this.urlWrapper.query.generic_assay_stacked_profiles;
+        if (!raw) return {};
+        return _.chain(raw.split(';'))
+            .filter(x => x.length > 0)
+            .keyBy(x => x)
+            .mapValues(() => true as true)
+            .value();
+    }
+
+    @computed get genericAssayStackedAbsoluteProfiles(): {
+        [profileId: string]: true;
+    } {
+        const raw = this.urlWrapper.query
+            .generic_assay_stacked_absolute_profiles;
+        if (!raw) return {};
+        return _.chain(raw.split(';'))
+            .filter(x => x.length > 0)
+            .keyBy(x => x)
+            .mapValues(() => true as true)
+            .value();
+    }
+
+    private serializeStackedProfiles(map: {
+        [profileId: string]: true;
+    }): string {
+        return _.keys(map).join(';');
+    }
+
+    @action.bound
+    public setGenericAssayStackedMode(
+        molecularProfileId: string,
+        mode: 'off' | 'composition' | 'absolute'
+    ) {
+        const comp = { ...this.genericAssayStackedProfiles };
+        const abs = { ...this.genericAssayStackedAbsoluteProfiles };
+        delete comp[molecularProfileId];
+        delete abs[molecularProfileId];
+        if (mode === 'composition') {
+            comp[molecularProfileId] = true;
+        } else if (mode === 'absolute') {
+            abs[molecularProfileId] = true;
+        }
         this.urlWrapper.updateURL({
-            generic_assay_groups,
+            generic_assay_stacked_profiles: this.serializeStackedProfiles(comp),
+            generic_assay_stacked_absolute_profiles: this.serializeStackedProfiles(
+                abs
+            ),
         });
     }
 
@@ -1748,6 +1818,21 @@ export default class ResultsViewOncoprint extends React.Component<
             : this.patientGenericAssayCategoricalTracks;
     }
 
+    readonly sampleGenericAssayStackedBarTracks = makeGenericAssayProfileStackedBarTracksMobxPromise(
+        this,
+        true
+    );
+    readonly patientGenericAssayStackedBarTracks = makeGenericAssayProfileStackedBarTracksMobxPromise(
+        this,
+        false
+    );
+    @computed get genericAssayStackedBarTracks() {
+        return this.oncoprintAnalysisCaseType ===
+            OncoprintAnalysisCaseType.SAMPLE
+            ? this.sampleGenericAssayStackedBarTracks
+            : this.patientGenericAssayStackedBarTracks;
+    }
+
     @computed get genesetHeatmapTrackGroupIndex(): TrackGroupIndex | undefined {
         // check whether oncoprint should show a geneset trackgroup
         if (this.props.store.genesetIds.length > 0) {
@@ -1763,6 +1848,9 @@ export default class ResultsViewOncoprint extends React.Component<
                         hmTrack => hmTrack.trackGroupIndex
                     ),
                     ...this.genericAssayCategoricalTracks.result.map(
+                        track => track.trackGroupIndex
+                    ),
+                    ...this.genericAssayStackedBarTracks.result.map(
                         track => track.trackGroupIndex
                     )
                 )
@@ -2286,9 +2374,14 @@ export default class ResultsViewOncoprint extends React.Component<
                                         this.genericAssayHeatmapTracks.result
                                     )
                                     .concat(this.heatmapTracks.result)}
-                                categoricalTracks={
-                                    this.genericAssayCategoricalTracks.result
-                                }
+                                categoricalTracks={([] as ICategoricalTrackSpec[])
+                                    .concat(
+                                        this.genericAssayCategoricalTracks
+                                            .result
+                                    )
+                                    .concat(
+                                        this.genericAssayStackedBarTracks.result
+                                    )}
                                 divId={this.props.divId}
                                 width={this.width}
                                 caseLinkOutInTooltips={true}

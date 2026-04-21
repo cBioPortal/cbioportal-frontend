@@ -90,6 +90,62 @@ export function makeCategoricalTrackTooltip(
 ) {
     return function(dataUnderMouse: any[]) {
         let ret = '';
+        // Stacked-bar tracks: each datum's attr_val is a map of category->fraction.
+        // Show the per-category value (averaged across cases under the cursor),
+        // not the categorical "<count> samples" aggregation.
+        if (track.stackedBar && track.stackedBarCategories) {
+            const cats = track.stackedBarCategories;
+            const sums: { [cat: string]: number } = {};
+            let nonNaCount = 0;
+            for (const d of dataUnderMouse) {
+                if (!d || d.na || !d.attr_val) continue;
+                nonNaCount++;
+                for (const cat of cats) {
+                    sums[cat] = (sums[cat] || 0) + (+d.attr_val[cat] || 0);
+                }
+            }
+            if (nonNaCount > 0) {
+                // If all aggregated values are whole numbers (absolute counts),
+                // render without decimals. Otherwise show 4-decimal fractions.
+                const values = cats.map(c => (sums[c] || 0) / nonNaCount);
+                const allInteger = values.every(
+                    v => Number.isFinite(v) && v === Math.round(v)
+                );
+                ret += track.label + ':<br>';
+                for (let i = 0; i < cats.length; i++) {
+                    const cat = cats[i];
+                    const avg = values[i];
+                    const fill =
+                        track.stackedBarFills && track.stackedBarFills[i];
+                    const color = fill
+                        ? `rgba(${fill[0]},${fill[1]},${fill[2]},${fill[3]})`
+                        : 'inherit';
+                    const formatted = allInteger
+                        ? Math.round(avg).toLocaleString()
+                        : avg.toFixed(4);
+                    ret +=
+                        `<span class="nobreak" style="color:${color};font-weight:bold;">` +
+                        cat +
+                        '</span>: ' +
+                        formatted +
+                        '<br>';
+                }
+            }
+            let naCount = 0;
+            for (const d of dataUnderMouse) {
+                if (d && d.na) naCount++;
+            }
+            if (naCount > 0) {
+                ret += `${track.label}: <b>N/A</b>${
+                    dataUnderMouse.length > 1 ? ` (${naCount} samples)` : ''
+                }<br/>`;
+            }
+            return $('<div>')
+                .addClass(TOOLTIP_DIV_CLASS)
+                .append(getCaseViewElt(dataUnderMouse, !!link_id))
+                .append('<br/>')
+                .append(ret);
+        }
         let attr_val_counts: { [attr_val: string]: number } = {};
         for (const d of dataUnderMouse) {
             if (d.attr_val_counts) {
@@ -454,6 +510,7 @@ export function getCaseViewElt(
     }[],
     caseViewLinkout: boolean
 ) {
+    dataUnderMouse = dataUnderMouse.filter(d => d);
     if (!dataUnderMouse.length) {
         return '';
     }

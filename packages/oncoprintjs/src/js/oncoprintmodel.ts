@@ -1375,6 +1375,14 @@ export default class OncoprintModel {
             const params = params_list[i];
             this.addTrack(params);
         }
+        // Update track_tops synchronously BEFORE any async work, so callers of
+        // model.addTracks (which is not awaited by Oncoprint.addTracks) see
+        // valid track positions for newly-added tracks. Without this, views
+        // (label_view, cell_view) that read getZoomedTrackTops() after the
+        // synchronous portion of addTracks but before the microtask-queued
+        // sort completes see `undefined` for the new track and compute NaN
+        // heights — manifesting as a zero-height canvas.
+        this.track_tops.update();
         if (this.rendering_suppressed_depth === 0) {
             if (this.keep_sorted) {
                 await this.sort();
@@ -1493,7 +1501,8 @@ export default class OncoprintModel {
         const group_arrays = [this.track_groups[params.target_group].tracks];
         if (
             this.sort_config.type === 'cluster' &&
-            this.sort_config.track_group_index === params.target_group
+            this.sort_config.track_group_index === params.target_group &&
+            this.unclustered_track_group_order
         ) {
             // if target group is clustered, also add track to unclustered order
             group_arrays.push(this.unclustered_track_group_order);

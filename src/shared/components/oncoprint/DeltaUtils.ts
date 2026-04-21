@@ -29,6 +29,7 @@ import {
     getGeneticTrackSortComparator,
     heatmapTrackSortComparator,
     categoricalTrackSortComparator,
+    makeStackedBarTrackSortComparator,
     getClinicalTrackSortDirection,
 } from './SortUtils';
 import {
@@ -1564,6 +1565,7 @@ export function transitionHeatmapTrack(
             expansion_of: expansionParentKey
                 ? trackSpecKeyToTrackId[expansionParentKey]
                 : undefined,
+            custom_track_options: nextSpec.customOptions,
         };
         // register new track in oncoprint
         const newTrackId: number = oncoprint.addTracks([heatmapTrackParams])[0];
@@ -1682,6 +1684,9 @@ export function transitionHeatmapTrack(
                     nextProps.caseLinkOutInTooltips
                 )
         );
+        if (prevSpec.customOptions !== nextSpec.customOptions) {
+            oncoprint.setTrackCustomOptions(trackId, nextSpec.customOptions);
+        }
     }
 }
 
@@ -1700,10 +1705,14 @@ export function transitionCategoricalTrack(
         return;
     } else if (nextSpec && !prevSpec) {
         // Add track
-        const rule_set_params: ICategoricalRuleSetParams = getCategoricalTrackRuleSetParams(
-            nextSpec
-        );
+        const rule_set_params = getCategoricalTrackRuleSetParams(nextSpec);
         rule_set_params.na_legend_label = nextSpec.naLegendLabel;
+        const sortCmpFn =
+            nextSpec.stackedBar && nextSpec.stackedBarCategories
+                ? makeStackedBarTrackSortComparator(
+                      nextSpec.stackedBarCategories
+                  )
+                : categoricalTrackSortComparator;
         const trackParams: UserTrackSpec<any> = {
             rule_set_params,
             data: nextSpec.data,
@@ -1721,7 +1730,7 @@ export function transitionCategoricalTrack(
                     nextSpec.onClickRemoveInTrackMenu();
             },
             sort_direction_changeable: true,
-            sortCmpFn: categoricalTrackSortComparator,
+            sortCmpFn,
             init_sort_direction: 0 as 0,
             description: ifNotDefined(
                 nextSpec.description,
@@ -1734,14 +1743,20 @@ export function transitionCategoricalTrack(
             ),
             track_info: nextSpec.info || '',
             onSortDirectionChange: nextProps.onTrackSortDirectionChange,
+            custom_track_options: nextSpec.customOptions,
         };
         const newTrackId = oncoprint.addTracks([trackParams])[0];
         trackSpecKeyToTrackId[nextSpec.key] = newTrackId;
-        //  add to trackIdForRuleSetSharing under its `molecularProfileId`
-        // this makes the trackId available for existing tracks of the same mol.profile for ruleset sharing
-        trackIdForRuleSetSharing.genericAssayCategorical![
-            nextSpec.molecularProfileId
-        ] = newTrackId;
+        // Stacked-bar tracks have per-profile categories + colors, so they
+        // cannot share a rule set with regular categorical tracks from other
+        // profiles. Keep their sharing slot separate.
+        if (!nextSpec.stackedBar) {
+            //  add to trackIdForRuleSetSharing under its `molecularProfileId`
+            // this makes the trackId available for existing tracks of the same mol.profile for ruleset sharing
+            trackIdForRuleSetSharing.genericAssayCategorical![
+                nextSpec.molecularProfileId
+            ] = newTrackId;
+        }
     } else if (nextSpec && prevSpec) {
         // Transition track
         const trackId = trackSpecKeyToTrackId[nextSpec.key];
@@ -1751,6 +1766,7 @@ export function transitionCategoricalTrack(
         }
         // generic assay profile tracks always are associated with the last added added track id
         if (
+            !nextSpec.stackedBar &&
             trackIdForRuleSetSharing.genericAssayCategorical![
                 nextSpec.molecularProfileId
             ] !== undefined
@@ -1768,5 +1784,8 @@ export function transitionCategoricalTrack(
                 nextProps.caseLinkOutInTooltips
             )
         );
+        if (prevSpec.customOptions !== nextSpec.customOptions) {
+            oncoprint.setTrackCustomOptions(trackId, nextSpec.customOptions);
+        }
     }
 }

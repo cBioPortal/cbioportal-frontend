@@ -537,7 +537,18 @@ export function getClinicalTrackRuleSetParams(track: ClinicalTrackSpec) {
 
 export function getCategoricalTrackRuleSetParams(
     track: ICategoricalTrackSpec
-): ICategoricalRuleSetParams {
+): RuleSetParams {
+    if (track.stackedBar && track.stackedBarCategories) {
+        return {
+            type: RuleSetType.STACKED_BAR,
+            legend_label: track.molecularProfileName,
+            exclude_from_legend: track.stackedBarExcludeFromLegend,
+            value_key: 'attr_val',
+            categories: track.stackedBarCategories,
+            fills: track.stackedBarFills,
+            max_total: track.stackedBarMaxTotal,
+        };
+    }
     return {
         type: RuleSetType.CATEGORICAL,
         legend_label: track.molecularProfileName,
@@ -1721,10 +1732,15 @@ export function makeGenericAssayProfileHeatmapTracksMobxPromise(
             const molecularProfileIdToAdditionalTracks =
                 oncoprint.molecularProfileIdToAdditionalTracks;
 
+            const stackedProfiles = oncoprint.genericAssayStackedProfiles;
+            const stackedAbsoluteProfiles =
+                oncoprint.genericAssayStackedAbsoluteProfiles;
             const genericAssayProfiles = _.filter(
                 molecularProfileIdToAdditionalTracks,
                 groupInfo =>
-                    isGenericAssayHeatmapProfile(groupInfo.molecularProfile)
+                    isGenericAssayHeatmapProfile(groupInfo.molecularProfile) &&
+                    !stackedProfiles[groupInfo.molecularProfileId] &&
+                    !stackedAbsoluteProfiles[groupInfo.molecularProfileId]
             );
 
             const cacheQueries = getGenericAssayTrackCacheQueries(
@@ -1796,6 +1812,26 @@ export function makeGenericAssayProfileHeatmapTracksMobxPromise(
                     trackGroupIndex: molecularProfileIdToAdditionalTracks[
                         molecularProfileId
                     ]!.trackGroupIndex,
+                    customOptions: [
+                        {
+                            label: 'Show as stacked barchart (composition)',
+                            onClick: action(() => {
+                                oncoprint.setGenericAssayStackedMode(
+                                    molecularProfileId,
+                                    'composition'
+                                );
+                            }),
+                        },
+                        {
+                            label: 'Show as stacked barchart (absolute)',
+                            onClick: action(() => {
+                                oncoprint.setGenericAssayStackedMode(
+                                    molecularProfileId,
+                                    'absolute'
+                                );
+                            }),
+                        },
+                    ],
                     onClickRemoveInTrackMenu: action(() => {
                         const trackGroup = oncoprint
                             .molecularProfileIdToAdditionalTracks[
@@ -1821,6 +1857,361 @@ export function makeGenericAssayProfileHeatmapTracksMobxPromise(
                     }),
                 };
             });
+            return tracks;
+        },
+        default: [],
+    });
+}
+
+export function makeGenericAssayProfileStackedBarTracksMobxPromise(
+    oncoprint: ResultsViewOncoprint,
+    sampleMode: boolean
+) {
+    return remoteData<ICategoricalTrackSpec[]>({
+        await: () => [
+            oncoprint.props.store.filteredSamples,
+            oncoprint.props.store.filteredPatients,
+            oncoprint.props.store.molecularProfileIdToMolecularProfile,
+            oncoprint.props.store.genericAssayMolecularDataCache,
+            oncoprint.genericAssayPromises
+                .genericAssayEntitiesGroupedByGenericAssayTypeLinkMap,
+            oncoprint.genericAssayPromises
+                .genericAssayEntitiesGroupedByGenericAssayType,
+        ],
+        invoke: async () => {
+            const molecularProfileIdToMolecularProfile = oncoprint.props.store
+                .molecularProfileIdToMolecularProfile.result!;
+            const molecularProfileIdToAdditionalTracks =
+                oncoprint.molecularProfileIdToAdditionalTracks;
+            const stackedProfiles = oncoprint.genericAssayStackedProfiles;
+            const stackedAbsoluteProfiles =
+                oncoprint.genericAssayStackedAbsoluteProfiles;
+
+            const stackedGenericAssayProfiles = _.filter(
+                molecularProfileIdToAdditionalTracks,
+                groupInfo =>
+                    isGenericAssayHeatmapProfile(groupInfo.molecularProfile) &&
+                    (!!stackedProfiles[groupInfo.molecularProfileId] ||
+                        !!stackedAbsoluteProfiles[groupInfo.molecularProfileId])
+            );
+
+            const cacheQueries = getGenericAssayTrackCacheQueries(
+                stackedGenericAssayProfiles,
+                molecularProfileIdToMolecularProfile,
+                oncoprint
+            );
+
+            await oncoprint.props.store.genericAssayMolecularDataCache.result!.getPromise(
+                cacheQueries.map(query => ({
+                    molecularProfileId: query.molecularProfileId,
+                    stableId: query.stableId,
+                })),
+                true
+            );
+
+            const samples = oncoprint.props.store.filteredSamples.result!;
+            const patients = oncoprint.props.store.filteredPatients.result!;
+            const dataCache = oncoprint.props.store
+                .genericAssayMolecularDataCache.result!;
+
+            const queriesByProfile = _.groupBy(
+                cacheQueries,
+                q => q.molecularProfileId
+            );
+
+            // Group stacked-bar tracks whose entity/category sets match — e.g.
+            // "Cell Type Absolute Counts" and "Cell Type Relative Fractions"
+            // share the same 10 cell types, so they should share colors and
+            // merge into a single legend. We key by the sorted-entity set so
+            // this works for any pair of profiles that describe the same
+            // quantities (not just the absolute/relative cell-type pair).
+            // Tableau 10/20 palette — designed for maximum categorical
+            // distinguishability. First 10 slots are Tableau10 (one color
+            // per hue family); slots 11-20 add lighter pair variants so
+            // larger category sets still stay readable.
+            const SHARED_STACKED_PALETTE: string[] = [
+                '#4E79A7',
+                '#F28E2B',
+                '#E15759',
+                '#76B7B2',
+                '#59A14F',
+                '#EDC949',
+                '#AF7AA1',
+                '#FF9DA7',
+                '#9C755F',
+                '#BAB0AB',
+                '#A0CBE8',
+                '#FFBE7D',
+                '#FF9D9A',
+                '#8CD17D',
+                '#B6992D',
+                '#499894',
+                '#86BCB6',
+                '#D37295',
+                '#B07AA1',
+                '#D7B5A6',
+            ];
+            const entitySetKey = (profileId: string) => {
+                const groupInfo = molecularProfileIdToAdditionalTracks[
+                    profileId
+                ]!;
+                return [..._.keys(groupInfo.entities)].sort().join('|');
+            };
+            const profilesBySetKey: { [setKey: string]: string[] } = {};
+            for (const profileId of Object.keys(queriesByProfile)) {
+                const k = entitySetKey(profileId);
+                if (!profilesBySetKey[k]) profilesBySetKey[k] = [];
+                profilesBySetKey[k].push(profileId);
+            }
+            const colorByProfile: {
+                [profileId: string]: {
+                    [cat: string]: [number, number, number, number];
+                };
+            } = {};
+            const profileExcludeFromLegend: {
+                [profileId: string]: boolean;
+            } = {};
+            for (const [setKey, pids] of Object.entries(profilesBySetKey)) {
+                const cats = setKey.split('|');
+                const colors: {
+                    [cat: string]: [number, number, number, number];
+                } = {};
+                for (let i = 0; i < cats.length; i++) {
+                    colors[cats[i]] = hexToRGBA(
+                        SHARED_STACKED_PALETTE[
+                            i % SHARED_STACKED_PALETTE.length
+                        ]
+                    );
+                }
+                // Prefer the composition (relative) profile to own the legend
+                // when one exists; else the first profile in this set.
+                const legendOwner =
+                    pids.find(p => !!stackedProfiles[p]) || pids[0];
+                for (const p of pids) {
+                    colorByProfile[p] = colors;
+                    profileExcludeFromLegend[p] = p !== legendOwner;
+                }
+            }
+
+            const tracks: ICategoricalTrackSpec[] = _.map(
+                queriesByProfile,
+                (queries, molecularProfileId) => {
+                    const profile =
+                        molecularProfileIdToMolecularProfile[
+                            molecularProfileId
+                        ];
+                    const trackGroupIndex = molecularProfileIdToAdditionalTracks[
+                        molecularProfileId
+                    ]!.trackGroupIndex;
+
+                    // keep entity order deterministic & aligned with URL order
+                    const entityOrder = _.keys(
+                        molecularProfileIdToAdditionalTracks[
+                            molecularProfileId
+                        ]!.entities
+                    );
+                    const categories = entityOrder.filter(e =>
+                        queries.some(q => q.stableId === e)
+                    );
+
+                    const isAbsolute = !!stackedAbsoluteProfiles[
+                        molecularProfileId
+                    ];
+
+                    // Always collect values keyed by sample first. In patient
+                    // mode we then aggregate across the patient's samples:
+                    // sum for absolute counts, mean for composition fractions.
+                    // (Last-write-wins on patient key is wrong — it shows one
+                    // arbitrary sample, not the patient's combined profile.)
+                    const perSampleValues: {
+                        [sampleKey: string]: { [entity: string]: number };
+                    } = {};
+                    for (const entityId of categories) {
+                        const entityData =
+                            dataCache.get({
+                                molecularProfileId,
+                                stableId: entityId,
+                            })!.data! || [];
+                        for (const d of entityData) {
+                            const sk = (d as any).uniqueSampleKey;
+                            if (!perSampleValues[sk]) perSampleValues[sk] = {};
+                            const v = parseFloat(d.value!);
+                            if (isFinite(v)) {
+                                perSampleValues[sk][entityId] = v;
+                            }
+                        }
+                    }
+
+                    const samplesByPatient: {
+                        [patientKey: string]: string[];
+                    } = {};
+                    for (const s of samples) {
+                        const pk = (s as any).uniquePatientKey;
+                        if (!samplesByPatient[pk]) samplesByPatient[pk] = [];
+                        samplesByPatient[pk].push((s as any).uniqueSampleKey);
+                    }
+
+                    const cases: Array<Sample | Patient> = sampleMode
+                        ? samples
+                        : patients;
+
+                    const data = cases.map((c: any) => {
+                        const uid = sampleMode
+                            ? c.uniqueSampleKey
+                            : c.uniquePatientKey;
+                        const sampleKeys = sampleMode
+                            ? [c.uniqueSampleKey]
+                            : samplesByPatient[c.uniquePatientKey] || [];
+
+                        // Aggregate per-category across one or more samples.
+                        const filled: { [k: string]: number } = {};
+                        let anyCatHasAnySample = false;
+                        for (const cat of categories) {
+                            let sum = 0;
+                            let n = 0;
+                            for (const sk of sampleKeys) {
+                                const v = perSampleValues[sk]?.[cat];
+                                if (v !== undefined && isFinite(v)) {
+                                    sum += v;
+                                    n++;
+                                }
+                            }
+                            if (n > 0) anyCatHasAnySample = true;
+                            if (isAbsolute) {
+                                // absolute counts: sum across patient's samples
+                                filled[cat] = sum;
+                            } else {
+                                // relative fractions: mean (since each sample
+                                // total = 1, mean stays normalized)
+                                filled[cat] = n > 0 ? sum / n : 0;
+                            }
+                        }
+
+                        const datum: any = {
+                            entity: molecularProfileId,
+                            profile_name: profile.name,
+                            study_id: profile.studyId,
+                            patient: c.patientId,
+                            uid,
+                        };
+                        if (sampleMode) {
+                            datum.sample = c.sampleId;
+                        }
+                        if (!anyCatHasAnySample) {
+                            datum.na = true;
+                            datum.attr_val_counts = {};
+                        } else {
+                            datum.attr_val_counts = filled;
+                            datum.attr_val = filled;
+                        }
+                        return datum;
+                    });
+
+                    const entityLinkMap = oncoprint.genericAssayPromises
+                        .genericAssayEntitiesGroupedByGenericAssayTypeLinkMap
+                        .result![profile.genericAssayType];
+                    // For absolute mode, scale bar heights by the maximum
+                    // per-sample total so magnitudes are comparable across
+                    // samples (like fig 1g "No. cells" panel).
+                    let stackedBarMaxTotal: number | undefined;
+                    if (isAbsolute) {
+                        let maxTotal = 0;
+                        for (const d of data) {
+                            if ((d as any).na || !(d as any).attr_val) continue;
+                            let total = 0;
+                            for (const cat of categories) {
+                                total += +((d as any).attr_val[cat] || 0);
+                            }
+                            if (total > maxTotal) maxTotal = total;
+                        }
+                        stackedBarMaxTotal =
+                            maxTotal > 0 ? maxTotal : undefined;
+                    }
+
+                    const customOptions = isAbsolute
+                        ? [
+                              {
+                                  label:
+                                      'Show as stacked barchart (composition)',
+                                  onClick: action(() => {
+                                      oncoprint.setGenericAssayStackedMode(
+                                          molecularProfileId,
+                                          'composition'
+                                      );
+                                  }),
+                              },
+                              {
+                                  label: 'Show as separate tracks',
+                                  onClick: action(() => {
+                                      oncoprint.setGenericAssayStackedMode(
+                                          molecularProfileId,
+                                          'off'
+                                      );
+                                  }),
+                              },
+                          ]
+                        : [
+                              {
+                                  label: 'Show as stacked barchart (absolute)',
+                                  onClick: action(() => {
+                                      oncoprint.setGenericAssayStackedMode(
+                                          molecularProfileId,
+                                          'absolute'
+                                      );
+                                  }),
+                              },
+                              {
+                                  label: 'Show as separate tracks',
+                                  onClick: action(() => {
+                                      oncoprint.setGenericAssayStackedMode(
+                                          molecularProfileId,
+                                          'off'
+                                      );
+                                  }),
+                              },
+                          ];
+
+                    return {
+                        key: `GENERICASSAYSTACKEDBARTRACK_${molecularProfileId}_${
+                            isAbsolute ? 'abs' : 'comp'
+                        }`,
+                        label: profile.name + (isAbsolute ? ' (absolute)' : ''),
+                        description: profile.description || profile.name,
+                        molecularProfileId,
+                        molecularProfileName: profile.name,
+                        molecularAlterationType:
+                            profile.molecularAlterationType,
+                        genericAssayType: profile.genericAssayType,
+                        datatype: profile.datatype,
+                        data,
+                        trackGroupIndex,
+                        trackLinkUrl: entityLinkMap
+                            ? entityLinkMap[categories[0]]
+                            : undefined,
+                        stackedBar: true,
+                        stackedBarCategories: categories,
+                        stackedBarFills: categories.map(
+                            c => colorByProfile[molecularProfileId]![c]
+                        ),
+                        stackedBarExcludeFromLegend: !!profileExcludeFromLegend[
+                            molecularProfileId
+                        ],
+                        stackedBarMaxTotal,
+                        customOptions,
+                        onClickRemoveInTrackMenu: action(() => {
+                            oncoprint.setGenericAssayStackedMode(
+                                molecularProfileId,
+                                'off'
+                            );
+                            oncoprint.setGenericAssayTracks(
+                                molecularProfileId,
+                                []
+                            );
+                        }),
+                    };
+                }
+            );
+
             return tracks;
         },
         default: [],

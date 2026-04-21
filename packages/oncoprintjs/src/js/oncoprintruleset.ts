@@ -116,6 +116,11 @@ export interface IStackedBarRuleSetParams extends IGeneralRuleSetParams {
     value_key: string;
     categories: string[];
     fills?: RGBAColor[];
+    // When set, bar heights are scaled against this constant instead of each
+    // datum's own total. Makes the bar height reflect absolute magnitude
+    // (e.g. "No. cells" panel in msk_spectrum fig 1g) rather than per-sample
+    // composition. Typically set to max(sum(datum values)) across all data.
+    max_total?: number;
 }
 
 export interface IGeneticAlterationRuleSetParams extends IGeneralRuleSetParams {
@@ -1169,6 +1174,7 @@ class StackedBarRuleSet extends ConditionRuleSet {
         const value_key = params.value_key;
         const fills = params.fills || [];
         const categories = params.categories || [];
+        const max_total = params.max_total;
         const getUnusedColor = makeUniqueColorGetter(fills.map(rgbaToHex));
 
         // Initialize with default values
@@ -1196,41 +1202,103 @@ class StackedBarRuleSet extends ConditionRuleSet {
                                 fill: fills[I],
                                 width: 100,
                                 height: function(d) {
-                                    var total = 0;
+                                    var denom;
+                                    if (max_total) {
+                                        denom = max_total;
+                                        return (
+                                            (parseFloat(
+                                                d[value_key][categories[I]]
+                                            ) *
+                                                100) /
+                                            denom
+                                        );
+                                    }
+                                    // Composition mode: treat as a percentage
+                                    // bar chart — every row fills the full
+                                    // cell height. For the last rect we snap
+                                    // to exactly "100 - prev_sum_pct" so that
+                                    // float drift in the input values (e.g.
+                                    // sample fractions rounded to 4 decimals
+                                    // summing to 0.9998 or 1.0001) never
+                                    // leaves a gap at the bottom of the bar.
+                                    denom = 0;
                                     for (
                                         var j = 0;
                                         j < categories.length;
                                         j++
                                     ) {
-                                        total += parseFloat(
+                                        denom += parseFloat(
                                             d[value_key][categories[j]]
                                         );
+                                    }
+                                    if (I === categories.length - 1) {
+                                        var prev_pct = 0;
+                                        for (var k = 0; k < I; k++) {
+                                            prev_pct +=
+                                                (parseFloat(
+                                                    d[value_key][categories[k]]
+                                                ) *
+                                                    100) /
+                                                denom;
+                                        }
+                                        return 100 - prev_pct;
                                     }
                                     return (
                                         (parseFloat(
                                             d[value_key][categories[I]]
                                         ) *
                                             100) /
-                                        total
+                                        denom
                                     );
                                 },
                                 y: function(d) {
-                                    var total = 0;
+                                    var denom;
                                     var prev_vals_sum = 0;
-                                    for (
-                                        var j = 0;
-                                        j < categories.length;
-                                        j++
-                                    ) {
-                                        var new_val = parseFloat(
-                                            d[value_key][categories[j]]
-                                        );
-                                        if (j < I) {
-                                            prev_vals_sum += new_val;
+                                    if (max_total) {
+                                        // Absolute mode: anchor bars to the
+                                        // bottom baseline, like a normal bar
+                                        // chart. empty_pct is the whitespace
+                                        // above a short bar (total < max).
+                                        denom = max_total;
+                                        var total = 0;
+                                        for (
+                                            var j = 0;
+                                            j < categories.length;
+                                            j++
+                                        ) {
+                                            total += parseFloat(
+                                                d[value_key][categories[j]]
+                                            );
                                         }
-                                        total += new_val;
+                                        var empty_pct =
+                                            ((max_total - total) * 100) /
+                                            max_total;
+                                        for (var j = 0; j < I; j++) {
+                                            prev_vals_sum += parseFloat(
+                                                d[value_key][categories[j]]
+                                            );
+                                        }
+                                        return (
+                                            empty_pct +
+                                            (prev_vals_sum * 100) / denom
+                                        );
+                                    } else {
+                                        denom = 0;
+                                        for (
+                                            var j = 0;
+                                            j < categories.length;
+                                            j++
+                                        ) {
+                                            var new_val = parseFloat(
+                                                d[value_key][categories[j]]
+                                            );
+                                            if (j < I) {
+                                                prev_vals_sum += new_val;
+                                            }
+                                            denom += new_val;
+                                        }
+                                        return (prev_vals_sum * 100) / denom;
                                     }
-                                    return (prev_vals_sum * 100) / total;
                                 },
                             },
                         ],
