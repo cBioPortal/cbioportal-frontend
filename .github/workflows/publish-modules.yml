@@ -40,13 +40,13 @@ jobs:
           node-version: '22.18.0'
           registry-url: 'https://registry.npmjs.org'
       - run: corepack enable
-      - run: yarn --frozen-lockfile
-      - run: yarn updatePackageVersion
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run updatePackageVersion
         if: github.event_name == 'push' || !inputs.skip_version_update
         env:
           GITHUB_TOKEN: ${{ secrets.LERNA_PUBLISH_BOT_GITHUB_TOKEN }}
-      - run: yarn buildModules
-      - run: yarn publishModulesFromPackages
+      - run: pnpm -w run buildModules
+      - run: pnpm run publishModulesFromPackages
         env:
           # Publish with provenance attestations linking the package to its source repository and build
           NPM_CONFIG_PROVENANCE: 'true'
