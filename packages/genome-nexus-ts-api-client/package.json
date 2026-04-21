@@ -8,8 +8,7 @@
   "typings": "dist/index.d.ts",
   "styles": "dist/styles.css",
   "engines": {
-    "node": "22.18.0",
-    "yarn": "1.22.22"
+    "node": "22.18.0"
   },
   "files": [
     "dist"
@@ -18,15 +17,15 @@
   "license": "AGPL-3.0-or-later",
   "repository": "cBioPortal/cbioportal-frontend",
   "scripts": {
-    "build": "cross-env NODE_ENV=production NODE_OPTIONS=--max-old-space-size=2048 yarn run rollup",
-    "start": "yarn run watch",
-    "watch": "yarn run rollup:watch",
-    "watchSSL": "yarn run watch",
+    "build": "cross-env NODE_ENV=production NODE_OPTIONS=--max-old-space-size=2048 pnpm run rollup",
+    "start": "pnpm run watch",
+    "watch": "pnpm run rollup:watch",
+    "watchSSL": "pnpm run watch",
     "rollup": "rollup -c rollup.config.ts",
     "rollup:watch": "rollup -c rollup.config.ts -w",
-    "prepare": "yarn run build",
+    "prepare": "pnpm run build",
     "test": "cross-env jest $GREP --env=jsdom --runInBand --ci --reporters=default --reporters=jest-junit --passWithNoTests",
-    "test:watch": "yarn run test --watch"
+    "test:watch": "pnpm run test --watch"
   },
   "dependencies": {
     "superagent": "^3.8.3",

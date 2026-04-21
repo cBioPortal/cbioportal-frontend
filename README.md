@@ -14,12 +14,15 @@ Note: you can check the frontend version of the live instance by checking `windo
 
 ## Run
 
-Make sure you have installed the node version and yarn version specified in
+Make sure you have installed the node version specified in
 [package.json](https://github.com/cBioPortal/cbioportal-frontend/blob/master/package.json).
+This project uses [pnpm](https://pnpm.io/) as its package manager. Enable it via [corepack](https://nodejs.org/api/corepack.html):
+
+```
+corepack enable
+```
 
 > **Tip:**  For node, we recommend that you use [nvm:  Node Version Manager](https://github.com/nvm-sh/nvm) to switch between versions easily.
-
-> **Tip:** For yarn, you can use [yarn set version](https://yarnpkg.com/cli/set/version) or `npm install yarn@(version)`.
 
 > **Windows Tip:** If you are developing on Windows, we recommend that you use [Ubuntu / Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/install-win10).
 
@@ -31,18 +34,13 @@ rm -rf node_modules
 
 To install all app and dev dependencies
 ```
-yarn install --frozen-lockfile
-```
-
-To build DLLs in common-dist folder (must be done prior to start of dev server)
-```
-yarn run buildDLL:dev
+pnpm install --frozen-lockfile
 ```
 
 To build all packages the main project depends on (must be done prior to start of dev server):
 
 ```
-yarn run buildModules
+pnpm run buildModules
 ```
 
 To start the dev server with hot reload enabled
@@ -51,7 +49,7 @@ To start the dev server with hot reload enabled
 # from
 export BRANCH_ENV=master # or rc if branching from rc
 # export any custom external API URLs by editing env/custom.sh
-yarn run start
+pnpm run start
 ```
 
 > **Tip:** BRANCH_ENV should be set to `master` or `rc`, and not to your local branch name. You can set this in your ~/.bashrc if you don't intend to change it often.
@@ -59,25 +57,25 @@ yarn run start
 Example pages:
  - http://localhost:3000/
  - http://localhost:3000/patient?studyId=lgg_ucsf_2014&caseId=P04
-> **Tip:** If you see dependency errors, especially the error that the script cannot identify the packages managed by lerna(monorepo), you could do a `yarn buildModules` first before starting the project.
+> **Tip:** If you see dependency errors, especially the error that the script cannot identify the packages managed by lerna(monorepo), you could do a `pnpm run buildModules` first before starting the project.
 
 To run unit/integration tests
 ```
 // run tests for main project
-yarn run testMain
+pnpm run testMain
 
 // run tests for all packages
-yarn run testPackages
+pnpm run testPackages
 
 // run the above with grep on particular spec file
-GREP=example.spec.js yarn run testMain
-GREP=example.spec.js yarn run testModules
+GREP=example.spec.js pnpm run testMain
+GREP=example.spec.js pnpm run testModules
 
 ```
 
 To run unit/integration tests in watch mode
 ```
-yarn run test:watch
+pnpm run test:watch
 
 // see above for GREP
 
@@ -85,7 +83,7 @@ yarn run test:watch
 
 To run unit/integration tests in watch mode (where specName is a fragment of the name of the spec file (before `.spec.`))
 ```
-yarn run test:watch 
+pnpm run test:watch 
 
 // see above for GREP
 ```
@@ -101,13 +99,13 @@ your pull request and the base branch of your pull request. If all of the files 
 CircleCI `prettier` job will pass and you'll see a green check on Github. But if, for whatever reason, this check *fails*, 
 you must run the following command in your cbioportal home directory:
 ```$bash
-yarn run prettierFixLocal
+pnpm run prettierFixLocal
 ```
 This will make PrettierJS run through the same files that CircleCI checks (i.e. all files changed since the base branch)
 but *in write mode* and thus adjust those files to have correct formatting. When you make this update, the CircleCI 
 `prettier` job should pass. To check if it will pass, you can also run the same command that CircleCI will run:
 ```$bash
-yarn run prettierCheckCircleCI
+pnpm run prettierCheckCircleCI
 ```
 
 
@@ -122,8 +120,8 @@ endpoint works with the checked in client by changing the API URL in
 # from
 export BRANCH_ENV=master # or rc if branching from rc
 # export any custom external API URLs by editing env/custom.sh
-yarn run updateAPI
-yarn run test
+pnpm run updateAPI
+pnpm run test
 ```
 
 ## Check in cBioPortal context
@@ -169,17 +167,17 @@ Follow instructions to boot up frontend dev server. This is the frontend that wi
 cd end-to-end-test
 
 // install deps
-yarn --ignore-engines
+pnpm install
 
 cd ..
 ```
 
 ```
-yarn run e2e:remote --grep=some.spec* 
+pnpm run e2e:remote --grep=some.spec* 
 ```
 
 ### Mount of frontend onto HTTPS backend
-A custom frontend can be tested against any backend in the web browser using a local node server (command `yarn run start`) and the `localdev` flag passed to th e browser (see section 'Check in cBioPortal context'). For remote backends that communicate over a HTTP over SSL (https) connection (e.g., cbioportal.org or rc.cbioportal.org), the frontend has to be served over SSL as well. In this case run `yarn run startSSL` in stead of `yarn run start`.
+A custom frontend can be tested against any backend in the web browser using a local node server (command `pnpm run start`) and the `localdev` flag passed to the browser (see section 'Check in cBioPortal context'). For remote backends served over HTTPS (e.g. cbioportal.org or rc.cbioportal.org), the frontend has to be served over SSL as well. In this case run `pnpm run startSSL` instead of `pnpm run start`.
 
 ## Run of `localdb` e2e-tests
 To enable e2e-tests on for features that depend on data that are not included in studies served by the public cBioPortal instance, cbioportal-frontend provides the `e2e local database` (refered to as _e2e-localdb_ or _local e2e_ in this text) facility that allows developers to load custom studies in any backend version used for e2e-tests. CircleCI runs the `e2e-localdb` tests as a separate job.
@@ -198,10 +196,10 @@ The script that can be used to run e2e-localdb tests is located at [./scripts/e2
 In a terminal, run the following commands from root directory.
 ```shell
 # Start backend and frontend servers
-yarn run e2e:spinup
+pnpm run e2e:spinup
 
 # Run tests
-yarn run e2e:local
+pnpm run e2e:local
 ```
 
 ### Writing e2e tests
@@ -245,7 +243,7 @@ This error occurs in CircleCI when the reference screenshot file is somehow corr
 
 ## Workspaces
 
-We are utilizing `yarn workspaces` to maintain multiple packages in a single repo (monorepo). The monorepo approach is an
+We are utilizing `pnpm workspaces` to maintain multiple packages in a single repo (monorepo). The monorepo approach is an
  efficient way of working on libraries in the same project as the application that is their primary consumer. 
 
 The `cbioportal-frontend` is the main web application workspace. It is used to build and deploy the cBioPortal frontend webapp. 
@@ -256,8 +254,8 @@ Workspaces under `packages` directory are separate modules (npm packages) design
 
 To add a new workspace, create a new directory under `packages` and add a `package.json` file. (See `cbioportal-frontend-commons` workspace for example configuration).
 
-The recommended way to add a new dependency to an existing workspace is to run `yarn workspace <workspace name> add <package name>` instead of just `yarn add <package name>`. For example, run `yarn workspace cbioportal-frontend add lodash` instead of `yarn add lodash`. 
-Similarly, to remove a package, run `yarn workspace <workspace name> remove <package name>`.
+The recommended way to add a new dependency to an existing workspace is to run `pnpm --filter <workspace name> add <package name>` instead of just `pnpm add <package name>`. For example, run `pnpm --filter cbioportal-frontend add lodash` instead of `pnpm add lodash`. 
+Similarly, to remove a package, run `pnpm --filter <workspace name> remove <package name>`.
 
 ### Tips for dependency management
 
@@ -284,7 +282,7 @@ Remember that the packages are used by other projects and compatibility needs to
 When you update code under packages a new version of changed packages automatically published once the code is merged to master. However, in a rare case when you would like to set a custom package version, you can run
  
 ```
-yarn run updatePackageVersion
+pnpm run updatePackageVersion
 ```
 
 Alternatively you can manually set a custom version. When updating manually you should update the version number in the corresponding `package.json` as well as the dependencies of other packages depending on the package you update. For example if you update the `cbioportal-frontend-commons` version from `0.1.1` to `0.1.2-beta.0`, corresponding `cbioportal-frontend-commons` dependency in the `package.json` for `react-mutation-mapper` and `cbioportal-frontend` should also be updated to the new version.
@@ -294,7 +292,7 @@ Note that when setting a custom version if you want the next published package v
 #### Update API clients
 
 ```
-yarn run updateAPI
+pnpm run updateAPI
 ```
 
 ## Components

@@ -1,9 +1,9 @@
-var MiniCssExtractPlugin = require('mini-css-extract-plugin');
-var HtmlWebpackPlugin = require('html-webpack-plugin');
+// Using rspack built-in CSS extract
+// Using rspack built-in HTML plugin
 var ProgressBarPlugin = require('progress-bar-webpack-plugin');
-var CopyWebpackPlugin = require('copy-webpack-plugin');
+// Using rspack built-in copy plugin
 var ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
-var TerserPlugin = require('terser-webpack-plugin');
+// rspack uses SWC minifier
 var { TypedCssModulesPlugin } = require('typed-css-modules-webpack-plugin');
 
 var commit = '"unknown"';
@@ -37,7 +37,8 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 
 const dotenv = require('dotenv');
 
-const webpack = require('webpack');
+const rspack = require('@rspack/core');
+const webpack = rspack;
 const path = require('path');
 const join = path.join;
 const resolve = path.resolve;
@@ -101,7 +102,10 @@ var config = {
     entry: [`babel-polyfill`, `${path.join(src, 'appBootstrapper.tsx')}`],
     output: {
         path: path.resolve(__dirname, 'dist'),
-        filename: 'reactapp/[name].app.js',
+        filename: pathData =>
+            pathData.chunk.name === 'common'
+                ? 'reactapp/common.bundle.js'
+                : 'reactapp/[name].app.js',
         chunkFilename: 'reactapp/[name].[chunkhash].chunk.js',
         // cssFilename: 'reactapp/app.css',
         // hash: false,
@@ -109,17 +113,44 @@ var config = {
     },
 
     optimization: {
-        minimizer: [
-            new TerserPlugin({
-                parallel: false,
-            }),
-        ],
+        splitChunks: {
+            cacheGroups: {
+                // Backend HTML hardcodes common.bundle.js; see output.filename.
+                common: {
+                    type: 'javascript/auto',
+                    test: /[\\/]node_modules[\\/]/,
+                    name: 'common',
+                    chunks: 'initial',
+                    enforce: true,
+                },
+                default: false,
+                defaultVendors: false,
+            },
+        },
     },
 
     resolve: {
         extensions: ['.js', '.jsx', '.json', '.ts', '.tsx'],
+        symlinks: false,
 
         alias: {
+            react: path.resolve(__dirname, 'node_modules/react'),
+            'react-dom': path.resolve(__dirname, 'node_modules/react-dom'),
+            'react-is': path.resolve(__dirname, 'node_modules/react-is'),
+            'react-router': path.resolve(
+                __dirname,
+                'node_modules/react-router'
+            ),
+            'react-router-dom': path.resolve(
+                __dirname,
+                'node_modules/react-router-dom'
+            ),
+            mobx: path.resolve(__dirname, 'node_modules/mobx'),
+            'mobx-react': path.resolve(__dirname, 'node_modules/mobx-react'),
+            'mobx-react-lite': path.resolve(
+                __dirname,
+                'node_modules/mobx-react-lite'
+            ),
             css: join(src, 'styles'),
             containers: join(src, 'containers'),
             components: join(src, 'components'),
@@ -135,7 +166,10 @@ var config = {
             ),
         },
 
-        fallback: { path: require.resolve('path-browserify') },
+        fallback: {
+            path: require.resolve('path-browserify'),
+            worker_threads: false,
+        },
     },
 
     resolveLoader: {
@@ -162,15 +196,14 @@ var config = {
                   )
                 : '"replace_me_env_genome_nexus_url"',
         }),
-        new HtmlWebpackPlugin({ cache: false, template: 'my-index.ejs' }),
+        new rspack.HtmlRspackPlugin({ template: 'my-index.ejs' }),
         new ProgressBarPlugin(),
-        new webpack.DllReferencePlugin({
-            context: join(root, '.'),
-            manifest: require('./common-dist/common-manifest.json'),
-        }),
-        new CopyWebpackPlugin({
+        new rspack.CopyRspackPlugin({
             patterns: [
-                { from: './common-dist', to: 'reactapp' },
+                {
+                    from: './src/common/common-bundle-stub.js',
+                    to: 'reactapp/common.bundle.js',
+                },
                 { from: './src/rootImages', to: 'images' },
                 { from: './src/common', to: 'common' },
                 { from: './api-e2e/json', to: 'common' },
@@ -210,7 +243,7 @@ var config = {
                                 '@babel/preset-env',
                                 '@babel/preset-react',
                             ],
-                            plugins: ['syntax-dynamic-import'],
+                            plugins: ['@babel/plugin-syntax-dynamic-import'],
 
                             cacheDirectory: babelCacheFolder,
                         },
@@ -391,7 +424,9 @@ var config = {
 
         noParse: [/3Dmol-nojquery.js/, /jspdf/],
     },
+    lazyCompilation: false,
     devServer: {
+        compress: true,
         static: {
             directory: path.resolve(__dirname, 'dist'),
         },
@@ -441,8 +476,9 @@ const defines = Object.keys(envVariables).reduce(
 
 config.plugins = [
     new webpack.DefinePlugin(defines),
-    new MiniCssExtractPlugin({
+    new rspack.CssExtractRspackPlugin({
         filename: 'reactapp/styles.css',
+        chunkFilename: 'reactapp/[name].[chunkhash].chunk.css',
     }),
     new webpack.ProvidePlugin({
         $: 'jquery',
@@ -450,6 +486,20 @@ config.plugins = [
     }),
 ].concat(config.plugins);
 // END ENV variables
+
+// Type-check in a worker so the build fails on TS errors even when
+// ts-loader runs with transpileOnly. Async in dev, sync in production.
+config.plugins.push(
+    new ForkTsCheckerWebpackPlugin({
+        typescript: {
+            configOverwrite: {
+                compilerOptions: {
+                    skipLibCheck: true,
+                },
+            },
+        },
+    })
+);
 
 // include jquery when we load boostrap-sass
 config.module.rules.push({
@@ -484,18 +534,6 @@ if (isDev || isTest) {
     config.resolve.alias['react-twitter-widgets'] = join(
         src,
         'shared/Empty.tsx'
-    );
-
-    config.plugins.push(
-        new ForkTsCheckerWebpackPlugin({
-            typescript: {
-                configOverwrite: {
-                    compilerOptions: {
-                        skipLibCheck: true,
-                    },
-                },
-            },
-        })
     );
 
     // css modules for any scss matching test
@@ -570,7 +608,7 @@ if (isDev || isTest) {
         test: /\.module\.scss$/,
         use: [
             {
-                loader: MiniCssExtractPlugin.loader,
+                loader: rspack.CssExtractRspackPlugin.loader,
             },
             {
                 loader: 'css-loader',
@@ -590,7 +628,7 @@ if (isDev || isTest) {
         exclude: /\.module\.scss/,
         use: [
             {
-                loader: MiniCssExtractPlugin.loader,
+                loader: rspack.CssExtractRspackPlugin.loader,
             },
             {
                 loader: 'css-loader',
@@ -607,7 +645,7 @@ if (isDev || isTest) {
         test: /\.css/,
         use: [
             {
-                loader: MiniCssExtractPlugin.loader,
+                loader: rspack.CssExtractRspackPlugin.loader,
             },
             {
                 loader: 'css-loader',

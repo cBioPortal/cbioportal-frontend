@@ -66,8 +66,8 @@ if [ "$RUN_FRONTEND" = "true" ]; then
   printf "\nBuilding frontend ...\n\n"
   cd "$ROOT_DIR" || exit 1
   export BRANCH_ENV=master
-  yarn install --frozen-lockfile
-  yarn run buildAll
+  pnpm install --frozen-lockfile
+  pnpm run buildAll
 
   # Start frontend http server, delete if previous server exists
   if [ -e "/var/tmp/cbioportal-pid" ]; then
@@ -87,11 +87,11 @@ fi
 if [ "$RUN_TESTS" = "true" ]; then
   # Build e2e localdb tests
   cd "$ROOT_DIR/end-to-end-test" || exit 1
-  yarn --ignore-engines
+  pnpm install
 
   # Run e2e localdb tests
   cd "$ROOT_DIR" || exit 1
-  yarn run e2e:local
+  pnpm run e2e:local
 fi
 
 # Cleanup

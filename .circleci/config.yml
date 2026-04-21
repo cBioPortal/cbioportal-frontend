@@ -86,15 +86,20 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
                 FRONTEND_TEST_USE_LOCAL_DIST: true
                 WEBPACK_PARALLEL: false
               command: |
-                yarn config set ignore-engines true
+                export NVM_DIR="$HOME/.nvm"
+                [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+                nvm install 22.18.0
+                nvm use 22.18.0
                 cd /tmp/repo/cbioportal-frontend
-                yarn serveDist --ignore-engines &
+                corepack enable
+                pnpm run serveDist &
                 cd /tmp/repo/cbioportal-test
                 sh ./utils/check-connection.sh --url=https://localhost:3000 --insecure='true'
                 cd /tmp/repo/cbioportal-frontend/end-to-end-test
+                pnpm install --frozen-lockfile --ignore-workspace
                 ../scripts/env_vars.sh
                 eval "$(../scripts/env_vars.sh)"
-                yarn run test-webdriver-manager-remote --ignore-engines
+                pnpm run test-webdriver-manager-remote
           - run:
               name: Make sure all screenshots are tracked (otherwise the test will always be successful)
               command: |
@@ -175,7 +180,8 @@ jobs:
             WEBPACK_PARALLEL: false
           command: |
             cd cbioportal-frontend
-            yarn run testMain
+            corepack enable
+            pnpm run testMain
       - store_test_results:
           path: ./junit/unit/main/
 
@@ -193,7 +199,8 @@ jobs:
             WEBPACK_PARALLEL: false
           command: |
             cd cbioportal-frontend
-            yarn run testPackagesCI
+            corepack enable
+            pnpm run testPackagesCI
       - store_test_results:
           path: /tmp/junit/module/
 
@@ -220,19 +227,8 @@ jobs:
           name: "Check incorrect package import statements"
           command: |
             cd cbioportal-frontend
-            yarn run checkIncorrectImportStatements
-
-  check_typescript:
-    <<: *defaults
-    resource_class: large
-    steps:
-      - attach_workspace:
-          at: /tmp/repo
-      - run:
-          name: "Run TypeScript type checking"
-          command: |
-            cd cbioportal-frontend
-            yarn run checkTS
+            corepack enable
+            pnpm run checkIncorrectImportStatements
 
   e2e_tests:
     machine:
@@ -273,8 +269,8 @@ jobs:
             GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no"
           command: |
             cd cbioportal-frontend
-            yarn add -W prettier@1.19.1
-            yarn run prettierCheckCircleCI
+            corepack enable
+            pnpm run prettierCheckCircleCI
 
   pull_cbioportal_test_codebase:
     machine:
@@ -314,29 +310,26 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/repo
-      - run:
-          name: Generate cache key for dist
-          command: |
-            cd cbioportal-frontend
-            echo "Concatenate all source files to use as hash key."
-            cat yarn.lock $(find src/ -type f | sort) $(find packages/ -type f | sort) webpack.config.js vendor-bundles.webpack.config.js > has_source_changed
       - restore_cache:
           keys:
-            - v11-dependencies-plus-dist-{{ checksum "cbioportal-frontend/has_source_changed" }}
-            - v11-dependencies-{{ checksum "cbioportal-frontend/yarn.lock" }}
+            - v12-pnpm-store-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}
       - run:
-          name: Download dependencies
+          name: Install dependencies
           command: |
             cd cbioportal-frontend
-            echo "Check if node_modules and built packages exist. If so, skip dependency installation."
-            if [ -d "node_modules" ]; then echo "✓ node_modules exists"; fi
-            if [ -d "packages/*/dist" ]; then echo "✓ Built packages exist"; fi
-            (ls node_modules && ls packages/*/dist) || (yarn && yarn buildModules)
+            corepack enable
+            pnpm install --frozen-lockfile
       - save_cache:
-          name: Save dependency cache
-          key: v11-dependencies-{{ checksum "cbioportal-frontend/yarn.lock" }}
+          name: Save pnpm store
+          key: v12-pnpm-store-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}
           paths:
-            - cbioportal-frontend/node_modules
+            - ~/.local/share/pnpm/store
+      - run:
+          name: Build workspace packages
+          command: |
+            cd cbioportal-frontend
+            corepack enable
+            pnpm -w run buildModules
       - run:
           name: Build frontend application
           environment:
@@ -344,20 +337,14 @@ jobs:
             NO_PARALLEL: true
           command: |
             cd cbioportal-frontend
-            ls dist || yarn run build
+            corepack enable
+            pnpm run build
       - run:
           name: Build frontend tests
           command: |
             cd cbioportal-frontend/end-to-end-test
-            ls node_modules || yarn install --frozen-lockfile --ignore-engines
-      - save_cache:
-          name: Save dependency plus dist cache
-          key: v11-dependencies-plus-dist-{{ checksum "cbioportal-frontend/has_source_changed" }}
-          paths:
-            - cbioportal-frontend/node_modules
-            - cbioportal-frontend/dist
-            - cbioportal-frontend/common-dist
-            - cbioportal-frontend/packages
+            corepack enable
+            pnpm install --frozen-lockfile --ignore-workspace
       - persist_to_workspace:
           root: /tmp/repo
           paths:
@@ -496,9 +483,6 @@ workflows:
           requires:
             - build_frontend
       - unit_tests_main:
-          requires:
-            - build_frontend
-      - check_typescript:
           requires:
             - build_frontend
 

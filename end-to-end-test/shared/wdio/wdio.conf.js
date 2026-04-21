@@ -403,7 +403,7 @@ exports.config = {
     //
 
     specs: [SPEC_FILE_PATTERN],
-    // specs: ['./local/specs/core/oncoprint.screenshot.spec.js'],
+    //specs: ['./remote/specs/core/groupComparison.screenshot.spec.js'],
 
     //exclude: ['./remote/specs/core/groupComparisonLollipop.spec.js'],
 
@@ -443,6 +443,9 @@ exports.config = {
             browserName: 'chrome',
             'goog:chromeOptions': {
                 args: chromeArgs,
+                ...(process.env.CHROME_BIN
+                    ? { binary: process.env.CHROME_BIN }
+                    : {}),
             },
             'goog:loggingPrefs': { browser: 'SEVERE' },
             acceptInsecureCerts: true,

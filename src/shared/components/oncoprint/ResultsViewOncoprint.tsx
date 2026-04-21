@@ -1067,104 +1067,95 @@ export default class ResultsViewOncoprint extends React.Component<
                             }
                         );
                         break;
-                    case 'oncoprinter':
-                        onMobxPromise(
-                            [
-                                this.props.store.samples,
-                                this.props.store.patients,
-                                this.geneticTracks,
-                                this.clinicalTracks,
-                                this.heatmapTracks,
-                                this.genesetHeatmapTracks,
-                                this.props.store
-                                    .clinicalAttributeIdToClinicalAttribute,
-                                this.props.store.mutationsByGene,
-                                this.props.store.studyIds,
-                            ],
-                            (
-                                samples: Sample[],
-                                patients: Patient[],
-                                geneticTracks: GeneticTrackSpec[],
-                                clinicalTracks: ClinicalTrackSpec[],
-                                heatmapTracks: IHeatmapTrackSpec[],
-                                genesetHeatmapTracks: IGenesetHeatmapTrackSpec[],
-                                attributeIdToAttribute: {
-                                    [attributeId: string]: ClinicalAttribute;
-                                },
-                                mutationsByGenes: {
-                                    [gene: string]: Mutation[];
-                                },
-                                studyIds: string[]
-                            ) => {
-                                const caseIds =
-                                    this.oncoprintAnalysisCaseType ===
-                                    OncoprintAnalysisCaseType.SAMPLE
-                                        ? samples.map(s => s.sampleId)
-                                        : patients.map(p => p.patientId);
+                    case 'oncoprinter': {
+                        // Open the Oncoprinter window synchronously inside the
+                        // user gesture so popup blockers allow it and so the
+                        // launch is not coupled to MobxPromise readiness. The
+                        // button is only rendered once the Oncoprint has
+                        // loaded, so the track results below are populated
+                        // even when their isComplete flag has been flipped
+                        // back to false by an unrelated re-computation.
+                        const oncoprinterWindow = window.open(
+                            buildCBioPortalPageUrl('/oncoprinter')
+                        ) as any;
 
-                                let geneticInput = '';
-                                if (geneticTracks.length > 0) {
-                                    geneticInput = getOncoprinterGeneticInput(
-                                        geneticTracks,
-                                        caseIds,
-                                        this.oncoprintAnalysisCaseType
-                                    );
-                                }
+                        const samples = this.props.store.samples.result || [];
+                        const patients = this.props.store.patients.result || [];
+                        const studyIds = this.props.store.studyIds.result || [];
+                        const attributeIdToAttribute =
+                            this.props.store
+                                .clinicalAttributeIdToClinicalAttribute
+                                .result || {};
+                        const geneticTracks = this.geneticTracks.result || [];
+                        const clinicalTracks = this.clinicalTracks.result || [];
+                        const heatmapTracks = this.heatmapTracks.result || [];
+                        const genesetHeatmapTracks =
+                            this.genesetHeatmapTracks.result || [];
+                        const mutationsByGenes: {
+                            [gene: string]: Mutation[];
+                        } = this.props.store.mutationsByGene.result || {};
 
-                                let clinicalInput = '';
-                                if (clinicalTracks.length > 0) {
-                                    const oncoprintClinicalData = _.flatMap(
-                                        clinicalTracks,
-                                        (track: ClinicalTrackSpec) => track.data
-                                    );
-                                    clinicalInput = getOncoprinterClinicalInput(
-                                        oncoprintClinicalData,
-                                        caseIds,
-                                        clinicalTracks.map(
-                                            track => track.attributeId
-                                        ),
-                                        attributeIdToAttribute,
-                                        this.oncoprintAnalysisCaseType
-                                    );
-                                }
+                        const caseIds =
+                            this.oncoprintAnalysisCaseType ===
+                            OncoprintAnalysisCaseType.SAMPLE
+                                ? samples.map(s => s.sampleId)
+                                : patients.map(p => p.patientId);
 
-                                let heatmapInput = '';
-                                if (heatmapTracks.length > 0) {
-                                    heatmapInput = getOncoprinterHeatmapInput(
-                                        heatmapTracks,
-                                        caseIds,
-                                        this.oncoprintAnalysisCaseType
-                                    );
-                                }
+                        let geneticInput = '';
+                        if (geneticTracks.length > 0) {
+                            geneticInput = getOncoprinterGeneticInput(
+                                geneticTracks,
+                                caseIds,
+                                this.oncoprintAnalysisCaseType
+                            );
+                        }
 
-                                if (genesetHeatmapTracks.length > 0) {
-                                    alert(
-                                        'Oncoprinter does not support geneset heatmaps - all other tracks will still be exported.'
-                                    );
-                                }
+                        let clinicalInput = '';
+                        if (clinicalTracks.length > 0) {
+                            const oncoprintClinicalData = _.flatMap(
+                                clinicalTracks,
+                                (track: ClinicalTrackSpec) => track.data
+                            );
+                            clinicalInput = getOncoprinterClinicalInput(
+                                oncoprintClinicalData,
+                                caseIds,
+                                clinicalTracks.map(track => track.attributeId),
+                                attributeIdToAttribute,
+                                this.oncoprintAnalysisCaseType
+                            );
+                        }
 
-                                const oncoprinterWindow = window.open(
-                                    buildCBioPortalPageUrl('/oncoprinter')
-                                ) as any;
+                        let heatmapInput = '';
+                        if (heatmapTracks.length > 0) {
+                            heatmapInput = getOncoprinterHeatmapInput(
+                                heatmapTracks,
+                                caseIds,
+                                this.oncoprintAnalysisCaseType
+                            );
+                        }
 
-                                // extra data that needs to be send for jupyter-notebook
-                                const allMutations = Object.values(
-                                    mutationsByGenes
-                                ).reduce(
-                                    (acc, geneArray) => [...acc, ...geneArray],
-                                    []
-                                );
+                        if (genesetHeatmapTracks.length > 0) {
+                            alert(
+                                'Oncoprinter does not support geneset heatmaps - all other tracks will still be exported.'
+                            );
+                        }
 
-                                oncoprinterWindow.clientPostedData = {
-                                    genetic: geneticInput,
-                                    clinical: clinicalInput,
-                                    heatmap: heatmapInput,
-                                    mutations: JSON.stringify(allMutations),
-                                    studyIds: JSON.stringify(studyIds),
-                                };
-                            }
+                        const allMutations = Object.values(
+                            mutationsByGenes
+                        ).reduce(
+                            (acc, geneArray) => [...acc, ...geneArray],
+                            []
                         );
+
+                        oncoprinterWindow.clientPostedData = {
+                            genetic: geneticInput,
+                            clinical: clinicalInput,
+                            heatmap: heatmapInput,
+                            mutations: JSON.stringify(allMutations),
+                            studyIds: JSON.stringify(studyIds),
+                        };
                         break;
+                    }
                     case 'jupyterNoteBook':
                         onMobxPromise(
                             [
@@ -1464,8 +1455,7 @@ export default class ResultsViewOncoprint extends React.Component<
 
     private onDeleteGeneticTrack(trackIndex: number): void {
         if (!this.isHidden) {
-            const currentGeneList =
-                this.urlWrapper.query.gene_list || '';
+            const currentGeneList = this.urlWrapper.query.gene_list || '';
             // Derive the genes to remove from the parsed gene_list at
             // trackIndex — this correctly handles merged tracks where the
             // display label is not a plain space-separated gene list.

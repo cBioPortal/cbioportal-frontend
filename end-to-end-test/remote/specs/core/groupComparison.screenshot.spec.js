@@ -15,7 +15,8 @@ const { assertScreenShotMatch } = require('../../../shared/lib/testUtils');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
-describe('group comparison page screenshot tests', () => {
+describe('group comparison page screenshot tests', async function() {
+    await this.retries(0);
     describe('general screenshot tests', () => {
         before(async () => {
             await goToUrlAndSetLocalStorage(
@@ -389,6 +390,7 @@ describe('group comparison page screenshot tests', () => {
                     'div[data-test="GroupComparisonMRNAEnrichments"]'
                 )
             ).waitForDisplayed({ timeout: 10000 });
+
             await (await getElement('b=RBMX2')).waitForDisplayed({
                 timeout: 10000,
             });
