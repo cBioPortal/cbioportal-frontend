@@ -6,6 +6,7 @@ settings:
 
 overrides:
   '@babel/traverse': 7.28.5
+  '@babel/types': 7.29.0
   '@types/express-serve-static-core': 4.19.8
   picomatch: 2.3.0
   '@types/react-router-dom>@types/react-router': 5.1.8
