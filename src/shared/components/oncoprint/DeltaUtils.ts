@@ -1822,6 +1822,12 @@ export function transitionCategoricalTrack(
             prevSpec.stackedBarSortByCategory !==
                 nextSpec.stackedBarSortByCategory
         ) {
+            // Category order changed (sort-by moves to the bottom of the
+            // stack), so rebuild the rule set to match the new visual order.
+            oncoprint.setRuleSet(
+                trackId,
+                getCategoricalTrackRuleSetParams(nextSpec)
+            );
             const newCmp = nextSpec.stackedBarSortByCategory
                 ? makeStackedBarTrackSortComparatorByCategory(
                       nextSpec.stackedBarSortByCategory

@@ -2269,6 +2269,15 @@ export function makeGenericAssayProfileStackedBarTracksMobxPromise(
                         : undefined;
 
                     const currentSortBy = stackedSortBy[molecularProfileId];
+                    const orderedCategories =
+                        currentSortBy && categories.includes(currentSortBy)
+                            ? [
+                                  ...categories.filter(
+                                      c => c !== currentSortBy
+                                  ),
+                                  currentSortBy,
+                              ]
+                            : categories;
                     const sortOptions = [
                         {
                             label: 'Sort by',
@@ -2368,8 +2377,11 @@ export function makeGenericAssayProfileStackedBarTracksMobxPromise(
                             ? entityLinkMap[categories[0]]
                             : undefined,
                         stackedBar: true,
-                        stackedBarCategories: categories,
-                        stackedBarFills: categories.map(
+                        // Put the sort-by category at the bottom of each stack
+                        // so every bar starts from the same baseline in that
+                        // color — makes the picked dimension easy to compare.
+                        stackedBarCategories: orderedCategories,
+                        stackedBarFills: orderedCategories.map(
                             c => colorByProfile[molecularProfileId]![c]
                         ),
                         stackedBarExcludeFromLegend: !!profileExcludeFromLegend[
