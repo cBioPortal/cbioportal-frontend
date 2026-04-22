@@ -80,6 +80,10 @@ h1{font-size:18px;margin:10px 0}
     if (p.startsWith('http://')||p.startsWith('https://')||p.startsWith('/')) {
       const idx = p.indexOf('/test-results/');
       if (idx >= 0) return attachBase + p.slice(idx+1);
+      // Paths recorded inside the docker container are rooted at /work
+      // (see scripts/docker-test.sh: -w /work). Strip so the static
+      // server resolves them from the project root.
+      if (p.startsWith('/work/')) return attachBase + p.slice('/work/'.length);
       return p;
     }
     return attachBase + p;
