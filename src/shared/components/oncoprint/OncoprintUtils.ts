@@ -2204,27 +2204,33 @@ export function makeGenericAssayProfileStackedBarTracksMobxPromise(
                         oncoprint.genericAssayStackedSortBy[molecularProfileId];
                     const sortOptions = [
                         {
-                            label: currentSortBy
-                                ? 'Sort by total (default)'
-                                : '\u2713 Sort by total (default)',
-                            onClick: action(() => {
-                                oncoprint.setGenericAssayStackedSortBy(
-                                    molecularProfileId,
-                                    null
-                                );
-                            }),
+                            label: 'Sort by',
+                            children: [
+                                {
+                                    label: currentSortBy
+                                        ? 'Total (default)'
+                                        : '\u2713 Total (default)',
+                                    onClick: action(() => {
+                                        oncoprint.setGenericAssayStackedSortBy(
+                                            molecularProfileId,
+                                            null
+                                        );
+                                    }),
+                                },
+                                ...categories.map(cat => ({
+                                    label:
+                                        (currentSortBy === cat
+                                            ? '\u2713 '
+                                            : '') + cat,
+                                    onClick: action(() => {
+                                        oncoprint.setGenericAssayStackedSortBy(
+                                            molecularProfileId,
+                                            cat
+                                        );
+                                    }),
+                                })),
+                            ],
                         },
-                        ...categories.map(cat => ({
-                            label:
-                                (currentSortBy === cat ? '\u2713 ' : '') +
-                                `Sort by ${cat}`,
-                            onClick: action(() => {
-                                oncoprint.setGenericAssayStackedSortBy(
-                                    molecularProfileId,
-                                    cat
-                                );
-                            }),
-                        })),
                     ];
                     const modeOptions = isAbsolute
                         ? [

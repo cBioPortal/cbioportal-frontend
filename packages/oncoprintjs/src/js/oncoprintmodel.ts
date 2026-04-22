@@ -79,6 +79,10 @@ export type CustomTrackOption = {
     weight?: string;
     disabled?: boolean;
     gapLabelsFn?: (model: OncoprintModel) => OncoprintGapConfig[];
+    // When set, this option becomes a parent item; hovering it shows a
+    // submenu with the nested options. Mutually exclusive with onClick
+    // (parent items don't do anything on their own).
+    children?: CustomTrackOption[];
 };
 export type CustomTrackGroupOption = {
     label?: string;

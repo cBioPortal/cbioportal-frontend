@@ -1,6 +1,7 @@
 import $ from 'jquery';
 import menuDotsIcon from '../img/menudots.svg';
 import OncoprintModel, {
+    CustomTrackOption,
     GAP_MODE_ENUM,
     TrackId,
     TrackProp,
@@ -207,6 +208,74 @@ export default class OncoprintTrackOptionsView {
         return $('<li>')
             .css({ 'border-top': '1px solid black' })
             .addClass(SEPARATOR_CLASS);
+    }
+
+    // Hover-expanding parent item that reveals a floating submenu with leaf
+    // options. Used for nested "Sort by > <category>" style menus without
+    // cluttering the top-level dropdown.
+    private static $makeDropdownSubmenuOption(
+        text: string,
+        children: CustomTrackOption[],
+        track_id: TrackId
+    ) {
+        const $li = $('<li>')
+            .text(text + ' \u25B8')
+            .css({
+                'font-weight': 'normal',
+                'font-size': 12,
+                'border-bottom': '1px solid rgba(0,0,0,0.3)',
+                cursor: 'default',
+                position: 'relative',
+            })
+            .addClass('has-submenu');
+        const $submenu = $('<ul>')
+            .appendTo($li)
+            .css({
+                position: 'absolute',
+                left: '100%',
+                top: 0,
+                display: 'none',
+                'list-style-type': 'none',
+                padding: 0,
+                margin: 0,
+                'padding-left': '6px',
+                'padding-right': '6px',
+                'background-color': 'rgb(255,255,255)',
+                border: '1px solid rgba(0,0,0,0.2)',
+                'z-index': 100,
+                'min-width': '140px',
+            });
+        for (const child of children) {
+            if (child.separator) {
+                $submenu.append(
+                    OncoprintTrackOptionsView.$makeDropdownSeparator()
+                );
+                continue;
+            }
+            $submenu.append(
+                OncoprintTrackOptionsView.$makeDropdownOption(
+                    child.label || '',
+                    child.weight || 'normal',
+                    child.disabled,
+                    child.onClick &&
+                        function(evt) {
+                            evt.stopPropagation();
+                            child.onClick!(track_id);
+                        }
+                )
+            );
+        }
+        $li.hover(
+            function() {
+                $(this).css({ 'background-color': 'rgb(200,200,200)' });
+                $submenu.show();
+            },
+            function() {
+                $(this).css({ 'background-color': 'rgba(255,255,255,0)' });
+                $submenu.hide();
+            }
+        );
+        return $li;
     }
 
     // 11/2/2023 we are removing sort arrow
@@ -508,6 +577,14 @@ export default class OncoprintTrackOptionsView {
                     if (option.separator) {
                         $dropdown.append(
                             OncoprintTrackOptionsView.$makeDropdownSeparator()
+                        );
+                    } else if (option.children && option.children.length) {
+                        $dropdown.append(
+                            OncoprintTrackOptionsView.$makeDropdownSubmenuOption(
+                                option.label || '',
+                                option.children,
+                                track_id
+                            )
                         );
                     } else {
                         $dropdown.append(
