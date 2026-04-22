@@ -41,11 +41,15 @@ test.describe('homepage config overrides', () => {
     });
 
     test('dataset nav observes skin_show_data_tab', async ({ page }) => {
+        // Exact-match regex — the homepage body has a permanent "Data Sets
+        // page" link (in the citation/download blurb) that a plain substring
+        // `hasText: 'Data Sets'` also matches, producing a toHaveCount=2
+        // false-failure regardless of the nav state we're actually testing.
+        const navDataSets = page.locator('a', { hasText: /^Data Sets$/ });
+
         await page.goto('/');
         await expect(page.locator('#rightHeaderContent')).toBeAttached();
-        await expect(page.locator('a', { hasText: 'Data Sets' })).toHaveCount(
-            1
-        );
+        await expect(navDataSets).toHaveCount(1);
 
         await setServerConfiguration(page, { skin_show_data_tab: false });
         await page.goto('/');
@@ -53,10 +57,7 @@ test.describe('homepage config overrides', () => {
         // Data Sets link is initially rendered before the frontendConfig
         // override applies; under parallel load the 5s default isn't enough
         // to see it disappear.
-        await expect(page.locator('a', { hasText: 'Data Sets' })).toHaveCount(
-            0,
-            { timeout: 30000 }
-        );
+        await expect(navDataSets).toHaveCount(0, { timeout: 30000 });
     });
 
     test('shows right logo depending on skin_right_logo', async ({ page }) => {
