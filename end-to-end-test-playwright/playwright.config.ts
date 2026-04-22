@@ -54,7 +54,25 @@ export default defineConfig({
     projects: [
         {
             name: 'chromium',
-            use: { ...devices['Desktop Chrome'] },
+            use: {
+                ...devices['Desktop Chrome'],
+                // chrome-headless-shell is a separate, stripped-down binary
+                // designed for automated pixel-stable work — less variance
+                // than the full "new headless" Chrome Chromium ships with.
+                channel: 'chromium-headless-shell',
+                launchOptions: {
+                    // Kill the most common sources of per-run subpixel
+                    // drift: fractional glyph placement, LCD-RGB
+                    // stripe antialiasing, and hinting-driven outline
+                    // changes. All three together give bit-stable text
+                    // across runs at the cost of slightly chunkier glyphs.
+                    args: [
+                        '--disable-font-subpixel-positioning',
+                        '--disable-lcd-text',
+                        '--font-render-hinting=none',
+                    ],
+                },
+            },
         },
     ],
 });
