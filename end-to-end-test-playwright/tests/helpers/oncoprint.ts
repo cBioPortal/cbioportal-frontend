@@ -203,6 +203,34 @@ export async function getFrontendOncTrackCount(page: Page): Promise<number> {
     );
 }
 
+/**
+ * 1-indexed position of the first track whose label matches `pattern`,
+ * or -1 if none. Matches the `.nth-N` suffix the oncoprintjs view
+ * attaches to each track's options button/dropdown — see
+ * oncoprinttrackoptionsview.ts, where nth-(i+1) is assigned in
+ * getTracks() iteration order. Reads the model directly so callers can
+ * skip the brittle "probe each Edit-Colors modal to read its title"
+ * dance.
+ */
+export async function findOncoprintTrackIndexByLabel(
+    page: Page,
+    pattern: RegExp
+): Promise<number> {
+    return await page.evaluate(
+        src => {
+            const re = new RegExp(src.source, src.flags);
+            const model = (window as any).frontendOnc.model;
+            const ids = model.getTracks();
+            for (let i = 0; i < ids.length; i++) {
+                const label = model.getTrackLabel(ids[i]) || '';
+                if (re.test(label)) return i + 1;
+            }
+            return -1;
+        },
+        { source: pattern.source, flags: pattern.flags }
+    );
+}
+
 /** Click the "Query by Gene" button once it's enabled. */
 export async function clickQueryByGeneButton(page: Page) {
     const btn = page.locator('[data-test=queryByGeneButton]');

@@ -2,6 +2,7 @@ import { test, expect, Page } from '@playwright/test';
 import { byTestHandle } from './helpers/common';
 import {
     expectOncoprintScreenshot,
+    findOncoprintTrackIndexByLabel,
     getNthOncoprintTrackOptionsSelectors,
     waitForOncoprint,
 } from './helpers/oncoprint';
@@ -14,10 +15,6 @@ import {
  *    its Edit-Colors modal, override three colors, verify the oncoprint
  *    reflects them, reset, verify defaults are restored.
  *  - "White background for glyphs" view-menu toggle — screenshot on/off.
- *
- * The oncoprint-within-results-view test index for the Mutation
- * Spectrum track is 5 (vs 2 in the standalone Oncoprinter); Edit Colors
- * sits at menu item 8 here (vs 11 in the Oncoprinter modal).
  */
 
 const ONCOPRINT_URL =
@@ -48,45 +45,6 @@ test.describe.serial(
         test.afterAll(async () => {
             await page.close();
         });
-
-        /**
-         * Find the track index (1-indexed) for the "Mutation spectrum"
-         * clinical track. wdio hardcoded nth-5, but the default track
-         * count has drifted. Several default clinical tracks (e.g.
-         * "Profiled in Mutations") also carry "Edit Colors", so simply
-         * matching on that menu item matches the wrong track. We open
-         * each candidate's Edit-Colors modal and check the dialog title
-         * — the Mutation Spectrum modal reads "Color Configuration:
-         * Mutation spectrum".
-         */
-        async function findMutationSpectrumTrackIndex(): Promise<number> {
-            const buttons = page.locator(
-                '#oncoprintDiv .oncoprintjs__track_options__toggle_btn_img'
-            );
-            const count = await buttons.count();
-            for (let i = 1; i <= count; i++) {
-                const opts = getNthOncoprintTrackOptionsSelectors(i);
-                await page.locator(opts.button).hover();
-                await page.locator(opts.button).click();
-                await expect(page.locator(opts.dropdown)).toBeVisible();
-                const editColors = page.locator(`${opts.dropdown} li`, {
-                    hasText: 'Edit Colors',
-                });
-                if ((await editColors.count()) === 0) {
-                    await page.locator(opts.button).click();
-                    await expect(page.locator(opts.dropdown)).toBeHidden();
-                    continue;
-                }
-                await editColors.click();
-                const title = page.locator('.modal-dialog h4');
-                await expect(title).toBeVisible();
-                const titleText = (await title.textContent()) || '';
-                await page.locator('.modal button.close').click();
-                await expect(page.locator('.modal-dialog')).toHaveCount(0);
-                if (/mutation spectrum/i.test(titleText)) return i;
-            }
-            throw new Error('No Mutation Spectrum track found');
-        }
 
         async function openColorEditor() {
             await page.locator(trackOpts.button).hover();
@@ -129,7 +87,11 @@ test.describe.serial(
             await updateTracks.click();
             await waitForOncoprint(page);
 
-            const idx = await findMutationSpectrumTrackIndex();
+            const idx = await findOncoprintTrackIndexByLabel(
+                page,
+                /mutation spectrum/i
+            );
+            expect(idx).toBeGreaterThan(0);
             trackOpts = getNthOncoprintTrackOptionsSelectors(idx);
 
             await openColorEditor();
