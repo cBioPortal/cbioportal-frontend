@@ -2271,8 +2271,8 @@ export function makeGenericAssayProfileStackedBarTracksMobxPromise(
                             children: [
                                 {
                                     label: currentSortBy
-                                        ? 'Total (default)'
-                                        : '\u2713 Total (default)',
+                                        ? 'Dominant category (default)'
+                                        : '\u2713 Dominant category (default)',
                                     onClick: action(() => {
                                         oncoprint.setGenericAssayStackedSortBy(
                                             molecularProfileId,

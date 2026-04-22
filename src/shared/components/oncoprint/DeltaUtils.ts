@@ -1750,6 +1750,8 @@ export function transitionCategoricalTrack(
                     nextSpec.onClickRemoveInTrackMenu();
             },
             sort_direction_changeable: true,
+            // Stacked-bar tracks use their own "Sort by" submenu; hide the default a-Z/Z-a items.
+            sort_direction_menu_visible: !nextSpec.stackedBar,
             sortCmpFn,
             // If the user picked a category to sort by, make this the primary
             // sort track (direction 1 applies the comparator as-is; our

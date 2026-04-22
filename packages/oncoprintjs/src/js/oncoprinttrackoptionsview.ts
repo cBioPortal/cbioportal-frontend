@@ -424,7 +424,10 @@ export default class OncoprintTrackOptionsView {
                 )
             );
         }
-        if (model.isTrackSortDirectionChangeable(track_id)) {
+        if (
+            model.isTrackSortDirectionChangeable(track_id) &&
+            model.isTrackSortDirectionMenuVisible(track_id)
+        ) {
             $dropdown.append(
                 OncoprintTrackOptionsView.$makeDropdownSeparator()
             );

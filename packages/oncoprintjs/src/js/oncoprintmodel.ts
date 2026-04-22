@@ -115,6 +115,8 @@ export type UserTrackSpec<D> = {
     track_info?: string;
     sortCmpFn: TrackSortSpecification<D>;
     sort_direction_changeable?: boolean;
+    // When false, hides the default sort a-Z/Z-a menu items; programmatic sort still works.
+    sort_direction_menu_visible?: boolean;
     onSortDirectionChange?: TrackSortDirectionChangeCallback;
     onGapChange?: TrackGapChangeCallBack;
     init_sort_direction?: TrackSortDirection;
@@ -311,6 +313,7 @@ export default class OncoprintModel {
     >;
     private track_sort_cmp_fn: TrackProp<TrackSortSpecification<Datum>>;
     private track_sort_direction_changeable: TrackProp<boolean>;
+    private track_sort_direction_menu_visible: TrackProp<boolean>;
     private track_sort_direction: TrackProp<TrackSortDirection>;
     private track_sort_direction_change_callback: TrackProp<
         TrackSortDirectionChangeCallback
@@ -422,6 +425,7 @@ export default class OncoprintModel {
         this.track_remove_option_callback = {};
         this.track_sort_cmp_fn = {};
         this.track_sort_direction_changeable = {};
+        this.track_sort_direction_menu_visible = {};
         this.track_sort_direction = {}; // 1: ascending, -1: descending, 0: not
         this.track_sort_direction_change_callback = {};
         this.track_gap_change_callback = {};
@@ -1471,6 +1475,10 @@ export default class OncoprintModel {
             params.sort_direction_changeable,
             false
         );
+        this.track_sort_direction_menu_visible[track_id] = ifndef(
+            params.sort_direction_menu_visible,
+            true
+        );
         this.track_sort_direction_change_callback[
             track_id
         ] = ifndef(params.onSortDirectionChange, function() {});
@@ -1648,6 +1656,7 @@ export default class OncoprintModel {
         delete this.track_remove_callback[track_id];
         delete this.track_sort_cmp_fn[track_id];
         delete this.track_sort_direction_changeable[track_id];
+        delete this.track_sort_direction_menu_visible[track_id];
         delete this.track_sort_direction[track_id];
         delete this.track_info[track_id];
         delete this.track_has_column_spacing[track_id];
@@ -2098,6 +2107,9 @@ export default class OncoprintModel {
 
     public isTrackSortDirectionChangeable(track_id: TrackId) {
         return this.track_sort_direction_changeable[track_id];
+    }
+    public isTrackSortDirectionMenuVisible(track_id: TrackId) {
+        return this.track_sort_direction_menu_visible[track_id] !== false;
     }
 
     public isTrackExpandable(track_id: TrackId) {
