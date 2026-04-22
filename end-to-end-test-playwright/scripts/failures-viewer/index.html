@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Playwright Failures</title>
+<style>
+body{font-family:system-ui;margin:0;padding:0;background:#f5f5f5;color:#222}
+.toolbar{position:sticky;top:0;background:#f5f5f5;padding:10px 20px;z-index:10;border-bottom:1px solid #ddd;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.toolbar button{background:#06c;color:#fff;border:0;padding:8px 14px;border-radius:4px;cursor:pointer;font-size:13px}
+.toolbar button:hover{background:#04a}
+.toolbar .spacer{flex:1}
+.toolbar input[type=text]{border:1px solid #ccc;padding:6px 10px;border-radius:4px;font-size:13px;min-width:240px}
+.toolbar .stats{font-size:12px;color:#555}
+.main{padding:10px 20px}
+h1{font-size:18px;margin:10px 0}
+.row{background:#fff;margin:6px 0;padding:10px;border-radius:4px;border-left:4px solid #d33}
+.row.timedout{border-left-color:#e80}
+.row.interrupted{border-left-color:#888}
+.name{font-family:monospace;font-size:13px;word-break:break-all;cursor:pointer}
+.name:hover{color:#06c}
+.meta{font-size:11px;color:#666;margin-top:3px}
+.links{margin-top:6px;font-size:12px}
+.links a{margin-right:10px;color:#06c;text-decoration:none}
+.links a:hover{text-decoration:underline}
+.err{font-family:monospace;font-size:11px;color:#900;white-space:pre-wrap;margin-top:6px;max-height:6em;overflow:hidden;background:#fff6f6;padding:6px;border-radius:3px}
+.overlay{display:none;margin-top:10px;background:#222;padding:10px;border-radius:4px}
+.overlay.open{display:block}
+.stack{position:relative;display:inline-block;background:#000;max-width:100%}
+.stack img{display:block;max-width:100%;height:auto}
+.stack img.actual{position:absolute;top:0;left:0;opacity:.5}
+.slider-row{display:flex;align-items:center;gap:10px;color:#eee;font-size:12px;margin-bottom:6px;font-family:system-ui}
+.slider-row input[type=range]{flex:1;max-width:300px}
+.slider-row .val{font-family:monospace;min-width:3em}
+.empty{padding:20px;color:#666;font-style:italic}
+.error-load{padding:20px;color:#900;background:#fff6f6;border-radius:4px;margin:20px}
+</style>
+</head>
+<body>
+<div class="toolbar">
+  <button id="toggle-all">Toggle all overlays</button>
+  <input type="text" id="filter" placeholder="Filter by test name or file...">
+  <span class="spacer"></span>
+  <span class="stats" id="stats"></span>
+</div>
+<div class="main" id="main"><div class="empty">Loading report…</div></div>
+<script>
+(function(){
+  const params = new URLSearchParams(location.search);
+  const reportUrl = params.get('report') || '../../test-results/report.json';
+  const attachBase = params.get('base') || '../../';
+
+  function flattenTests(suite, path){
+    let out = [];
+    const myPath = suite.title ? [...path, suite.title] : path;
+    (suite.specs||[]).forEach(spec => {
+      (spec.tests||[]).forEach(test => {
+        (test.results||[]).forEach(result => {
+          out.push({
+            title: spec.title,
+            file: spec.file || suite.file || '',
+            line: spec.line,
+            path: myPath,
+            status: result.status,
+            duration: result.duration,
+            retry: result.retry,
+            error: result.error,
+            errors: result.errors||[],
+            attachments: result.attachments||[],
+            projectName: test.projectName,
+          });
+        });
+      });
+    });
+    (suite.suites||[]).forEach(s => { out = out.concat(flattenTests(s, myPath)); });
+    return out;
+  }
+
+  function resolveAttachment(p){
+    if (!p) return null;
+    if (p.startsWith('http://')||p.startsWith('https://')||p.startsWith('/')) {
+      const idx = p.indexOf('/test-results/');
+      if (idx >= 0) return attachBase + p.slice(idx+1);
+      return p;
+    }
+    return attachBase + p;
+  }
+
+  function pickAttachments(atts){
+    const by = {};
+    atts.forEach(a => {
+      const key = (a.name||'').toLowerCase();
+      if (key.includes('expected')) by.expected = a;
+      else if (key.includes('actual')) by.actual = a;
+      else if (key.includes('diff')) by.diff = a;
+      else if (key.includes('trace')) by.trace = a;
+      else if (key.includes('error-context')) by.errorContext = a;
+      else if (key.includes('video')) by.video = a;
+      else if (key.includes('screenshot')) by.screenshot = a;
+    });
+    return by;
+  }
+
+  function esc(s){ return (s==null?'':String(s)).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+  function renderRow(t, i){
+    const atts = pickAttachments(t.attachments);
+    const cls = t.status === 'timedOut' ? 'timedout' : (t.status === 'interrupted' ? 'interrupted' : '');
+    const links = [];
+    if (atts.errorContext) links.push(`<a href="${esc(resolveAttachment(atts.errorContext.path))}">error-context</a>`);
+    if (atts.trace) links.push(`<a href="${esc(resolveAttachment(atts.trace.path))}">trace.zip</a>`);
+    if (atts.screenshot) links.push(`<a href="${esc(resolveAttachment(atts.screenshot.path))}">screenshot</a>`);
+    if (atts.video) links.push(`<a href="${esc(resolveAttachment(atts.video.path))}">video</a>`);
+    if (atts.expected) links.push(`<a href="${esc(resolveAttachment(atts.expected.path))}">expected</a>`);
+    if (atts.actual) links.push(`<a href="${esc(resolveAttachment(atts.actual.path))}">actual</a>`);
+    if (atts.diff) links.push(`<a href="${esc(resolveAttachment(atts.diff.path))}">diff</a>`);
+
+    const breadcrumb = [...(t.path||[]), t.title].map(esc).join(' › ');
+    const meta = [
+      t.file ? esc(t.file) + (t.line?`:${t.line}`:'') : '',
+      t.status ? `status: ${esc(t.status)}` : '',
+      t.duration != null ? `${t.duration}ms` : '',
+      t.retry ? `retry ${t.retry}` : '',
+    ].filter(Boolean).join(' · ');
+
+    let overlayHtml = '';
+    if (atts.expected && atts.actual) {
+      overlayHtml = `
+        <div class="overlay" id="ov${i}">
+          <div class="slider-row"><span>actual opacity</span>
+            <input type="range" min="0" max="100" value="50" oninput="setOpacity('ov${i}', this.value)">
+            <span class="val" id="ov${i}_val">50%</span>
+          </div>
+          <div class="stack">
+            <img class="expected" src="${esc(resolveAttachment(atts.expected.path))}" alt="expected">
+            <img class="actual" src="${esc(resolveAttachment(atts.actual.path))}" alt="actual">
+          </div>
+        </div>`;
+    }
+
+    let errText = '';
+    if (t.error && t.error.message) errText = t.error.message;
+    else if (t.errors.length && t.errors[0].message) errText = t.errors[0].message;
+    const errHtml = errText ? `<div class="err">${esc(errText.slice(0, 600))}</div>` : '';
+
+    return `<div class="row ${cls}" data-search="${esc((breadcrumb + ' ' + (t.file||'')).toLowerCase())}">
+      <div class="name" onclick="toggleOverlay('ov${i}')">${breadcrumb}</div>
+      <div class="meta">${meta}</div>
+      <div class="links">${links.join('')}</div>
+      ${overlayHtml}
+      ${errHtml}
+    </div>`;
+  }
+
+  window.toggleOverlay = function(id){
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('open');
+  };
+  window.setOpacity = function(id, v){
+    const el = document.getElementById(id);
+    if (!el) return;
+    const img = el.querySelector('img.actual');
+    if (img) img.style.opacity = (v/100);
+    const lbl = document.getElementById(id+'_val');
+    if (lbl) lbl.textContent = v+'%';
+  };
+  document.getElementById('toggle-all').addEventListener('click', () => {
+    const els = document.querySelectorAll('.row:not([hidden]) .overlay');
+    const anyClosed = Array.from(els).some(e => !e.classList.contains('open'));
+    els.forEach(e => { if (anyClosed) e.classList.add('open'); else e.classList.remove('open'); });
+  });
+  document.getElementById('filter').addEventListener('input', e => {
+    const q = e.target.value.toLowerCase().trim();
+    document.querySelectorAll('.row').forEach(r => {
+      r.hidden = q && !r.dataset.search.includes(q);
+    });
+  });
+
+  fetch(reportUrl)
+    .then(r => { if (!r.ok) throw new Error(`fetch ${reportUrl}: HTTP ${r.status}`); return r.json(); })
+    .then(report => {
+      let tests = [];
+      (report.suites||[]).forEach(s => { tests = tests.concat(flattenTests(s, [])); });
+      const failures = tests.filter(t => t.status !== 'passed' && t.status !== 'skipped');
+      const stats = document.getElementById('stats');
+      stats.textContent = `${failures.length} failures / ${tests.length} results · report: ${reportUrl}`;
+      const main = document.getElementById('main');
+      if (failures.length === 0) {
+        main.innerHTML = '<div class="empty">No failures in this report.</div>';
+        return;
+      }
+      main.innerHTML = `<h1>Playwright failures (${failures.length})</h1>` + failures.map(renderRow).join('');
+    })
+    .catch(err => {
+      document.getElementById('main').innerHTML = `<div class="error-load">Failed to load report: ${esc(err.message)}<br><br>Expected report at <code>${esc(reportUrl)}</code> (override with <code>?report=path</code>).<br>Attachments resolved against <code>${esc(attachBase)}</code> (override with <code>?base=path</code>).</div>`;
+    });
+})();
+</script>
+</body>
+</html>
