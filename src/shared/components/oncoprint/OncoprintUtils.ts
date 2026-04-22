@@ -286,6 +286,12 @@ export const legendColorLightRed = [255, 226, 204, 1] as [
     number,
     number
 ];
+export const legendColorWhite = [255, 255, 255, 1] as [
+    number,
+    number,
+    number,
+    number
+];
 
 export function getGenericAssayTrackRuleSetParams(
     trackSpec: IHeatmapTrackSpec
@@ -376,7 +382,32 @@ export function getGenericAssayTrackRuleSetParams(
     value_range = [leftBoundaryValue, rightBoundaryValue]; // smaller concentrations are more `important` (ASC)
     value_stop_points = [leftBoundaryValue, rightBoundaryValue];
 
-    if (pivotThreshold === undefined || maxValue === pivotThreshold) {
+    if (leftBoundaryValue >= 0) {
+        // Non-negative data (fractions, counts, concentrations) — use a
+        // clean "absence to intensity" gradient starting from white, so
+        // zero reads as neutral background and color intensity tracks
+        // magnitude. Avoids the cold dark-blue sliver at 0 that the
+        // default blue-to-red gradient produced for such data.
+        if (
+            pivotThreshold === undefined ||
+            pivotThreshold <= leftBoundaryValue ||
+            pivotThreshold >= rightBoundaryValue
+        ) {
+            colors = [legendColorWhite, legendColorDarkRed];
+            value_stop_points = [leftBoundaryValue, rightBoundaryValue];
+        } else {
+            colors = [
+                legendColorWhite,
+                legendColorLightRed,
+                legendColorDarkRed,
+            ];
+            value_stop_points = [
+                leftBoundaryValue,
+                pivotThreshold,
+                rightBoundaryValue,
+            ];
+        }
+    } else if (pivotThreshold === undefined || maxValue === pivotThreshold) {
         // all values are smaller than pivot threshold
         colors = [legendColorDarkBlue, legendColorLightBlue];
     } else if (minValue === pivotThreshold) {
