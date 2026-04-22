@@ -1409,6 +1409,32 @@ export default class ResultsViewOncoprint extends React.Component<
         });
     }
 
+    // Unified chart-type setter for a generic-assay profile — flips URL
+    // params for stacked mode AND per-row bar mode in a single update so the
+    // transition between the four views is atomic.
+    @action.bound
+    public setGenericAssayChartType(
+        molecularProfileId: string,
+        type: 'heatmap' | 'bars' | 'composition' | 'absolute'
+    ) {
+        const comp = { ...this.genericAssayStackedProfiles };
+        const abs = { ...this.genericAssayStackedAbsoluteProfiles };
+        const bar = { ...this.genericAssayBarProfiles };
+        delete comp[molecularProfileId];
+        delete abs[molecularProfileId];
+        delete bar[molecularProfileId];
+        if (type === 'composition') comp[molecularProfileId] = true;
+        else if (type === 'absolute') abs[molecularProfileId] = true;
+        else if (type === 'bars') bar[molecularProfileId] = true;
+        this.urlWrapper.updateURL({
+            generic_assay_stacked_profiles: this.serializeStackedProfiles(comp),
+            generic_assay_stacked_absolute_profiles: this.serializeStackedProfiles(
+                abs
+            ),
+            generic_assay_bar_profiles: _.keys(bar).join(';'),
+        });
+    }
+
     @action.bound
     public setGenericAssayStackedMode(
         molecularProfileId: string,

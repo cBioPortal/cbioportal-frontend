@@ -1822,6 +1822,40 @@ export function makeGenericAssayProfileHeatmapTracksMobxPromise(
             const samples = oncoprint.props.store.filteredSamples.result!;
             const patients = oncoprint.props.store.filteredPatients.result!;
 
+            // Detect fraction-like profiles: sum per-sample across all
+            // entities in the profile; if the largest total is <=1.01 the
+            // data is fractions (per-sample 100%-normalized) and the
+            // "Stacked bar (absolute)" chart type would just produce
+            // identical full-height bars — so we hide it.
+            const dataCacheForCheck = oncoprint.props.store
+                .genericAssayMolecularDataCache.result!;
+            const queriesByProfileId = _.groupBy(
+                cacheQueries,
+                q => q.molecularProfileId
+            );
+            const isFractionLikeByProfile: {
+                [profileId: string]: boolean;
+            } = {};
+            for (const pid of Object.keys(queriesByProfileId)) {
+                const perSampleTotal: { [sampleKey: string]: number } = {};
+                for (const q of queriesByProfileId[pid]) {
+                    const data = dataCacheForCheck.get({
+                        molecularProfileId: pid,
+                        stableId: q.stableId,
+                    })?.data;
+                    if (!data) continue;
+                    for (const d of data) {
+                        const sk = (d as any).uniqueSampleKey;
+                        const v = parseFloat(d.value!);
+                        if (!isFinite(v)) continue;
+                        perSampleTotal[sk] = (perSampleTotal[sk] || 0) + v;
+                    }
+                }
+                const vals = Object.values(perSampleTotal);
+                const max = vals.length ? Math.max(...vals) : 0;
+                isFractionLikeByProfile[pid] = max > 0 && max <= 1.01;
+            }
+
             const tracks = cacheQueries.map(query => {
                 const molecularProfileId = query.molecularProfileId;
                 const profile =
@@ -1873,37 +1907,62 @@ export function makeGenericAssayProfileHeatmapTracksMobxPromise(
                         molecularProfileId
                     ]!.trackGroupIndex,
                     showAsBar: !!barProfiles[molecularProfileId],
-                    customOptions: [
-                        {
-                            label: 'Show as stacked barchart (composition)',
-                            onClick: action(() => {
-                                oncoprint.setGenericAssayStackedMode(
-                                    molecularProfileId,
-                                    'composition'
-                                );
-                            }),
-                        },
-                        {
-                            label: 'Show as stacked barchart (absolute)',
-                            onClick: action(() => {
-                                oncoprint.setGenericAssayStackedMode(
-                                    molecularProfileId,
-                                    'absolute'
-                                );
-                            }),
-                        },
-                        {
-                            label: barProfiles[molecularProfileId]
-                                ? 'Show as heatmap gradient'
-                                : 'Show as bar chart',
-                            onClick: action(() => {
-                                oncoprint.setGenericAssayBarMode(
-                                    molecularProfileId,
-                                    !barProfiles[molecularProfileId]
-                                );
-                            }),
-                        },
-                    ],
+                    customOptions: (() => {
+                        const currentType = barProfiles[molecularProfileId]
+                            ? 'bars'
+                            : 'heatmap';
+                        const chartTypeChildren: any[] = [
+                            {
+                                label:
+                                    (currentType === 'heatmap'
+                                        ? '\u2713 '
+                                        : '') + 'Separate rows (heatmap)',
+                                onClick: action(() => {
+                                    oncoprint.setGenericAssayChartType(
+                                        molecularProfileId,
+                                        'heatmap'
+                                    );
+                                }),
+                            },
+                            {
+                                label:
+                                    (currentType === 'bars' ? '\u2713 ' : '') +
+                                    'Separate rows (bar chart)',
+                                onClick: action(() => {
+                                    oncoprint.setGenericAssayChartType(
+                                        molecularProfileId,
+                                        'bars'
+                                    );
+                                }),
+                            },
+                            {
+                                label: 'Stacked bar (composition)',
+                                onClick: action(() => {
+                                    oncoprint.setGenericAssayChartType(
+                                        molecularProfileId,
+                                        'composition'
+                                    );
+                                }),
+                            },
+                        ];
+                        if (!isFractionLikeByProfile[molecularProfileId]) {
+                            chartTypeChildren.push({
+                                label: 'Stacked bar (absolute)',
+                                onClick: action(() => {
+                                    oncoprint.setGenericAssayChartType(
+                                        molecularProfileId,
+                                        'absolute'
+                                    );
+                                }),
+                            });
+                        }
+                        return [
+                            {
+                                label: 'Chart type',
+                                children: chartTypeChildren,
+                            },
+                        ];
+                    })(),
                     onClickRemoveInTrackMenu: action(() => {
                         const trackGroup = oncoprint
                             .molecularProfileIdToAdditionalTracks[
@@ -2182,23 +2241,27 @@ export function makeGenericAssayProfileStackedBarTracksMobxPromise(
                     const entityLinkMap = oncoprint.genericAssayPromises
                         .genericAssayEntitiesGroupedByGenericAssayTypeLinkMap
                         .result![profile.genericAssayType];
-                    // For absolute mode, scale bar heights by the maximum
-                    // per-sample total so magnitudes are comparable across
-                    // samples (like fig 1g "No. cells" panel).
-                    let stackedBarMaxTotal: number | undefined;
-                    if (isAbsolute) {
-                        let maxTotal = 0;
-                        for (const d of data) {
-                            if ((d as any).na || !(d as any).attr_val) continue;
-                            let total = 0;
-                            for (const cat of categories) {
-                                total += +((d as any).attr_val[cat] || 0);
-                            }
-                            if (total > maxTotal) maxTotal = total;
+                    // Always compute per-sample totals. Used for:
+                    // (a) absolute-mode bar-height scaling,
+                    // (b) detecting fraction-like data (max total <= ~1),
+                    //     so we can hide the "Stacked (absolute)" option for
+                    //     those profiles — showing absolute mode on fractions
+                    //     just gives identical 100%-height bars.
+                    let maxTotal = 0;
+                    for (const d of data) {
+                        if ((d as any).na || !(d as any).attr_val) continue;
+                        let total = 0;
+                        for (const cat of categories) {
+                            total += +((d as any).attr_val[cat] || 0);
                         }
-                        stackedBarMaxTotal =
-                            maxTotal > 0 ? maxTotal : undefined;
+                        if (total > maxTotal) maxTotal = total;
                     }
+                    const isFractionLike = maxTotal > 0 && maxTotal <= 1.01;
+                    const stackedBarMaxTotal = isAbsolute
+                        ? maxTotal > 0
+                            ? maxTotal
+                            : undefined
+                        : undefined;
 
                     const currentSortBy =
                         oncoprint.genericAssayStackedSortBy[molecularProfileId];
@@ -2232,48 +2295,55 @@ export function makeGenericAssayProfileStackedBarTracksMobxPromise(
                             ],
                         },
                     ];
-                    const modeOptions = isAbsolute
-                        ? [
-                              {
-                                  label:
-                                      'Show as stacked barchart (composition)',
-                                  onClick: action(() => {
-                                      oncoprint.setGenericAssayStackedMode(
-                                          molecularProfileId,
-                                          'composition'
-                                      );
-                                  }),
-                              },
-                              {
-                                  label: 'Show as separate tracks',
-                                  onClick: action(() => {
-                                      oncoprint.setGenericAssayStackedMode(
-                                          molecularProfileId,
-                                          'off'
-                                      );
-                                  }),
-                              },
-                          ]
-                        : [
-                              {
-                                  label: 'Show as stacked barchart (absolute)',
-                                  onClick: action(() => {
-                                      oncoprint.setGenericAssayStackedMode(
-                                          molecularProfileId,
-                                          'absolute'
-                                      );
-                                  }),
-                              },
-                              {
-                                  label: 'Show as separate tracks',
-                                  onClick: action(() => {
-                                      oncoprint.setGenericAssayStackedMode(
-                                          molecularProfileId,
-                                          'off'
-                                      );
-                                  }),
-                              },
-                          ];
+                    const currentType = isAbsolute ? 'absolute' : 'composition';
+                    const chartTypeChildren: any[] = [
+                        {
+                            label: 'Separate rows (heatmap)',
+                            onClick: action(() => {
+                                oncoprint.setGenericAssayChartType(
+                                    molecularProfileId,
+                                    'heatmap'
+                                );
+                            }),
+                        },
+                        {
+                            label: 'Separate rows (bar chart)',
+                            onClick: action(() => {
+                                oncoprint.setGenericAssayChartType(
+                                    molecularProfileId,
+                                    'bars'
+                                );
+                            }),
+                        },
+                        {
+                            label:
+                                (currentType === 'composition'
+                                    ? '\u2713 '
+                                    : '') + 'Stacked bar (composition)',
+                            onClick: action(() => {
+                                oncoprint.setGenericAssayChartType(
+                                    molecularProfileId,
+                                    'composition'
+                                );
+                            }),
+                        },
+                    ];
+                    if (!isFractionLike) {
+                        chartTypeChildren.push({
+                            label:
+                                (currentType === 'absolute' ? '\u2713 ' : '') +
+                                'Stacked bar (absolute)',
+                            onClick: action(() => {
+                                oncoprint.setGenericAssayChartType(
+                                    molecularProfileId,
+                                    'absolute'
+                                );
+                            }),
+                        });
+                    }
+                    const modeOptions = [
+                        { label: 'Chart type', children: chartTypeChildren },
+                    ];
                     const customOptions = [...modeOptions, ...sortOptions];
 
                     return {
