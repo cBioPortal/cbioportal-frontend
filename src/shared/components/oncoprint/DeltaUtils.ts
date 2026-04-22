@@ -30,6 +30,7 @@ import {
     heatmapTrackSortComparator,
     categoricalTrackSortComparator,
     makeStackedBarTrackSortComparator,
+    makeStackedBarTrackSortComparatorByCategory,
     getClinicalTrackSortDirection,
 } from './SortUtils';
 import {
@@ -1709,9 +1710,13 @@ export function transitionCategoricalTrack(
         rule_set_params.na_legend_label = nextSpec.naLegendLabel;
         const sortCmpFn =
             nextSpec.stackedBar && nextSpec.stackedBarCategories
-                ? makeStackedBarTrackSortComparator(
-                      nextSpec.stackedBarCategories
-                  )
+                ? nextSpec.stackedBarSortByCategory
+                    ? makeStackedBarTrackSortComparatorByCategory(
+                          nextSpec.stackedBarSortByCategory
+                      )
+                    : makeStackedBarTrackSortComparator(
+                          nextSpec.stackedBarCategories
+                      )
                 : categoricalTrackSortComparator;
         const trackParams: UserTrackSpec<any> = {
             rule_set_params,
@@ -1731,7 +1736,14 @@ export function transitionCategoricalTrack(
             },
             sort_direction_changeable: true,
             sortCmpFn,
-            init_sort_direction: 0 as 0,
+            // If the user picked a category to sort by, make this the primary
+            // sort track (direction 1 applies the comparator as-is; our
+            // comparator already orders largest value first). Otherwise leave
+            // at 0 so other tracks take priority.
+            init_sort_direction: (nextSpec.stackedBar &&
+            nextSpec.stackedBarSortByCategory
+                ? 1
+                : 0) as any,
             description: ifNotDefined(
                 nextSpec.description,
                 `${nextSpec.label} data from ${nextSpec.molecularProfileId}`
@@ -1786,6 +1798,29 @@ export function transitionCategoricalTrack(
         );
         if (prevSpec.customOptions !== nextSpec.customOptions) {
             oncoprint.setTrackCustomOptions(trackId, nextSpec.customOptions);
+        }
+        if (
+            nextSpec.stackedBar &&
+            nextSpec.stackedBarCategories &&
+            prevSpec.stackedBarSortByCategory !==
+                nextSpec.stackedBarSortByCategory
+        ) {
+            const newCmp = nextSpec.stackedBarSortByCategory
+                ? makeStackedBarTrackSortComparatorByCategory(
+                      nextSpec.stackedBarSortByCategory
+                  )
+                : makeStackedBarTrackSortComparator(
+                      nextSpec.stackedBarCategories
+                  );
+            oncoprint.setTrackSortComparator(trackId, newCmp);
+            // Flip sort direction so the picked-category comparator is the
+            // primary sort. When category is cleared, drop back to direction 0
+            // (track-agnostic sort) so the oncoprint falls back to other
+            // tracks' sort contributions.
+            oncoprint.setTrackSortDirection(
+                trackId,
+                nextSpec.stackedBarSortByCategory ? 1 : 0
+            );
         }
     }
 }

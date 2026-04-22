@@ -2128,7 +2128,33 @@ export function makeGenericAssayProfileStackedBarTracksMobxPromise(
                             maxTotal > 0 ? maxTotal : undefined;
                     }
 
-                    const customOptions = isAbsolute
+                    const currentSortBy =
+                        oncoprint.genericAssayStackedSortBy[molecularProfileId];
+                    const sortOptions = [
+                        {
+                            label: currentSortBy
+                                ? 'Sort by total (default)'
+                                : '\u2713 Sort by total (default)',
+                            onClick: action(() => {
+                                oncoprint.setGenericAssayStackedSortBy(
+                                    molecularProfileId,
+                                    null
+                                );
+                            }),
+                        },
+                        ...categories.map(cat => ({
+                            label:
+                                (currentSortBy === cat ? '\u2713 ' : '') +
+                                `Sort by ${cat}`,
+                            onClick: action(() => {
+                                oncoprint.setGenericAssayStackedSortBy(
+                                    molecularProfileId,
+                                    cat
+                                );
+                            }),
+                        })),
+                    ];
+                    const modeOptions = isAbsolute
                         ? [
                               {
                                   label:
@@ -2170,6 +2196,7 @@ export function makeGenericAssayProfileStackedBarTracksMobxPromise(
                                   }),
                               },
                           ];
+                    const customOptions = [...modeOptions, ...sortOptions];
 
                     return {
                         key: `GENERICASSAYSTACKEDBARTRACK_${molecularProfileId}_${
@@ -2197,6 +2224,7 @@ export function makeGenericAssayProfileStackedBarTracksMobxPromise(
                             molecularProfileId
                         ],
                         stackedBarMaxTotal,
+                        stackedBarSortByCategory: currentSortBy,
                         customOptions,
                         onClickRemoveInTrackMenu: action(() => {
                             oncoprint.setGenericAssayStackedMode(

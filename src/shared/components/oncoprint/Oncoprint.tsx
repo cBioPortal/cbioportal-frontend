@@ -271,6 +271,9 @@ export interface ICategoricalTrackSpec {
     // by side (absolute + composition view of the same cell types), only one
     // track needs to contribute the category legend.
     stackedBarExcludeFromLegend?: boolean;
+    // When set, samples are sorted by this category's value descending instead
+    // of the default "dominant-category-then-proportion" heuristic.
+    stackedBarSortByCategory?: string;
 }
 
 export const GENETIC_TRACK_GROUP_INDEX = 1;

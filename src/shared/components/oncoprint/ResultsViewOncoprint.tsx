@@ -1345,6 +1345,44 @@ export default class ResultsViewOncoprint extends React.Component<
         return _.keys(map).join(';');
     }
 
+    // Map profileId -> entityId to use as sort key. If a profile isn't present
+    // in the map, fall back to the default stacked-bar comparator (sort by
+    // dominant category, then proportion).
+    @computed get genericAssayStackedSortBy(): {
+        [profileId: string]: string;
+    } {
+        const raw = this.urlWrapper.query.generic_assay_stacked_sortby;
+        if (!raw) return {};
+        const out: { [profileId: string]: string } = {};
+        for (const entry of raw.split(';')) {
+            const [pid, entityId] = entry.split(':');
+            if (pid && entityId) out[pid] = entityId;
+        }
+        return out;
+    }
+
+    private serializeStackedSortBy(map: {
+        [profileId: string]: string;
+    }): string {
+        return _.map(map, (entity, pid) => `${pid}:${entity}`).join(';');
+    }
+
+    @action.bound
+    public setGenericAssayStackedSortBy(
+        molecularProfileId: string,
+        entityId: string | null
+    ) {
+        const next = { ...this.genericAssayStackedSortBy };
+        if (entityId) {
+            next[molecularProfileId] = entityId;
+        } else {
+            delete next[molecularProfileId];
+        }
+        this.urlWrapper.updateURL({
+            generic_assay_stacked_sortby: this.serializeStackedSortBy(next),
+        });
+    }
+
     @action.bound
     public setGenericAssayStackedMode(
         molecularProfileId: string,
@@ -1994,7 +2032,9 @@ export default class ResultsViewOncoprint extends React.Component<
                     this.removeAdditionalTrackSection,
                     this.props.store.queryContainsOql,
                     this.useOqlFilteringForVafHeatmap,
-                    this.toggleVafHeatmapOqlFiltering
+                    this.toggleVafHeatmapOqlFiltering,
+                    this.genericAssayStackedProfiles,
+                    this.genericAssayStackedAbsoluteProfiles
                 )
             );
         },

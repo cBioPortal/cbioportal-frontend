@@ -332,11 +332,28 @@ export function makeTrackGroupHeaders(
     onClickDeleteCallback: (index: TrackGroupIndex) => void,
     queryContainsOql?: boolean,
     useOqlFilteringForVafHeatmap?: boolean,
-    onToggleOqlFilterCallback?: () => void
+    onToggleOqlFilterCallback?: () => void,
+    genericAssayStackedProfiles?: { [profileId: string]: true },
+    genericAssayStackedAbsoluteProfiles?: { [profileId: string]: true }
 ): { [trackGroupIndex: number]: TrackGroupHeader } {
     var headers = _.reduce(
         molecularProfileIdToAdditionalTracks,
         (headerMap, nextEntry) => {
+            // Stacked-bar tracks are single-row tracks that already carry
+            // their profile name in the track label — the big group header
+            // (and its Cluster/Don't cluster options) is redundant. Skip.
+            if (
+                (genericAssayStackedProfiles &&
+                    genericAssayStackedProfiles[
+                        nextEntry.molecularProfileId
+                    ]) ||
+                (genericAssayStackedAbsoluteProfiles &&
+                    genericAssayStackedAbsoluteProfiles[
+                        nextEntry.molecularProfileId
+                    ])
+            ) {
+                return headerMap;
+            }
             let type: 'categorical' | 'heatmap' | 'vaf';
             const profile =
                 molecularProfileIdToMolecularProfile[

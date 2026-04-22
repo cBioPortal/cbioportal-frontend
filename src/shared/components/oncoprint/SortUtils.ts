@@ -345,3 +345,19 @@ export function makeStackedBarTrackSortComparator(categories: string[]) {
         mandatory: comparator,
     };
 }
+
+export function makeStackedBarTrackSortComparatorByCategory(category: string) {
+    const comparator = function(d1: any, d2: any) {
+        if (d1.na && d2.na) return 0;
+        if (d1.na) return 2;
+        if (d2.na) return -2;
+        const v1 = (d1.attr_val && d1.attr_val[category]) || 0;
+        const v2 = (d2.attr_val && d2.attr_val[category]) || 0;
+        if (v1 === v2) return 0;
+        return v1 > v2 ? -1 : 1; // descending so largest values sort first
+    };
+    return {
+        preferred: alphabeticalDefault(comparator),
+        mandatory: comparator,
+    };
+}
