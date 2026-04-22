@@ -177,12 +177,31 @@ export default class OncoprintTrackOptionsView {
                 'font-weight': weight,
                 'font-size': 12,
                 'border-bottom': '1px solid rgba(0,0,0,0.3)',
+                // Disables the iOS 300ms tap delay and lets click fire on first tap.
+                'touch-action': 'manipulation',
             });
         if (!disabled) {
             if (callback) {
                 li.addClass('clickable');
                 li.css({ cursor: 'pointer' });
-                li.click(callback).hover(
+                // Also fire on touchend so taps work when the synthetic click
+                // doesn't arrive (sticky hover on iOS). preventDefault on the
+                // touch stops the follow-up click so the callback runs once.
+                let fired = false;
+                const invoke = function(evt: any) {
+                    if (fired) return;
+                    fired = true;
+                    setTimeout(() => {
+                        fired = false;
+                    }, 400);
+                    callback(evt);
+                };
+                li.on('click', invoke);
+                li.on('touchend', function(evt) {
+                    evt.preventDefault();
+                    invoke(evt);
+                });
+                li.hover(
                     function() {
                         $(this).css({ 'background-color': 'rgb(200,200,200)' });
                     },
@@ -216,7 +235,8 @@ export default class OncoprintTrackOptionsView {
     private static $makeDropdownSubmenuOption(
         text: string,
         children: CustomTrackOption[],
-        track_id: TrackId
+        track_id: TrackId,
+        closeOuterMenu: () => void
     ) {
         const $li = $('<li>')
             .text(text + ' \u25B8')
@@ -245,6 +265,7 @@ export default class OncoprintTrackOptionsView {
                 'z-index': 100,
                 'min-width': '140px',
             });
+        let clickedOpen = false;
         for (const child of children) {
             if (child.separator) {
                 $submenu.append(
@@ -260,7 +281,10 @@ export default class OncoprintTrackOptionsView {
                     child.onClick &&
                         function(evt) {
                             evt.stopPropagation();
+                            clickedOpen = false;
+                            $submenu.hide();
                             child.onClick!(track_id);
+                            closeOuterMenu();
                         }
                 )
             );
@@ -272,9 +296,40 @@ export default class OncoprintTrackOptionsView {
             },
             function() {
                 $(this).css({ 'background-color': 'rgba(255,255,255,0)' });
-                $submenu.hide();
+                if (!clickedOpen) $submenu.hide();
             }
         );
+        // Touch devices have no hover — tapping the parent toggles the submenu
+        // and keeps it open until a child is picked or the outer menu closes.
+        $li.css({ 'touch-action': 'manipulation' });
+        let parentFired = false;
+        const toggleSubmenu = function(evt: any) {
+            if (
+                $(evt.target)
+                    .closest('ul')
+                    .is($submenu)
+            )
+                return;
+            if (parentFired) return;
+            parentFired = true;
+            setTimeout(() => {
+                parentFired = false;
+            }, 400);
+            evt.stopPropagation();
+            clickedOpen = !clickedOpen;
+            $submenu.toggle(clickedOpen);
+        };
+        $li.on('click', toggleSubmenu);
+        $li.on('touchend', function(evt) {
+            if (
+                $(evt.target)
+                    .closest('ul')
+                    .is($submenu)
+            )
+                return;
+            evt.preventDefault();
+            toggleSubmenu(evt);
+        });
         return $li;
     }
 
@@ -371,7 +426,14 @@ export default class OncoprintTrackOptionsView {
                 }
             }
         );
-        $img.click(function(evt) {
+        $img.css({ 'touch-action': 'manipulation' });
+        let imgFired = false;
+        const toggleImgMenu = function(evt: any) {
+            if (imgFired) return;
+            imgFired = true;
+            setTimeout(() => {
+                imgFired = false;
+            }, 400);
             evt.stopPropagation();
             if ($dropdown.is(':visible')) {
                 $img.addClass(TOGGLE_BTN_OPEN_CLASS);
@@ -381,6 +443,11 @@ export default class OncoprintTrackOptionsView {
                 self.showTrackMenu(track_id);
             }
             self.hideMenusExcept(track_id);
+        };
+        $img.on('click', toggleImgMenu);
+        $img.on('touchend', function(evt) {
+            evt.preventDefault();
+            toggleImgMenu(evt);
         });
 
         const movingDisabled =
@@ -586,7 +653,8 @@ export default class OncoprintTrackOptionsView {
                             OncoprintTrackOptionsView.$makeDropdownSubmenuOption(
                                 option.label || '',
                                 option.children,
-                                track_id
+                                track_id,
+                                () => self.hideTrackMenu(track_id)
                             )
                         );
                     } else {

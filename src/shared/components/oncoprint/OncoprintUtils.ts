@@ -2017,6 +2017,11 @@ export function makeGenericAssayProfileStackedBarTracksMobxPromise(
             const stackedProfiles = oncoprint.genericAssayStackedProfiles;
             const stackedAbsoluteProfiles =
                 oncoprint.genericAssayStackedAbsoluteProfiles;
+            // Snapshot before any `await` so MobX tracks the observable for
+            // re-invalidation (tracking stops at the first await in an async
+            // invoke). Without this, clicking a sort-by category updates URL
+            // state but doesn't re-run the promise.
+            const stackedSortBy = { ...oncoprint.genericAssayStackedSortBy };
 
             const stackedGenericAssayProfiles = _.filter(
                 molecularProfileIdToAdditionalTracks,
@@ -2263,8 +2268,7 @@ export function makeGenericAssayProfileStackedBarTracksMobxPromise(
                             : undefined
                         : undefined;
 
-                    const currentSortBy =
-                        oncoprint.genericAssayStackedSortBy[molecularProfileId];
+                    const currentSortBy = stackedSortBy[molecularProfileId];
                     const sortOptions = [
                         {
                             label: 'Sort by',
