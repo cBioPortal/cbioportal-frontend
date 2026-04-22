@@ -233,6 +233,10 @@ export interface IHeatmapTrackSpec extends IBaseHeatmapTrackSpec {
     minProfileValue?: number;
     customNaShapes?: ShapeParams[];
     customOptions?: CustomTrackOption[];
+    // When true, render this generic-assay row as a bar chart (height = value)
+    // instead of the default heatmap gradient. Value range is [0, maxProfileValue]
+    // (or [0, 1] for fractions when maxProfileValue is not set).
+    showAsBar?: boolean;
 }
 export interface IGenesetHeatmapTrackSpec extends IBaseHeatmapTrackSpec {
     data: IGenesetHeatmapTrackDatum[];

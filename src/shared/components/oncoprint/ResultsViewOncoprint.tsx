@@ -1383,6 +1383,32 @@ export default class ResultsViewOncoprint extends React.Component<
         });
     }
 
+    // Profiles rendered as per-entity bar charts (height = value) instead of
+    // the default heatmap gradient. Only applies when the profile is split
+    // into one row per entity (i.e. not in a stacked-bar mode).
+    @computed get genericAssayBarProfiles(): { [profileId: string]: true } {
+        const raw = this.urlWrapper.query.generic_assay_bar_profiles;
+        if (!raw) return {};
+        return _.chain(raw.split(';'))
+            .filter(x => x.length > 0)
+            .keyBy(x => x)
+            .mapValues(() => true as true)
+            .value();
+    }
+
+    @action.bound
+    public setGenericAssayBarMode(molecularProfileId: string, asBar: boolean) {
+        const next = { ...this.genericAssayBarProfiles };
+        if (asBar) {
+            next[molecularProfileId] = true;
+        } else {
+            delete next[molecularProfileId];
+        }
+        this.urlWrapper.updateURL({
+            generic_assay_bar_profiles: _.keys(next).join(';'),
+        });
+    }
+
     @action.bound
     public setGenericAssayStackedMode(
         molecularProfileId: string,

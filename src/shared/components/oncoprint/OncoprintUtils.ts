@@ -290,6 +290,34 @@ export const legendColorLightRed = [255, 226, 204, 1] as [
 export function getGenericAssayTrackRuleSetParams(
     trackSpec: IHeatmapTrackSpec
 ): RuleSetParams {
+    // When the user has opted into bar-chart rendering for this profile,
+    // reuse the clinical "number" bar rule set: height scales linearly with
+    // value against the track's value range.
+    if (trackSpec.showAsBar) {
+        let maxBar = trackSpec.maxProfileValue;
+        let minBar = trackSpec.minProfileValue;
+        if (maxBar === undefined || minBar === undefined) {
+            let dataMax = Number.NEGATIVE_INFINITY;
+            let dataMin = Number.POSITIVE_INFINITY;
+            for (const d of trackSpec.data) {
+                if (d.profile_data !== null && d.profile_data !== undefined) {
+                    dataMax = Math.max(d.profile_data, dataMax);
+                    dataMin = Math.min(d.profile_data, dataMin);
+                }
+            }
+            maxBar = maxBar ?? (isFinite(dataMax) ? dataMax : 1);
+            minBar = minBar ?? (isFinite(dataMin) ? dataMin : 0);
+        }
+        // Bars should start at zero when values are non-negative.
+        const barMin = minBar >= 0 ? 0 : minBar;
+        return {
+            type: RuleSetType.BAR,
+            legend_label:
+                trackSpec.legendLabel || `${trackSpec.molecularProfileName}`,
+            value_key: 'profile_data',
+            value_range: [barMin, maxBar > barMin ? maxBar : barMin + 1],
+        };
+    }
     let value_range: [number, number];
     let legend_label: string;
     let colors: [number, number, number, number][];
@@ -1735,6 +1763,7 @@ export function makeGenericAssayProfileHeatmapTracksMobxPromise(
             const stackedProfiles = oncoprint.genericAssayStackedProfiles;
             const stackedAbsoluteProfiles =
                 oncoprint.genericAssayStackedAbsoluteProfiles;
+            const barProfiles = oncoprint.genericAssayBarProfiles;
             const genericAssayProfiles = _.filter(
                 molecularProfileIdToAdditionalTracks,
                 groupInfo =>
@@ -1812,6 +1841,7 @@ export function makeGenericAssayProfileHeatmapTracksMobxPromise(
                     trackGroupIndex: molecularProfileIdToAdditionalTracks[
                         molecularProfileId
                     ]!.trackGroupIndex,
+                    showAsBar: !!barProfiles[molecularProfileId],
                     customOptions: [
                         {
                             label: 'Show as stacked barchart (composition)',
@@ -1828,6 +1858,17 @@ export function makeGenericAssayProfileHeatmapTracksMobxPromise(
                                 oncoprint.setGenericAssayStackedMode(
                                     molecularProfileId,
                                     'absolute'
+                                );
+                            }),
+                        },
+                        {
+                            label: barProfiles[molecularProfileId]
+                                ? 'Show as heatmap gradient'
+                                : 'Show as bar chart',
+                            onClick: action(() => {
+                                oncoprint.setGenericAssayBarMode(
+                                    molecularProfileId,
+                                    !barProfiles[molecularProfileId]
                                 );
                             }),
                         },

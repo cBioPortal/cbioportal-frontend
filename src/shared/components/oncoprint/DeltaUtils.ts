@@ -1674,6 +1674,21 @@ export function transitionHeatmapTrack(
             const rulesetTrackId = trackIdForRuleSetSharing.genericAssayHeatmap![
                 nextSpec.molecularProfileId
             ];
+            // If the user toggled heatmap<->bar for this profile, rebuild the
+            // shared rule set on the owning track first; shareRuleSet below
+            // then propagates the new ruleset to this track.
+            if (
+                rulesetTrackId === trackId &&
+                (nextSpec as any).showAsBar !== (prevSpec as any).showAsBar
+            ) {
+                oncoprint.setRuleSet(
+                    trackId,
+                    getHeatmapTrackRuleSetParams(
+                        nextSpec,
+                        nextProps.isWhiteBackgroundForGlyphsEnabled
+                    )
+                );
+            }
             oncoprint.shareRuleSet(rulesetTrackId!, trackId);
         }
         // set tooltip, its cheap
