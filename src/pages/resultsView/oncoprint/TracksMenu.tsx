@@ -572,7 +572,7 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
                             }
                             onTrackSubmit={this.onGenericAssaySubmit}
                             allowEmptySubmission={true}
-                            selectAllThreshold={25}
+                            selectAllThreshold={50}
                         />
                     </MSKTab>
                 );
