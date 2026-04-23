@@ -323,9 +323,27 @@ export default class ResultsViewOncoprint extends React.Component<
 
     private heatmapGeneInputValueUpdater: IReactionDisposer;
 
-    private molecularProfileIdToTrackGroupIndex: {
+    @observable private molecularProfileIdToTrackGroupIndex: {
         [molecularProfileId: string]: number;
     } = {};
+
+    // Swap two generic-assay profile track-group indexes so one renders above
+    // the other. React re-renders with new trackGroupIndex values; the track
+    // keys include trackGroupIndex so DeltaUtils recreates the tracks in the
+    // new groups. Crossing into hardcoded gene/clinical groups is not
+    // supported — the stacked-bar track picker filters to adjacent generic-
+    // assay profiles only.
+    @action.bound
+    public swapGenericAssayProfileOrder(
+        profileIdA: string,
+        profileIdB: string
+    ) {
+        const a = this.molecularProfileIdToTrackGroupIndex[profileIdA];
+        const b = this.molecularProfileIdToTrackGroupIndex[profileIdB];
+        if (a === undefined || b === undefined) return;
+        this.molecularProfileIdToTrackGroupIndex[profileIdA] = b;
+        this.molecularProfileIdToTrackGroupIndex[profileIdB] = a;
+    }
 
     @computed get selectedClinicalTrackConfig(): ClinicalTrackConfigMap {
         let clinicalTracks: ClinicalTrackConfig[] | undefined = this.props.store

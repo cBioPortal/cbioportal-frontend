@@ -258,6 +258,10 @@ export interface ICategoricalTrackSpec {
     trackLinkUrl: string | undefined;
     onRemove?: () => void;
     onClickRemoveInTrackMenu?: () => void;
+    onMoveUp?: () => void;
+    onMoveDown?: () => void;
+    moveUpDisabled?: boolean;
+    moveDownDisabled?: boolean;
     naLegendLabel?: string;
     description?: string;
     info?: string;

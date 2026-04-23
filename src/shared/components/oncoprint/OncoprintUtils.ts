@@ -2022,6 +2022,14 @@ export function makeGenericAssayProfileStackedBarTracksMobxPromise(
             // invoke). Without this, clicking a sort-by category updates URL
             // state but doesn't re-run the promise.
             const stackedSortBy = { ...oncoprint.genericAssayStackedSortBy };
+            // Ordered list of generic-assay profile IDs by their current
+            // track-group index — used to find the adjacent profile above or
+            // below when the user picks Move up / Move down on a stacked-bar
+            // track. Move crosses only within the generic-assay index space.
+            const genericAssayProfileOrder = _.orderBy(
+                Object.values(molecularProfileIdToAdditionalTracks),
+                g => g.trackGroupIndex
+            ).map(g => g.molecularProfileId);
 
             const stackedGenericAssayProfiles = _.filter(
                 molecularProfileIdToAdditionalTracks,
@@ -2374,10 +2382,26 @@ export function makeGenericAssayProfileStackedBarTracksMobxPromise(
                         { label: 'Chart type', children: chartTypeChildren },
                     ];
 
+                    const myOrderIdx = genericAssayProfileOrder.indexOf(
+                        molecularProfileId
+                    );
+                    const profileAbove =
+                        myOrderIdx > 0
+                            ? genericAssayProfileOrder[myOrderIdx - 1]
+                            : undefined;
+                    const profileBelow =
+                        myOrderIdx >= 0 &&
+                        myOrderIdx < genericAssayProfileOrder.length - 1
+                            ? genericAssayProfileOrder[myOrderIdx + 1]
+                            : undefined;
+
                     return {
+                        // Include trackGroupIndex so a swap (which changes the
+                        // index) causes DeltaUtils to remove + re-add the
+                        // track in the new group instead of updating in place.
                         key: `GENERICASSAYSTACKEDBARTRACK_${molecularProfileId}_${
                             isAbsolute ? 'abs' : 'comp'
-                        }`,
+                        }_grp${trackGroupIndex}`,
                         label: profile.name + (isAbsolute ? ' (absolute)' : ''),
                         description: profile.description || profile.name,
                         molecularProfileId,
@@ -2405,6 +2429,24 @@ export function makeGenericAssayProfileStackedBarTracksMobxPromise(
                         stackedBarMaxTotal,
                         stackedBarSortByCategory: currentSortBy,
                         customOptions,
+                        onMoveUp: profileAbove
+                            ? action(() =>
+                                  oncoprint.swapGenericAssayProfileOrder(
+                                      molecularProfileId,
+                                      profileAbove
+                                  )
+                              )
+                            : undefined,
+                        onMoveDown: profileBelow
+                            ? action(() =>
+                                  oncoprint.swapGenericAssayProfileOrder(
+                                      molecularProfileId,
+                                      profileBelow
+                                  )
+                              )
+                            : undefined,
+                        moveUpDisabled: !profileAbove,
+                        moveDownDisabled: !profileBelow,
                         onClickRemoveInTrackMenu: action(() => {
                             oncoprint.setGenericAssayStackedMode(
                                 molecularProfileId,

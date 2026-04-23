@@ -1752,6 +1752,10 @@ export function transitionCategoricalTrack(
                 nextSpec.onClickRemoveInTrackMenu &&
                     nextSpec.onClickRemoveInTrackMenu();
             },
+            on_move_up: nextSpec.onMoveUp,
+            on_move_down: nextSpec.onMoveDown,
+            move_up_disabled: nextSpec.moveUpDisabled,
+            move_down_disabled: nextSpec.moveDownDisabled,
             sort_direction_changeable: true,
             sortCmpFn,
             // Picked category → direction -1 (reverses the ascending comparator

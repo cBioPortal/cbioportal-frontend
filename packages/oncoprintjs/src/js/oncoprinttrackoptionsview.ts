@@ -462,14 +462,21 @@ export default class OncoprintTrackOptionsView {
             containingTracks.length > 1;
 
         if (model.getTrackMovable(track_id)) {
+            const customMoveUp = model.getTrackOnMoveUp(track_id);
+            const customMoveDown = model.getTrackOnMoveDown(track_id);
+            const moveUpDisabled =
+                movingDisabled || model.isTrackMoveUpDisabled(track_id);
+            const moveDownDisabled =
+                movingDisabled || model.isTrackMoveDownDisabled(track_id);
             $dropdown.append(
                 OncoprintTrackOptionsView.$makeDropdownOption(
                     'Move up',
                     'normal',
-                    movingDisabled,
+                    moveUpDisabled,
                     function(evt) {
                         evt.stopPropagation();
-                        self.moveUpCallback(track_id);
+                        if (customMoveUp) customMoveUp();
+                        else self.moveUpCallback(track_id);
                     }
                 )
             );
@@ -477,10 +484,11 @@ export default class OncoprintTrackOptionsView {
                 OncoprintTrackOptionsView.$makeDropdownOption(
                     'Move down',
                     'normal',
-                    movingDisabled,
+                    moveDownDisabled,
                     function(evt) {
                         evt.stopPropagation();
-                        self.moveDownCallback(track_id);
+                        if (customMoveDown) customMoveDown();
+                        else self.moveDownCallback(track_id);
                     }
                 )
             );
