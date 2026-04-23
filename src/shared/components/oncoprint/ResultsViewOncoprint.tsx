@@ -970,10 +970,24 @@ export default class ResultsViewOncoprint extends React.Component<
                 // at the same time, so just use first one
                 // (should be refactored)
                 if (info.length === 0) return;
+                const profileId = info[0].profileId;
                 this.setGenericAssayTracks(
-                    info[0].profileId,
+                    profileId,
                     info.map(d => d.genericAssayEntityId)
                 );
+                // Apply the chart type picked in the Add Tracks dialog. Map
+                // the selection-component values to the setter the track
+                // menu uses; 'heatmap' is the default so no call is needed.
+                const chartType = info[0].chartType;
+                if (chartType && chartType !== 'heatmap') {
+                    const mapped =
+                        chartType === 'stacked_composition'
+                            ? 'composition'
+                            : chartType === 'stacked_absolute'
+                            ? 'absolute'
+                            : 'bars';
+                    this.setGenericAssayChartType(profileId, mapped);
+                }
             },
             onClickNGCHM: () => {
                 window.open(this.props.store.remoteNgchmUrl.result, '_blank');
