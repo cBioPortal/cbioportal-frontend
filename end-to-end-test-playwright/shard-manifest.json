@@ -1,0 +1,66 @@
+{
+  "1": [
+    "tests/studyview.spec.ts"
+  ],
+  "2": [
+    "tests/group-comparison-general-screenshot.spec.ts",
+    "tests/mutation-table.spec.ts",
+    "tests/oncoprinter-screenshot.spec.ts"
+  ],
+  "3": [
+    "tests/group-comparison-lollipop.spec.ts",
+    "tests/home.spec.ts",
+    "tests/oncoprinter-color-config.spec.ts",
+    "tests/patient-screenshot.spec.ts"
+  ],
+  "4": [
+    "tests/plots.spec.ts",
+    "tests/results.spec.ts"
+  ],
+  "5": [
+    "tests/group-comparison-misc-screenshot.spec.ts",
+    "tests/mutations-tab.spec.ts",
+    "tests/oncoprint-gaps.spec.ts",
+    "tests/screenshot-misc.spec.ts"
+  ],
+  "6": [
+    "tests/config.spec.ts",
+    "tests/genomic-evolution-logic.spec.ts",
+    "tests/oncoprint-screenshot-sorting.spec.ts",
+    "tests/screenshot-results-no-session.spec.ts"
+  ],
+  "7": [
+    "tests/comparison-tab-screenshot.spec.ts",
+    "tests/mutation-mapper-tool.spec.ts",
+    "tests/results-oncoprint-color-config.spec.ts",
+    "tests/timeline.spec.ts"
+  ],
+  "8": [
+    "tests/coexpression-screenshot.spec.ts",
+    "tests/oncoprint-screenshot-interactions.spec.ts",
+    "tests/oncoprint.spec.ts"
+  ],
+  "9": [
+    "tests/group-comparison-venn-screenshot.spec.ts",
+    "tests/redirect.spec.ts",
+    "tests/screenshot-results-excluding-unprofiled.spec.ts"
+  ],
+  "10": [
+    "tests/custom-tabs.spec.ts",
+    "tests/genomic-evolution-screenshot.spec.ts",
+    "tests/patient-logic.spec.ts",
+    "tests/screenshot-results-session.spec.ts"
+  ],
+  "11": [
+    "tests/group-comparison.spec.ts",
+    "tests/oncoprint-screenshot-catalog.spec.ts",
+    "tests/oncoprinter.spec.ts",
+    "tests/plots-screenshot.spec.ts"
+  ],
+  "12": [
+    "tests/comparison-tab.spec.ts",
+    "tests/expression-comparison.spec.ts",
+    "tests/quick-search.spec.ts",
+    "tests/results-logic.spec.ts"
+  ]
+}
