@@ -11,7 +11,7 @@ on:
 
 jobs:
   label-check:
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     steps:
       - name: Check PR Labels
         uses: actions/checkout@v2

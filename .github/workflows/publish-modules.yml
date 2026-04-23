@@ -11,7 +11,7 @@ jobs:
   publish:
     # Only run on push events triggered by the Lerna Publish Bot, or when manually dispatched
     if: github.event_name == 'workflow_dispatch' || github.actor == 'cbioportal-devops'
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     permissions:
       contents: read
       id-token: write

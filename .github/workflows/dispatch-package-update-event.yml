@@ -16,7 +16,7 @@ jobs:
     # do not attempt dispatching on forked repos, only trigger on the main repo
     # also do not attempt dispatching if the actor is the bot account
     if: github.repository == 'cBioPortal/cbioportal-frontend' && github.actor != 'cbioportal-devops'
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     steps:
       - uses: peter-evans/repository-dispatch@v1
         with:
