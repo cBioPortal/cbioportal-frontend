@@ -6,7 +6,7 @@ on:
       - 'src/**'
       - 'packages/**'
       - 'end-to-end-test-playwright/**'
-      - '.github/workflows/playwright-e2e/**'
+      - '.github/workflows/playwright-e2e.yml'
   push:
     branches:
       - master
@@ -15,7 +15,7 @@ on:
       - 'src/**'
       - 'packages/**'
       - 'end-to-end-test-playwright/**'
-      - '.github/workflows/playwright-e2e/**'
+      - '.github/workflows/playwright-e2e.yml'
   workflow_dispatch:
     inputs:
       cbioportal_url:
