@@ -1,0 +1,24 @@
+{
+  "name": "end-to-end-test-playwright",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "playwright test",
+    "test:update": "playwright test --update-snapshots",
+    "test:ui": "playwright test --ui",
+    "test:docker": "./scripts/docker-test.sh",
+    "test:docker:update": "./scripts/docker-test.sh --update-snapshots",
+    "report": "playwright show-report"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.59.1",
+    "typescript": "^6.0.3"
+  }
+}

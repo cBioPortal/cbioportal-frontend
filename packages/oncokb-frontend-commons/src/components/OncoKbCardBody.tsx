@@ -333,18 +333,18 @@ export const OncoKbCardBody: React.FunctionComponent<OncoKbCardBodyProps> = prop
 
     const UNKNOWN = 'Unknown';
 
-    function getOncogenicity() {
-        let oncogenicity = props.indicator?.oncogenic;
+    function getOncogenicity(): string {
+        const oncogenicity = props.indicator?.oncogenic;
         if (!oncogenicity || oncogenicity === UNKNOWN) {
-            oncogenicity = 'Unknown Oncogenic Effect';
+            return 'Unknown Oncogenic Effect';
         }
         return oncogenicity;
     }
 
-    function getMutationEffect() {
-        let mutationEffect = props.indicator?.mutationEffect.knownEffect;
+    function getMutationEffect(): string {
+        const mutationEffect = props.indicator?.mutationEffect.knownEffect;
         if (!mutationEffect || mutationEffect === UNKNOWN) {
-            mutationEffect = 'Unknown Biological Effect';
+            return 'Unknown Biological Effect';
         }
         return mutationEffect;
     }

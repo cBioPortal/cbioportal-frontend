@@ -296,7 +296,9 @@ export default class HeaderAnnotation extends React.Component<
         });
         // transcript id
         parsedData.push({
-            value: transcript.transcriptId,
+            value: transcript.transcriptIdVersion
+                ? `${transcript.transcriptId}.${transcript.transcriptIdVersion}`
+                : transcript.transcriptId,
             key: 'transcript',
             category: 'default',
         });
@@ -499,9 +501,8 @@ function getOncogeneFromOncokbGenesMap(
     oncokbGenesMap: { [hugoSymbol: string]: CuratedGene },
     gene?: string
 ): string | null {
-    return gene &&
-        oncokbGenesMap[gene] &&
-        oncokbGenesMap[gene].oncogene === true
+    const geneType = gene && oncokbGenesMap[gene]?.geneType;
+    return geneType === 'ONCOGENE' || geneType === 'ONCOGENE_AND_TSG'
         ? 'Oncogene'
         : null;
 }
@@ -510,7 +511,6 @@ function getTsgFromOncokbGenesMap(
     oncokbGenesMap: { [hugoSymbol: string]: CuratedGene },
     gene?: string
 ): string | null {
-    return gene && oncokbGenesMap[gene] && oncokbGenesMap[gene].tsg === true
-        ? 'TSG'
-        : null;
+    const geneType = gene && oncokbGenesMap[gene]?.geneType;
+    return geneType === 'TSG' || geneType === 'ONCOGENE_AND_TSG' ? 'TSG' : null;
 }

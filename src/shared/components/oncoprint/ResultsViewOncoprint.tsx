@@ -78,7 +78,11 @@ import ProgressIndicator, {
     IProgressIndicatorItem,
 } from '../progressIndicator/ProgressIndicator';
 import autobind from 'autobind-decorator';
-import { parseOQLQuery } from '../../lib/oql/oqlfilter';
+import {
+    parseOQLQuery,
+    removeIndexFromGeneList,
+    getGeneSymbolsAtIndex,
+} from '../../lib/oql/oqlfilter';
 import AlterationFilterWarning from '../banners/AlterationFilterWarning';
 import WindowStore from '../window/WindowStore';
 import { OncoprintAnalysisCaseType } from '../../../pages/resultsView/ResultsViewPageStoreUtils';
@@ -1458,201 +1462,37 @@ export default class ResultsViewOncoprint extends React.Component<
         }
     }
 
-    private onDeleteGeneticTrack(
-        geneticTrackKey: string,
-        geneticSublabel: string
-    ): void {
+    private onDeleteGeneticTrack(trackIndex: number): void {
         if (!this.isHidden) {
+            const currentGeneList =
+                this.urlWrapper.query.gene_list || '';
+            // Derive the genes to remove from the parsed gene_list at
+            // trackIndex — this correctly handles merged tracks where the
+            // display label is not a plain space-separated gene list.
+            const genesToDelete = getGeneSymbolsAtIndex(
+                currentGeneList,
+                trackIndex
+            );
             let json: GeneticTrackConfigMap = _.clone(
                 this.selectedGeneticTrackConfig
             );
-            const genesToDelete = geneticTrackKey.split(' ');
-            json = _.omitBy(json, entry =>
-                genesToDelete.some(gene => entry.stableId.includes(gene.trim()))
-            ) as GeneticTrackConfigMap;
+            json = _.omitBy(json, entry => {
+                const stableIdUpper = entry.stableId.toUpperCase();
+                return genesToDelete.some(gene => stableIdUpper === gene);
+            }) as GeneticTrackConfigMap;
             const session = this.props.store.pageUserSession;
             session.userSettings = {
                 ...session.userSettings,
                 geneticlist: _.values(json),
             };
-            const remainingGeneAfterDeletion = Object.keys(json).join(' ');
-            const updatedGeneList = this.calculateUpdatedGeneList(
-                remainingGeneAfterDeletion,
-                geneticSublabel,
-                geneticTrackKey
+            const newGeneList = removeIndexFromGeneList(
+                currentGeneList,
+                trackIndex
             );
             this.urlWrapper.updateURL({
-                gene_list: updatedGeneList.join(' '),
+                gene_list: newGeneList,
             });
         }
-    }
-
-    private calculateUpdatedGeneList(
-        remainingGeneAfterDeletion: string,
-        geneticSublabel: string,
-        GeneticTrackToBeDeleted: string
-    ): string[] {
-        const urlParams = new URLSearchParams(window.location.search);
-        const geneListFromURL = urlParams.get('gene_list') || '';
-        let geneListArrayFromURL: string[];
-
-        if (geneListFromURL.includes('%25')) {
-            geneListArrayFromURL = geneListFromURL
-                .split('%25')
-                .map(param => decodeURIComponent(param));
-        } else {
-            geneListArrayFromURL = geneListFromURL
-                .split('%20')
-                .map(param => decodeURIComponent(param));
-        }
-        let tempArray: string[] = [];
-        for (const item of geneListArrayFromURL) {
-            tempArray = tempArray.concat(item.split('\n'));
-        }
-        geneListArrayFromURL = tempArray.filter(item => item.trim() !== '');
-        let updatedGeneList: string[] = [];
-        const remainingGeneAfterDeletionString = remainingGeneAfterDeletion.split(
-            ' '
-        );
-
-        //Datatypes genetrack logic
-        if (geneListArrayFromURL.includes('DATATYPES:')) {
-            updatedGeneList.push(
-                'DATATYPES' +
-                    geneticSublabel +
-                    ' ; ' +
-                    remainingGeneAfterDeletion
-            );
-        } else if (geneticSublabel) {
-            //OQL Queries logic
-            const isSublabelInURL = this.isSublabelInURL(
-                geneListArrayFromURL,
-                geneticSublabel
-            );
-            if (isSublabelInURL) {
-                const newList = this.sliceURLBasedOnSublabel(
-                    geneListArrayFromURL,
-                    geneticSublabel,
-                    GeneticTrackToBeDeleted
-                );
-                if (newList !== null) {
-                    updatedGeneList.push(...newList);
-                }
-            } else {
-                geneListArrayFromURL = geneListArrayFromURL.filter(
-                    item => item !== GeneticTrackToBeDeleted
-                );
-                const testRemainingArray = remainingGeneAfterDeletionString; // Split testRemaining into an array
-                let startIdx = 0;
-
-                for (let i = 1; i < testRemainingArray.length; i++) {
-                    const currentGene = testRemainingArray[i];
-                    const currentIndex = geneListArrayFromURL.indexOf(
-                        currentGene
-                    );
-                    const genesToAdd = geneListArrayFromURL.slice(
-                        startIdx,
-                        currentIndex
-                    );
-                    updatedGeneList.push(...genesToAdd);
-                    updatedGeneList.push('\n');
-                    startIdx = currentIndex;
-                }
-                const genesToAdd = geneListArrayFromURL.slice(
-                    startIdx,
-                    geneListArrayFromURL.length + 1
-                );
-                updatedGeneList.push(...genesToAdd);
-            }
-        } else {
-            //Merged gene track updation logic
-            let insideSquareBrackets = false;
-            let withinQuotes = false;
-            let startIdx = geneListArrayFromURL.indexOf('[');
-            let endIdx = geneListArrayFromURL.lastIndexOf(']');
-            let desiredArray = geneListArrayFromURL.slice(startIdx, endIdx + 1);
-            const containsBracketGenes = remainingGeneAfterDeletionString.some(
-                gene => desiredArray.includes(gene)
-            );
-            if (containsBracketGenes) {
-                for (const gene of geneListArrayFromURL) {
-                    if (gene === '[') {
-                        insideSquareBrackets = true;
-                        updatedGeneList.push(gene);
-                        withinQuotes = false;
-                    } else if (gene === ']') {
-                        insideSquareBrackets = false;
-                        updatedGeneList.push(gene);
-                        withinQuotes = false;
-                    } else if (
-                        insideSquareBrackets &&
-                        gene.startsWith('"') &&
-                        !withinQuotes
-                    ) {
-                        updatedGeneList.push(gene);
-                        withinQuotes = true;
-                    } else if (remainingGeneAfterDeletion.includes(gene)) {
-                        updatedGeneList.push(gene);
-                    }
-                }
-            } else {
-                updatedGeneList = [remainingGeneAfterDeletion];
-            }
-        }
-        return updatedGeneList;
-    }
-
-    private isSublabelInURL(
-        geneListArrayFromURL: string[],
-        geneticSublabel: string
-    ): boolean {
-        const sublabelWords = geneticSublabel.split(/[ :=]/).filter(Boolean);
-        let currentIndex = 0;
-
-        for (const word of sublabelWords) {
-            const index = geneListArrayFromURL.indexOf(word, currentIndex);
-            if (index === -1) {
-                return false;
-            }
-            currentIndex = index + 1;
-        }
-
-        return true;
-    }
-
-    private sliceURLBasedOnSublabel(
-        geneListArrayFromURL: string[],
-        geneticSublabel: string,
-        geneticTrackToBeDeleted: string
-    ): string[] | null {
-        const sublabelWords = geneticSublabel.split(/[ :=]/).filter(Boolean);
-        let currentIndex = 0;
-
-        for (const word of sublabelWords) {
-            const index = geneListArrayFromURL.indexOf(word, currentIndex);
-            if (index === -1) {
-                return null;
-            }
-            currentIndex = index + 1;
-        }
-
-        const startIndex = geneListArrayFromURL.indexOf(sublabelWords[0]);
-        const endIndex = geneListArrayFromURL.indexOf(
-            sublabelWords[sublabelWords.length - 1]
-        );
-        const trackWithoutColon = geneListArrayFromURL[startIndex - 1].endsWith(
-            ':'
-        )
-            ? geneListArrayFromURL[startIndex - 1].slice(0, -1) // Remove ':' if it's the last character
-            : geneListArrayFromURL[startIndex - 1];
-        if (trackWithoutColon === geneticTrackToBeDeleted) {
-            const slicedURL = [
-                ...geneListArrayFromURL.slice(0, startIndex - 1),
-                ...geneListArrayFromURL.slice(endIndex + 1),
-            ];
-            return slicedURL;
-        }
-        return null;
     }
 
     /**

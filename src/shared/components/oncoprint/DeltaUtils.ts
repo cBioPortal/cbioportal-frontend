@@ -1161,19 +1161,25 @@ function transitionGeneticTrack(
                 if (nextSpec.removeCallback) nextSpec.removeCallback();
             },
             onClickRemoveInTrackMenu: () => {
-                const oql = nextSpec.oql;
-                const sublabel = nextSpec.sublabel;
-                if (oql) {
-                    const geneLabelsRegex = /[A-Z0-9]+(?=:)/g;
-                    const geneLabels = oql.match(geneLabelsRegex);
-                    if (geneLabels) {
-                        const geneLabelsString = geneLabels.join(' ');
-                        nextProps.onDeleteGeneticTrack &&
-                            nextProps.onDeleteGeneticTrack(
-                                geneLabelsString,
-                                sublabel || ''
-                            );
+                if (nextProps.onDeleteGeneticTrack && !expansionParentKey) {
+                    // Only handle top-level genetic tracks.
+                    // Expansion sub-tracks (expansionParentKey is set) are
+                    // not individually removable via this handler.
+                    //
+                    // Pass the track index so the handler can remove the
+                    // corresponding entry from the raw URL gene_list string
+                    // without any default OQL expansion.  The key format is
+                    // `GENETICTRACK_N` where N is the index in the list.
+                    const match = nextSpec.key.match(/^GENETICTRACK_(\d+)$/);
+                    if (!match) {
+                        console.warn(
+                            'onClickRemoveInTrackMenu: unexpected track key format:',
+                            nextSpec.key
+                        );
+                        return; // skip deletion — can't determine correct index
                     }
+                    const trackIndex = parseInt(match[1], 10);
+                    nextProps.onDeleteGeneticTrack(trackIndex);
                 }
             },
             expandCallback: nextSpec.expansionCallback || undefined,
