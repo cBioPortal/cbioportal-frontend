@@ -85,9 +85,9 @@ jobs:
           FILES=$(python3 -c "import json; print(' '.join(json.load(open('shard-manifest.json'))['${{ matrix.shard }}']))")
           echo "Shard ${{ matrix.shard }} files: $FILES"
           if [ -n "${{ inputs.grep }}" ]; then
-            npx playwright test --workers=2 --grep "${{ inputs.grep }}" $FILES
+            npx playwright test --grep "${{ inputs.grep }}" $FILES
           else
-            npx playwright test --workers=2 $FILES
+            npx playwright test $FILES
           fi
 
       - name: Upload report + traces
