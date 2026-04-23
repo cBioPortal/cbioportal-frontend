@@ -12,6 +12,12 @@ const CBIOPORTAL_URL = (
 const inDocker = process.env.PW_DOCKER === '1';
 const SNAPSHOT_DIR = inDocker ? '__snapshots__' : '__local_snapshots__';
 
+// When LOCALDEV=1, tests point at a public cbioportal origin but load the
+// local frontend bundle from https://localhost:3000 (via ?localdev=true).
+// Chromium's Private Network Access gate blocks public→loopback subresource
+// loads by default; disable it so the local bundle can attach.
+const isLocaldev = process.env.LOCALDEV === '1';
+
 export default defineConfig({
     testDir: './tests',
     fullyParallel: false,
@@ -49,6 +55,7 @@ export default defineConfig({
         video: 'retain-on-failure',
         actionTimeout: 15_000,
         navigationTimeout: 60_000,
+        ...(isLocaldev && { ignoreHTTPSErrors: true }),
     },
 
     projects: [
@@ -70,6 +77,15 @@ export default defineConfig({
                         '--disable-font-subpixel-positioning',
                         '--disable-lcd-text',
                         '--font-render-hinting=none',
+                        ...(isLocaldev
+                            ? [
+                                  // Private Network Access + the newer
+                                  // Local Network Access gate both need
+                                  // to be disabled for public→loopback
+                                  // subresource loads.
+                                  '--disable-features=BlockInsecurePrivateNetworkRequests,PrivateNetworkAccessPreflightSupport,PrivateNetworkAccessRespectPreflightResults,LocalNetworkAccessChecks,LocalNetworkAccessChecksWarnings',
+                              ]
+                            : []),
                     ],
                 },
             },

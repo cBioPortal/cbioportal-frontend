@@ -84,6 +84,12 @@ h1{font-size:18px;margin:10px 0}
       // (see scripts/docker-test.sh: -w /work). Strip so the static
       // server resolves them from the project root.
       if (p.startsWith('/work/')) return attachBase + p.slice('/work/'.length);
+      // Host-mode runs record absolute filesystem paths for reference
+      // snapshots (e.g. /Users/.../end-to-end-test-playwright/tests/...).
+      // Strip everything up to end-to-end-test-playwright/ so the static
+      // server (rooted at end-to-end-test-playwright/) can resolve them.
+      const e2eIdx = p.indexOf('/end-to-end-test-playwright/');
+      if (e2eIdx >= 0) return attachBase + p.slice(e2eIdx + '/end-to-end-test-playwright/'.length);
       return p;
     }
     return attachBase + p;
