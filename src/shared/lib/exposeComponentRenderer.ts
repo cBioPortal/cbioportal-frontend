@@ -4,7 +4,7 @@ import { createRoot } from 'react-dom/client';
 
 export default function(
     name: string,
-    Comp: React.ComponentClass<any> | React.StatelessComponent<any>,
+    Comp: React.ComponentClass<any> | React.FunctionComponent<any>,
     props: any = {}
 ) {
     const win = window as any;

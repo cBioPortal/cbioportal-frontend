@@ -43,11 +43,11 @@ export default class ClinicalInformationSamplesTable extends React.Component<
                 if (isUrl(data[col.id] as any)) {
                     return (
                         <a href={data[col.id] as any} target="_blank">
-                            {data[col.id]}
+                            {data[col.id] as any}
                         </a>
                     );
                 }
-                return <span>{data[col.id]}</span>;
+                return <span>{data[col.id] as any}</span>;
             },
             download: (data: ISampleRow) => `${data[col.id]}`,
             filter: (

@@ -17,6 +17,7 @@ export type GeneSymbolValidatorMessageProps = {
     wrapTheContent?: boolean;
     replaceGene: ReplaceGene;
     highlightError?: () => void;
+    children?: React.ReactNode;
 };
 
 export type ReplaceGene = (oldSymbol: string, newSymbol: string) => void;

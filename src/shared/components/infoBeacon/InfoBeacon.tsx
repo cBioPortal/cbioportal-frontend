@@ -13,6 +13,7 @@ interface IInfoBeaconProps {
     interaction: 'click' | 'mouseover';
     color?: string;
     id: string;
+    children?: React.ReactNode;
 }
 
 @observer

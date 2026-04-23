@@ -34,11 +34,16 @@ export interface IMSKTabProps {
     onClickClose?: (tabId: string) => void;
     pending?: boolean;
     linkOverride?: JSX.Element;
+    children?: React.ReactNode;
 }
 
 @observer
 export class DeferredRender extends React.Component<
-    { className: string; loadingState?: JSX.Element },
+    {
+        className: string;
+        loadingState?: JSX.Element;
+        children?: React.ReactNode;
+    },
     {}
 > {
     @observable renderedOnce = false;
@@ -115,6 +120,7 @@ interface IMSKTabsProps {
     hrefRoot?: string;
     onMount?: () => void;
     defaultTabId?: string | Boolean;
+    children?: React.ReactNode;
 }
 
 @observer
@@ -561,7 +567,7 @@ export class MSKTabs extends React.Component<IMSKTabsProps> {
 
             React.Children.forEach(
                 this.props.children,
-                (tab: MSKTab | null, index: number) => {
+                (tab: any, index: number) => {
                     if (!tab || !(tab.props.id in this.tabIdToNavTabWidth)) {
                         // skip a null child or a tab that hasnt been rendered yet
                         return;
