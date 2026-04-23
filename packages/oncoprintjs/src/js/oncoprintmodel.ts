@@ -1378,6 +1378,22 @@ export default class OncoprintModel {
         return this.track_groups;
     }
 
+    public swapTrackGroups(i: TrackGroupIndex, j: TrackGroupIndex) {
+        if (
+            i === j ||
+            i < 0 ||
+            j < 0 ||
+            i >= this.track_groups.length ||
+            j >= this.track_groups.length
+        ) {
+            return;
+        }
+        const tmp = this.track_groups[i];
+        this.track_groups[i] = this.track_groups[j];
+        this.track_groups[j] = tmp;
+        this.track_tops.update();
+    }
+
     public async addTracks(params_list: LibraryTrackSpec<Datum>[]) {
         for (let i = 0; i < params_list.length; i++) {
             const params = params_list[i];

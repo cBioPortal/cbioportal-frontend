@@ -405,6 +405,15 @@ export default class Oncoprint {
                         new_previous_track = tracks[index - 2];
                     }
                     self.moveTrack(track_id, new_previous_track);
+                } else if (tracks.length === 1) {
+                    // Alone in its group — move the whole group up instead so
+                    // tracks without siblings aren't stuck in place.
+                    const groupIdx = self.model.getContainingTrackGroupIndex(
+                        track_id
+                    ) as number;
+                    if (groupIdx > 0) {
+                        self.swapTrackGroups(groupIdx, groupIdx - 1);
+                    }
                 }
             },
             function(track_id: TrackId) {
@@ -413,6 +422,16 @@ export default class Oncoprint {
                 const index = tracks.indexOf(track_id);
                 if (index < tracks.length - 1) {
                     self.moveTrack(track_id, tracks[index + 1]);
+                } else if (tracks.length === 1) {
+                    const groupIdx = self.model.getContainingTrackGroupIndex(
+                        track_id
+                    ) as number;
+                    if (
+                        groupIdx >= 0 &&
+                        groupIdx < self.model.getTrackGroups().length - 1
+                    ) {
+                        self.swapTrackGroups(groupIdx, groupIdx + 1);
+                    }
                 }
             },
             function(track_id: TrackId) {
@@ -707,6 +726,19 @@ export default class Oncoprint {
             this.sort();
         }
 
+        this.resizeAndOrganizeAfterTimeout();
+    }
+    public swapTrackGroups(i: TrackGroupIndex, j: TrackGroupIndex) {
+        if (this.webgl_unavailable || this.destroyed) {
+            return;
+        }
+        this.model.swapTrackGroups(i, j);
+        this.cell_view.moveTrack(this.model);
+        this.header_view.render(this.model);
+        this.label_view.moveTrack(this.model, this.getCellViewHeight);
+        this.track_options_view.moveTrack(this.model, this.getCellViewHeight);
+        this.track_info_view.moveTrack(this.model, this.getCellViewHeight);
+        this.minimap_view.moveTrack(this.model, this.cell_view);
         this.resizeAndOrganizeAfterTimeout();
     }
     public setTrackGroupOrder(
