@@ -11,6 +11,10 @@ import { expectPageScreenshot, waitForNetworkQuiet } from './helpers/common';
  * public.
  */
 
+// Tests are independent — each cold-loads its own URL without shared state.
+// Opt into parallel so shards running this file don't serialize unnecessarily.
+test.describe.configure({ mode: 'parallel' });
+
 test.describe('Patient cohort view screenshot tests', () => {
     const patientUrl =
         '/patient?studyId=coadread_tcga_pub&caseId=TCGA-A6-2670' +

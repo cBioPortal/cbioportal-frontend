@@ -35,6 +35,10 @@ async function waitForGenomeNexus(page: Page) {
     await page.waitForTimeout(5000);
 }
 
+// Tests are independent — each cold-loads its own URL without shared state.
+// Opt into parallel so shards running this file don't serialize unnecessarily.
+test.describe.configure({ mode: 'parallel' });
+
 test.describe('Mutation Mapper Tool: example genomic changes input', () => {
     test('annotates genomic changes example and breaks down by gene', async ({
         browser,

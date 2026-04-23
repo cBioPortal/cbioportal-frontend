@@ -36,6 +36,10 @@ async function openQuickSearchAndType(page: Page, query: string) {
     ).toBeVisible();
 }
 
+// Tests are independent — each cold-loads its own URL without shared state.
+// Opt into parallel so shards running this file don't serialize unnecessarily.
+test.describe.configure({ mode: 'parallel' });
+
 test.describe('Quick Search', () => {
     test.beforeEach(async ({ page }) => {
         await openQuickSearchAndType(page, 'Ad');

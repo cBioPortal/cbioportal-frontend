@@ -18,6 +18,10 @@ async function readMutationCount(page: Page): Promise<number> {
     return parseInt(text, 10);
 }
 
+// Tests are independent — each cold-loads its own URL without shared state.
+// Opt into parallel so shards running this file don't serialize unnecessarily.
+test.describe.configure({ mode: 'parallel' });
+
 test.describe('Patient-view Genomic Evolution tab — mutation table', () => {
     test('show-only-highlighted filter reflects row selection', async ({
         page,

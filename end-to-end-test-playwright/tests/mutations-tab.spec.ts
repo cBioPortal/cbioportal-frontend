@@ -40,6 +40,10 @@ const BADGES_URL =
     '&gene_set_choice=user-defined-list&RPPA_SCORE_THRESHOLD=2.0&profileFilter=mutations' +
     '&geneset_list=%20&tab_index=tab_visualize&Action=Submit&mutations_gene=KRAS';
 
+// Tests are independent — each cold-loads its own URL without shared state.
+// Opt into parallel so shards running this file don't serialize unnecessarily.
+test.describe.configure({ mode: 'parallel' });
+
 test.describe('mutations tab — VUS / germline filtering', () => {
     test('hides VUS mutations when the setting is on', async ({ page }) => {
         await page.goto(VUS_URL);

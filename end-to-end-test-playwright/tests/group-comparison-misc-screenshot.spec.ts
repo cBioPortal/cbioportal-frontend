@@ -20,6 +20,10 @@ import {
  * workers without shared state concerns.
  */
 
+// Tests are independent — each cold-loads its own URL without shared state.
+// Opt into parallel so shards running this file don't serialize unnecessarily.
+test.describe.configure({ mode: 'parallel' });
+
 test.describe('group comparison mutations tab', () => {
     test('two groups', async ({ page }) => {
         await page.goto(MUTATIONS_TWO_GROUPS_URL);

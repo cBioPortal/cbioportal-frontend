@@ -67,6 +67,10 @@ async function openSamplesInputViaModify(page: Page) {
     await expect(page.locator(SAMPLES_INPUT)).toBeVisible();
 }
 
+// Tests are independent — each cold-loads its own URL without shared state.
+// Opt into parallel so shards running this file don't serialize unnecessarily.
+test.describe.configure({ mode: 'parallel' });
+
 test.describe('oncoprinter screenshot tests', () => {
     test('genetic only example data', async ({ page }) => {
         await submitOncoprinter(page, { genetic: true });

@@ -35,6 +35,10 @@ const METHYLATION_DEFAULT_URL =
     '&plots_vert_selection=%7B%22selectedGeneOption%22%3A7157%7D' +
     '&plots_coloring_selection=%7B%7D';
 
+// Tests are independent — each cold-loads its own URL without shared state.
+// Opt into parallel so shards running this file don't serialize unnecessarily.
+test.describe.configure({ mode: 'parallel' });
+
 test.describe('plots tab', () => {
     test('shows data availability alert tooltip for plots tab multiple studies', async ({
         page,

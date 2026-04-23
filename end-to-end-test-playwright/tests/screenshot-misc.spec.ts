@@ -17,6 +17,10 @@ async function snapshot(
     await expectElementScreenshot(page, selector, name, { hide });
 }
 
+// Tests are independent — each cold-loads its own URL without shared state.
+// Opt into parallel so shards running this file don't serialize unnecessarily.
+test.describe.configure({ mode: 'parallel' });
+
 test.describe('download tab screenshot tests', () => {
     const downloadCases = [
         {

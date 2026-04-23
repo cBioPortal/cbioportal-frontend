@@ -9,6 +9,10 @@ import { byTestHandle } from './helpers/common';
  * isn't on public portal yet), so we skip it here too.
  */
 
+// Tests are independent — each cold-loads its own URL without shared state.
+// Opt into parallel so shards running this file don't serialize unnecessarily.
+test.describe.configure({ mode: 'parallel' });
+
 test.describe('patient page', () => {
     test('shows "all samples button" for single-sample view of multi-sample patient', async ({
         page,

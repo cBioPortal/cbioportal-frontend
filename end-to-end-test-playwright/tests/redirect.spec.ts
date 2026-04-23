@@ -13,6 +13,10 @@ import { waitForOncoprint } from './helpers/oncoprint';
 const ENCODED_ONCOPRINT_URL =
     '/encodedRedirect?encodedURL=aHR0cHM6Ly93d3cuY2Jpb3BvcnRhbC5vcmcvcmVzdWx0cy9vbmNvcHJpbnQ/Wl9TQ09SRV9USFJFU0hPTEQ9Mi4wJmNhbmNlcl9zdHVkeV9pZD1jb2FkcmVhZF90Y2dhX3B1YiZjYW5jZXJfc3R1ZHlfbGlzdD1jb2FkcmVhZF90Y2dhX3B1YiZjYXNlX3NldF9pZD1jb2FkcmVhZF90Y2dhX3B1Yl9ub25oeXBlcm11dCZnZW5lX2xpc3Q9S1JBUyUyME5SQVMlMjBCUkFGJmdlbmVfc2V0X2Nob2ljZT11c2VyLWRlZmluZWQtbGlzdCZnZW5ldGljX3Byb2ZpbGVfaWRzX1BST0ZJTEVfQ09QWV9OVU1CRVJfQUxURVJBVElPTj1jb2FkcmVhZF90Y2dhX3B1Yl9naXN0aWMmZ2VuZXRpY19wcm9maWxlX2lkc19QUk9GSUxFX01VVEFUSU9OX0VYVEVOREVEPWNvYWRyZWFkX3RjZ2FfcHViX211dGF0aW9ucw%3D%3D';
 
+// Tests are independent — each cold-loads its own URL without shared state.
+// Opt into parallel so shards running this file don't serialize unnecessarily.
+test.describe.configure({ mode: 'parallel' });
+
 test.describe('/encodedRedirect', () => {
     test('correctly redirects to a results view page URL', async ({ page }) => {
         await page.goto(ENCODED_ONCOPRINT_URL);
