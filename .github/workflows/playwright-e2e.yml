@@ -1,0 +1,93 @@
+name: Playwright E2E
+
+on:
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'packages/**'
+      - 'end-to-end-test-playwright/**'
+      - '.github/workflows/playwright-e2e/**'
+  push:
+    branches:
+      - master
+      - rc
+    paths:
+      - 'src/**'
+      - 'packages/**'
+      - 'end-to-end-test-playwright/**'
+      - '.github/workflows/playwright-e2e/**'
+  workflow_dispatch:
+    inputs:
+      cbioportal_url:
+        description: 'cBioPortal URL to test against'
+        type: string
+        required: false
+        default: 'https://www.cbioportal.org'
+      grep:
+        description: 'Playwright --grep filter (optional)'
+        type: string
+        required: false
+
+concurrency:
+  group: playwright-e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  image-tag:
+    runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.resolve.outputs.image }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: resolve
+        working-directory: end-to-end-test-playwright
+        run: |
+          VERSION=$(node -p "require('./package.json').devDependencies['@playwright/test'].replace(/^[\^~]/, '')")
+          echo "image=mcr.microsoft.com/playwright:v${VERSION}-jammy" >> "$GITHUB_OUTPUT"
+
+  e2e:
+    needs: image-tag
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ needs.image-tag.outputs.image }}
+      options: --ipc=host
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    env:
+      PW_DOCKER: '1'
+      CI: 'true'
+      HOME: /tmp
+      CBIOPORTAL_URL: ${{ inputs.cbioportal_url || 'https://www.cbioportal.org' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: end-to-end-test-playwright/package-lock.json
+
+      - name: Install dependencies
+        working-directory: end-to-end-test-playwright
+        run: npm ci
+
+      - name: Run Playwright tests (shard ${{ matrix.shard }}/4)
+        working-directory: end-to-end-test-playwright
+        run: |
+          ARGS=(--shard=${{ matrix.shard }}/4)
+          if [ -n "${{ inputs.grep }}" ]; then
+            ARGS+=(--grep "${{ inputs.grep }}")
+          fi
+          npx playwright test "${ARGS[@]}"
+
+      - name: Upload report + traces
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-shard-${{ matrix.shard }}
+          path: |
+            end-to-end-test-playwright/playwright-report
+            end-to-end-test-playwright/test-results
+          retention-days: 14
