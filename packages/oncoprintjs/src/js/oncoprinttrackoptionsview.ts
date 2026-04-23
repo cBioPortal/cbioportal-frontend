@@ -450,9 +450,16 @@ export default class OncoprintTrackOptionsView {
             toggleImgMenu(evt);
         });
 
+        // Gray out Move up/down only when the track belongs to a clustered
+        // group AND there are siblings to move against. A single-track group
+        // can never be "clustered" in any meaningful way, and showing the
+        // items as disabled there is confusing (users see a grayed-out option
+        // with no explanation).
+        const containingTracks = model.getContainingTrackGroup(track_id) || [];
         const movingDisabled =
             model.getTrackMovable(track_id) &&
-            model.isTrackInClusteredGroup(track_id);
+            model.isTrackInClusteredGroup(track_id) &&
+            containingTracks.length > 1;
 
         if (model.getTrackMovable(track_id)) {
             $dropdown.append(
