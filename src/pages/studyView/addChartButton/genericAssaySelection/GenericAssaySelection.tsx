@@ -156,12 +156,14 @@ export default class GenericAssaySelection extends React.Component<
         );
     }
 
-    @computed get canShowSelectAll() {
+    @computed get canShowBulkToggle() {
         const threshold = this.props.selectAllThreshold;
         if (threshold === undefined) return false;
         const total = this.props.genericAssayEntityOptions.length;
-        if (total === 0 || total > threshold) return false;
-        return this._selectedGenericAssayEntityIds.length < total;
+        return total > 0 && total <= threshold;
+    }
+    @computed get bulkToggleIsClear() {
+        return this._selectedGenericAssayEntityIds.length > 0;
     }
 
     @action.bound
@@ -437,6 +439,22 @@ export default class GenericAssaySelection extends React.Component<
                             }}
                         />
                     </div>
+                    {this.canShowBulkToggle && (
+                        <button
+                            className="btn btn-default btn-sm"
+                            style={{ marginRight: 8 }}
+                            data-test="GenericAssaySelectionSelectAllButton"
+                            onClick={
+                                this.bulkToggleIsClear
+                                    ? this.clearSelectedEntities
+                                    : this.selectAllEntities
+                            }
+                        >
+                            {this.bulkToggleIsClear
+                                ? 'Clear all'
+                                : 'Select all'}
+                        </button>
+                    )}
                     <button
                         disabled={this.buttonDisabled}
                         className="btn btn-primary btn-sm"
@@ -445,16 +463,6 @@ export default class GenericAssaySelection extends React.Component<
                     >
                         {this.props.submitButtonText}
                     </button>
-                    {this.canShowSelectAll && (
-                        <button
-                            className="btn btn-default btn-sm"
-                            style={{ marginLeft: 8 }}
-                            data-test="GenericAssaySelectionSelectAllButton"
-                            onClick={this.selectAllEntities}
-                        >
-                            Select all
-                        </button>
-                    )}
                 </div>
             </div>
         );
