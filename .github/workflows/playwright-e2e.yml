@@ -54,7 +54,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
+        shard: [1, 2, 3, 4, 5, 6, 7, 8]
     env:
       PW_DOCKER: '1'
       CI: 'true'
@@ -78,9 +78,9 @@ jobs:
         shell: bash
         run: |
           if [ -n "${{ inputs.grep }}" ]; then
-            npx playwright test --shard=${{ matrix.shard }}/4 --grep "${{ inputs.grep }}"
+            npx playwright test --shard=${{ matrix.shard }}/8 --grep "${{ inputs.grep }}"
           else
-            npx playwright test --shard=${{ matrix.shard }}/4
+            npx playwright test --shard=${{ matrix.shard }}/8
           fi
 
       - name: Upload report + traces
