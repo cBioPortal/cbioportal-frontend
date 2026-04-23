@@ -54,7 +54,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+        shard: [1, 2, 3, 4, 5, 6]
     env:
       PW_DOCKER: '1'
       CI: 'true'
@@ -73,14 +73,14 @@ jobs:
         working-directory: end-to-end-test-playwright
         run: npm ci
 
-      - name: Run Playwright tests (shard ${{ matrix.shard }}/4)
+      - name: Run Playwright tests (shard ${{ matrix.shard }}/6)
         working-directory: end-to-end-test-playwright
         shell: bash
         run: |
           if [ -n "${{ inputs.grep }}" ]; then
-            npx playwright test --shard=${{ matrix.shard }}/12 --grep "${{ inputs.grep }}"
+            npx playwright test --shard=${{ matrix.shard }}/6 --grep "${{ inputs.grep }}"
           else
-            npx playwright test --shard=${{ matrix.shard }}/12
+            npx playwright test --shard=${{ matrix.shard }}/6
           fi
 
       - name: Upload report + traces
