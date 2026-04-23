@@ -6,10 +6,17 @@ import { setSettingsMenuOpen, waitForOncoprint } from './oncoprint';
  * Shared results-view screenshot suite, ported from
  * end-to-end-test/remote/specs/core/screenshot.spec.js.
  *
- * Extracted into a helper so each URL config (no-session, session,
- * excluding-unprofiled) can live in its own spec file and run on a
- * separate worker. Within a single config the tests still share one
- * page via describe.serial because they depend on cumulative state.
+ * Split into two describe blocks so each config (no-session, session,
+ * excluding-unprofiled) can be consumed from two separate spec files
+ * (e.g. `*-tabs.spec.ts` and `*-comparison.spec.ts`). Sharding + per-file
+ * parallelism then both work:
+ *
+ *  - Tab tests each click a different main tab and are mutually
+ *    independent, so their spec files opt into `mode: 'parallel'`.
+ *  - Comparison-flow tests share backend session state — e.g. the
+ *    `mrna enrichments` test only produces the expected ranking
+ *    AFTER `alterations patient mode` has set
+ *    `patient_enrichments=true` on the session. Those stay serial.
  */
 
 export const NO_SESSION_URL =
@@ -51,43 +58,32 @@ async function snapshot(
     await expectElementScreenshot(page, selector, name, { hide });
 }
 
-export function runResultsTestSuite(
+type SuiteOpts = {
+    mrnaEnrichmentsRowSelector?: string;
+    preLoad?: (page: Page) => Promise<void>;
+};
+
+function registerBeforeEach(url: string, opts: SuiteOpts) {
+    test.use({ viewport: { width: 1600, height: 1000 } });
+
+    test.beforeEach(async ({ page }) => {
+        await page.goto(url);
+        await waitForOncoprint(page);
+        if (opts.preLoad) await opts.preLoad(page);
+    });
+}
+
+/**
+ * The "simple tab" subset: each test cold-navigates to a main-view tab
+ * and snapshots it. No cross-test state. Safe to run in parallel.
+ */
+export function runResultsTabTests(
     prefix: string,
     url: string,
-    opts: {
-        mrnaEnrichmentsRowSelector?: string;
-        preLoad?: (page: Page) => Promise<void>;
-    } = {}
+    opts: SuiteOpts = {}
 ) {
-    test.describe(`${prefix} results-page screenshots`, () => {
-        test.use({ viewport: { width: 1600, height: 1000 } });
-
-        test.beforeEach(async ({ page }) => {
-            await page.goto(url);
-            await waitForOncoprint(page);
-            if (opts.preLoad) await opts.preLoad(page);
-        });
-
-        const openComparison = async (page: Page) => {
-            await page.locator('a.tabAnchor_comparison').click();
-            await expect(
-                page.locator('div[data-test="ComparisonPageOverlapTabContent"]')
-            ).toBeVisible();
-        };
-
-        const openComparisonAlterations = async (page: Page) => {
-            await openComparison(page);
-            await page
-                .locator('.comparisonTabSubTabs .tabAnchor_alterations')
-                .click();
-            await expect(
-                page
-                    .locator(
-                        'div[data-test="GroupComparisonAlterationEnrichments"]'
-                    )
-                    .first()
-            ).toBeVisible({ timeout: 60000 });
-        };
+    test.describe(`${prefix} results-page screenshots - tabs`, () => {
+        registerBeforeEach(url, opts);
 
         test('oncoprint', async ({ page }) => {
             await waitForOncoprint(page);
@@ -178,6 +174,70 @@ export function runResultsTestSuite(
                 `${prefix}-coexpression.png`
             );
         });
+
+        test('pathwaymapper tab', async ({ page }) => {
+            await expect(page.locator('a.tabAnchor_pathways')).toBeVisible();
+            await page.locator('a.tabAnchor_pathways').click();
+            await expect(page.locator('#cy')).toBeVisible({ timeout: 10000 });
+            await waitForNetworkQuiet(page, 30000);
+            await snapshot(
+                page,
+                '[data-test="pathwayMapperTabDiv"]',
+                `${prefix}-pathways.png`,
+                ['.qtip', '.__react_component_tooltip', '.rc-tooltip']
+            );
+        });
+
+        test('data_download tab', async ({ page }) => {
+            await page.locator('a.tabAnchor_download').click();
+            await expect(
+                page.locator("[data-test='downloadTabDiv']")
+            ).toBeVisible({ timeout: 20000 });
+            await waitForNetworkQuiet(page, 30000);
+            await snapshot(
+                page,
+                "[data-test='downloadTabDiv']",
+                `${prefix}-download.png`
+            );
+        });
+    });
+}
+
+/**
+ * The comparison subset: tests that open the Comparison view and
+ * chain through its sub-tabs. `alterations patient mode` flips
+ * `patient_enrichments=true` on the backend session, and
+ * `mrna enrichments` relies on that state when ranking rows — so
+ * these stay serial.
+ */
+export function runResultsComparisonTests(
+    prefix: string,
+    url: string,
+    opts: SuiteOpts = {}
+) {
+    test.describe(`${prefix} results-page screenshots - comparison`, () => {
+        registerBeforeEach(url, opts);
+
+        const openComparison = async (page: Page) => {
+            await page.locator('a.tabAnchor_comparison').click();
+            await expect(
+                page.locator('div[data-test="ComparisonPageOverlapTabContent"]')
+            ).toBeVisible();
+        };
+
+        const openComparisonAlterations = async (page: Page) => {
+            await openComparison(page);
+            await page
+                .locator('.comparisonTabSubTabs .tabAnchor_alterations')
+                .click();
+            await expect(
+                page
+                    .locator(
+                        'div[data-test="GroupComparisonAlterationEnrichments"]'
+                    )
+                    .first()
+            ).toBeVisible({ timeout: 60000 });
+        };
 
         test('comparison overlap', async ({ page }) => {
             await openComparison(page);
@@ -288,32 +348,6 @@ export function runResultsTestSuite(
                 page,
                 '[data-test="ComparisonTabDiv"]',
                 `${prefix}-survival.png`
-            );
-        });
-
-        test('pathwaymapper tab', async ({ page }) => {
-            await expect(page.locator('a.tabAnchor_pathways')).toBeVisible();
-            await page.locator('a.tabAnchor_pathways').click();
-            await expect(page.locator('#cy')).toBeVisible({ timeout: 10000 });
-            await waitForNetworkQuiet(page, 30000);
-            await snapshot(
-                page,
-                '[data-test="pathwayMapperTabDiv"]',
-                `${prefix}-pathways.png`,
-                ['.qtip', '.__react_component_tooltip', '.rc-tooltip']
-            );
-        });
-
-        test('data_download tab', async ({ page }) => {
-            await page.locator('a.tabAnchor_download').click();
-            await expect(
-                page.locator("[data-test='downloadTabDiv']")
-            ).toBeVisible({ timeout: 20000 });
-            await waitForNetworkQuiet(page, 30000);
-            await snapshot(
-                page,
-                "[data-test='downloadTabDiv']",
-                `${prefix}-download.png`
             );
         });
     });

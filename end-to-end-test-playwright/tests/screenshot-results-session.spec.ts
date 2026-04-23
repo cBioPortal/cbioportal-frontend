@@ -1,6 +1,6 @@
 import {
     SESSION_URL,
-    runResultsTestSuite,
+    runResultsComparisonTests,
 } from './helpers/results-screenshots';
 
-runResultsTestSuite('session', SESSION_URL);
+runResultsComparisonTests('session', SESSION_URL);

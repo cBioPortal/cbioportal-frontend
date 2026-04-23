@@ -1,6 +1,6 @@
 import {
     NO_SESSION_URL,
-    runResultsTestSuite,
+    runResultsComparisonTests,
 } from './helpers/results-screenshots';
 
-runResultsTestSuite('no-session', NO_SESSION_URL);
+runResultsComparisonTests('no-session', NO_SESSION_URL);
