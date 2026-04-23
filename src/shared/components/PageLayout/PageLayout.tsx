@@ -11,6 +11,7 @@ interface IPageLayout {
     noMargin?: boolean;
     appStore?: AppStore;
     hideFooter?: boolean;
+    children?: React.ReactNode;
 }
 
 @inject('appStore')

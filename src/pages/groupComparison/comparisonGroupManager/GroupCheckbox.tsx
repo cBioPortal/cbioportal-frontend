@@ -13,7 +13,12 @@ import { action, computed, makeObservable, observable } from 'mobx';
 import ErrorIcon from '../../../shared/components/ErrorIcon';
 import styles from '../styles.module.scss';
 import { CirclePicker, CirclePickerProps } from 'react-color';
-import { OverlayTrigger, Popover } from 'react-bootstrap';
+import {
+    OverlayTrigger as OverlayTriggerUntyped,
+    Popover,
+} from 'react-bootstrap';
+// @types/react-bootstrap 0.32 OverlayTriggerProps has no `children` under @types/react 18.
+const OverlayTrigger = OverlayTriggerUntyped as any;
 import { COLORS } from '../../studyView/StudyViewUtils';
 import {
     CLI_FEMALE_COLOR,

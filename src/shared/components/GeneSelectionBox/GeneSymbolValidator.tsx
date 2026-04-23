@@ -40,6 +40,7 @@ export interface IGeneSymbolValidatorProps {
     wrap?: boolean;
     replaceGene: (oldSymbol: string, newSymbol: string) => void;
     highlightError?: (oql: OQL) => void;
+    children?: React.ReactNode;
 }
 
 export type GeneValidationResult = {

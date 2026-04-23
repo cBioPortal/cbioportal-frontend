@@ -7,6 +7,7 @@ export interface IFadeInteractionProps {
     fadeOutSeconds?: number;
     showByDefault?: boolean;
     show?: boolean;
+    children?: React.ReactNode;
 }
 
 @observer
