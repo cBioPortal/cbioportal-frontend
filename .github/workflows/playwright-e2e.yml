@@ -75,12 +75,13 @@ jobs:
 
       - name: Run Playwright tests (shard ${{ matrix.shard }}/4)
         working-directory: end-to-end-test-playwright
+        shell: bash
         run: |
-          ARGS=(--shard=${{ matrix.shard }}/4)
           if [ -n "${{ inputs.grep }}" ]; then
-            ARGS+=(--grep "${{ inputs.grep }}")
+            npx playwright test --shard=${{ matrix.shard }}/4 --grep "${{ inputs.grep }}"
+          else
+            npx playwright test --shard=${{ matrix.shard }}/4
           fi
-          npx playwright test "${ARGS[@]}"
 
       - name: Upload report + traces
         if: always()
