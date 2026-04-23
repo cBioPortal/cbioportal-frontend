@@ -60,6 +60,19 @@ describe('CustomCaseSelectionUtils', () => {
             );
         });
 
+        it('resolves sample when studyId is empty string (auto-populated single-study format)', () => {
+            const result = getData(
+                [{ line: ':c1', studyId: '', caseId: 'c1' }],
+                's1',
+                ClinicalDataTypeEnum.SAMPLE,
+                [s1],
+                false
+            );
+            assert.equal(result.length, 1);
+            assert.equal(result[0].sampleId, 'c1');
+            assert.equal(result[0].studyId, 's1');
+        });
+
         it("group name should be NA when it's specified by user", () => {
             const sampleIdentifiersWithData = getData(
                 [

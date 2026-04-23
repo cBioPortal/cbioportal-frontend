@@ -88,7 +88,7 @@ export default class CustomCaseSelection extends React.Component<
 
     @computed
     get isSingleStudy() {
-        return _.uniq(this.props.queriedStudies.filter(Boolean)).length === 1;
+        return _.uniq(this.props.queriedStudies).length === 1;
     }
 
     @computed
@@ -151,7 +151,9 @@ export default class CustomCaseSelection extends React.Component<
                 : `${sample.studyId}:${caseId}`;
 
             return `${caseIdWithOptionalStudyPrefix}${
-                this.props.disableGrouping ? '' : ` ${DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT}`
+                this.props.disableGrouping
+                    ? ''
+                    : ` ${DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT}`
             }`;
         });
         if (this.caseIdsMode === ClinicalDataTypeEnum.PATIENT) {
@@ -219,7 +221,8 @@ export default class CustomCaseSelection extends React.Component<
                 : 'patient_id';
 
         const idPrefix = this.isSingleStudy ? '' : 'study_id:';
-        const includeCustomValue = !this.isSingleStudy && !this.props.disableGrouping;
+        const includeCustomValue =
+            !this.isSingleStudy && !this.props.disableGrouping;
 
         // Creating example strings for each delimiter type
         const newLineExample = `${idPrefix}${caseIdentifier}1${

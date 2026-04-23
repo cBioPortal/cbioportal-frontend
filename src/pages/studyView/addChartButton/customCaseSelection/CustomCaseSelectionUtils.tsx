@@ -318,10 +318,9 @@ export function getData(
                 ? DEFAULT_GROUP_NAME_WITH_USER_INPUT
                 : DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT);
 
-        const caseId =
-            line.studyId === undefined
-                ? `${singleStudyId}:${line.caseId}`
-                : `${line.studyId}:${line.caseId}`;
+        const caseId = !line.studyId
+            ? `${singleStudyId}:${line.caseId}`
+            : `${line.studyId}:${line.caseId}`;
         const caseMap = isPatientId ? patientMap[caseId] : [sampleMap[caseId]];
 
         return caseMap.map(sample => {
