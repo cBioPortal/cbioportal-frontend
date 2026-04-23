@@ -34,7 +34,7 @@ concurrency:
 
 jobs:
   image-tag:
-    runs-on: ubuntu-latest-4-cores
+    runs-on: ubuntu-latest
     outputs:
       image: ${{ steps.resolve.outputs.image }}
     steps:
@@ -47,7 +47,7 @@ jobs:
 
   e2e:
     needs: image-tag
-    runs-on: ubuntu-latest-4-cores
+    runs-on: ubuntu-latest
     container:
       image: ${{ needs.image-tag.outputs.image }}
       options: --ipc=host
