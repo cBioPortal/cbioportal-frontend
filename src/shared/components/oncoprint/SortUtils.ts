@@ -347,6 +347,9 @@ export function makeStackedBarTrackSortComparator(categories: string[]) {
 }
 
 export function makeStackedBarTrackSortComparatorByCategory(category: string) {
+    // Ascending (smallest first). Track sort direction = -1 reverses this to
+    // largest-first for the default "picked a category" view, while keeping
+    // Sort a-Z (dir=1) as smallest-first in the standard cbioportal sense.
     const comparator = function(d1: any, d2: any) {
         if (d1.na && d2.na) return 0;
         if (d1.na) return 2;
@@ -354,7 +357,7 @@ export function makeStackedBarTrackSortComparatorByCategory(category: string) {
         const v1 = (d1.attr_val && d1.attr_val[category]) || 0;
         const v2 = (d2.attr_val && d2.attr_val[category]) || 0;
         if (v1 === v2) return 0;
-        return v1 > v2 ? -1 : 1; // descending so largest values sort first
+        return v1 > v2 ? 1 : -1;
     };
     return {
         preferred: alphabeticalDefault(comparator),
@@ -376,7 +379,7 @@ export function makeStackedBarTrackSortComparatorByTotal() {
         const t1 = sum(d1);
         const t2 = sum(d2);
         if (t1 === t2) return 0;
-        return t1 > t2 ? -1 : 1;
+        return t1 > t2 ? 1 : -1; // ascending; dir=-1 reverses to largest-first
     };
     return {
         preferred: alphabeticalDefault(comparator),

@@ -1754,13 +1754,13 @@ export function transitionCategoricalTrack(
             },
             sort_direction_changeable: true,
             sortCmpFn,
-            // If the user picked a category to sort by, make this the primary
-            // sort track (direction 1 applies the comparator as-is; our
-            // comparator already orders largest value first). Otherwise leave
-            // at 0 so other tracks take priority.
+            // Picked category → direction -1 (reverses the ascending comparator
+            // so the default view shows largest values first). Leaving a-Z/Z-a
+            // in the menu consistent with cbioportal semantics: a-Z=smallest,
+            // Z-a=largest. No picked category → 0 so other tracks take priority.
             init_sort_direction: (nextSpec.stackedBar &&
             nextSpec.stackedBarSortByCategory
-                ? 1
+                ? -1
                 : 0) as any,
             description: ifNotDefined(
                 nextSpec.description,
@@ -1840,13 +1840,9 @@ export function transitionCategoricalTrack(
                           nextSpec.stackedBarCategories
                       );
             oncoprint.setTrackSortComparator(trackId, newCmp);
-            // Flip sort direction so the picked-category comparator is the
-            // primary sort. When category is cleared, drop back to direction 0
-            // (track-agnostic sort) so the oncoprint falls back to other
-            // tracks' sort contributions.
             oncoprint.setTrackSortDirection(
                 trackId,
-                nextSpec.stackedBarSortByCategory ? 1 : 0
+                nextSpec.stackedBarSortByCategory ? -1 : 0
             );
         }
     }

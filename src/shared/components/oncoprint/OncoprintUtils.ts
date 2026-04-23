@@ -2368,10 +2368,11 @@ export function makeGenericAssayProfileStackedBarTracksMobxPromise(
                             }),
                         });
                     }
-                    const modeOptions = [
+                    const customOptions = [
+                        ...sortOptions,
+                        { separator: true },
                         { label: 'Chart type', children: chartTypeChildren },
                     ];
-                    const customOptions = [...modeOptions, ...sortOptions];
 
                     return {
                         key: `GENERICASSAYSTACKEDBARTRACK_${molecularProfileId}_${
