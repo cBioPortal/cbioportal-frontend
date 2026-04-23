@@ -85,6 +85,26 @@ import { DataType } from 'pages/studyView/StudyViewUtils';
 import GeneCache from 'shared/cache/GeneCache';
 import { isSampleProfiled } from 'shared/lib/isSampleProfiled';
 
+// Length of the shared prefix to strip — cut at the last separator char
+// within the common prefix so we don't accidentally chop a meaningful word.
+// e.g. ["prefix_Signature1", "prefix_Signature2"] strips "prefix_", not
+// "prefix_Signature". Separators: _ - . : space.
+function commonPrefixLength(strs: string[]): number {
+    if (strs.length < 2) return 0;
+    const min = Math.min(...strs.map(s => s.length));
+    let i = 0;
+    for (; i < min; i++) {
+        const c = strs[0][i];
+        for (let j = 1; j < strs.length; j++) {
+            if (strs[j][i] !== c) {
+                const sep = strs[0].slice(0, i).search(/[^_\-.:\s]*$/);
+                return sep >= 0 ? sep : 0;
+            }
+        }
+    }
+    return 0;
+}
+
 interface IGenesetExpansionMap {
     [genesetTrackKey: string]: IHeatmapTrackSpec[];
 }
@@ -1856,6 +1876,17 @@ export function makeGenericAssayProfileHeatmapTracksMobxPromise(
                 isFractionLikeByProfile[pid] = max > 0 && max <= 1.01;
             }
 
+            // When multiple tracks from the same profile share a long common
+            // prefix in their labels (e.g. "mutational_signatures_..._Signature1",
+            // "_Signature2", ...), the ellipsised display is unreadable. Trim
+            // the shared prefix once per profile so labels differentiate.
+            const labelStripByProfile: { [profileId: string]: number } = {};
+            for (const pid of Object.keys(queriesByProfileId)) {
+                const names = queriesByProfileId[pid].map(q => q.entityName);
+                labelStripByProfile[pid] =
+                    names.length >= 2 ? commonPrefixLength(names) : 0;
+            }
+
             const tracks = cacheQueries.map(query => {
                 const molecularProfileId = query.molecularProfileId;
                 const profile =
@@ -1871,9 +1902,15 @@ export function makeGenericAssayProfileHeatmapTracksMobxPromise(
                     .genericAssayEntitiesGroupedByGenericAssayTypeLinkMap
                     .result![profile.genericAssayType];
 
+                const strip = labelStripByProfile[molecularProfileId] || 0;
+                const displayLabel =
+                    strip > 0 && strip < query.entityName.length
+                        ? query.entityName.slice(strip)
+                        : query.entityName;
+
                 return {
                     key: `GENERICASSAYHEATMAPTRACK_${molecularProfileId},${entityId}`,
-                    label: query.entityName,
+                    label: displayLabel,
                     description: query.description,
                     molecularProfileId: query.molecularProfileId,
                     molecularProfileName:
