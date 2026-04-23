@@ -22,7 +22,13 @@ export class AppStore {
                 sendSentryMessage('ERRORHANDLER:' + error);
             } catch (ex) {}
 
-            if (error.status && /400|500|5\d\d|403/.test(error.status)) {
+            // Some rejected promises surface as `undefined` — guard so the
+            // handler itself doesn't throw and obscure the real failure.
+            if (
+                error &&
+                error.status &&
+                /400|500|5\d\d|403/.test(error.status)
+            ) {
                 sendSentryMessage('ERROR DIALOG SHOWN:' + error);
                 if (error instanceof Error) {
                     this.siteErrors.push(new SiteError(error));

@@ -969,6 +969,7 @@ export default class ResultsViewOncoprint extends React.Component<
                 // you can't select entities from multiple profiles
                 // at the same time, so just use first one
                 // (should be refactored)
+                if (info.length === 0) return;
                 this.setGenericAssayTracks(
                     info[0].profileId,
                     info.map(d => d.genericAssayEntityId)
