@@ -2278,35 +2278,49 @@ export function makeGenericAssayProfileStackedBarTracksMobxPromise(
                                   currentSortBy,
                               ]
                             : categories;
-                    const sortOptions = [
+                    const sortChildren: any[] = [
                         {
-                            label: 'Sort by',
-                            children: [
-                                {
-                                    label: currentSortBy
-                                        ? 'Dominant category (default)'
-                                        : '\u2713 Dominant category (default)',
-                                    onClick: action(() => {
-                                        oncoprint.setGenericAssayStackedSortBy(
-                                            molecularProfileId,
-                                            null
-                                        );
-                                    }),
-                                },
-                                ...categories.map(cat => ({
-                                    label:
-                                        (currentSortBy === cat
-                                            ? '\u2713 '
-                                            : '') + cat,
-                                    onClick: action(() => {
-                                        oncoprint.setGenericAssayStackedSortBy(
-                                            molecularProfileId,
-                                            cat
-                                        );
-                                    }),
-                                })),
-                            ],
+                            label: currentSortBy
+                                ? 'Dominant category (default)'
+                                : '\u2713 Dominant category (default)',
+                            onClick: action(() => {
+                                oncoprint.setGenericAssayStackedSortBy(
+                                    molecularProfileId,
+                                    null
+                                );
+                            }),
                         },
+                    ];
+                    // "Total" only makes sense in absolute mode — in fraction
+                    // mode every sample's total is 1, so sort would be a no-op.
+                    if (isAbsolute) {
+                        sortChildren.push({
+                            label:
+                                (currentSortBy === '__total__'
+                                    ? '\u2713 '
+                                    : '') + 'Total',
+                            onClick: action(() => {
+                                oncoprint.setGenericAssayStackedSortBy(
+                                    molecularProfileId,
+                                    '__total__'
+                                );
+                            }),
+                        });
+                    }
+                    for (const cat of categories) {
+                        sortChildren.push({
+                            label:
+                                (currentSortBy === cat ? '\u2713 ' : '') + cat,
+                            onClick: action(() => {
+                                oncoprint.setGenericAssayStackedSortBy(
+                                    molecularProfileId,
+                                    cat
+                                );
+                            }),
+                        });
+                    }
+                    const sortOptions = [
+                        { label: 'Sort by', children: sortChildren },
                     ];
                     const currentType = isAbsolute ? 'absolute' : 'composition';
                     const chartTypeChildren: any[] = [

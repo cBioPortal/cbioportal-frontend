@@ -31,6 +31,7 @@ import {
     categoricalTrackSortComparator,
     makeStackedBarTrackSortComparator,
     makeStackedBarTrackSortComparatorByCategory,
+    makeStackedBarTrackSortComparatorByTotal,
     getClinicalTrackSortDirection,
 } from './SortUtils';
 import {
@@ -1725,7 +1726,9 @@ export function transitionCategoricalTrack(
         rule_set_params.na_legend_label = nextSpec.naLegendLabel;
         const sortCmpFn =
             nextSpec.stackedBar && nextSpec.stackedBarCategories
-                ? nextSpec.stackedBarSortByCategory
+                ? nextSpec.stackedBarSortByCategory === '__total__'
+                    ? makeStackedBarTrackSortComparatorByTotal()
+                    : nextSpec.stackedBarSortByCategory
                     ? makeStackedBarTrackSortComparatorByCategory(
                           nextSpec.stackedBarSortByCategory
                       )
@@ -1828,13 +1831,16 @@ export function transitionCategoricalTrack(
                 trackId,
                 getCategoricalTrackRuleSetParams(nextSpec)
             );
-            const newCmp = nextSpec.stackedBarSortByCategory
-                ? makeStackedBarTrackSortComparatorByCategory(
-                      nextSpec.stackedBarSortByCategory
-                  )
-                : makeStackedBarTrackSortComparator(
-                      nextSpec.stackedBarCategories
-                  );
+            const newCmp =
+                nextSpec.stackedBarSortByCategory === '__total__'
+                    ? makeStackedBarTrackSortComparatorByTotal()
+                    : nextSpec.stackedBarSortByCategory
+                    ? makeStackedBarTrackSortComparatorByCategory(
+                          nextSpec.stackedBarSortByCategory
+                      )
+                    : makeStackedBarTrackSortComparator(
+                          nextSpec.stackedBarCategories
+                      );
             oncoprint.setTrackSortComparator(trackId, newCmp);
             // Flip sort direction so the picked-category comparator is the
             // primary sort. When category is cleared, drop back to direction 0

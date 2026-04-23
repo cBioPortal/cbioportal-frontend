@@ -32,6 +32,10 @@ export interface IGenericAssaySelectionProps {
     containerWidth?: number;
     initialGenericAssayEntityIds?: string[];
     allowEmptySubmission?: boolean;
+    // When set, show a "Select all" button if the total option count is at or
+    // below this threshold. Left undefined (e.g. for profiles with hundreds of
+    // entities) to avoid a trivial one-click flood.
+    selectAllThreshold?: number;
     onSelectGenericAssayProfile?: (molecularProfileId: string) => void;
     onTrackSubmit?: (data: GenericAssayTrackInfo[]) => void;
     onChartSubmit?: (data: GenericAssayChart[]) => void;
@@ -143,6 +147,21 @@ export default class GenericAssaySelection extends React.Component<
     @action.bound
     private clearSelectedEntities() {
         this._selectedGenericAssayEntityIds = [];
+    }
+
+    @action.bound
+    private selectAllEntities() {
+        this._selectedGenericAssayEntityIds = this.props.genericAssayEntityOptions.map(
+            o => o.value
+        );
+    }
+
+    @computed get canShowSelectAll() {
+        const threshold = this.props.selectAllThreshold;
+        if (threshold === undefined) return false;
+        const total = this.props.genericAssayEntityOptions.length;
+        if (total === 0 || total > threshold) return false;
+        return this._selectedGenericAssayEntityIds.length < total;
     }
 
     @action.bound
@@ -426,6 +445,16 @@ export default class GenericAssaySelection extends React.Component<
                     >
                         {this.props.submitButtonText}
                     </button>
+                    {this.canShowSelectAll && (
+                        <button
+                            className="btn btn-default btn-sm"
+                            style={{ marginLeft: 8 }}
+                            data-test="GenericAssaySelectionSelectAllButton"
+                            onClick={this.selectAllEntities}
+                        >
+                            Select all
+                        </button>
+                    )}
                 </div>
             </div>
         );
