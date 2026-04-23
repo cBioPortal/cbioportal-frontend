@@ -89,7 +89,7 @@ import { isSampleProfiled } from 'shared/lib/isSampleProfiled';
 // within the common prefix so we don't accidentally chop a meaningful word.
 // e.g. ["prefix_Signature1", "prefix_Signature2"] strips "prefix_", not
 // "prefix_Signature". Separators: _ - . : space.
-function commonPrefixLength(strs: string[]): number {
+export function commonPrefixLength(strs: string[]): number {
     if (strs.length < 2) return 0;
     const min = Math.min(...strs.map(s => s.length));
     let i = 0;

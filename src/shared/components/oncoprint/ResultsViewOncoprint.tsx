@@ -2119,7 +2119,9 @@ export default class ResultsViewOncoprint extends React.Component<
                     this.useOqlFilteringForVafHeatmap,
                     this.toggleVafHeatmapOqlFiltering,
                     this.genericAssayStackedProfiles,
-                    this.genericAssayStackedAbsoluteProfiles
+                    this.genericAssayStackedAbsoluteProfiles,
+                    this.genericAssayBarProfiles,
+                    this.setGenericAssayChartType
                 )
             );
         },
