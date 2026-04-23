@@ -77,17 +77,10 @@ jobs:
         working-directory: end-to-end-test-playwright
         shell: bash
         run: |
-          # Select this shard's spec files from the duration-balanced manifest
-          # (shard-manifest.json). Playwright's default --shard=X/N groups tests
-          # from the same file together, which left one shard with 315s of
-          # work while another got 0 tests. The manifest was built with LPT
-          # bin-packing on historical per-file durations.
-          FILES=$(python3 -c "import json; print(' '.join(json.load(open('shard-manifest.json'))['${{ matrix.shard }}']))")
-          echo "Shard ${{ matrix.shard }} files: $FILES"
           if [ -n "${{ inputs.grep }}" ]; then
-            npx playwright test --grep "${{ inputs.grep }}" $FILES
+            npx playwright test --workers=2 --shard=${{ matrix.shard }}/12 --grep "${{ inputs.grep }}"
           else
-            npx playwright test $FILES
+            npx playwright test --workers=2 --shard=${{ matrix.shard }}/12
           fi
 
       - name: Upload report + traces
