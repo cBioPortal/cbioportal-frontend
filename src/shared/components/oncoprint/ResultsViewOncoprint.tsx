@@ -1459,6 +1459,12 @@ export default class ResultsViewOncoprint extends React.Component<
         if (type === 'composition') comp[molecularProfileId] = true;
         else if (type === 'absolute') abs[molecularProfileId] = true;
         else if (type === 'bars') bar[molecularProfileId] = true;
+        // Force the loading spinner to show during the chart-type swap.
+        // Even when data is cached, swapping 30 per-entity tracks for 1
+        // stacked track (or vice versa) causes a noticeable re-render pause.
+        // The Oncoprint lifecycle calls onReleaseRendering once the new
+        // tracks finish rendering, flipping this back to true.
+        this.renderingComplete = false;
         this.urlWrapper.updateURL({
             generic_assay_stacked_profiles: this.serializeStackedProfiles(comp),
             generic_assay_stacked_absolute_profiles: this.serializeStackedProfiles(
@@ -2172,6 +2178,7 @@ export default class ResultsViewOncoprint extends React.Component<
                 this.genesetHeatmapTracks,
                 this.genericAssayCategoricalTracks,
                 this.genericAssayHeatmapTracks,
+                this.genericAssayStackedBarTracks,
                 this.heatmapTracks,
                 this.props.store.molecularProfileIdToMolecularProfile,
                 this.alterationTypesInQuery,

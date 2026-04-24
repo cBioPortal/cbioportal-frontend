@@ -617,7 +617,7 @@ export function getClinicalTrackRuleSetParams(track: ClinicalTrackSpec) {
 export function getCategoricalTrackRuleSetParams(
     track: ICategoricalTrackSpec
 ): RuleSetParams {
-    if (track.stackedBar && track.stackedBarCategories) {
+    if (track.stackedBar) {
         return {
             type: RuleSetType.STACKED_BAR,
             legend_label: track.molecularProfileName,

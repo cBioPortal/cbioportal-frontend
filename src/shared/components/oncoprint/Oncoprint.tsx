@@ -245,7 +245,10 @@ export interface IGenesetHeatmapTrackSpec extends IBaseHeatmapTrackSpec {
     expansionCallback: () => void;
 }
 
-export interface ICategoricalTrackSpec {
+// Fields shared by both single-category and stacked-bar variants. The
+// categorical spec is a discriminated union on `stackedBar` so consumers can
+// narrow: `if (spec.stackedBar) { spec.stackedBarCategories // no longer undefined }`.
+interface CategoricalTrackSpecBase {
     key: string;
     label: string;
     molecularProfileId: string;
@@ -266,11 +269,22 @@ export interface ICategoricalTrackSpec {
     description?: string;
     info?: string;
     customOptions?: CustomTrackOption[];
-    // When true, render as a stacked bar track rather than a single-category track.
-    // The per-datum `attr_val` is expected to be an object `{ [category]: number }`.
-    stackedBar?: boolean;
-    stackedBarCategories?: string[];
-    stackedBarFills?: [number, number, number, number][];
+}
+
+// Classic single-category track: the datum's `attr_val` is a single string.
+export interface ISingleCategoricalTrackSpec extends CategoricalTrackSpecBase {
+    stackedBar?: false;
+}
+
+// Stacked bar variant: the datum's `attr_val` is `{ [category]: number }`,
+// and the track renders one stacked rect per category within each sample's
+// cell. Required fields distinguish it from the single-category variant.
+export interface IStackedBarTrackSpec extends CategoricalTrackSpecBase {
+    stackedBar: true;
+    // Order of categories in each stack (bottom-to-top in rendering terms).
+    stackedBarCategories: string[];
+    // Fill colors, index-aligned with `stackedBarCategories`.
+    stackedBarFills: [number, number, number, number][];
     // When set, bar heights are scaled against this constant across all data
     // (absolute-magnitude view, e.g. "No. cells") instead of each sample's own
     // total (composition view). Typically computed as the max per-sample total.
@@ -279,10 +293,15 @@ export interface ICategoricalTrackSpec {
     // by side (absolute + composition view of the same cell types), only one
     // track needs to contribute the category legend.
     stackedBarExcludeFromLegend?: boolean;
-    // When set, samples are sorted by this category's value descending instead
-    // of the default "dominant-category-then-proportion" heuristic.
+    // When set, samples are sorted by this category's value (or by the total
+    // across categories when value is '__total__') instead of the default
+    // "dominant-category-then-proportion" heuristic.
     stackedBarSortByCategory?: string;
 }
+
+export type ICategoricalTrackSpec =
+    | ISingleCategoricalTrackSpec
+    | IStackedBarTrackSpec;
 
 export const GENETIC_TRACK_GROUP_INDEX = 1;
 export const CLINICAL_TRACK_GROUP_INDEX = 0;

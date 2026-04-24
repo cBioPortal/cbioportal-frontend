@@ -93,7 +93,7 @@ export function makeCategoricalTrackTooltip(
         // Stacked-bar tracks: each datum's attr_val is a map of category->fraction.
         // Show the per-category value (averaged across cases under the cursor),
         // not the categorical "<count> samples" aggregation.
-        if (track.stackedBar && track.stackedBarCategories) {
+        if (track.stackedBar) {
             const cats = track.stackedBarCategories;
             const sums: { [cat: string]: number } = {};
             let nonNaCount = 0;
@@ -115,8 +115,7 @@ export function makeCategoricalTrackTooltip(
                 for (let i = 0; i < cats.length; i++) {
                     const cat = cats[i];
                     const avg = values[i];
-                    const fill =
-                        track.stackedBarFills && track.stackedBarFills[i];
+                    const fill = track.stackedBarFills[i];
                     const color = fill
                         ? `rgba(${fill[0]},${fill[1]},${fill[2]},${fill[3]})`
                         : 'inherit';

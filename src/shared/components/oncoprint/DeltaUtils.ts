@@ -1724,18 +1724,17 @@ export function transitionCategoricalTrack(
         // Add track
         const rule_set_params = getCategoricalTrackRuleSetParams(nextSpec);
         rule_set_params.na_legend_label = nextSpec.naLegendLabel;
-        const sortCmpFn =
-            nextSpec.stackedBar && nextSpec.stackedBarCategories
-                ? nextSpec.stackedBarSortByCategory === '__total__'
-                    ? makeStackedBarTrackSortComparatorByTotal()
-                    : nextSpec.stackedBarSortByCategory
-                    ? makeStackedBarTrackSortComparatorByCategory(
-                          nextSpec.stackedBarSortByCategory
-                      )
-                    : makeStackedBarTrackSortComparator(
-                          nextSpec.stackedBarCategories
-                      )
-                : categoricalTrackSortComparator;
+        const sortCmpFn = nextSpec.stackedBar
+            ? nextSpec.stackedBarSortByCategory === '__total__'
+                ? makeStackedBarTrackSortComparatorByTotal()
+                : nextSpec.stackedBarSortByCategory
+                ? makeStackedBarTrackSortComparatorByCategory(
+                      nextSpec.stackedBarSortByCategory
+                  )
+                : makeStackedBarTrackSortComparator(
+                      nextSpec.stackedBarCategories
+                  )
+            : categoricalTrackSortComparator;
         const trackParams: UserTrackSpec<any> = {
             rule_set_params,
             data: nextSpec.data,
@@ -1821,33 +1820,35 @@ export function transitionCategoricalTrack(
         if (prevSpec.customOptions !== nextSpec.customOptions) {
             oncoprint.setTrackCustomOptions(trackId, nextSpec.customOptions);
         }
-        if (
-            nextSpec.stackedBar &&
-            nextSpec.stackedBarCategories &&
-            prevSpec.stackedBarSortByCategory !==
-                nextSpec.stackedBarSortByCategory
-        ) {
-            // Category order changed (sort-by moves to the bottom of the
-            // stack), so rebuild the rule set to match the new visual order.
-            oncoprint.setRuleSet(
-                trackId,
-                getCategoricalTrackRuleSetParams(nextSpec)
-            );
-            const newCmp =
-                nextSpec.stackedBarSortByCategory === '__total__'
-                    ? makeStackedBarTrackSortComparatorByTotal()
-                    : nextSpec.stackedBarSortByCategory
-                    ? makeStackedBarTrackSortComparatorByCategory(
-                          nextSpec.stackedBarSortByCategory
-                      )
-                    : makeStackedBarTrackSortComparator(
-                          nextSpec.stackedBarCategories
-                      );
-            oncoprint.setTrackSortComparator(trackId, newCmp);
-            oncoprint.setTrackSortDirection(
-                trackId,
-                nextSpec.stackedBarSortByCategory ? -1 : 0
-            );
+        if (nextSpec.stackedBar === true) {
+            const nextStacked = nextSpec;
+            const prevSortBy =
+                prevSpec.stackedBar === true
+                    ? prevSpec.stackedBarSortByCategory
+                    : undefined;
+            if (prevSortBy !== nextStacked.stackedBarSortByCategory) {
+                // Category order changed (sort-by moves to the bottom of the
+                // stack), so rebuild the rule set to match the new visual order.
+                oncoprint.setRuleSet(
+                    trackId,
+                    getCategoricalTrackRuleSetParams(nextStacked)
+                );
+                const newCmp =
+                    nextStacked.stackedBarSortByCategory === '__total__'
+                        ? makeStackedBarTrackSortComparatorByTotal()
+                        : nextStacked.stackedBarSortByCategory
+                        ? makeStackedBarTrackSortComparatorByCategory(
+                              nextStacked.stackedBarSortByCategory
+                          )
+                        : makeStackedBarTrackSortComparator(
+                              nextStacked.stackedBarCategories
+                          );
+                oncoprint.setTrackSortComparator(trackId, newCmp);
+                oncoprint.setTrackSortDirection(
+                    trackId,
+                    nextStacked.stackedBarSortByCategory ? -1 : 0
+                );
+            }
         }
     }
 }
