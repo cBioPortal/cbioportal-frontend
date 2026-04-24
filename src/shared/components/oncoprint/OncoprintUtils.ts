@@ -1866,7 +1866,7 @@ export function makeGenericAssayProfileHeatmapTracksMobxPromise(
                     if (!data) continue;
                     for (const d of data) {
                         const sk = (d as any).uniqueSampleKey;
-                        const v = parseFloat(d.value!);
+                        const v = +d.value!;
                         if (!isFinite(v)) continue;
                         perSampleTotal[sk] = (perSampleTotal[sk] || 0) + v;
                     }
@@ -1933,7 +1933,7 @@ export function makeGenericAssayProfileHeatmapTracksMobxPromise(
                             .get({ molecularProfileId, stableId: entityId })!
                             .data!.map(d => ({
                                 ...d!,
-                                value: parseFloat(d.value!),
+                                value: +d.value!,
                             }))
                     ),
                     genericAssayType: genericAssayType,
@@ -2216,7 +2216,7 @@ export function makeGenericAssayProfileStackedBarTracksMobxPromise(
                         for (const d of entityData) {
                             const sk = (d as any).uniqueSampleKey;
                             if (!perSampleValues[sk]) perSampleValues[sk] = {};
-                            const v = parseFloat(d.value!);
+                            const v = +d.value!;
                             if (isFinite(v)) {
                                 perSampleValues[sk][entityId] = v;
                             }
@@ -2669,7 +2669,7 @@ export function makeGenesetHeatmapTracksMobxPromise(
                             .get({ molecularProfileId, genesetId })!
                             .data!.map(d => ({
                                 ...d!,
-                                value: parseFloat(d.value!),
+                                value: +d.value!,
                             }))
                     ),
                     trackGroupIndex: trackGroupIndex!,

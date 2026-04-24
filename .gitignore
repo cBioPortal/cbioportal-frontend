@@ -69,3 +69,4 @@ api-e2e/validation.js
 .vs/
 .nx
 .turbo
+common-dist/
