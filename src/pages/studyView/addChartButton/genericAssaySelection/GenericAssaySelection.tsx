@@ -451,56 +451,10 @@ export default class GenericAssaySelection extends React.Component<
                             }}
                         />
                     </div>
-                    {this.props.showChartTypeSelector && (
-                        <div
-                            style={{ marginBottom: 8, fontSize: 12 }}
-                            data-test="GenericAssayChartTypeSelector"
-                        >
-                            <span style={{ marginRight: 8 }}>Chart type:</span>
-                            {[
-                                {
-                                    value: 'heatmap',
-                                    label: 'Separate rows (heatmap)',
-                                },
-                                {
-                                    value: 'bar',
-                                    label: 'Separate rows (bar chart)',
-                                },
-                                {
-                                    value: 'stacked_composition',
-                                    label: 'Stacked bar (composition)',
-                                },
-                                {
-                                    value: 'stacked_absolute',
-                                    label: 'Stacked bar (absolute)',
-                                },
-                            ].map(opt => (
-                                <label
-                                    key={opt.value}
-                                    style={{
-                                        marginRight: 12,
-                                        fontWeight: 'normal',
-                                    }}
-                                >
-                                    <input
-                                        type="radio"
-                                        name="ga-chart-type"
-                                        value={opt.value}
-                                        checked={this._chartType === opt.value}
-                                        onChange={action(() => {
-                                            this._chartType = opt.value as GenericAssayChartType;
-                                        })}
-                                        style={{ marginRight: 4 }}
-                                    />
-                                    {opt.label}
-                                </label>
-                            ))}
-                        </div>
-                    )}
                     {this.canShowBulkToggle && (
                         <button
                             className="btn btn-default btn-sm"
-                            style={{ marginRight: 8 }}
+                            style={{ marginLeft: 8, whiteSpace: 'nowrap' }}
                             data-test="GenericAssaySelectionSelectAllButton"
                             onClick={
                                 this.bulkToggleIsClear
@@ -513,11 +467,71 @@ export default class GenericAssaySelection extends React.Component<
                                 : 'Select all'}
                         </button>
                     )}
+                </div>
+                {this.props.showChartTypeSelector && (
+                    <div
+                        style={{
+                            marginTop: 12,
+                            fontSize: 12,
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            alignItems: 'center',
+                            columnGap: 14,
+                            rowGap: 4,
+                        }}
+                        data-test="GenericAssayChartTypeSelector"
+                    >
+                        <span style={{ fontWeight: 600 }}>Chart type:</span>
+                        {[
+                            {
+                                value: 'heatmap',
+                                label: 'Separate rows (heatmap)',
+                            },
+                            {
+                                value: 'bar',
+                                label: 'Separate rows (bar chart)',
+                            },
+                            {
+                                value: 'stacked_composition',
+                                label: 'Stacked bar (composition)',
+                            },
+                            {
+                                value: 'stacked_absolute',
+                                label: 'Stacked bar (absolute)',
+                            },
+                        ].map(opt => (
+                            <label
+                                key={opt.value}
+                                style={{
+                                    fontWeight: 'normal',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    marginBottom: 0,
+                                    cursor: 'pointer',
+                                }}
+                            >
+                                <input
+                                    type="radio"
+                                    name="ga-chart-type"
+                                    value={opt.value}
+                                    checked={this._chartType === opt.value}
+                                    onChange={action(() => {
+                                        this._chartType = opt.value as GenericAssayChartType;
+                                    })}
+                                    style={{ marginRight: 5, marginTop: 0 }}
+                                />
+                                {opt.label}
+                            </label>
+                        ))}
+                    </div>
+                )}
+                <div style={{ display: 'flex', marginTop: 12 }}>
                     <button
                         disabled={this.buttonDisabled}
                         className="btn btn-primary btn-sm"
                         data-test="GenericAssaySelectionSubmitButton"
                         onClick={this.onSubmit}
+                        style={{ flex: 1 }}
                     >
                         {this.props.submitButtonText}
                     </button>
