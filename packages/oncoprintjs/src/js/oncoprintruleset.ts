@@ -1206,9 +1206,7 @@ class StackedBarRuleSet extends ConditionRuleSet {
                                     if (max_total) {
                                         denom = max_total;
                                         return (
-                                            (parseFloat(
-                                                d[value_key][categories[I]]
-                                            ) *
+                                            (+d[value_key][categories[I]] *
                                                 100) /
                                             denom
                                         );
@@ -1227,27 +1225,20 @@ class StackedBarRuleSet extends ConditionRuleSet {
                                         j < categories.length;
                                         j++
                                     ) {
-                                        denom += parseFloat(
-                                            d[value_key][categories[j]]
-                                        );
+                                        denom += +d[value_key][categories[j]];
                                     }
                                     if (I === categories.length - 1) {
                                         var prev_pct = 0;
                                         for (var k = 0; k < I; k++) {
                                             prev_pct +=
-                                                (parseFloat(
-                                                    d[value_key][categories[k]]
-                                                ) *
+                                                (+d[value_key][categories[k]] *
                                                     100) /
                                                 denom;
                                         }
                                         return 100 - prev_pct;
                                     }
                                     return (
-                                        (parseFloat(
-                                            d[value_key][categories[I]]
-                                        ) *
-                                            100) /
+                                        (+d[value_key][categories[I]] * 100) /
                                         denom
                                     );
                                 },
@@ -1266,17 +1257,17 @@ class StackedBarRuleSet extends ConditionRuleSet {
                                             j < categories.length;
                                             j++
                                         ) {
-                                            total += parseFloat(
-                                                d[value_key][categories[j]]
-                                            );
+                                            total += +d[value_key][
+                                                categories[j]
+                                            ];
                                         }
                                         var empty_pct =
                                             ((max_total - total) * 100) /
                                             max_total;
                                         for (var j = 0; j < I; j++) {
-                                            prev_vals_sum += parseFloat(
-                                                d[value_key][categories[j]]
-                                            );
+                                            prev_vals_sum += +d[value_key][
+                                                categories[j]
+                                            ];
                                         }
                                         return (
                                             empty_pct +
@@ -1289,9 +1280,9 @@ class StackedBarRuleSet extends ConditionRuleSet {
                                             j < categories.length;
                                             j++
                                         ) {
-                                            var new_val = parseFloat(
-                                                d[value_key][categories[j]]
-                                            );
+                                            var new_val = +d[value_key][
+                                                categories[j]
+                                            ];
                                             if (j < I) {
                                                 prev_vals_sum += new_val;
                                             }

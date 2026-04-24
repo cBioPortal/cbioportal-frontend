@@ -1161,11 +1161,14 @@ export default class OncoprintModel {
         ) {
             return self.track_rule_set_id[track_id];
         });
-        const unique_rule_set_ids = arrayUnique(
-            rule_set_ids.map(x => x.toString())
-        );
+        // Dedupe numeric IDs directly. The previous implementation went
+        // number -> string -> arrayUnique -> parseInt, and the core-js
+        // parseInt polyfill ends up calling trim() per call. On large
+        // studies with many tracks this dominated chart-type-switch cost
+        // (~95s out of ~135s observed on msk_impact_50k_2026 with 30 rows).
+        const unique_rule_set_ids = Array.from(new Set(rule_set_ids));
         return unique_rule_set_ids.map(function(rule_set_id) {
-            return self.rule_sets[parseInt(rule_set_id, 10)];
+            return self.rule_sets[rule_set_id];
         });
     }
 
