@@ -43,8 +43,8 @@ importers:
         specifier: ^7.0.0
         version: 7.28.5(@babel/core@7.4.4)
       '@cbioportal-cell-explorer/component':
-        specifier: file:../cbioportal-cell-explorer/packages/component
-        version: file:../cbioportal-cell-explorer/packages/component(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: file:./vendor/cbioportal-cell-explorer-component-0.0.1.tgz
+        version: file:vendor/cbioportal-cell-explorer-component-0.0.1.tgz(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@cfaester/enzyme-adapter-react-18':
         specifier: ^0.8.0
         version: 0.8.0(enzyme@3.11.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -1749,8 +1749,9 @@ packages:
   '@bcoe/v8-coverage@0.2.3':
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
 
-  '@cbioportal-cell-explorer/component@file:../cbioportal-cell-explorer/packages/component':
-    resolution: {directory: ../cbioportal-cell-explorer/packages/component, type: directory}
+  '@cbioportal-cell-explorer/component@file:vendor/cbioportal-cell-explorer-component-0.0.1.tgz':
+    resolution: {integrity: sha512-QyC8oDrCoN/mAQlFB68tNHtw2Z1fa/N2UNU316ENU4hk12jGg3i0DNOnI5jrujQt7nsC+Zf2KQEWIGSR579Wkw==, tarball: file:vendor/cbioportal-cell-explorer-component-0.0.1.tgz}
+    version: 0.0.1
     peerDependencies:
       react: ^18.3.1
       react-dom: ^18.3.1
@@ -13266,7 +13267,7 @@ snapshots:
 
   '@bcoe/v8-coverage@0.2.3': {}
 
-  '@cbioportal-cell-explorer/component@file:../cbioportal-cell-explorer/packages/component(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@cbioportal-cell-explorer/component@file:vendor/cbioportal-cell-explorer-component-0.0.1.tgz(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)

@@ -46,3 +46,4 @@ end-to-end-test/local/studies/**
 *.html
 *.crt
 .nx
+vendor/
