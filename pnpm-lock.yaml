@@ -42,6 +42,9 @@ importers:
       '@babel/preset-react':
         specifier: ^7.0.0
         version: 7.28.5(@babel/core@7.4.4)
+      '@cbioportal-cell-explorer/component':
+        specifier: file:../cbioportal-cell-explorer/packages/component
+        version: file:../cbioportal-cell-explorer/packages/component(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@cfaester/enzyme-adapter-react-18':
         specifier: ^0.8.0
         version: 0.8.0(enzyme@3.11.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -1745,6 +1748,12 @@ packages:
 
   '@bcoe/v8-coverage@0.2.3':
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
+
+  '@cbioportal-cell-explorer/component@file:../cbioportal-cell-explorer/packages/component':
+    resolution: {directory: ../cbioportal-cell-explorer/packages/component, type: directory}
+    peerDependencies:
+      react: ^18.3.1
+      react-dom: ^18.3.1
 
   '@cfaester/enzyme-adapter-react-18@0.8.0':
     resolution: {integrity: sha512-3Z3ThTUouHwz8oIyhTYQljEMNRFtlVyc3VOOHCbxs47U6cnXs8K9ygi/c1tv49s7MBlTXeIcuN+Ttd9aPtILFQ==}
@@ -13256,6 +13265,11 @@ snapshots:
       '@babel/helper-validator-identifier': 7.28.5
 
   '@bcoe/v8-coverage@0.2.3': {}
+
+  '@cbioportal-cell-explorer/component@file:../cbioportal-cell-explorer/packages/component(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
 
   '@cfaester/enzyme-adapter-react-18@0.8.0(enzyme@3.11.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
