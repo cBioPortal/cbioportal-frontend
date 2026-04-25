@@ -24,6 +24,7 @@
     "build": "./scripts/env_vars.sh && eval \"$(./scripts/env_vars.sh)\" && pnpm run buildAll",
     "buildAll": "pnpm run buildModules && pnpm run buildMain",
     "buildMain": "pnpm run clean && pnpm run compileOqlParser && cross-env NODE_ENV=production NODE_OPTIONS=--openssl-legacy-provider --max-old-space-size=4096 rspack build -c rspack.config.js",
+    "buildQuick": "cross-env NODE_ENV=production NODE_OPTIONS=--openssl-legacy-provider\\ --max-old-space-size=4096 DISABLE_SOURCEMAP=true TRANSPILE_ONLY=true rspack build -c rspack.config.js",
     "buildModules": "turbo run build --filter=./packages/*",
     "publishModules": "lerna publish from-git --yes --concurrency 1",
     "publishModulesFromPackages": "lerna publish from-package --yes --concurrency 1",
@@ -354,7 +355,9 @@
       "react-router-dom": "5.2.0",
       "prop-types": "15.7.2",
       "react-is": "16.8.6",
-      "igv": "2.11.2"
+      "igv": "2.11.2",
+      "http-errors": "1.8.1",
+      "finalhandler>statuses": "2.0.1"
     }
   }
 }

@@ -50,6 +50,33 @@ This repository contains the frontend code for cBioPortal, a comprehensive cance
 2. Build packages: `pnpm run buildModules`
 3. Start dev server: `pnpm run start`
 
+### Fast build loop (for agent iteration)
+
+**Do not run `pnpm run buildAll` to verify a single-file change** — it runs `clean` + rebuilds all workspace packages. Use one of these instead:
+
+**Preferred — dev server with HMR (near-instant):**
+```bash
+pnpm run start       # or pnpm run startSSL for HTTPS
+```
+Edits to `src/` hot-reload in <1s at `https://localhost:3000`.
+
+**Incremental rspack rebuild — use when you need a production `dist/`:**
+```bash
+# One-time full build first
+pnpm run buildAll
+
+# Each subsequent change:
+pnpm run buildQuick
+```
+
+`buildQuick` skips `pnpm run clean` (which deletes `dist/`) and runs rspack directly with production env vars.
+
+**Full cold build (only when required):** `pnpm run buildAll` — use after pulling new deps, changing workspace package sources, or changing `rspack.config.js`.
+
+**Type checking is not part of the production build.** Run separately: `npx tsc --noEmit --skipLibCheck`.
+
+**What NOT to do:** don't run `pnpm run clean` between iterations, don't use `buildAll` to verify a single-file change.
+
 ### Environment Variables
 - Set `BRANCH_ENV` to `master` or `rc` based on the branch you're working from
 - Custom API URLs can be configured in `env/custom.sh`
