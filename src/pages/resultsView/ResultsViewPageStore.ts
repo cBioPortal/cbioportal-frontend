@@ -50,7 +50,7 @@ import {
     observable,
     reaction,
 } from 'mobx';
-import { IOncoKbData } from 'cbioportal-utils';
+import { IGermlineOncoKbData, IOncoKbData } from 'cbioportal-utils';
 import {
     deriveStructuralVariantType,
     generateQueryStructuralVariantId,
@@ -89,6 +89,8 @@ import {
     mapSampleIdToClinicalData,
     ONCOKB_DEFAULT,
     fetchOncoKbInfo,
+    fetchGermlineOncoKbData,
+    GERMLINE_ONCOKB_DEFAULT,
 } from 'shared/lib/StoreUtils';
 import {
     CoverageInformation,
@@ -5401,6 +5403,31 @@ export class ResultsViewPageStore extends AnalysisStore
             },
         },
         undefined
+    );
+
+    readonly germlineOncoKbData = remoteData<IGermlineOncoKbData | Error>(
+        {
+            await: () => [
+                this.oncoKbAnnotatedGenes,
+                this.mutations,
+                this.uniqueSampleKeyToTumorType,
+            ],
+            invoke: () => {
+                if (getServerConfig().show_oncokb) {
+                    return fetchGermlineOncoKbData(
+                        this.uniqueSampleKeyToTumorType.result!,
+                        this.oncoKbAnnotatedGenes.result || {},
+                        this.mutations
+                    );
+                } else {
+                    return Promise.resolve(GERMLINE_ONCOKB_DEFAULT);
+                }
+            },
+            onError: () => {
+                // fail silently
+            },
+        },
+        GERMLINE_ONCOKB_DEFAULT
     );
 
     readonly structuralVariantOncoKbDataForOncoprint = remoteData<

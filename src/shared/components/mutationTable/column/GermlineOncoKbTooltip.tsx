@@ -165,6 +165,15 @@ export default function GermlineOncoKbTooltip(props: {
     annotation: GermlineVariantAnnotation;
     children: React.ReactNode;
 }) {
+    // Touch handler: on mobile, a tap fires both `mouseover`/`mouseenter`
+    // (synthesized) AND `click`. The inner OncoKB icon's own tooltip uses
+    // hover, so without intercepting the synthesized mouse events the user
+    // sees both our germline tooltip and the inner somatic tooltip stack
+    // briefly. Capturing pointerover/mouseover at the wrapper and stopping
+    // propagation keeps the inner hover tooltip from firing on touch.
+    const stopAll = (e: React.SyntheticEvent) => {
+        e.stopPropagation();
+    };
     return (
         <DefaultTooltip
             placement="right"
@@ -173,7 +182,11 @@ export default function GermlineOncoKbTooltip(props: {
         >
             <span
                 style={{ display: 'inline-block', cursor: 'pointer' }}
-                onClick={e => e.stopPropagation()}
+                onClick={stopAll}
+                onMouseOver={stopAll}
+                onMouseEnter={stopAll}
+                onTouchStart={stopAll}
+                onPointerOver={stopAll}
             >
                 {props.children}
             </span>
