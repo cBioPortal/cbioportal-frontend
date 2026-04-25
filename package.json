@@ -355,7 +355,9 @@
       "react-router-dom": "5.2.0",
       "prop-types": "15.7.2",
       "react-is": "16.8.6",
-      "igv": "2.11.2"
+      "igv": "2.11.2",
+      "http-errors": "1.8.1",
+      "finalhandler>statuses": "2.0.1"
     }
   }
 }
