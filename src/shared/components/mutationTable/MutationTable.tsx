@@ -59,6 +59,7 @@ import {
     extractGenomicLocation,
     genomicLocationString,
 } from 'cbioportal-utils';
+import { isNotGermlineMutation } from 'shared/lib/MutationUtils';
 import {
     DownloadControlOption,
     MobxPromise,
@@ -216,7 +217,6 @@ export enum MutationTableColumnType {
     SELECTED = 'Selected',
     DBSNP = 'dbSNP',
     GENE_PANEL = 'Gene panel',
-    GERMLINE_ONCOKB = 'Germline OncoKB',
     SIGNAL = 'SIGNAL',
     NUM_MUTATED_GROUP_A = '(A) Group',
     NUM_MUTATED_GROUP_B = '(B) Group',
@@ -943,33 +943,68 @@ export default class MutationTable<
                     this.handleOncoKbIconModeToggle,
                     this.shouldShowRevue
                 ),
-            render: (d: Mutation[]) => (
-                <span id="mutation-annotation">
-                    {AnnotationColumnFormatter.renderFunction(d, {
-                        hotspotData: this.props.hotspotData,
-                        oncoKbData: this.props.oncoKbData,
-                        oncoKbCancerGenes: this.props.oncoKbCancerGenes,
-                        usingPublicOncoKbInstance: this.props
-                            .usingPublicOncoKbInstance,
-                        mergeOncoKbIcons: this.props.mergeOncoKbIcons,
-                        oncoKbContentPadding: calculateOncoKbContentPadding(
-                            this.oncokbWidth
-                        ),
-                        pubMedCache: this.props.pubMedCache,
-                        civicGenes: this.props.civicGenes,
-                        civicVariants: this.props.civicVariants,
-                        enableCivic: this.props.enableCivic as boolean,
-                        enableOncoKb: this.props.enableOncoKb as boolean,
-                        enableHotspot: this.props.enableHotspot as boolean,
-                        enableRevue:
-                            !!this.props.enableRevue && this.shouldShowRevue,
-                        userDisplayName: this.props.userDisplayName,
-                        indexedVariantAnnotations: this.props
-                            .indexedVariantAnnotations,
-                        resolveTumorType: this.resolveTumorType,
-                    })}
-                </span>
-            ),
+            render: (d: Mutation[]) => {
+                const mutation = d ? d[0] : undefined;
+                // For mutations explicitly marked germline, prefer the germline
+                // OncoKB tooltip when an annotation is available; fall back to
+                // the standard somatic annotation column rendering otherwise so
+                // that hotspot / civic / reVUE indicators still show.
+                const germlineData = this.props.germlineOncoKbData;
+                let germlineAnnotation: GermlineVariantAnnotation | undefined;
+                if (
+                    mutation &&
+                    !isNotGermlineMutation(mutation) &&
+                    germlineData &&
+                    germlineData.result &&
+                    !(germlineData.result instanceof Error) &&
+                    germlineData.result.indicatorMap
+                ) {
+                    const queryId = generateQueryVariantId(
+                        mutation.entrezGeneId,
+                        null,
+                        mutation.proteinChange,
+                        mutation.mutationType
+                    );
+                    germlineAnnotation =
+                        germlineData.result.indicatorMap[queryId];
+                }
+                return (
+                    <span id="mutation-annotation">
+                        {germlineAnnotation ? (
+                            <GermlineOncoKbIcon
+                                annotation={germlineAnnotation}
+                            />
+                        ) : (
+                            AnnotationColumnFormatter.renderFunction(d, {
+                                hotspotData: this.props.hotspotData,
+                                oncoKbData: this.props.oncoKbData,
+                                oncoKbCancerGenes: this.props.oncoKbCancerGenes,
+                                usingPublicOncoKbInstance: this.props
+                                    .usingPublicOncoKbInstance,
+                                mergeOncoKbIcons: this.props.mergeOncoKbIcons,
+                                oncoKbContentPadding: calculateOncoKbContentPadding(
+                                    this.oncokbWidth
+                                ),
+                                pubMedCache: this.props.pubMedCache,
+                                civicGenes: this.props.civicGenes,
+                                civicVariants: this.props.civicVariants,
+                                enableCivic: this.props.enableCivic as boolean,
+                                enableOncoKb: this.props
+                                    .enableOncoKb as boolean,
+                                enableHotspot: this.props
+                                    .enableHotspot as boolean,
+                                enableRevue:
+                                    !!this.props.enableRevue &&
+                                    this.shouldShowRevue,
+                                userDisplayName: this.props.userDisplayName,
+                                indexedVariantAnnotations: this.props
+                                    .indexedVariantAnnotations,
+                                resolveTumorType: this.resolveTumorType,
+                            })
+                        )}
+                    </span>
+                );
+            },
             filter: (
                 d: Mutation[],
                 filterString: string,
@@ -1045,104 +1080,6 @@ export default class MutationTable<
                     this.resolveTumorType
                 );
             },
-        };
-
-        this._columns[MutationTableColumnType.GERMLINE_ONCOKB] = {
-            name: MutationTableColumnType.GERMLINE_ONCOKB,
-            render: (d: Mutation[]) => {
-                const mutation = d ? d[0] : undefined;
-                if (!mutation) return <span />;
-
-                const germlineData = this.props.germlineOncoKbData;
-                if (
-                    !germlineData ||
-                    !germlineData.result ||
-                    germlineData.result instanceof Error ||
-                    !germlineData.result.indicatorMap
-                ) {
-                    if (germlineData && germlineData.isPending) {
-                        return (
-                            <span
-                                style={{
-                                    display: 'inline-block',
-                                    width: 22,
-                                    height: 22,
-                                }}
-                            >
-                                <i
-                                    className="fa fa-spinner fa-pulse"
-                                    style={{ fontSize: 12 }}
-                                />
-                            </span>
-                        );
-                    }
-                    return <span />;
-                }
-
-                const queryId = generateQueryVariantId(
-                    mutation.entrezGeneId,
-                    null,
-                    mutation.proteinChange,
-                    mutation.mutationType
-                );
-                const annotation: GermlineVariantAnnotation | undefined =
-                    germlineData.result.indicatorMap[queryId];
-                if (!annotation) return <span />;
-
-                return <GermlineOncoKbIcon annotation={annotation} />;
-            },
-            download: (d: Mutation[]) => {
-                const mutation = d ? d[0] : undefined;
-                if (!mutation) return '';
-                const germlineData = this.props.germlineOncoKbData;
-                if (
-                    !germlineData ||
-                    !germlineData.result ||
-                    germlineData.result instanceof Error ||
-                    !germlineData.result.indicatorMap
-                )
-                    return '';
-                const queryId = generateQueryVariantId(
-                    mutation.entrezGeneId,
-                    null,
-                    mutation.proteinChange,
-                    mutation.mutationType
-                );
-                const annotation = germlineData.result.indicatorMap[queryId];
-                if (!annotation) return '';
-                return `Pathogenic: ${annotation.pathogenic ||
-                    'N/A'}, Penetrance: ${annotation.penetrance || 'N/A'}`;
-            },
-            sortBy: (d: Mutation[]) => {
-                const mutation = d ? d[0] : undefined;
-                if (!mutation) return [0];
-                const germlineData = this.props.germlineOncoKbData;
-                if (
-                    !germlineData ||
-                    !germlineData.result ||
-                    germlineData.result instanceof Error ||
-                    !germlineData.result.indicatorMap
-                )
-                    return [0];
-                const queryId = generateQueryVariantId(
-                    mutation.entrezGeneId,
-                    null,
-                    mutation.proteinChange,
-                    mutation.mutationType
-                );
-                const annotation = germlineData.result.indicatorMap[queryId];
-                if (!annotation) return [0];
-                // Sort by pathogenicity level
-                const pathogenicOrder: { [key: string]: number } = {
-                    Pathogenic: 4,
-                    'Likely Pathogenic': 3,
-                    VUS: 2,
-                    'Likely Benign': 1,
-                    Benign: 0,
-                };
-                return [pathogenicOrder[annotation.pathogenic] ?? 0];
-            },
-            visible: false,
         };
 
         this._columns[MutationTableColumnType.CUSTOM_DRIVER] = {
