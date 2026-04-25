@@ -2504,4 +2504,64 @@ export default class OncoKbAPI {
             return response.body;
         });
     };
+
+    /**
+     * Annotate germline mutations by genomic change. Batched POST.
+     * @method
+     * @name OncoKbAPI#annotateMutationsByGenomicChangeGermlinePostUsingPOST
+     * @param {} body - List of AnnotateMutationByGenomicChangeQuery.
+     */
+    annotateMutationsByGenomicChangeGermlinePostUsingPOSTWithHttpInfo(parameters: {
+        'body': Array < AnnotateMutationByGenomicChangeQuery > ,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/annotate/germline/mutations/byGenomicChange';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['body'] !== undefined) {
+                body = parameters['body'];
+            }
+
+            if (parameters['body'] === undefined) {
+                reject(new Error('Missing required  parameter: body'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+        });
+    };
+
+    /**
+     * Annotate germline mutations by genomic change. Batched POST.
+     * @method
+     * @name OncoKbAPI#annotateMutationsByGenomicChangeGermlinePostUsingPOST
+     * @param {} body - List of AnnotateMutationByGenomicChangeQuery.
+     */
+    annotateMutationsByGenomicChangeGermlinePostUsingPOST(parameters: {
+            'body': Array < AnnotateMutationByGenomicChangeQuery > ,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < GermlineVariantAnnotation >
+        > {
+            return this.annotateMutationsByGenomicChangeGermlinePostUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
 }

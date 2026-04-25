@@ -60,6 +60,7 @@ import {
     genomicLocationString,
 } from 'cbioportal-utils';
 import { isNotGermlineMutation } from 'shared/lib/MutationUtils';
+import { germlineOncoKbKeyForMutation } from 'shared/lib/StoreUtils';
 import {
     DownloadControlOption,
     MobxPromise,
@@ -959,14 +960,10 @@ export default class MutationTable<
                     !(germlineData.result instanceof Error) &&
                     germlineData.result.indicatorMap
                 ) {
-                    const queryId = generateQueryVariantId(
-                        mutation.entrezGeneId,
-                        null,
-                        mutation.proteinChange,
-                        mutation.mutationType
-                    );
                     germlineAnnotation =
-                        germlineData.result.indicatorMap[queryId];
+                        germlineData.result.indicatorMap[
+                            germlineOncoKbKeyForMutation(mutation)
+                        ];
                 }
                 return (
                     <span id="mutation-annotation">
