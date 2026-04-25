@@ -237,21 +237,23 @@ var config = {
                 test: /\.tsx?$/,
                 use: [
                     {
-                        loader: 'babel-loader',
+                        loader: 'builtin:swc-loader',
                         options: {
-                            presets: [
-                                '@babel/preset-env',
-                                '@babel/preset-react',
-                            ],
-                            plugins: ['@babel/plugin-syntax-dynamic-import'],
-
-                            cacheDirectory: babelCacheFolder,
-                        },
-                    },
-                    {
-                        loader: 'ts-loader',
-                        options: {
-                            transpileOnly: transpileOnly,
+                            jsc: {
+                                parser: {
+                                    syntax: 'typescript',
+                                    tsx: true,
+                                    decorators: true,
+                                },
+                                transform: {
+                                    legacyDecorator: true,
+                                    useDefineForClassFields: true,
+                                    react: {
+                                        runtime: 'classic',
+                                    },
+                                },
+                                target: 'es2015',
+                            },
                         },
                     },
                 ],
@@ -261,12 +263,18 @@ var config = {
                 test: /\.(js|jsx|babel)$/,
                 use: [
                     {
-                        loader: 'babel-loader',
+                        loader: 'builtin:swc-loader',
                         options: {
-                            presets: [
-                                '@babel/preset-env',
-                                '@babel/preset-react',
-                            ],
+                            jsc: {
+                                parser: {
+                                    syntax: 'ecmascript',
+                                    jsx: true,
+                                },
+                                transform: {
+                                    react: { runtime: 'classic' },
+                                },
+                                target: 'es2015',
+                            },
                         },
                     },
                 ],
@@ -487,19 +495,22 @@ config.plugins = [
 ].concat(config.plugins);
 // END ENV variables
 
-// Type-check in a worker so the build fails on TS errors even when
-// ts-loader runs with transpileOnly. Async in dev, sync in production.
-config.plugins.push(
-    new ForkTsCheckerWebpackPlugin({
-        typescript: {
-            configOverwrite: {
-                compilerOptions: {
-                    skipLibCheck: true,
+// Type-check in a worker during dev/test. In production / CI the
+// separate `checkTS` job handles type-checking, so skip it here to
+// avoid ~30-60s overhead on every prod build.
+if (isDev || isTest) {
+    config.plugins.push(
+        new ForkTsCheckerWebpackPlugin({
+            typescript: {
+                configOverwrite: {
+                    compilerOptions: {
+                        skipLibCheck: true,
+                    },
                 },
             },
-        },
-    })
-);
+        })
+    );
+}
 
 // include jquery when we load boostrap-sass
 config.module.rules.push({
