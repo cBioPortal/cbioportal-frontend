@@ -333,6 +333,74 @@ export type GermlineQuery = {
     'germline': boolean
 
 };
+export type GenomicIndicator = {
+    'description': string
+
+        'inheritanceMechanism': "AUTOSOMAL_DOMINANT" | "AUTOSOMAL_RECESSIVE" | "X_LINKED_RECESSIVE" | "CARRIER"
+
+        'name': string
+
+};
+export type VariantAnnotationTumorType = {
+    'evidences': Array < any >
+
+        'relevantTumorType': boolean
+
+        'tumorType': TumorType
+
+};
+export type GermlineVariantAnnotation = {
+    'alleleExist': boolean
+
+        'clinVarId': string
+
+        'dataVersion': string
+
+        'diagnosticImplications': Array < Implication >
+
+        'diagnosticSummary': string
+
+        'geneExist': boolean
+
+        'geneSummary': string
+
+        'genomicIndicators': Array < GenomicIndicator >
+
+        'highestDiagnosticImplicationLevel': "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3"
+
+        'highestPrognosticImplicationLevel': "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3"
+
+        'highestResistanceLevel': "LEVEL_R1" | "LEVEL_R2"
+
+        'highestSensitiveLevel': "LEVEL_1" | "LEVEL_2" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4"
+
+        'lastUpdate': string
+
+        'mutationEffect': MutationEffectResp
+
+        'pathogenic': string
+
+        'penetrance': string
+
+        'prognosticImplications': Array < Implication >
+
+        'prognosticSummary': string
+
+        'query': Query
+
+        'treatments': Array < IndicatorQueryTreatment >
+
+        'tumorTypeSummary': string
+
+        'tumorTypes': Array < VariantAnnotationTumorType >
+
+        'variantExist': boolean
+
+        'variantSummary': string
+
+        'vus': boolean
+
+};
 export type AnnotateMutationByProteinChangeQuery = {
     'alteration': string
 
@@ -2294,6 +2362,145 @@ export default class OncoKbAPI {
             $domain ? : string
     }): Promise < string > {
         return this.utilsCancerGeneListTxtGetUsingGET_1WithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
+
+    utilsVariantAnnotationGermlineGetURL(parameters: {
+        'hugoSymbol' ? : string,
+        'entrezGeneId' ? : number,
+        'alteration' ? : string,
+        'hgvsg' ? : string,
+        'genomicChange' ? : string,
+        'referenceGenome' ? : string,
+        'tumorType' ? : string,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/utils/variantAnnotation/germline';
+        if (parameters['hugoSymbol'] !== undefined) {
+            queryParameters['hugoSymbol'] = parameters['hugoSymbol'];
+        }
+        if (parameters['entrezGeneId'] !== undefined) {
+            queryParameters['entrezGeneId'] = parameters['entrezGeneId'];
+        }
+        if (parameters['alteration'] !== undefined) {
+            queryParameters['alteration'] = parameters['alteration'];
+        }
+        if (parameters['hgvsg'] !== undefined) {
+            queryParameters['hgvsg'] = parameters['hgvsg'];
+        }
+        if (parameters['genomicChange'] !== undefined) {
+            queryParameters['genomicChange'] = parameters['genomicChange'];
+        }
+        if (parameters['referenceGenome'] !== undefined) {
+            queryParameters['referenceGenome'] = parameters['referenceGenome'];
+        }
+        if (parameters['tumorType'] !== undefined) {
+            queryParameters['tumorType'] = parameters['tumorType'];
+        }
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Get germline variant annotation.
+     * @method
+     * @name OncoKbAPI#utilsVariantAnnotationGermlineGetUsingGET
+     * @param {string} hugoSymbol - Gene hugo symbol
+     * @param {integer} entrezGeneId - Entrez gene ID
+     * @param {string} alteration - Variant alteration
+     * @param {string} hgvsg - HGVS genomic format
+     * @param {string} genomicChange - Genomic change format
+     * @param {string} referenceGenome - Reference genome, either GRCh37 or GRCh38. Default: GRCh37
+     * @param {string} tumorType - OncoTree tumor type
+     */
+    utilsVariantAnnotationGermlineGetUsingGETWithHttpInfo(parameters: {
+        'hugoSymbol' ? : string,
+        'entrezGeneId' ? : number,
+        'alteration' ? : string,
+        'hgvsg' ? : string,
+        'genomicChange' ? : string,
+        'referenceGenome' ? : string,
+        'tumorType' ? : string,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/utils/variantAnnotation/germline';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['hugoSymbol'] !== undefined) {
+                queryParameters['hugoSymbol'] = parameters['hugoSymbol'];
+            }
+            if (parameters['entrezGeneId'] !== undefined) {
+                queryParameters['entrezGeneId'] = parameters['entrezGeneId'];
+            }
+            if (parameters['alteration'] !== undefined) {
+                queryParameters['alteration'] = parameters['alteration'];
+            }
+            if (parameters['hgvsg'] !== undefined) {
+                queryParameters['hgvsg'] = parameters['hgvsg'];
+            }
+            if (parameters['genomicChange'] !== undefined) {
+                queryParameters['genomicChange'] = parameters['genomicChange'];
+            }
+            if (parameters['referenceGenome'] !== undefined) {
+                queryParameters['referenceGenome'] = parameters['referenceGenome'];
+            }
+            if (parameters['tumorType'] !== undefined) {
+                queryParameters['tumorType'] = parameters['tumorType'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+        });
+    };
+
+    /**
+     * Get germline variant annotation.
+     * @method
+     * @name OncoKbAPI#utilsVariantAnnotationGermlineGetUsingGET
+     * @param {string} hugoSymbol - Gene hugo symbol
+     * @param {integer} entrezGeneId - Entrez gene ID
+     * @param {string} alteration - Variant alteration
+     * @param {string} hgvsg - HGVS genomic format
+     * @param {string} genomicChange - Genomic change format
+     * @param {string} referenceGenome - Reference genome, either GRCh37 or GRCh38. Default: GRCh37
+     * @param {string} tumorType - OncoTree tumor type
+     */
+    utilsVariantAnnotationGermlineGetUsingGET(parameters: {
+        'hugoSymbol' ? : string,
+        'entrezGeneId' ? : number,
+        'alteration' ? : string,
+        'hgvsg' ? : string,
+        'genomicChange' ? : string,
+        'referenceGenome' ? : string,
+        'tumorType' ? : string,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < GermlineVariantAnnotation > {
+        return this.utilsVariantAnnotationGermlineGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
             return response.body;
         });
     };

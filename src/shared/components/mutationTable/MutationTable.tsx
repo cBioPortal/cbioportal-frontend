@@ -32,6 +32,7 @@ import MutationStatusColumnFormatter from './column/MutationStatusColumnFormatte
 import ValidationStatusColumnFormatter from './column/ValidationStatusColumnFormatter';
 import StudyColumnFormatter from './column/StudyColumnFormatter';
 import AnnotationColumnFormatter from './column/AnnotationColumnFormatter';
+import GermlineOncoKbIcon from './column/GermlineOncoKbIcon';
 import ExonColumnFormatter from './column/ExonColumnFormatter';
 import { IMutSigData } from 'shared/model/MutSig';
 import DiscreteCNACache from 'shared/cache/DiscreteCNACache';
@@ -48,6 +49,7 @@ import classnames from 'classnames';
 import { IPaginationControlsProps } from '../paginationControls/PaginationControls';
 import { IColumnVisibilityControlsProps } from '../columnVisibilityControls/ColumnVisibilityControls';
 import {
+    IGermlineOncoKbData,
     IOncoKbData,
     ICivicGeneIndex,
     ICivicVariantIndex,
@@ -63,7 +65,7 @@ import {
 } from 'cbioportal-frontend-commons';
 import { generateQueryVariantId } from 'oncokb-frontend-commons';
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';
-import { CancerGene } from 'oncokb-ts-api-client';
+import { CancerGene, GermlineVariantAnnotation } from 'oncokb-ts-api-client';
 import { getAnnotationData, IAnnotation } from 'react-mutation-mapper';
 import HgvscColumnFormatter from './column/HgvscColumnFormatter';
 import HgvsgColumnFormatter from './column/HgvsgColumnFormatter';
@@ -118,6 +120,7 @@ export interface IMutationTableProps {
         IMyVariantInfoIndex | undefined
     >;
     oncoKbData?: RemoteData<IOncoKbData | Error | undefined>;
+    germlineOncoKbData?: RemoteData<IGermlineOncoKbData | Error | undefined>;
     oncoKbDataForCancerType?: RemoteData<IOncoKbData | Error | undefined>;
     oncoKbDataForUnknownPrimary?: RemoteData<IOncoKbData | Error | undefined>;
     usingPublicOncoKbInstance: boolean;
@@ -213,6 +216,7 @@ export enum MutationTableColumnType {
     SELECTED = 'Selected',
     DBSNP = 'dbSNP',
     GENE_PANEL = 'Gene panel',
+    GERMLINE_ONCOKB = 'Germline OncoKB',
     SIGNAL = 'SIGNAL',
     NUM_MUTATED_GROUP_A = '(A) Group',
     NUM_MUTATED_GROUP_B = '(B) Group',
@@ -1041,6 +1045,104 @@ export default class MutationTable<
                     this.resolveTumorType
                 );
             },
+        };
+
+        this._columns[MutationTableColumnType.GERMLINE_ONCOKB] = {
+            name: MutationTableColumnType.GERMLINE_ONCOKB,
+            render: (d: Mutation[]) => {
+                const mutation = d ? d[0] : undefined;
+                if (!mutation) return <span />;
+
+                const germlineData = this.props.germlineOncoKbData;
+                if (
+                    !germlineData ||
+                    !germlineData.result ||
+                    germlineData.result instanceof Error ||
+                    !germlineData.result.indicatorMap
+                ) {
+                    if (germlineData && germlineData.isPending) {
+                        return (
+                            <span
+                                style={{
+                                    display: 'inline-block',
+                                    width: 22,
+                                    height: 22,
+                                }}
+                            >
+                                <i
+                                    className="fa fa-spinner fa-pulse"
+                                    style={{ fontSize: 12 }}
+                                />
+                            </span>
+                        );
+                    }
+                    return <span />;
+                }
+
+                const queryId = generateQueryVariantId(
+                    mutation.entrezGeneId,
+                    null,
+                    mutation.proteinChange,
+                    mutation.mutationType
+                );
+                const annotation: GermlineVariantAnnotation | undefined =
+                    germlineData.result.indicatorMap[queryId];
+                if (!annotation) return <span />;
+
+                return <GermlineOncoKbIcon annotation={annotation} />;
+            },
+            download: (d: Mutation[]) => {
+                const mutation = d ? d[0] : undefined;
+                if (!mutation) return '';
+                const germlineData = this.props.germlineOncoKbData;
+                if (
+                    !germlineData ||
+                    !germlineData.result ||
+                    germlineData.result instanceof Error ||
+                    !germlineData.result.indicatorMap
+                )
+                    return '';
+                const queryId = generateQueryVariantId(
+                    mutation.entrezGeneId,
+                    null,
+                    mutation.proteinChange,
+                    mutation.mutationType
+                );
+                const annotation = germlineData.result.indicatorMap[queryId];
+                if (!annotation) return '';
+                return `Pathogenic: ${annotation.pathogenic ||
+                    'N/A'}, Penetrance: ${annotation.penetrance || 'N/A'}`;
+            },
+            sortBy: (d: Mutation[]) => {
+                const mutation = d ? d[0] : undefined;
+                if (!mutation) return [0];
+                const germlineData = this.props.germlineOncoKbData;
+                if (
+                    !germlineData ||
+                    !germlineData.result ||
+                    germlineData.result instanceof Error ||
+                    !germlineData.result.indicatorMap
+                )
+                    return [0];
+                const queryId = generateQueryVariantId(
+                    mutation.entrezGeneId,
+                    null,
+                    mutation.proteinChange,
+                    mutation.mutationType
+                );
+                const annotation = germlineData.result.indicatorMap[queryId];
+                if (!annotation) return [0];
+                // Sort by pathogenicity level
+                const pathogenicOrder: { [key: string]: number } = {
+                    Pathogenic: 4,
+                    'Likely Pathogenic': 3,
+                    VUS: 2,
+                    'Likely Benign': 1,
+                    Benign: 0,
+                };
+                return [pathogenicOrder[annotation.pathogenic] ?? 0];
+            },
+            visible: false,
         };
 
         this._columns[MutationTableColumnType.CUSTOM_DRIVER] = {

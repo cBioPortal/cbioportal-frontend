@@ -47,6 +47,7 @@ import {
     chunkCalls,
     EvidenceType,
     IHotspotIndex,
+    IGermlineOncoKbData,
     IOncoKbData,
     isLinearClusterHotspot,
 } from 'cbioportal-utils';
@@ -74,6 +75,7 @@ import {
     AnnotateCopyNumberAlterationQuery,
     AnnotateStructuralVariantQuery,
     CancerGene,
+    GermlineVariantAnnotation,
     IndicatorQueryResp,
     OncoKbAPI,
     OncoKBInfo,
@@ -123,6 +125,10 @@ export const MolecularAlterationType_filenameSuffix: {
 };
 
 export const ONCOKB_DEFAULT: IOncoKbData = {
+    indicatorMap: {},
+};
+
+export const GERMLINE_ONCOKB_DEFAULT: IGermlineOncoKbData = {
     indicatorMap: {},
 };
 
@@ -951,6 +957,85 @@ export async function queryOncoKbData(
     };
 
     return oncoKbData;
+}
+
+export async function fetchGermlineOncoKbData(
+    uniqueSampleKeyToTumorType: { [uniqueSampleKey: string]: string },
+    annotatedGenes: { [entrezGeneId: number]: boolean } | Error,
+    mutationData: MobxPromise<Mutation[]>,
+    uncalledMutationData?: MobxPromise<Mutation[]>,
+    client: OncoKbAPI = oncokbClient
+): Promise<IGermlineOncoKbData | Error> {
+    const mutationDataResult = concatMutationData(
+        mutationData,
+        uncalledMutationData
+    );
+
+    if (annotatedGenes instanceof Error) {
+        return new Error();
+    } else if (mutationDataResult.length === 0) {
+        return GERMLINE_ONCOKB_DEFAULT;
+    }
+
+    // Only query germline mutations for genes annotated by OncoKB
+    const germlineMutations = mutationDataResult.filter(
+        m => !isNotGermlineMutation(m) && !!annotatedGenes[m.entrezGeneId]
+    );
+
+    if (germlineMutations.length === 0) {
+        return GERMLINE_ONCOKB_DEFAULT;
+    }
+
+    // Deduplicate by gene + alteration + tumor type
+    const uniqueQueries = _.uniqBy(
+        germlineMutations.map(mutation => ({
+            mutation,
+            id: generateQueryVariantId(
+                mutation.entrezGeneId,
+                cancerTypeForOncoKb(
+                    mutation.uniqueSampleKey,
+                    uniqueSampleKeyToTumorType
+                ),
+                mutation.proteinChange,
+                mutation.mutationType
+            ),
+        })),
+        q => q.id
+    );
+
+    // Query each germline mutation individually via GET endpoint
+    const results = await Promise.all(
+        uniqueQueries.map(async ({ mutation, id }) => {
+            try {
+                const tumorType = cancerTypeForOncoKb(
+                    mutation.uniqueSampleKey,
+                    uniqueSampleKeyToTumorType
+                );
+                const annotation = await client.utilsVariantAnnotationGermlineGetUsingGET(
+                    {
+                        entrezGeneId: mutation.entrezGeneId,
+                        alteration: mutation.proteinChange,
+                        tumorType: tumorType || undefined,
+                    }
+                );
+                return { id, annotation };
+            } catch (e) {
+                // Silently skip mutations that fail
+                return null;
+            }
+        })
+    );
+
+    const indicatorMap: {
+        [id: string]: GermlineVariantAnnotation;
+    } = {};
+    for (const result of results) {
+        if (result && result.annotation) {
+            indicatorMap[result.id] = result.annotation;
+        }
+    }
+
+    return { indicatorMap };
 }
 
 export async function queryOncoKbCopyNumberAlterationData(

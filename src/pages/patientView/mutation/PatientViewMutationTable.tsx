@@ -65,6 +65,7 @@ export default class PatientViewMutationTable extends MutationTable<
             MutationTableColumnType.ASCN_METHOD,
             MutationTableColumnType.ASCN_COPY_NUM,
             MutationTableColumnType.ANNOTATION,
+            MutationTableColumnType.GERMLINE_ONCOKB,
             MutationTableColumnType.CUSTOM_DRIVER,
             MutationTableColumnType.CUSTOM_DRIVER_TIER,
             MutationTableColumnType.HGVSG,
@@ -179,9 +180,7 @@ export default class PatientViewMutationTable extends MutationTable<
         // This can lead to cases where there are multiple icons/tooltips in a single cell
         // therefore patient view needs sampleManager to indicate which values match which samples
 
-        this._columns[
-            MutationTableColumnType.CANCER_CELL_FRACTION
-        ] = {
+        this._columns[MutationTableColumnType.CANCER_CELL_FRACTION] = {
             ...getDefaultCancerCellFractionColumnDefinition(
                 this.getSamples(),
                 this.props.sampleManager
@@ -200,9 +199,7 @@ export default class PatientViewMutationTable extends MutationTable<
             this.props.sampleManager
         );
 
-        this._columns[
-            MutationTableColumnType.EXPECTED_ALT_COPIES
-        ] = {
+        this._columns[MutationTableColumnType.EXPECTED_ALT_COPIES] = {
             ...getDefaultExpectedAltCopiesColumnDefinition(
                 this.getSamples(),
                 this.props.sampleManager
@@ -317,6 +314,10 @@ export default class PatientViewMutationTable extends MutationTable<
         this._columns[MutationTableColumnType.GENE_PANEL].order = 25;
         this._columns[MutationTableColumnType.PROTEIN_CHANGE].order = 30;
         this._columns[MutationTableColumnType.ANNOTATION].order = 35;
+        this._columns[MutationTableColumnType.GERMLINE_ONCOKB].order = 35.5;
+        this._columns[
+            MutationTableColumnType.GERMLINE_ONCOKB
+        ].visible = getServerConfig().show_oncokb;
         this._columns[MutationTableColumnType.CUSTOM_DRIVER].order = 36;
         this._columns[MutationTableColumnType.CUSTOM_DRIVER_TIER].order = 37;
         this._columns[MutationTableColumnType.FUNCTIONAL_IMPACT].order = 38;
