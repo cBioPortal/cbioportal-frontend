@@ -1,120 +1,166 @@
 import * as React from 'react';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { GermlineVariantAnnotation } from 'oncokb-ts-api-client';
+// Reuse the somatic OncoKbCard SCSS so the germline tooltip matches the
+// somatic tooltip's visual style (blue title, additional-info sections,
+// footer with the OncoKB logo).
+import oncoKbStyles from 'oncokb-frontend-commons/src/components/main.module.scss';
+import oncoKbLogoImgSrc from 'oncokb-styles/dist/images/logo/oncokb.svg';
 
-function GermlineTooltipContent(props: {
-    annotation: GermlineVariantAnnotation;
-}) {
+function germlineUrl(annotation: GermlineVariantAnnotation): string {
+    const hugo = annotation.query?.hugoSymbol;
+    if (!hugo) return 'https://www.oncokb.org';
+    const alteration = annotation.query?.alteration;
+    return alteration
+        ? `https://www.oncokb.org/gene/${hugo}/germline/${alteration}`
+        : `https://www.oncokb.org/gene/${hugo}/germline`;
+}
+
+function titleText(annotation: GermlineVariantAnnotation): string {
+    const parts: string[] = [];
+    const hugo = annotation.query?.hugoSymbol;
+    const alt = annotation.query?.alteration;
+    if (hugo) parts.push(hugo);
+    if (alt && (!hugo || !alt.includes(hugo))) parts.push(alt);
+    parts.push('(germline)');
+    return parts.join(' ');
+}
+
+function GermlineCard(props: { annotation: GermlineVariantAnnotation }) {
     const { annotation } = props;
+    const url = germlineUrl(annotation);
     return (
-        <div style={{ maxWidth: 300 }}>
-            <div style={{ marginBottom: 5 }}>
-                <strong>OncoKB Germline Annotation</strong>
+        <div
+            className={oncoKbStyles['oncokb-card']}
+            data-test="germline-oncokb-card"
+        >
+            <div className={oncoKbStyles['title']}>{titleText(annotation)}</div>
+
+            <div className={oncoKbStyles['additional-info']}>
+                <div>
+                    <strong>Pathogenicity: </strong>
+                    {annotation.pathogenic || 'N/A'}
+                </div>
+                {annotation.penetrance && (
+                    <div>
+                        <strong>Penetrance: </strong>
+                        {annotation.penetrance}
+                    </div>
+                )}
+                {annotation.clinVarId && (
+                    <div>
+                        <strong>ClinVar: </strong>
+                        <a
+                            href={`https://www.ncbi.nlm.nih.gov/clinvar/variation/${annotation.clinVarId}/`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            {annotation.clinVarId}
+                        </a>
+                    </div>
+                )}
             </div>
-            <table className="table table-condensed table-borderless">
-                <tbody>
-                    <tr>
-                        <td>
-                            <strong>Pathogenicity:</strong>
-                        </td>
-                        <td>{annotation.pathogenic || 'N/A'}</td>
-                    </tr>
-                    {annotation.penetrance && (
-                        <tr>
-                            <td>
-                                <strong>Penetrance:</strong>
-                            </td>
-                            <td>{annotation.penetrance}</td>
-                        </tr>
-                    )}
+
+            {(annotation.geneSummary || annotation.variantSummary) && (
+                <div className={oncoKbStyles['additional-info']}>
                     {annotation.geneSummary && (
-                        <tr>
-                            <td colSpan={2}>
-                                <strong>Gene Summary:</strong>
-                                <br />
-                                <span style={{ fontSize: '0.9em' }}>
-                                    {annotation.geneSummary}
-                                </span>
-                            </td>
-                        </tr>
+                        <div>
+                            <strong>Gene Summary</strong>
+                            <div>{annotation.geneSummary}</div>
+                        </div>
                     )}
                     {annotation.variantSummary && (
-                        <tr>
-                            <td colSpan={2}>
-                                <strong>Variant Summary:</strong>
-                                <br />
-                                <span style={{ fontSize: '0.9em' }}>
-                                    {annotation.variantSummary}
-                                </span>
-                            </td>
-                        </tr>
+                        <div style={{ marginTop: 6 }}>
+                            <strong>Variant Summary</strong>
+                            <div>{annotation.variantSummary}</div>
+                        </div>
                     )}
-                    {annotation.genomicIndicators &&
-                        annotation.genomicIndicators.length > 0 && (
-                            <tr>
-                                <td colSpan={2}>
-                                    <strong>Genomic Indicators:</strong>
-                                    <br />
-                                    {annotation.genomicIndicators.map(
-                                        (gi, i) => (
-                                            <span
-                                                key={i}
-                                                style={{ fontSize: '0.9em' }}
-                                            >
-                                                {gi.name}
-                                                {gi.inheritanceMechanism &&
-                                                    ` (${gi.inheritanceMechanism
-                                                        .toLowerCase()
-                                                        .replace(/_/g, ' ')})`}
-                                                {gi.description && (
-                                                    <>: {gi.description}</>
-                                                )}
-                                                <br />
-                                            </span>
-                                        )
-                                    )}
-                                </td>
-                            </tr>
-                        )}
+                </div>
+            )}
+
+            {annotation.genomicIndicators &&
+                annotation.genomicIndicators.length > 0 && (
+                    <div className={oncoKbStyles['additional-info']}>
+                        <strong>Genomic Indicators</strong>
+                        {annotation.genomicIndicators.map((gi, i) => (
+                            <div key={i} style={{ marginTop: 4 }}>
+                                <strong>{gi.name}</strong>
+                                {gi.inheritanceMechanism && (
+                                    <span style={{ color: '#666' }}>
+                                        {' '}
+                                        ·{' '}
+                                        {gi.inheritanceMechanism
+                                            .toLowerCase()
+                                            .replace(/_/g, ' ')}
+                                    </span>
+                                )}
+                                {gi.description && (
+                                    <div style={{ fontSize: '0.95em' }}>
+                                        {gi.description}
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+            {(annotation.highestSensitiveLevel ||
+                annotation.highestDiagnosticImplicationLevel ||
+                annotation.highestPrognosticImplicationLevel) && (
+                <div className={oncoKbStyles['additional-info']}>
+                    <strong>Highest Levels of Evidence</strong>
                     {annotation.highestSensitiveLevel && (
-                        <tr>
-                            <td>
-                                <strong>Therapeutic Level:</strong>
-                            </td>
-                            <td>{annotation.highestSensitiveLevel}</td>
-                        </tr>
+                        <div>
+                            Therapeutic: {annotation.highestSensitiveLevel}
+                        </div>
                     )}
                     {annotation.highestDiagnosticImplicationLevel && (
-                        <tr>
-                            <td>
-                                <strong>Diagnostic Level:</strong>
-                            </td>
-                            <td>
-                                {annotation.highestDiagnosticImplicationLevel}
-                            </td>
-                        </tr>
+                        <div>
+                            Diagnostic:{' '}
+                            {annotation.highestDiagnosticImplicationLevel}
+                        </div>
                     )}
                     {annotation.highestPrognosticImplicationLevel && (
-                        <tr>
-                            <td>
-                                <strong>Prognostic Level:</strong>
-                            </td>
-                            <td>
-                                {annotation.highestPrognosticImplicationLevel}
-                            </td>
-                        </tr>
+                        <div>
+                            Prognostic:{' '}
+                            {annotation.highestPrognosticImplicationLevel}
+                        </div>
                     )}
-                </tbody>
-            </table>
+                </div>
+            )}
+
+            <div className={oncoKbStyles['footer']}>
+                <a
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={oncoKbStyles['oncokb-logo']}
+                >
+                    <img
+                        src={oncoKbLogoImgSrc}
+                        className={oncoKbStyles['oncokb-logo']}
+                        alt="OncoKB™"
+                    />
+                </a>
+            </div>
         </div>
     );
 }
 
 // Wraps the standard OncoKB Annotation column rendering for germline rows so
-// hovering anywhere in the cell surfaces a germline-specific tooltip
-// (pathogenicity, penetrance, genomic indicators, levels). The icon visual
-// is intentionally unchanged from somatic -- germline status is already
-// communicated by the indicator on the Protein Change column.
+// hovering / tapping the cell surfaces a germline-specific tooltip styled
+// to match the somatic OncoKbCard look. The icon visual is intentionally
+// unchanged from somatic -- germline status is communicated by the
+// indicator on the Protein Change column.
+//
+// Trigger is `click` only (no hover) on purpose:
+//   * On desktop, hover continues to open the inner OncoKB icon's own
+//     somatic tooltip; an explicit click reveals our germline tooltip.
+//   * On mobile, tap synthesizes both mouseenter and click. If we kept
+//     `hover` in our trigger list, every tap would open both our tooltip
+//     and the inner OncoKB hover tooltip on top of each other.
+// onClick stopPropagation is added so the same tap doesn't also fire any
+// click handler on the inner Annotation children.
 export default function GermlineOncoKbTooltip(props: {
     annotation: GermlineVariantAnnotation;
     children: React.ReactNode;
@@ -122,12 +168,15 @@ export default function GermlineOncoKbTooltip(props: {
     return (
         <DefaultTooltip
             placement="right"
-            // Include `click` so a tap on touch devices (where hover never
-            // fires) also opens the tooltip; keep `hover` for desktop.
-            trigger={['hover', 'click']}
-            overlay={<GermlineTooltipContent annotation={props.annotation} />}
+            trigger={['click']}
+            overlay={<GermlineCard annotation={props.annotation} />}
         >
-            <span style={{ display: 'inline-block' }}>{props.children}</span>
+            <span
+                style={{ display: 'inline-block', cursor: 'pointer' }}
+                onClick={e => e.stopPropagation()}
+            >
+                {props.children}
+            </span>
         </DefaultTooltip>
     );
 }
