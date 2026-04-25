@@ -2,22 +2,6 @@ import * as React from 'react';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { GermlineVariantAnnotation } from 'oncokb-ts-api-client';
 
-const PATHOGENIC_COLORS: { [key: string]: string } = {
-    Pathogenic: '#FF0000',
-    'Likely Pathogenic': '#FF6600',
-    VUS: '#696969',
-    'Likely Benign': '#33A02C',
-    Benign: '#33A02C',
-};
-
-const PATHOGENIC_ICONS: { [key: string]: string } = {
-    Pathogenic: 'fa-exclamation-circle',
-    'Likely Pathogenic': 'fa-exclamation-triangle',
-    VUS: 'fa-question-circle',
-    'Likely Benign': 'fa-check-circle',
-    Benign: 'fa-check-circle',
-};
-
 function GermlineTooltipContent(props: {
     annotation: GermlineVariantAnnotation;
 }) {
@@ -126,36 +110,21 @@ function GermlineTooltipContent(props: {
     );
 }
 
-export default function GermlineOncoKbIcon(props: {
+// Wraps the standard OncoKB Annotation column rendering for germline rows so
+// hovering anywhere in the cell surfaces a germline-specific tooltip
+// (pathogenicity, penetrance, genomic indicators, levels). The icon visual
+// is intentionally unchanged from somatic -- germline status is already
+// communicated by the indicator on the Protein Change column.
+export default function GermlineOncoKbTooltip(props: {
     annotation: GermlineVariantAnnotation;
+    children: React.ReactNode;
 }) {
-    const { annotation } = props;
-    const pathogenic = annotation.pathogenic || 'VUS';
-    const color = PATHOGENIC_COLORS[pathogenic] || '#696969';
-    const icon = PATHOGENIC_ICONS[pathogenic] || 'fa-question-circle';
-
     return (
         <DefaultTooltip
             placement="right"
-            overlay={<GermlineTooltipContent annotation={annotation} />}
+            overlay={<GermlineTooltipContent annotation={props.annotation} />}
         >
-            <span
-                style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    cursor: 'pointer',
-                }}
-            >
-                <i
-                    className={`fa ${icon}`}
-                    style={{
-                        color,
-                        fontSize: 14,
-                        marginRight: 3,
-                    }}
-                />
-                <span style={{ fontSize: 11, color }}>{pathogenic}</span>
-            </span>
+            <span style={{ display: 'inline-block' }}>{props.children}</span>
         </DefaultTooltip>
     );
 }

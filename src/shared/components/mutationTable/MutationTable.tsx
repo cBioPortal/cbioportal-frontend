@@ -32,7 +32,7 @@ import MutationStatusColumnFormatter from './column/MutationStatusColumnFormatte
 import ValidationStatusColumnFormatter from './column/ValidationStatusColumnFormatter';
 import StudyColumnFormatter from './column/StudyColumnFormatter';
 import AnnotationColumnFormatter from './column/AnnotationColumnFormatter';
-import GermlineOncoKbIcon from './column/GermlineOncoKbIcon';
+import GermlineOncoKbTooltip from './column/GermlineOncoKbTooltip';
 import ExonColumnFormatter from './column/ExonColumnFormatter';
 import { IMutSigData } from 'shared/model/MutSig';
 import DiscreteCNACache from 'shared/cache/DiscreteCNACache';
@@ -946,10 +946,40 @@ export default class MutationTable<
                 ),
             render: (d: Mutation[]) => {
                 const mutation = d ? d[0] : undefined;
-                // For mutations explicitly marked germline, prefer the germline
-                // OncoKB tooltip when an annotation is available; fall back to
-                // the standard somatic annotation column rendering otherwise so
-                // that hotspot / civic / reVUE indicators still show.
+                // Render the standard Annotation icons for every row. For
+                // germline-marked rows where an OncoKB germline annotation
+                // is available, wrap the icons in a tooltip surfacing
+                // germline-specific content (pathogenicity, penetrance,
+                // genomic indicators, levels). The icon visual is unchanged
+                // from somatic -- germline status is signalled by the
+                // indicator on the Protein Change column.
+                const annotationContent = AnnotationColumnFormatter.renderFunction(
+                    d,
+                    {
+                        hotspotData: this.props.hotspotData,
+                        oncoKbData: this.props.oncoKbData,
+                        oncoKbCancerGenes: this.props.oncoKbCancerGenes,
+                        usingPublicOncoKbInstance: this.props
+                            .usingPublicOncoKbInstance,
+                        mergeOncoKbIcons: this.props.mergeOncoKbIcons,
+                        oncoKbContentPadding: calculateOncoKbContentPadding(
+                            this.oncokbWidth
+                        ),
+                        pubMedCache: this.props.pubMedCache,
+                        civicGenes: this.props.civicGenes,
+                        civicVariants: this.props.civicVariants,
+                        enableCivic: this.props.enableCivic as boolean,
+                        enableOncoKb: this.props.enableOncoKb as boolean,
+                        enableHotspot: this.props.enableHotspot as boolean,
+                        enableRevue:
+                            !!this.props.enableRevue && this.shouldShowRevue,
+                        userDisplayName: this.props.userDisplayName,
+                        indexedVariantAnnotations: this.props
+                            .indexedVariantAnnotations,
+                        resolveTumorType: this.resolveTumorType,
+                    }
+                );
+
                 const germlineData = this.props.germlineOncoKbData;
                 let germlineAnnotation: GermlineVariantAnnotation | undefined;
                 if (
@@ -968,36 +998,13 @@ export default class MutationTable<
                 return (
                     <span id="mutation-annotation">
                         {germlineAnnotation ? (
-                            <GermlineOncoKbIcon
+                            <GermlineOncoKbTooltip
                                 annotation={germlineAnnotation}
-                            />
+                            >
+                                {annotationContent}
+                            </GermlineOncoKbTooltip>
                         ) : (
-                            AnnotationColumnFormatter.renderFunction(d, {
-                                hotspotData: this.props.hotspotData,
-                                oncoKbData: this.props.oncoKbData,
-                                oncoKbCancerGenes: this.props.oncoKbCancerGenes,
-                                usingPublicOncoKbInstance: this.props
-                                    .usingPublicOncoKbInstance,
-                                mergeOncoKbIcons: this.props.mergeOncoKbIcons,
-                                oncoKbContentPadding: calculateOncoKbContentPadding(
-                                    this.oncokbWidth
-                                ),
-                                pubMedCache: this.props.pubMedCache,
-                                civicGenes: this.props.civicGenes,
-                                civicVariants: this.props.civicVariants,
-                                enableCivic: this.props.enableCivic as boolean,
-                                enableOncoKb: this.props
-                                    .enableOncoKb as boolean,
-                                enableHotspot: this.props
-                                    .enableHotspot as boolean,
-                                enableRevue:
-                                    !!this.props.enableRevue &&
-                                    this.shouldShowRevue,
-                                userDisplayName: this.props.userDisplayName,
-                                indexedVariantAnnotations: this.props
-                                    .indexedVariantAnnotations,
-                                resolveTumorType: this.resolveTumorType,
-                            })
+                            annotationContent
                         )}
                     </span>
                 );
