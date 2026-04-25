@@ -4,7 +4,13 @@ import * as request from 'superagent';
 // import {getServerConfig} from "../../../../src/config/config";
 // import {getBrowserWindow} from "cbioportal-frontend-commons";
 
-const BASE64_ENCODING = 'base64';
+// Use URL-safe base64 (alphabet `-_`, no `=` padding) so the encoded path can
+// safely sit inside a URL path segment without `+` becoming a space, `/`
+// splitting the path, or padding chars getting stripped. The backend's
+// Apache Commons Codec Base64 decoder accepts both alphabets, and Node's
+// Buffer treats the two encodings as interchangeable on decode, so the
+// switch is backward-compatible with previously cached responses.
+const BASE64_ENCODING = 'base64url';
 const UTF8_ENCODING = 'utf8';
 
 export async function chunkCalls<ParamData, ResponseData>(
