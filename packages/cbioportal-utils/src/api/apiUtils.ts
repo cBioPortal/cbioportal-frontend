@@ -4,14 +4,30 @@ import * as request from 'superagent';
 // import {getServerConfig} from "../../../../src/config/config";
 // import {getBrowserWindow} from "cbioportal-frontend-commons";
 
-// Use URL-safe base64 (alphabet `-_`, no `=` padding) so the encoded path can
-// safely sit inside a URL path segment without `+` becoming a space, `/`
-// splitting the path, or padding chars getting stripped. The backend's
-// Apache Commons Codec Base64 decoder accepts both alphabets, and Node's
-// Buffer treats the two encodings as interchangeable on decode, so the
-// switch is backward-compatible with previously cached responses.
-const BASE64_ENCODING = 'base64url';
+const BASE64_ENCODING = 'base64';
 const UTF8_ENCODING = 'utf8';
+
+// Convert standard base64 to URL-safe (alphabet `-_`, no `=` padding) so the
+// encoded path can sit inside a URL path segment without `+` becoming a space,
+// `/` splitting the path, or padding chars getting stripped. We do the
+// conversion manually rather than relying on Buffer's `'base64url'` encoding
+// because the browser-side `buffer` polyfill (v5.x) doesn't recognize it and
+// throws `Unknown encoding: base64url`. The cbioportal backend's Apache
+// Commons Codec Base64 decoder accepts both alphabets transparently.
+function toUrlSafeBase64(b64: string) {
+    return b64
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=+$/, '');
+}
+
+// Convert URL-safe base64 back to standard before decoding, also restoring
+// the `=` padding the standard decoder requires.
+function fromUrlSafeBase64(urlSafe: string) {
+    const standard = urlSafe.replace(/-/g, '+').replace(/_/g, '/');
+    const pad = standard.length % 4;
+    return pad ? standard + '='.repeat(4 - pad) : standard;
+}
 
 export async function chunkCalls<ParamData, ResponseData>(
     callback: (chunk: ParamData[]) => Promise<ResponseData[]>,
@@ -24,14 +40,18 @@ export async function chunkCalls<ParamData, ResponseData>(
 }
 
 function monkify(obj: any) {
-    return Buffer.from(_.isString(obj) ? obj : JSON.stringify(obj)).toString(
-        BASE64_ENCODING
+    return toUrlSafeBase64(
+        Buffer.from(_.isString(obj) ? obj : JSON.stringify(obj)).toString(
+            BASE64_ENCODING
+        )
     );
 }
 
 function unmonkify(base64String: string) {
     return JSON.parse(
-        Buffer.from(base64String, BASE64_ENCODING).toString(UTF8_ENCODING)
+        Buffer.from(fromUrlSafeBase64(base64String), BASE64_ENCODING).toString(
+            UTF8_ENCODING
+        )
     );
 }
 
