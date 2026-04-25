@@ -122,6 +122,9 @@ export default function GermlineOncoKbTooltip(props: {
     return (
         <DefaultTooltip
             placement="right"
+            // Include `click` so a tap on touch devices (where hover never
+            // fires) also opens the tooltip; keep `hover` for desktop.
+            trigger={['hover', 'click']}
             overlay={<GermlineTooltipContent annotation={props.annotation} />}
         >
             <span style={{ display: 'inline-block' }}>{props.children}</span>
