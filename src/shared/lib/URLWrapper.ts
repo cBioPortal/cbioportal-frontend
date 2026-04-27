@@ -338,7 +338,6 @@ export default class URLWrapper<
                 /* keep an ordering token to make sure
                     that async session response matches the
                     current session and hasn't been invalidated by a subsequent session
-                    (stored in localSessionData.timeStamp to keep the existing PortalSession field name)
                 */
                 const sessionRequestToken = ++this.nextSessionRequestToken;
                 this.localSessionData = {
@@ -346,7 +345,7 @@ export default class URLWrapper<
                     query: this.stringifyProps(paramsMap.sessionProps),
                     path: path || this.pathName,
                     version: 3,
-                    timeStamp: sessionRequestToken,
+                    requestToken: sessionRequestToken,
                 };
 
                 // we need to make a new session
@@ -373,7 +372,7 @@ export default class URLWrapper<
                         //  on the session hasn't been changed since it started
                         if (
                             sessionRequestToken !==
-                            this.localSessionData?.timeStamp
+                            this.localSessionData?.requestToken
                         ) {
                             return;
                         }
