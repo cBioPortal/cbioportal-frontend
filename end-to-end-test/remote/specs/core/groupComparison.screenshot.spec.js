@@ -231,7 +231,6 @@ describe('group comparison page screenshot tests', async function() {
             );
             assertScreenShotMatch(res);
         });
-        //TODO:-- this test is not passing because of out of bounds error
         it('group comparison page mrna enrichments tab several groups', async () => {
             await clickElement('.tabAnchor_mrna');
             await (
@@ -314,17 +313,29 @@ describe('group comparison page screenshot tests', async function() {
         });
 
         it('group comparison page alteration enrichments tab two groups', async () => {
-            // deselect two groups
-            await clickElement(
-                'button[data-test="groupSelectorButtonGARS mutant"]'
+            // deselect two groups (only click if currently selected to avoid re-selecting on retry)
+            const garsButton = await getElement(
+                'button[data-test="groupSelectorButtonGARS mutant"]',
+                { timeout: 10000 }
             );
-            await getElement(
+            if (
+                !(await garsButton.getAttribute('class')).includes(
+                    'buttonUnselected'
+                )
+            ) {
+                await garsButton.click();
+            }
+            const znf517Button = await getElement(
                 'button[data-test="groupSelectorButtonZNF517 mutant"]',
                 { timeout: 10000 }
             );
-            await clickElement(
-                'button[data-test="groupSelectorButtonZNF517 mutant"]'
-            );
+            if (
+                !(await znf517Button.getAttribute('class')).includes(
+                    'buttonUnselected'
+                )
+            ) {
+                await znf517Button.click();
+            }
             // go back to mutations tab
             await getElement('.tabAnchor_alterations', { timeout: 10000 });
             await clickElement('.tabAnchor_alterations');
@@ -382,7 +393,6 @@ describe('group comparison page screenshot tests', async function() {
             assertScreenShotMatch(res);
         });
 
-        //TODO:-- this test is not passing because of out of bounds error
         it('group comparison page mrna enrichments tab two groups', async () => {
             await clickElement('.tabAnchor_mrna');
             await (
