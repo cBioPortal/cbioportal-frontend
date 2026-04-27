@@ -11,7 +11,6 @@ stats.json
 .DS_Store
 tsDist/
 dist/
-common-dist/
 packages/cbioportal-frontend-commons/dist
 .sass-cache
 .rpt2_cache
@@ -68,3 +67,5 @@ junit.xml
 .luarc.json
 api-e2e/validation.js
 .vs/
+.nx
+.turbo

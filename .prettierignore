@@ -24,11 +24,14 @@
 **/generated/**
 src/shared/lib/oql/oql-parser.js
 packages/**/dist/**
-yarn.lock
+pnpm-lock.yaml
+*.mjs
+.npmrc
 LICENSE
 .prettierignore
 .DS_Store
 .gitignore
+.browserslistrc
 *.toml
 *.maf
 *properties
@@ -42,3 +45,4 @@ end-to-end-test/local/studies/**
 *.yaml
 *.html
 *.crt
+.nx
