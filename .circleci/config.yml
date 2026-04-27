@@ -331,7 +331,10 @@ jobs:
     docker:
       - image: mcr.microsoft.com/playwright:v1.59.1-jammy
     resource_class: large
-    parallelism: 12
+    # Experiment scope: 3 spec files only, sharded 3 ways (one file per
+    # container) so parallelism + sharding are still exercised. Bump
+    # parallelism back up + remove the spec-file filter to run the full suite.
+    parallelism: 3
     working_directory: /tmp/repo/cbioportal-frontend
     environment:
       PW_DOCKER: '1'
@@ -349,17 +352,33 @@ jobs:
           name: Run Playwright shard
           working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
           command: |
-            FILES=$(circleci tests glob 'tests/*.spec.ts' \
+            # 3 hand-picked specs for the experiment: a screenshot test we've
+            # deliberately broken (acc-clinical-heatmap baseline mismatch — to
+            # exercise the comparison UI), plus two stable specs that should
+            # pass (redirect + patient-logic).
+            FILES=$(printf '%s\n' \
+              'tests/oncoprint-screenshot-catalog.spec.ts' \
+              'tests/redirect.spec.ts' \
+              'tests/patient-logic.spec.ts' \
               | circleci tests split --split-by=timings --timings-type=filename)
             echo "Files for this container:"
             printf '  %s\n' $FILES
             mkdir -p test-results blob-report
-            # blob reporter writes a zip we'll merge in the next job
+            # Capture playwright's exit code but exit 0 so:
+            #   1. persist_to_workspace runs (it does on success only by default)
+            #   2. CircleCI's `requires:` chain to playwright_merge_reports fires
+            # The merge job inspects the blobs and reports overall pass/fail.
+            set +e
             npx playwright test --workers=2 \
               --reporter=list,junit,blob \
               $FILES
+            EXIT=$?
+            set -e
+            echo "playwright exit: $EXIT"
             # uniquify the blob filename so persist_to_workspace doesn't collide
             mv blob-report/report-*.zip blob-report/blob-${CIRCLE_NODE_INDEX}.zip || true
+            # always exit 0 — let the merge job own pass/fail
+            exit 0
       - store_test_results:
           path: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright/test-results
       - store_artifacts:
@@ -377,6 +396,7 @@ jobs:
     working_directory: /tmp/repo/cbioportal-frontend
     environment:
       HOME: /tmp
+      PLAYWRIGHT_JUNIT_OUTPUT_NAME: test-results/junit.xml
     steps:
       - checkout
       - attach_workspace:
@@ -390,12 +410,22 @@ jobs:
           working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
           command: |
             ls -la blob-report/ || (echo "no blobs found" && exit 1)
-            npx playwright merge-reports \
-              --reporter=html \
-              blob-report
+            mkdir -p test-results
+            npx playwright merge-reports --reporter=html,junit blob-report
+            # Sum 'failures' across all <testsuite> elements in the JUnit XML.
+            # If any test failed (and didn't recover via retries), exit non-zero
+            # so the build is correctly marked failed.
+            FAILS=$(grep -oE 'failures="[0-9]+"' test-results/junit.xml \
+                    | grep -oE '[0-9]+' \
+                    | awk '{s+=$1} END {print s+0}')
+            echo "merged failures: $FAILS"
+            echo "Browse the merged report from this job's Artifacts tab → playwright-report/index.html"
+            [ "$FAILS" = "0" ]
       - store_artifacts:
           path: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright/playwright-report
           destination: playwright-report
+      - store_test_results:
+          path: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright/test-results
 
   prettier:
     <<: *defaults
@@ -705,14 +735,15 @@ workflows:
       - build_frontend:
           requires:
             - checkout
-      - e2e_localdb_tests:
-          requires:
-            - pull_cbioportal_test_codebase
-            - build_frontend
-      - e2e_tests:
-          requires:
-            - pull_cbioportal_test_codebase
-            - build_frontend
+      # TEMPORARILY DISABLED while the playwright_e2e_remote experiment runs:
+      # - e2e_localdb_tests:
+      #     requires:
+      #       - pull_cbioportal_test_codebase
+      #       - build_frontend
+      # - e2e_tests:
+      #     requires:
+      #       - pull_cbioportal_test_codebase
+      #       - build_frontend
       - playwright_e2e_remote:
           requires:
             - checkout
