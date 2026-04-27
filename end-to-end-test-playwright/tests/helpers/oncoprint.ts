@@ -141,7 +141,14 @@ export async function expectOncoprintScreenshot(
         '.qtip',
         '.dropdown-menu',
         '.oncoprintjs__track_options__dropdown',
-        '.oncoprintjs__cell_overlay_div',
+        // Do NOT mask .oncoprintjs__cell_overlay_div — it's a full-size
+        // transparent hit-testing div over the entire oncoprint cell
+        // grid + heatmap area. Playwright's mask paints matched
+        // elements solid magenta, so masking this one wipes out the
+        // entire data region of every screenshot. Tooltip/hover state
+        // is already cleared above via clearMouseOverEffects + the
+        // page.mouse.move(0, 0) park, which is what the overlay was
+        // (incorrectly) being masked for.
         ...(opts.extraMasks ?? []),
     ];
     const mask = maskSelectors.map(s => page.locator(s));

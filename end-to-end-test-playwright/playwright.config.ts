@@ -42,13 +42,7 @@ export default defineConfig({
         toHaveScreenshot: {
             maxDiffPixelRatio: 0.01,
             threshold: 0.2,
-            // Was 'disabled', but oncoprint draws into its WebGL canvas
-            // via requestAnimationFrame — Playwright's "pause animations"
-            // hook intercepts RAF, which leaves the canvas empty
-            // (purple block) at screenshot time. Allow animations so the
-            // initial draw call actually runs; we still freeze layout
-            // animations via CSS in the suite.
-            animations: 'allow',
+            animations: 'disabled',
             caret: 'hide',
         },
     },
@@ -69,10 +63,10 @@ export default defineConfig({
             name: 'chromium',
             use: {
                 ...devices['Desktop Chrome'],
-                // No `channel` — Playwright's bundled Chromium runs in
-                // its "new headless" mode by default, which (unlike the
-                // chromium-headless-shell binary) has SwiftShader linked
-                // in for software WebGL.
+                // chrome-headless-shell is a separate, stripped-down binary
+                // designed for automated pixel-stable work — less variance
+                // than the full "new headless" Chrome Chromium ships with.
+                channel: 'chromium-headless-shell',
                 launchOptions: {
                     // Kill the most common sources of per-run subpixel
                     // drift: fractional glyph placement, LCD-RGB
@@ -83,23 +77,6 @@ export default defineConfig({
                         '--disable-font-subpixel-positioning',
                         '--disable-lcd-text',
                         '--font-render-hinting=none',
-                        // The probe confirmed SwiftShader was rendering
-                        // WebGL into the canvas (toDataURL() saw real
-                        // pixels), but they didn't make it into the
-                        // page screenshot — they were on a separate GPU
-                        // compositor layer that headless skips.
-                        // --disable-gpu drops the dedicated GPU process
-                        // and routes everything through the CPU
-                        // compositor that the screenshot path actually
-                        // walks. WebGL stays functional because
-                        // SwiftShader is software-only and doesn't need
-                        // the GPU process.
-                        '--disable-gpu',
-                        '--in-process-gpu',
-                        '--use-gl=swiftshader',
-                        '--enable-unsafe-swiftshader',
-                        '--ignore-gpu-blocklist',
-                        '--enable-webgl',
                         ...(isLocaldev
                             ? [
                                   // Private Network Access + the newer
