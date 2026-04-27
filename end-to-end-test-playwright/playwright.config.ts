@@ -77,10 +77,19 @@ export default defineConfig({
                         '--disable-font-subpixel-positioning',
                         '--disable-lcd-text',
                         '--font-render-hinting=none',
-                        // Force WebGL onto SwiftShader so canvas content
-                        // is captured AND bit-stable across hosts. The
-                        // direct --use-gl=swiftshader path tends to be
-                        // more reliable than going through ANGLE.
+                        // The probe confirmed SwiftShader was rendering
+                        // WebGL into the canvas (toDataURL() saw real
+                        // pixels), but they didn't make it into the
+                        // page screenshot — they were on a separate GPU
+                        // compositor layer that headless skips.
+                        // --disable-gpu drops the dedicated GPU process
+                        // and routes everything through the CPU
+                        // compositor that the screenshot path actually
+                        // walks. WebGL stays functional because
+                        // SwiftShader is software-only and doesn't need
+                        // the GPU process.
+                        '--disable-gpu',
+                        '--in-process-gpu',
                         '--use-gl=swiftshader',
                         '--enable-unsafe-swiftshader',
                         '--ignore-gpu-blocklist',
