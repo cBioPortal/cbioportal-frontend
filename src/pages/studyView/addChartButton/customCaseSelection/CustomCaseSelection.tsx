@@ -326,6 +326,7 @@ export default class CustomCaseSelection extends React.Component<
                         }}
                     >
                         <span
+                            data-test="AddCurrentlySelectedCases"
                             className={styles.selection}
                             onClick={() => {
                                 this.onClick(SelectMode.SELECTED);
@@ -340,6 +341,7 @@ export default class CustomCaseSelection extends React.Component<
                             </span>
                         </span>
                         <span
+                            data-test="AddCurrentlyUnselectedCases"
                             className={styles.selection}
                             onClick={() => {
                                 this.onClick(SelectMode.UNSELECTED);
