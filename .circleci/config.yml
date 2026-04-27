@@ -331,10 +331,7 @@ jobs:
     docker:
       - image: mcr.microsoft.com/playwright:v1.59.1-jammy
     resource_class: large
-    # Experiment scope: 3 spec files only, sharded 3 ways (one file per
-    # container) so parallelism + sharding are still exercised. Bump
-    # parallelism back up + remove the spec-file filter to run the full suite.
-    parallelism: 3
+    parallelism: 12
     working_directory: /tmp/repo/cbioportal-frontend
     environment:
       PW_DOCKER: '1'
@@ -352,14 +349,9 @@ jobs:
           name: Run Playwright shard
           working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
           command: |
-            # 3 hand-picked specs for the experiment: a screenshot test we've
-            # deliberately broken (acc-clinical-heatmap baseline mismatch — to
-            # exercise the comparison UI), plus two stable specs that should
-            # pass (redirect + patient-logic).
-            FILES=$(printf '%s\n' \
-              'tests/_probe-webgl.spec.ts' \
-              'tests/oncoprint-screenshot-catalog.spec.ts' \
-              'tests/redirect.spec.ts' \
+            # CircleCI's timing-aware split distributes spec files across
+            # the 12 parallel containers, balancing by historical duration.
+            FILES=$(circleci tests glob 'tests/*.spec.ts' \
               | circleci tests split --split-by=timings --timings-type=filename)
             echo "Files for this container:"
             printf '  %s\n' $FILES
@@ -735,15 +727,14 @@ workflows:
       - build_frontend:
           requires:
             - checkout
-      # TEMPORARILY DISABLED while the playwright_e2e_remote experiment runs:
-      # - e2e_localdb_tests:
-      #     requires:
-      #       - pull_cbioportal_test_codebase
-      #       - build_frontend
-      # - e2e_tests:
-      #     requires:
-      #       - pull_cbioportal_test_codebase
-      #       - build_frontend
+      - e2e_localdb_tests:
+          requires:
+            - pull_cbioportal_test_codebase
+            - build_frontend
+      - e2e_tests:
+          requires:
+            - pull_cbioportal_test_codebase
+            - build_frontend
       - playwright_e2e_remote:
           requires:
             - checkout
