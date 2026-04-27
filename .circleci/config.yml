@@ -332,24 +332,55 @@ jobs:
   # jobs when an upstream job fails — and we want the merged report to run
   # exactly when there ARE failures. The `playwright_e2e` job downstream
   # owns the actual pass/fail status of the run.
+  #
+  # Mirrors the legacy `e2e_tests` flow: attach the workspace built by
+  # `build_frontend`, start `yarn serveDist` on localhost:3000, then run
+  # the Playwright suite in LOCALDEV mode so it loads the locally-built
+  # bundle into the public cbioportal origin via ?localdev=true.
   playwright_e2e_shards:
     docker:
       - image: mcr.microsoft.com/playwright:v1.59.1-jammy
     resource_class: large
     parallelism: 12
-    working_directory: /tmp/repo/cbioportal-frontend
+    working_directory: /tmp/repo
     environment:
       PW_DOCKER: '1'
       CI: 'true'
       HOME: /tmp
+      LOCALDEV: '1'
       CBIOPORTAL_URL: https://www.cbioportal.org
+      BRANCH_ENV: master
+      FRONTEND_TEST_USE_LOCAL_DIST: 'true'
       PLAYWRIGHT_JUNIT_OUTPUT_NAME: test-results/junit.xml
     steps:
-      - checkout
+      - attach_workspace:
+          at: /tmp/repo
       - run:
-          name: Install dependencies
+          name: Install yarn (not in the Playwright Docker image)
+          command: npm install -g yarn
+      - run:
+          name: Install Playwright suite dependencies
           working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
           command: npm ci
+      - run:
+          name: Start frontend dev server (yarn serveDist) on localhost:3000
+          background: true
+          working_directory: /tmp/repo/cbioportal-frontend
+          command: |
+            yarn config set ignore-engines true
+            yarn serveDist --ignore-engines
+      - run:
+          name: Wait for frontend server to be reachable
+          command: |
+            for i in $(seq 1 120); do
+              if curl -k -sf https://localhost:3000/ > /dev/null; then
+                echo "Frontend server up after ~$((i*2))s"
+                exit 0
+              fi
+              sleep 2
+            done
+            echo "FAILED: frontend server didn't come up after ~4 minutes"
+            exit 1
       - run:
           name: Run Playwright shard
           working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
@@ -759,7 +790,7 @@ workflows:
             - build_frontend
       - playwright_e2e_shards:
           requires:
-            - checkout
+            - build_frontend
       - playwright_e2e:
           requires:
             - playwright_e2e_shards
