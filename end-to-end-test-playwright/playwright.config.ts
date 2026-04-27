@@ -63,10 +63,13 @@ export default defineConfig({
             name: 'chromium',
             use: {
                 ...devices['Desktop Chrome'],
-                // chrome-headless-shell is a separate, stripped-down binary
-                // designed for automated pixel-stable work — less variance
-                // than the full "new headless" Chrome Chromium ships with.
-                channel: 'chromium-headless-shell',
+                // Switched off chromium-headless-shell because that
+                // stripped-down binary lacks SwiftShader and renders
+                // every WebGL <canvas> (oncoprint, etc.) as black. Full
+                // headless chromium has SwiftShader compiled in, so we
+                // pin GL to the software path explicitly to keep
+                // rendering deterministic across hosts.
+                channel: 'chromium',
                 launchOptions: {
                     // Kill the most common sources of per-run subpixel
                     // drift: fractional glyph placement, LCD-RGB
@@ -77,6 +80,13 @@ export default defineConfig({
                         '--disable-font-subpixel-positioning',
                         '--disable-lcd-text',
                         '--font-render-hinting=none',
+                        // Force WebGL onto SwiftShader (software ANGLE
+                        // backend) so canvas content is captured AND
+                        // bit-stable across hosts.
+                        '--use-gl=angle',
+                        '--use-angle=swiftshader',
+                        '--enable-unsafe-swiftshader',
+                        '--ignore-gpu-blocklist',
                         ...(isLocaldev
                             ? [
                                   // Private Network Access + the newer
