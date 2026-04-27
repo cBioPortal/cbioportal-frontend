@@ -164,6 +164,21 @@ jobs:
             bash src/test/check_api_sync_dependencies.sh
 
 
+  typecheck:
+    <<: *defaults
+    resource_class: medium
+    steps:
+      - attach_workspace:
+          at: /tmp/repo
+      - run:
+          name: TypeScript check
+          environment:
+            NODE_OPTIONS: --max-old-space-size=4096
+          command: |
+            cd cbioportal-frontend
+            corepack enable
+            pnpm run typecheck
+
   unit_tests_main:
     <<: *defaults
     resource_class: medium
@@ -517,6 +532,9 @@ workflows:
       - unit_tests_main:
           requires:
             - build_frontend
+      - typecheck:
+          requires:
+            - build_frontend
 
 
   nightly:
@@ -555,5 +573,8 @@ workflows:
           requires:
             - build_frontend
       - unit_tests_packages:
+          requires:
+            - build_frontend
+      - typecheck:
           requires:
             - build_frontend
