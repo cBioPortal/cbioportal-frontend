@@ -40,6 +40,7 @@ const STUDY_URL =
 const SHOW_GAPS_MENU_ITEM = 'li:nth-child(10)';
 
 test.describe.serial('oncoprint gap screenshot tests', () => {
+    test.describe.configure({ retries: 0 });
     // A single page/oncoprint session shared across both tests.
     let page: import('@playwright/test').Page;
 

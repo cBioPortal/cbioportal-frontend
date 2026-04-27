@@ -26,6 +26,7 @@ import {
  */
 
 test.describe.serial('group comparison general screenshots', () => {
+    test.describe.configure({ retries: 0 });
     let page: Page;
 
     test.beforeAll(async ({ browser }) => {

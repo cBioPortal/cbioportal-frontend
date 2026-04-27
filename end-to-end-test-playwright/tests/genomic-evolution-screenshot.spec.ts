@@ -24,6 +24,7 @@ const TABLE_ROW = (n: number) =>
     `div[data-test="GenomicEvolutionMutationTable"] table tbody > tr:nth-child(${n})`;
 
 test.describe.serial('Patient View Genomic Evolution screenshot tests', () => {
+    test.describe.configure({ retries: 0 });
     let page: Page;
 
     test.beforeAll(async ({ browser }) => {

@@ -121,6 +121,7 @@ async function getColorOfNthElement(
 
 test.describe('studyview tests', () => {
     test.describe.serial('study laml_tcga tests', () => {
+        test.describe.configure({ retries: 0 });
         let page: Page;
         test.beforeAll(async ({ browser }) => {
             page = await browser.newPage({
@@ -253,6 +254,7 @@ test.describe('studyview tests', () => {
         });
 
         test.describe.serial('add chart', () => {
+            test.describe.configure({ retries: 0 });
             test('the button text should be updated in different tab', async () => {
                 await toStudyViewSummaryTab(page);
                 expect(
@@ -315,6 +317,7 @@ test.describe('studyview tests', () => {
             });
 
             test.describe.serial('add custom data', () => {
+                test.describe.configure({ retries: 0 });
                 test.beforeAll(async () => {
                     if (
                         !(await page
@@ -436,6 +439,7 @@ test.describe('studyview tests', () => {
     );
 
     test.describe.serial('check the filters are working properly', () => {
+        test.describe.configure({ retries: 0 });
         let page: Page;
         test.beforeAll(async ({ browser }) => {
             page = await browser.newPage({
@@ -549,6 +553,7 @@ test.describe('studyview tests', () => {
     });
 
     test.describe.serial('check the fusion filter is working properly', () => {
+        test.describe.configure({ retries: 0 });
         let page: Page;
         test.beforeAll(async ({ browser }) => {
             page = await browser.newPage({
@@ -647,6 +652,7 @@ test.describe('studyview tests', () => {
     });
 
     test.describe.serial('crc_msk_2017 study tests', () => {
+        test.describe.configure({ retries: 0 });
         let page: Page;
         test.beforeAll(async ({ browser }) => {
             page = await browser.newPage({
@@ -952,6 +958,7 @@ test.describe('studyview tests', () => {
     );
 
     test.describe.serial('the gene panel is loaded properly', () => {
+        test.describe.configure({ retries: 0 });
         let page: Page;
         test.beforeAll(async ({ browser }) => {
             page = await browser.newPage({

@@ -31,6 +31,7 @@ const COLOR_PICKER_ICON = '[data-test="color-picker-icon"]';
 test.describe.serial(
     'oncoprint results-view clinical track color config',
     () => {
+        test.describe.configure({ retries: 0 });
         let page: Page;
         let trackOpts: { button: string; dropdown: string };
 
@@ -179,6 +180,7 @@ test.describe.serial(
 );
 
 test.describe.serial('oncoprint white background for glyphs toggle', () => {
+    test.describe.configure({ retries: 0 });
     let page: Page;
 
     test.beforeAll(async ({ browser }) => {

@@ -118,6 +118,7 @@ async function clickBoldByText(page: Page, text: string) {
 
 test.describe('results view comparison tab screenshot tests', () => {
     test.describe.serial('general screenshot tests', () => {
+        test.describe.configure({ retries: 0 });
         let page: Page;
 
         test.beforeAll(async ({ browser }) => {
@@ -445,6 +446,7 @@ test.describe('results view comparison tab screenshot tests', () => {
     });
 
     test.describe.serial('delete group from session', () => {
+        test.describe.configure({ retries: 0 });
         let page: Page;
 
         test.beforeAll(async ({ browser }) => {
@@ -527,6 +529,7 @@ test.describe('results view comparison tab screenshot tests', () => {
         });
 
         test.describe.serial('venn diagram with overlap', () => {
+            test.describe.configure({ retries: 0 });
             let page: Page;
 
             test.beforeAll(async ({ browser }) => {
@@ -579,6 +582,7 @@ test.describe('results view comparison tab screenshot tests', () => {
         });
 
         test.describe.serial('venn diagram with complex overlaps', () => {
+            test.describe.configure({ retries: 0 });
             let page: Page;
             const buttonA =
                 'button[data-test="groupSelectorButtonAltered group"]';
@@ -701,6 +705,7 @@ test.describe('results view comparison tab screenshot tests', () => {
     });
 
     test.describe.serial('overlap upset diagram group selection', () => {
+        test.describe.configure({ retries: 0 });
         let page: Page;
 
         test.beforeAll(async ({ browser }) => {

@@ -268,6 +268,7 @@ test.describe('case set selection in front page query form', () => {
 test.describe.serial(
     'default case sets across single->select-all-filtered->single flow',
     () => {
+        test.describe.configure({ retries: 0 });
         let page: Page;
 
         test.beforeAll(async ({ browser }) => {
@@ -392,6 +393,7 @@ test.describe.serial(
 test.describe.serial(
     'genetic profile selection in front page query form',
     () => {
+        test.describe.configure({ retries: 0 });
         let page: Page;
 
         test.beforeAll(async ({ browser }) => {

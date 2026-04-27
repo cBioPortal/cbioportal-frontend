@@ -24,6 +24,7 @@ import {
 const EDIT_COLORS_MENU_ITEM = 'li:nth-child(11)';
 
 test.describe.serial('oncoprinter color configuration', () => {
+    test.describe.configure({ retries: 0 });
     let page: Page;
     let trackOpts: { button: string; dropdown: string };
 

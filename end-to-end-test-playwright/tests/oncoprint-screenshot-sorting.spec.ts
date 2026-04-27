@@ -24,6 +24,7 @@ import {
  *     column-gap interactions.
  */
 test.describe.serial('sorting flow', () => {
+    test.describe.configure({ retries: 0 });
     let page: Page;
 
     const eventsPerSampleRadio =

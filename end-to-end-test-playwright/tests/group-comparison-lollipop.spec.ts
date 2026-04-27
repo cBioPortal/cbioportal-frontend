@@ -105,6 +105,7 @@ test.describe('group comparison mutations tab tests', () => {
     test.describe.serial(
         'alerts, tooltips, gene selection, tracks, badges',
         () => {
+            test.describe.configure({ retries: 0 });
             let page: Page;
 
             test.beforeAll(async ({ browser }) => {
@@ -122,6 +123,7 @@ test.describe('group comparison mutations tab tests', () => {
             });
 
             test.describe.serial('lollipop alerts and plot display', () => {
+                test.describe.configure({ retries: 0 });
                 test('too many groups alert displayed when more than 2 groups selected', async () => {
                     await expect(
                         byTestHandle(page, 'TooManyGroupsAlert')
@@ -157,6 +159,7 @@ test.describe('group comparison mutations tab tests', () => {
             });
 
             test.describe.serial('lollipop tooltip display', () => {
+                test.describe.configure({ retries: 0 });
                 test('displays double tooltip when lollipop is present in both plots at the same position', async () => {
                     await expect(
                         page.locator('.lollipop-0').first()
@@ -215,6 +218,7 @@ test.describe('group comparison mutations tab tests', () => {
             test.describe.serial(
                 'selecting gene with dropdown and tabs',
                 () => {
+                    test.describe.configure({ retries: 0 });
                     test('clicking on gene tab sets the selected gene', async () => {
                         await page.locator('a.tabAnchor_TP53').click();
                         const plotH3 = page
@@ -254,6 +258,7 @@ test.describe('group comparison mutations tab tests', () => {
             );
 
             test.describe.serial('adding annotation tracks', () => {
+                test.describe.configure({ retries: 0 });
                 test('track visibility stays on gene change', async () => {
                     await page.locator('div.annotation-track-selector').hover();
                     await page.locator('div.annotation-track-selector').click();
@@ -271,6 +276,7 @@ test.describe('group comparison mutations tab tests', () => {
             });
 
             test.describe.serial('protein badge selecting', () => {
+                test.describe.configure({ retries: 0 });
                 test('clicking badge filters both top and bottom plots', async () => {
                     // deselect protein driver badge
                     await byTestHandle(page, 'badge-truncating_putative_driver')
@@ -667,6 +673,7 @@ test.describe('group comparison mutations tab tests', () => {
             });
 
             test.describe.serial('protein only selecting', () => {
+                test.describe.configure({ retries: 0 });
                 test('clicking protein driver/vus badge only button selects protein driver/vus, deselects others', async () => {
                     await byTestHandle(page, 'badge-splice_putative_driver')
                         .first()
@@ -1034,6 +1041,7 @@ test.describe('group comparison mutations tab tests', () => {
     );
 
     test.describe.serial('fisher exact and pagination', () => {
+        test.describe.configure({ retries: 0 });
         let page: Page;
 
         test.beforeAll(async ({ browser }) => {
@@ -1051,6 +1059,7 @@ test.describe('group comparison mutations tab tests', () => {
         });
 
         test.describe.serial('displaying fisher exact test label', () => {
+            test.describe.configure({ retries: 0 });
             test('fisher test text and tooltip dynamically changes when filtering and selecting', async () => {
                 await byTestHandle(page, 'missense_putative_driver_only')
                     .first()
@@ -1126,6 +1135,7 @@ test.describe('group comparison mutations tab tests', () => {
         test.describe.serial(
             'displaying table header and pagination status text',
             () => {
+                test.describe.configure({ retries: 0 });
                 test('displays correct text and number of mutations and protein changes when filtering and selecting', async () => {
                     // filter value
                     await page

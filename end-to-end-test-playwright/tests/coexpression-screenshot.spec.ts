@@ -50,6 +50,7 @@ async function waitForCoexpressionPlot(page: Page) {
 }
 
 test.describe.serial('coexpression tab screenshot tests', () => {
+    test.describe.configure({ retries: 0 });
     let page: Page;
 
     test.beforeAll(async ({ browser }) => {

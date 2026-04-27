@@ -58,6 +58,7 @@ const BRCA_TCGA_BASE_URL =
     '&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=brca_tcga_mutations';
 
 test.describe.serial('plots tab screenshot tests', () => {
+    test.describe.configure({ retries: 0 });
     let page: Page;
 
     test.beforeAll(async ({ browser }) => {

@@ -96,6 +96,7 @@ test.describe('mutation table: basic search', () => {
 test.describe.serial(
     'mutation table: exon + HGVSc columns (genome nexus)',
     () => {
+        test.describe.configure({ retries: 0 });
         let page: Page;
 
         test.beforeAll(async ({ browser }) => {

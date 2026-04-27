@@ -62,6 +62,7 @@ test.describe('group comparison venn diagrams', () => {
     });
 
     test.describe.serial('venn diagram with overlap', () => {
+        test.describe.configure({ retries: 0 });
         let page: Page;
 
         test.beforeAll(async ({ browser }) => {
@@ -112,6 +113,7 @@ test.describe('group comparison venn diagrams', () => {
     });
 
     test.describe.serial('venn diagram with complex overlaps', () => {
+        test.describe.configure({ retries: 0 });
         let page: Page;
         const buttonA = 'button[data-test="groupSelectorButtonAll Cases"]';
         const buttonB = 'button[data-test="groupSelectorButtonMetastasis"]';
@@ -232,6 +234,7 @@ test.describe('group comparison venn diagrams', () => {
 });
 
 test.describe.serial('group comparison overlap upset diagram', () => {
+    test.describe.configure({ retries: 0 });
     let page: Page;
 
     test.beforeAll(async ({ browser }) => {

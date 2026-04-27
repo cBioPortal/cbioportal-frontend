@@ -43,6 +43,7 @@ async function dispatchSvgClick(page: Page, selector: string) {
 }
 
 test.describe.serial('results view comparison tab venn diagram', () => {
+    test.describe.configure({ retries: 0 });
     let page: Page;
 
     test.beforeAll(async ({ browser }) => {
@@ -187,6 +188,7 @@ test.describe.serial('results view comparison tab venn diagram', () => {
 });
 
 test.describe.serial('results view comparison tab upset diagram', () => {
+    test.describe.configure({ retries: 0 });
     let page: Page;
 
     test.beforeAll(async ({ browser }) => {

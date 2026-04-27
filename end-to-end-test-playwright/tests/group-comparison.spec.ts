@@ -37,6 +37,7 @@ async function dispatchSvgClick(page: Page, selector: string) {
 }
 
 test.describe.serial('group comparison venn diagram create-group', () => {
+    test.describe.configure({ retries: 0 });
     let page: Page;
 
     test.beforeAll(async ({ browser }) => {
@@ -154,6 +155,7 @@ test.describe.serial('group comparison venn diagram create-group', () => {
 });
 
 test.describe.serial('group comparison upset diagram create-group', () => {
+    test.describe.configure({ retries: 0 });
     let page: Page;
 
     test.beforeAll(async ({ browser }) => {

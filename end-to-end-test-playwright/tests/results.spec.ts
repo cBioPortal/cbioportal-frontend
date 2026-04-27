@@ -119,6 +119,7 @@ test.describe('Cancer Type Summary Bar Chart', () => {
     });
 
     test.describe.serial('customization functionality', () => {
+        test.describe.configure({ retries: 0 });
         let page: Page;
 
         test.beforeAll(async ({ browser }) => {
@@ -244,6 +245,7 @@ test.describe('Mutations Tab', () => {
     });
 
     test.describe.serial('Lollipop Plot Tracks', () => {
+        test.describe.configure({ retries: 0 });
         let page: Page;
 
         test.beforeAll(async ({ browser }) => {
