@@ -327,6 +327,43 @@ jobs:
       CHROMEDRIVER_CUSTOM_PATH: /usr/local/bin/chromedriver
     <<: *run_e2e_and_save_artifacts
 
+  playwright_e2e_remote:
+    docker:
+      - image: mcr.microsoft.com/playwright:v1.59.1-jammy
+    resource_class: large
+    parallelism: 12
+    working_directory: /tmp/repo/cbioportal-frontend
+    environment:
+      PW_DOCKER: '1'
+      CI: 'true'
+      HOME: /tmp
+      CBIOPORTAL_URL: https://www.cbioportal.org
+      PLAYWRIGHT_JUNIT_OUTPUT_NAME: test-results/junit.xml
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
+          command: npm ci
+      - run:
+          name: Run Playwright shard
+          working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
+          command: |
+            FILES=$(circleci tests glob 'tests/*.spec.ts' \
+              | circleci tests split --split-by=timings --timings-type=filename)
+            echo "Files for this container:"
+            printf '  %s\n' $FILES
+            mkdir -p test-results
+            npx playwright test --workers=2 --reporter=list,junit $FILES
+      - store_test_results:
+          path: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright/test-results
+      - store_artifacts:
+          path: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright/playwright-report
+          destination: playwright-report
+      - store_artifacts:
+          path: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright/test-results
+          destination: test-results
+
   prettier:
     <<: *defaults
     resource_class: medium
@@ -643,6 +680,9 @@ workflows:
           requires:
             - pull_cbioportal_test_codebase
             - build_frontend
+      - playwright_e2e_remote:
+          requires:
+            - checkout
       - api_sync_cbioportal:
           requires:
             - build_frontend
