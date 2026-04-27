@@ -353,16 +353,49 @@ jobs:
               | circleci tests split --split-by=timings --timings-type=filename)
             echo "Files for this container:"
             printf '  %s\n' $FILES
-            mkdir -p test-results
-            npx playwright test --workers=2 --reporter=list,junit,html $FILES
+            mkdir -p test-results blob-report
+            # blob reporter writes a zip we'll merge in the next job
+            npx playwright test --workers=2 \
+              --reporter=list,junit,blob \
+              $FILES
+            # uniquify the blob filename so persist_to_workspace doesn't collide
+            mv blob-report/report-*.zip blob-report/blob-${CIRCLE_NODE_INDEX}.zip || true
       - store_test_results:
           path: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright/test-results
       - store_artifacts:
-          path: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright/playwright-report
-          destination: playwright-report
-      - store_artifacts:
           path: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright/test-results
           destination: test-results
+      - persist_to_workspace:
+          root: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
+          paths:
+            - blob-report
+
+  playwright_merge_reports:
+    docker:
+      - image: mcr.microsoft.com/playwright:v1.59.1-jammy
+    resource_class: medium
+    working_directory: /tmp/repo/cbioportal-frontend
+    environment:
+      HOME: /tmp
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
+      - run:
+          name: Install dependencies
+          working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
+          command: npm ci
+      - run:
+          name: Merge per-shard blob reports into one HTML report
+          working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
+          command: |
+            ls -la blob-report/ || (echo "no blobs found" && exit 1)
+            npx playwright merge-reports \
+              --reporter=html \
+              blob-report
+      - store_artifacts:
+          path: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright/playwright-report
+          destination: playwright-report
 
   prettier:
     <<: *defaults
@@ -683,6 +716,9 @@ workflows:
       - playwright_e2e_remote:
           requires:
             - checkout
+      - playwright_merge_reports:
+          requires:
+            - playwright_e2e_remote
       - api_sync_cbioportal:
           requires:
             - build_frontend
