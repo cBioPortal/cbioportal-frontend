@@ -51,6 +51,7 @@
     "serveDistLocalDb": "./end-to-end-test/local/runtime-config/serve_dist.sh",
     "testTime": "start_time=`date +%s` && karma start karma.conf.js && echo run time is $(expr `date +%s` - $start_time) s",
     "test": "pnpm run testMain",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
     "check-env": "echo ",
     "testMain": "jest $GREP --env=jsdom --runInBand --ci --reporters=default --reporters=jest-junit",
     "testPackagesCI": "JEST_JUNIT_UNIQUE_OUTPUT_NAME=true JEST_JUNIT_OUTPUT_DIR=/tmp/junit/module/ JEST_JUNIT_OUTPUT_NAME=unit-test-module pnpm run testPackages",
