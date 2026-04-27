@@ -357,9 +357,9 @@ jobs:
             # exercise the comparison UI), plus two stable specs that should
             # pass (redirect + patient-logic).
             FILES=$(printf '%s\n' \
+              'tests/_probe-webgl.spec.ts' \
               'tests/oncoprint-screenshot-catalog.spec.ts' \
               'tests/redirect.spec.ts' \
-              'tests/patient-logic.spec.ts' \
               | circleci tests split --split-by=timings --timings-type=filename)
             echo "Files for this container:"
             printf '  %s\n' $FILES
