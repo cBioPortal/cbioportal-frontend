@@ -42,7 +42,13 @@ export default defineConfig({
         toHaveScreenshot: {
             maxDiffPixelRatio: 0.01,
             threshold: 0.2,
-            animations: 'disabled',
+            // Was 'disabled', but oncoprint draws into its WebGL canvas
+            // via requestAnimationFrame — Playwright's "pause animations"
+            // hook intercepts RAF, which leaves the canvas empty
+            // (purple block) at screenshot time. Allow animations so the
+            // initial draw call actually runs; we still freeze layout
+            // animations via CSS in the suite.
+            animations: 'allow',
             caret: 'hide',
         },
     },
