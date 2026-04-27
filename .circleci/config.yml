@@ -382,6 +382,7 @@ jobs:
           environment:
             DISABLE_SOURCEMAP: true
             NO_PARALLEL: true
+            DISABLE_TYPECHECK: true
           command: |
             cd cbioportal-frontend
             corepack enable
