@@ -354,7 +354,7 @@ jobs:
             echo "Files for this container:"
             printf '  %s\n' $FILES
             mkdir -p test-results
-            npx playwright test --workers=2 --reporter=list,junit $FILES
+            npx playwright test --workers=2 --reporter=list,junit,html $FILES
       - store_test_results:
           path: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright/test-results
       - store_artifacts:
