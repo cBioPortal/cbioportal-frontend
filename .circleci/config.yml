@@ -325,11 +325,43 @@ jobs:
           paths:
             - ~/.local/share/pnpm/store
       - run:
+          name: Compute packages source hash for turbo cache key
+          command: |
+            cd cbioportal-frontend
+            find packages -type f \
+              \( -name '*.ts' -o -name '*.tsx' -o -name '*.js' -o -name '*.jsx' \
+                 -o -name '*.json' -o -name '*.css' -o -name '*.scss' \
+                 -o -name 'rollup.config.*' -o -name 'tsconfig*.json' \) \
+              -not -path '*/node_modules/*' -not -path '*/dist/*' \
+              | LC_ALL=C sort | xargs sha256sum | sha256sum | cut -c1-16 \
+              > /tmp/packages-src-hash
+            cat /tmp/packages-src-hash
+      - restore_cache:
+          name: Restore turbo cache
+          keys:
+            - v1-turbo-{{ checksum "/tmp/packages-src-hash" }}
+            - v1-turbo-
+      - run:
           name: Build workspace packages
           command: |
             cd cbioportal-frontend
             corepack enable
             pnpm -w run buildModules
+      - save_cache:
+          name: Save turbo cache
+          key: v1-turbo-{{ checksum "/tmp/packages-src-hash" }}
+          paths:
+            - cbioportal-frontend/.turbo
+            - cbioportal-frontend/packages/cbioportal-clinical-timeline/.turbo
+            - cbioportal-frontend/packages/cbioportal-frontend-commons/.turbo
+            - cbioportal-frontend/packages/cbioportal-ts-api-client/.turbo
+            - cbioportal-frontend/packages/cbioportal-utils/.turbo
+            - cbioportal-frontend/packages/genome-nexus-ts-api-client/.turbo
+            - cbioportal-frontend/packages/oncokb-frontend-commons/.turbo
+            - cbioportal-frontend/packages/oncokb-ts-api-client/.turbo
+            - cbioportal-frontend/packages/oncoprintjs/.turbo
+            - cbioportal-frontend/packages/react-mutation-mapper/.turbo
+            - cbioportal-frontend/packages/react-variant-view/.turbo
       - run:
           name: Build frontend application
           environment:
