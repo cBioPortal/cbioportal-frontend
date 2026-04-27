@@ -63,13 +63,10 @@ export default defineConfig({
             name: 'chromium',
             use: {
                 ...devices['Desktop Chrome'],
-                // Switched off chromium-headless-shell because that
-                // stripped-down binary lacks SwiftShader and renders
-                // every WebGL <canvas> (oncoprint, etc.) as black. Full
-                // headless chromium has SwiftShader compiled in, so we
-                // pin GL to the software path explicitly to keep
-                // rendering deterministic across hosts.
-                channel: 'chromium',
+                // No `channel` — Playwright's bundled Chromium runs in
+                // its "new headless" mode by default, which (unlike the
+                // chromium-headless-shell binary) has SwiftShader linked
+                // in for software WebGL.
                 launchOptions: {
                     // Kill the most common sources of per-run subpixel
                     // drift: fractional glyph placement, LCD-RGB
@@ -80,13 +77,14 @@ export default defineConfig({
                         '--disable-font-subpixel-positioning',
                         '--disable-lcd-text',
                         '--font-render-hinting=none',
-                        // Force WebGL onto SwiftShader (software ANGLE
-                        // backend) so canvas content is captured AND
-                        // bit-stable across hosts.
-                        '--use-gl=angle',
-                        '--use-angle=swiftshader',
+                        // Force WebGL onto SwiftShader so canvas content
+                        // is captured AND bit-stable across hosts. The
+                        // direct --use-gl=swiftshader path tends to be
+                        // more reliable than going through ANGLE.
+                        '--use-gl=swiftshader',
                         '--enable-unsafe-swiftshader',
                         '--ignore-gpu-blocklist',
+                        '--enable-webgl',
                         ...(isLocaldev
                             ? [
                                   // Private Network Access + the newer
