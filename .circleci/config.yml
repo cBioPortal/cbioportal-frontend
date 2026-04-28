@@ -383,6 +383,11 @@ jobs:
       - attach_workspace:
           at: /tmp/repo
       - restore_cache:
+          name: Restore node_modules cache
+          keys:
+            - v1-node-modules-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}
+      - restore_cache:
+          name: Restore pnpm store
           keys:
             - v12-pnpm-store-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}
       - run:
@@ -396,6 +401,21 @@ jobs:
           key: v12-pnpm-store-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}
           paths:
             - ~/.local/share/pnpm/store
+      - save_cache:
+          name: Save node_modules cache
+          key: v1-node-modules-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}
+          paths:
+            - cbioportal-frontend/node_modules
+            - cbioportal-frontend/packages/cbioportal-clinical-timeline/node_modules
+            - cbioportal-frontend/packages/cbioportal-frontend-commons/node_modules
+            - cbioportal-frontend/packages/cbioportal-ts-api-client/node_modules
+            - cbioportal-frontend/packages/cbioportal-utils/node_modules
+            - cbioportal-frontend/packages/genome-nexus-ts-api-client/node_modules
+            - cbioportal-frontend/packages/oncokb-frontend-commons/node_modules
+            - cbioportal-frontend/packages/oncokb-ts-api-client/node_modules
+            - cbioportal-frontend/packages/oncoprintjs/node_modules
+            - cbioportal-frontend/packages/react-mutation-mapper/node_modules
+            - cbioportal-frontend/packages/react-variant-view/node_modules
       - run:
           name: Compute packages source hash for turbo cache key
           command: |
