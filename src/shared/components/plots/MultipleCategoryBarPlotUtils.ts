@@ -1,5 +1,5 @@
 import { IStringAxisData } from './PlotsTabUtils';
-import { SortByOptions } from './PlotsTab';
+import { SortByOptions } from './PlotsTabTypes';
 import _ from 'lodash';
 import { IMultipleCategoryBarPlotData } from 'shared/components/plots/MultipleCategoryBarPlot';
 interface CountItem {

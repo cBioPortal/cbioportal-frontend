@@ -169,11 +169,31 @@ import { AnnotatedNumericGeneMolecularData } from 'shared/model/AnnotatedNumeric
 import { ExtendedAlteration } from 'shared/model/ExtendedAlteration';
 import CaseFilterWarning from '../banners/CaseFilterWarning';
 import { SelectedDataAlert } from './SelectedDataAlert';
-import SampleManager from 'pages/patientView/SampleManager';
 import PatientViewUrlWrapper, {
     PatientViewUrlQuery,
 } from 'pages/patientView/PatientViewUrlWrapper';
 import { PlotsSelectionParam } from './PlotsTabUrlParameters';
+import {
+    AxisMenuSelection,
+    ColoringMenuOmnibarGroup,
+    ColoringMenuOmnibarOption,
+    ColoringMenuSelection,
+    ColoringType,
+    DiscreteVsDiscretePlotType,
+    MutationCountBy,
+    PlotType,
+    PlotsTabOption,
+    PotentialColoringType,
+    SampleIdsForPatientIds,
+    SelectedColoringTypes,
+    SortByOptions,
+    StructuralVariantCountBy,
+    NONE_SELECTED_OPTION_STRING_VALUE,
+    NONE_SELECTED_OPTION_NUMERICAL_VALUE,
+    NONE_SELECTED_OPTION_LABEL,
+    SAME_SELECTED_OPTION_STRING_VALUE,
+    SAME_SELECTED_OPTION_NUMERICAL_VALUE,
+} from './PlotsTabTypes';
 
 enum EventKey {
     horz_logScale,
@@ -185,103 +205,10 @@ enum EventKey {
     sortByMedian,
 }
 
-export enum ColoringType {
-    ClinicalData,
-    MutationType,
-    CopyNumber,
-    LimitVal,
-    StructuralVariant,
-    None,
-}
-
-export enum PotentialColoringType {
-    GenomicData,
-    None,
-    LimitValGenomicData,
-    LimitVal,
-}
-
-export type SelectedColoringTypes = Partial<{ [c in ColoringType]: any }>;
-
 export type PlotsTabURLQuery =
     | ResultsViewURLQuery
     | StudyViewURLQuery
     | PatientViewUrlQuery;
-
-export enum PlotType {
-    ScatterPlot,
-    WaterfallPlot,
-    BoxPlot,
-    DiscreteVsDiscrete,
-}
-
-export enum DiscreteVsDiscretePlotType {
-    Bar = 'Bar',
-    StackedBar = 'StackedBar',
-    PercentageStackedBar = 'PercentageStackedBar',
-    Table = 'Table',
-}
-
-export enum SortByOptions {
-    Alphabetically = 'alphabetically',
-    SortByTotalSum = 'SortByTotalSum',
-}
-
-export enum MutationCountBy {
-    MutationType = 'MutationType',
-    MutatedVsWildType = 'MutatedVsWildType',
-    DriverVsVUS = 'DriverVsVUS',
-    VariantAlleleFrequency = 'VariantAlleleFrequency',
-    CancerCellFraction = 'CancerCellFraction',
-    Clonality = 'Clonality',
-}
-
-export enum StructuralVariantCountBy {
-    VariantType = 'VariantType',
-    MutatedVsWildType = 'MutatedVsWildType',
-}
-
-export type AxisMenuSelection = {
-    entrezGeneId?: number;
-    genesetId?: string;
-    genericAssayEntityId?: string;
-    selectedGeneOption?: PlotsTabGeneOption;
-    selectedDataSourceOption?: PlotsTabOption;
-    selectedGenesetOption?: PlotsTabOption;
-    selectedGenericAssayOption?: PlotsTabOption;
-    genericAssayDataType?: string; // LIMIT-VALUE, CATEGORICAL, BINARY
-    selectedCategories: any[];
-    dataType?: string; // Generic Assay saves genericAssayType as dataType
-    dataSourceId?: string;
-    mutationCountBy: MutationCountBy;
-    structuralVariantCountBy: StructuralVariantCountBy;
-    logScale: boolean;
-};
-
-export type ColoringMenuOmnibarOption = {
-    label: string;
-    value: string;
-    info: {
-        entrezGeneId?: number;
-        clinicalAttribute?: ClinicalAttribute;
-    };
-};
-
-export type ColoringMenuOmnibarGroup = {
-    label: string;
-    options: ColoringMenuOmnibarOption[];
-};
-
-export type ColoringMenuSelection = {
-    selectedOption: ColoringMenuOmnibarOption | undefined;
-    logScale?: boolean;
-    readonly colorByMutationType: boolean;
-    readonly colorByCopyNumber: boolean;
-    readonly colorByStructuralVariant: boolean;
-    default: {
-        entrezGeneId?: number;
-    };
-};
 
 export interface IPlotsTabProps {
     filteredSamplesByDetailedCancerType: MobxPromise<{
@@ -399,26 +326,6 @@ export interface IPlotsTabProps {
     ) => JSX.Element;
 }
 
-export type PlotsTabDataSource = {
-    [dataType: string]: { value: string; label: string }[];
-};
-
-export type PlotsTabOption = {
-    value: string;
-    label: string;
-    plotAxisLabel?: string;
-    genericAssayDataType?: string;
-};
-
-export type PlotsTabGeneOption = {
-    value: number; // entrez id
-    label: string; // hugo symbol
-};
-
-export type SampleIdsForPatientIds = {
-    [patientId: string]: string[];
-};
-
 const searchInputTimeoutMs = 600;
 
 class PlotsTabScatterPlot extends ScatterPlot<IScatterPlotData> {}
@@ -427,12 +334,6 @@ class PlotsTabWaterfallPlot extends WaterfallPlot<IWaterfallPlotData> {}
 
 const SVG_ID = 'plots-tab-plot-svg';
 
-export const NONE_SELECTED_OPTION_STRING_VALUE = 'none';
-export const NONE_SELECTED_OPTION_NUMERICAL_VALUE = -10000;
-export const NONE_SELECTED_OPTION_LABEL = 'Ordered samples';
-export const ALL_SELECTED_OPTION_NUMERICAL_VALUE = -30000;
-export const SAME_SELECTED_OPTION_STRING_VALUE = 'same';
-export const SAME_SELECTED_OPTION_NUMERICAL_VALUE = -20000;
 const LEGEND_TO_BOTTOM_WIDTH_THRESHOLD = 550; // when plot is wider than this value, the legend moves from right to bottom of screen
 const DISCRETE_CATEGORY_LIMIT = 150; // when a discrete variable has more categories, the discrete plot will not be rendered.
 

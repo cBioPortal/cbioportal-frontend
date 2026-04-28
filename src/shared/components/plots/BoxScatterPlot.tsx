@@ -47,7 +47,7 @@ import WindowStore from '../window/WindowStore';
 import LegendDataComponent from './LegendDataComponent';
 import LegendLabelComponent from './LegendLabelComponent';
 import { PQValueLabel } from 'shared/components/plots/MultipleCategoryBarPlot';
-import { SampleIdsForPatientIds } from './PlotsTab';
+import { SampleIdsForPatientIds } from './PlotsTabTypes';
 
 export interface IBaseBoxScatterPlotPoint {
     value: number;

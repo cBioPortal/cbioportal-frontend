@@ -10,7 +10,7 @@ import {
     StructuralVariantCountBy,
     PlotsTabOption,
     SelectedColoringTypes,
-} from './PlotsTab';
+} from './PlotsTabTypes';
 import {
     CancerStudy,
     ClinicalAttribute,

@@ -3,7 +3,7 @@ import {
     PlotsTabDataSource,
     NONE_SELECTED_OPTION_STRING_VALUE,
     NONE_SELECTED_OPTION_LABEL,
-} from './PlotsTab';
+} from './PlotsTabTypes';
 import { AlterationTypeConstants } from 'shared/constants';
 import { SpecialAttribute } from 'shared/cache/ClinicalDataCache';
 import { CLIN_ATTR_DATA_TYPE } from './PlotsTabUtils';
