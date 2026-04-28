@@ -385,7 +385,7 @@ jobs:
       - restore_cache:
           name: Restore node_modules cache
           keys:
-            - v1-node-modules-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}
+            - v2-node-modules-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}
       - restore_cache:
           name: Restore pnpm store
           keys:
@@ -408,7 +408,7 @@ jobs:
             - ~/.local/share/pnpm/store
       - save_cache:
           name: Save node_modules cache
-          key: v1-node-modules-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}
+          key: v2-node-modules-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}
           paths:
             - cbioportal-frontend/node_modules
             - cbioportal-frontend/packages/cbioportal-clinical-timeline/node_modules
