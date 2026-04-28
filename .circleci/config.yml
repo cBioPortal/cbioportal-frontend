@@ -394,8 +394,13 @@ jobs:
           name: Install dependencies
           command: |
             cd cbioportal-frontend
+            if [ -f node_modules/.cbio-cache-ok ]; then
+              echo "node_modules cache hit (lockfile unchanged) — skipping pnpm install"
+              exit 0
+            fi
             corepack enable
             pnpm install --frozen-lockfile
+            touch node_modules/.cbio-cache-ok
       - save_cache:
           name: Save pnpm store
           key: v12-pnpm-store-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}
