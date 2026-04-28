@@ -1,4 +1,4 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, Page } from '../fixtures';
 import { byTestHandle } from './helpers/common';
 import { setSettingsMenuOpen, waitForOncoprint } from './helpers/oncoprint';
 

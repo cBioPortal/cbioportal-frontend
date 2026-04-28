@@ -1,4 +1,4 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, Page } from '../fixtures';
 
 /**
  * Clinical timeline — port of end-to-end-test/remote/specs/core/timeline.spec.js

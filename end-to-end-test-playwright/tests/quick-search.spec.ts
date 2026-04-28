@@ -1,4 +1,4 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, Page } from '../fixtures';
 
 /**
  * Port of end-to-end-test/remote/specs/core/quickSearch.spec.js.

@@ -1,4 +1,5 @@
-import { test, expect, Page } from '@playwright/test';
+import { Page } from '@playwright/test';
+import { test, expect } from '../../fixtures';
 import { expectElementScreenshot, waitForNetworkQuiet } from './common';
 import { setSettingsMenuOpen, waitForOncoprint } from './oncoprint';
 

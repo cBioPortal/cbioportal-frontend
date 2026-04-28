@@ -784,14 +784,10 @@ workflows:
       - build_frontend:
           requires:
             - checkout
-      - e2e_localdb_tests:
-          requires:
-            - pull_cbioportal_test_codebase
-            - build_frontend
-      - e2e_tests:
-          requires:
-            - pull_cbioportal_test_codebase
-            - build_frontend
+      # Legacy WDIO e2e jobs (e2e_localdb_tests, e2e_tests) are disabled
+      # on this experimental branch — the Playwright suite below is the
+      # candidate replacement and is what we're validating here. Restore
+      # before merging if Playwright isn't yet a full replacement.
       - playwright_e2e_shards:
           requires:
             - build_frontend

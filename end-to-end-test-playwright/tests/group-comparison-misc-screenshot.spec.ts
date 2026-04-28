@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import { expectElementScreenshot } from './helpers/common';
 import {
     CLINICAL_CATEGORICAL_URL,
