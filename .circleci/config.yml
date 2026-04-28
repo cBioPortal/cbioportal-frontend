@@ -382,10 +382,22 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/repo
+      - run:
+          name: Compute manifests hash for node_modules cache key
+          command: |
+            cd cbioportal-frontend
+            { cat pnpm-lock.yaml; \
+              find . -maxdepth 4 -name 'package.json' \
+                -not -path './node_modules/*' \
+                -not -path './packages/*/node_modules/*' \
+                -not -path './end-to-end-test/node_modules/*' \
+                | LC_ALL=C sort | xargs cat; } \
+              | sha256sum | cut -c1-16 > /tmp/manifests-hash
+            cat /tmp/manifests-hash
       - restore_cache:
           name: Restore node_modules cache
           keys:
-            - v2-node-modules-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}
+            - v3-node-modules-{{ checksum "/tmp/manifests-hash" }}
       - restore_cache:
           name: Restore pnpm store
           keys:
@@ -395,7 +407,7 @@ jobs:
           command: |
             cd cbioportal-frontend
             if [ -f node_modules/.cbio-cache-ok ]; then
-              echo "node_modules cache hit (lockfile unchanged) — skipping pnpm install"
+              echo "node_modules cache hit (manifests + lockfile unchanged) — skipping pnpm install"
               exit 0
             fi
             corepack enable
@@ -408,7 +420,7 @@ jobs:
             - ~/.local/share/pnpm/store
       - save_cache:
           name: Save node_modules cache
-          key: v2-node-modules-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}
+          key: v3-node-modules-{{ checksum "/tmp/manifests-hash" }}
           paths:
             - cbioportal-frontend/node_modules
             - cbioportal-frontend/packages/cbioportal-clinical-timeline/node_modules
