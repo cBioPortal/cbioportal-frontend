@@ -356,8 +356,12 @@ jobs:
       - attach_workspace:
           at: /tmp/repo
       - run:
-          name: Install yarn (not in the Playwright Docker image)
-          command: npm install -g yarn
+          name: Install yarn and jq (not in the Playwright Docker image)
+          command: |
+            npm install -g yarn
+            # jq is needed by scripts/env_vars.sh to parse the GitHub
+            # API response when resolving the PR's base branch.
+            apt-get update && apt-get install -y jq
       - run:
           name: Install Playwright suite dependencies
           working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
