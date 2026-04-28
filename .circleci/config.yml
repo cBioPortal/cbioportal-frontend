@@ -436,8 +436,7 @@ jobs:
       - restore_cache:
           name: Restore turbo cache
           keys:
-            - v1-turbo-{{ checksum "/tmp/packages-src-hash" }}
-            - v1-turbo-
+            - v3-turbo-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}-{{ checksum "/tmp/packages-src-hash" }}
       - run:
           name: Build workspace packages
           command: |
@@ -446,7 +445,7 @@ jobs:
             pnpm -w run buildModules
       - save_cache:
           name: Save turbo cache
-          key: v1-turbo-{{ checksum "/tmp/packages-src-hash" }}
+          key: v3-turbo-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}-{{ checksum "/tmp/packages-src-hash" }}
           paths:
             - cbioportal-frontend/.turbo
             - cbioportal-frontend/packages/cbioportal-clinical-timeline/.turbo
