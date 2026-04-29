@@ -369,6 +369,10 @@ jobs:
           working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
           command: npm ci
       - run:
+          name: Install main project dependencies (needed for serveDist's http-server)
+          working_directory: /tmp/repo/cbioportal-frontend
+          command: pnpm install --frozen-lockfile
+      - run:
           name: Start frontend dev server (pnpm serveDist) on localhost:3000
           background: true
           working_directory: /tmp/repo/cbioportal-frontend
