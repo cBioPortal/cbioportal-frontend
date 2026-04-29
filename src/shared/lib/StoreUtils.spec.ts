@@ -11,11 +11,12 @@ import {
     generateMutationIdByEvent,
     generateMutationIdByGeneAndProteinChangeAndEvent,
     getOncoKbOncogenic,
+    getSampleBiomarkerClinicalData,
     getSampleClinicalDataMapByThreshold,
-    getSampleTmbClinicalData,
     makeStudyToCancerTypeMap,
     mergeMutationsIncludingUncalled,
     noGenePanelUsed,
+    OTHER_BIOMARKERS_CONFIG,
     PUTATIVE_DRIVER,
     PUTATIVE_PASSENGER,
 } from './StoreUtils';
@@ -32,6 +33,7 @@ import {
 } from 'cbioportal-ts-api-client';
 import { initMutation } from 'test/MutationMockUtils';
 import { IndicatorQueryResp } from 'oncokb-ts-api-client';
+import { OtherBiomarkersQueryType } from 'oncokb-frontend-commons';
 import { observable } from 'mobx';
 import { getSimplifiedMutationType } from 'shared/lib/oql/AccessorsForOqlFilter';
 import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
@@ -1508,7 +1510,33 @@ describe('StoreUtils', () => {
         });
     });
 
-    describe('getSampleTmbClinicalData', () => {
+    describe('OTHER_BIOMARKERS_CONFIG', () => {
+        it('has an entry for every OtherBiomarkersQueryType', () => {
+            for (const type of Object.values(OtherBiomarkersQueryType)) {
+                assert.isDefined(
+                    OTHER_BIOMARKERS_CONFIG[type as OtherBiomarkersQueryType],
+                    `missing config for ${type}`
+                );
+            }
+        });
+
+        it('TMBH config lists CVR_TMB_SCORE before TMB_NONSYNONYMOUS', () => {
+            const { attributeIds } =
+                OTHER_BIOMARKERS_CONFIG[OtherBiomarkersQueryType.TMBH];
+            assert.isAbove(attributeIds.length, 1);
+            assert.equal(attributeIds[0], 'CVR_TMB_SCORE');
+            assert.equal(attributeIds[1], 'TMB_NONSYNONYMOUS');
+        });
+
+        it('MSIH config lists a single MSI_SCORE attribute', () => {
+            const { attributeIds } =
+                OTHER_BIOMARKERS_CONFIG[OtherBiomarkersQueryType.MSIH];
+            assert.equal(attributeIds.length, 1);
+            assert.equal(attributeIds[0], 'MSI_SCORE');
+        });
+    });
+
+    describe('getSampleBiomarkerClinicalData', () => {
         it('returns CVR_TMB_SCORE entry when only CVR_TMB_SCORE is present', () => {
             const clinicalData = [
                 {
@@ -1517,7 +1545,11 @@ describe('StoreUtils', () => {
                     value: '15',
                 },
             ] as ClinicalData[];
-            const result = getSampleTmbClinicalData(clinicalData, 's1');
+            const result = getSampleBiomarkerClinicalData(
+                clinicalData,
+                's1',
+                OtherBiomarkersQueryType.TMBH
+            );
             assert.isDefined(result);
             assert.equal(result!.clinicalAttributeId, 'CVR_TMB_SCORE');
             assert.equal(result!.value, '15');
@@ -1531,7 +1563,11 @@ describe('StoreUtils', () => {
                     value: '12',
                 },
             ] as ClinicalData[];
-            const result = getSampleTmbClinicalData(clinicalData, 's1');
+            const result = getSampleBiomarkerClinicalData(
+                clinicalData,
+                's1',
+                OtherBiomarkersQueryType.TMBH
+            );
             assert.isDefined(result);
             assert.equal(result!.clinicalAttributeId, 'TMB_NONSYNONYMOUS');
             assert.equal(result!.value, '12');
@@ -1550,12 +1586,16 @@ describe('StoreUtils', () => {
                     value: '15',
                 },
             ] as ClinicalData[];
-            const result = getSampleTmbClinicalData(clinicalData, 's1');
+            const result = getSampleBiomarkerClinicalData(
+                clinicalData,
+                's1',
+                OtherBiomarkersQueryType.TMBH
+            );
             assert.isDefined(result);
             assert.equal(result!.clinicalAttributeId, 'CVR_TMB_SCORE');
         });
 
-        it('returns undefined when no TMB attribute is present for the sample', () => {
+        it('returns undefined when no TMBH attribute is present for the sample', () => {
             const clinicalData = [
                 {
                     sampleId: 's1',
@@ -1563,7 +1603,11 @@ describe('StoreUtils', () => {
                     value: '5',
                 },
             ] as ClinicalData[];
-            const result = getSampleTmbClinicalData(clinicalData, 's1');
+            const result = getSampleBiomarkerClinicalData(
+                clinicalData,
+                's1',
+                OtherBiomarkersQueryType.TMBH
+            );
             assert.isUndefined(result);
         });
 
@@ -1575,8 +1619,29 @@ describe('StoreUtils', () => {
                     value: '15',
                 },
             ] as ClinicalData[];
-            const result = getSampleTmbClinicalData(clinicalData, 's1');
+            const result = getSampleBiomarkerClinicalData(
+                clinicalData,
+                's1',
+                OtherBiomarkersQueryType.TMBH
+            );
             assert.isUndefined(result);
+        });
+
+        it('returns MSI_SCORE entry for MSIH type', () => {
+            const clinicalData = [
+                {
+                    sampleId: 's1',
+                    clinicalAttributeId: 'MSI_SCORE',
+                    value: '15',
+                },
+            ] as ClinicalData[];
+            const result = getSampleBiomarkerClinicalData(
+                clinicalData,
+                's1',
+                OtherBiomarkersQueryType.MSIH
+            );
+            assert.isDefined(result);
+            assert.equal(result!.clinicalAttributeId, 'MSI_SCORE');
         });
     });
 });

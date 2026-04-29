@@ -67,7 +67,8 @@ import {
     CLINICAL_ATTRIBUTE_ID_ENUM,
     DataTypeConstants,
     GENOME_NEXUS_ARG_FIELD_ENUM,
-    TMB_CLINICAL_ATTRIBUTE_IDS,
+    MSI_H_THRESHOLD,
+    TMB_H_THRESHOLD,
 } from 'shared/constants';
 import { normalizeMutations } from '../components/mutationMapper/MutationMapperUtils';
 import { getServerConfig } from 'config/config';
@@ -1777,25 +1778,60 @@ export function getSampleNumericalClinicalDataValue(
 }
 
 /**
- * Returns the ClinicalData entry for the first TMB attribute found for the
- * given sample, checking all supported TMB attribute IDs in a single pass.
- * Priority order (CVR_TMB_SCORE then TMB_NONSYNONYMOUS) is enforced after
- * the scan by picking the highest-priority match.
- * Returns undefined if no TMB attribute is present for the sample.
+ * Configuration for an "other biomarker" type, declaring which clinical
+ * attribute IDs carry its value (in priority order, highest first) and the
+ * numeric threshold above which a sample is considered positive.
  */
-export function getSampleTmbClinicalData(
+export type BiomarkerConfig = {
+    attributeIds: readonly string[];
+    threshold: number;
+};
+
+/**
+ * Central config for all supported "other biomarker" types.
+ * Each entry declares the clinical attribute IDs to check (in priority order)
+ * and the positivity threshold.  Adding a new biomarker or a new synonym for
+ * an existing one only requires updating this map.
+ */
+export const OTHER_BIOMARKERS_CONFIG: Record<
+    OtherBiomarkersQueryType,
+    BiomarkerConfig
+> = {
+    [OtherBiomarkersQueryType.MSIH]: {
+        attributeIds: [CLINICAL_ATTRIBUTE_ID_ENUM.MSI_SCORE],
+        threshold: MSI_H_THRESHOLD,
+    },
+    [OtherBiomarkersQueryType.TMBH]: {
+        // CVR_TMB_SCORE is preferred (MSK-specific);
+        // TMB_NONSYNONYMOUS is the public/general fallback.
+        attributeIds: [
+            CLINICAL_ATTRIBUTE_ID_ENUM.TMB_SCORE,
+            CLINICAL_ATTRIBUTE_ID_ENUM.TMB_NONSYNONYMOUS,
+        ],
+        threshold: TMB_H_THRESHOLD,
+    },
+};
+
+/**
+ * Returns the highest-priority ClinicalData entry for the given biomarker
+ * type and sample, following the attribute ID priority order declared in
+ * OTHER_BIOMARKERS_CONFIG.  Returns undefined when no matching attribute is
+ * present for the sample.
+ */
+export function getSampleBiomarkerClinicalData(
     clinicalData: ClinicalData[],
-    sampleId: string
+    sampleId: string,
+    type: OtherBiomarkersQueryType
 ): ClinicalData | undefined {
-    const tmbAttrIdSet = new Set<string>(TMB_CLINICAL_ATTRIBUTE_IDS);
+    const { attributeIds } = OTHER_BIOMARKERS_CONFIG[type];
+    const attrIdSet = new Set<string>(attributeIds);
     const candidates = new Map<string, ClinicalData>();
     for (const d of clinicalData) {
-        if (d.sampleId === sampleId && tmbAttrIdSet.has(d.clinicalAttributeId)) {
+        if (d.sampleId === sampleId && attrIdSet.has(d.clinicalAttributeId)) {
             candidates.set(d.clinicalAttributeId, d);
         }
     }
-    // Return in priority order
-    for (const attrId of TMB_CLINICAL_ATTRIBUTE_IDS) {
+    for (const attrId of attributeIds) {
         if (candidates.has(attrId)) {
             return candidates.get(attrId);
         }
@@ -1812,13 +1848,6 @@ export type SampleCancerTypeMap = {
 export type OtherBiomarkerQueryId = {
     sampleId: string;
     type: OtherBiomarkersQueryType;
-};
-
-export const OTHER_BIOMARKERS_CLINICAL_ATTR: {
-    [key in OtherBiomarkersQueryType]: string;
-} = {
-    [OtherBiomarkersQueryType.MSIH]: CLINICAL_ATTRIBUTE_ID_ENUM.MSI_SCORE,
-    [OtherBiomarkersQueryType.TMBH]: CLINICAL_ATTRIBUTE_ID_ENUM.TMB_SCORE,
 };
 
 export const OTHER_BIOMARKERS_QUERY_ID_SEPARATOR = '-&-';

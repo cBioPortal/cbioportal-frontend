@@ -10,9 +10,7 @@ import { PatientViewPageStore } from '../clinicalInformation/PatientViewPageStor
 import { If, Then, Else } from 'react-if';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import {
-    getSampleNumericalClinicalDataValue,
-    OTHER_BIOMARKERS_CLINICAL_ATTR,
-    getSampleTmbClinicalData,
+    getSampleBiomarkerClinicalData,
     getNumericalClinicalDataValue,
 } from 'shared/lib/StoreUtils';
 import { OtherBiomarkersQueryType } from 'oncokb-frontend-commons';
@@ -45,25 +43,16 @@ export default class SampleSummaryList extends React.Component<
         type: OtherBiomarkersQueryType,
         sampleId: string
     ) {
-        // For TMBH, resolve both the attribute ID and its numeric value in a
-        // single array scan (CVR_TMB_SCORE preferred over TMB_NONSYNONYMOUS).
-        // For all other biomarker types use the static attribute mapping.
-        let numericalData: number | undefined;
-        if (type === OtherBiomarkersQueryType.TMBH) {
-            const tmbClinicalData = getSampleTmbClinicalData(
-                this.props.patientViewPageStore.clinicalDataForSamples.result,
-                sampleId
-            );
-            numericalData = tmbClinicalData
-                ? getNumericalClinicalDataValue(tmbClinicalData)
-                : undefined;
-        } else {
-            numericalData = getSampleNumericalClinicalDataValue(
-                this.props.patientViewPageStore.clinicalDataForSamples.result,
-                sampleId,
-                OTHER_BIOMARKERS_CLINICAL_ATTR[type]
-            );
-        }
+        // Resolve the biomarker value using the central config, which declares
+        // all attribute IDs to check and their priority order for each type.
+        const clinicalData = getSampleBiomarkerClinicalData(
+            this.props.patientViewPageStore.clinicalDataForSamples.result,
+            sampleId,
+            type
+        );
+        const numericalData = clinicalData
+            ? getNumericalClinicalDataValue(clinicalData)
+            : undefined;
 
         return this.props.patientViewPageStore.getOtherBiomarkersOncoKbData
             .result[sampleId][type] && numericalData !== undefined ? (
