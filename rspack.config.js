@@ -99,6 +99,7 @@ var sassResourcesLoader = {
 
 var config = {
     stats: 'detailed',
+    devtool: isDev || isTest ? (process.env.DISABLE_SOURCEMAP ? false : 'source-map') : false,
     entry: [`babel-polyfill`, `${path.join(src, 'appBootstrapper.tsx')}`],
     output: {
         path: path.resolve(__dirname, 'dist'),
@@ -235,46 +236,56 @@ var config = {
         rules: [
             {
                 test: /\.tsx?$/,
-                use: [
-                    {
-                        loader: 'babel-loader',
-                        options: {
-                            presets: [
-                                '@babel/preset-env',
-                                '@babel/preset-react',
-                            ],
-                            plugins: ['@babel/plugin-syntax-dynamic-import'],
-
-                            cacheDirectory: babelCacheFolder,
-                        },
-                    },
-                    {
-                        loader: 'ts-loader',
-                        options: {
-                            transpileOnly: transpileOnly,
-                        },
-                    },
-                ],
+                loader: 'builtin:swc-loader',
                 exclude: /node_modules/,
+                options: {
+                    jsc: {
+                        parser: {
+                            syntax: 'typescript',
+                            tsx: true,
+                            decorators: true,
+                            dynamicImport: true,
+                        },
+                        transform: {
+                            legacyDecorator: true,
+                            decoratorMetadata: false,
+                            useDefineForClassFields: true,
+                            react: {
+                                runtime: 'classic',
+                                development: isDev,
+                                refresh: false,
+                            },
+                        },
+                        target: 'es2016',
+                        loose: false,
+                        externalHelpers: false,
+                    },
+                },
             },
             {
                 test: /\.(js|jsx|babel)$/,
-                use: [
-                    {
-                        loader: 'babel-loader',
-                        options: {
-                            presets: [
-                                '@babel/preset-env',
-                                '@babel/preset-react',
-                            ],
-                        },
-                    },
-                ],
+                loader: 'builtin:swc-loader',
                 exclude: function(modulePath) {
                     return (
                         /node_modules/.test(modulePath) &&
                         !/igv\.min/.test(modulePath)
                     );
+                },
+                options: {
+                    jsc: {
+                        parser: {
+                            syntax: 'ecmascript',
+                            jsx: true,
+                            dynamicImport: true,
+                        },
+                        transform: {
+                            react: {
+                                runtime: 'classic',
+                                development: isDev,
+                            },
+                        },
+                        target: 'es2016',
+                    },
                 },
             },
             {
@@ -404,16 +415,19 @@ var config = {
                 test: /lodash/,
                 use: [{ loader: 'imports-loader?define=>false' }],
             },
-            {
-                test: /\.js$/,
-                enforce: 'pre',
-                use: [
-                    {
-                        loader: 'source-map-loader',
-                    },
-                ],
-                exclude: [/igv\.min/, /node_modules\/svg2pdf.js\//],
-            },
+            // source-map-loader only matters when we are emitting source
+            // maps; skipping it in production saves a full pre-pass over
+            // every .js file in node_modules.
+            ...(isDev || isTest
+                ? [
+                      {
+                          test: /\.js$/,
+                          enforce: 'pre',
+                          use: [{ loader: 'source-map-loader' }],
+                          exclude: [/igv\.min/, /node_modules\/svg2pdf.js\//],
+                      },
+                  ]
+                : []),
 
             {
                 test: require.resolve('3dmol'),
@@ -487,19 +501,26 @@ config.plugins = [
 ].concat(config.plugins);
 // END ENV variables
 
-// Type-check in a worker so the build fails on TS errors even when
-// ts-loader runs with transpileOnly. Async in dev, sync in production.
-config.plugins.push(
-    new ForkTsCheckerWebpackPlugin({
-        typescript: {
-            configOverwrite: {
-                compilerOptions: {
-                    skipLibCheck: true,
+// Type-check in a worker. Async means the plugin does not block the
+// bundler emit: the bundle is produced as soon as it is ready, and the
+// typecheck continues in a separate worker process. The build still
+// fails (exit != 0) if the typecheck reports errors.
+// To skip typechecking entirely set DISABLE_TYPECHECK=true (intended for
+// CI configurations that run `tsc --noEmit` as a parallel job).
+if (process.env.DISABLE_TYPECHECK !== 'true') {
+    config.plugins.push(
+        new ForkTsCheckerWebpackPlugin({
+            async: true,
+            typescript: {
+                configOverwrite: {
+                    compilerOptions: {
+                        skipLibCheck: true,
+                    },
                 },
             },
-        },
-    })
-);
+        })
+    );
+}
 
 // include jquery when we load boostrap-sass
 config.module.rules.push({

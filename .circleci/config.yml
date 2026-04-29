@@ -71,6 +71,18 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
         steps:
           - attach_workspace:
               at: /tmp/repo
+          - restore_cache:
+              keys:
+                - v12-pnpm-store-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}
+          - run:
+              name: Install root dependencies
+              command: |
+                export NVM_DIR="$HOME/.nvm"
+                [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+                nvm use 22.18.0
+                cd /tmp/repo/cbioportal-frontend
+                corepack enable
+                pnpm install --frozen-lockfile
 #          - run:
 #              name: Install linux dependencies
 #              command: |
@@ -144,6 +156,15 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/repo
+      - restore_cache:
+          keys:
+            - v12-pnpm-store-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}
+      - run:
+          name: Install root dependencies
+          command: |
+            cd cbioportal-frontend
+            corepack enable
+            pnpm install --frozen-lockfile
       - run:
           name: Check that cbioportal api responses are still the same
           command: |
@@ -157,6 +178,15 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/repo
+      - restore_cache:
+          keys:
+            - v12-pnpm-store-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}
+      - run:
+          name: Install root dependencies
+          command: |
+            cd cbioportal-frontend
+            corepack enable
+            pnpm install --frozen-lockfile
       - run:
           name: Check that dependency api responses (OncoKB, GenomeNexus) are still the same
           command: |
@@ -164,12 +194,45 @@ jobs:
             bash src/test/check_api_sync_dependencies.sh
 
 
+  typecheck:
+    <<: *defaults
+    resource_class: medium
+    steps:
+      - attach_workspace:
+          at: /tmp/repo
+      - restore_cache:
+          keys:
+            - v12-pnpm-store-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}
+      - run:
+          name: Install root dependencies
+          command: |
+            cd cbioportal-frontend
+            corepack enable
+            pnpm install --frozen-lockfile
+      - run:
+          name: TypeScript check
+          environment:
+            NODE_OPTIONS: --max-old-space-size=4096
+          command: |
+            cd cbioportal-frontend
+            corepack enable
+            pnpm run typecheck
+
   unit_tests_main:
     <<: *defaults
     resource_class: medium
     steps:
       - attach_workspace:
           at: /tmp/repo
+      - restore_cache:
+          keys:
+            - v12-pnpm-store-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}
+      - run:
+          name: Install root dependencies
+          command: |
+            cd cbioportal-frontend
+            corepack enable
+            pnpm install --frozen-lockfile
       - run:
           name: Run junit tests main
           environment:
@@ -191,6 +254,15 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/repo
+      - restore_cache:
+          keys:
+            - v12-pnpm-store-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}
+      - run:
+          name: Install root dependencies
+          command: |
+            cd cbioportal-frontend
+            corepack enable
+            pnpm install --frozen-lockfile
       - run:
           name: Run jest junit tests
           environment:
@@ -310,31 +382,100 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/repo
+      - run:
+          name: Compute manifests hash for node_modules cache key
+          command: |
+            cd cbioportal-frontend
+            { cat pnpm-lock.yaml; \
+              find . -maxdepth 4 -name 'package.json' \
+                -not -path './node_modules/*' \
+                -not -path './packages/*/node_modules/*' \
+                -not -path './end-to-end-test/node_modules/*' \
+                | LC_ALL=C sort | xargs cat; } \
+              | sha256sum | cut -c1-16 > /tmp/manifests-hash
+            cat /tmp/manifests-hash
       - restore_cache:
+          name: Restore node_modules cache
+          keys:
+            - v3-node-modules-{{ checksum "/tmp/manifests-hash" }}
+      - restore_cache:
+          name: Restore pnpm store
           keys:
             - v12-pnpm-store-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}
       - run:
           name: Install dependencies
           command: |
             cd cbioportal-frontend
+            if [ -f node_modules/.cbio-cache-ok ]; then
+              echo "node_modules cache hit (manifests + lockfile unchanged) — skipping pnpm install"
+              exit 0
+            fi
             corepack enable
             pnpm install --frozen-lockfile
+            touch node_modules/.cbio-cache-ok
       - save_cache:
           name: Save pnpm store
           key: v12-pnpm-store-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}
           paths:
             - ~/.local/share/pnpm/store
+      - save_cache:
+          name: Save node_modules cache
+          key: v3-node-modules-{{ checksum "/tmp/manifests-hash" }}
+          paths:
+            - cbioportal-frontend/node_modules
+            - cbioportal-frontend/packages/cbioportal-clinical-timeline/node_modules
+            - cbioportal-frontend/packages/cbioportal-frontend-commons/node_modules
+            - cbioportal-frontend/packages/cbioportal-ts-api-client/node_modules
+            - cbioportal-frontend/packages/cbioportal-utils/node_modules
+            - cbioportal-frontend/packages/genome-nexus-ts-api-client/node_modules
+            - cbioportal-frontend/packages/oncokb-frontend-commons/node_modules
+            - cbioportal-frontend/packages/oncokb-ts-api-client/node_modules
+            - cbioportal-frontend/packages/oncoprintjs/node_modules
+            - cbioportal-frontend/packages/react-mutation-mapper/node_modules
+            - cbioportal-frontend/packages/react-variant-view/node_modules
+      - run:
+          name: Compute packages source hash for turbo cache key
+          command: |
+            cd cbioportal-frontend
+            find packages -type f \
+              \( -name '*.ts' -o -name '*.tsx' -o -name '*.js' -o -name '*.jsx' \
+                 -o -name '*.json' -o -name '*.css' -o -name '*.scss' \
+                 -o -name 'rollup.config.*' -o -name 'tsconfig*.json' \) \
+              -not -path '*/node_modules/*' -not -path '*/dist/*' \
+              | LC_ALL=C sort | xargs sha256sum | sha256sum | cut -c1-16 \
+              > /tmp/packages-src-hash
+            cat /tmp/packages-src-hash
+      - restore_cache:
+          name: Restore turbo cache
+          keys:
+            - v3-turbo-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}-{{ checksum "/tmp/packages-src-hash" }}
       - run:
           name: Build workspace packages
           command: |
             cd cbioportal-frontend
             corepack enable
             pnpm -w run buildModules
+      - save_cache:
+          name: Save turbo cache
+          key: v3-turbo-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}-{{ checksum "/tmp/packages-src-hash" }}
+          paths:
+            - cbioportal-frontend/.turbo
+            - cbioportal-frontend/packages/cbioportal-clinical-timeline/.turbo
+            - cbioportal-frontend/packages/cbioportal-frontend-commons/.turbo
+            - cbioportal-frontend/packages/cbioportal-ts-api-client/.turbo
+            - cbioportal-frontend/packages/cbioportal-utils/.turbo
+            - cbioportal-frontend/packages/genome-nexus-ts-api-client/.turbo
+            - cbioportal-frontend/packages/oncokb-frontend-commons/.turbo
+            - cbioportal-frontend/packages/oncokb-ts-api-client/.turbo
+            - cbioportal-frontend/packages/oncoprintjs/.turbo
+            - cbioportal-frontend/packages/react-mutation-mapper/.turbo
+            - cbioportal-frontend/packages/react-variant-view/.turbo
       - run:
           name: Build frontend application
           environment:
             DISABLE_SOURCEMAP: true
             NO_PARALLEL: true
+            DISABLE_TYPECHECK: true
           command: |
             cd cbioportal-frontend
             corepack enable
@@ -345,6 +486,12 @@ jobs:
             cd cbioportal-frontend/end-to-end-test
             corepack enable
             pnpm install --frozen-lockfile --ignore-workspace
+      - run:
+          name: Trim node_modules from workspace before persist
+          command: |
+            cd cbioportal-frontend
+            rm -rf node_modules
+            rm -rf packages/*/node_modules
       - persist_to_workspace:
           root: /tmp/repo
           paths:
@@ -365,6 +512,29 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/repo
+      - run:
+          name: Install Node.js 22.18.0
+          command: |
+            curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            nvm install 22.18.0
+            nvm use 22.18.0
+            nvm alias default 22.18.0
+            node -v
+            npm -v
+      - restore_cache:
+          keys:
+            - v12-pnpm-store-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}
+      - run:
+          name: Install root dependencies
+          command: |
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+            nvm use 22.18.0
+            cd cbioportal-frontend
+            corepack enable
+            pnpm install --frozen-lockfile
       - run:
           name: Generate keycloak config
           environment:
@@ -485,6 +655,9 @@ workflows:
       - unit_tests_main:
           requires:
             - build_frontend
+      - typecheck:
+          requires:
+            - build_frontend
 
 
   nightly:
@@ -523,5 +696,8 @@ workflows:
           requires:
             - build_frontend
       - unit_tests_packages:
+          requires:
+            - build_frontend
+      - typecheck:
           requires:
             - build_frontend
