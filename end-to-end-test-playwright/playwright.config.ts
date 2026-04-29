@@ -12,11 +12,13 @@ const CBIOPORTAL_URL = (
 const inDocker = process.env.PW_DOCKER === '1';
 const SNAPSHOT_DIR = inDocker ? '__snapshots__' : '__local_snapshots__';
 
-// When LOCALDEV=1, tests point at a public cbioportal origin but load the
-// local frontend bundle from https://localhost:3000 (via ?localdev=true).
-// Chromium's Private Network Access gate blocks public→loopback subresource
-// loads by default; disable it so the local bundle can attach.
-const isLocaldev = process.env.LOCALDEV === '1';
+// LOCALDEV defaults ON: tests point at a public cbioportal origin but
+// load the local frontend bundle from https://localhost:3000 (via
+// ?localdev=true). Chromium's Private Network Access gate blocks
+// public→loopback subresource loads by default; disable it so the local
+// bundle can attach. Opt out with LOCALDEV=0 to exercise the deployed
+// bundle on the public origin instead.
+const isLocaldev = process.env.LOCALDEV !== '0';
 
 export default defineConfig({
     testDir: './tests',
@@ -66,7 +68,11 @@ export default defineConfig({
                 // chrome-headless-shell is a separate, stripped-down binary
                 // designed for automated pixel-stable work — less variance
                 // than the full "new headless" Chrome Chromium ships with.
-                channel: 'chromium-headless-shell',
+                // Only relevant when generating/comparing canonical
+                // baselines (Docker mode). On host runs, fall back to the
+                // standard Chromium so `--headed` / `--ui` actually show a
+                // window.
+                channel: inDocker ? 'chromium-headless-shell' : undefined,
                 launchOptions: {
                     // Kill the most common sources of per-run subpixel
                     // drift: fractional glyph placement, LCD-RGB
@@ -84,6 +90,21 @@ export default defineConfig({
                                   // to be disabled for public→loopback
                                   // subresource loads.
                                   '--disable-features=BlockInsecurePrivateNetworkRequests,PrivateNetworkAccessPreflightSupport,PrivateNetworkAccessRespectPreflightResults,LocalNetworkAccessChecks,LocalNetworkAccessChecksWarnings',
+                                  // Inside the Playwright Docker image,
+                                  // `localhost` resolves to the container,
+                                  // not the host running `yarn startSSL`.
+                                  // Remap it at the resolver level so the
+                                  // bundle URL (https://localhost:3000)
+                                  // reaches the host. host.docker.internal
+                                  // is provided by Docker Desktop on macOS
+                                  // and added via --add-host on Linux (see
+                                  // scripts/docker-test.sh). Skip on host
+                                  // runs — there `localhost` already works.
+                                  ...(inDocker
+                                      ? [
+                                            '--host-resolver-rules=MAP localhost host.docker.internal',
+                                        ]
+                                      : []),
                               ]
                             : []),
                     ],

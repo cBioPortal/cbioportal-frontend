@@ -33,6 +33,22 @@ echo "Target: ${CBIOPORTAL_URL:-https://www.cbioportal.org}"
 # -v ...:/work     mounts the suite; node_modules is reused from host
 # PW_DOCKER=1      selected in playwright.config.ts to route snapshots
 #                  to the tracked __snapshots__/ directory
+# LOCALDEV defaults ON: this suite exists to validate locally-built
+# frontend changes against a public backend. Opt out with LOCALDEV=0
+# (e.g. to verify against the deployed bundle on cbioportal.org).
+#
+# --add-host       ensures host.docker.internal points at the host gateway
+#                  so the playwright config's
+#                  `--host-resolver-rules=MAP localhost host.docker.internal`
+#                  can reach `yarn startSSL` on the host's port 3000. On
+#                  macOS Docker Desktop this hostname exists already; on
+#                  Linux the explicit mapping is required. Harmless on Mac.
+LOCALDEV="${LOCALDEV:-1}"
+LOCALDEV_ARGS=()
+if [[ "${LOCALDEV}" != "0" ]]; then
+    LOCALDEV_ARGS+=(--add-host=host.docker.internal:host-gateway)
+fi
+
 exec docker run --rm -i \
     --ipc=host \
     --user "$(id -u):$(id -g)" \
@@ -42,5 +58,7 @@ exec docker run --rm -i \
     -e HOME=/tmp \
     -e CBIOPORTAL_URL="${CBIOPORTAL_URL:-https://www.cbioportal.org}" \
     -e CI="${CI:-}" \
+    -e LOCALDEV="${LOCALDEV}" \
+    ${LOCALDEV_ARGS[@]+"${LOCALDEV_ARGS[@]}"} \
     "${IMAGE}" \
     npx playwright test "$@"

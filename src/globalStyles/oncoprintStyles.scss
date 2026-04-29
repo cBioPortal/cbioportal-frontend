@@ -1,11 +1,4 @@
 #oncoprintDiv {
-    /* TEMP — DO NOT MERGE.
-       Deliberate visual diff to verify the playwright_e2e_shards CI job
-       actually loads the locally-built dist via ?localdev=true. If this
-       outline shows up in failing oncoprint screenshots on CI, the
-       LOCALDEV wiring is working and this block should be reverted. */
-    outline: 5px solid red !important;
-
     .oncoprintjs__track_options__toggle_btn_img {
         top: 4px;
     }
