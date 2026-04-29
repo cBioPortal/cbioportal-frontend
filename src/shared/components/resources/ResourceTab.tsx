@@ -40,7 +40,7 @@ export default class ResourceTab extends React.Component<
             return 0;
         } else {
             const index = this.props.resourceData.findIndex(
-                d => d.url === this.props.urlWrapper.query.resourceUrl
+                (d) => d.url === this.props.urlWrapper.query.resourceUrl
             );
             if (index === -1) {
                 return 0;
@@ -98,7 +98,7 @@ export default class ResourceTab extends React.Component<
 
         try {
             // apply instance specific transformation on url (e.g. to keep state)
-            CUSTOM_URL_TRANSFORMERS.forEach(config => {
+            CUSTOM_URL_TRANSFORMERS.forEach((config) => {
                 if (config.test(this.currentResourceDatum) === true) {
                     url = config.transformer(this.currentResourceDatum);
                 }

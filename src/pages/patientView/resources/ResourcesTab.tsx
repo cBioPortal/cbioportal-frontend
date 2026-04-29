@@ -122,7 +122,7 @@ export default class ResourcesTab extends React.Component<
                 if (this.props.store.resourceIdToResourceData.isComplete) {
                     return !_.some(
                         this.props.store.resourceIdToResourceData.result,
-                        data => data.length > 0
+                        (data) => data.length > 0
                     );
                 }
                 return true;

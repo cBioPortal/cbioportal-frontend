@@ -17,6 +17,7 @@ function makeDefinition(
         customMetaData: '',
         resourceType: 'PATIENT',
         studyId: 'study1',
+        openByDefault: false,
         ...overrides,
     };
 }
@@ -58,7 +59,7 @@ describe('getResourceConfig', () => {
                 'View'
             );
             assert.isString(config.iframeErrorMessage);
-            assert.isNotEmpty(config.iframeErrorMessage);
+            assert.notEqual(config.iframeErrorMessage, '');
         });
 
         it('does not mutate the RESOURCE_CUSTOM_CONFIGS entry', () => {

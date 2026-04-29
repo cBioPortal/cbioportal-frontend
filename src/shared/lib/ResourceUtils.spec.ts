@@ -14,12 +14,13 @@ function makeDef(description: string | undefined): ResourceDefinition {
         customMetaData: '',
         resourceType: 'PATIENT',
         studyId: 'study1',
+        openByDefault: false,
     };
 }
 
-function makeResourceData(
-    description: string | undefined
-): { resourceDefinition?: ResourceDefinition } {
+function makeResourceData(description: string | undefined): {
+    resourceDefinition?: ResourceDefinition;
+} {
     return { resourceDefinition: makeDef(description) };
 }
 

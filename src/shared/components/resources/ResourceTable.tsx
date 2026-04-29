@@ -28,7 +28,7 @@ const ResourceTable = observer(
         const state = useLocalObservable(() => ({
             get data() {
                 // Map incoming resources into row data for the MobX table
-                return resources.map(r => ({
+                return resources.map((r) => ({
                     resource: r,
                     resourceName: r.resourceDefinition?.displayName ?? r.url,
                     url: r.url,
@@ -58,19 +58,22 @@ const ResourceTable = observer(
                 headerRender: () => (
                     <span data-test={'Sample ID'}>{'Sample ID'}</span>
                 ),
-                render: row => <span>{row.sampleId}</span>,
-                download: row => `${row.resource.sampleId ?? ''}`,
-                sortBy: row => `${row.resource.sampleId ?? ''}`,
+                render: (row) => <span>{row.sampleId}</span>,
+                download: (row) => `${row.resource.sampleId ?? ''}`,
+                sortBy: (row) => `${row.resource.sampleId ?? ''}`,
                 filter: (row, _filterString, filterStringUpper) => {
-                    const value = `${row.resource.sampleId ??
-                        ''}`.toUpperCase();
+                    const value = `${
+                        row.resource.sampleId ?? ''
+                    }`.toUpperCase();
                     return value.includes(filterStringUpper ?? '');
                 },
             });
         }
 
         // Determine if there's only one unique resource type
-        const uniqueResourceNames = _.uniq(state.data.map(d => d.resourceName));
+        const uniqueResourceNames = _.uniq(
+            state.data.map((d) => d.resourceName)
+        );
         const resourceColumnName =
             uniqueResourceNames.length === 1 && uniqueResourceNames[0]
                 ? uniqueResourceNames[0]
@@ -82,7 +85,7 @@ const ResourceTable = observer(
                 headerRender: () => (
                     <span data-test={'Resource'}>{resourceColumnName}</span>
                 ),
-                render: row => (
+                render: (row) => (
                     <a
                         onClick={() => openResource(row.resource)}
                         style={{ fontSize: 10 }}
@@ -98,9 +101,9 @@ const ResourceTable = observer(
                         {row.resourceName}
                     </a>
                 ),
-                download: row => row.resourceName,
+                download: (row) => row.resourceName,
                 // Sort by priority to mirror previous initial ordering
-                sortBy: row => row.priority,
+                sortBy: (row) => row.priority,
                 filter: (row, _filterString, filterStringUpper) =>
                     row.resourceName
                         .toUpperCase()
@@ -111,7 +114,7 @@ const ResourceTable = observer(
                 headerRender: () => (
                     <span data-test={'Resource URL'}>{'Resource URL'}</span>
                 ),
-                render: row => (
+                render: (row) => (
                     <a
                         href={row.url}
                         style={{ fontSize: 10 }}
@@ -124,8 +127,8 @@ const ResourceTable = observer(
                         Open in new window
                     </a>
                 ),
-                download: row => row.url,
-                sortBy: row => row.url,
+                download: (row) => row.url,
+                sortBy: (row) => row.url,
                 filter: (row, _filterString, filterStringUpper) =>
                     row.url.toUpperCase().includes(filterStringUpper ?? ''),
             }
@@ -138,9 +141,9 @@ const ResourceTable = observer(
                 headerRender: () => (
                     <span data-test={'Description'}>{'Description'}</span>
                 ),
-                render: row => <span>{row.description ?? ''}</span>,
-                download: row => row.description ?? '',
-                sortBy: row => row.description ?? '',
+                render: (row) => <span>{row.description ?? ''}</span>,
+                download: (row) => row.description ?? '',
+                sortBy: (row) => row.description ?? '',
                 filter: (row, _filterString, filterStringUpper) =>
                     (row.description ?? '')
                         .toUpperCase()
