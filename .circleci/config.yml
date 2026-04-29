@@ -334,9 +334,9 @@ jobs:
   # owns the actual pass/fail status of the run.
   #
   # Mirrors the legacy `e2e_tests` flow: attach the workspace built by
-  # `build_frontend`, start `yarn serveDist` on localhost:3000, then run
+  # `build_frontend`, start `pnpm run serveDist` on localhost:3000, then run
   # the Playwright suite in LOCALDEV mode so it loads the locally-built
-  # bundle into the public cbioportal origin via ?localdev=true.
+  # bundle into the public cbioportal origin via ?localdist=true.
   playwright_e2e_shards:
     docker:
       - image: mcr.microsoft.com/playwright:v1.59.1-jammy
@@ -356,9 +356,11 @@ jobs:
       - attach_workspace:
           at: /tmp/repo
       - run:
-          name: Install yarn and jq (not in the Playwright Docker image)
+          name: Enable pnpm via corepack and install jq (not in the Playwright Docker image)
           command: |
-            npm install -g yarn
+            # package.json declares pnpm as the project's package manager;
+            # corepack picks the right version automatically.
+            corepack enable
             # jq is needed by scripts/env_vars.sh to parse the GitHub
             # API response when resolving the PR's base branch.
             apt-get update && apt-get install -y jq
@@ -367,12 +369,11 @@ jobs:
           working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
           command: npm ci
       - run:
-          name: Start frontend dev server (yarn serveDist) on localhost:3000
+          name: Start frontend dev server (pnpm serveDist) on localhost:3000
           background: true
           working_directory: /tmp/repo/cbioportal-frontend
           command: |
-            yarn config set ignore-engines true
-            yarn serveDist --ignore-engines
+            pnpm run serveDist
       - run:
           name: Wait for frontend server to be reachable
           command: |
