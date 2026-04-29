@@ -162,7 +162,7 @@ const ResourceTable = observer(
                 showFilterClearButton={false}
                 showCopyDownload={true}
                 copyDownloadProps={{ showCopy: false }}
-                initialSortColumn={resourceColumnName}
+                initialSortColumn={'Resource'}
                 initialSortDirection={'asc'}
             />
         );

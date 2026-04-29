@@ -222,6 +222,12 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
         return { config, typeName };
     }
 
+    @computed get resourcesPerPatientColumnName(): string {
+        return this.singleTypeConfig
+            ? `${pluralize(this.singleTypeConfig.typeName, 2)} per Patient`
+            : 'Resources per Patient';
+    }
+
     readonly resourceData = remoteData({
         await: () => [
             this.props.store.selectedSamples,
@@ -250,9 +256,6 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
         const { singleTypeConfig } = this;
         const config = singleTypeConfig?.config ?? {};
 
-        const resourcesPerPatientColumnName = singleTypeConfig
-            ? `${pluralize(singleTypeConfig.typeName, 2)} per Patient`
-            : 'Resources per Patient';
         const shouldHideResourcesPerPatientColumn =
             !!config.hidePerPatientColumn;
         const typeOfResourceColumnName =
@@ -378,7 +381,7 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
             defaultColumns.push({
                 ...this.getDefaultColumnConfig(
                     'resourcesPerPatient',
-                    resourcesPerPatientColumnName,
+                    this.resourcesPerPatientColumnName,
                     true
                 ),
                 render: (data: { [id: string]: number }) => {
@@ -427,11 +430,11 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
                             }}
                             initialSortColumn={
                                 this.columns.some(
-                                    column =>
+                                    (column) =>
                                         column.name ===
-                                        resourcesPerPatientColumnName
+                                        this.resourcesPerPatientColumnName
                                 )
-                                    ? resourcesPerPatientColumnName
+                                    ? this.resourcesPerPatientColumnName
                                     : this.columns[0]?.name
                             }
                             initialSortDirection={'desc'}
