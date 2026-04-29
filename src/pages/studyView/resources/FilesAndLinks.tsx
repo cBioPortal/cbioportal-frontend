@@ -16,16 +16,14 @@ import {
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
 import { isUrl, pluralize, remoteData } from 'cbioportal-frontend-commons';
 import { makeObservable, observable, computed } from 'mobx';
+import { ResourceData, StudyViewFilter } from 'cbioportal-ts-api-client';
 import {
-    ResourceData,
-    ClinicalData,
-    StudyViewFilter,
-} from 'cbioportal-ts-api-client';
-import { getResourceConfig } from 'shared/lib/ResourceConfig';
+    getResourceConfig,
+    ResourceCustomConfig,
+} from 'shared/lib/ResourceConfig';
 import { hasNonEmptyDescriptionInDefinitions } from 'shared/lib/ResourceUtils';
 
 export interface IFilesLinksTable {
-    resourceDisplayName: string;
     store: StudyViewPageStore;
 }
 
@@ -47,30 +45,6 @@ function getResourceDataOfEntireStudy(studyIds: string[]) {
     return Promise.all(allResources).then(allResources =>
         _(allResources)
             .flatMap()
-            .value()
-    );
-}
-
-function getResourceDataOfPatients(studyClinicalData: {
-    [uniqueSampleKey: string]: ClinicalData[];
-}) {
-    const resourcesPerPatient = _(studyClinicalData)
-        .flatMap(clinicaldataItems => clinicaldataItems)
-        .uniqBy('patientId')
-        .map(resource =>
-            internalClient.getAllResourceDataOfPatientInStudyUsingGET({
-                studyId: resource.studyId,
-                patientId: resource.patientId,
-                projection: 'DETAILED',
-            })
-        )
-        .flatten()
-        .value();
-
-    return Promise.all(resourcesPerPatient).then(resourcesPerPatient =>
-        _(resourcesPerPatient)
-            .flatMap()
-            .groupBy('patientId')
             .value()
     );
 }
@@ -217,6 +191,35 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
 
     @observable searchTerm: string | undefined = undefined;
 
+    @computed get uniqueResourceTypes(): string[] {
+        if (!this.resourceData.result?.data) return [];
+        return _.uniq(
+            this.resourceData.result.data.map(
+                item => item.typeOfResource as string
+            )
+        );
+    }
+
+    @computed get singleTypeConfig(): {
+        config: ResourceCustomConfig;
+        typeName: string;
+    } | null {
+        if (
+            this.uniqueResourceTypes.length !== 1 ||
+            !this.uniqueResourceTypes[0]
+        ) {
+            return null;
+        }
+        const typeName = this.uniqueResourceTypes[0];
+        const def = this.props.store.resourceDefinitions.result?.find(
+            d => d.displayName === typeName
+        );
+        const config = def
+            ? getResourceConfig(def)
+            : ({} as ResourceCustomConfig);
+        return { config, typeName };
+    }
+
     readonly resourceData = remoteData({
         await: () => [
             this.props.store.selectedSamples,
@@ -242,47 +245,15 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
     });
 
     @computed get columns() {
-        // Determine if there's only one unique resource type
-        const uniqueResourceTypes =
-            this.resourceData.result && this.resourceData.result.data
-                ? _.uniq(
-                      this.resourceData.result.data.map(
-                          item => item.typeOfResource as string
-                      )
-                  )
-                : [];
-        let resourcesPerPatientColumnName = 'Resources per Patient';
-        let shouldHideResourcesPerPatientColumn = false;
+        const { singleTypeConfig } = this;
+        const config = singleTypeConfig?.config ?? {};
 
-        // Get config for single resource type (if applicable)
-        let config: any = {};
-        if (uniqueResourceTypes.length === 1 && uniqueResourceTypes[0]) {
-            const def = this.props.store.resourceDefinitions.result?.find(
-                d => d.displayName === uniqueResourceTypes[0]
-            );
-
-            if (def) {
-                config = getResourceConfig(def);
-                // Set default column name for single resource type
-                resourcesPerPatientColumnName = `${pluralize(
-                    uniqueResourceTypes[0] as string,
-                    2
-                )} per Patient`;
-
-                if (config.hidePerPatientColumn) {
-                    shouldHideResourcesPerPatientColumn = true;
-                }
-            } else {
-                resourcesPerPatientColumnName = `${pluralize(
-                    uniqueResourceTypes[0] as string,
-                    2
-                )} per Patient`;
-            }
-        }
-
-        // Apply customizations (only active for single resource type with config)
+        const resourcesPerPatientColumnName = singleTypeConfig
+            ? `${pluralize(singleTypeConfig.typeName, 2)} per Patient`
+            : 'Resources per Patient';
+        const shouldHideResourcesPerPatientColumn = !!config.hidePerPatientColumn;
         const typeOfResourceColumnName =
-            config.columnNameMapping?.['Type Of Resource'] ||
+            config.columnNameMapping?.['Type Of Resource'] ??
             'Type Of Resource';
         const hideUrlColumn = !!config.hideUrlColumn;
         const openInNewTab = !!config.openInNewTab;
@@ -430,52 +401,16 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
                     <Else>
                         <FilesLinksTableComponent
                             initialItemsPerPage={20}
-                            headerComponent={(() => {
-                                // Determine if there's only one unique resource type
-                                const uniqueResourceTypes =
-                                    this.resourceData.result &&
-                                    this.resourceData.result.data
-                                        ? _.uniq(
-                                              this.resourceData.result.data.map(
-                                                  item =>
-                                                      item.typeOfResource as string
-                                              )
-                                          )
-                                        : [];
-                                let def;
-                                if (
-                                    uniqueResourceTypes.length === 1 &&
-                                    uniqueResourceTypes[0]
-                                ) {
-                                    def = this.props.store.resourceDefinitions.result?.find(
-                                        d =>
-                                            d.displayName ===
-                                            uniqueResourceTypes[0]
-                                    );
-                                }
-                                let customName = '';
-                                if (def) {
-                                    const config = getResourceConfig(def);
-                                    if (config.customizedDisplayName) {
-                                        customName =
-                                            config.customizedDisplayName;
-                                    }
-                                }
-
-                                return (
-                                    <div className={'positionAbsolute'}>
-                                        <strong>
-                                            {
-                                                this.resourceData.result
-                                                    ?.totalItems
-                                            }{' '}
-                                            {customName
-                                                ? customName
-                                                : 'resources'}
-                                        </strong>
-                                    </div>
-                                );
-                            })()}
+                            headerComponent={
+                                <div className={'positionAbsolute'}>
+                                    <strong>
+                                        {this.resourceData.result?.totalItems}{' '}
+                                        {this.singleTypeConfig?.config
+                                            .customizedDisplayName ||
+                                            'resources'}
+                                    </strong>
+                                </div>
+                            }
                             data={this.resourceData.result?.data || []}
                             columns={this.columns}
                             showColumnVisibility={false}

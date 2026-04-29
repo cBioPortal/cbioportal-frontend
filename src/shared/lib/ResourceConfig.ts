@@ -53,16 +53,10 @@ export const RESOURCE_CUSTOM_CONFIGS: Record<string, ResourceCustomConfig> = {
     },
 };
 
-// Type for ResourceDefinition with optional customMetaData field
-type ExtendedResourceDefinition = ResourceDefinition & {
-    customMetaData?: string;
-};
-
 export function getResourceConfig(
     def: ResourceDefinition
 ): ResourceCustomConfig {
     let config: ResourceCustomConfig = {};
-    const extendedDef = def as ExtendedResourceDefinition;
 
     // 1. Load from local dictionary
     if (def.resourceId && RESOURCE_CUSTOM_CONFIGS[def.resourceId]) {
@@ -70,13 +64,11 @@ export function getResourceConfig(
     }
 
     // 2. Override with customMetaData
-    if (extendedDef.customMetaData) {
+    if (def.customMetaData) {
         try {
-            const customConfig = JSON.parse(
-                extendedDef.customMetaData
-            ) as Partial<ResourceCustomConfig>;
-            // Merge all properties from customConfig into config
-            // This automatically handles all current and future properties
+            const customConfig = JSON.parse(def.customMetaData) as Partial<
+                ResourceCustomConfig
+            >;
             Object.assign(config, customConfig);
         } catch (e) {
             console.warn(

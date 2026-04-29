@@ -21,7 +21,6 @@ import {
     getBrowserWindow,
     onMobxPromise,
     remoteData,
-    pluralize,
 } from 'cbioportal-frontend-commons';
 import { PageLayout } from '../../shared/components/PageLayout/PageLayout';
 import IFrameLoader from '../../shared/components/iframeLoader/IFrameLoader';
@@ -743,7 +742,7 @@ export default class StudyViewPage extends React.Component<
                                         }
                                         linkText={
                                             this.store.resourceDefinitions
-                                                .result?.length == 1
+                                                .result?.length === 1
                                                 ? this.store.resourceDefinitions
                                                       .result[0].displayName
                                                 : RESOURCES_TAB_NAME
@@ -752,16 +751,6 @@ export default class StudyViewPage extends React.Component<
                                     >
                                         <div>
                                             <ResourcesTab
-                                                resourceDisplayName={
-                                                    this.store
-                                                        .resourceDefinitions
-                                                        .result?.length == 1
-                                                        ? this.store
-                                                              .resourceDefinitions
-                                                              .result[0]
-                                                              .displayName
-                                                        : RESOURCES_TAB_NAME
-                                                }
                                                 store={this.store}
                                                 openResource={this.openResource}
                                             />

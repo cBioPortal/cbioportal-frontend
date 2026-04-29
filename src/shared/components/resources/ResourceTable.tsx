@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { getFileExtension } from './ResourcesTableUtils';
 import { ResourceData } from 'cbioportal-ts-api-client';
 import { useLocalObservable } from 'mobx-react-lite';
 import LazyMobXTable, {
@@ -11,42 +10,8 @@ import { hasNonEmptyDescriptionInResources } from 'shared/lib/ResourceUtils';
 
 export interface IResourceTableProps {
     resources: ResourceData[];
-    isTabOpen: (resourceId: string) => boolean;
     openResource: (resource: ResourceData) => void;
     sampleId?: React.ReactNode;
-}
-
-function icon(resource: ResourceData) {
-    let className = '';
-    const fileExtension = getFileExtension(resource.url);
-    switch (fileExtension) {
-        case 'pdf':
-            className = 'fa fa-file-pdf-o';
-            break;
-        case 'png':
-        case 'jpeg':
-        case 'jpg':
-        case 'gif':
-            className = 'fa fa-file-image-o';
-            break;
-        case 'm4a':
-        case 'flac':
-        case 'mp3':
-        case 'mp4':
-        case 'wav':
-            className = 'fa fa-file-audio-o';
-            break;
-    }
-    if (className) {
-        return (
-            <i
-                className={`${className} fa-sm`}
-                style={{ marginRight: 5, color: 'black' }}
-            />
-        );
-    } else {
-        return null;
-    }
 }
 
 class ResourceMobXTable extends LazyMobXTable<{
@@ -54,12 +19,12 @@ class ResourceMobXTable extends LazyMobXTable<{
     resourceName: string;
     url: string;
     description?: string;
-    priority: string | number;
+    priority: string;
     sampleId?: React.ReactNode;
 }> {}
 
 const ResourceTable = observer(
-    ({ resources, isTabOpen, openResource, sampleId }: IResourceTableProps) => {
+    ({ resources, openResource, sampleId }: IResourceTableProps) => {
         const state = useLocalObservable(() => ({
             get data() {
                 // Map incoming resources into row data for the MobX table
@@ -68,7 +33,7 @@ const ResourceTable = observer(
                     resourceName: r.resourceDefinition?.displayName ?? r.url,
                     url: r.url,
                     description: r.resourceDefinition?.description,
-                    priority: r.resourceDefinition?.priority ?? 0,
+                    priority: r.resourceDefinition?.priority ?? '',
                     sampleId,
                 }));
             },
@@ -83,7 +48,7 @@ const ResourceTable = observer(
             resourceName: string;
             url: string;
             description?: string;
-            priority: string | number;
+            priority: string;
             sampleId?: React.ReactNode;
         }>[] = [];
 
@@ -193,8 +158,7 @@ const ResourceTable = observer(
                 showFilterClearButton={false}
                 showCopyDownload={true}
                 copyDownloadProps={{ showCopy: false }}
-                // Use the 'Resource' column which sorts by priority via sortBy
-                initialSortColumn={'Resource'}
+                initialSortColumn={resourceColumnName}
                 initialSortDirection={'asc'}
             />
         );
