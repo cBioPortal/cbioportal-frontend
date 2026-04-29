@@ -425,7 +425,15 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
                             copyDownloadProps={{
                                 showCopy: false,
                             }}
-                            initialSortColumn={'resourcesPerPatient'}
+                            initialSortColumn={
+                                this.columns.some(
+                                    column =>
+                                        column.name ===
+                                        resourcesPerPatientColumnName
+                                )
+                                    ? resourcesPerPatientColumnName
+                                    : this.columns[0]?.name
+                            }
                             initialSortDirection={'desc'}
                         />
                     </Else>

@@ -74,16 +74,16 @@ const ResourceTable = observer(
         const uniqueResourceNames = _.uniq(
             state.data.map((d) => d.resourceName)
         );
-        const resourceColumnName =
+        const resourceColumnHeader =
             uniqueResourceNames.length === 1 && uniqueResourceNames[0]
                 ? uniqueResourceNames[0]
                 : 'Resource';
 
         columns.push(
             {
-                name: resourceColumnName,
+                name: 'Resource',
                 headerRender: () => (
-                    <span data-test={'Resource'}>{resourceColumnName}</span>
+                    <span data-test={'Resource'}>{resourceColumnHeader}</span>
                 ),
                 render: (row) => (
                     <a
@@ -119,6 +119,7 @@ const ResourceTable = observer(
                         href={row.url}
                         style={{ fontSize: 10 }}
                         target={'_blank'}
+                        rel="noopener noreferrer"
                     >
                         <i
                             className={`fa fa-external-link fa-sm`}

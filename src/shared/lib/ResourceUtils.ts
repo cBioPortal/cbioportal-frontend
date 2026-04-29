@@ -4,8 +4,8 @@ import _ from 'lodash';
 /**
  * Helper function to check if a string is non-empty
  */
-function isNonEmptyString(value: string | undefined): boolean {
-    return !_.isEmpty(value);
+function isNonEmptyString(value: string | null | undefined): boolean {
+    return (value?.trim().length ?? 0) > 0;
 }
 
 /**
