@@ -860,6 +860,9 @@ jobs:
       CI: 'true'
       LOCALDEV: '1'
       CBIOPORTAL_URL: http://localhost:8080
+      # Route screenshot baselines to the committed `__snapshots__/` dir
+      # (the gitignored `__local_snapshots__/` is for host-mode runs).
+      PW_DOCKER: '1'
     steps:
       - attach_workspace:
           at: /tmp/repo
@@ -978,7 +981,15 @@ jobs:
             [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
             nvm use 22.18.0
             mkdir -p test-results
-            npx playwright test tests/local --reporter=list,junit
+            # `--update-snapshots=missing` auto-generates baselines for
+            # tests whose snapshot files don't exist yet, and leaves
+            # existing ones unchanged. After this PR's first green run,
+            # download `__snapshots__/local/` from artifacts and commit
+            # — then drop this flag in a follow-up so subsequent runs
+            # enforce baselines.
+            npx playwright test tests/local \
+              --reporter=list,junit \
+              --update-snapshots=missing
       - store_test_results:
           path: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright/test-results
       - store_artifacts:
@@ -987,6 +998,12 @@ jobs:
       - store_artifacts:
           path: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright/playwright-report
           destination: playwright-report
+      - store_artifacts:
+          # Auto-generated screenshot baselines for the new localdb
+          # specs. Download and commit these, then remove
+          # `--update-snapshots=missing` from the test command above.
+          path: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright/tests/__snapshots__
+          destination: snapshots
       - store_artifacts:
           path: /tmp/repo/docker-compose-logs.txt
 

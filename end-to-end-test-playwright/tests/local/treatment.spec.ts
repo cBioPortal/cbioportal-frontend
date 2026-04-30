@@ -83,6 +83,7 @@ async function selectTreamentsBothAxes(page: Page) {
 
     await page
         .locator('[data-test=generic-assay-info-icon]')
+        .first()
         .waitFor({ state: 'attached' });
     await page.evaluate(() => {
         (window as any).resultsViewPlotsTab.onHorizontalAxisGenericAssaySelect({
@@ -449,6 +450,7 @@ test.describe('treatment feature', () => {
 
             await page
                 .locator('[data-test=generic-assay-info-icon]')
+                .first()
                 .waitFor({ state: 'attached' });
 
             await page.evaluate(() => {
@@ -487,6 +489,7 @@ test.describe('treatment feature', () => {
 
             await page
                 .locator('[data-test=generic-assay-info-icon]')
+                .first()
                 .waitFor({ state: 'attached' });
         });
 
@@ -508,6 +511,7 @@ test.describe('treatment feature', () => {
 
             await page
                 .locator('[data-test=generic-assay-info-icon]')
+                .first()
                 .waitFor({ state: 'attached' });
 
             await page.evaluate(() => {
@@ -547,6 +551,7 @@ test.describe('treatment feature', () => {
 
             await page
                 .locator('[data-test=generic-assay-info-icon]')
+                .first()
                 .waitFor({ state: 'attached' });
 
             await page.evaluate(() => {
@@ -610,6 +615,7 @@ test.describe('treatment feature', () => {
 
             await page
                 .locator('[data-test=generic-assay-info-icon]')
+                .first()
                 .waitFor({ state: 'attached', timeout: 10000 });
 
             await page.evaluate(() => {
@@ -646,6 +652,7 @@ test.describe('treatment feature', () => {
             );
             await page
                 .locator('[data-test=generic-assay-info-icon]')
+                .first()
                 .waitFor({ state: 'attached', timeout: 10000 });
 
             await page.evaluate(() => {
