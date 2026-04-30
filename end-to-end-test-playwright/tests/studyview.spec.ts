@@ -120,6 +120,15 @@ async function getColorOfNthElement(
 }
 
 test.describe('studyview tests', () => {
+    // Each nested describe owns its own page — either via beforeAll
+    // creating a browser.newPage and afterAll closing it, or via the
+    // per-test `page` fixture in beforeEach. No state crosses block
+    // boundaries, so the top-level describe is safe to run in parallel
+    // mode: --workers=N inside a shard then runs N of the nested
+    // describes concurrently. Each describe.serial block remains serial
+    // internally (Playwright honors the per-block mode).
+    test.describe.configure({ mode: 'parallel' });
+
     test.describe.serial('study laml_tcga tests', () => {
         test.describe.configure({ retries: 0 });
         let page: Page;

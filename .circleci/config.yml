@@ -445,13 +445,13 @@ jobs:
                 echo "Filtering with --grep=$PLAYWRIGHT_GREP"
             fi
             set +e
-            # --workers=4 on resource_class large (4 vCPU / 8 GB). Pushes
-            # one chromium per vCPU; runner / serveDist share. Only
-            # describes opted into mode: 'parallel' (results-screenshots
-            # helper today) actually use the extra workers. Drop back to
-            # 3 if we see CPU-bound flakes or hit memory pressure
-            # (~500 MB/page is typical for the results page).
-            npx playwright test --workers=4 \
+            # --workers=3 on resource_class large (4 vCPU / 8 GB) leaves
+            # one vCPU for the runner / serveDist while running 3 chromium
+            # contexts. workers=4 was tried and ran slower than 3
+            # (CPU-bound contention with serveDist + runner sharing the
+            # 4th core). Only describes opted into mode: 'parallel'
+            # actually use the extra workers; the rest still serialize.
+            npx playwright test --workers=3 \
               --shard="${SHARD_NUM}/${CIRCLE_NODE_TOTAL}" \
               --reporter=list,junit,blob \
               $GREP_ARG
