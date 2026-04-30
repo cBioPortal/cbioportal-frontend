@@ -22,7 +22,8 @@ header {
 
 .pageTopContainer {
     background: #eee;
-    border-bottom: 1px solid #ddd;
+    /* TEMP: deliberate 5px red border to verify CircleCI screenshot-fail signal across shards. Revert before merging. */
+    border-bottom: 5px solid red;
 }
 
 .pageTopContainer,
