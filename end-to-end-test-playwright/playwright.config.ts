@@ -90,17 +90,27 @@ export default defineConfig({
                                   // to be disabled for public→loopback
                                   // subresource loads.
                                   '--disable-features=BlockInsecurePrivateNetworkRequests,PrivateNetworkAccessPreflightSupport,PrivateNetworkAccessRespectPreflightResults,LocalNetworkAccessChecks,LocalNetworkAccessChecksWarnings',
-                                  // Inside the Playwright Docker image,
-                                  // `localhost` resolves to the container,
-                                  // not the host running `yarn startSSL`.
-                                  // Remap it at the resolver level so the
-                                  // bundle URL (https://localhost:3000)
-                                  // reaches the host. host.docker.internal
-                                  // is provided by Docker Desktop on macOS
-                                  // and added via --add-host on Linux (see
-                                  // scripts/docker-test.sh). Skip on host
-                                  // runs — there `localhost` already works.
-                                  ...(inDocker
+                                  // Inside the Playwright Docker image
+                                  // *on a developer machine* (scripts/docker-test.sh),
+                                  // `localhost` resolves to the test
+                                  // container, not the host running
+                                  // `yarn startSSL`, so we remap it to
+                                  // host.docker.internal (provided by
+                                  // Docker Desktop on macOS, added via
+                                  // --add-host on Linux). Skip on host
+                                  // runs — `localhost` already works.
+                                  // Also skip on CircleCI: there, the
+                                  // playwright image IS the job container
+                                  // and `serveDist` runs in the same
+                                  // container, so `localhost` already
+                                  // points at the bundle and
+                                  // host.docker.internal doesn't resolve
+                                  // at all (no Docker Desktop) — without
+                                  // this skip, chromium can't fetch the
+                                  // local bundle, the page never boots,
+                                  // and waitForNetworkQuiet never sees
+                                  // window.ajaxQuiet flip to true.
+                                  ...(inDocker && !process.env.CIRCLECI
                                       ? [
                                             '--host-resolver-rules=MAP localhost host.docker.internal',
                                         ]

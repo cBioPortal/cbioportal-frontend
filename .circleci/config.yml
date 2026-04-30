@@ -456,7 +456,12 @@ jobs:
     working_directory: /tmp/repo/cbioportal-frontend
     environment:
       HOME: /tmp
-      PLAYWRIGHT_JUNIT_OUTPUT_NAME: test-results/junit.xml
+      # PLAYWRIGHT_JUNIT_OUTPUT_NAME is honored by `playwright test` but
+      # `playwright merge-reports` resolves it relative to a configDir that
+      # isn't set when reporters come from the CLI, so the file lands in
+      # an unpredictable place (and our pass/fail check then silently saw
+      # zero failures). PLAYWRIGHT_JUNIT_OUTPUT_FILE is absolute and is
+      # set per-step below.
     steps:
       - checkout
       - attach_workspace:
@@ -466,21 +471,44 @@ jobs:
           working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
           command: npm ci
       - run:
-          name: Merge per-shard blob reports into one HTML report
+          name: Merge per-shard blob reports and fail the build if any test failed
           working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
           command: |
             ls -la blob-report/ || (echo "no blobs found" && exit 1)
             mkdir -p test-results
+
+            # Force junit.xml to a known absolute path. With CLI-supplied
+            # reporters, `merge-reports` constructs the junit reporter
+            # without a configDir, which makes the relative-path resolution
+            # in PLAYWRIGHT_JUNIT_OUTPUT_NAME unreliable. The _FILE form
+            # is absolute and bypasses that.
+            JUNIT="$PWD/test-results/junit.xml"
+            export PLAYWRIGHT_JUNIT_OUTPUT_FILE="$JUNIT"
+            rm -f "$JUNIT"
+
             npx playwright merge-reports --reporter=html,junit blob-report
-            # Sum 'failures' across all <testsuite> elements in the JUnit XML.
-            # If any test failed (and didn't recover via retries), exit non-zero
-            # so the build is correctly marked failed.
-            FAILS=$(grep -oE 'failures="[0-9]+"' test-results/junit.xml \
-                    | grep -oE '[0-9]+' \
-                    | awk '{s+=$1} END {print s+0}')
-            echo "merged failures: $FAILS"
+
+            if [ ! -s "$JUNIT" ]; then
+                echo "ERROR: merge-reports did not produce a junit.xml at $JUNIT"
+                echo "--- test-results/ ---"
+                ls -la test-results/ || true
+                echo "--- looking for stray junit files ---"
+                find . -path ./node_modules -prune -o -name 'junit.xml' -print | head
+                exit 1
+            fi
+
+            # Count <failure> and <error> tags rather than reading the
+            # failures="N" attribute on <testsuites>. In merged reports
+            # that root attribute has come back as 0 even when individual
+            # <testsuite>s carry failures, so counting tags is the
+            # bulletproof signal.
+            FAILS=$(grep -cE '<failure([ />]|$)' "$JUNIT" || true)
+            ERRS=$(grep -cE '<error([ />]|$)' "$JUNIT" || true)
+            echo "merged junit at: $JUNIT"
+            echo "merged <failure> tags: $FAILS"
+            echo "merged <error>   tags: $ERRS"
             echo "Browse the merged report from this job's Artifacts tab → playwright-report/index.html"
-            [ "$FAILS" = "0" ]
+            [ "$FAILS" = "0" ] && [ "$ERRS" = "0" ]
       - store_artifacts:
           path: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright/playwright-report
           destination: playwright-report
