@@ -862,10 +862,14 @@ workflows:
       - build_frontend:
           requires:
             - checkout
-      # Legacy WDIO e2e jobs (e2e_localdb_tests, e2e_tests) are disabled
-      # on this experimental branch — the Playwright suite below is the
-      # candidate replacement and is what we're validating here. Restore
-      # before merging if Playwright isn't yet a full replacement.
+      # The legacy WDIO `e2e_tests` (remote) job is still disabled on this
+      # experimental branch — the Playwright suite below is the candidate
+      # replacement. e2e_localdb_tests stays on because it covers
+      # local-db scenarios the Playwright suite hasn't ported yet.
+      - e2e_localdb_tests:
+          requires:
+            - pull_cbioportal_test_codebase
+            - build_frontend
       - playwright_e2e_shards:
           requires:
             - build_frontend
