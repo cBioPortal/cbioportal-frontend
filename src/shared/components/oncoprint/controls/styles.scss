@@ -1,4 +1,6 @@
 .oncoprint__controls {
+    /* TEMP: lime background to break oncoprint screenshot diffs — revert before merge. */
+    background: #c6ff00;
     display: flex;
 
     .rangeslider {
