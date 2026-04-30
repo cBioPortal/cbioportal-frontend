@@ -923,11 +923,30 @@ jobs:
       - run:
           name: Install Playwright Chromium browser
           working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
+          # ubuntu-2204:2024.08.1 ships with apt-daily-upgrade timers that
+          # routinely hold the dpkg lock for several minutes after boot.
+          # `playwright install --with-deps` waits silently on that lock
+          # and trips CircleCI's 10-minute no-output timeout. Stop the
+          # timers + pass DPkg::Lock::Timeout so apt waits cleanly with
+          # progress output, and bump no_output_timeout for safety.
+          no_output_timeout: 20m
           command: |
             export NVM_DIR="$HOME/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
             nvm use 22.18.0
-            npx playwright install --with-deps chromium
+            sudo systemctl stop unattended-upgrades.service apt-daily.service apt-daily-upgrade.service apt-daily.timer apt-daily-upgrade.timer 2>/dev/null || true
+            sudo killall apt apt-get 2>/dev/null || true
+            APT_OPTS='-o DPkg::Lock::Timeout=600 -o Dpkg::Use-Pty=0'
+            sudo apt-get $APT_OPTS update
+            npx playwright install chromium
+            # Install Playwright's chromium system dependencies via apt
+            # directly with the same timeout/Pty options, so they don't
+            # hang on the apt lock either.
+            sudo apt-get $APT_OPTS install -y \
+              libnss3 libnspr4 libatk1.0-0 libatk-bridge2.0-0 libcups2 \
+              libxkbcommon0 libatspi2.0-0 libxcomposite1 libxdamage1 \
+              libxfixes3 libxrandr2 libgbm1 libpango-1.0-0 libcairo2 \
+              libasound2
       - run:
           name: Start frontend dist server (pnpm serveDistLocalDb) on https://localhost:3000
           background: true
