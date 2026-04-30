@@ -13,6 +13,8 @@
     position: relative;
     padding-left: 45px;
     display: flex;
+    /* TEMP: deliberate visible diff to verify CircleCI screenshot-fail signal. Revert before merging. */
+    border-bottom: 3px solid red;
 
     td {
         vertical-align: top;
