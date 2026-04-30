@@ -8,9 +8,11 @@ import { setSettingsMenuOpen, waitForOncoprint } from './oncoprint';
  * end-to-end-test/remote/specs/core/screenshot.spec.js.
  *
  * Extracted into a helper so each URL config (no-session, session,
- * excluding-unprofiled) can live in its own spec file and run on a
- * separate worker. Within a single config the tests still share one
- * page via describe.serial because they depend on cumulative state.
+ * excluding-unprofiled) can live in its own spec file. Tests within a
+ * config are independent — each gets a fresh `page` fixture and the
+ * beforeEach navigates from scratch — so the describe is configured
+ * parallel: the runner's --workers=2 then runs two tests concurrently
+ * inside a shard, halving the wall-clock cost of this 15-test suite.
  */
 
 export const NO_SESSION_URL =
@@ -68,6 +70,12 @@ export function runResultsTestSuite(
     } = {}
 ) {
     test.describe(`${prefix} results-page screenshots`, () => {
+        // Tests in this block don't share state — each gets a fresh page
+        // and the beforeEach navigates from scratch. Opt into parallel
+        // mode so --workers=N actually runs N at once. fullyParallel is
+        // off globally; this opt-in keeps the rest of the suite serial.
+        test.describe.configure({ mode: 'parallel' });
+
         test.use({ viewport: { width: 1600, height: 1000 } });
 
         test.beforeEach(async ({ page }) => {
