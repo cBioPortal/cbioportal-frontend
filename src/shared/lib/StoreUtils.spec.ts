@@ -1508,6 +1508,28 @@ describe('StoreUtils', () => {
             );
             assert.deepEqual(result, {});
         });
+
+        it('prefers the first attribute ID when a sample has multiple qualifying attributes', () => {
+            const mixedData = [
+                {
+                    sampleId: 's1',
+                    clinicalAttributeId: 'TMB_NONSYNONYMOUS',
+                    value: '12',
+                },
+                {
+                    sampleId: 's1',
+                    clinicalAttributeId: 'CVR_TMB_SCORE',
+                    value: '15',
+                },
+            ] as ClinicalData[];
+            const result = getSampleClinicalDataMapByThreshold(
+                mixedData,
+                ['CVR_TMB_SCORE', 'TMB_NONSYNONYMOUS'],
+                10
+            );
+            assert.isDefined(result['s1']);
+            assert.equal(result['s1'].clinicalAttributeId, 'CVR_TMB_SCORE');
+        });
     });
 
     describe('OTHER_BIOMARKERS_CONFIG', () => {

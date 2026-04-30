@@ -1712,24 +1712,35 @@ export function getSampleClinicalDataMapByThreshold(
     clinicalAttributeId: string | readonly string[],
     threshold: number
 ) {
-    const ids = new Set<string>(
-        Array.isArray(clinicalAttributeId)
-            ? (clinicalAttributeId as readonly string[])
-            : [clinicalAttributeId as string]
-    );
-    return _.reduce(
-        clinicalData,
-        (acc, next) => {
-            if (ids.has(next.clinicalAttributeId)) {
-                const value = getNumericalClinicalDataValue(next);
-                if (Number.isFinite(value) && value! >= threshold) {
-                    acc[next.sampleId] = next;
+    const attrIds: readonly string[] = Array.isArray(clinicalAttributeId)
+        ? (clinicalAttributeId as readonly string[])
+        : [clinicalAttributeId as string];
+    const attrIdSet = new Set<string>(attrIds);
+    // Collect all qualifying entries per sample, keyed by attribute ID.
+    const qualifying = new Map<string, Map<string, ClinicalData>>();
+    for (const entry of clinicalData) {
+        if (attrIdSet.has(entry.clinicalAttributeId)) {
+            const value = getNumericalClinicalDataValue(entry);
+            if (Number.isFinite(value) && value! >= threshold) {
+                if (!qualifying.has(entry.sampleId)) {
+                    qualifying.set(entry.sampleId, new Map());
                 }
+                qualifying.get(entry.sampleId)!.set(entry.clinicalAttributeId, entry);
             }
-            return acc;
-        },
-        {} as { [key: string]: ClinicalData }
-    );
+        }
+    }
+    // For each sample, pick the highest-priority qualifying entry by
+    // iterating attrIds in declared order (first = highest priority).
+    const result: { [key: string]: ClinicalData } = {};
+    for (const [sampleId, attrMap] of qualifying) {
+        for (const attrId of attrIds) {
+            if (attrMap.has(attrId)) {
+                result[sampleId] = attrMap.get(attrId)!;
+                break;
+            }
+        }
+    }
+    return result;
 }
 
 export function getSampleClinicalDataMapByKeywords(
