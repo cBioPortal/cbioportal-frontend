@@ -34,6 +34,13 @@ export const HIDE_UNPROFILED_URL =
     '&hide_unprofiled_samples=false&profileFilter=0&tab_index=tab_visualize';
 
 export const hideUnprofiledPreLoad = async (page: Page) => {
+    // beforeEach used to call waitForOncoprint() unconditionally before any
+    // preLoad ran. Now beforeEach only confirms the tab bar mounted (cheap)
+    // because most tests in the suite immediately switch to a different tab
+    // and don't need the oncoprint at all. Tests/preloads that DO need the
+    // oncoprint must wait for it themselves — like this preload, which
+    // toggles a setting that requires the oncoprint to be loaded first.
+    await waitForOncoprint(page);
     await setSettingsMenuOpen(page, true);
     await expect(
         page.locator('input[data-test="HideUnprofiled"]')
@@ -65,7 +72,15 @@ export function runResultsTestSuite(
 
         test.beforeEach(async ({ page }) => {
             await page.goto(url);
-            await waitForOncoprint(page);
+            // Only confirm the results-page tab bar mounted; don't wait for
+            // the full oncoprint to render. 14 of the 15 tests in this
+            // suite immediately switch to a different tab and never look at
+            // the oncoprint. The two cases that do need it
+            // (test('oncoprint') and hideUnprofiledPreLoad) call
+            // waitForOncoprint themselves.
+            await expect(page.locator('a.tabAnchor_oncoprint')).toBeVisible({
+                timeout: 30000,
+            });
             if (opts.preLoad) await opts.preLoad(page);
         });
 

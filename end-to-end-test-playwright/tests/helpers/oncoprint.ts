@@ -11,8 +11,6 @@ import { expect, Locator, Page } from '@playwright/test';
 
 /** The oncoprint is ready when: loader is gone, legend SVG has painted, controls are mounted. */
 export async function waitForOncoprint(page: Page, timeoutMs = 20000) {
-    // Give any pending re-render a moment to tear the old oncoprint down.
-    await page.waitForTimeout(500);
     await expect(page.locator('.oncoprintLoadingIndicator')).toHaveCount(0, {
         timeout: timeoutMs,
     });
@@ -22,9 +20,13 @@ export async function waitForOncoprint(page: Page, timeoutMs = 20000) {
     await expect(page.locator('.oncoprint__controls')).toBeAttached({
         timeout: timeoutMs,
     });
-    // Let the frame settle — the wdio version had a 1s pause here because the
-    // legend paints after the data grid and flakes otherwise.
-    await page.waitForTimeout(1000);
+    // Wait for the legend SVG to actually paint at least one <text> node
+    // rather than sleeping for a fixed 1s. The legend renders after the
+    // data grid; this is the deterministic signal that the wdio-era
+    // 1000ms `waitForTimeout` was approximating.
+    await expect(
+        page.locator('#oncoprintDiv .oncoprint-legend-div svg text').first()
+    ).toBeAttached({ timeout: timeoutMs });
 }
 
 /**
