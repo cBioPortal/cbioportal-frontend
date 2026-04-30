@@ -72,7 +72,7 @@ async function selectTreamentsBothAxes(page: Page) {
     );
 
     await expect(
-        page.locator('[data-test=generic-assay-info-icon]')
+        page.locator('[data-test=generic-assay-info-icon]').first()
     ).toBeAttached();
     await page.evaluate(() => {
         (window as any).resultsViewPlotsTab.onHorizontalAxisGenericAssaySelect({
@@ -115,7 +115,7 @@ test.describe('treatment feature', () => {
             await goToTreatmentTab(page);
             await page.locator(GENERIC_ASSAY_PROFILE_SELECTOR).click();
             const ec50Option = page.locator(
-                `xpath=//*[text()="${TREATMENT_EC50_PROFILE_NAME}"]`
+                `xpath=//*[text()="${TREATMENT_EC50_PROFILE_NAME}"][1]`
             );
             await expect(ec50Option).toBeAttached();
             await ec50Option.click();

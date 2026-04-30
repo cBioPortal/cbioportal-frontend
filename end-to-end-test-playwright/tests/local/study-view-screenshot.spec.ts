@@ -21,7 +21,8 @@ const CATEGORY_MUTATIONAL_SIGNATURE_PROFILE_TEXT =
 const ADD_CHART_X_VS_Y_TAB = '.addChartTabs a.tabAnchor_X_Vs_Y';
 const WAIT_FOR_VISIBLE_TIMEOUT = 30000;
 const MUTATIONS_GENES_TABLE = "[data-test='mutations-table']";
-const CANCER_GENE_FILTER_ICON = "[data-test='header-filter-icon']";
+const CANCER_GENE_FILTER_ICON =
+    "[data-test='gene-column-header'] [data-test='header-filter-icon']";
 const ADD_CUSTOM_CHART_TAB = '.addChartTabs a.tabAnchor.tabAnchor_Custom_Data';
 
 test.describe('study view generic assay categorical/binary features', () => {

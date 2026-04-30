@@ -207,10 +207,13 @@ test.describe('patient view page', () => {
         test('show tooltip for patient who has significant SBS signatures', async ({
             page,
         }) => {
-            await expect(page.locator('div.progress')).toBeVisible({
+            await expect(page.locator('div.progress').first()).toBeVisible({
                 timeout: 20000,
             });
-            await page.locator('div.progress').hover();
+            await page
+                .locator('div.progress')
+                .first()
+                .hover();
             await expectElementScreenshot(
                 page,
                 'div.patientViewPage',
@@ -254,10 +257,13 @@ test.describe('patient view page', () => {
             page,
         }) => {
             await selectMutationalSignaturesVersionID(page);
-            await expect(page.locator('div.progress')).toBeVisible({
+            await expect(page.locator('div.progress').first()).toBeVisible({
                 timeout: 20000,
             });
-            await page.locator('div.progress').hover();
+            await page
+                .locator('div.progress')
+                .first()
+                .hover();
             await expect(
                 page.locator(
                     'div[data-test="SignificantMutationalSignaturesTooltip"]'
@@ -296,10 +302,13 @@ test.describe('patient view page', () => {
             page,
         }) => {
             await selectMutationalSignaturesVersionDBS(page);
-            await expect(page.locator('div.progress')).toBeVisible({
+            await expect(page.locator('div.progress').first()).toBeVisible({
                 timeout: 20000,
             });
-            await page.locator('div.progress').hover();
+            await page
+                .locator('div.progress')
+                .first()
+                .hover();
             await expect(
                 page.locator(
                     'div[data-test="SignificantMutationalSignaturesTooltip"]'
