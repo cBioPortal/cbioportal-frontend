@@ -3,6 +3,7 @@ import {
     expect,
     Browser,
     BrowserContext,
+    Locator,
     Page,
 } from '@playwright/test';
 
@@ -90,4 +91,4 @@ export const test = baseTest.extend({
     },
 });
 
-export { expect };
+export { expect, Browser, BrowserContext, Locator, Page };
