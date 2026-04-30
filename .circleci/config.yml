@@ -352,9 +352,9 @@ jobs:
       BRANCH_ENV: master
       FRONTEND_TEST_USE_LOCAL_DIST: 'true'
       PLAYWRIGHT_JUNIT_OUTPUT_NAME: test-results/junit.xml
-      # Glob for the spec files this job runs, fed to `circleci tests glob`
-      # below. Override to a single file for targeted smoke runs.
-      PLAYWRIGHT_SPEC_GLOB: 'tests/*.spec.ts'
+      # Optional grep filter for targeted smoke runs. Empty by default →
+      # whole suite runs. Set to e.g. 'patient-screenshot' to narrow.
+      PLAYWRIGHT_GREP: ''
     steps:
       - attach_workspace:
           at: /tmp/repo
@@ -397,24 +397,33 @@ jobs:
           name: Run Playwright shard
           working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
           command: |
-            # CircleCI's timing-aware split distributes spec files across
-            # the parallel containers, balancing by historical duration.
-            # PLAYWRIGHT_SPEC_GLOB is set in the job environment so we can
-            # narrow the run to a single spec without editing this command.
-            FILES=$(circleci tests glob "$PLAYWRIGHT_SPEC_GLOB" \
-              | circleci tests split --split-by=timings --timings-type=filename)
-            echo "Files for this container:"
-            printf '  %s\n' $FILES
+            # Use Playwright's native --shard=N/M instead of `circleci tests
+            # split`. CircleCI's timing-aware split needs historical timing
+            # data per file, but Playwright's junit reporter doesn't emit a
+            # `file=` attribute on <testcase>, so --timings-type=filename
+            # comes back empty and the split degenerates to alphabetical
+            # name order — heavily unbalanced shards. Playwright's own
+            # sharder does a size-balanced split from run #1 with no
+            # historical data needed. CIRCLE_NODE_INDEX is 0-based;
+            # Playwright wants 1-based.
+            SHARD_NUM=$((CIRCLE_NODE_INDEX + 1))
+            echo "Running Playwright shard ${SHARD_NUM}/${CIRCLE_NODE_TOTAL}"
             mkdir -p test-results blob-report
             # Capture playwright's exit code but exit 0 so:
             #   1. persist_to_workspace runs (it does on success only by default)
             #   2. CircleCI's `requires:` chain to playwright_e2e fires
             # The downstream playwright_e2e job inspects the blobs and reports
             # overall pass/fail.
+            GREP_ARG=""
+            if [ -n "$PLAYWRIGHT_GREP" ]; then
+                GREP_ARG="--grep=$PLAYWRIGHT_GREP"
+                echo "Filtering with --grep=$PLAYWRIGHT_GREP"
+            fi
             set +e
             npx playwright test --workers=2 \
+              --shard="${SHARD_NUM}/${CIRCLE_NODE_TOTAL}" \
               --reporter=list,junit,blob \
-              $FILES
+              $GREP_ARG
             EXIT=$?
             set -e
             if [ "$EXIT" != "0" ]; then
