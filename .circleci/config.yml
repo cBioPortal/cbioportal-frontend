@@ -341,7 +341,7 @@ jobs:
     docker:
       - image: mcr.microsoft.com/playwright:v1.59.1-jammy
     resource_class: large
-    parallelism: 1
+    parallelism: 12
     working_directory: /tmp/repo
     environment:
       PW_DOCKER: '1'
@@ -352,10 +352,9 @@ jobs:
       BRANCH_ENV: master
       FRONTEND_TEST_USE_LOCAL_DIST: 'true'
       PLAYWRIGHT_JUNIT_OUTPUT_NAME: test-results/junit.xml
-      # Temporary single-spec smoke run for the playwright-circleci-experiment
-      # branch. Restore to 'tests/*.spec.ts' (and bump parallelism back to 12)
-      # once this run is green.
-      PLAYWRIGHT_SPEC_GLOB: 'tests/patient-screenshot.spec.ts'
+      # Glob for the spec files this job runs, fed to `circleci tests glob`
+      # below. Override to a single file for targeted smoke runs.
+      PLAYWRIGHT_SPEC_GLOB: 'tests/*.spec.ts'
     steps:
       - attach_workspace:
           at: /tmp/repo
