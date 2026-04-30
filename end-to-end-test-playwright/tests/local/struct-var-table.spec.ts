@@ -42,6 +42,7 @@ test.describe('study view structural variant table', () => {
         await page
             .locator(structVarTable)
             .locator(filterCheckBox)
+            .first()
             .click();
         await expect(
             page.locator('[data-test=selectSamplesButton]')

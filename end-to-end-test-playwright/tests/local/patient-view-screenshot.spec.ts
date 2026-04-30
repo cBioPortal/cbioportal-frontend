@@ -46,10 +46,11 @@ async function doVafPlotScreenshotTest(page: Page, snapshotName: string) {
     await page.locator('.vafPlotThumbnail').hover();
     await page
         .locator('div[role=tooltip] [data-test=vaf-plot]')
+        .first()
         .waitFor({ state: 'attached' });
     await expectElementScreenshot(
         page,
-        'div[role=tooltip] [data-test=vaf-plot]',
+        'div[role=tooltip] [data-test=vaf-plot] >> nth=0',
         snapshotName
     );
 }

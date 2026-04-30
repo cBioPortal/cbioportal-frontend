@@ -27,7 +27,7 @@ const GENERIC_ASSAY_PROFILE_SELECTOR =
     '[data-test="GenericAssayProfileSelection"]';
 
 async function waitForPlotsTab(page: Page, timeoutMs = 20000) {
-    await expect(page.locator('div.axisBlock')).toBeVisible({
+    await expect(page.locator('div.axisBlock').first()).toBeVisible({
         timeout: timeoutMs,
     });
 }
@@ -122,7 +122,7 @@ test.describe('treatment feature', () => {
             await page.locator(GENERIC_ASSAY_ENTITY_SELECTOR).click();
             await setInputText(
                 page,
-                '[data-test="GenericAssayEntitySelection"] input',
+                '[data-test="GenericAssayEntitySelection"] input >> nth=0',
                 '17-AAG'
             );
             const options = page

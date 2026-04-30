@@ -28,7 +28,9 @@ const GENERIC_ASSAY_ENTITY_SELECTOR =
     '[data-test="GenericAssayEntitySelection"]';
 
 async function waitForPlotsTab(page: Page, timeout = 20000) {
-    await expect(page.locator('div.axisBlock')).toBeVisible({ timeout });
+    await expect(page.locator('div.axisBlock').first()).toBeVisible({
+        timeout,
+    });
 }
 
 async function selectReactSelectOption(parent: Locator, optionText: string) {
@@ -139,16 +141,24 @@ test.describe('treatment feature', () => {
             await goToTreatmentTab(page);
             await page.locator(GENERIC_ASSAY_PROFILE_SELECTOR).click();
             await page
-                .locator(`//*[text()="${TREATMENT_IC50_PROFILE_NAME}"]`)
+                .locator(
+                    `//*[text()="${TREATMENT_IC50_PROFILE_NAME}"] >> nth=0`
+                )
                 .waitFor({ state: 'attached' });
             await expect(
-                page.locator(`//*[text()="${TREATMENT_IC50_PROFILE_NAME}"]`)
+                page.locator(
+                    `//*[text()="${TREATMENT_IC50_PROFILE_NAME}"] >> nth=0`
+                )
             ).toBeAttached();
             await page
-                .locator(`//*[text()="${TREATMENT_EC50_PROFILE_NAME}"]`)
+                .locator(
+                    `//*[text()="${TREATMENT_EC50_PROFILE_NAME}"] >> nth=0`
+                )
                 .waitFor({ state: 'attached' });
             await expect(
-                page.locator(`//*[text()="${TREATMENT_EC50_PROFILE_NAME}"]`)
+                page.locator(
+                    `//*[text()="${TREATMENT_EC50_PROFILE_NAME}"] >> nth=0`
+                )
             ).toBeAttached();
         });
 
@@ -158,23 +168,35 @@ test.describe('treatment feature', () => {
             await goToTreatmentTab(page);
             await page.locator(GENERIC_ASSAY_PROFILE_SELECTOR).click();
             await page
-                .locator(`//*[text()="${TREATMENT_IC50_PROFILE_NAME}"]`)
+                .locator(
+                    `//*[text()="${TREATMENT_IC50_PROFILE_NAME}"] >> nth=0`
+                )
                 .waitFor({ state: 'attached' });
             await page
-                .locator(`//*[text()="${TREATMENT_IC50_PROFILE_NAME}"]`)
+                .locator(
+                    `//*[text()="${TREATMENT_IC50_PROFILE_NAME}"] >> nth=0`
+                )
                 .click();
             await expect(
-                page.locator(`//*[text()="${TREATMENT_IC50_PROFILE_NAME}"]`)
+                page.locator(
+                    `//*[text()="${TREATMENT_IC50_PROFILE_NAME}"] >> nth=0`
+                )
             ).toBeAttached();
             await page.locator(GENERIC_ASSAY_PROFILE_SELECTOR).click();
             await page
-                .locator(`//*[text()="${TREATMENT_EC50_PROFILE_NAME}"]`)
+                .locator(
+                    `//*[text()="${TREATMENT_EC50_PROFILE_NAME}"] >> nth=0`
+                )
                 .waitFor({ state: 'attached' });
             await page
-                .locator(`//*[text()="${TREATMENT_EC50_PROFILE_NAME}"]`)
+                .locator(
+                    `//*[text()="${TREATMENT_EC50_PROFILE_NAME}"] >> nth=0`
+                )
                 .click();
             await expect(
-                page.locator(`//*[text()="${TREATMENT_EC50_PROFILE_NAME}"]`)
+                page.locator(
+                    `//*[text()="${TREATMENT_EC50_PROFILE_NAME}"] >> nth=0`
+                )
             ).toBeAttached();
         });
 
@@ -196,7 +218,7 @@ test.describe('treatment feature', () => {
             await page.locator(GENERIC_ASSAY_ENTITY_SELECTOR).click();
             await setInputText(
                 page,
-                '[data-test="GenericAssayEntitySelection"] input',
+                '[data-test="GenericAssayEntitySelection"] input >> nth=0',
                 '17-AAG'
             );
             const options = page
@@ -219,7 +241,7 @@ test.describe('treatment feature', () => {
             await page.locator(GENERIC_ASSAY_ENTITY_SELECTOR).click();
             await setInputText(
                 page,
-                '[data-test="GenericAssayEntitySelection"] input',
+                '[data-test="GenericAssayEntitySelection"] input >> nth=0',
                 'AZD'
             );
             const options = page
@@ -235,7 +257,7 @@ test.describe('treatment feature', () => {
             await page.locator(GENERIC_ASSAY_ENTITY_SELECTOR).click();
             await setInputText(
                 page,
-                '[data-test="GenericAssayEntitySelection"] input',
+                '[data-test="GenericAssayEntitySelection"] input >> nth=0',
                 'AZD'
             );
             const options = page
@@ -299,16 +321,20 @@ test.describe('treatment feature', () => {
             await goToTreatmentTab(page);
             await page.locator(GENERIC_ASSAY_PROFILE_SELECTOR).click();
             await page
-                .locator(`//*[text()="${TREATMENT_EC50_PROFILE_NAME}"]`)
+                .locator(
+                    `//*[text()="${TREATMENT_EC50_PROFILE_NAME}"] >> nth=0`
+                )
                 .waitFor({ state: 'attached' });
             await page
-                .locator(`//*[text()="${TREATMENT_EC50_PROFILE_NAME}"]`)
+                .locator(
+                    `//*[text()="${TREATMENT_EC50_PROFILE_NAME}"] >> nth=0`
+                )
                 .click();
 
             await page.locator(GENERIC_ASSAY_ENTITY_SELECTOR).click();
             await setInputText(
                 page,
-                '[data-test="GenericAssayEntitySelection"] input',
+                '[data-test="GenericAssayEntitySelection"] input >> nth=0',
                 '17-AAG'
             );
             const options = page

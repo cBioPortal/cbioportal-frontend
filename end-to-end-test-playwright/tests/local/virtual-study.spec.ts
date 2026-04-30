@@ -88,7 +88,10 @@ test.describe.serial('Virtual Study life cycle', () => {
                         message: 'HTTP Status: ' + response.status,
                     };
                 } catch (error) {
-                    return { success: false, message: error.message };
+                    return {
+                        success: false,
+                        message: (error as Error).message,
+                    };
                 }
             },
             {
@@ -136,7 +139,10 @@ test.describe.serial('Virtual Study life cycle', () => {
                         message: 'HTTP Status: ' + response.status,
                     };
                 } catch (error) {
-                    return { success: false, message: error.message };
+                    return {
+                        success: false,
+                        message: (error as Error).message,
+                    };
                 }
             },
             {
@@ -183,7 +189,10 @@ test.describe.serial('Virtual Study life cycle', () => {
                         message: 'HTTP Status: ' + response.status,
                     };
                 } catch (error) {
-                    return { success: false, message: error.message };
+                    return {
+                        success: false,
+                        message: (error as Error).message,
+                    };
                 }
             },
             {

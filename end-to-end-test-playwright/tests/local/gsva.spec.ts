@@ -43,7 +43,9 @@ async function waitForGeneQueryPage(page: Page, timeout = 20000) {
 }
 
 async function waitForPlotsTab(page: Page, timeout = 20000) {
-    await expect(page.locator('div.axisBlock')).toBeVisible({ timeout });
+    await expect(page.locator('div.axisBlock').first()).toBeVisible({
+        timeout,
+    });
 }
 
 async function waitForCoExpressionTab(page: Page, timeout = 20000) {

@@ -72,9 +72,11 @@ test.describe('cnsegments tab', () => {
     test('renders cnsegments tab', async ({ page }) => {
         const url = `${CBIOPORTAL_URL}/results/cnSegments?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=study_es_0&case_set_id=study_es_0_cnaseq&data_priority=0&gene_list=TP53&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=study_es_0_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=study_es_0_mutations&profileFilter=0&tab_index=tab_visualize`;
         await goToUrlAndSetLocalStorage(page, url, true);
-        await expect(page.locator('.igv-viewport-content')).toBeVisible({
-            timeout: 60000,
-        });
+        await expect(page.locator('.igv-viewport-content').first()).toBeVisible(
+            {
+                timeout: 60000,
+            }
+        );
         await expectElementScreenshot(
             page,
             '.cnSegmentsMSKTab',

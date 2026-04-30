@@ -382,10 +382,14 @@ test.describe('patient view page', () => {
         test('shows gene panel icons when gene panels are used', async () => {
             await page.locator('.vafPlotThumbnail').hover();
             await expect(
-                page.locator('div[role=tooltip] svg[data-test=vaf-plot]')
+                page
+                    .locator('div[role=tooltip] svg[data-test=vaf-plot]')
+                    .first()
             ).toBeVisible();
             await expect(
-                page.locator('svg[data-test=vaf-plot] rect.genepanel-icon')
+                page
+                    .locator('svg[data-test=vaf-plot] rect.genepanel-icon')
+                    .first()
             ).toBeAttached();
         });
     });
@@ -411,6 +415,7 @@ test.describe('patient view page', () => {
         }) => {
             await page
                 .locator('[data-test="patientSamplesClinicalSpans"] svg')
+                .first()
                 .hover();
             await clickOnGenePanelLinks(page);
             await expect(
