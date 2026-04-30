@@ -372,9 +372,19 @@ jobs:
           working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
           command: npm ci
       - run:
-          name: Install main project dependencies (needed for serveDist's http-server)
+          name: Install only http-server (the single dep serveDist needs)
           working_directory: /tmp/repo/cbioportal-frontend
-          command: pnpm install --frozen-lockfile
+          command: |
+            # The previous step here ran `pnpm install --frozen-lockfile` to
+            # pull in the entire main-project tree purely so that
+            # ./node_modules/http-server/bin/http-server existed on disk
+            # for scripts/serve_dist.sh. Across 12 shards this averaged
+            # ~88s/shard. http-server is pinned at 0.11.1 (small, ancient,
+            # very few transitive deps), so an isolated install is ~5s.
+            # We skip writing pnpm-lock/package.json (--no-save) and the
+            # npm package-lock (--no-package-lock) so the workspace stays
+            # exactly as build_frontend persisted it.
+            npm install --no-save --no-package-lock --no-audit --silent http-server@0.11.1
       - run:
           name: Start frontend dev server (pnpm serveDist) on localhost:3000
           background: true
