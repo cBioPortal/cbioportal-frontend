@@ -840,6 +840,137 @@ jobs:
           path: /tmp/repo/cbioportal-frontend/end-to-end-test/local/junit/completeResults.json
           destination: /completeResults.json
 
+  # Playwright port of e2e_localdb_tests. Boots the same dockerized
+  # backend (cbioportal + keycloak + remote clickhouse) on localhost:8080,
+  # serves the freshly-built frontend dist on https://localhost:3000, and
+  # runs the migrated Playwright suite in tests/local. Lives alongside
+  # the WDIO localdb job for now; swap-and-delete once parity is proven.
+  e2e_localdb_playwright_tests:
+    machine:
+      image: ubuntu-2204:2024.08.1
+    resource_class: large
+    working_directory: /tmp/repo
+    environment:
+      BACKEND_PORT: 8080
+      FRONTEND_PORT: 3000
+      DOCKER_IMAGE_MYSQL: cbioportal/mysql:8.0-database-test
+      DOCKER_IMAGE_CBIOPORTAL: cbioportal/cbioportal:master
+      DOCKER_COMPOSE_REF: master
+      APP_CBIOPORTAL_CORE_BRANCH: main
+      CI: 'true'
+      LOCALDEV: '1'
+      CBIOPORTAL_URL: http://localhost:8080
+    steps:
+      - attach_workspace:
+          at: /tmp/repo
+      - run:
+          name: Install Node.js 22.18.0
+          command: |
+            curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            nvm install 22.18.0
+            nvm use 22.18.0
+            nvm alias default 22.18.0
+            node -v
+            npm -v
+      - restore_cache:
+          keys:
+            - v12-pnpm-store-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}
+      - run:
+          name: Install root dependencies
+          command: |
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+            nvm use 22.18.0
+            cd cbioportal-frontend
+            corepack enable
+            pnpm install --frozen-lockfile
+      - run:
+          name: Generate keycloak config
+          environment:
+            STUDIES: 'ascn_test_study study_hg38 teststudy_genepanels study_es_0 lgg_ucsf_2014_test_generic_assay'
+          command: |
+            git clone https://github.com/cbioportal/cbioportal-docker-compose.git
+            cd cbioportal-test
+            ./utils/gen-keycloak-config.sh --studies="$STUDIES" --template='/tmp/repo/cbioportal-docker-compose/dev/keycloak/keycloak-config.json' --out='/tmp/repo/keycloak-config-generated.json'
+      - run:
+          name: Start backend server with keycloak
+          environment:
+            KEYCLOAK_CONFIG_PATH: '/tmp/repo/keycloak-config-generated.json'
+            APPLICATION_PROPERTIES_PATH: '/tmp/repo/cbioportal-frontend/end-to-end-test/local/runtime-config/portal.properties'
+          command: |
+            cd cbioportal-test
+            nohup ./scripts/docker-compose.sh --portal_type='keycloak' --compose_extensions='-f addon/clickhouse/docker-compose.remote.clickhouse.yml'  >> /tmp/repo/docker-compose-logs.txt 2>&1 &
+      - run:
+          name: Check keycloak connection at localhost
+          command: |
+            cd cbioportal-test
+            ./utils/check-connection.sh --url=localhost:8081 --max_retries=50
+      - run:
+          name: Check backend connection at localhost
+          command: |
+            cd cbioportal-test
+            ./utils/check-connection.sh --url=localhost:${BACKEND_PORT} --max_retries=250
+      - run:
+          name: Install Playwright suite dependencies
+          working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
+          command: |
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+            nvm use 22.18.0
+            npm ci
+      - run:
+          name: Install Playwright Chromium browser
+          working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
+          command: |
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+            nvm use 22.18.0
+            npx playwright install --with-deps chromium
+      - run:
+          name: Start frontend dist server (pnpm serveDistLocalDb) on https://localhost:3000
+          background: true
+          working_directory: /tmp/repo/cbioportal-frontend
+          command: |
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+            nvm use 22.18.0
+            pnpm run serveDistLocalDb
+      - run:
+          name: Wait for frontend server to be reachable
+          command: |
+            for i in $(seq 1 120); do
+              if curl -k -sf https://localhost:3000/ > /dev/null; then
+                echo "Frontend server up after ~$((i*2))s"
+                exit 0
+              fi
+              sleep 2
+            done
+            echo "FAILED: frontend server didn't come up after ~4 minutes"
+            exit 1
+      - run:
+          name: Run Playwright localdb tests
+          working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
+          environment:
+            PLAYWRIGHT_JUNIT_OUTPUT_NAME: test-results/junit.xml
+          command: |
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+            nvm use 22.18.0
+            mkdir -p test-results
+            npx playwright test tests/local --reporter=list,junit
+      - store_test_results:
+          path: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright/test-results
+      - store_artifacts:
+          path: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright/test-results
+          destination: test-results
+      - store_artifacts:
+          path: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright/playwright-report
+          destination: playwright-report
+      - store_artifacts:
+          path: /tmp/repo/docker-compose-logs.txt
+
 workflows:
   tests:
     jobs:
@@ -862,11 +993,16 @@ workflows:
       - build_frontend:
           requires:
             - checkout
-      # The legacy WDIO `e2e_tests` (remote) job is still disabled on this
-      # experimental branch — the Playwright suite below is the candidate
-      # replacement. e2e_localdb_tests stays on because it covers
-      # local-db scenarios the Playwright suite hasn't ported yet.
-      - e2e_localdb_tests:
+      # The legacy WDIO `e2e_tests` (remote) job and the WDIO
+      # `e2e_localdb_tests` job are both disabled — the Playwright suite
+      # below is the candidate replacement for both. The Playwright
+      # localdb job (e2e_localdb_playwright_tests) is the local-db
+      # successor; flip the WDIO job back on if you need to compare.
+      # - e2e_localdb_tests:
+      #     requires:
+      #       - pull_cbioportal_test_codebase
+      #       - build_frontend
+      - e2e_localdb_playwright_tests:
           requires:
             - pull_cbioportal_test_codebase
             - build_frontend
@@ -907,7 +1043,12 @@ workflows:
       - build_frontend:
           requires:
             - checkout
-      - e2e_localdb_tests:
+      # WDIO localdb is disabled in favor of e2e_localdb_playwright_tests.
+      # - e2e_localdb_tests:
+      #     requires:
+      #       - pull_cbioportal_test_codebase
+      #       - build_frontend
+      - e2e_localdb_playwright_tests:
           requires:
             - pull_cbioportal_test_codebase
             - build_frontend
