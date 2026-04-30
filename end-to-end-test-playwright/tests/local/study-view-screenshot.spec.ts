@@ -60,7 +60,9 @@ test.describe('study view generic assay categorical/binary features', () => {
             .locator('div[data-test="GenericAssayEntitySelection"]')
             .waitFor({ state: 'attached' });
         await page
-            .locator('div[data-test="GenericAssayEntitySelection"] input')
+            .locator(
+                'div[data-test="GenericAssayEntitySelection"] input >> nth=0'
+            )
             .fill('mutational_signature_category_10');
 
         await page
@@ -274,12 +276,24 @@ test.describe.serial('study view editable breadcrumbs', () => {
     });
 
     test.afterAll(async () => {
-        await setDropdownOpen(
-            page,
-            true,
-            ADD_CHART_BUTTON,
-            'button:text-is("Reset charts")'
-        );
+        // The setDropdownOpen helper polls dropdown visibility while
+        // toggling ADD_CHART_BUTTON, but the toggle can race a flicker
+        // and trip "Couldn't open dropdown" — retry the toggle manually
+        // until the Reset Charts button actually paints.
+        await expect(page.locator(ADD_CHART_BUTTON)).toBeVisible({
+            timeout: WAIT_FOR_VISIBLE_TIMEOUT,
+        });
+        for (let attempt = 0; attempt < 5; attempt++) {
+            const isOpen =
+                (await page.locator('button:text-is("Reset charts")').count()) >
+                    0 &&
+                (await page
+                    .locator('button:text-is("Reset charts")')
+                    .isVisible());
+            if (isOpen) break;
+            await page.locator(ADD_CHART_BUTTON).click();
+            await page.waitForTimeout(1000);
+        }
         await page.locator('button:text-is("Reset charts")').click();
         await expect(
             page.locator('.modal-content button:text-is("Confirm")')
