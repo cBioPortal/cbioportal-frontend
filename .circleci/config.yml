@@ -1181,20 +1181,20 @@ jobs:
           working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
           environment:
             PLAYWRIGHT_JUNIT_OUTPUT_NAME: test-results/junit.xml
+            # PW_UPDATE_SNAPSHOTS=missing tells the suite to auto-generate
+            # baselines for screenshots that don't have one yet (the
+            # localdb snapshots haven't been committed yet). Existing
+            # ones still enforce. After this PR's first green run,
+            # download `__snapshots__/local/` from artifacts and commit
+            # — then drop PW_UPDATE_SNAPSHOTS so subsequent runs only
+            # enforce.
+            PW_UPDATE_SNAPSHOTS: missing
           command: |
             export NVM_DIR="$HOME/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
             nvm use 22.18.0
             mkdir -p test-results
-            # `--update-snapshots=missing` auto-generates baselines for
-            # tests whose snapshot files don't exist yet, and leaves
-            # existing ones unchanged. After this PR's first green run,
-            # download `__snapshots__/local/` from artifacts and commit
-            # — then drop this flag in a follow-up so subsequent runs
-            # enforce baselines.
-            npx playwright test tests/local \
-              --reporter=list,junit \
-              --update-snapshots=missing
+            npx playwright test tests/local --reporter=list,junit
       - store_test_results:
           path: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright/test-results
       - store_artifacts:

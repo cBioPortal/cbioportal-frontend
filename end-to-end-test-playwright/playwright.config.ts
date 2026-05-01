@@ -20,12 +20,26 @@ const SNAPSHOT_DIR = inDocker ? '__snapshots__' : '__local_snapshots__';
 // bundle on the public origin instead.
 const isLocaldev = process.env.LOCALDEV !== '0';
 
+// PW_UPDATE_SNAPSHOTS lets CI auto-generate missing screenshot
+// baselines on first run without making every developer pass a CLI
+// flag. Set to 'missing' / 'changed' / 'all' / 'none' (default 'none'
+// when unset). Used by the e2e_localdb_playwright_tests CI job to
+// bootstrap baselines that haven't been committed yet.
+const updateSnapshots =
+    (process.env.PW_UPDATE_SNAPSHOTS as
+        | 'all'
+        | 'changed'
+        | 'missing'
+        | 'none'
+        | undefined) ?? 'none';
+
 export default defineConfig({
     testDir: './tests',
     fullyParallel: false,
     forbidOnly: !!process.env.CI,
     retries: process.env.CI ? 1 : 0,
     workers: 1,
+    updateSnapshots,
     reporter: [
         ['list'],
         ['html', { open: 'never' }],

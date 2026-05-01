@@ -100,14 +100,19 @@ async function selectTreamentsBothAxes(page: Page) {
 
     await page
         .locator('[data-test=ViewLimitValues]')
+        .first()
         .waitFor({ state: 'attached' });
     if (
         !(await page
             .locator('[data-test=ViewLimitValues]')
+            .first()
             .isChecked()
             .catch(() => false))
     ) {
-        await page.locator('[data-test=ViewLimitValues]').click();
+        await page
+            .locator('[data-test=ViewLimitValues]')
+            .first()
+            .click();
     }
 
     if (
@@ -629,9 +634,10 @@ test.describe('treatment feature', () => {
 
             await page
                 .locator('[data-test=ViewLimitValues]')
+                .first()
                 .waitFor({ state: 'attached' });
             await expect(
-                page.locator('[data-test=ViewLimitValues]')
+                page.locator('[data-test=ViewLimitValues]').first()
             ).toBeVisible();
         });
 
@@ -666,9 +672,10 @@ test.describe('treatment feature', () => {
 
             await page
                 .locator('[data-test=ViewLimitValues]')
+                .first()
                 .waitFor({ state: 'attached' });
             await expect(
-                page.locator('[data-test=ViewLimitValues]')
+                page.locator('[data-test=ViewLimitValues]').first()
             ).toBeVisible();
         });
 
