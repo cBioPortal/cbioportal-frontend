@@ -1181,24 +1181,18 @@ jobs:
           working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
           environment:
             PLAYWRIGHT_JUNIT_OUTPUT_NAME: test-results/junit.xml
-            # PW_UPDATE_SNAPSHOTS auto-generates baselines for screenshots
-            # that don't have one yet. The localdb suite has 0 committed
-            # baselines, so we use 'all' to force baseline write AND pass
-            # the test on first run (which 'missing' did not reliably do
-            # in earlier runs — see PR #5554 history). After this PR's
-            # first green run, download `__snapshots__/local/` from
-            # artifacts and commit — then drop PW_UPDATE_SNAPSHOTS in a
-            # follow-up so subsequent runs only enforce.
-            PW_UPDATE_SNAPSHOTS: all
+            # PW_UPDATE_SNAPSHOTS=missing auto-generates baselines for
+            # screenshots that don't have one yet, but leaves existing
+            # ones unchanged (so committed baselines actually enforce
+            # against drift). Switch to 'none' or drop the env var
+            # entirely once all baselines are stable.
+            PW_UPDATE_SNAPSHOTS: missing
           command: |
             export NVM_DIR="$HOME/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
             nvm use 22.18.0
             mkdir -p test-results
-            # CLI flag belt-and-suspenders alongside PW_UPDATE_SNAPSHOTS:
-            # earlier rounds suggested the env→config path may have been
-            # silently dropped. The CLI flag explicitly forces update mode.
-            npx playwright test tests/local --reporter=list,junit --update-snapshots
+            npx playwright test tests/local --reporter=list,junit
       - store_test_results:
           path: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright/test-results
       - store_artifacts:
