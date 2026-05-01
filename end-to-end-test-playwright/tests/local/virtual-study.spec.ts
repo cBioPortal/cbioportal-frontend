@@ -55,9 +55,9 @@ test.describe.serial('Virtual Study life cycle', () => {
 
     test('See the VS in My Virtual Studies section on the landing page', async () => {
         await goToUrlAndSetLocalStorage(page, CBIOPORTAL_URL, true);
-        const vsSection = page.locator(
-            `xpath=//*[text()="${vsTitle}"]/ancestor::ul[1]`
-        );
+        const vsSection = page
+            .locator(`xpath=//*[text()="${vsTitle}"]/ancestor::ul[1]`)
+            .first();
         await expect(vsSection).toBeVisible();
         const sectionTitle = vsSection.locator('li label span');
         expect(await sectionTitle.innerText()).toBe('My Virtual Studies');
@@ -105,9 +105,9 @@ test.describe.serial('Virtual Study life cycle', () => {
 
     test('See the VS in Public Virtual Studies section on the landing page', async () => {
         await goToUrlAndSetLocalStorage(page, CBIOPORTAL_URL, true);
-        const vsSection = page.locator(
-            `xpath=//*[text()="${vsTitle}"]/ancestor::ul[1]`
-        );
+        const vsSection = page
+            .locator(`xpath=//*[text()="${vsTitle}"]/ancestor::ul[1]`)
+            .first();
         await expect(vsSection).toBeVisible();
         const sectionTitle = vsSection.locator('li label span');
         expect(await sectionTitle.innerText()).toBe('Public Virtual Studies');

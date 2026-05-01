@@ -40,9 +40,15 @@ async function switchGeneFilter(page: Page, selectedOption: string) {
 }
 
 async function doVafPlotScreenshotTest(page: Page, snapshotName: string) {
-    await page.locator('button:has-text("Columns")').click();
+    await page
+        .locator('button:has-text("Columns")')
+        .first()
+        .click();
     await page.locator('//*[text()="Annotation"]').click();
-    await page.locator('button:has-text("Columns")').click();
+    await page
+        .locator('button:has-text("Columns")')
+        .first()
+        .click();
     await page.locator('.vafPlotThumbnail').hover();
     await page
         .locator('div[role=tooltip] [data-test=vaf-plot]')
