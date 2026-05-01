@@ -142,7 +142,10 @@ async function geneTableCounts(
 async function enrichmentTableCounts(
     page: Page
 ): Promise<Record<string, { alt: string; unalt: string }>> {
-    const tbody = page.locator('[data-test=LazyMobXTable]').locator('tbody');
+    const tbody = page
+        .locator('[data-test=LazyMobXTable]')
+        .first()
+        .locator('tbody');
     const rows = tbody.locator('tr');
     const rowCount = await rows.count();
     const geneNames: string[] = [];
