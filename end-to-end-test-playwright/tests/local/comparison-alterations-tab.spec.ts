@@ -112,14 +112,24 @@ test.describe('comparison alterations tab', () => {
             'Structural Variants / Fusions'
         );
         await submitEnrichmentRequest(page);
-        await expect(page.locator('[data-test=LazyMobXTable]')).toBeVisible();
-        let rows = page.locator('[data-test=LazyMobXTable] tbody tr');
+        await expect(
+            page.locator('[data-test=LazyMobXTable]').first()
+        ).toBeVisible();
+        let rows = page
+            .locator('[data-test=LazyMobXTable]')
+            .first()
+            .locator('tbody tr');
         expect(await rows.count()).toBe(8);
         await clickAlterationTypeCheckBox(page, 'Mutations');
         await clickAlterationTypeCheckBox(page, 'Frameshift Deletion');
         await submitEnrichmentRequest(page);
-        await expect(page.locator('[data-test=LazyMobXTable]')).toBeVisible();
-        rows = page.locator('[data-test=LazyMobXTable] tbody tr');
+        await expect(
+            page.locator('[data-test=LazyMobXTable]').first()
+        ).toBeVisible();
+        rows = page
+            .locator('[data-test=LazyMobXTable]')
+            .first()
+            .locator('tbody tr');
         expect(await rows.count()).toBe(2);
     });
 
@@ -131,12 +141,16 @@ test.describe('comparison alterations tab', () => {
         );
 
         await submitEnrichmentRequest(page);
-        await expect(page.locator('[data-test=LazyMobXTable]')).toBeVisible();
+        await expect(
+            page.locator('[data-test=LazyMobXTable]').first()
+        ).toBeVisible();
         expect(await selectUnalteredCount(page, 'ACAP3')).toBe('9 (1.17%)');
 
         await clickAlterationTypeCheckBox(page, 'Deletion');
         await submitEnrichmentRequest(page);
-        await expect(page.locator('[data-test=LazyMobXTable]')).toBeVisible();
+        await expect(
+            page.locator('[data-test=LazyMobXTable]').first()
+        ).toBeVisible();
         expect(await selectUnalteredCount(page, 'ACAP3')).toBe('7 (0.91%)');
     });
 });

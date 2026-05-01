@@ -185,7 +185,9 @@ async function enrichmentTableCounts(
 }
 
 async function waitForUpdateResultsView(page: Page) {
-    await expect(page.locator('[data-test=LazyMobXTable]')).toBeVisible();
+    await expect(
+        page.locator('[data-test=LazyMobXTable]').first()
+    ).toBeVisible();
 }
 
 async function turnOffCancerGenesFilters(page: Page) {
