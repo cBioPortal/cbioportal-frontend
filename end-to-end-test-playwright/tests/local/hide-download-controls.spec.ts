@@ -608,6 +608,7 @@ test.describe('hide download controls feature', () => {
                 await page.locator('.tabAnchor_filesAndLinks').click();
                 await page
                     .locator('.resourcesSection')
+                    .first()
                     .waitFor({ state: 'attached' });
                 await globalCheck(page);
             });
@@ -757,6 +758,7 @@ test.describe('hide download controls feature', () => {
                 await page.locator('.tabAnchor_filesAndLinks').click();
                 await page
                     .locator('.resourcesSection')
+                    .first()
                     .waitFor({ state: 'attached' });
                 await globalCheck(page);
             });

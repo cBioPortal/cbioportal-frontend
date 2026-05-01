@@ -67,8 +67,12 @@ async function selectUnalteredCount(page: Page, gene: string) {
 }
 
 async function clickAlterationTypeCheckBox(page: Page, name: string) {
+    // Mirror the wdio `label=<name>` selector exactly: visible text equals
+    // <name> (whitespace-trimmed). hasText:/^name$/ is too strict — it
+    // failed on labels that wrap the input in a sibling node — but
+    // :text-is matches the wdio "label=" semantics directly.
     await page
-        .locator(`label`, { hasText: new RegExp(`^${name}$`) })
+        .locator(`label:text-is("${name}")`)
         .locator('input')
         .click();
 }
