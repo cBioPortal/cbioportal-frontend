@@ -32,6 +32,10 @@ const updateSnapshots =
         | 'missing'
         | 'none'
         | undefined) ?? 'none';
+// eslint-disable-next-line no-console
+console.log(
+    `[playwright.config] PW_UPDATE_SNAPSHOTS=${process.env.PW_UPDATE_SNAPSHOTS} → updateSnapshots=${updateSnapshots}`
+);
 
 export default defineConfig({
     testDir: './tests',

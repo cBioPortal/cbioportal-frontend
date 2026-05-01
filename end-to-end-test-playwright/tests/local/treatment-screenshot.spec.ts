@@ -88,9 +88,19 @@ async function selectTreamentsBothAxes(page: Page) {
         });
     });
 
-    await expect(page.locator('[data-test=ViewLimitValues]')).toBeAttached();
-    if (!(await page.locator('[data-test=ViewLimitValues]').isChecked())) {
-        await page.locator('[data-test=ViewLimitValues]').click();
+    await expect(
+        page.locator('[data-test=ViewLimitValues]').first()
+    ).toBeAttached();
+    if (
+        !(await page
+            .locator('[data-test=ViewLimitValues]')
+            .first()
+            .isChecked())
+    ) {
+        await page
+            .locator('[data-test=ViewLimitValues]')
+            .first()
+            .click();
     }
 
     if (await page.locator('[data-test=HorizontalLogCheckbox]').isChecked()) {
@@ -200,7 +210,10 @@ test.describe('treatment feature', () => {
             ).toBeAttached();
             await page.locator('[data-test=ViewCopyNumber]').click();
 
-            await page.locator('[data-test=ViewLimitValues]').click();
+            await page
+                .locator('[data-test=ViewLimitValues]')
+                .first()
+                .click();
 
             await expectElementScreenshot(
                 page,
