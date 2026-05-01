@@ -35,7 +35,9 @@ test.describe.serial('results view comparison tab screenshot tests', () => {
             page = await browser.newPage();
             await goToUrlAndSetLocalStorage(page, SEVERAL_GROUPS_URL, true);
             await expect(
-                page.locator('[data-test=GroupComparisonAlterationEnrichments]')
+                page
+                    .locator('[data-test=GroupComparisonAlterationEnrichments]')
+                    .first()
             ).toBeVisible({ timeout: 20000 });
         });
 
@@ -59,7 +61,9 @@ test.describe.serial('results view comparison tab screenshot tests', () => {
                 );
             });
             await expect(
-                page.locator('[data-test=GroupComparisonAlterationEnrichments]')
+                page
+                    .locator('[data-test=GroupComparisonAlterationEnrichments]')
+                    .first()
             ).toBeVisible({ timeout: 20000 });
             await page.mouse.move(0, 0);
             await expectElementScreenshot(
@@ -160,7 +164,9 @@ test.describe.serial('results view comparison tab screenshot tests', () => {
         test('results view comparison tab alteration enrichments two groups', async () => {
             await goToUrlAndSetLocalStorage(page, TWO_GROUPS_URL, true);
             await expect(
-                page.locator('[data-test=GroupComparisonAlterationEnrichments]')
+                page
+                    .locator('[data-test=GroupComparisonAlterationEnrichments]')
+                    .first()
             ).toBeVisible({ timeout: 20000 });
             await page.mouse.move(0, 0);
             await expectElementScreenshot(

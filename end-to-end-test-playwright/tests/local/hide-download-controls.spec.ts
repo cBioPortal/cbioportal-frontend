@@ -391,6 +391,7 @@ test.describe('hide download controls feature', () => {
                         .click();
                     await page
                         .locator('[data-test=MiniBoxPlot]')
+                        .first()
                         .waitFor({ state: 'attached' });
                     await globalCheck(page);
                 });
@@ -411,6 +412,7 @@ test.describe('hide download controls feature', () => {
                         .click();
                     await page
                         .locator('[data-test=MiniBoxPlot]')
+                        .first()
                         .waitFor({ state: 'attached' });
                     await globalCheck(page);
                 });
@@ -433,6 +435,7 @@ test.describe('hide download controls feature', () => {
                         .click();
                     await page
                         .locator('[data-test=MiniBoxPlot]')
+                        .first()
                         .waitFor({ state: 'attached' });
                     await globalCheck(page);
                 });
@@ -459,6 +462,7 @@ test.describe('hide download controls feature', () => {
                         .click();
                     await page
                         .locator('[data-test=MiniBoxPlot]')
+                        .first()
                         .waitFor({ state: 'attached' });
                     await globalCheck(page);
                 });
@@ -484,6 +488,7 @@ test.describe('hide download controls feature', () => {
                         .click();
                     await page
                         .locator('[data-test=MiniBoxPlot]')
+                        .first()
                         .waitFor({ state: 'attached' });
                     await globalCheck(page);
                 });
@@ -506,6 +511,7 @@ test.describe('hide download controls feature', () => {
                     await page.locator('.tabAnchor_pathways').click();
                     await page
                         .locator('.pathwayMapper')
+                        .first()
                         .waitFor({ state: 'attached' });
                 });
                 test('global check for icon and occurrence of "Download" as a word', async () => {
@@ -582,6 +588,7 @@ test.describe('hide download controls feature', () => {
                 await page.locator('.tabAnchor_pathways').click();
                 await page
                     .locator('.pathwayMapper')
+                    .first()
                     .waitFor({ state: 'attached' });
                 await globalCheck(page);
             });
@@ -878,6 +885,7 @@ test.describe('hide download controls feature', () => {
                     .click();
                 await page
                     .locator('[data-test=MiniBoxPlot]')
+                    .first()
                     .waitFor({ state: 'attached' });
                 await globalCheck(page);
             });
@@ -898,6 +906,7 @@ test.describe('hide download controls feature', () => {
                     .click();
                 await page
                     .locator('[data-test=MiniBoxPlot]')
+                    .first()
                     .waitFor({ state: 'attached' });
                 await globalCheck(page);
             });
@@ -924,6 +933,7 @@ test.describe('hide download controls feature', () => {
                     .click();
                 await page
                     .locator('[data-test=MiniBoxPlot]')
+                    .first()
                     .waitFor({ state: 'attached' });
                 await globalCheck(page);
             });
@@ -948,6 +958,7 @@ test.describe('hide download controls feature', () => {
                     .click();
                 await page
                     .locator('[data-test=MiniBoxPlot]')
+                    .first()
                     .waitFor({ state: 'attached' });
                 await globalCheck(page);
             });
@@ -972,6 +983,7 @@ test.describe('hide download controls feature', () => {
                     .click();
                 await page
                     .locator('[data-test=MiniBoxPlot]')
+                    .first()
                     .waitFor({ state: 'attached' });
                 await globalCheck(page);
             });
