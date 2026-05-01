@@ -33,7 +33,9 @@ async function columnIsDisplayed(page: Page, column: string) {
 
 async function columnIsNotDisplayed(page: Page, column: string) {
     await expect(
-        page.locator(`${tableSel} //span[text() = '${column}']`)
+        page
+            .locator(tableSel)
+            .locator(`xpath=.//span[normalize-space(text())='${column}']`)
     ).toHaveCount(0);
 }
 

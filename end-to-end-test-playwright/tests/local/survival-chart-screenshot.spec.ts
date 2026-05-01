@@ -53,7 +53,7 @@ async function openGroupComparison(
     const [newPage] = await Promise.all([
         context.waitForEvent('page'),
         page
-            .locator(chart + ' ' + hamburgerIcon + '-menu li')
+            .locator(chart + ' [data-test=chart-header-hamburger-icon-menu] li')
             .nth(1)
             .click(),
     ]);
