@@ -124,9 +124,9 @@ test.describe('treatment feature', () => {
         }) => {
             await goToTreatmentTab(page);
             await page.locator(GENERIC_ASSAY_PROFILE_SELECTOR).click();
-            const ec50Option = page.locator(
-                `xpath=//*[text()="${TREATMENT_EC50_PROFILE_NAME}"][1]`
-            );
+            const ec50Option = page
+                .locator(`xpath=//*[text()="${TREATMENT_EC50_PROFILE_NAME}"]`)
+                .first();
             await expect(ec50Option).toBeAttached();
             await ec50Option.click();
             await page.locator(GENERIC_ASSAY_ENTITY_SELECTOR).click();
