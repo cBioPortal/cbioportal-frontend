@@ -863,6 +863,10 @@ jobs:
       # Route screenshot baselines to the committed `__snapshots__/` dir
       # (the gitignored `__local_snapshots__/` is for host-mode runs).
       PW_DOCKER: '1'
+      # Opt this job into running tests/local/** — the playwright config
+      # excludes that subtree by default so the remote `playwright_e2e_shards`
+      # job doesn't pick them up and hang against the public origin.
+      PW_LOCAL: '1'
     steps:
       - attach_workspace:
           at: /tmp/repo

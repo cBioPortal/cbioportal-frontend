@@ -35,8 +35,15 @@ const updateSnapshots = process.env.PW_UPDATE_SNAPSHOTS as
     | 'none'
     | undefined;
 
+// The remote `playwright_e2e_shards` job runs `npx playwright test`
+// with no path filter and would otherwise pick up tests/local/**, where
+// the Keycloak/SAML helpers hang against the public origin and add
+// 5+ minutes to slow shards. The localdb job opts in via PW_LOCAL=1.
+const includeLocalDb = process.env.PW_LOCAL === '1';
+
 export default defineConfig({
     testDir: './tests',
+    testIgnore: includeLocalDb ? [] : ['**/local/**'],
     fullyParallel: false,
     forbidOnly: !!process.env.CI,
     retries: process.env.CI ? 1 : 0,
