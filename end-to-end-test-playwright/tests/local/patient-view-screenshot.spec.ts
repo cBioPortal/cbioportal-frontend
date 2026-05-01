@@ -44,7 +44,10 @@ async function doVafPlotScreenshotTest(page: Page, snapshotName: string) {
         .locator('button:has-text("Columns")')
         .first()
         .click();
-    await page.locator('//*[text()="Annotation"]').click();
+    await page
+        .locator('//*[text()="Annotation"]')
+        .first()
+        .click();
     await page
         .locator('button:has-text("Columns")')
         .first()

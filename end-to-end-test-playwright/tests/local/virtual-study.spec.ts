@@ -156,9 +156,9 @@ test.describe.serial('Virtual Study life cycle', () => {
 
     test('See the VS in the Adrenocortical Adenoma section with PubMed link', async () => {
         await goToUrlAndSetLocalStorage(page, CBIOPORTAL_URL, true);
-        const vsRow = page.locator(
-            `xpath=//*[text()="${vsTitle}"]/ancestor::li[1]`
-        );
+        const vsRow = page
+            .locator(`xpath=//*[text()="${vsTitle}"]/ancestor::li[1]`)
+            .first();
         const vsSection = vsRow.locator('xpath=..');
         await expect(vsSection).toBeVisible();
         const sectionTitle = vsSection.locator('li label span');
@@ -206,9 +206,9 @@ test.describe.serial('Virtual Study life cycle', () => {
 
     test('Removing the VS', async () => {
         await goToUrlAndSetLocalStorage(page, CBIOPORTAL_URL, true);
-        const vsRow = page.locator(
-            `xpath=//*[text()="${vsTitle}"]/ancestor::li[1]`
-        );
+        const vsRow = page
+            .locator(`xpath=//*[text()="${vsTitle}"]/ancestor::li[1]`)
+            .first();
         await expect(vsRow).toBeVisible();
         await vsRow.locator('.fa-trash').click();
     });
