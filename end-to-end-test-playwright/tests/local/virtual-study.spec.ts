@@ -59,7 +59,7 @@ test.describe.serial('Virtual Study life cycle', () => {
             .locator(`xpath=//*[text()="${vsTitle}"]/ancestor::ul[1]`)
             .first();
         await expect(vsSection).toBeVisible();
-        const sectionTitle = vsSection.locator('li label span');
+        const sectionTitle = vsSection.locator('li label span').first();
         expect(await sectionTitle.innerText()).toBe('My Virtual Studies');
     });
 
@@ -109,7 +109,7 @@ test.describe.serial('Virtual Study life cycle', () => {
             .locator(`xpath=//*[text()="${vsTitle}"]/ancestor::ul[1]`)
             .first();
         await expect(vsSection).toBeVisible();
-        const sectionTitle = vsSection.locator('li label span');
+        const sectionTitle = vsSection.locator('li label span').first();
         expect(await sectionTitle.innerText()).toBe('Public Virtual Studies');
     });
 
@@ -161,7 +161,7 @@ test.describe.serial('Virtual Study life cycle', () => {
             .first();
         const vsSection = vsRow.locator('xpath=..');
         await expect(vsSection).toBeVisible();
-        const sectionTitle = vsSection.locator('li label span');
+        const sectionTitle = vsSection.locator('li label span').first();
         expect(await sectionTitle.innerText()).toBe('Adrenocortical Adenoma');
         await expect(vsRow.locator('.fa-book')).toBeAttached();
     });
