@@ -67,11 +67,11 @@ async function selectUnalteredCount(page: Page, gene: string) {
 }
 
 async function clickAlterationTypeCheckBox(page: Page, name: string) {
-    // Mirror the wdio `label=<name>` selector exactly: visible text equals
-    // <name> (whitespace-trimmed). hasText:/^name$/ is too strict — it
-    // failed on labels that wrap the input in a sibling node — but
-    // :text-is matches the wdio "label=" semantics directly.
+    // Mirror the wdio `label=<name>` selector exactly. Scope to the
+    // alteration-type menu — the same name (e.g. "Mutations") may
+    // appear in other parts of the page (track legend, count column).
     await page
+        .locator('[data-test=AlterationTypeSelectorMenu]')
         .locator(`label:text-is("${name}")`)
         .locator('input')
         .click();

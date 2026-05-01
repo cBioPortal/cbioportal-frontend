@@ -90,7 +90,12 @@ async function changeNthTrack(
     const sels = getNthOncoprintTrackOptionsSelectors(n);
     await page.locator(sels.button).click();
     await expect(page.locator(sels.dropdown)).toBeVisible({ timeout: 1000 });
-    await page.locator(`li:text-is("${menuOptionButtonText}")`).click();
+    // Multiple oncoprint tracks each render their own copy of the
+    // sort menu; scope to the dropdown for the track we just opened.
+    await page
+        .locator(sels.dropdown)
+        .locator(`li:text-is("${menuOptionButtonText}")`)
+        .click();
     await waitForOncoprint(page);
 }
 

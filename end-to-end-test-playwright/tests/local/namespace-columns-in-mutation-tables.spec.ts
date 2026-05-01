@@ -72,7 +72,10 @@ test.describe('namespace columns in mutation tables', () => {
         });
 
         test('shows columns when column menu is used', async () => {
-            await page.locator('button:has-text("Columns")').click();
+            await page
+                .locator('button:has-text("Columns")')
+                .first()
+                .click();
             await setInputText(
                 page,
                 '[data-test=fixed-header-table-search-input]',
@@ -93,7 +96,10 @@ test.describe('namespace columns in mutation tables', () => {
                 await expect(cb).toBeVisible();
                 await cb.click();
             }
-            await page.locator('button:has-text("Columns")').click();
+            await page
+                .locator('button:has-text("Columns")')
+                .first()
+                .click();
             expect(await namespaceColumnsAreDisplayed(page)).toBe(true);
         });
 
