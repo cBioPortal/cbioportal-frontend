@@ -1054,6 +1054,12 @@ jobs:
     machine:
       image: ubuntu-2204:2024.08.1
     resource_class: large
+    # Parallelism = 4 shards. Each parallel runner spins up its own
+    # cbioportal+keycloak stack (~2 min) and runs ~1/4 of the suite
+    # (~7-8 min of tests), so total wall time drops from ~30 min serial
+    # to ~12-15 min. Tested values: 1 (serial baseline ~30 min),
+    # 4 (sweet spot for cost vs. speedup), 6+ (diminishing returns).
+    parallelism: 4
     working_directory: /tmp/repo
     environment:
       BACKEND_PORT: 8080
@@ -1196,7 +1202,17 @@ jobs:
             [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
             nvm use 22.18.0
             mkdir -p test-results
-            npx playwright test tests/local --reporter=list,junit
+            # Playwright shards are 1-based; CIRCLE_NODE_INDEX is 0-based.
+            # Each parallel runner gets ~1/CIRCLE_NODE_TOTAL of the test
+            # files, with describe.serial blocks staying intact (Playwright
+            # shards by file). Each shard prints its own pass/fail; the
+            # CircleCI test-results UI aggregates the junit XMLs across
+            # shards so the job-level totals reflect all 346 tests.
+            SHARD_NUM=$((CIRCLE_NODE_INDEX + 1))
+            echo "Running Playwright shard ${SHARD_NUM}/${CIRCLE_NODE_TOTAL}"
+            npx playwright test tests/local \
+              --shard="${SHARD_NUM}/${CIRCLE_NODE_TOTAL}" \
+              --reporter=list,junit
       - store_test_results:
           path: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright/test-results
       - store_artifacts:
