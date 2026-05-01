@@ -187,7 +187,7 @@ export default class ResourceTab extends React.Component<
                             </div>
                             <button
                                 className={styles.refreshButton}
-                                onClick={() => window.location.reload()}
+                                onClick={() => getBrowserWindow().location.reload()}
                             >
                                 <i
                                     className="fa fa-refresh"

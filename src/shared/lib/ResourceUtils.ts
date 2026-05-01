@@ -1,5 +1,4 @@
 import { ResourceDefinition } from 'cbioportal-ts-api-client';
-import _ from 'lodash';
 
 /**
  * Helper function to check if a string is non-empty

@@ -102,8 +102,8 @@ const ResourceTable = observer(
                     </a>
                 ),
                 download: (row) => row.resourceName,
-                // Sort by priority to mirror previous initial ordering
-                sortBy: (row) => row.priority,
+                // Sort by the displayed resource name so column sorting matches the UI
+                sortBy: (row) => row.resourceName,
                 filter: (row, _filterString, filterStringUpper) =>
                     row.resourceName
                         .toUpperCase()
