@@ -13,7 +13,9 @@ const ZYGOSITY_CODE = "xpath=//span[text() = 'Zygosity Code']";
 const ZYGOSITY_NAME = "xpath=//span[text() = 'Zygosity Name']";
 
 async function waitForMutationTable(page: Page) {
-    await expect(page.locator('[data-test=LazyMobXTable]')).toBeVisible();
+    await expect(
+        page.locator('[data-test=LazyMobXTable]').first()
+    ).toBeVisible();
 }
 
 async function waitForPatientViewMutationTable(page: Page) {

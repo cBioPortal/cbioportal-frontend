@@ -174,6 +174,7 @@ test.describe('hide download controls feature', () => {
             );
             await page
                 .locator('[data-test=LazyMobXTable]')
+                .first()
                 .waitFor({ state: 'attached' });
             await expect(page.locator(downloadIcon)).toHaveCount(0);
         });
@@ -252,6 +253,7 @@ test.describe('hide download controls feature', () => {
                 await page.locator('.tabAnchor_mutualExclusivity').click();
                 await page
                     .locator('[data-test=LazyMobXTable]')
+                    .first()
                     .waitFor({ state: 'attached' });
                 await globalCheck(page);
             });
@@ -360,6 +362,7 @@ test.describe('hide download controls feature', () => {
                         .waitFor({ state: 'attached' });
                     await page
                         .locator('[data-test=LazyMobXTable]')
+                        .first()
                         .waitFor({ state: 'attached' });
                     await globalCheck(page);
                 });
@@ -369,6 +372,7 @@ test.describe('hide download controls feature', () => {
                     await page.locator('.tabAnchor_alterations').click();
                     await page
                         .locator('[data-test=LazyMobXTable]')
+                        .first()
                         .waitFor({ state: 'attached' });
                     await globalCheck(page);
                 });
@@ -568,6 +572,7 @@ test.describe('hide download controls feature', () => {
                 await page.locator('.tabAnchor_summary').click();
                 await page
                     .locator('[data-test=LazyMobXTable]')
+                    .first()
                     .waitFor({ state: 'attached' });
                 await globalCheck(page);
             });
@@ -586,6 +591,7 @@ test.describe('hide download controls feature', () => {
                 await page.locator('.tabAnchor_clinicalData').click();
                 await page
                     .locator('[data-test=LazyMobXTable]')
+                    .first()
                     .waitFor({ state: 'attached' });
                 await globalCheck(page);
             });
@@ -725,6 +731,7 @@ test.describe('hide download controls feature', () => {
                 await page.locator('.tabAnchor_clinicalData').click();
                 await page
                     .locator('[data-test=LazyMobXTable]')
+                    .first()
                     .waitFor({ state: 'attached' });
                 await globalCheck(page);
             });
@@ -840,6 +847,7 @@ test.describe('hide download controls feature', () => {
                 await page.locator('.tabAnchor_clinical').click();
                 await page
                     .locator('[data-test=LazyMobXTable]')
+                    .first()
                     .waitFor({ state: 'attached' });
                 await page
                     .locator('[data-test=ClinicalTabPlotDiv]')
@@ -901,6 +909,7 @@ test.describe('hide download controls feature', () => {
                     .click();
                 await page
                     .locator('[data-test=LazyMobXTable]')
+                    .first()
                     .waitFor({ state: 'attached' });
                 await page
                     .locator(

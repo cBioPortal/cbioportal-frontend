@@ -82,14 +82,18 @@ async function columnIsNotDisplayed(page: Page, column: string) {
 }
 
 async function waitForMutationTable(page: Page) {
-    await expect(page.locator('[data-test=LazyMobXTable]')).toBeVisible();
+    await expect(
+        page.locator('[data-test=LazyMobXTable]').first()
+    ).toBeVisible();
 }
 
 async function waitForPatientViewMutationTable(page: Page) {
     await expect(
         page.locator('[data-test=patientview-mutation-table]')
     ).toBeVisible();
-    await expect(page.locator('[data-test=LazyMobXTable]')).toBeVisible();
+    await expect(
+        page.locator('[data-test=LazyMobXTable]').first()
+    ).toBeVisible();
 }
 
 test.describe('default init columns in mutation tables', () => {
