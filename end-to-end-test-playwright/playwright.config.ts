@@ -22,20 +22,18 @@ const isLocaldev = process.env.LOCALDEV !== '0';
 
 // PW_UPDATE_SNAPSHOTS lets CI auto-generate missing screenshot
 // baselines on first run without making every developer pass a CLI
-// flag. Set to 'missing' / 'changed' / 'all' / 'none' (default 'none'
-// when unset). Used by the e2e_localdb_playwright_tests CI job to
-// bootstrap baselines that haven't been committed yet.
-const updateSnapshots =
-    (process.env.PW_UPDATE_SNAPSHOTS as
-        | 'all'
-        | 'changed'
-        | 'missing'
-        | 'none'
-        | undefined) ?? 'none';
-// eslint-disable-next-line no-console
-console.log(
-    `[playwright.config] PW_UPDATE_SNAPSHOTS=${process.env.PW_UPDATE_SNAPSHOTS} → updateSnapshots=${updateSnapshots}`
-);
+// flag. Set to 'missing' / 'changed' / 'all' / 'none'. When unset, we
+// pass `undefined` so Playwright falls back to its built-in default
+// ('missing'), which is what the remote shards job has always relied
+// on — overriding to 'none' here previously slowed the remote suite
+// from ~12 min to ~35 min by forcing failures + retries on any test
+// whose baseline drifted vs. silently re-baselining.
+const updateSnapshots = process.env.PW_UPDATE_SNAPSHOTS as
+    | 'all'
+    | 'changed'
+    | 'missing'
+    | 'none'
+    | undefined;
 
 export default defineConfig({
     testDir: './tests',
