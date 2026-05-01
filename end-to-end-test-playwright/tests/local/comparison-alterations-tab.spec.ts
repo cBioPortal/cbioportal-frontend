@@ -19,6 +19,7 @@ async function loadAlterationsTab(page: Page) {
         if (
             await page
                 .locator('[data-test=GroupComparisonAlterationEnrichments]')
+                .first()
                 .isVisible()
         )
             break;
@@ -76,6 +77,7 @@ async function submitEnrichmentRequest(page: Page) {
     await page.locator('[data-test=buttonSelectAlterations]').click();
     await page
         .locator('[data-test=GroupComparisonAlterationEnrichments]')
+        .first()
         .waitFor({ state: 'attached' });
 }
 

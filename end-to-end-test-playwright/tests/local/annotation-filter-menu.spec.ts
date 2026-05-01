@@ -28,7 +28,7 @@ const SV_COUNTS_SORT_DESC_10 = {
 
 async function waitForComparisonTab(page: Page) {
     await expect(
-        page.locator('[data-test=GroupComparisonAlterationEnrichments]')
+        page.locator('[data-test=GroupComparisonAlterationEnrichments]').first()
     ).toBeVisible({ timeout: 30000 });
 }
 

@@ -108,6 +108,7 @@ test.describe('group comparison page screenshot tests', () => {
             await page.locator('.tabAnchor_alterations').click();
             await page
                 .locator('[data-test="GroupComparisonAlterationEnrichments"]')
+                .first()
                 .waitFor({ state: 'attached', timeout: 20000 });
         });
 
@@ -132,6 +133,7 @@ test.describe('group comparison page screenshot tests', () => {
             });
             await page
                 .locator('[data-test="GroupComparisonAlterationEnrichments"]')
+                .first()
                 .waitFor({ state: 'attached', timeout: 20000 });
             await page.mouse.move(0, 0);
             await expectElementScreenshot(
@@ -236,6 +238,7 @@ test.describe('group comparison page screenshot tests', () => {
 
             await page
                 .locator('[data-test="GroupComparisonAlterationEnrichments"]')
+                .first()
                 .waitFor({ state: 'attached', timeout: 20000 });
             await page.mouse.move(0, 0);
             await expectElementScreenshot(
