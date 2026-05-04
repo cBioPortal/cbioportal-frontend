@@ -113,27 +113,23 @@ export default defineConfig({
                                   // to be disabled for public→loopback
                                   // subresource loads.
                                   '--disable-features=BlockInsecurePrivateNetworkRequests,PrivateNetworkAccessPreflightSupport,PrivateNetworkAccessRespectPreflightResults,LocalNetworkAccessChecks,LocalNetworkAccessChecksWarnings',
-                                  // Inside the Playwright Docker image
-                                  // *on a developer machine* (scripts/docker-test.sh),
-                                  // `localhost` resolves to the test
-                                  // container, not the host running
-                                  // `yarn startSSL`, so we remap it to
+                                  // Opt-in remap for the one caller that
+                                  // needs it: scripts/docker-test.sh runs
+                                  // Playwright inside the pinned image on a
+                                  // developer machine while `yarn startSSL`
+                                  // serves the bundle on the host. From
+                                  // inside that container, `localhost` is
+                                  // the container itself, so we map it to
                                   // host.docker.internal (provided by
                                   // Docker Desktop on macOS, added via
-                                  // --add-host on Linux). Skip on host
-                                  // runs — `localhost` already works.
-                                  // Also skip on CircleCI: there, the
-                                  // playwright image IS the job container
-                                  // and `serveDist` runs in the same
-                                  // container, so `localhost` already
-                                  // points at the bundle and
-                                  // host.docker.internal doesn't resolve
-                                  // at all (no Docker Desktop) — without
-                                  // this skip, chromium can't fetch the
-                                  // local bundle, the page never boots,
-                                  // and waitForNetworkQuiet never sees
-                                  // window.ajaxQuiet flip to true.
-                                  ...(inDocker && !process.env.CIRCLECI
+                                  // --add-host on Linux). Every other
+                                  // setup — host runs, CircleCI jobs
+                                  // (Playwright + serveDist colocated),
+                                  // and any VPS/CI runner that boots the
+                                  // backend in docker but runs Playwright
+                                  // on the host — leaves this unset and
+                                  // `localhost` resolves naturally.
+                                  ...(process.env.PW_REMAP_LOCALHOST === '1'
                                       ? [
                                             '--host-resolver-rules=MAP localhost host.docker.internal',
                                         ]

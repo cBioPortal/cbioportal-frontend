@@ -55,6 +55,7 @@ exec docker run --rm -i \
     -v "$(pwd):/work" \
     -w /work \
     -e PW_DOCKER=1 \
+    -e PW_REMAP_LOCALHOST=1 \
     -e HOME=/tmp \
     -e CBIOPORTAL_URL="${CBIOPORTAL_URL:-https://www.cbioportal.org}" \
     -e CI="${CI:-}" \
