@@ -6,15 +6,13 @@
 # Image: ghcr.io/cbioportal/cbioportal-frontend-playwright-ci:v1.59.1-jammy
 #
 # Triggers:
-#   • Push to master that touches the Dockerfile
+#   • Push to any branch that touches the Dockerfile (guarded to main repo only)
 #   • Manual workflow_dispatch (for rebuilds without a Dockerfile change)
 
 name: Build Playwright CI image
 
 on:
   push:
-    branches:
-      - master
     paths:
       - .circleci/images/playwright/Dockerfile
   workflow_dispatch:

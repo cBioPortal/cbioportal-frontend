@@ -34,3 +34,4 @@ RUN mkdir -p /opt/serve-deps \
     && echo '{"name":"_serve","version":"0.0.0","private":true}' > package.json \
     && npm install --no-save --no-package-lock --no-audit http-server@0.11.1 \
     && rm package.json
+
