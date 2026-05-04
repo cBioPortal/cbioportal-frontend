@@ -45,9 +45,9 @@ export function setNetworkListener() {
                     window.ajaxQuiet = true;
                     console.log(
                         'ending network activity timer',
-                        performance.now() - startTime - 1000
+                        performance.now() - startTime - 200
                     );
-                }, 1000);
+                }, 200);
             }
         };
 

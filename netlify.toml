@@ -5,9 +5,10 @@
   DISABLE_SOURCEMAP = "true"
   NODE_OPTIONS="--openssl-legacy-provider"
   TRANSPILE_ONLY="true"
+  DISABLE_TYPECHECK="true"
 
 [build]
-  command = "rm -rf node_modules && corepack enable && pnpm install --frozen-lockfile --force && pnpm run build"
+  command = "rm -rf node_modules && corepack enable && pnpm install --frozen-lockfile --force && pnpm run buildModules && pnpm run typecheck && pnpm run buildMain"
 
 [[headers]]
 for = "/*.otf"

@@ -71,6 +71,18 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
         steps:
           - attach_workspace:
               at: /tmp/repo
+          - restore_cache:
+              keys:
+                - v12-pnpm-store-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}
+          - run:
+              name: Install root dependencies
+              command: |
+                export NVM_DIR="$HOME/.nvm"
+                [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+                nvm use 22.18.0
+                cd /tmp/repo/cbioportal-frontend
+                corepack enable
+                pnpm install --frozen-lockfile
 #          - run:
 #              name: Install linux dependencies
 #              command: |
@@ -144,6 +156,15 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/repo
+      - restore_cache:
+          keys:
+            - v12-pnpm-store-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}
+      - run:
+          name: Install root dependencies
+          command: |
+            cd cbioportal-frontend
+            corepack enable
+            pnpm install --frozen-lockfile
       - run:
           name: Check that cbioportal api responses are still the same
           command: |
@@ -157,6 +178,15 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/repo
+      - restore_cache:
+          keys:
+            - v12-pnpm-store-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}
+      - run:
+          name: Install root dependencies
+          command: |
+            cd cbioportal-frontend
+            corepack enable
+            pnpm install --frozen-lockfile
       - run:
           name: Check that dependency api responses (OncoKB, GenomeNexus) are still the same
           command: |
@@ -164,12 +194,45 @@ jobs:
             bash src/test/check_api_sync_dependencies.sh
 
 
+  typecheck:
+    <<: *defaults
+    resource_class: medium
+    steps:
+      - attach_workspace:
+          at: /tmp/repo
+      - restore_cache:
+          keys:
+            - v12-pnpm-store-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}
+      - run:
+          name: Install root dependencies
+          command: |
+            cd cbioportal-frontend
+            corepack enable
+            pnpm install --frozen-lockfile
+      - run:
+          name: TypeScript check
+          environment:
+            NODE_OPTIONS: --max-old-space-size=4096
+          command: |
+            cd cbioportal-frontend
+            corepack enable
+            pnpm run typecheck
+
   unit_tests_main:
     <<: *defaults
     resource_class: medium
     steps:
       - attach_workspace:
           at: /tmp/repo
+      - restore_cache:
+          keys:
+            - v12-pnpm-store-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}
+      - run:
+          name: Install root dependencies
+          command: |
+            cd cbioportal-frontend
+            corepack enable
+            pnpm install --frozen-lockfile
       - run:
           name: Run junit tests main
           environment:
@@ -191,6 +254,15 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/repo
+      - restore_cache:
+          keys:
+            - v12-pnpm-store-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}
+      - run:
+          name: Install root dependencies
+          command: |
+            cd cbioportal-frontend
+            corepack enable
+            pnpm install --frozen-lockfile
       - run:
           name: Run jest junit tests
           environment:
@@ -255,6 +327,233 @@ jobs:
       CHROMEDRIVER_CUSTOM_PATH: /usr/local/bin/chromedriver
     <<: *run_e2e_and_save_artifacts
 
+  # The matrix half of the Playwright e2e workflow. Always exits 0 even on
+  # test failures, because CircleCI's `requires:` semantics skip downstream
+  # jobs when an upstream job fails — and we want the merged report to run
+  # exactly when there ARE failures. The `playwright_e2e` job downstream
+  # owns the actual pass/fail status of the run.
+  #
+  # Mirrors the legacy `e2e_tests` flow: attach the workspace built by
+  # `build_frontend`, start `pnpm run serveDist` on localhost:3000, then run
+  # the Playwright suite in LOCALDEV mode so it loads the locally-built
+  # bundle into the public cbioportal origin via ?localdist=true.
+  playwright_e2e_shards:
+    docker:
+      - image: mcr.microsoft.com/playwright:v1.59.1-jammy
+    resource_class: large
+    parallelism: 12
+    working_directory: /tmp/repo
+    environment:
+      PW_DOCKER: '1'
+      CI: 'true'
+      HOME: /tmp
+      LOCALDEV: '1'
+      CBIOPORTAL_URL: https://www.cbioportal.org
+      BRANCH_ENV: master
+      FRONTEND_TEST_USE_LOCAL_DIST: 'true'
+      PLAYWRIGHT_JUNIT_OUTPUT_NAME: test-results/junit.xml
+      # Optional grep filter for targeted smoke runs. Empty by default →
+      # whole suite runs. Set to e.g. 'patient-screenshot' to narrow.
+      PLAYWRIGHT_GREP: ''
+    steps:
+      - attach_workspace:
+          at: /tmp/repo
+      - run:
+          name: Enable pnpm via corepack and install jq (not in the Playwright Docker image)
+          command: |
+            # package.json declares pnpm as the project's package manager;
+            # corepack picks the right version automatically.
+            corepack enable
+            # jq is needed by scripts/env_vars.sh to parse the GitHub
+            # API response when resolving the PR's base branch.
+            apt-get update && apt-get install -y jq
+      - run:
+          name: Install Playwright suite dependencies
+          working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
+          command: npm ci
+      - run:
+          name: Install only http-server (the single dep serveDist needs)
+          command: |
+            # The previous step here ran `pnpm install --frozen-lockfile` to
+            # pull in the entire main-project tree purely so that
+            # ./node_modules/http-server/bin/http-server existed on disk
+            # for scripts/serve_dist.sh. Across 12 shards this averaged
+            # ~88s/shard. http-server is pinned at 0.11.1 (small, ancient,
+            # very few transitive deps), so an isolated install is ~5s.
+            #
+            # We do the install in a throwaway dir, NOT in cbioportal-frontend.
+            # cbioportal-frontend/package.json declares
+            # `packageManager: "pnpm@..."`, which makes recent npm refuse to
+            # install ("Use pnpm instead" or similar) — that's why the
+            # earlier in-place attempt failed. A bare /tmp/serve-deps dir
+            # with a one-line package.json bypasses that.
+            #
+            # Then we symlink the freshly-built node_modules into
+            # cbioportal-frontend so the hardcoded
+            # `./node_modules/http-server/bin/http-server` path in
+            # scripts/serve_dist.sh resolves. Node follows symlinks for
+            # require() resolution, so http-server's deps are reachable.
+            set -x
+            mkdir -p /tmp/serve-deps
+            cd /tmp/serve-deps
+            echo '{"name":"_serve","version":"0.0.0","private":true}' > package.json
+            npm install --no-save --no-package-lock --no-audit http-server@0.11.1
+            ln -sfn /tmp/serve-deps/node_modules /tmp/repo/cbioportal-frontend/node_modules
+            ls -la /tmp/repo/cbioportal-frontend/node_modules/http-server/bin/
+      - run:
+          name: Start frontend dev server (pnpm serveDist) on localhost:3000
+          background: true
+          working_directory: /tmp/repo/cbioportal-frontend
+          command: |
+            pnpm run serveDist
+      - run:
+          name: Wait for frontend server to be reachable
+          command: |
+            for i in $(seq 1 120); do
+              if curl -k -sf https://localhost:3000/ > /dev/null; then
+                echo "Frontend server up after ~$((i*2))s"
+                exit 0
+              fi
+              sleep 2
+            done
+            echo "FAILED: frontend server didn't come up after ~4 minutes"
+            exit 1
+      - run:
+          name: Run Playwright shard
+          working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
+          command: |
+            # Use Playwright's native --shard=N/M instead of `circleci tests
+            # split`. CircleCI's timing-aware split needs historical timing
+            # data per file, but Playwright's junit reporter doesn't emit a
+            # `file=` attribute on <testcase>, so --timings-type=filename
+            # comes back empty and the split degenerates to alphabetical
+            # name order — heavily unbalanced shards. Playwright's own
+            # sharder does a size-balanced split from run #1 with no
+            # historical data needed. CIRCLE_NODE_INDEX is 0-based;
+            # Playwright wants 1-based.
+            SHARD_NUM=$((CIRCLE_NODE_INDEX + 1))
+            echo "Running Playwright shard ${SHARD_NUM}/${CIRCLE_NODE_TOTAL}"
+            mkdir -p test-results blob-report
+            # Capture playwright's exit code but exit 0 so:
+            #   1. persist_to_workspace runs (it does on success only by default)
+            #   2. CircleCI's `requires:` chain to playwright_e2e fires
+            # The downstream playwright_e2e job inspects the blobs and reports
+            # overall pass/fail.
+            GREP_ARG=""
+            if [ -n "$PLAYWRIGHT_GREP" ]; then
+                GREP_ARG="--grep=$PLAYWRIGHT_GREP"
+                echo "Filtering with --grep=$PLAYWRIGHT_GREP"
+            fi
+            set +e
+            # --workers=3 on resource_class large (4 vCPU / 8 GB) leaves
+            # one vCPU for the runner / serveDist while running 3 chromium
+            # contexts. workers=4 was tried and ran slower than 3
+            # (CPU-bound contention with serveDist + runner sharing the
+            # 4th core). Only describes opted into mode: 'parallel'
+            # actually use the extra workers; the rest still serialize.
+            npx playwright test --workers=3 \
+              --shard="${SHARD_NUM}/${CIRCLE_NODE_TOTAL}" \
+              --reporter=list,junit,blob \
+              $GREP_ARG
+            EXIT=$?
+            set -e
+            if [ "$EXIT" != "0" ]; then
+              echo ""
+              echo "*****************************************************************"
+              echo "*** TESTS FAILED on this shard (exit $EXIT).                    ***"
+              echo "*** This shard intentionally exits 0 so the merged report runs. ***"
+              echo "*** See the playwright_e2e job for the consolidated diff UI    ***"
+              echo "*** and the actual red/green status of the run.                ***"
+              echo "*****************************************************************"
+              echo ""
+            else
+              echo "playwright exit: 0 (this shard passed)"
+            fi
+            # uniquify the blob filename so persist_to_workspace doesn't collide
+            mv blob-report/report-*.zip blob-report/blob-${CIRCLE_NODE_INDEX}.zip || true
+            # always exit 0 — let the playwright_e2e job own pass/fail
+            exit 0
+      - store_test_results:
+          path: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright/test-results
+      - store_artifacts:
+          path: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright/test-results
+          destination: test-results
+      - persist_to_workspace:
+          root: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
+          paths:
+            - blob-report
+
+  # The user-facing Playwright e2e status check. Merges all 12 shards' blob
+  # reports into one HTML report (with the screenshot diff/comparison UI)
+  # and inspects the merged JUnit XML to fail the build when any test
+  # failed. This is the green/red signal you want to look at — green
+  # shards above are not necessarily a green run.
+  playwright_e2e:
+    docker:
+      - image: mcr.microsoft.com/playwright:v1.59.1-jammy
+    resource_class: medium
+    working_directory: /tmp/repo/cbioportal-frontend
+    environment:
+      HOME: /tmp
+      # PLAYWRIGHT_JUNIT_OUTPUT_NAME is honored by `playwright test` but
+      # `playwright merge-reports` resolves it relative to a configDir that
+      # isn't set when reporters come from the CLI, so the file lands in
+      # an unpredictable place (and our pass/fail check then silently saw
+      # zero failures). PLAYWRIGHT_JUNIT_OUTPUT_FILE is absolute and is
+      # set per-step below.
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
+      - run:
+          name: Install dependencies
+          working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
+          command: npm ci
+      - run:
+          name: Merge per-shard blob reports and fail the build if any test failed
+          working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
+          command: |
+            ls -la blob-report/ || (echo "no blobs found" && exit 1)
+            mkdir -p test-results
+
+            # Force junit.xml to a known absolute path. With CLI-supplied
+            # reporters, `merge-reports` constructs the junit reporter
+            # without a configDir, which makes the relative-path resolution
+            # in PLAYWRIGHT_JUNIT_OUTPUT_NAME unreliable. The _FILE form
+            # is absolute and bypasses that.
+            JUNIT="$PWD/test-results/junit.xml"
+            export PLAYWRIGHT_JUNIT_OUTPUT_FILE="$JUNIT"
+            rm -f "$JUNIT"
+
+            npx playwright merge-reports --reporter=html,junit blob-report
+
+            if [ ! -s "$JUNIT" ]; then
+                echo "ERROR: merge-reports did not produce a junit.xml at $JUNIT"
+                echo "--- test-results/ ---"
+                ls -la test-results/ || true
+                echo "--- looking for stray junit files ---"
+                find . -path ./node_modules -prune -o -name 'junit.xml' -print | head
+                exit 1
+            fi
+
+            # Count <failure> and <error> tags rather than reading the
+            # failures="N" attribute on <testsuites>. In merged reports
+            # that root attribute has come back as 0 even when individual
+            # <testsuite>s carry failures, so counting tags is the
+            # bulletproof signal.
+            FAILS=$(grep -cE '<failure([ />]|$)' "$JUNIT" || true)
+            ERRS=$(grep -cE '<error([ />]|$)' "$JUNIT" || true)
+            echo "merged junit at: $JUNIT"
+            echo "merged <failure> tags: $FAILS"
+            echo "merged <error>   tags: $ERRS"
+            echo "Browse the merged report from this job's Artifacts tab → playwright-report/index.html"
+            [ "$FAILS" = "0" ] && [ "$ERRS" = "0" ]
+      - store_artifacts:
+          path: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright/playwright-report
+          destination: playwright-report
+      - store_test_results:
+          path: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright/test-results
+
   prettier:
     <<: *defaults
     resource_class: medium
@@ -310,31 +609,100 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/repo
+      - run:
+          name: Compute manifests hash for node_modules cache key
+          command: |
+            cd cbioportal-frontend
+            { cat pnpm-lock.yaml; \
+              find . -maxdepth 4 -name 'package.json' \
+                -not -path './node_modules/*' \
+                -not -path './packages/*/node_modules/*' \
+                -not -path './end-to-end-test/node_modules/*' \
+                | LC_ALL=C sort | xargs cat; } \
+              | sha256sum | cut -c1-16 > /tmp/manifests-hash
+            cat /tmp/manifests-hash
       - restore_cache:
+          name: Restore node_modules cache
+          keys:
+            - v3-node-modules-{{ checksum "/tmp/manifests-hash" }}
+      - restore_cache:
+          name: Restore pnpm store
           keys:
             - v12-pnpm-store-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}
       - run:
           name: Install dependencies
           command: |
             cd cbioportal-frontend
+            if [ -f node_modules/.cbio-cache-ok ]; then
+              echo "node_modules cache hit (manifests + lockfile unchanged) — skipping pnpm install"
+              exit 0
+            fi
             corepack enable
             pnpm install --frozen-lockfile
+            touch node_modules/.cbio-cache-ok
       - save_cache:
           name: Save pnpm store
           key: v12-pnpm-store-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}
           paths:
             - ~/.local/share/pnpm/store
+      - save_cache:
+          name: Save node_modules cache
+          key: v3-node-modules-{{ checksum "/tmp/manifests-hash" }}
+          paths:
+            - cbioportal-frontend/node_modules
+            - cbioportal-frontend/packages/cbioportal-clinical-timeline/node_modules
+            - cbioportal-frontend/packages/cbioportal-frontend-commons/node_modules
+            - cbioportal-frontend/packages/cbioportal-ts-api-client/node_modules
+            - cbioportal-frontend/packages/cbioportal-utils/node_modules
+            - cbioportal-frontend/packages/genome-nexus-ts-api-client/node_modules
+            - cbioportal-frontend/packages/oncokb-frontend-commons/node_modules
+            - cbioportal-frontend/packages/oncokb-ts-api-client/node_modules
+            - cbioportal-frontend/packages/oncoprintjs/node_modules
+            - cbioportal-frontend/packages/react-mutation-mapper/node_modules
+            - cbioportal-frontend/packages/react-variant-view/node_modules
+      - run:
+          name: Compute packages source hash for turbo cache key
+          command: |
+            cd cbioportal-frontend
+            find packages -type f \
+              \( -name '*.ts' -o -name '*.tsx' -o -name '*.js' -o -name '*.jsx' \
+                 -o -name '*.json' -o -name '*.css' -o -name '*.scss' \
+                 -o -name 'rollup.config.*' -o -name 'tsconfig*.json' \) \
+              -not -path '*/node_modules/*' -not -path '*/dist/*' \
+              | LC_ALL=C sort | xargs sha256sum | sha256sum | cut -c1-16 \
+              > /tmp/packages-src-hash
+            cat /tmp/packages-src-hash
+      - restore_cache:
+          name: Restore turbo cache
+          keys:
+            - v3-turbo-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}-{{ checksum "/tmp/packages-src-hash" }}
       - run:
           name: Build workspace packages
           command: |
             cd cbioportal-frontend
             corepack enable
             pnpm -w run buildModules
+      - save_cache:
+          name: Save turbo cache
+          key: v3-turbo-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}-{{ checksum "/tmp/packages-src-hash" }}
+          paths:
+            - cbioportal-frontend/.turbo
+            - cbioportal-frontend/packages/cbioportal-clinical-timeline/.turbo
+            - cbioportal-frontend/packages/cbioportal-frontend-commons/.turbo
+            - cbioportal-frontend/packages/cbioportal-ts-api-client/.turbo
+            - cbioportal-frontend/packages/cbioportal-utils/.turbo
+            - cbioportal-frontend/packages/genome-nexus-ts-api-client/.turbo
+            - cbioportal-frontend/packages/oncokb-frontend-commons/.turbo
+            - cbioportal-frontend/packages/oncokb-ts-api-client/.turbo
+            - cbioportal-frontend/packages/oncoprintjs/.turbo
+            - cbioportal-frontend/packages/react-mutation-mapper/.turbo
+            - cbioportal-frontend/packages/react-variant-view/.turbo
       - run:
           name: Build frontend application
           environment:
             DISABLE_SOURCEMAP: true
             NO_PARALLEL: true
+            DISABLE_TYPECHECK: true
           command: |
             cd cbioportal-frontend
             corepack enable
@@ -345,6 +713,12 @@ jobs:
             cd cbioportal-frontend/end-to-end-test
             corepack enable
             pnpm install --frozen-lockfile --ignore-workspace
+      - run:
+          name: Trim node_modules from workspace before persist
+          command: |
+            cd cbioportal-frontend
+            rm -rf node_modules
+            rm -rf packages/*/node_modules
       - persist_to_workspace:
           root: /tmp/repo
           paths:
@@ -365,6 +739,29 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/repo
+      - run:
+          name: Install Node.js 22.18.0
+          command: |
+            curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            nvm install 22.18.0
+            nvm use 22.18.0
+            nvm alias default 22.18.0
+            node -v
+            npm -v
+      - restore_cache:
+          keys:
+            - v12-pnpm-store-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}
+      - run:
+          name: Install root dependencies
+          command: |
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+            nvm use 22.18.0
+            cd cbioportal-frontend
+            corepack enable
+            pnpm install --frozen-lockfile
       - run:
           name: Generate keycloak config
           environment:
@@ -465,14 +862,20 @@ workflows:
       - build_frontend:
           requires:
             - checkout
+      # The legacy WDIO `e2e_tests` (remote) job is still disabled on this
+      # experimental branch — the Playwright suite below is the candidate
+      # replacement. e2e_localdb_tests stays on because it covers
+      # local-db scenarios the Playwright suite hasn't ported yet.
       - e2e_localdb_tests:
           requires:
             - pull_cbioportal_test_codebase
             - build_frontend
-      - e2e_tests:
+      - playwright_e2e_shards:
           requires:
-            - pull_cbioportal_test_codebase
             - build_frontend
+      - playwright_e2e:
+          requires:
+            - playwright_e2e_shards
       - api_sync_cbioportal:
           requires:
             - build_frontend
@@ -483,6 +886,9 @@ workflows:
           requires:
             - build_frontend
       - unit_tests_main:
+          requires:
+            - build_frontend
+      - typecheck:
           requires:
             - build_frontend
 
@@ -523,5 +929,8 @@ workflows:
           requires:
             - build_frontend
       - unit_tests_packages:
+          requires:
+            - build_frontend
+      - typecheck:
           requires:
             - build_frontend

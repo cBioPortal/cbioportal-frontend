@@ -8,6 +8,14 @@ if [[ "$CIRCLECI" ]]; then
     PR_BRANCH=$CIRCLE_BRANCH
     PR_NUMBER=$CIRCLE_PR_NUMBER
     PR_URL=$CIRCLE_PULL_REQUEST
+    # CircleCI only populates CIRCLE_PR_NUMBER for PRs from forks. For
+    # same-repo PRs we have to look up the PR ourselves via the GitHub
+    # API by branch name. Without this, BRANCH falls through to the raw
+    # branch name and the "Branch name X was not recognized" path runs.
+    if [[ -z "$PR_NUMBER" && -n "$PR_BRANCH" ]]; then
+        PR_NUMBER=$(curl -s "https://api.github.com/repos/cBioPortal/cbioportal-frontend/pulls?head=cBioPortal:${PR_BRANCH}&state=open" \
+            | jq -r '.[0].number // empty')
+    fi
 elif [[ "$NETLIFY" ]]; then
     PR_BRANCH=$BRANCH
     PR_NUMBER=$REVIEW_ID
@@ -34,7 +42,10 @@ if [[ "$CIRCLECI" ]] || [[ "$NETLIFY" ]]; then
     if test -f "$SCRIPT_DIR/../env/${BRANCH}.sh"; then
         cat $SCRIPT_DIR/../env/${BRANCH}.sh
     else
-        echo "Branch name ${BRANCH} was not recognized. Please add env script to /env/ directory or test the branch as part of a github pull request."
+        # Send to stderr — this script's stdout is consumed by `eval` in
+        # callers like serve_dist.sh, and a warning on stdout gets
+        # executed as shell ("Branch: command not found", exit 127).
+        echo "Branch name ${BRANCH} was not recognized. Please add env script to /env/ directory or test the branch as part of a github pull request." >&2
     fi
     echo "export BRANCH_ENV=$BRANCH"
 elif [[ "$BRANCH_ENV" ]]; then
