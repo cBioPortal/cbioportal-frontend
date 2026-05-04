@@ -14,7 +14,7 @@ export interface PortalSession {
     query: { [key: string]: any };
     path: string;
     version: number;
-    requestToken?: number;
+    timeStamp?: number;
 }
 
 export function saveRemoteSession(data: any) {
