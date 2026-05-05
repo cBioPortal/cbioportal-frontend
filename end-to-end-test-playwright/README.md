@@ -44,6 +44,10 @@ pnpm exec playwright install chromium   # only needed for host-mode runs
 pnpm run test:docker                    # verify against tracked baselines
 pnpm run test:docker:update             # regenerate tracked baselines
 
+# Local-DB lane (Docker against a localhost backend, runs tests/local only)
+npm run test:docker:localdb            # verify against tracked baselines
+npm run test:docker:localdb:update     # regenerate tracked baselines
+
 # Host-mode (fast, scratch snapshots) — for local iteration
 pnpm test                               # verify against local scratch
 pnpm run test:update                    # regenerate local scratch
@@ -54,6 +58,12 @@ pnpm run report                         # open the last HTML report
 ./scripts/docker-test.sh timeline       # grep-filter specs
 CBIOPORTAL_URL=https://rc.cbioportal.org pnpm run test:docker
 ```
+
+The `test:docker:localdb` scripts set `PW_LOCAL=1` and point
+`CBIOPORTAL_URL` at `http://localhost:8080`, then forward `tests/local`
+to the wrapper. They assume a local cBioPortal backend is already
+listening on port 8080; the wrapper's `host.docker.internal` remap
+makes that reachable from inside the Playwright container.
 
 `./scripts/docker-test.sh` is a thin wrapper — anything after the
 script name is forwarded to `playwright test`, so flags like
