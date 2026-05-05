@@ -372,6 +372,12 @@ jobs:
             ln -sfn /opt/serve-deps/node_modules /tmp/repo/cbioportal-frontend/node_modules
             test -f /tmp/repo/cbioportal-frontend/node_modules/http-server/bin/http-server \
               || (echo "ERROR: http-server binary not found after symlink" && exit 1)
+            # Verify the other image-baked tools are also available so a wrong
+            # or missing image tag gives an immediate, actionable error message.
+            pnpm --version \
+              || (echo "ERROR: pnpm not found — is the CI image correct?" && exit 1)
+            jq --version \
+              || (echo "ERROR: jq not found — is the CI image correct?" && exit 1)
       - run:
           name: Install Playwright suite dependencies
           working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright

@@ -8,6 +8,11 @@
 # Triggers:
 #   • Push to any branch that touches the Dockerfile (guarded to main repo only)
 #   • Manual workflow_dispatch (for rebuilds without a Dockerfile change)
+#
+# Tagging strategy:
+#   • master branch → shared stable tag  :v1.59.1-jammy  (used by CircleCI jobs)
+#   • other branches → branch-specific   :v1.59.1-jammy-<sanitised-branch-name>
+#     so feature-branch Dockerfile edits never overwrite the tag that CI relies on.
 
 name: Build Playwright CI image
 
@@ -39,11 +44,26 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Compute image tags
+        id: tags
+        run: |
+          BASE="ghcr.io/cbioportal/cbioportal-frontend-playwright-ci:v1.59.1-jammy"
+          if [ "${{ github.ref_name }}" = "master" ]; then
+            echo "tags=${BASE}" >> "$GITHUB_OUTPUT"
+          else
+            # Sanitise branch name: replace any character that isn't alphanumeric,
+            # dot, or hyphen with a hyphen, then strip leading/trailing hyphens.
+            BRANCH=$(echo "${{ github.ref_name }}" \
+              | tr -cs 'A-Za-z0-9.-' '-' \
+              | sed 's/^-//;s/-$//')
+            echo "tags=${BASE}-${BRANCH}" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
           context: .circleci/images/playwright
           push: true
-          tags: ghcr.io/cbioportal/cbioportal-frontend-playwright-ci:v1.59.1-jammy
+          tags: ${{ steps.tags.outputs.tags }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
