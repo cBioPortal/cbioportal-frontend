@@ -327,11 +327,13 @@ jobs:
       CHROMEDRIVER_CUSTOM_PATH: /usr/local/bin/chromedriver
     <<: *run_e2e_and_save_artifacts
 
-  # The matrix half of the Playwright e2e workflow. Always exits 0 even on
-  # test failures, because CircleCI's `requires:` semantics skip downstream
-  # jobs when an upstream job fails — and we want the merged report to run
-  # exactly when there ARE failures. The `playwright_e2e` job downstream
-  # owns the actual pass/fail status of the run.
+  # The matrix half of the Playwright e2e workflow. Each shard exits with
+  # Playwright's real exit code so individual failed parallel runs show as
+  # red and CircleCI's "Rerun failed only" can target the actual failed
+  # shard indices. The downstream `playwright_e2e` (merge) job no longer
+  # uses `requires:` on this — it polls the CircleCI API for terminal
+  # status of all parallel runs and then merges, so the merged HTML is
+  # produced even on red runs.
   #
   # Mirrors the legacy `e2e_tests` flow: attach the workspace built by
   # `build_frontend`, start `pnpm run serveDist` on localhost:3000, then run
@@ -434,11 +436,6 @@ jobs:
             SHARD_NUM=$((CIRCLE_NODE_INDEX + 1))
             echo "Running Playwright shard ${SHARD_NUM}/${CIRCLE_NODE_TOTAL}"
             mkdir -p test-results blob-report
-            # Capture playwright's exit code but exit 0 so:
-            #   1. persist_to_workspace runs (it does on success only by default)
-            #   2. CircleCI's `requires:` chain to playwright_e2e fires
-            # The downstream playwright_e2e job inspects the blobs and reports
-            # overall pass/fail.
             GREP_ARG=""
             if [ -n "$PLAYWRIGHT_GREP" ]; then
                 GREP_ARG="--grep=$PLAYWRIGHT_GREP"
@@ -457,21 +454,20 @@ jobs:
               $GREP_ARG
             EXIT=$?
             set -e
+            # uniquify the blob filename so persist_to_workspace doesn't collide
+            mv blob-report/report-*.zip blob-report/blob-${CIRCLE_NODE_INDEX}.zip || true
+            # Stash the real exit code for the trailing `when: always` step.
+            # We exit 0 here so the store_* and persist_to_workspace special
+            # steps below run even on failure (they default to on_success).
+            # The final step re-exits with the captured code so the shard is
+            # correctly red and "Rerun failed only" can target it.
+            echo "$EXIT" > /tmp/playwright_exit
             if [ "$EXIT" != "0" ]; then
-              echo ""
-              echo "*****************************************************************"
-              echo "*** TESTS FAILED on this shard (exit $EXIT).                    ***"
-              echo "*** This shard intentionally exits 0 so the merged report runs. ***"
-              echo "*** See the playwright_e2e job for the consolidated diff UI    ***"
-              echo "*** and the actual red/green status of the run.                ***"
-              echo "*****************************************************************"
-              echo ""
+              echo "*** TESTS FAILED on this shard (exit $EXIT). Blobs will still be"
+              echo "*** persisted; the trailing step will re-exit with $EXIT."
             else
               echo "playwright exit: 0 (this shard passed)"
             fi
-            # uniquify the blob filename so persist_to_workspace doesn't collide
-            mv blob-report/report-*.zip blob-report/blob-${CIRCLE_NODE_INDEX}.zip || true
-            # always exit 0 — let the playwright_e2e job own pass/fail
             exit 0
       - store_test_results:
           path: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright/test-results
@@ -482,12 +478,32 @@ jobs:
           root: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
           paths:
             - blob-report
+      - run:
+          name: Propagate Playwright exit code
+          # Run regardless of any earlier step failures so the shard's red/green
+          # state always reflects Playwright's real exit code, not e.g. a flaky
+          # store_artifacts upload.
+          when: always
+          command: |
+            EXIT=$(cat /tmp/playwright_exit 2>/dev/null || echo 1)
+            echo "Playwright shard exit: $EXIT"
+            exit $EXIT
 
   # The user-facing Playwright e2e status check. Merges all 12 shards' blob
   # reports into one HTML report (with the screenshot diff/comparison UI)
   # and inspects the merged JUnit XML to fail the build when any test
-  # failed. This is the green/red signal you want to look at — green
-  # shards above are not necessarily a green run.
+  # failed.
+  #
+  # This job intentionally has NO `requires:` on playwright_e2e_shards in
+  # the workflow. Instead it starts at workflow time and polls the CircleCI
+  # v2 API until the shards job's rolled-up status is terminal. This way
+  # the merged HTML is produced even when shards are red — `requires:` only
+  # chains on success, which would skip this job exactly when it's most
+  # useful.
+  #
+  # Requires CIRCLE_TOKEN in the job env via the `circleci-api` context
+  # (read-only token is enough — only `GET /api/v2/workflow/{id}/job` is
+  # called).
   playwright_e2e:
     docker:
       - image: mcr.microsoft.com/playwright:v1.59.1-jammy
@@ -495,6 +511,10 @@ jobs:
     working_directory: /tmp/repo/cbioportal-frontend
     environment:
       HOME: /tmp
+      # Must match parallelism on playwright_e2e_shards. Used as a sanity
+      # check after attach_workspace — if fewer blobs landed, at least one
+      # shard died before persist_to_workspace ran.
+      EXPECTED_SHARDS: '12'
       # PLAYWRIGHT_JUNIT_OUTPUT_NAME is honored by `playwright test` but
       # `playwright merge-reports` resolves it relative to a configDir that
       # isn't set when reporters come from the CLI, so the file lands in
@@ -503,6 +523,46 @@ jobs:
       # set per-step below.
     steps:
       - checkout
+      - run:
+          name: Install jq (not present in the Playwright Docker image)
+          command: apt-get update && apt-get install -y jq
+      - run:
+          name: Wait for all playwright_e2e_shards parallel runs to terminate
+          # Polls the workflow's job list until the shards job is in a
+          # terminal state. CircleCI rolls the parallelism job up to a
+          # single status entry that stays "running" until every parallel
+          # run has terminated, so this can't proceed before all shards
+          # are done — even if a few shards fail early.
+          command: |
+            : "${CIRCLE_TOKEN:?CIRCLE_TOKEN not set — attach a context with a read-only API token to this job}"
+            API="https://circleci.com/api/v2/workflow/${CIRCLE_WORKFLOW_ID}/job"
+            # Statuses we treat as terminal — anything else means "keep waiting".
+            TERMINAL_RE='^(success|failed|canceled|unauthorized|not_run|terminated-unknown)$'
+            DEADLINE=$(( $(date +%s) + 60 * 60 * 2 ))   # 2h cap
+            while :; do
+              if [ "$(date +%s)" -gt "$DEADLINE" ]; then
+                echo "ERROR: shards did not reach terminal state within 2h — bailing"
+                exit 1
+              fi
+              BODY=$(curl -fsS -H "Circle-Token: ${CIRCLE_TOKEN}" "$API" || true)
+              if [ -z "$BODY" ]; then
+                echo "API call failed; retrying"
+                sleep 15
+                continue
+              fi
+              STATUS=$(echo "$BODY" | jq -r '.items[] | select(.name=="playwright_e2e_shards") | .status' | head -n1)
+              if [ -z "$STATUS" ]; then
+                echo "playwright_e2e_shards not yet visible in workflow — waiting"
+                sleep 10
+                continue
+              fi
+              if echo "$STATUS" | grep -qE "$TERMINAL_RE"; then
+                echo "playwright_e2e_shards terminal status: $STATUS"
+                break
+              fi
+              echo "playwright_e2e_shards status: $STATUS — waiting"
+              sleep 15
+            done
       - attach_workspace:
           at: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
       - run:
@@ -513,8 +573,20 @@ jobs:
           name: Merge per-shard blob reports and fail the build if any test failed
           working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
           command: |
-            ls -la blob-report/ || (echo "no blobs found" && exit 1)
             mkdir -p test-results
+            if ! ls blob-report/*.zip >/dev/null 2>&1; then
+                echo "ERROR: no blobs in workspace — every shard died before persist_to_workspace ran."
+                echo "Check each shard's own artifacts for per-shard test-results."
+                exit 1
+            fi
+            ACTUAL=$(ls blob-report/*.zip | wc -l)
+            echo "Found $ACTUAL of $EXPECTED_SHARDS expected shard blobs."
+            if [ "$ACTUAL" -lt "$EXPECTED_SHARDS" ]; then
+                echo "WARNING: missing $((EXPECTED_SHARDS - ACTUAL)) shard blob(s) — merging with what we have."
+                echo "The missing shard(s) will already be red in the workflow; the merged HTML"
+                echo "below will simply not include their tests."
+                ls blob-report/
+            fi
 
             # Force junit.xml to a known absolute path. With CLI-supplied
             # reporters, `merge-reports` constructs the junit reporter
@@ -547,6 +619,12 @@ jobs:
             echo "merged <failure> tags: $FAILS"
             echo "merged <error>   tags: $ERRS"
             echo "Browse the merged report from this job's Artifacts tab → playwright-report/index.html"
+            # If any blobs were missing, fail the merge job as well so the
+            # workflow never appears green when shards are missing.
+            if [ "$ACTUAL" -lt "$EXPECTED_SHARDS" ]; then
+              echo "Failing merge because $((EXPECTED_SHARDS - ACTUAL)) shard blob(s) were missing."
+              exit 1
+            fi
             [ "$FAILS" = "0" ] && [ "$ERRS" = "0" ]
       - store_artifacts:
           path: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright/playwright-report
@@ -873,9 +951,13 @@ workflows:
       - playwright_e2e_shards:
           requires:
             - build_frontend
+      # Intentionally NOT requiring playwright_e2e_shards: this job polls
+      # the CircleCI API for the shards' terminal state, then merges. That
+      # way the merged HTML is produced even when shards are red. Needs a
+      # context that supplies CIRCLE_TOKEN (read-only API token).
       - playwright_e2e:
-          requires:
-            - playwright_e2e_shards
+          context:
+            - circleci-api
       - api_sync_cbioportal:
           requires:
             - build_frontend
