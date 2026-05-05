@@ -339,7 +339,11 @@ jobs:
   # bundle into the public cbioportal origin via ?localdist=true.
   playwright_e2e_shards:
     docker:
-      - image: mcr.microsoft.com/playwright:v1.59.1-jammy
+      # Custom image pre-bakes jq, corepack/pnpm, and http-server@0.11.1 so
+      # shards don't need apt-get or npm installs at runtime.
+      # Rebuilt by .github/workflows/build-playwright-ci-image.yml when
+      # .circleci/images/playwright/Dockerfile changes.
+      - image: ghcr.io/cbioportal/cbioportal-frontend-playwright-ci:v1.59.1-jammy
     resource_class: large
     parallelism: 12
     working_directory: /tmp/repo
@@ -359,47 +363,25 @@ jobs:
       - attach_workspace:
           at: /tmp/repo
       - run:
-          name: Enable pnpm via corepack and install jq (not in the Playwright Docker image)
+          name: Symlink pre-installed http-server into repo node_modules
           command: |
-            # package.json declares pnpm as the project's package manager;
-            # corepack picks the right version automatically.
-            corepack enable
-            # jq is needed by scripts/env_vars.sh to parse the GitHub
-            # API response when resolving the PR's base branch.
-            apt-get update && apt-get install -y jq
+            # The Docker image has http-server@0.11.1 pre-installed at
+            # /opt/serve-deps/node_modules. scripts/serve_dist.sh uses the
+            # hardcoded path ./node_modules/http-server/bin/http-server, so
+            # a single symlink is all that's needed — no network download.
+            ln -sfn /opt/serve-deps/node_modules /tmp/repo/cbioportal-frontend/node_modules
+            test -f /tmp/repo/cbioportal-frontend/node_modules/http-server/bin/http-server \
+              || (echo "ERROR: http-server binary not found after symlink" && exit 1)
+            # Verify the other image-baked tools are also available so a wrong
+            # or missing image tag gives an immediate, actionable error message.
+            pnpm --version \
+              || (echo "ERROR: pnpm not found — is the CI image correct?" && exit 1)
+            jq --version \
+              || (echo "ERROR: jq not found — is the CI image correct?" && exit 1)
       - run:
           name: Install Playwright suite dependencies
           working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
           command: npm ci
-      - run:
-          name: Install only http-server (the single dep serveDist needs)
-          command: |
-            # The previous step here ran `pnpm install --frozen-lockfile` to
-            # pull in the entire main-project tree purely so that
-            # ./node_modules/http-server/bin/http-server existed on disk
-            # for scripts/serve_dist.sh. Across 12 shards this averaged
-            # ~88s/shard. http-server is pinned at 0.11.1 (small, ancient,
-            # very few transitive deps), so an isolated install is ~5s.
-            #
-            # We do the install in a throwaway dir, NOT in cbioportal-frontend.
-            # cbioportal-frontend/package.json declares
-            # `packageManager: "pnpm@..."`, which makes recent npm refuse to
-            # install ("Use pnpm instead" or similar) — that's why the
-            # earlier in-place attempt failed. A bare /tmp/serve-deps dir
-            # with a one-line package.json bypasses that.
-            #
-            # Then we symlink the freshly-built node_modules into
-            # cbioportal-frontend so the hardcoded
-            # `./node_modules/http-server/bin/http-server` path in
-            # scripts/serve_dist.sh resolves. Node follows symlinks for
-            # require() resolution, so http-server's deps are reachable.
-            set -x
-            mkdir -p /tmp/serve-deps
-            cd /tmp/serve-deps
-            echo '{"name":"_serve","version":"0.0.0","private":true}' > package.json
-            npm install --no-save --no-package-lock --no-audit http-server@0.11.1
-            ln -sfn /tmp/serve-deps/node_modules /tmp/repo/cbioportal-frontend/node_modules
-            ls -la /tmp/repo/cbioportal-frontend/node_modules/http-server/bin/
       - run:
           name: Start frontend dev server (pnpm serveDist) on localhost:3000
           background: true
@@ -490,7 +472,7 @@ jobs:
   # shards above are not necessarily a green run.
   playwright_e2e:
     docker:
-      - image: mcr.microsoft.com/playwright:v1.59.1-jammy
+      - image: ghcr.io/cbioportal/cbioportal-frontend-playwright-ci:v1.59.1-jammy
     resource_class: medium
     working_directory: /tmp/repo/cbioportal-frontend
     environment:
