@@ -501,9 +501,11 @@ jobs:
   # chains on success, which would skip this job exactly when it's most
   # useful.
   #
-  # Requires CIRCLE_TOKEN in the job env via the `circleci-api` context
-  # (read-only token is enough — only `GET /api/v2/workflow/{id}/job` is
-  # called).
+  # The poll uses CircleCI's v2 workflow API anonymously. cbioportal-frontend
+  # is a public CircleCI project, so `GET /api/v2/workflow/{id}/job` does
+  # NOT require auth — important because contexts (and any other secret
+  # injection) are stripped on fork PRs by default, and we need this job
+  # to run on contributor PRs.
   playwright_e2e:
     docker:
       - image: mcr.microsoft.com/playwright:v1.59.1-jammy
@@ -533,35 +535,43 @@ jobs:
           # single status entry that stays "running" until every parallel
           # run has terminated, so this can't proceed before all shards
           # are done — even if a few shards fail early.
+          #
+          # Anonymous (no Circle-Token header) — cbioportal-frontend is
+          # a public CircleCI project so workflow status is readable
+          # without auth. This is essential because secrets are stripped
+          # from fork PR builds, and this job must run on fork PRs.
           command: |
-            : "${CIRCLE_TOKEN:?CIRCLE_TOKEN not set — attach a context with a read-only API token to this job}"
             API="https://circleci.com/api/v2/workflow/${CIRCLE_WORKFLOW_ID}/job"
             # Statuses we treat as terminal — anything else means "keep waiting".
             TERMINAL_RE='^(success|failed|canceled|unauthorized|not_run|terminated-unknown)$'
             DEADLINE=$(( $(date +%s) + 60 * 60 * 2 ))   # 2h cap
+            # Poll every 30s rather than 15s; anonymous API requests have
+            # tighter rate limits and the shard job runs for many minutes,
+            # so 30s adds at most one extra iteration of latency.
+            POLL_INTERVAL=30
             while :; do
               if [ "$(date +%s)" -gt "$DEADLINE" ]; then
                 echo "ERROR: shards did not reach terminal state within 2h — bailing"
                 exit 1
               fi
-              BODY=$(curl -fsS -H "Circle-Token: ${CIRCLE_TOKEN}" "$API" || true)
+              BODY=$(curl -fsS "$API" || true)
               if [ -z "$BODY" ]; then
-                echo "API call failed; retrying"
-                sleep 15
+                echo "API call failed; retrying in ${POLL_INTERVAL}s"
+                sleep "$POLL_INTERVAL"
                 continue
               fi
               STATUS=$(echo "$BODY" | jq -r '.items[] | select(.name=="playwright_e2e_shards") | .status' | head -n1)
               if [ -z "$STATUS" ]; then
                 echo "playwright_e2e_shards not yet visible in workflow — waiting"
-                sleep 10
+                sleep "$POLL_INTERVAL"
                 continue
               fi
               if echo "$STATUS" | grep -qE "$TERMINAL_RE"; then
                 echo "playwright_e2e_shards terminal status: $STATUS"
                 break
               fi
-              echo "playwright_e2e_shards status: $STATUS — waiting"
-              sleep 15
+              echo "playwright_e2e_shards status: $STATUS — waiting ${POLL_INTERVAL}s"
+              sleep "$POLL_INTERVAL"
             done
       - attach_workspace:
           at: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
@@ -953,11 +963,10 @@ workflows:
             - build_frontend
       # Intentionally NOT requiring playwright_e2e_shards: this job polls
       # the CircleCI API for the shards' terminal state, then merges. That
-      # way the merged HTML is produced even when shards are red. Needs a
-      # context that supplies CIRCLE_TOKEN (read-only API token).
-      - playwright_e2e:
-          context:
-            - circleci-api
+      # way the merged HTML is produced even when shards are red. The poll
+      # uses CircleCI's public workflow API (no auth), so this works on
+      # fork PRs too.
+      - playwright_e2e
       - api_sync_cbioportal:
           requires:
             - build_frontend
