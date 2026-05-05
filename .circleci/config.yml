@@ -454,13 +454,14 @@ jobs:
               $GREP_ARG
             EXIT=$?
             set -e
-            # uniquify the blob filename so persist_to_workspace doesn't collide
+            # uniquify the blob filename so the merge job's artifact downloads
+            # don't collide on a shared `blob-report/*.zip` name.
             mv blob-report/report-*.zip blob-report/blob-${CIRCLE_NODE_INDEX}.zip || true
             # Stash the real exit code for the trailing `when: always` step.
-            # We exit 0 here so the store_* and persist_to_workspace special
-            # steps below run even on failure (they default to on_success).
-            # The final step re-exits with the captured code so the shard is
-            # correctly red and "Rerun failed only" can target it.
+            # We exit 0 here so the `store_*` special steps below run even
+            # on failure (they default to on_success). The final step
+            # re-exits with the captured code so the shard is correctly red
+            # and "Rerun failed only" can target it.
             echo "$EXIT" > /tmp/playwright_exit
             if [ "$EXIT" != "0" ]; then
               echo "*** TESTS FAILED on this shard (exit $EXIT). Blobs will still be"
@@ -474,10 +475,14 @@ jobs:
       - store_artifacts:
           path: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright/test-results
           destination: test-results
-      - persist_to_workspace:
-          root: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
-          paths:
-            - blob-report
+      # Store blob-report as a CircleCI artifact rather than persisting it
+      # to the workflow workspace. The downstream merge job uses the
+      # public artifacts API to fetch these — workspaces only flow along
+      # the `requires:` graph, and the merge job is intentionally not
+      # `requires:`-chained to this job (so it can run on red shards).
+      - store_artifacts:
+          path: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright/blob-report
+          destination: blob-report
       - run:
           name: Propagate Playwright exit code
           # Run regardless of any earlier step failures so the shard's red/green
@@ -514,8 +519,8 @@ jobs:
     environment:
       HOME: /tmp
       # Must match parallelism on playwright_e2e_shards. Used as a sanity
-      # check after attach_workspace — if fewer blobs landed, at least one
-      # shard died before persist_to_workspace ran.
+      # check after the artifact download step — if fewer blobs were
+      # uploaded, at least one shard died before its store_artifacts ran.
       EXPECTED_SHARDS: '12'
       # PLAYWRIGHT_JUNIT_OUTPUT_NAME is honored by `playwright test` but
       # `playwright merge-reports` resolves it relative to a configDir that
@@ -540,6 +545,9 @@ jobs:
           # a public CircleCI project so workflow status is readable
           # without auth. This is essential because secrets are stripped
           # from fork PR builds, and this job must run on fork PRs.
+          #
+          # Captures the shards job_number to /tmp/shards_job_number so
+          # the next step can hit the artifacts API for that job.
           command: |
             API="https://circleci.com/api/v2/workflow/${CIRCLE_WORKFLOW_ID}/job"
             # Statuses we treat as terminal — anything else means "keep waiting".
@@ -561,20 +569,52 @@ jobs:
                 continue
               fi
               STATUS=$(echo "$BODY" | jq -r '.items[] | select(.name=="playwright_e2e_shards") | .status' | head -n1)
+              JOB_NUMBER=$(echo "$BODY" | jq -r '.items[] | select(.name=="playwright_e2e_shards") | .job_number' | head -n1)
               if [ -z "$STATUS" ]; then
                 echo "playwright_e2e_shards not yet visible in workflow — waiting"
                 sleep "$POLL_INTERVAL"
                 continue
               fi
               if echo "$STATUS" | grep -qE "$TERMINAL_RE"; then
-                echo "playwright_e2e_shards terminal status: $STATUS"
+                echo "playwright_e2e_shards terminal status: $STATUS  (job_number=$JOB_NUMBER)"
+                echo "$JOB_NUMBER" > /tmp/shards_job_number
                 break
               fi
               echo "playwright_e2e_shards status: $STATUS — waiting ${POLL_INTERVAL}s"
               sleep "$POLL_INTERVAL"
             done
-      - attach_workspace:
-          at: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
+      - run:
+          name: Download per-shard blob artifacts from the shards job
+          # Reads the public v2 artifacts API for the shards job and
+          # downloads every blob-report/*.zip into a local directory.
+          # `attach_workspace` doesn't work here because workspaces only
+          # flow along the `requires:` graph and we deliberately broke
+          # that chain so the merge runs on red shards.
+          working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
+          command: |
+            JOB_NUMBER=$(cat /tmp/shards_job_number)
+            : "${JOB_NUMBER:?missing shards job_number from previous step}"
+            API="https://circleci.com/api/v2/project/gh/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/${JOB_NUMBER}/artifacts"
+            mkdir -p blob-report
+            cd blob-report
+            # Each parallel run uploaded a uniquely-named blob-${index}.zip,
+            # so the URL's last path component is unique per shard and
+            # `curl -O` won't collide.
+            URLS=$(curl -fsS "$API" | jq -r '.items[] | select(.path | startswith("blob-report/")) | select(.path | endswith(".zip")) | .url')
+            COUNT=$(echo "$URLS" | grep -c . || true)
+            echo "Found $COUNT blob artifacts on job ${JOB_NUMBER}."
+            if [ "$COUNT" = "0" ]; then
+              echo "ERROR: no blob-report artifacts on the shards job. Cannot merge."
+              exit 1
+            fi
+            echo "$URLS" | while read -r URL; do
+              [ -z "$URL" ] && continue
+              echo "GET $URL"
+              # Retry a few times in case of transient 5xx; -f makes curl
+              # exit non-zero on HTTP errors, --retry only retries network errors.
+              curl -fsSLO --retry 3 --retry-delay 2 "$URL"
+            done
+            ls -la
       - run:
           name: Install dependencies
           working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
@@ -585,8 +625,8 @@ jobs:
           command: |
             mkdir -p test-results
             if ! ls blob-report/*.zip >/dev/null 2>&1; then
-                echo "ERROR: no blobs in workspace — every shard died before persist_to_workspace ran."
-                echo "Check each shard's own artifacts for per-shard test-results."
+                echo "ERROR: no blob-report/*.zip files locally after download step."
+                echo "Check the previous 'Download per-shard blob artifacts' step."
                 exit 1
             fi
             ACTUAL=$(ls blob-report/*.zip | wc -l)
