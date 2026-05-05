@@ -12,6 +12,8 @@
     "test:ui": "playwright test --headed --ui",
     "test:docker": "./scripts/docker-test.sh",
     "test:docker:update": "./scripts/docker-test.sh --update-snapshots",
+    "test:docker:localdb": "PW_LOCAL=1 CBIOPORTAL_URL=http://localhost:8080 ./scripts/docker-test.sh tests/local",
+    "test:docker:localdb:update": "PW_LOCAL=1 CBIOPORTAL_URL=http://localhost:8080 ./scripts/docker-test.sh tests/local --update-snapshots",
     "report": "playwright show-report"
   },
   "keywords": [],
