@@ -60,6 +60,7 @@ exec docker run --rm -i \
     -e CBIOPORTAL_URL="${CBIOPORTAL_URL:-https://www.cbioportal.org}" \
     -e CI="${CI:-}" \
     -e LOCALDEV="${LOCALDEV}" \
+    -e PW_LOCAL="${PW_LOCAL:-}" \
     ${LOCALDEV_ARGS[@]+"${LOCALDEV_ARGS[@]}"} \
     "${IMAGE}" \
     npx playwright test "$@"
