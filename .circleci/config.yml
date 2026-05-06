@@ -670,16 +670,18 @@ jobs:
                 ls blob-report/
             fi
 
-            # Force junit.xml to a known absolute path. With CLI-supplied
-            # reporters, `merge-reports` constructs the junit reporter
-            # without a configDir, which makes the relative-path resolution
-            # in PLAYWRIGHT_JUNIT_OUTPUT_NAME unreliable. The _FILE form
-            # is absolute and bypasses that.
+            # Force junit.xml and results.json to known absolute paths.
+            # With CLI-supplied reporters, `merge-reports` constructs the
+            # junit/json reporters without a configDir, which makes the
+            # relative-path resolution in PLAYWRIGHT_*_OUTPUT_NAME
+            # unreliable. The _FILE form is absolute and bypasses that.
             JUNIT="$PWD/test-results/junit.xml"
+            JSON="$PWD/test-results/results.json"
             export PLAYWRIGHT_JUNIT_OUTPUT_FILE="$JUNIT"
-            rm -f "$JUNIT"
+            export PLAYWRIGHT_JSON_OUTPUT_FILE="$JSON"
+            rm -f "$JUNIT" "$JSON"
 
-            npx playwright merge-reports --reporter=html,junit blob-report
+            npx playwright merge-reports --reporter=html,junit,json blob-report
 
             if [ ! -s "$JUNIT" ]; then
                 echo "ERROR: merge-reports did not produce a junit.xml at $JUNIT"
@@ -687,6 +689,14 @@ jobs:
                 ls -la test-results/ || true
                 echo "--- looking for stray junit files ---"
                 find . -path ./node_modules -prune -o -name 'junit.xml' -print | head
+                exit 1
+            fi
+            if [ ! -s "$JSON" ]; then
+                echo "ERROR: merge-reports did not produce a results.json at $JSON"
+                echo "--- test-results/ ---"
+                ls -la test-results/ || true
+                echo "--- looking for stray json files ---"
+                find . -path ./node_modules -prune -o -name 'results.json' -print | head
                 exit 1
             fi
 
@@ -697,10 +707,12 @@ jobs:
             # bulletproof signal.
             FAILS=$(grep -cE '<failure([ />]|$)' "$JUNIT" || true)
             ERRS=$(grep -cE '<error([ />]|$)' "$JUNIT" || true)
-            echo "merged junit at: $JUNIT"
+            echo "merged junit at:   $JUNIT"
+            echo "merged json at:    $JSON  ($(wc -c < "$JSON") bytes)"
             echo "merged <failure> tags: $FAILS"
             echo "merged <error>   tags: $ERRS"
             echo "Browse the merged report from this job's Artifacts tab → playwright-report/index.html"
+            echo "Programmatic results: test-results/results.json, test-results/junit.xml"
             # If any blobs were missing, fail the merge job as well so the
             # workflow never appears green when shards are missing.
             if [ "$ACTUAL" -lt "$EXPECTED_SHARDS" ]; then
@@ -711,6 +723,12 @@ jobs:
       - store_artifacts:
           path: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright/playwright-report
           destination: playwright-report
+      # Make junit.xml + results.json downloadable from the Artifacts tab
+      # (store_test_results only feeds the JUnit into CircleCI's "Tests"
+      # tab; it doesn't expose the files for download).
+      - store_artifacts:
+          path: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright/test-results
+          destination: test-results
       - store_test_results:
           path: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright/test-results
 
