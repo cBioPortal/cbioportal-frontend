@@ -500,9 +500,11 @@ jobs:
             # PR. Make that landing experience point them at the
             # consolidated report, since this shard is just one of 12 and
             # the merge job is the authoritative verdict for the run.
-            # CircleCI v2.1 parses `<<` as parameter substitution and
-            # would error "Unclosed '<<' tag" on a bash heredoc. Use echo
-            # lines instead so the config-preprocess pass leaves us alone.
+            # NOTE: CircleCI v2.1 reserves the double-angle-bracket
+            # sequence for parameter substitution and rejects unescaped
+            # uses of it anywhere in the YAML — including in comments.
+            # That's why we use `echo` lines below rather than a bash
+            # heredoc.
             echo "================================================================"
             echo "Tests failed in this shard (Playwright exit $EXIT)."
             echo
