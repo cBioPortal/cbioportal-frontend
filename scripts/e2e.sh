@@ -13,9 +13,6 @@ CLICKHOUSE="true"
 RUN_FRONTEND="false" # Set to "true" if you want to build and run frontend at localhost:3000
 RUN_TESTS="false" # Set to "true" if you want to run all e2e:local tests
 
-# Use database image with preloaded studies
-export DOCKER_IMAGE_MYSQL=cbioportal/mysql:8.0-database-test
-
 # Use custom application properties
 export APPLICATION_PROPERTIES_PATH=$APPLICATION_PROPERTIES_PATH
 
