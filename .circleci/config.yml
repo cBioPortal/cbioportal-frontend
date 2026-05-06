@@ -330,7 +330,7 @@ jobs:
   # The matrix half of the Playwright e2e workflow. Each shard exits with
   # Playwright's real exit code so individual failed parallel runs show as
   # red and CircleCI's "Rerun failed only" can target the actual failed
-  # shard indices. The downstream `playwright_e2e` (merge) job no longer
+  # shard indices. The downstream `remote_e2e` (merge) job no longer
   # uses `requires:` on this — it polls the CircleCI API for terminal
   # status of all parallel runs and then merges, so the merged HTML is
   # produced even on red runs.
@@ -339,7 +339,7 @@ jobs:
   # `build_frontend`, start `pnpm run serveDist` on localhost:3000, then run
   # the Playwright suite in LOCALDEV mode so it loads the locally-built
   # bundle into the public cbioportal origin via ?localdist=true.
-  playwright_e2e_shards:
+  remote_e2e_shards:
     docker:
       - image: mcr.microsoft.com/playwright:v1.59.1-jammy
     resource_class: large
@@ -496,7 +496,7 @@ jobs:
               exit 0
             fi
             # When this shard is red, this is the step a reviewer lands on
-            # after clicking the red `playwright_e2e_shards` check on the
+            # after clicking the red `remote_e2e_shards` check on the
             # PR. Make that landing experience point them at the
             # consolidated report, since this shard is just one of 12 and
             # the merge job is the authoritative verdict for the run.
@@ -510,18 +510,18 @@ jobs:
             echo
             echo "This is ONE OF $CIRCLE_NODE_TOTAL parallel shards. Don't try"
             echo "to debug from here — the consolidated, screenshot-diff-rich"
-            echo "HTML report lives in the 'playwright_e2e' job:"
+            echo "HTML report lives in the 'remote_e2e' job:"
             echo
-            echo "  playwright_e2e (same workflow)"
+            echo "  remote_e2e (same workflow)"
             echo "    → Artifacts tab"
             echo "    → playwright-report/index.html"
             echo
             echo "This shard intentionally exits non-zero so that CircleCI's"
             echo "'Rerun failed jobs' button reruns just the failed shard"
             echo "parallel-run indices, not all $CIRCLE_NODE_TOTAL shards."
-            echo "That's why both 'playwright_e2e_shards' and 'playwright_e2e'"
+            echo "That's why both 'remote_e2e_shards' and 'remote_e2e'"
             echo "are red — they're reporting the same underlying failures."
-            echo "For branch-protection purposes, only 'playwright_e2e' needs"
+            echo "For branch-protection purposes, only 'remote_e2e' needs"
             echo "to be required."
             echo "================================================================"
             exit $EXIT
@@ -531,7 +531,7 @@ jobs:
   # and inspects the merged JUnit XML to fail the build when any test
   # failed.
   #
-  # This job intentionally has NO `requires:` on playwright_e2e_shards in
+  # This job intentionally has NO `requires:` on remote_e2e_shards in
   # the workflow. Instead it starts at workflow time and polls the CircleCI
   # v2 API until the shards job's rolled-up status is terminal. This way
   # the merged HTML is produced even when shards are red — `requires:` only
@@ -543,14 +543,14 @@ jobs:
   # NOT require auth — important because contexts (and any other secret
   # injection) are stripped on fork PRs by default, and we need this job
   # to run on contributor PRs.
-  playwright_e2e:
+  remote_e2e:
     docker:
       - image: mcr.microsoft.com/playwright:v1.59.1-jammy
     resource_class: medium
     working_directory: /tmp/repo/cbioportal-frontend
     environment:
       HOME: /tmp
-      # Must match parallelism on playwright_e2e_shards. Used as a sanity
+      # Must match parallelism on remote_e2e_shards. Used as a sanity
       # check after the artifact download step — if fewer blobs were
       # uploaded, at least one shard died before its store_artifacts ran.
       EXPECTED_SHARDS: '12'
@@ -566,7 +566,7 @@ jobs:
           name: Install jq (not present in the Playwright Docker image)
           command: apt-get update && apt-get install -y jq
       - run:
-          name: Wait for all playwright_e2e_shards parallel runs to terminate
+          name: Wait for all remote_e2e_shards parallel runs to terminate
           # Polls the workflow's job list until the shards job is in a
           # terminal state. CircleCI rolls the parallelism job up to a
           # single status entry that stays "running" until every parallel
@@ -600,19 +600,19 @@ jobs:
                 sleep "$POLL_INTERVAL"
                 continue
               fi
-              STATUS=$(echo "$BODY" | jq -r '.items[] | select(.name=="playwright_e2e_shards") | .status' | head -n1)
-              JOB_NUMBER=$(echo "$BODY" | jq -r '.items[] | select(.name=="playwright_e2e_shards") | .job_number' | head -n1)
+              STATUS=$(echo "$BODY" | jq -r '.items[] | select(.name=="remote_e2e_shards") | .status' | head -n1)
+              JOB_NUMBER=$(echo "$BODY" | jq -r '.items[] | select(.name=="remote_e2e_shards") | .job_number' | head -n1)
               if [ -z "$STATUS" ]; then
-                echo "playwright_e2e_shards not yet visible in workflow — waiting"
+                echo "remote_e2e_shards not yet visible in workflow — waiting"
                 sleep "$POLL_INTERVAL"
                 continue
               fi
               if echo "$STATUS" | grep -qE "$TERMINAL_RE"; then
-                echo "playwright_e2e_shards terminal status: $STATUS  (job_number=$JOB_NUMBER)"
+                echo "remote_e2e_shards terminal status: $STATUS  (job_number=$JOB_NUMBER)"
                 echo "$JOB_NUMBER" > /tmp/shards_job_number
                 break
               fi
-              echo "playwright_e2e_shards status: $STATUS — waiting ${POLL_INTERVAL}s"
+              echo "remote_e2e_shards status: $STATUS — waiting ${POLL_INTERVAL}s"
               sleep "$POLL_INTERVAL"
             done
       - run:
@@ -1048,15 +1048,15 @@ workflows:
           requires:
             - pull_cbioportal_test_codebase
             - build_frontend
-      - playwright_e2e_shards:
+      - remote_e2e_shards:
           requires:
             - build_frontend
-      # Intentionally NOT requiring playwright_e2e_shards: this job polls
+      # Intentionally NOT requiring remote_e2e_shards: this job polls
       # the CircleCI API for the shards' terminal state, then merges. That
       # way the merged HTML is produced even when shards are red. The poll
       # uses CircleCI's public workflow API (no auth), so this works on
       # fork PRs too.
-      - playwright_e2e
+      - remote_e2e
       - api_sync_cbioportal:
           requires:
             - build_frontend
