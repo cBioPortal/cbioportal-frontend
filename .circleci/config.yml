@@ -500,27 +500,28 @@ jobs:
             # PR. Make that landing experience point them at the
             # consolidated report, since this shard is just one of 12 and
             # the merge job is the authoritative verdict for the run.
-            cat <<MSG
-            ================================================================
-            Tests failed in this shard (Playwright exit $EXIT).
-
-            This is ONE OF $CIRCLE_NODE_TOTAL parallel shards. Don't try
-            to debug from here — the consolidated, screenshot-diff-rich
-            HTML report lives in the 'playwright_e2e' job:
-
-              playwright_e2e (same workflow)
-                → Artifacts tab
-                → playwright-report/index.html
-
-            This shard intentionally exits non-zero so that CircleCI's
-            'Rerun failed jobs' button reruns just the failed shard
-            parallel-run indices, not all $CIRCLE_NODE_TOTAL shards.
-            That's why both 'playwright_e2e_shards' and 'playwright_e2e'
-            are red — they're reporting the same underlying failures.
-            For branch-protection purposes, only 'playwright_e2e' needs
-            to be required.
-            ================================================================
-            MSG
+            # CircleCI v2.1 parses `<<` as parameter substitution and
+            # would error "Unclosed '<<' tag" on a bash heredoc. Use echo
+            # lines instead so the config-preprocess pass leaves us alone.
+            echo "================================================================"
+            echo "Tests failed in this shard (Playwright exit $EXIT)."
+            echo
+            echo "This is ONE OF $CIRCLE_NODE_TOTAL parallel shards. Don't try"
+            echo "to debug from here — the consolidated, screenshot-diff-rich"
+            echo "HTML report lives in the 'playwright_e2e' job:"
+            echo
+            echo "  playwright_e2e (same workflow)"
+            echo "    → Artifacts tab"
+            echo "    → playwright-report/index.html"
+            echo
+            echo "This shard intentionally exits non-zero so that CircleCI's"
+            echo "'Rerun failed jobs' button reruns just the failed shard"
+            echo "parallel-run indices, not all $CIRCLE_NODE_TOTAL shards."
+            echo "That's why both 'playwright_e2e_shards' and 'playwright_e2e'"
+            echo "are red — they're reporting the same underlying failures."
+            echo "For branch-protection purposes, only 'playwright_e2e' needs"
+            echo "to be required."
+            echo "================================================================"
             exit $EXIT
 
   # The user-facing Playwright e2e status check. Merges all 12 shards' blob
