@@ -1,6 +1,12 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { action, computed, observable, makeObservable } from 'mobx';
+import {
+    action,
+    computed,
+    observable,
+    makeObservable,
+    runInAction,
+} from 'mobx';
 
 import $ from 'jquery';
 
@@ -53,8 +59,10 @@ export default class Domain extends React.Component<DomainProps, {}> {
         return this.props.y + this.props.height / 2;
     }
 
-    @action componentDidMount() {
-        this.isMounted = true;
+    componentDidMount() {
+        runInAction(() => {
+            this.isMounted = true;
+        });
     }
 
     @computed private get displayText() {

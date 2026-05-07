@@ -27,4 +27,9 @@ class SelectAllDeselectAll extends React.Component<ISelectionButtonProps, {}> {
     }
 }
 
-export default SortableElement(SelectAllDeselectAll);
+// SortableElement HOC strips original prop types; re-assert them.
+export default (SortableElement(
+    SelectAllDeselectAll
+) as unknown) as React.ComponentType<
+    ISelectionButtonProps & { index: number; disabled?: boolean }
+>;

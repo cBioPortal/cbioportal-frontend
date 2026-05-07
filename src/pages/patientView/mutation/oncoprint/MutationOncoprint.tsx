@@ -42,7 +42,7 @@ import 'react-rangeslider/lib/index.css';
 import styles from './styles.module.scss';
 import PatientViewMutationsDataStore from '../PatientViewMutationsDataStore';
 import { Mutation } from 'cbioportal-ts-api-client';
-import ReactDOM from 'react-dom';
+import { renderToStaticMarkup } from 'react-dom/server';
 import PatientViewUrlWrapper from '../../PatientViewUrlWrapper';
 import { getVariantAlleleFrequency } from 'shared/lib/MutationUtils';
 import { getServerConfig } from 'config/config';
@@ -462,10 +462,7 @@ export default class MutationOncoprint extends React.Component<
                             mutationStatus: d.mutationStatus,
                             vafReport,
                         });
-                        // convert JSX into HTML string by rendering to dummy element then using innerHTML
-                        const dummyElt = document.createElement('div');
-                        ReactDOM.render(tooltipJSX, dummyElt);
-                        const html = dummyElt.innerHTML;
+                        const html = renderToStaticMarkup(tooltipJSX);
                         return $(html);
                     },
                     sortDirectionChangeable: false,
@@ -526,10 +523,7 @@ export default class MutationOncoprint extends React.Component<
                             mutationStatus: d.mutationStatus,
                             vafReport,
                         });
-                        // convert JSX into HTML string by rendering to dummy element then using innerHTML
-                        const dummyElt = document.createElement('div');
-                        ReactDOM.render(tooltipJSX, dummyElt);
-                        const html = dummyElt.innerHTML;
+                        const html = renderToStaticMarkup(tooltipJSX);
                         return $(html);
                     },
                     sortDirectionChangeable: false,

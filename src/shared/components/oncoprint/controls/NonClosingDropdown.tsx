@@ -1,5 +1,16 @@
 import * as React from 'react';
-import { DropdownButtonProps, DropdownButton } from 'react-bootstrap';
+import {
+    DropdownButtonProps as DropdownButtonPropsStrict,
+    DropdownButton as DropdownButtonUntyped,
+} from 'react-bootstrap';
+// @types/react-bootstrap 0.32 DropdownButtonProps omits `open` / `onToggle`,
+// which the v0 runtime actually supports.
+type DropdownButtonProps = DropdownButtonPropsStrict & {
+    open?: boolean;
+    onToggle?: (newOpen: boolean) => void;
+    children?: React.ReactNode;
+};
+const DropdownButton = DropdownButtonUntyped as any;
 import { observer } from 'mobx-react';
 import { computed, makeObservable, observable } from 'mobx';
 

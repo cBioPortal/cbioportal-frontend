@@ -80,11 +80,18 @@ export default class Lollipop extends React.Component<LollipopProps, {}> {
                         fontSize: this.props.label.fontSize || 10,
                         fontFamily: this.props.label.fontFamily || 'arial',
                     }}
-                    textAnchor={this.props.label.textAnchor || 'middle'}
+                    textAnchor={
+                        (this.props.label.textAnchor ||
+                            'middle') as React.SVGAttributes<
+                            SVGTextElement
+                        >['textAnchor']
+                    }
                     dominantBaseline={
                         this.props.spec.placement === LollipopPlacement.BOTTOM
                             ? 'hanging'
-                            : 'baseline'
+                            : ('baseline' as React.SVGAttributes<
+                                  SVGTextElement
+                              >['dominantBaseline'])
                     }
                     x={this.props.x}
                     y={this.textY}

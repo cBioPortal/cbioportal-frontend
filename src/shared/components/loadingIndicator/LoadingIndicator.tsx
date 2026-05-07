@@ -19,6 +19,7 @@ export interface ILoader {
     small?: boolean;
     big?: boolean;
     className?: string;
+    children?: React.ReactNode;
 }
 
 @observer

@@ -108,7 +108,11 @@ class VictoryTableCell extends React.Component<IVictoryTableCellProps, {}> {
                     x={x + width / 2}
                     y={y + height / 2}
                     dy="0.3em"
-                    textAnchor={this.props.textAnchor}
+                    textAnchor={
+                        this.props.textAnchor as React.SVGAttributes<
+                            SVGTextElement
+                        >['textAnchor']
+                    }
                     fill={this.props.textColor}
                     fontFamily={this.props.fontFamily}
                     fontSize={this.props.fontSize}

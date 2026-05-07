@@ -66,7 +66,9 @@ export type OncoKbCardBodyProps = {
     displayHighestLevelInTabTitle?: boolean;
 };
 
-const TabContentWrapper: React.FunctionComponent<{}> = props => {
+const TabContentWrapper: React.FunctionComponent<{
+    children?: React.ReactNode;
+}> = props => {
     return <div className={mainStyles['tab-content']}>{props.children}</div>;
 };
 
