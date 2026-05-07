@@ -199,8 +199,6 @@ export function lazyMobXTableSort<T>(
     }[] = [];
 
     for (let i = 0; i < data.length; i++) {
-        // Have to do this loop instead of using data.map because we need dataAndValue to be mutable,
-        //  and Immutable.js makes .map return another immutable structure;
         const d = data[i];
         dataAndValue.push({
             data: d,

@@ -18,10 +18,6 @@ export function addServiceErrorHandler(handler: errorHandler) {
     return JSON.stringify(this.result);
 };
 
-/**
- * Constructs a MobxPromise which will call seamlessImmutable.from() on the result and the default value.
- */
-
 export const remoteData: MobxPromiseFactory = function<R>(
     input: MobxPromiseInputUnion<R>,
     defaultResult?: R

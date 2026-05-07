@@ -1,4 +1,3 @@
-import Immutable from 'seamless-immutable'; // need to use immutables so mobX can observe the cache shallowly
 import accumulatingDebounce from './accumulatingDebounce';
 import { observable, action, reaction, makeObservable } from 'mobx';
 import { AccumulatingDebouncedFunction } from './accumulatingDebounce';
@@ -23,9 +22,6 @@ type Pending = {
     [key: string]: boolean;
 };
 
-type ImmutableCache<D, M> = Cache<D, M> &
-    Immutable.ImmutableObject<Cache<D, M>>;
-
 type QueryKeyToQuery<Q> = { [queryKey: string]: Q };
 
 export type AugmentedData<D, M> = {
@@ -48,7 +44,7 @@ function isAugmentedData<D, M>(
 }
 
 export default class LazyMobXCache<Data, Query, Metadata = any> {
-    @observable.ref private _cache: ImmutableCache<Data, Metadata>;
+    @observable.ref private _cache: Cache<Data, Metadata>;
     private pending: Pending;
 
     private staticDependencies: any[];
@@ -102,7 +98,7 @@ export default class LazyMobXCache<Data, Query, Metadata = any> {
 
     private init() {
         this.pending = {};
-        this._cache = Immutable.from<Cache<Data, Metadata>>({});
+        this._cache = {};
         this.promises = [];
     }
     public get cache() {
@@ -298,9 +294,7 @@ export default class LazyMobXCache<Data, Query, Metadata = any> {
 
     @action private updateCache(toMerge: Cache<Data, Metadata>) {
         if (Object.keys(toMerge).length > 0) {
-            this._cache = this._cache.merge(toMerge, {
-                deep: true,
-            }) as ImmutableCache<Data, Metadata>;
+            this._cache = { ...this._cache, ...toMerge };
         }
     }
 }

@@ -11,7 +11,6 @@ declare module 'object-sizeof';
 declare module 'save-svg-as-png';
 declare module 'react-file-download';
 declare module 'reactableMSK';
-declare module 'redux-seamless-immutable';
 declare module 'react-if';
 declare module 'webpack-raphael';
 declare module 'javascript-natural-sort';

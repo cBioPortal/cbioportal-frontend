@@ -1,5 +1,4 @@
 import { observable, action, makeObservable } from 'mobx';
-import Immutable from 'seamless-immutable';
 
 export interface ICacheData<T> {
     status: 'pending' | 'complete' | 'error';
@@ -10,19 +9,16 @@ export interface ICache<T> {
     [queryId: string]: ICacheData<T>;
 }
 
-export type ImmutableCache<T> = ICache<T> &
-    Immutable.ImmutableObject<ICache<T>>;
-
 /**
  * @author Selcuk Onur Sumer
  */
 export default class SimpleCache<T, Query> {
-    @observable.ref protected _cache: ImmutableCache<T>;
+    @observable.ref protected _cache: ICache<T>;
     protected _pendingCache: ICache<T>;
 
     constructor() {
         makeObservable<SimpleCache<T, Query>, '_cache' | 'putData'>(this);
-        this._cache = Immutable.from<ICache<T>>({});
+        this._cache = {};
         this._pendingCache = {};
     }
 
@@ -86,9 +82,7 @@ export default class SimpleCache<T, Query> {
 
         // put the data into the actual cache
         if (Object.keys(data).length > 0) {
-            this._cache = this._cache.merge(data, {
-                deep: true,
-            }) as ImmutableCache<T>;
+            this._cache = { ...this._cache, ...data };
         }
     }
 }
