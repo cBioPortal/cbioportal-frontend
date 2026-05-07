@@ -29,7 +29,9 @@ export const enum CLINICAL_ATTRIBUTE_ID_ENUM {
     MSI_SCORE = 'MSI_SCORE',
     MSI_TYPE = 'MSI_TYPE',
     TMB_SCORE = 'CVR_TMB_SCORE',
+    TMB_NONSYNONYMOUS = 'TMB_NONSYNONYMOUS',
 }
+
 
 export const enum MIS_TYPE_VALUE {
     INSTABLE = 'Instable',
