@@ -51,6 +51,7 @@ npm run test:docker:localdb:update     # regenerate tracked baselines
 # Local-DB lane (host-mode, scratch snapshots) — for fast local iteration
 npm run test:localdb                   # verify against local scratch snapshots
 npm run test:localdb:update            # regenerate local scratch snapshots
+npm run test:localdb:ui                # interactive runner + trace viewer
 
 # Host-mode (fast, scratch snapshots) — for local iteration
 pnpm test                               # verify against local scratch
