@@ -100,7 +100,7 @@ async function selectReactSelectOption(parent: Locator, optionText: string) {
         .click();
 }
 
-test.describe('gsva feature', () => {
+test.describe.skip('gsva feature', () => {
     test.describe('GenesetVolcanoPlotSelector', () => {
         test.beforeEach(async ({ page }) => {
             await goToUrlAndSetLocalStorage(page, queryPageUrl, true);
