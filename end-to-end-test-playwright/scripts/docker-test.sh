@@ -1,9 +1,15 @@
 #!/usr/bin/env bash
-# Run the Playwright suite inside the official Playwright Docker image
-# pinned to the exact version in package.json. This is the *only* supported
-# way to generate/update the canonical screenshot references under
+# Run the Playwright suite inside our custom Playwright CI Docker image
+# (the same image CircleCI uses), pinned to the @playwright/test version
+# declared in package.json. This is the *only* supported way to
+# generate/update the canonical screenshot references under
 # __snapshots__/ — the Docker environment pins OS, fonts, and browser
 # builds so references are byte-stable across developer machines and CI.
+#
+# The custom image (built from .circleci/images/playwright/Dockerfile)
+# is FROM mcr.microsoft.com/playwright:v<version>-jammy and adds jq,
+# pnpm, and http-server. Using it locally — instead of the bare MS image
+# — gives devs the exact same toolchain CI runs against.
 #
 # Usage:
 #   ./scripts/docker-test.sh                      # run against committed baselines
@@ -21,9 +27,10 @@ fi
 
 # Pin the image to the @playwright/test version declared in package.json.
 # Any drift between the image and the library produces flaky comparisons,
-# so this MUST stay in lockstep.
+# so this MUST stay in lockstep. The custom CI image is tagged with the
+# same v<version>-jammy suffix as its MS base, so the same lookup works.
 PLAYWRIGHT_VERSION=$(node -p "require('./package.json').devDependencies['@playwright/test'].replace(/^[\^~]/, '')")
-IMAGE="mcr.microsoft.com/playwright:v${PLAYWRIGHT_VERSION}-jammy"
+IMAGE="ghcr.io/cbioportal/cbioportal-frontend-playwright-ci:v${PLAYWRIGHT_VERSION}-jammy"
 
 echo "Playwright Docker image: ${IMAGE}"
 echo "Target: ${CBIOPORTAL_URL:-https://www.cbioportal.org}"
@@ -61,4 +68,4 @@ exec docker run --rm -i \
     -e LOCALDEV="${LOCALDEV}" \
     ${LOCALDEV_ARGS[@]+"${LOCALDEV_ARGS[@]}"} \
     "${IMAGE}" \
-    npx playwright test "$@"
+    pnpm exec playwright test "$@"

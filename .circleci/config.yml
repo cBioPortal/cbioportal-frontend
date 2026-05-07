@@ -341,8 +341,8 @@ jobs:
   # bundle into the public cbioportal origin via ?localdist=true.
   remote_e2e_shards:
     docker:
-      # Custom image pre-bakes jq, corepack/pnpm, and http-server@0.11.1 so
-      # shards don't need apt-get or npm installs at runtime.
+      # Custom image pre-bakes jq, pnpm (via corepack), and http-server@0.11.1
+      # so shards don't need apt-get or package-manager downloads at runtime.
       # Rebuilt by .github/workflows/build-playwright-ci-image.yml when
       # .circleci/images/playwright/Dockerfile changes.
       - image: ghcr.io/cbioportal/cbioportal-frontend-playwright-ci:v1.59.1-jammy
@@ -383,7 +383,13 @@ jobs:
       - run:
           name: Install Playwright suite dependencies
           working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
-          command: npm ci
+          # --ignore-workspace: this suite is intentionally not in the
+          # repo's pnpm workspace (pnpm-workspace.yaml lists only
+          # `packages/*`). Without the flag pnpm walks up to the repo
+          # root and tries to install the whole workspace.
+          # --frozen-lockfile: fail if pnpm-lock.yaml would change,
+          # the pnpm equivalent of `npm ci`.
+          command: pnpm install --frozen-lockfile --ignore-workspace
       - run:
           name: Start frontend dev server (pnpm serveDist) on localhost:3000
           background: true
@@ -430,7 +436,7 @@ jobs:
             # (CPU-bound contention with serveDist + runner sharing the
             # 4th core). Only describes opted into mode: 'parallel'
             # actually use the extra workers; the rest still serialize.
-            npx playwright test --workers=3 \
+            pnpm exec playwright test --workers=3 \
               --shard="${SHARD_NUM}/${CIRCLE_NODE_TOTAL}" \
               --reporter=list,junit,blob \
               $GREP_ARG
@@ -632,7 +638,9 @@ jobs:
       - run:
           name: Install dependencies
           working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
-          command: npm ci
+          # See remote_e2e_shards "Install Playwright suite dependencies"
+          # for why --ignore-workspace is required.
+          command: pnpm install --frozen-lockfile --ignore-workspace
       - run:
           name: Merge per-shard blob reports and fail the build if any test failed
           working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
@@ -663,7 +671,7 @@ jobs:
             export PLAYWRIGHT_JSON_OUTPUT_FILE="$JSON"
             rm -f "$JUNIT" "$JSON"
 
-            npx playwright merge-reports --reporter=html,junit,json blob-report
+            pnpm exec playwright merge-reports --reporter=html,junit,json blob-report
 
             if [ ! -s "$JUNIT" ]; then
                 echo "ERROR: merge-reports did not produce a junit.xml at $JUNIT"
