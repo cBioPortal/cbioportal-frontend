@@ -72,6 +72,15 @@ any pixel change reflects an actual rendering change, not host drift.
 ## Pinning
 
 The wrapper reads `@playwright/test` from `package.json` and runs
-`mcr.microsoft.com/playwright:v<version>-jammy`. Bumping the library
-version automatically bumps the image. Keep them in lockstep — a
-version skew will produce spurious diffs on every snapshot.
+`ghcr.io/cbioportal/cbioportal-frontend-playwright-ci:v<version>-jammy`
+— our custom image, built from `.circleci/images/playwright/Dockerfile`
+on top of `mcr.microsoft.com/playwright:v<version>-jammy`. CircleCI
+runs the same image, so the dev experience and CI experience are
+byte-identical. Bumping the library version automatically bumps the
+image lookup; keep `@playwright/test` and the CI image tag in
+lockstep — a skew will produce spurious diffs on every snapshot.
+
+When `@playwright/test` is bumped, also bump the
+`mcr.microsoft.com/playwright:v<X>-jammy` base in the Dockerfile and
+the tag references in `.circleci/config.yml` so the rebuild publishes
+the matching image.

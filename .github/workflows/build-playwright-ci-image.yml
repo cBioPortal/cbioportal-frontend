@@ -1,7 +1,9 @@
 # Build and publish the custom Playwright CI Docker image to GHCR.
 #
-# The image pre-bakes jq, corepack (pnpm shim), and http-server@0.11.1 so that
-# playwright_e2e_shards CircleCI jobs don't need apt-get or npm at runtime.
+# The image pre-bakes jq, pnpm (via corepack prepare --activate), and
+# http-server@0.11.1 so the playwright_e2e_shards CircleCI jobs and the
+# end-to-end-test-playwright/scripts/docker-test.sh wrapper don't need
+# apt-get or package-manager downloads at runtime.
 #
 # Image: ghcr.io/cbioportal/cbioportal-frontend-playwright-ci:v1.59.1-jammy
 #
