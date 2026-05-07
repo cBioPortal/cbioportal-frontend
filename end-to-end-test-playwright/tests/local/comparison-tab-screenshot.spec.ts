@@ -80,7 +80,8 @@ test.describe.serial('results view comparison tab screenshot tests', () => {
                 );
             });
             await openGeneSelectorMenu(page);
-            await setInputText(page, 'input[data-test=numberOfGenes]', '2\n');
+            await setInputText(page, 'input[data-test=numberOfGenes]', '2');
+            await page.locator('input[data-test=numberOfGenes]').press('Enter');
             await expect(
                 page.locator('[data-test="addGenestoBarPlot"]')
             ).toBeEnabled({ timeout: 30000 });

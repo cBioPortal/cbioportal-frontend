@@ -639,6 +639,13 @@ test.describe('treatment feature', () => {
             await expect(
                 page.locator('[data-test=ViewLimitValues]').first()
             ).toBeVisible();
+
+            await expect(
+                page.locator('label:has-text("Value >8.00 Labels **")')
+            ).toBeAttached();
+            await expect(
+                page.locator('div:has-text("** ")').first()
+            ).toBeAttached();
         });
 
         test('shows checkbox for limit values (e.g., larger_than_8.00) checkbox when such profile selected on vert. axis', async ({
@@ -677,11 +684,7 @@ test.describe('treatment feature', () => {
             await expect(
                 page.locator('[data-test=ViewLimitValues]').first()
             ).toBeVisible();
-        });
 
-        test('shows hint for handling of threshold values for treatment data in scatter plot', async ({
-            page,
-        }) => {
             await expect(
                 page.locator('label:has-text("Value >8.00 Labels **")')
             ).toBeAttached();
@@ -724,29 +727,22 @@ test.describe('treatment feature', () => {
                     .locator('div:text-is("Genes")')
             ).toBeVisible();
 
-            const geneMenuEntries = await page.evaluate(() => {
-                const root = document.querySelector(
-                    '[data-test=GeneColoringMenu]'
-                );
-                if (!root) return [];
-                const labels = Array.from(root.querySelectorAll('div')).filter(
-                    el => (el as HTMLElement).innerText === 'Genes'
-                );
-                if (labels.length === 0) return [];
-                const parent = labels[0].parentElement;
-                if (!parent) return [];
-                const wrappers = parent.querySelectorAll('div');
-                if (wrappers.length < 2) return [];
-                const innerEntries = wrappers[1].querySelectorAll('div');
-                return Array.from(innerEntries).map(
-                    e => (e as HTMLElement).innerText
-                );
-            });
+            // Mirror the wdio traversal: find the "Genes" label, step up to
+            // its parent, take the second descendant div (the gene list
+            // container), then assert the text of each gene entry div.
+            // Using locators (not page.evaluate) gives built-in retries so
+            // entries that haven't finished rendering are waited for.
+            const genesLabelParent = page
+                .locator('[data-test=GeneColoringMenu]')
+                .locator('div:text-is("Genes")')
+                .locator('xpath=..');
+            const geneListContainer = genesLabelParent.locator('div').nth(1);
+            const geneEntries = geneListContainer.locator('div');
 
-            expect(geneMenuEntries[0]).toBe('CDKN2A');
-            expect(geneMenuEntries[1]).toBe('MDM2');
-            expect(geneMenuEntries[2]).toBe('MDM4');
-            expect(geneMenuEntries[3]).toBe('TP53');
+            await expect(geneEntries.nth(0)).toHaveText('CDKN2A');
+            await expect(geneEntries.nth(1)).toHaveText('MDM2');
+            await expect(geneEntries.nth(2)).toHaveText('MDM4');
+            await expect(geneEntries.nth(3)).toHaveText('TP53');
         });
 
         test('shows sort order button for waterfall plot when `Ordered samples` selected', async ({

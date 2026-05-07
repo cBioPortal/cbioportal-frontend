@@ -658,7 +658,10 @@ test.describe('hide download controls feature', () => {
         let page: Page;
 
         test.beforeAll(async ({ browser }) => {
-            page = await browser.newPage();
+            page = await browser.newPage({
+                viewport: { width: 3200, height: 1000 },
+            });
+
             await openAndSetProperty(
                 page,
                 `${CBIOPORTAL_URL}/study/summary?id=study_es_0`,

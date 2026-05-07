@@ -105,5 +105,13 @@ export async function goToUrlAndSetLocalStorage(
     await page.goto(url);
     if (authenticated) {
         await keycloakLogin(page);
+        // The Keycloak SAML redirect drops URL fragments (#...). If the target
+        // URL has a hash and the current URL no longer contains it (i.e. an
+        // actual login just occurred), navigate again so the fragment is
+        // processed by the app.
+        const hashIndex = url.indexOf('#');
+        if (hashIndex !== -1 && !page.url().includes(url.slice(hashIndex))) {
+            await page.goto(url);
+        }
     }
 }

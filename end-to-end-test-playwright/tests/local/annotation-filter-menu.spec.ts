@@ -87,7 +87,7 @@ const sortDescLimit = (
 };
 
 async function clickCheckBoxResultsView(page: Page, name: string) {
-    const el = page.locator(`label:text-is("${name}")`).locator('input');
+    const el = page.locator(`label:has-text("${name}")`).locator('input');
     await el.waitFor({ state: 'attached' });
     await expect(el).toBeVisible();
     await el.click();
@@ -550,7 +550,7 @@ test.describe('alteration filter menu', () => {
                 page,
             }) => {
                 await selectTier(page, 'Class_2');
-
+                await waitForStudyView(page);
                 expect(await geneTableCounts(page, 'mutations-table')).toEqual({
                     TMEM247: '1',
                 });
@@ -802,7 +802,6 @@ test.describe('alteration filter menu', () => {
         });
 
         test('filters enrichment table when unchecking germline checkbox', async () => {
-            await waitForStudyView(page);
             await clickCheckBoxResultsView(page, 'Germline');
             expect(await enrichmentTableCounts(page)).toEqual({
                 DTNB: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
@@ -882,6 +881,7 @@ test.describe('alteration filter menu', () => {
         });
 
         test('does not filter tables when checking all tier checkboxes', async () => {
+            await waitForUpdateResultsView(page);
             expect(await enrichmentTableCounts(page)).toEqual({
                 DTNB: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                 ADAMTS20: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },

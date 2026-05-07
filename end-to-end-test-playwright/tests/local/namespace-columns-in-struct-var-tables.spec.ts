@@ -50,9 +50,7 @@ async function getRowByGene(
     const count = await rows.count();
     for (let i = 0; i < count; i++) {
         const row = rows.nth(i);
-        const cell = row.locator(
-            `xpath=.//td[normalize-space(text())="${gene}"]`
-        );
+        const cell = row.locator(`xpath=.//td[normalize-space(.)="${gene}"]`);
         if ((await cell.count()) > 0) {
             return row;
         }

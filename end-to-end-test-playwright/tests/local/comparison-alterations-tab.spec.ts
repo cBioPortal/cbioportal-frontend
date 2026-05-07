@@ -66,14 +66,17 @@ async function selectUnalteredCount(page: Page, gene: string) {
         .innerText();
 }
 
+const ALTERATION_TYPE_DATA_TEST: Record<string, string> = {
+    Mutations: 'Mutations',
+    'Copy Number Alterations': 'CheckCopynumberAlterations',
+    'Structural Variants / Fusions': 'StructuralVariants',
+    'Frameshift Deletion': 'FrameshiftDeletion',
+    Deletion: 'DeepDeletion',
+};
+
 async function clickAlterationTypeCheckBox(page: Page, name: string) {
-    // Mirror the wdio `label=<name>` selector exactly. Scope to the
-    // alteration-type menu — the same name (e.g. "Mutations") may
-    // appear in other parts of the page (track legend, count column).
     await page
-        .locator('[data-test=AlterationTypeSelectorMenu]')
-        .locator(`label:text-is("${name}")`)
-        .locator('input')
+        .locator(`[data-test=${ALTERATION_TYPE_DATA_TEST[name]}]`)
         .click();
 }
 

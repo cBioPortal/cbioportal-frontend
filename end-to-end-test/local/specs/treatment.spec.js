@@ -514,11 +514,14 @@ describe('treatment feature', function() {
             assert(
                 await (await $('[data-test=ViewLimitValues]')).isDisplayed()
             );
-        });
 
-        it('shows hint for handling of threshold values for treatment data in scatter plot', async () => {
-            assert(await $('label=Value >8.00 Labels **'));
-            assert(await $('div*=** '));
+            // Threshold-value hint elements are produced by the same page state,
+            // so assert them here rather than in a separate test that would have
+            // its state reset by beforeEach.
+            await (await $('label=Value >8.00 Labels **')).waitForExist();
+            assert(await (await $('label=Value >8.00 Labels **')).isExisting());
+            await (await $('div*=** ')).waitForExist();
+            assert(await (await $('div*=** ')).isExisting());
         });
 
         it('shows gene selection box in utilities menu for waterfall plot', async () => {

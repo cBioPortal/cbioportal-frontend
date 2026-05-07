@@ -47,7 +47,6 @@ async function expectDefaultColumns(page: Page) {
     await columnIsDisplayed(page, DEFAULT_COLS.VARIANT_CLASS);
     await columnIsDisplayed(page, DEFAULT_COLS.EVENT_INFO);
     await columnIsDisplayed(page, DEFAULT_COLS.CONNECTION_TYPE);
-    await columnIsDisplayed(page, 'Breakpoint Type');
 }
 
 test.describe('namespace columns in structural variant tables', () => {

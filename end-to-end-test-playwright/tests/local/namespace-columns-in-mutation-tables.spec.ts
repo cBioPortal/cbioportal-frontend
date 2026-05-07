@@ -19,8 +19,12 @@ async function waitForMutationTable(page: Page) {
 }
 
 async function waitForPatientViewMutationTable(page: Page) {
+    const mutationTable = page.locator(
+        '[data-test="patientview-mutation-table"]'
+    );
+    await expect(mutationTable).toBeVisible();
     await expect(
-        page.locator('[data-test=patientview-mutation-table]')
+        mutationTable.locator('[data-test="LazyMobXTable"]')
     ).toBeVisible();
 }
 

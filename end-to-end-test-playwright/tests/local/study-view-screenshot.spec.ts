@@ -157,6 +157,7 @@ test.describe.serial('study view x vs y charts', () => {
         page = await browser.newPage();
         const url = `${CBIOPORTAL_URL}/study?id=lgg_ucsf_2014_test_generic_assay`;
         await goToUrlAndSetLocalStorage(page, url, true);
+        await waitForNetworkQuiet(page);
 
         if ((await page.locator(X_VS_Y_CHART).count()) > 0) {
             await page.locator(X_VS_Y_CHART).dispatchEvent('mouseover');
@@ -211,16 +212,20 @@ test.describe.serial('study view x vs y charts', () => {
         await expect(page.locator('.xvsy-x-axis-selector')).toBeVisible();
         await page.locator('.xvsy-x-axis-selector').click();
         await expect(
-            page.locator('.xvsy-x-axis-selector div=Diagnosis Age')
+            page.locator('.xvsy-x-axis-selector :text-is("Diagnosis Age")')
         ).toBeVisible();
-        await page.locator('.xvsy-x-axis-selector div=Diagnosis Age').click();
+        await page
+            .locator('.xvsy-x-axis-selector :text-is("Diagnosis Age")')
+            .click();
 
         await expect(page.locator('.xvsy-y-axis-selector')).toBeVisible();
         await page.locator('.xvsy-y-axis-selector').click();
         await expect(
-            page.locator('.xvsy-y-axis-selector div=Mutation Count')
+            page.locator('.xvsy-y-axis-selector :text-is("Mutation Count")')
         ).toBeVisible();
-        await page.locator('.xvsy-y-axis-selector div=Mutation Count').click();
+        await page
+            .locator('.xvsy-y-axis-selector :text-is("Mutation Count")')
+            .click();
 
         try {
             await expect(
@@ -274,6 +279,28 @@ test.describe.serial('study view editable breadcrumbs', () => {
 
     test.beforeAll(async ({ browser }) => {
         page = await browser.newPage();
+        // Ensure a clean default chart state
+        const studyUrl = `${CBIOPORTAL_URL}/study/summary?id=lgg_ucsf_2014_test_generic_assay`;
+        await goToUrlAndSetLocalStorage(page, studyUrl, true);
+        await waitForNetworkQuiet(page);
+        await page.locator(ADD_CHART_BUTTON).click();
+        const resetVisible =
+            (await page.locator('button:text-is("Reset charts")').count()) >
+                0 &&
+            (await page.locator('button:text-is("Reset charts")').isVisible());
+        if (resetVisible) {
+            await page.locator('button:text-is("Reset charts")').click();
+            await expect(
+                page.locator('.modal-content button:text-is("Confirm")')
+            ).toBeVisible();
+            await page
+                .locator('.modal-content button:text-is("Confirm")')
+                .click();
+            await waitForNetworkQuiet(page);
+        } else {
+            // Close the dropdown without resetting
+            await page.locator(ADD_CHART_BUTTON).click();
+        }
     });
 
     test.afterAll(async () => {

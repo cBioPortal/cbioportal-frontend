@@ -150,7 +150,8 @@ test.describe('group comparison page screenshot tests', () => {
                 );
             });
             await openGeneSelectorMenu(page);
-            await page.locator('input[data-test=numberOfGenes]').fill('2\n');
+            await page.locator('input[data-test=numberOfGenes]').fill('2');
+            await page.locator('input[data-test=numberOfGenes]').press('Enter');
             await expect(
                 page.locator('[data-test="addGenestoBarPlot"]')
             ).toBeEnabled({ timeout: 10000 });
