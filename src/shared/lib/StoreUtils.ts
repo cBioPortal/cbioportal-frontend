@@ -67,6 +67,8 @@ import {
     CLINICAL_ATTRIBUTE_ID_ENUM,
     DataTypeConstants,
     GENOME_NEXUS_ARG_FIELD_ENUM,
+    MSI_H_THRESHOLD,
+    TMB_H_THRESHOLD,
 } from 'shared/constants';
 import { normalizeMutations } from '../components/mutationMapper/MutationMapperUtils';
 import { getServerConfig } from 'config/config';
@@ -1707,22 +1709,38 @@ export function makeGetOncoKbCnaAnnotationForOncoprint(
 
 export function getSampleClinicalDataMapByThreshold(
     clinicalData: ClinicalData[],
-    clinicalAttributeId: string,
+    clinicalAttributeId: string | readonly string[],
     threshold: number
 ) {
-    return _.reduce(
-        clinicalData,
-        (acc, next) => {
-            if (next.clinicalAttributeId === clinicalAttributeId) {
-                const value = getNumericalClinicalDataValue(next);
-                if (value && value >= threshold) {
-                    acc[next.sampleId] = next;
+    const attrIds: readonly string[] = Array.isArray(clinicalAttributeId)
+        ? (clinicalAttributeId as readonly string[])
+        : [clinicalAttributeId as string];
+    const attrIdSet = new Set<string>(attrIds);
+    // Collect all qualifying entries per sample, keyed by attribute ID.
+    const qualifying = new Map<string, Map<string, ClinicalData>>();
+    for (const entry of clinicalData) {
+        if (attrIdSet.has(entry.clinicalAttributeId)) {
+            const value = getNumericalClinicalDataValue(entry);
+            if (Number.isFinite(value) && value! >= threshold) {
+                if (!qualifying.has(entry.sampleId)) {
+                    qualifying.set(entry.sampleId, new Map());
                 }
+                qualifying.get(entry.sampleId)!.set(entry.clinicalAttributeId, entry);
             }
-            return acc;
-        },
-        {} as { [key: string]: ClinicalData }
-    );
+        }
+    }
+    // For each sample, pick the highest-priority qualifying entry by
+    // iterating attrIds in declared order (first = highest priority).
+    const result: { [key: string]: ClinicalData } = {};
+    for (const [sampleId, attrMap] of qualifying) {
+        for (const attrId of attrIds) {
+            if (attrMap.has(attrId)) {
+                result[sampleId] = attrMap.get(attrId)!;
+                break;
+            }
+        }
+    }
+    return result;
 }
 
 export function getSampleClinicalDataMapByKeywords(
@@ -1770,6 +1788,68 @@ export function getSampleNumericalClinicalDataValue(
     return undefined;
 }
 
+/**
+ * Configuration for an "other biomarker" type, declaring which clinical
+ * attribute IDs carry its value (in priority order, highest first) and the
+ * numeric threshold above which a sample is considered positive.
+ */
+export type BiomarkerConfig = {
+    attributeIds: readonly string[];
+    threshold: number;
+};
+
+/**
+ * Central config for all supported "other biomarker" types.
+ * Each entry declares the clinical attribute IDs to check (in priority order)
+ * and the positivity threshold.  Adding a new biomarker or a new synonym for
+ * an existing one only requires updating this map.
+ */
+export const OTHER_BIOMARKERS_CONFIG: Record<
+    OtherBiomarkersQueryType,
+    BiomarkerConfig
+> = {
+    [OtherBiomarkersQueryType.MSIH]: {
+        attributeIds: [CLINICAL_ATTRIBUTE_ID_ENUM.MSI_SCORE],
+        threshold: MSI_H_THRESHOLD,
+    },
+    [OtherBiomarkersQueryType.TMBH]: {
+        // CVR_TMB_SCORE is preferred (MSK-specific);
+        // TMB_NONSYNONYMOUS is the public/general fallback.
+        attributeIds: [
+            CLINICAL_ATTRIBUTE_ID_ENUM.TMB_SCORE,
+            CLINICAL_ATTRIBUTE_ID_ENUM.TMB_NONSYNONYMOUS,
+        ],
+        threshold: TMB_H_THRESHOLD,
+    },
+};
+
+/**
+ * Returns the highest-priority ClinicalData entry for the given biomarker
+ * type and sample, following the attribute ID priority order declared in
+ * OTHER_BIOMARKERS_CONFIG.  Returns undefined when no matching attribute is
+ * present for the sample.
+ */
+export function getSampleBiomarkerClinicalData(
+    clinicalData: ClinicalData[],
+    sampleId: string,
+    type: OtherBiomarkersQueryType
+): ClinicalData | undefined {
+    const { attributeIds } = OTHER_BIOMARKERS_CONFIG[type];
+    const attrIdSet = new Set<string>(attributeIds);
+    const candidates = new Map<string, ClinicalData>();
+    for (const d of clinicalData) {
+        if (d.sampleId === sampleId && attrIdSet.has(d.clinicalAttributeId)) {
+            candidates.set(d.clinicalAttributeId, d);
+        }
+    }
+    for (const attrId of attributeIds) {
+        if (candidates.has(attrId)) {
+            return candidates.get(attrId);
+        }
+    }
+    return undefined;
+}
+
 export type SampleCancerTypeMap = {
     cancerType: string | undefined;
     cancerTypeDetailed: string | undefined;
@@ -1779,13 +1859,6 @@ export type SampleCancerTypeMap = {
 export type OtherBiomarkerQueryId = {
     sampleId: string;
     type: OtherBiomarkersQueryType;
-};
-
-export const OTHER_BIOMARKERS_CLINICAL_ATTR: {
-    [key in OtherBiomarkersQueryType]: string;
-} = {
-    [OtherBiomarkersQueryType.MSIH]: CLINICAL_ATTRIBUTE_ID_ENUM.MSI_SCORE,
-    [OtherBiomarkersQueryType.TMBH]: CLINICAL_ATTRIBUTE_ID_ENUM.TMB_SCORE,
 };
 
 export const OTHER_BIOMARKERS_QUERY_ID_SEPARATOR = '-&-';

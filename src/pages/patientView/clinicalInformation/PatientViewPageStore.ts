@@ -98,6 +98,7 @@ import {
     makeStudyToCancerTypeMap,
     mapSampleIdToClinicalData,
     mergeDiscreteCNAData,
+    OTHER_BIOMARKERS_CONFIG,
     mergeMutations,
     mergeMutationsIncludingUncalled,
     ONCOKB_DEFAULT,
@@ -169,7 +170,6 @@ import {
     CLINICAL_ATTRIBUTE_ID_ENUM,
     MIS_TYPE_VALUE,
     GENOME_NEXUS_ARG_FIELD_ENUM,
-    TMB_H_THRESHOLD,
     AlterationTypeConstants,
     DataTypeConstants,
 } from 'shared/constants';
@@ -2752,10 +2752,13 @@ export class PatientViewPageStore {
     }
 
     @computed get sampleTmbHInfo() {
+        const { attributeIds, threshold } = OTHER_BIOMARKERS_CONFIG[
+            OtherBiomarkersQueryType.TMBH
+        ];
         return getSampleClinicalDataMapByThreshold(
             this.clinicalDataForSamples.result,
-            CLINICAL_ATTRIBUTE_ID_ENUM.TMB_SCORE,
-            TMB_H_THRESHOLD
+            attributeIds,
+            threshold
         );
     }
 
