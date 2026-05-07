@@ -14,7 +14,7 @@ The Playwright config emits `test-results/report.json` on every run
 ad-hoc run:
 
 ```bash
-npx playwright test --reporter=json > test-results/report.json
+pnpm exec playwright test --reporter=json > test-results/report.json
 ```
 
 ## Viewing

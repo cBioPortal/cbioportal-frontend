@@ -11,10 +11,10 @@ Screenshots flake across machines because fonts, GPU, and Chromium
 builds differ. This suite has two snapshot directories to keep that
 under control:
 
-| Directory                                      | Tracked in git | Produced by                        |
-| ---------------------------------------------- | -------------- | ---------------------------------- |
-| `tests/**/__snapshots__/` (canonical)          | yes            | `npm run test:docker:update`       |
-| `tests/**/__local_snapshots__/` (dev scratch)  | no (gitignored)| `npm test` / `npm run test:update` |
+| Directory                                      | Tracked in git | Produced by                          |
+| ---------------------------------------------- | -------------- | ------------------------------------ |
+| `tests/**/__snapshots__/` (canonical)          | yes            | `pnpm run test:docker:update`        |
+| `tests/**/__local_snapshots__/` (dev scratch)  | no (gitignored)| `pnpm test` / `pnpm run test:update` |
 
 The selector is the `PW_DOCKER=1` env var (set by the wrapper script);
 see `playwright.config.ts`. Only Docker output is authoritative. Host
@@ -23,29 +23,36 @@ runs are for fast dev iteration; they don't count as references.
 ## Prereqs
 
 - Node >= 18
+- pnpm (the rest of the repo uses pnpm; `corepack enable` will pick up the
+  version pinned in the root `package.json`'s `packageManager` field)
 - Docker (only for the canonical/Docker lane)
 
 ```bash
-npm install
-npx playwright install chromium   # only needed for host-mode runs
+# --ignore-workspace is required because this suite lives below the
+# repo's pnpm workspace root but is intentionally NOT a workspace
+# member (see pnpm-workspace.yaml — only `packages/*` is included).
+# Without the flag, pnpm walks up and installs the whole workspace
+# instead of this suite's two devDependencies.
+pnpm install --ignore-workspace
+pnpm exec playwright install chromium   # only needed for host-mode runs
 ```
 
 ## Daily commands
 
 ```bash
 # Canonical (Docker, byte-stable) — what CI runs, what we commit
-npm run test:docker                    # verify against tracked baselines
-npm run test:docker:update             # regenerate tracked baselines
+pnpm run test:docker                    # verify against tracked baselines
+pnpm run test:docker:update             # regenerate tracked baselines
 
 # Host-mode (fast, scratch snapshots) — for local iteration
-npm test                               # verify against local scratch
-npm run test:update                    # regenerate local scratch
-npm run test:ui                        # interactive runner + trace viewer
+pnpm test                               # verify against local scratch
+pnpm run test:update                    # regenerate local scratch
+pnpm run test:ui                        # interactive runner + trace viewer
 
 # Reports + pass-through args
-npm run report                         # open the last HTML report
-./scripts/docker-test.sh timeline      # grep-filter specs
-CBIOPORTAL_URL=https://rc.cbioportal.org npm run test:docker
+pnpm run report                         # open the last HTML report
+./scripts/docker-test.sh timeline       # grep-filter specs
+CBIOPORTAL_URL=https://rc.cbioportal.org pnpm run test:docker
 ```
 
 `./scripts/docker-test.sh` is a thin wrapper — anything after the
@@ -55,7 +62,7 @@ script name is forwarded to `playwright test`, so flags like
 ## Updating references when a real visual change lands
 
 1. Land the code change.
-2. `npm run test:docker:update`
+2. `pnpm run test:docker:update`
 3. Review the diff on the PNGs under `tests/**/__snapshots__/`.
 4. Commit the updated snapshots with the code change in the same PR.
 

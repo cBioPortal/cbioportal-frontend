@@ -383,7 +383,13 @@ jobs:
       - run:
           name: Install Playwright suite dependencies
           working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
-          command: npm ci
+          # --ignore-workspace: this suite is intentionally not in the
+          # repo's pnpm workspace (pnpm-workspace.yaml lists only
+          # `packages/*`). Without the flag pnpm walks up to the repo
+          # root and tries to install the whole workspace.
+          # --frozen-lockfile: fail if pnpm-lock.yaml would change,
+          # the pnpm equivalent of `npm ci`.
+          command: pnpm install --frozen-lockfile --ignore-workspace
       - run:
           name: Start frontend dev server (pnpm serveDist) on localhost:3000
           background: true
@@ -632,7 +638,9 @@ jobs:
       - run:
           name: Install dependencies
           working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
-          command: npm ci
+          # See remote_e2e_shards "Install Playwright suite dependencies"
+          # for why --ignore-workspace is required.
+          command: pnpm install --frozen-lockfile --ignore-workspace
       - run:
           name: Merge per-shard blob reports and fail the build if any test failed
           working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
