@@ -48,6 +48,10 @@ pnpm run test:docker:update             # regenerate tracked baselines
 npm run test:docker:localdb            # verify against tracked baselines
 npm run test:docker:localdb:update     # regenerate tracked baselines
 
+# Local-DB lane (host-mode, scratch snapshots) — for fast local iteration
+npm run test:localdb                   # verify against local scratch snapshots
+npm run test:localdb:update            # regenerate local scratch snapshots
+
 # Host-mode (fast, scratch snapshots) — for local iteration
 pnpm test                               # verify against local scratch
 pnpm run test:update                    # regenerate local scratch
@@ -64,6 +68,15 @@ The `test:docker:localdb` scripts set `PW_LOCAL=1` and point
 to the wrapper. They assume a local cBioPortal backend is already
 listening on port 8080; the wrapper's `host.docker.internal` remap
 makes that reachable from inside the Playwright container.
+
+The `test:localdb` and `test:localdb:update` commands run the same
+`tests/local` suite directly on the host (no Docker) against a backend
+already listening on `http://localhost:8080`. They write scratch
+snapshots to `tests/**/__local_snapshots__/` (gitignored) so they never
+overwrite the tracked Docker references. `LOCALDEV=0` is set explicitly
+because the backend serves the full app directly — no separate frontend
+dev server is involved. These commands are the fastest way to iterate on
+localdb tests without waiting for a Docker pull.
 
 `./scripts/docker-test.sh` is a thin wrapper — anything after the
 script name is forwarded to `playwright test`, so flags like
