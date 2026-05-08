@@ -45,6 +45,30 @@ const MODEL = process.env.CLAUDE_MODEL ?? 'claude-haiku-4-5';
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 
 async function main() {
+  // Skip the report entirely when this run's remote_e2e was clean —
+  // there's nothing actionable, no point burning API tokens, and the
+  // dashboard's "flakes" link should only light up when there's
+  // actual flakiness to look at. We DON'T skip for non-success
+  // statuses (failed / timed out / etc.) because those are exactly
+  // the situations where surfacing recent cross-run flakes is most
+  // helpful. Running locally (no CIRCLE_WORKFLOW_ID) always proceeds
+  // so the script stays useful for ad-hoc debugging.
+  if (process.env.CIRCLE_WORKFLOW_ID) {
+    const status = await getThisRunRemoteE2EStatus(process.env.CIRCLE_WORKFLOW_ID);
+    if (status === 'success') {
+      log("this run's remote_e2e succeeded — skipping flake analysis");
+      // Make sure no stale report from a previous build's restored
+      // workspace lingers and gets uploaded as our artifact.
+      try {
+        fs.unlinkSync(REPORT_FILE);
+      } catch {
+        // file didn't exist — that's the desired state
+      }
+      return;
+    }
+    log(`this run's remote_e2e status: ${status ?? 'unknown'} — proceeding with analysis`);
+  }
+
   if (!ANTHROPIC_API_KEY) {
     log('ANTHROPIC_API_KEY not set — detection only, no LLM analysis');
   }
@@ -120,6 +144,20 @@ function loadCache() {
 function saveCache(cache) {
   fs.writeFileSync(CACHE_FILE, JSON.stringify(cache));
   log(`cache: saved (${Object.keys(cache.jobs).length} jobs)`);
+}
+
+// Look up THIS workflow's remote_e2e job and return its current
+// status. Used to decide whether the analyzer should run at all.
+// Returns null on any API hiccup so the caller can default to "run".
+async function getThisRunRemoteE2EStatus(workflowId) {
+  try {
+    const wf = await getJSON(`https://circleci.com/api/v2/workflow/${workflowId}/job`);
+    const remote = (wf.items ?? []).find((j) => j.name === REMOTE_E2E_JOB_NAME);
+    return remote?.status ?? null;
+  } catch (err) {
+    log(`could not read this workflow's job list: ${err.message}`);
+    return null;
+  }
 }
 
 async function listRecentRemoteE2EJobs(targetCount) {

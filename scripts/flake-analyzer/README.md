@@ -8,19 +8,23 @@ asks Claude to propose a fix.
 
 For every CI invocation of `remote_e2e`:
 
-1. Pulls the last N (default 15) `remote_e2e` runs' merged
+1. **Short-circuit on green runs.** If this pipeline's `remote_e2e`
+   succeeded, the analyzer exits without producing a report — there's
+   nothing actionable, and no point burning API tokens. The
+   dashboard's "flakes" link only lights up on red/incomplete runs.
+2. Pulls the last N (default 15) `remote_e2e` runs' merged
    `test-results/results.json` from the CircleCI artifacts API.
    Per-job summaries are cached locally — once a job is in the cache,
    subsequent invocations skip its download. The cache lives in
    `scripts/flake-analyzer/.cache/jobs.json` and is preserved across
    CI runs by CircleCI's `save_cache` / `restore_cache`.
-2. Identifies tests that have **both** passes and failures in the
+3. Identifies tests that have **both** passes and failures in the
    window. Tests whose recent runs are an unbroken trail of failures
    are filtered out as regressions, not flakes.
-3. For each flake (capped at 10 per invocation), reads the spec
+4. For each flake (capped at 10 per invocation), reads the spec
    source, picks the most recent failure error, and asks Claude
    (`claude-haiku-4-5` by default) for a likely cause + concrete fix.
-4. Writes `flake-report.md` as a CircleCI build artifact.
+5. Writes `flake-report.md` as a CircleCI build artifact.
 
 The script never modifies tests, never opens PRs, and never blocks
 the build — it exits 0 even on internal failure.
