@@ -175,7 +175,7 @@ export class PatientViewPageInner extends React.Component<
         this.patientViewMutationDataStore = new PatientViewMutationsDataStore(
             () => {
                 return this.pageStore.mergedMutationDataIncludingUncalledFilteredByGene.filter(
-                    (mutationArray) => {
+                    mutationArray => {
                         return !isFusion(mutationArray[0]);
                     }
                 );
@@ -191,8 +191,7 @@ export class PatientViewPageInner extends React.Component<
 
         this.setOpenResourceTabs();
 
-        this.mergeMutationTableOncoKbIcons =
-            getOncoKbIconStyleFromLocalStorage().mergeIcons;
+        this.mergeMutationTableOncoKbIcons = getOncoKbIconStyleFromLocalStorage().mergeIcons;
     }
 
     setOpenResourceTabs() {
@@ -247,7 +246,7 @@ export class PatientViewPageInner extends React.Component<
     @computed get showWholeSlideViewerTab() {
         return (
             this.pageStore.clinicalDataForSamples.isComplete &&
-            _.some(this.pageStore.clinicalDataForSamples.result, (s) => {
+            _.some(this.pageStore.clinicalDataForSamples.result, s => {
                 return s.clinicalAttributeId === 'MSK_SLIDE_ID';
             })
         );
@@ -287,7 +286,7 @@ export class PatientViewPageInner extends React.Component<
         if (this.pageStore.resourceIdToResourceData.isComplete) {
             return _.some(
                 this.pageStore.resourceIdToResourceData.result,
-                (data) => data.length > 0
+                data => data.length > 0
             );
         } else {
             return false;
@@ -361,7 +360,7 @@ export class PatientViewPageInner extends React.Component<
         const entrezGeneIds: number[] = _.uniq(
             _.map(
                 this.pageStore.mergedMutationDataIncludingUncalled,
-                (mutations) => mutations[0].entrezGeneId
+                mutations => mutations[0].entrezGeneId
             )
         );
         return (
@@ -379,7 +378,7 @@ export class PatientViewPageInner extends React.Component<
         const entrezGeneIds: number[] = _.uniq(
             _.map(
                 this.pageStore.mergedDiscreteCNAData,
-                (alterations) => alterations[0].entrezGeneId
+                alterations => alterations[0].entrezGeneId
             )
         );
         return (
@@ -471,13 +470,12 @@ export class PatientViewPageInner extends React.Component<
             this.pageStore.resourceIdToResourceData,
         ],
         render: () => {
-            const openDefinitions =
-                this.pageStore.resourceDefinitions.result!.filter((d) =>
-                    this.pageStore.isResourceTabOpen(d.resourceId)
-                );
-            const sorted = _.sortBy(openDefinitions, (d) => d.priority);
-            const resourceDataById =
-                this.pageStore.resourceIdToResourceData.result!;
+            const openDefinitions = this.pageStore.resourceDefinitions.result!.filter(
+                d => this.pageStore.isResourceTabOpen(d.resourceId)
+            );
+            const sorted = _.sortBy(openDefinitions, d => d.priority);
+            const resourceDataById = this.pageStore.resourceIdToResourceData
+                .result!;
 
             const tabs: JSX.Element[] = sorted.reduce((list, def) => {
                 const data = resourceDataById[def.resourceId];
@@ -569,17 +567,15 @@ export class PatientViewPageInner extends React.Component<
 
     @action.bound
     private handleReturnToStudyView() {
-        const patientIdentifiers = this.pageStore.patientIdsInCohort.map(
-            (p) => {
-                const patientIdParts = p.split(':');
-                return {
-                    patientId: patientIdParts[1],
-                    studyId: patientIdParts[0],
-                };
-            }
-        );
+        const patientIdentifiers = this.pageStore.patientIdsInCohort.map(p => {
+            const patientIdParts = p.split(':');
+            return {
+                patientId: patientIdParts[1],
+                studyId: patientIdParts[0],
+            };
+        });
         const queriedStudies: Set<string> = new Set(
-            patientIdentifiers.map((p) => p.studyId)
+            patientIdentifiers.map(p => p.studyId)
         );
 
         // We need to do this because of url length limits. We post the data to the new window once it is opened.
@@ -605,7 +601,7 @@ export class PatientViewPageInner extends React.Component<
                 ? deleteAtIndex - 1
                 : deleteAtIndex;
 
-        let navCaseIds = newCohortIdList.map((p) => {
+        let navCaseIds = newCohortIdList.map(p => {
             const patientIdParts = p.split(':');
             return {
                 patientId: patientIdParts[1],
@@ -708,7 +704,7 @@ export class PatientViewPageInner extends React.Component<
                                 ]
                             )
                         }
-                        onChangeCurrentPage={(newPage) => {
+                        onChangeCurrentPage={newPage => {
                             if (
                                 newPage > 0 &&
                                 newPage <=

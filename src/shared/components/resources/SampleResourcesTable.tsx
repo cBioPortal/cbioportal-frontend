@@ -29,7 +29,7 @@ export default class SampleResourcesTable extends React.Component<
         );
         return _.sortBy(
             this.props.data,
-            (rowData) => sampleIndex[rowData.sample.sampleId]
+            rowData => sampleIndex[rowData.sample.sampleId]
         );
     }
 

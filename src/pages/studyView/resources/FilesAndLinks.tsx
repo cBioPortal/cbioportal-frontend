@@ -35,15 +35,17 @@ const RECORD_LIMIT = 500;
 
 function getResourceDataOfEntireStudy(studyIds: string[]) {
     // Fetch resource data for each studyId, then return combined results
-    const allResources = studyIds.map((studyId) =>
+    const allResources = studyIds.map(studyId =>
         internalClient.getAllStudyResourceDataInStudyPatientSampleUsingGET({
             studyId: studyId,
             projection: 'DETAILED',
         })
     );
 
-    return Promise.all(allResources).then((allResources) =>
-        _(allResources).flatMap().value()
+    return Promise.all(allResources).then(allResources =>
+        _(allResources)
+            .flatMap()
+            .value()
     );
 }
 
@@ -67,8 +69,8 @@ function buildItemsAndResources(resourceData: {
     );
 
     const items: { [attributeId: string]: string | number }[] = _(resourceData)
-        .flatMap((data) =>
-            data.map((resource) => ({
+        .flatMap(data =>
+            data.map(resource => ({
                 studyId: resource.studyId,
                 patientId: resource.patientId,
                 sampleId: resource.sampleId,
@@ -93,17 +95,13 @@ async function fetchFilesLinksData(
     recordLimit: number
 ) {
     const selectedStudyIds = [
-        ...new Set(selectedSamples.map((item) => item.studyId)),
+        ...new Set(selectedSamples.map(item => item.studyId)),
     ];
 
     // sampleIds (+patientIds) for the selectedSamples
     const selectedIds = new Map([
-        ...selectedSamples.map(
-            (item) => [item.sampleId, item.studyId] as const
-        ),
-        ...selectedSamples.map(
-            (item) => [item.patientId, item.studyId] as const
-        ),
+        ...selectedSamples.map(item => [item.sampleId, item.studyId] as const),
+        ...selectedSamples.map(item => [item.patientId, item.studyId] as const),
     ]);
 
     // Fetch resources for entire study
@@ -114,10 +112,10 @@ async function fetchFilesLinksData(
     // Filter the resources to consist of only studyView selected samples
     // Also keep patient level resources (e.g. Those don't have a sampleId)
     const resourcesForPatientsAndSamples = _(resourcesForEntireStudy)
-        .filter((resource) =>
+        .filter(resource =>
             selectedIds.has(resource.sampleId || resource.patientId)
         )
-        .groupBy((r) => r.patientId)
+        .groupBy(r => r.patientId)
         .value();
 
     // we create objects with the necessary properties for each resource
@@ -127,7 +125,7 @@ async function fetchFilesLinksData(
     );
 
     // set the number of resources available per patient.
-    _.forEach(items, (item) => {
+    _.forEach(items, item => {
         item.resourcesPerPatient = resourcesPerPatient[item.patientId];
     });
 
@@ -197,7 +195,7 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
         if (!this.resourceData.result?.data) return [];
         return _.uniq(
             this.resourceData.result.data.map(
-                (item) => item.typeOfResource as string
+                item => item.typeOfResource as string
             )
         );
     }
@@ -214,7 +212,7 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
         }
         const typeName = this.uniqueResourceTypes[0];
         const def = this.props.store.resourceDefinitions.result?.find(
-            (d) => d.displayName === typeName
+            d => d.displayName === typeName
         );
         const config = def
             ? getResourceConfig(def)
@@ -256,8 +254,7 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
         const { singleTypeConfig } = this;
         const config = singleTypeConfig?.config ?? {};
 
-        const shouldHideResourcesPerPatientColumn =
-            !!config.hidePerPatientColumn;
+        const shouldHideResourcesPerPatientColumn = !!config.hidePerPatientColumn;
         const typeOfResourceColumnName =
             config.columnNameMapping?.['Type Of Resource'] ??
             'Type Of Resource';
@@ -430,7 +427,7 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
                             }}
                             initialSortColumn={
                                 this.columns.some(
-                                    (column) =>
+                                    column =>
                                         column.name ===
                                         this.resourcesPerPatientColumnName
                                 )

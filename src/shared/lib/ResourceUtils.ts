@@ -15,9 +15,7 @@ function isNonEmptyString(value: string | null | undefined): boolean {
 export function hasNonEmptyDescriptionInDefinitions(
     definitions: ResourceDefinition[] | undefined
 ): boolean {
-    return (
-        definitions?.some((def) => isNonEmptyString(def.description)) ?? false
-    );
+    return definitions?.some(def => isNonEmptyString(def.description)) ?? false;
 }
 
 /**
@@ -28,7 +26,7 @@ export function hasNonEmptyDescriptionInDefinitions(
 export function hasNonEmptyDescriptionInResources(
     resources: { resourceDefinition?: ResourceDefinition }[]
 ): boolean {
-    return resources.some((r) =>
+    return resources.some(r =>
         isNonEmptyString(r.resourceDefinition?.description)
     );
 }

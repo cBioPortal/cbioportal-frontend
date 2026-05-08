@@ -66,9 +66,9 @@ export function getResourceConfig(
     // 2. Override with customMetaData
     if (def.customMetaData) {
         try {
-            const customConfig = JSON.parse(
-                def.customMetaData
-            ) as Partial<ResourceCustomConfig>;
+            const customConfig = JSON.parse(def.customMetaData) as Partial<
+                ResourceCustomConfig
+            >;
             Object.assign(config, customConfig);
         } catch (e) {
             console.warn(
