@@ -22,6 +22,8 @@ import {
     ResourceCustomConfig,
 } from 'shared/lib/ResourceConfig';
 import { hasNonEmptyDescriptionInDefinitions } from 'shared/lib/ResourceUtils';
+import { getServerConfig } from 'config/config';
+import { DownloadControlOption } from 'cbioportal-frontend-commons';
 
 export interface IFilesLinksTable {
     store: StudyViewPageStore;
@@ -421,7 +423,11 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
                             // when header component is null, we might want to also ensure no extra spacing or issues occur.
                             // but LazyMobXTable should handle null headerComponent gracefully.
                             showFilterClearButton={false}
-                            showCopyDownload={true}
+                            showCopyDownload={
+                                getServerConfig()
+                                    .skin_hide_download_controls ===
+                                DownloadControlOption.SHOW_ALL
+                            }
                             copyDownloadProps={{
                                 showCopy: false,
                             }}
