@@ -1,0 +1,55 @@
+{
+  "name": "cbioportal-cell-explorer-profiler",
+  "description": "Profiler UI from cBioPortal cell-explorer (session/history + charts)",
+  "version": "0.1.0",
+  "main": "dist/index.js",
+  "module": "dist/index.es.js",
+  "jsnext:main": "dist/index.es.js",
+  "typings": "dist/index.d.ts",
+  "engines": {
+    "node": "22.18.0"
+  },
+  "files": [
+    "dist"
+  ],
+  "author": "cBioPortal",
+  "license": "AGPL-3.0-or-later",
+  "repository": "cBioPortal/cbioportal-frontend",
+  "scripts": {
+    "build": "cross-env NODE_ENV=production NODE_OPTIONS=--max-old-space-size=2048 pnpm run rollup",
+    "start": "pnpm run watch",
+    "watch": "pnpm run rollup:watch",
+    "watchSSL": "pnpm run watch",
+    "rollup": "rollup -c rollup.config.ts",
+    "rollup:watch": "rollup -c rollup.config.ts -w",
+    "prepare": "pnpm run build",
+    "test": "cross-env jest $GREP --env=jsdom --runInBand --ci --reporters=default --reporters=jest-junit --passWithNoTests",
+    "test:watch": "pnpm run test --watch"
+  },
+  "peerDependencies": {
+    "@ant-design/icons": "^4.0.0",
+    "@visx/axis": "^2.0.0 || ^3.0.0",
+    "@visx/group": "^2.0.0 || ^3.0.0",
+    "@visx/scale": "^2.0.0 || ^3.0.0",
+    "@visx/shape": "^2.0.0 || ^3.0.0",
+    "@visx/tooltip": "^2.0.0 || ^3.0.0",
+    "antd": "^4.0.0",
+    "react": "^16.8.0 || ^17.0.0",
+    "react-dom": "^16.8.0 || ^17.0.0"
+  },
+  "dependencies": {
+    "use-sync-external-store": "^1.2.0"
+  },
+  "devDependencies": {
+    "@ant-design/icons": "^4.8.3",
+    "@types/react": "^16.14.0",
+    "@types/react-dom": "^16.9.0",
+    "@types/use-sync-external-store": "^0.0.6",
+    "@visx/axis": "^2.17.0",
+    "@visx/group": "^2.17.0",
+    "@visx/scale": "^2.17.0",
+    "@visx/shape": "^2.17.0",
+    "@visx/tooltip": "^2.17.0",
+    "antd": "^4.24.16"
+  }
+}
