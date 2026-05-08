@@ -52,7 +52,7 @@ import {
     USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB,
 } from 'react-mutation-mapper';
 import { ClinicalInformationData } from 'shared/model/ClinicalInformation';
-import VariantCountCache from 'shared/cache/VariantCountCache';
+import { createVariantCountCache } from 'shared/cache/VariantCountCache';
 import CopyNumberCountCache from './CopyNumberCountCache';
 import CancerTypeCache from 'shared/cache/CancerTypeCache';
 import MutationCountCache from 'shared/cache/MutationCountCache';
@@ -2435,7 +2435,7 @@ export class PatientViewPageStore {
     }
 
     @cached @computed get variantCountCache() {
-        return new VariantCountCache(this.mutationMolecularProfileId.result);
+        return createVariantCountCache(this.mutationMolecularProfileId.result);
     }
 
     @cached @computed get discreteCNACache() {

@@ -1,11 +1,11 @@
 import * as React from 'react';
 import 'rc-tooltip/assets/bootstrap_white.css';
 import { Mutation } from 'cbioportal-ts-api-client';
-import VariantCountCache from 'shared/cache/VariantCountCache';
+import { VariantCountCache } from 'shared/cache/VariantCountCache';
 import FrequencyBar from 'shared/components/cohort/FrequencyBar';
 import { IMutSigData as MutSigData } from 'shared/model/MutSig';
 import { VariantCount } from 'cbioportal-ts-api-client';
-import { CacheData } from 'shared/lib/LazyMobXCache';
+import { ReactiveEntry } from 'shared/lib/batchedFetch';
 import { getPercentage } from 'shared/lib/FormatUtils';
 import { If, Then } from 'react-if';
 import {
@@ -14,7 +14,7 @@ import {
 } from 'cbioportal-frontend-commons';
 import MutSigAnnotation from 'shared/components/annotation/MutSig';
 
-type AugVariantCountOutput = CacheData<VariantCount> & {
+type AugVariantCountOutput = ReactiveEntry<VariantCount> & {
     hugoGeneSymbol: string;
 };
 
