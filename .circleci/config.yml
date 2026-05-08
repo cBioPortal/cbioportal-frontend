@@ -1089,8 +1089,13 @@ workflows:
       # analysis as a build artifact. Runs after remote_e2e so this
       # run's results.json is included in the cross-run window.
       - analyze_flakes:
-          requires:
-            - remote_e2e
+          # Intentionally NOT requiring remote_e2e: the analyzer hits
+          # the CircleCI artifacts API to read previous remote_e2e
+          # runs' results.json — it doesn't need this run's results
+          # to be done. The next pipeline's analyzer will pick this
+          # one up. Decoupling means the analyzer still runs even
+          # when remote_e2e is red, which is exactly the case where
+          # surfacing flakes is most useful.
           context: claude-flake-analyzer
       - api_sync_cbioportal:
           requires:
@@ -1136,8 +1141,13 @@ workflows:
             - build_frontend
       - remote_e2e
       - analyze_flakes:
-          requires:
-            - remote_e2e
+          # Intentionally NOT requiring remote_e2e: the analyzer hits
+          # the CircleCI artifacts API to read previous remote_e2e
+          # runs' results.json — it doesn't need this run's results
+          # to be done. The next pipeline's analyzer will pick this
+          # one up. Decoupling means the analyzer still runs even
+          # when remote_e2e is red, which is exactly the case where
+          # surfacing flakes is most useful.
           context: claude-flake-analyzer
       # - e2e_tests_against_master:
       #     requires:
