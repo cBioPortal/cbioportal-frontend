@@ -7489,6 +7489,10 @@ export class StudyViewPageStore
     public resetToDefaultChartSettings(): void {
         this.clearPageChartSettings();
         this.loadChartSettings(_.values(this.defaultChartSettingsMap));
+        // Persist the reset to session-service so it survives page reload.
+        if (this.isSavingUserPreferencePossible) {
+            this.saveChartSettings();
+        }
     }
 
     @computed get showResetToDefaultButton(): boolean {
