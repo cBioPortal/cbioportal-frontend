@@ -223,10 +223,16 @@ test.describe('patient view page', () => {
                 .locator('div.progress')
                 .first()
                 .hover();
+            await expect(
+                page.locator(
+                    'div[data-test="SignificantMutationalSignaturesTooltip"]'
+                )
+            ).toBeVisible();
             await expectElementScreenshot(
                 page,
                 'div.patientViewPage',
-                'patient-view-mut-sig-sbs-tooltip.png'
+                'patient-view-mut-sig-sbs-tooltip.png',
+                { keepMouse: true }
             );
         });
 
@@ -281,7 +287,8 @@ test.describe('patient view page', () => {
             await expectElementScreenshot(
                 page,
                 'div.patientViewPage',
-                'patient-view-mut-sig-id-tooltip.png'
+                'patient-view-mut-sig-id-tooltip.png',
+                { keepMouse: true }
             );
         });
 
@@ -326,7 +333,8 @@ test.describe('patient view page', () => {
             await expectElementScreenshot(
                 page,
                 'div.patientViewPage',
-                'patient-view-mut-sig-dbs-tooltip.png'
+                'patient-view-mut-sig-dbs-tooltip.png',
+                { keepMouse: true }
             );
         });
 

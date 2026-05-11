@@ -256,14 +256,21 @@ test.describe('treatment feature', () => {
             await page.locator('[data-test=ViewCopyNumber]').click();
 
             await page.locator('.gene-select').click();
+            await expect(
+                page
+                    .locator('[data-test=GeneColoringMenu]')
+                    .locator('div:text-is("Genes")')
+            ).toBeVisible();
 
-            const genesParent = page
+            const genesLabelParent = page
                 .locator('[data-test=GeneColoringMenu]')
-                .locator('div:has-text("Genes")')
+                .locator('div:text-is("Genes")')
                 .locator('xpath=..');
-            const innerDivs = genesParent.locator('div');
-            const geneMenuEntries = innerDivs.nth(1).locator('div');
-            await geneMenuEntries.nth(3).click();
+            const geneListContainer = genesLabelParent.locator('div').nth(1);
+            await geneListContainer
+                .locator('div')
+                .nth(3)
+                .click();
 
             await expectElementScreenshot(
                 page,
@@ -332,6 +339,14 @@ test.describe('treatment feature', () => {
                 .locator('xpath=..')
                 .locator('input');
             await sampleSearch.fill('TCGA-A2-A04U-01 TCGA-A1-A0SE-01');
+
+            await expect(
+                page
+                    .locator(
+                        '[id=plots-tab-plot-svg] path[style*="stroke: red"]'
+                    )
+                    .first()
+            ).toBeVisible();
 
             await expectElementScreenshot(
                 page,
