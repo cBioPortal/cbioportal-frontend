@@ -219,7 +219,14 @@ export function runResultsTestSuite(
                 .click();
             await expect(
                 page.locator('div[data-test="ComparisonPageClinicalTabDiv"]')
-            ).toBeVisible();
+            ).toBeVisible({ timeout: 30000 });
+            // Kruskal-Wallis stats render asynchronously after the
+            // tab activates — snapshotting before the network is
+            // quiet captures an in-flight state and produces the
+            // ~17,902-pixel diff we see flaking in CI. Sibling
+            // 'comparison alterations sample mode' below already
+            // uses this pattern.
+            await waitForNetworkQuiet(page);
             await snapshot(
                 page,
                 'div[data-test="ComparisonTabDiv"]',
