@@ -1804,7 +1804,7 @@ describe('DataUtils', () => {
                 partialTrackDatum,
                 'entityId',
                 'GENERIC_ASSAY_ID_1',
-                { patientId: 'patient', studyId: 'study' } as Sample,
+                { patientId: 'patient', studyId: 'study', uniquePatientKey: 'patient_key' } as any,
                 data,
                 'ASC'
             );
@@ -1839,7 +1839,7 @@ describe('DataUtils', () => {
                 partialTrackDatum,
                 'entityId',
                 'GENERIC_ASSAY_ID_1',
-                { patientId: 'patient', studyId: 'study' } as Sample,
+                { patientId: 'patient', studyId: 'study', uniquePatientKey: 'patient_key' } as any,
                 data,
                 'DESC'
             );
@@ -1874,7 +1874,7 @@ describe('DataUtils', () => {
                 partialTrackDatum,
                 'entityId',
                 'GENERIC_ASSAY_ID_1',
-                { patientId: 'patient', studyId: 'study' } as Sample,
+                { patientId: 'patient', studyId: 'study', uniquePatientKey: 'patient_key' } as any,
                 data
             );
             assert.deepEqual(partialTrackDatum, {
@@ -1929,7 +1929,7 @@ describe('DataUtils', () => {
                 partialTrackDatum,
                 'entityId',
                 'GENERIC_ASSAY_ID_1',
-                { patientId: 'patient', studyId: 'study' } as Sample,
+                { patientId: 'patient', studyId: 'study', uniquePatientKey: 'patient_key' } as any,
                 data
             );
             assert.deepEqual(partialTrackDatum, {

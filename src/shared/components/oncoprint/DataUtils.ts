@@ -428,9 +428,14 @@ export function fillHeatmapTrackDatum<
                 'Unexpectedly received multiple heatmap profile data for one sample'
             );
         } else {
-            // Handle multiple data points for patient mode
+            // Handle multiple data points for patient mode.
+            // Only consider data for the specific patient being processed
+            // (defensive: callers should pre-filter, but this ensures correctness).
+            const patientKey = case_.uniquePatientKey;
             const dataWithNonNullValues = dataWithValue.filter(
-                d => d.value !== null
+                d =>
+                    d.value !== null &&
+                    d.uniquePatientKey === patientKey
             );
 
             if (dataWithNonNullValues.length === 0) {
