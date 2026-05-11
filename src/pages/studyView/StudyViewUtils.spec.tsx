@@ -37,6 +37,7 @@ import {
     getExponent,
     getFilteredMolecularProfilesByAlterationType,
     getFilteredSampleIdentifiers,
+    getGeneListForStudyViewSubmission,
     getFilteredStudiesWithSamples,
     getFrequencyStr,
     getGroupedClinicalDataByBins,
@@ -4846,7 +4847,31 @@ describe('StudyViewUtils', () => {
         });
     });
 
+    describe('getGeneListForStudyViewSubmission', () => {
+        it('keeps merged-track OQL query text unchanged', () => {
+            const mergedTrackQuery =
+                '["My fav genes"  TP53: HOMDEL, BRAF: V600E]';
+            assert.strictEqual(
+                getGeneListForStudyViewSubmission(mergedTrackQuery, [
+                    { gene: 'TP53', alterations: [{ alteration_type: 'homdel' }] },
+                    { gene: 'BRAF', alterations: [{ alteration_type: 'mut' }] },
+                ] as SingleGeneQuery[]),
+                mergedTrackQuery
+            );
+        });
+
+        it('falls back to parsed query list when query text is empty', () => {
+            assert.strictEqual(
+                getGeneListForStudyViewSubmission('', [
+                    { gene: 'TP53', alterations: false },
+                ] as SingleGeneQuery[]),
+                'TP53'
+            );
+        });
+    });
+
     describe('annotationFilterActive', () => {
+
         it('false when all excluded', () => {
             assert.isFalse(annotationFilterActive(false, false, false));
         });
