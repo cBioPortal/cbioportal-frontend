@@ -4871,7 +4871,6 @@ describe('StudyViewUtils', () => {
     });
 
     describe('annotationFilterActive', () => {
-
         it('false when all excluded', () => {
             assert.isFalse(annotationFilterActive(false, false, false));
         });
