@@ -4,5 +4,5 @@ The Onco Query Language (OQL) from oql_basic.pegjs can be tested online at https
 
 To create the parser, run:
 ```
-yarn run compileOqlParser
+pnpm run compileOqlParser
 ```

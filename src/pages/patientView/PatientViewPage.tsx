@@ -488,6 +488,7 @@ export class PatientViewPageInner extends React.Component<
                             onClickClose={this.closeResourceTab}
                         >
                             <ResourceTab
+                                resourceDisplayName={def.displayName}
                                 resourceData={resourceDataById[def.resourceId]}
                                 urlWrapper={this.urlWrapper}
                             />

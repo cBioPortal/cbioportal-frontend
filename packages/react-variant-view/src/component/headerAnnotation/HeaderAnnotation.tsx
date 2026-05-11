@@ -296,7 +296,9 @@ export default class HeaderAnnotation extends React.Component<
         });
         // transcript id
         parsedData.push({
-            value: transcript.transcriptId,
+            value: transcript.transcriptIdVersion
+                ? `${transcript.transcriptId}.${transcript.transcriptIdVersion}`
+                : transcript.transcriptId,
             key: 'transcript',
             category: 'default',
         });

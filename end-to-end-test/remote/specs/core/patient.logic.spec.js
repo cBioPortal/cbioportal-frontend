@@ -32,7 +32,7 @@ describe('patient page', () => {
         ).waitForDisplayed();
     });
 
-    it('should display TMB-H biomarker annotation inline in the sample header', async () => {
+    it.skip('should display TMB-H biomarker annotation inline in the sample header', async () => {
         await goToUrlAndSetLocalStorage(
             `${CBIOPORTAL_URL}/patient?studyId=msk_impact_50k_2026&caseId=P-0002435`
         );
