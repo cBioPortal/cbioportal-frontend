@@ -136,6 +136,27 @@ test.describe('studyview tests', () => {
             page = await browser.newPage({
                 viewport: { width: 1600, height: 1000 },
             });
+            // The study-summary "raw data download" icon's visibility
+            // is gated on a fetch of study_list.json from
+            // datahub.assets.cbioportal.org. From CI's network path
+            // that fetch sometimes never lands; when it doesn't, the
+            // hasRawDataForDownload remoteData call falls back to
+            // false and the icon stays hidden — so the test fails
+            // even after waiting 30s. Stub the manifest at the page
+            // level with a known-good payload that includes
+            // laml_tcga, matching the JSON-array shape the real
+            // endpoint returns. Other tests in this block aren't
+            // affected because none of them assert on the icon.
+            await page.route('**/study_list.json', route =>
+                route.fulfill({
+                    status: 200,
+                    contentType: 'application/json',
+                    body: JSON.stringify([
+                        'laml_tcga',
+                        'laml_tcga_pan_can_atlas_2018',
+                    ]),
+                })
+            );
             await page.goto('/study?id=laml_tcga');
         });
         test.afterAll(async () => {
@@ -168,9 +189,22 @@ test.describe('studyview tests', () => {
 
         test('study should have the raw data available', async () => {
             await toStudyViewSummaryTab(page);
+            // The download icon's visibility is gated on the
+            // StudyViewPageStore.hasRawDataForDownload remoteData
+            // request, which fetches a separate study-list manifest
+            // via getStudyDownloadListUrl(). That request goes through
+            // `request(...)` (superagent), which is not tracked by
+            // window.ajaxQuiet — so waitForNetworkQuiet can return
+            // green while the manifest is still in flight, and the
+            // icon stays hidden. Belt and suspenders:
+            //   1) waitForNetworkQuiet for the main summary fetches.
+            //   2) WAIT_FOR_VISIBLE_TIMEOUT on toHaveCount to absorb
+            //      the trailing manifest request landing late on
+            //      cold-cache CI.
+            await waitForNetworkQuiet(page);
             await expect(
                 page.locator(STUDY_SUMMARY_RAW_DATA_DOWNLOAD)
-            ).toHaveCount(1);
+            ).toHaveCount(1, { timeout: WAIT_FOR_VISIBLE_TIMEOUT });
         });
 
         test('when quickly adding charts, each chart should get proper data.', async () => {

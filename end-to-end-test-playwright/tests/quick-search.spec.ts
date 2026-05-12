@@ -59,6 +59,16 @@ test.describe('Quick Search', () => {
             .locator('strong', { hasText: 'AdCC11T' })
             .first()
             .click();
-        await expect(page.locator('a', { hasText: 'AdCC11T' })).toBeVisible();
+        // The patient page renders multiple anchors containing the
+        // sample id (header link, breadcrumb, sample table row, …),
+        // so a bare `locator('a', { hasText: 'AdCC11T' })` matches
+        // more than one element and fails Playwright's strict-mode
+        // visibility assertion. We just need to confirm the
+        // navigation landed; any matching anchor is fine. 60s
+        // timeout matches the sibling `shows gene results` test
+        // since the patient view loads from the live API.
+        await expect(
+            page.locator('a', { hasText: 'AdCC11T' }).first()
+        ).toBeVisible({ timeout: 60000 });
     });
 });
