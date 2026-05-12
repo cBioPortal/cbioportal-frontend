@@ -209,7 +209,23 @@ test.describe.serial('study view x vs y charts', () => {
         await expect(page.locator(ADD_CHART_BUTTON)).toBeVisible({
             timeout: WAIT_FOR_VISIBLE_TIMEOUT,
         });
-        await page.locator(ADD_CHART_BUTTON).click();
+        // The button has a `disabled` CSS class while generic-assay profiles are
+        // still loading (tabsLoading guard). Clicks during that window are silently
+        // ignored, so wait for the class to clear before clicking.
+        await expect(page.locator(ADD_CHART_BUTTON)).not.toHaveClass(
+            /disabled/,
+            { timeout: WAIT_FOR_VISIBLE_TIMEOUT }
+        );
+        // Retry-click until the dropdown actually opens — a re-render can race
+        // the toggle and close it immediately after the first click.
+        for (let attempt = 0; attempt < 5; attempt++) {
+            const isOpen =
+                (await page.locator(ADD_CHART_X_VS_Y_TAB).count()) > 0 &&
+                (await page.locator(ADD_CHART_X_VS_Y_TAB).isVisible());
+            if (isOpen) break;
+            await page.locator(ADD_CHART_BUTTON).click();
+            await page.waitForTimeout(1000);
+        }
 
         await expect(page.locator(ADD_CHART_X_VS_Y_TAB)).toBeVisible({
             timeout: WAIT_FOR_VISIBLE_TIMEOUT,
