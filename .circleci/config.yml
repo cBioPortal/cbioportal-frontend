@@ -1137,7 +1137,7 @@ jobs:
             export NVM_DIR="$HOME/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
             nvm use 22.18.0
-            npm ci
+            pnpm install --frozen-lockfile --ignore-workspace
       - run:
           name: Install Playwright Chromium browser
           working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright

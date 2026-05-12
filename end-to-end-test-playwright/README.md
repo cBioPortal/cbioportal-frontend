@@ -26,6 +26,9 @@ runs are for fast dev iteration; they don't count as references.
 - pnpm (the rest of the repo uses pnpm; `corepack enable` will pick up the
   version pinned in the root `package.json`'s `packageManager` field)
 - Docker (only for the canonical/Docker lane)
+  - **Apple Silicon (M1/M2/M3)**: the CI image is amd64-only and runs via
+    Rosetta emulation automatically — Docker Desktop must have "Use Rosetta
+    for x86_64/amd64 emulation on Apple Silicon" enabled in settings
 
 ```bash
 # --ignore-workspace is required because this suite lives below the
@@ -45,13 +48,13 @@ pnpm run test:docker                    # verify against tracked baselines
 pnpm run test:docker:update             # regenerate tracked baselines
 
 # Local-DB lane (Docker against a localhost backend, runs tests/local only)
-npm run test:docker:localdb            # verify against tracked baselines
-npm run test:docker:localdb:update     # regenerate tracked baselines
+pnpm run test:docker:localdb            # verify against tracked baselines
+pnpm run test:docker:localdb:update     # regenerate tracked baselines
 
 # Local-DB lane (host-mode, scratch snapshots) — for fast local iteration
-npm run test:localdb                   # verify against local scratch snapshots
-npm run test:localdb:update            # regenerate local scratch snapshots
-npm run test:localdb:ui                # interactive runner + trace viewer
+pnpm run test:localdb                   # verify against local scratch snapshots
+pnpm run test:localdb:update            # regenerate local scratch snapshots
+pnpm run test:localdb:ui                # interactive runner + trace viewer
 
 # Host-mode (fast, scratch snapshots) — for local iteration
 pnpm test                               # verify against local scratch

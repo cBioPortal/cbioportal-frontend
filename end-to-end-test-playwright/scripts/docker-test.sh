@@ -56,7 +56,12 @@ if [[ "${LOCALDEV}" != "0" ]]; then
     LOCALDEV_ARGS+=(--add-host=host.docker.internal:host-gateway)
 fi
 
+# The CI image is built for linux/amd64 only; on Apple Silicon we need
+# Rosetta emulation. Passing --platform on amd64 hosts is harmless.
+PLATFORM_ARGS=(--platform linux/amd64)
+
 exec docker run --rm -i \
+    "${PLATFORM_ARGS[@]}" \
     --ipc=host \
     --user "$(id -u):$(id -g)" \
     -v "$(pwd):/work" \
