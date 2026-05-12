@@ -726,6 +726,12 @@ test.describe('alteration filter menu', () => {
             test('adds breadcrumb text for cnas', async ({ page }) => {
                 await clickCheckBoxStudyView(page, 'Somatic');
                 await clickCheckBoxStudyView(page, 'Putative drivers');
+                // Close the alteration filter menu before clicking the CNA
+                // table — the open dropdown overlaps the table in CI and
+                // intercepts pointer events.
+                await page
+                    .locator('[data-test=AlterationFilterButton]')
+                    .click();
                 await page
                     .locator('//*[@data-test="copy number alterations-table"]')
                     .locator('input')
