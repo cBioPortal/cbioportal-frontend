@@ -1130,11 +1130,18 @@ jobs:
             [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
             nvm use 22.18.0
             cd cbioportal-frontend
+            # corepack enable must run on every shard (cache hit OR miss)
+            # so that the `pnpm` shim is on PATH for subsequent steps —
+            # the shim lives under nvm's node bin dir and is not part of
+            # node_modules / the workspace, so it doesn't survive a cache
+            # restore. Skipping it on cache hit means later steps that
+            # call `pnpm` (Install Playwright suite deps, serveDistLocalDb)
+            # would fail with `pnpm: command not found`.
+            corepack enable
             if [ -f node_modules/.cbio-cache-ok ]; then
               echo "node_modules cache hit (manifests + lockfile unchanged) — skipping pnpm install"
               exit 0
             fi
-            corepack enable
             pnpm install --frozen-lockfile
       - run:
           name: Generate keycloak config
