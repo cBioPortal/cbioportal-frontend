@@ -1099,7 +1099,28 @@ jobs:
             nvm alias default 22.18.0
             node -v
             npm -v
+      - run:
+          name: Compute manifests hash for node_modules cache key
+          # Mirrors build_frontend's manifests-hash command so we restore
+          # exactly the cache build_frontend already saved — no
+          # `pnpm install --frozen-lockfile` linking work needed when the
+          # manifests + lockfile haven't changed.
+          command: |
+            cd cbioportal-frontend
+            { cat pnpm-lock.yaml; \
+              find . -maxdepth 4 -name 'package.json' \
+                -not -path './node_modules/*' \
+                -not -path './packages/*/node_modules/*' \
+                -not -path './end-to-end-test/node_modules/*' \
+                | LC_ALL=C sort | xargs cat; } \
+              | sha256sum | cut -c1-16 > /tmp/manifests-hash
+            cat /tmp/manifests-hash
       - restore_cache:
+          name: Restore node_modules cache
+          keys:
+            - v3-node-modules-{{ checksum "/tmp/manifests-hash" }}
+      - restore_cache:
+          name: Restore pnpm store
           keys:
             - v12-pnpm-store-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}
       - run:
@@ -1109,6 +1130,10 @@ jobs:
             [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
             nvm use 22.18.0
             cd cbioportal-frontend
+            if [ -f node_modules/.cbio-cache-ok ]; then
+              echo "node_modules cache hit (manifests + lockfile unchanged) — skipping pnpm install"
+              exit 0
+            fi
             corepack enable
             pnpm install --frozen-lockfile
       - run:
@@ -1145,6 +1170,14 @@ jobs:
             [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
             nvm use 22.18.0
             pnpm install --frozen-lockfile --ignore-workspace
+      - restore_cache:
+          name: Restore Playwright browser cache
+          # Keyed off end-to-end-test-playwright/pnpm-lock.yaml so a
+          # Playwright/Chromium version bump invalidates the cache and
+          # forces a fresh `playwright install`. On hit, the install
+          # step below is a no-op and only the apt system deps still run.
+          keys:
+            - v1-playwright-browsers-{{ checksum "cbioportal-frontend/end-to-end-test-playwright/pnpm-lock.yaml" }}
       - run:
           name: Install Playwright Chromium browser
           working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
@@ -1172,6 +1205,14 @@ jobs:
               libxkbcommon0 libatspi2.0-0 libxcomposite1 libxdamage1 \
               libxfixes3 libxrandr2 libgbm1 libpango-1.0-0 libcairo2 \
               libasound2
+      - save_cache:
+          name: Save Playwright browser cache
+          # No-op when restore_cache hit (key already exists), otherwise
+          # the fresh `playwright install chromium` output is cached for
+          # subsequent runs on the same lockfile.
+          key: v1-playwright-browsers-{{ checksum "cbioportal-frontend/end-to-end-test-playwright/pnpm-lock.yaml" }}
+          paths:
+            - ~/.cache/ms-playwright
       - run:
           name: Start frontend dist server (pnpm serveDistLocalDb) on https://localhost:3000
           background: true
