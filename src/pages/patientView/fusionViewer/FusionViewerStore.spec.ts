@@ -68,6 +68,7 @@ function makeFusion(overrides: Partial<FusionEvent> = {}): FusionEvent {
         position: 'Exon 5 | Exon 6',
         significance: 'NA',
         note: '',
+        connectionType: '',
         ...overrides,
     };
 }
