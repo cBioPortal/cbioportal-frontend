@@ -238,6 +238,7 @@ describe('resolveFusionPartners', () => {
         assert.equal(result.threePrime!.symbol, 'ERG');
         assert.equal(result.threePrime!.position, 39860000);
         assert.equal(result.mismatchStatus, 'swapped');
+        assert.equal(result.swapped, true);
         assert.deepEqual(result.fivePrimeTranscripts, [tmprss2]);
         assert.deepEqual(result.threePrimeTranscripts, [erg]);
     });
