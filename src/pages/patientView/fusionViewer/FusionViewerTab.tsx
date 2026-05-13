@@ -35,7 +35,7 @@ export class FusionViewerTab extends React.Component<IFusionViewerTabProps> {
     }
 
     render() {
-        const selectedFusion = this.store.canonicalFusion;
+        const canonicalFusion = this.store.canonicalFusion;
 
         if (this.store.fusions.length === 0) {
             return (
@@ -77,9 +77,9 @@ export class FusionViewerTab extends React.Component<IFusionViewerTabProps> {
                             >
                                 Loading transcript data...
                             </div>
-                        ) : selectedFusion && this.store.forteTranscript5p ? (
+                        ) : canonicalFusion && this.store.forteTranscript5p ? (
                             <FusionDiagramSVG
-                                fusion={selectedFusion}
+                                fusion={canonicalFusion}
                                 forteTranscript5p={this.store.forteTranscript5p}
                                 forteTranscript3p={this.store.forteTranscript3p}
                                 userTranscripts5p={
@@ -118,11 +118,11 @@ export class FusionViewerTab extends React.Component<IFusionViewerTabProps> {
                             </div>
                         )}
                     </div>
-                    {selectedFusion &&
-                        selectedFusion.note &&
-                        selectedFusion.note !== 'NA' && (
+                    {canonicalFusion &&
+                        canonicalFusion.note &&
+                        canonicalFusion.note !== 'NA' && (
                             <div className={styles.notePanel}>
-                                {selectedFusion.note}
+                                {canonicalFusion.note}
                             </div>
                         )}
                 </div>
