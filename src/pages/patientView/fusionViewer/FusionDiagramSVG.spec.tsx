@@ -66,6 +66,7 @@ function makeFusion(): FusionEvent {
         position: '',
         significance: 'NA',
         note: '',
+        connectionType: '',
     };
 }
 
