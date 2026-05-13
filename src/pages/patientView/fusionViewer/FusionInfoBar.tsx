@@ -64,7 +64,7 @@ function TranscriptCheckboxList({
 export class FusionInfoBar extends React.Component<IFusionInfoBarProps> {
     public render() {
         const { store } = this.props;
-        const fusion = store.selectedFusion;
+        const fusion = store.canonicalFusion;
 
         if (!fusion) {
             return (

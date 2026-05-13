@@ -35,7 +35,7 @@ export class FusionViewerTab extends React.Component<IFusionViewerTabProps> {
     }
 
     render() {
-        const selectedFusion = this.store.selectedFusion;
+        const selectedFusion = this.store.canonicalFusion;
 
         if (this.store.fusions.length === 0) {
             return (
