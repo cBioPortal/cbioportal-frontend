@@ -10,6 +10,10 @@ import { StructuralVariant } from 'cbioportal-ts-api-client';
 import { FusionEvent, TranscriptData } from './data/types';
 import { convertStructuralVariantsToFusionEvents } from './data/structuralVariantAdapter';
 import {
+    resolveFusionPartners,
+    ResolvedFusion,
+} from './data/partnerResolution';
+import {
     fetchTranscriptsForGeneWithFallback,
     GenomeBuild,
 } from './data/genomeNexusTranscriptService';
@@ -216,6 +220,44 @@ export class FusionViewerStore {
         return this.fusions.find(f => f.id === this.selectedFusionId);
     }
 
+    /**
+     * The selected fusion with canonical 5'/3' partner assignment applied.
+     * gene1 is always the canonical 5' partner, gene2 is the canonical 3'.
+     * Symbol/position pairings are corrected if the sanity check detected
+     * a mismatch. Falls back to the raw selectedFusion if transcripts have
+     * not loaded or connectionType is missing.
+     */
+    @computed
+    public get canonicalFusion(): FusionEvent | undefined {
+        const raw = this.selectedFusion;
+        if (!raw) return undefined;
+        const resolved = this.resolvedFusion;
+        if (!resolved) return raw;
+        return {
+            ...raw,
+            gene1: resolved.fivePrime,
+            gene2: resolved.threePrime,
+        };
+    }
+
+    /** Internal: the full ResolvedFusion (positions, transcripts, swap flag). */
+    @computed
+    public get resolvedFusion(): ResolvedFusion | undefined {
+        const fusion = this.selectedFusion;
+        if (!fusion) return undefined;
+        return resolveFusionPartners({
+            fusion,
+            gene1Transcripts: this.gene1Transcripts,
+            gene2Transcripts: this.gene2Transcripts,
+        });
+    }
+
+    /** True when the canonical resolver had to swap site1<->site2. */
+    @computed
+    public get partnersWereSwapped(): boolean {
+        return this.resolvedFusion?.swapped ?? false;
+    }
+
     @computed
     public get gene1Transcripts(): TranscriptData[] {
         return this.gene1TranscriptsRemote.result || [];
@@ -248,15 +290,29 @@ export class FusionViewerStore {
     }
 
     @computed
+    public get canonicalTranscripts5p(): TranscriptData[] {
+        return (
+            this.resolvedFusion?.fivePrimeTranscripts ?? this.gene1Transcripts
+        );
+    }
+
+    @computed
+    public get canonicalTranscripts3p(): TranscriptData[] {
+        return (
+            this.resolvedFusion?.threePrimeTranscripts ?? this.gene2Transcripts
+        );
+    }
+
+    @computed
     public get selectedTranscript5p(): TranscriptData | undefined {
-        return this.gene1Transcripts.find(
+        return this.canonicalTranscripts5p.find(
             t => t.transcriptId === this.selectedTranscript5pId
         );
     }
 
     @computed
     public get selectedTranscript3p(): TranscriptData | undefined {
-        return this.gene2Transcripts.find(
+        return this.canonicalTranscripts3p.find(
             t => t.transcriptId === this.selectedTranscript3pId
         );
     }
@@ -264,7 +320,7 @@ export class FusionViewerStore {
     @computed
     public get activeTranscript5p(): TranscriptData | undefined {
         if (!this.activeTranscript5pId) return undefined;
-        return this.gene1Transcripts.find(
+        return this.canonicalTranscripts5p.find(
             t => t.transcriptId === this.activeTranscript5pId
         );
     }
@@ -272,35 +328,33 @@ export class FusionViewerStore {
     @computed
     public get activeTranscript3p(): TranscriptData | undefined {
         if (!this.activeTranscript3pId) return undefined;
-        return this.gene2Transcripts.find(
+        return this.canonicalTranscripts3p.find(
             t => t.transcriptId === this.activeTranscript3pId
         );
     }
 
-    /** All selected 5' transcripts (for multi-select display) */
     @computed
     public get allSelectedTranscripts5p(): TranscriptData[] {
-        return this.gene1Transcripts.filter(t =>
+        return this.canonicalTranscripts5p.filter(t =>
             this.selectedTranscript5pIds.has(t.transcriptId)
         );
     }
 
-    /** All selected 3' transcripts (for multi-select display) */
     @computed
     public get allSelectedTranscripts3p(): TranscriptData[] {
-        return this.gene2Transcripts.filter(t =>
+        return this.canonicalTranscripts3p.filter(t =>
             this.selectedTranscript3pIds.has(t.transcriptId)
         );
     }
 
     @computed
     public get forteTranscript5p(): TranscriptData | undefined {
-        return this.gene1Transcripts.find(t => t.isForteSelected);
+        return this.canonicalTranscripts5p.find(t => t.isForteSelected);
     }
 
     @computed
     public get forteTranscript3p(): TranscriptData | undefined {
-        return this.gene2Transcripts.find(t => t.isForteSelected);
+        return this.canonicalTranscripts3p.find(t => t.isForteSelected);
     }
 }
 
