@@ -175,7 +175,7 @@ export class FusionViewerStore {
                 if (this.activeTranscript5pId === transcriptId) {
                     this.activeTranscript5pId = resolveActiveId(
                         '',
-                        this.gene1Transcripts
+                        this.canonicalTranscripts5p
                     );
                 }
             }
@@ -192,7 +192,7 @@ export class FusionViewerStore {
                 if (this.activeTranscript3pId === transcriptId) {
                     this.activeTranscript3pId = resolveActiveId(
                         '',
-                        this.gene2Transcripts
+                        this.canonicalTranscripts3p
                     );
                 }
             }
