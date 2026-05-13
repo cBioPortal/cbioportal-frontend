@@ -47,3 +47,54 @@ export function detectSymbolPositionMismatch(
 
     return 'inconsistent';
 }
+
+/**
+ * Empirical lookup table keyed by `${lowStrand}|${highStrand}|${connectionType}`.
+ * Value names which position holds the canonical 5' fusion partner.
+ *
+ * Derived from msk_impact_50k_2026 by cross-referencing connectionType +
+ * known gene strands against the canonical fusion name in eventInfo for
+ * 1,800+ rows across TMPRSS2-ERG, EML4-ALK, KIF5B-RET, CCDC6-RET,
+ * NCOA4-RET, and others. Sample sizes for each row are in the test.
+ *
+ * Combinations omitted from this table are intentionally returned as null
+ * (unknown) because the data was too sparse or genuinely ambiguous to
+ * commit to a rule. The caller is expected to fall back to "trust site1
+ * as 5p" in those cases.
+ */
+const FIVE_PRIME_RULES: ReadonlyMap<string, 'low' | 'high'> = new Map([
+    ['+|+|3to5', 'low'],
+    ['+|+|5to5', 'low'],
+    ['+|-|3to3', 'low'],
+    ['+|-|5to3', 'high'],
+    ['+|-|5to5', 'high'],
+    ['-|+|3to3', 'high'],
+    ['-|+|3to5', 'high'],
+    ['-|+|5to3', 'low'],
+    ['-|+|5to5', 'low'],
+    ['-|-|3to5', 'high'],
+    ['-|-|5to3', 'low'],
+]);
+
+/**
+ * Decide which position (low or high, after position-sort) holds the canonical
+ * 5' fusion partner, given the strand of each gene and the connectionType.
+ *
+ * Returns null when the combination is not in the empirical rule set — the
+ * caller should preserve the existing site1=5p ordering in that case.
+ */
+export function resolveFivePrimeBy(
+    lowStrand: '+' | '-',
+    highStrand: '+' | '-',
+    connectionType: string
+): 'low' | 'high' | null {
+    if (
+        (lowStrand !== '+' && lowStrand !== '-') ||
+        (highStrand !== '+' && highStrand !== '-') ||
+        !connectionType
+    ) {
+        return null;
+    }
+    const key = `${lowStrand}|${highStrand}|${connectionType}`;
+    return FIVE_PRIME_RULES.get(key) ?? null;
+}
