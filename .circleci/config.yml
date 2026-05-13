@@ -1054,12 +1054,12 @@ jobs:
     machine:
       image: ubuntu-2204:2024.08.1
     resource_class: large
-    # Parallelism = 4 shards. Each parallel runner spins up its own
-    # cbioportal+keycloak stack (~2 min) and runs ~1/4 of the suite
-    # (~7-8 min of tests), so total wall time drops from ~30 min serial
-    # to ~12-15 min. Tested values: 1 (serial baseline ~30 min),
-    # 4 (sweet spot for cost vs. speedup), 6+ (diminishing returns).
-    parallelism: 4
+    # Parallelism = 12 shards. Each parallel runner spins up its own
+    # cbioportal+keycloak stack (~2 min fixed setup) and runs ~1/12 of
+    # the suite. Higher shard count trades CI minutes (12x the stack
+    # boots) for wall-clock time — the slowest shard's test execution
+    # is the wall-time floor, so more shards = smaller floor.
+    parallelism: 12
     working_directory: /tmp/repo
     environment:
       BACKEND_PORT: 8080
