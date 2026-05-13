@@ -1261,8 +1261,15 @@ jobs:
             echo "Running Playwright shard ${SHARD_NUM}/${CIRCLE_NODE_TOTAL}"
             mkdir -p test-results blob-report
             set +e
+            # --workers=2 overrides playwright.config.ts's `workers: 1` so
+            # 2 spec files in the same shard can run concurrently. resource_class
+            # `large` is 4 vCPU / 8 GB shared with mysql + cbioportal + keycloak
+            # + clickhouse containers + http-server, so workers=3 would risk CPU
+            # thrashing here even though remote_e2e_shards (no local backend)
+            # uses it safely. `.serial` describes still serialize within a file.
             npx playwright test tests/local \
               --shard="${SHARD_NUM}/${CIRCLE_NODE_TOTAL}" \
+              --workers=2 \
               --reporter=list,junit,blob
             EXIT=$?
             set -e
