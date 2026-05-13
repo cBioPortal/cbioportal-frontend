@@ -1,4 +1,4 @@
-import { TranscriptData } from './types';
+import { FusionEvent, GenePartner, TranscriptData } from './types';
 
 /** Slop window (bp) for treating a breakpoint as "inside" a transcript range. */
 const POSITION_OVERLAP_SLOP = 10_000;
@@ -97,4 +97,133 @@ export function resolveFivePrimeBy(
     }
     const key = `${lowStrand}|${highStrand}|${connectionType}`;
     return FIVE_PRIME_RULES.get(key) ?? null;
+}
+
+export interface ResolvedFusion {
+    fivePrime: GenePartner;
+    threePrime: GenePartner | null;
+    /** Transcripts for the 5' role (either gene1Transcripts or gene2Transcripts). */
+    fivePrimeTranscripts: TranscriptData[];
+    /** Transcripts for the 3' role (the other set). Empty when threePrime is null. */
+    threePrimeTranscripts: TranscriptData[];
+    /** True when gene1 and gene2 had to be swapped to produce the canonical order. */
+    swapped: boolean;
+    /** Outcome of the symbol/position sanity check. */
+    mismatchStatus: MismatchStatus;
+}
+
+interface ResolveInput {
+    fusion: FusionEvent;
+    gene1Transcripts: TranscriptData[];
+    gene2Transcripts: TranscriptData[];
+}
+
+/** Return the strand of the first transcript in the list, or null. */
+function strandOf(txs: TranscriptData[]): '+' | '-' | null {
+    return txs.length > 0 ? txs[0].strand : null;
+}
+
+/**
+ * Resolve the canonical 5' and 3' fusion partners given a FusionEvent and the
+ * Genome Nexus transcripts already fetched for each side.
+ *
+ * Algorithm:
+ *  1. Detect symbol/position mismatch ("pattern B"). When detected, treat each
+ *     symbol as paired with the OTHER side's position (and chromosome).
+ *  2. Sort the two partners by position.
+ *  3. Look up (lowStrand, highStrand, connectionType) in the empirical rule
+ *     table. Choose which sorted side is the 5' partner.
+ *  4. If anything is missing — empty transcripts, unknown connectionType,
+ *     intergenic fusion — fall back to the input gene1/gene2 unchanged.
+ */
+export function resolveFusionPartners(input: ResolveInput): ResolvedFusion {
+    const { fusion, gene1Transcripts, gene2Transcripts } = input;
+    const fallback: ResolvedFusion = {
+        fivePrime: fusion.gene1,
+        threePrime: fusion.gene2,
+        fivePrimeTranscripts: gene1Transcripts,
+        threePrimeTranscripts: gene2Transcripts,
+        swapped: false,
+        mismatchStatus: 'unknown',
+    };
+
+    if (!fusion.gene2) {
+        return fallback;
+    }
+
+    const mismatchStatus = detectSymbolPositionMismatch({
+        gene1Position: fusion.gene1.position,
+        gene2Position: fusion.gene2.position,
+        gene1Transcripts,
+        gene2Transcripts,
+    });
+
+    // Build "normalized" partners: each one carries the symbol/transcripts of
+    // the gene curated for that side, but the position/chromosome of wherever
+    // that gene's transcripts actually overlap.
+    let leftPartner: GenePartner;
+    let rightPartner: GenePartner;
+    let leftTxs: TranscriptData[];
+    let rightTxs: TranscriptData[];
+    if (mismatchStatus === 'swapped') {
+        // gene1's symbol belongs with gene2's position; gene2's symbol with gene1's position
+        leftPartner = {
+            ...fusion.gene1,
+            position: fusion.gene2.position,
+            chromosome: fusion.gene2.chromosome,
+        };
+        rightPartner = {
+            ...fusion.gene2,
+            position: fusion.gene1.position,
+            chromosome: fusion.gene1.chromosome,
+        };
+        leftTxs = gene1Transcripts;
+        rightTxs = gene2Transcripts;
+    } else {
+        leftPartner = fusion.gene1;
+        rightPartner = fusion.gene2;
+        leftTxs = gene1Transcripts;
+        rightTxs = gene2Transcripts;
+    }
+
+    // Position-sort
+    const leftIsLow = leftPartner.position <= rightPartner.position;
+    const low = leftIsLow ? leftPartner : rightPartner;
+    const high = leftIsLow ? rightPartner : leftPartner;
+    const lowTxs = leftIsLow ? leftTxs : rightTxs;
+    const highTxs = leftIsLow ? rightTxs : leftTxs;
+
+    const lowStrand = strandOf(lowTxs);
+    const highStrand = strandOf(highTxs);
+    if (!lowStrand || !highStrand) {
+        return { ...fallback, mismatchStatus };
+    }
+
+    const which = resolveFivePrimeBy(
+        lowStrand,
+        highStrand,
+        fusion.connectionType
+    );
+    if (which === null) {
+        return { ...fallback, mismatchStatus };
+    }
+
+    const fivePrime = which === 'low' ? low : high;
+    const threePrime = which === 'low' ? high : low;
+    const fivePrimeTranscripts = which === 'low' ? lowTxs : highTxs;
+    const threePrimeTranscripts = which === 'low' ? highTxs : lowTxs;
+
+    // swapped means: the canonical 5p is NOT the original fusion.gene1
+    const swapped =
+        fivePrime.symbol !== fusion.gene1.symbol ||
+        fivePrime.position !== fusion.gene1.position;
+
+    return {
+        fivePrime,
+        threePrime,
+        fivePrimeTranscripts,
+        threePrimeTranscripts,
+        swapped,
+        mismatchStatus,
+    };
 }
