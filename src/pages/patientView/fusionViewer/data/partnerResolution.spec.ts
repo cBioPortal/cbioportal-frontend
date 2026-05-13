@@ -127,7 +127,7 @@ describe('resolveFivePrimeBy', () => {
         assert.isNull(resolveFivePrimeBy('+', '+', '3to3'));
     });
 
-    it('covers all eight unambiguous combinations found in the 50k study', () => {
+    it('covers all 11 unambiguous combinations found in the 50k study', () => {
         // Source of truth: empirical lookup table, comments document the
         // example fusion pair that established each row.
         const cases: Array<['+' | '-', '+' | '-', string, 'low' | 'high']> = [
