@@ -156,7 +156,7 @@ export class FusionInfoBar extends React.Component<IFusionInfoBarProps> {
                 {/* Transcript selection row */}
                 <div style={inlineStyles.transcriptRow}>
                     <TranscriptCheckboxList
-                        transcripts={store.gene1Transcripts}
+                        transcripts={store.canonicalTranscripts5p}
                         selectedIds={selected5pIds}
                         onToggle={id => store.toggleTranscript5p(id)}
                         accentColor={COLOR_5PRIME}
@@ -165,7 +165,7 @@ export class FusionInfoBar extends React.Component<IFusionInfoBarProps> {
 
                     {!isIntergenic && (
                         <TranscriptCheckboxList
-                            transcripts={store.gene2Transcripts}
+                            transcripts={store.canonicalTranscripts3p}
                             selectedIds={selected3pIds}
                             onToggle={id => store.toggleTranscript3p(id)}
                             accentColor={COLOR_3PRIME}
