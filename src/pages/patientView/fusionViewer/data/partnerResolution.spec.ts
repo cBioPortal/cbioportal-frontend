@@ -84,3 +84,71 @@ describe('detectSymbolPositionMismatch', () => {
         assert.equal(result, 'consistent');
     });
 });
+
+import { resolveFivePrimeBy } from './partnerResolution';
+
+describe('resolveFivePrimeBy', () => {
+    // Empirically derived from msk_impact_50k_2026; "low" = the partner at the
+    // lower genomic coordinate after position-sort, "high" = higher coord.
+    // Result: which position holds the canonical 5' partner.
+
+    it('TMPRSS2-ERG style: (-, -, 3to5) -> high is 5p', () => {
+        // Both minus strand, deletion-style. Canonical: TMPRSS2 (higher coord) is 5p.
+        assert.equal(resolveFivePrimeBy('-', '-', '3to5'), 'high');
+    });
+
+    it('EML4-ALK style: (+, -, 3to3) -> low is 5p', () => {
+        // Mixed strands, inversion. Canonical: EML4 (lower coord, +) is 5p.
+        assert.equal(resolveFivePrimeBy('+', '-', '3to3'), 'low');
+    });
+
+    it('ALK-EML4 row (positions swapped): (-, +, 3to3) -> high is 5p', () => {
+        // Same biology, opposite position order. Canonical 5p still EML4 (now high).
+        assert.equal(resolveFivePrimeBy('-', '+', '3to3'), 'high');
+    });
+
+    it('KIF5B-RET style: (+, +, 5to5) -> low is 5p', () => {
+        // Both plus, head-to-head inversion. Canonical: KIF5B (lower) is 5p.
+        assert.equal(resolveFivePrimeBy('+', '+', '5to5'), 'low');
+    });
+
+    it('CCDC6-RET style: (+, -, 5to5) -> high is 5p', () => {
+        assert.equal(resolveFivePrimeBy('+', '-', '5to5'), 'high');
+    });
+
+    it('NCOA4-RET style: (-, +, 5to3) -> low is 5p', () => {
+        assert.equal(resolveFivePrimeBy('-', '+', '5to3'), 'low');
+    });
+
+    it('returns null for unknown / ambiguous combinations', () => {
+        assert.isNull(resolveFivePrimeBy('+' as any, '+' as any, '' as any));
+        assert.isNull(resolveFivePrimeBy('-', '-', 'unknown'));
+        // (+, +, 3to3) has too small a sample to commit to a rule
+        assert.isNull(resolveFivePrimeBy('+', '+', '3to3'));
+    });
+
+    it('covers all eight unambiguous combinations found in the 50k study', () => {
+        // Source of truth: empirical lookup table, comments document the
+        // example fusion pair that established each row.
+        const cases: Array<['+' | '-', '+' | '-', string, 'low' | 'high']> = [
+            ['+', '+', '3to5', 'low'], // 2 rows
+            ['+', '+', '5to5', 'low'], // KIF5B-RET, 84 rows
+            ['+', '-', '3to3', 'low'], // EML4-ALK, 98 rows
+            ['+', '-', '5to3', 'high'], // 5 rows
+            ['+', '-', '5to5', 'high'], // RET-CCDC6, 26 rows
+            ['-', '+', '3to3', 'high'], // ALK-EML4, 122 rows
+            ['-', '+', '3to5', 'high'], // 5 rows
+            ['-', '+', '5to3', 'low'], // NCOA4-RET, 27 rows
+            ['-', '+', '5to5', 'low'], // 24 rows
+            ['-', '-', '3to5', 'high'], // TMPRSS2-ERG, 412 rows
+            ['-', '-', '5to3', 'low'], // 17 rows
+        ];
+        for (const [lo, hi, conn, expected] of cases) {
+            assert.equal(
+                resolveFivePrimeBy(lo, hi, conn),
+                expected,
+                `(${lo}, ${hi}, ${conn})`
+            );
+        }
+    });
+});
