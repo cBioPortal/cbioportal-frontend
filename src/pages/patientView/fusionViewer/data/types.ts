@@ -50,6 +50,13 @@ export interface FusionEvent {
     position: string;
     significance: string;
     note: string;
+    /**
+     * Direction of the SV breakpoint joining, as reported by the caller.
+     * One of '5to3', '3to5', '3to3', '5to5', or '' when missing.
+     * Used by the partner-orientation resolver to decide which site is
+     * the canonical 5' partner.
+     */
+    connectionType: string;
 }
 
 export const COLOR_5PRIME = '#5A73B3';
