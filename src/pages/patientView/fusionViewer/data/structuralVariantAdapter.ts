@@ -151,6 +151,7 @@ export function convertStructuralVariantToFusionEvent(
         position: buildPositionString(sv),
         significance: 'NA',
         note: safeString(sv.comments),
+        connectionType: safeString(sv.connectionType),
     };
 }
 

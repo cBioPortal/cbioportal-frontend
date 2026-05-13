@@ -268,6 +268,28 @@ describe('structuralVariantAdapter', () => {
 
             assert.equal(fe.callMethod, 'SV');
         });
+
+        // --- connectionType ---
+
+        it('passes connectionType through to FusionEvent', () => {
+            const sv = makeSV({ connectionType: '3to5' });
+            const fe = convertStructuralVariantToFusionEvent(sv);
+            assert.equal(fe.connectionType, '3to5');
+        });
+
+        it('preserves all four connectionType values', () => {
+            for (const conn of ['3to5', '5to3', '3to3', '5to5']) {
+                const sv = makeSV({ connectionType: conn });
+                const fe = convertStructuralVariantToFusionEvent(sv);
+                assert.equal(fe.connectionType, conn);
+            }
+        });
+
+        it('defaults connectionType to empty string when missing', () => {
+            const sv = makeSV({ connectionType: undefined as any });
+            const fe = convertStructuralVariantToFusionEvent(sv);
+            assert.equal(fe.connectionType, '');
+        });
     });
 
     // -------------------------------------------------------------------
