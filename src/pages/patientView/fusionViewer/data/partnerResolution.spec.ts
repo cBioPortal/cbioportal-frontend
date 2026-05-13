@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import { TranscriptData } from './types';
+import { FusionEvent, GenePartner, TranscriptData } from './types';
 import { detectSymbolPositionMismatch } from './partnerResolution';
 
 /** Build a minimal TranscriptData covering [start, end] on the given chromosome. */
@@ -86,7 +86,6 @@ describe('detectSymbolPositionMismatch', () => {
 });
 
 import { resolveFivePrimeBy, resolveFusionPartners } from './partnerResolution';
-import { FusionEvent, GenePartner } from './types';
 
 describe('resolveFivePrimeBy', () => {
     // Empirically derived from msk_impact_50k_2026; "low" = the partner at the
