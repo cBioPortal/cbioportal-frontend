@@ -1045,12 +1045,19 @@ jobs:
           path: /tmp/repo/cbioportal-frontend/end-to-end-test/local/junit/completeResults.json
           destination: /completeResults.json
 
-  # Playwright port of e2e_localdb_tests. Boots the same dockerized
+  # The matrix half of the Playwright localdb e2e workflow. Mirrors
+  # remote_e2e_shards: each parallel runner boots its own dockerized
   # backend (cbioportal + keycloak + remote clickhouse) on localhost:8080,
-  # serves the freshly-built frontend dist on https://localhost:3000, and
-  # runs the migrated Playwright suite in tests/local. Lives alongside
-  # the WDIO localdb job for now; swap-and-delete once parity is proven.
-  e2e_localdb_playwright_tests:
+  # serves the freshly-built frontend dist on https://localhost:3000,
+  # runs ~1/N of the suite in tests/local, and uploads a unique
+  # blob-${CIRCLE_NODE_INDEX}.zip artifact for the merge job to pick up.
+  #
+  # Each shard exits with Playwright's real exit code so "Rerun failed
+  # only" can target the actual failed parallel-run indices. The downstream
+  # e2e_localdb_merge job no longer uses `requires:` on this — it polls
+  # the CircleCI API for terminal status of all parallel runs and then
+  # merges, so the merged HTML is produced even on red runs.
+  e2e_localdb_shards:
     machine:
       image: ubuntu-2204:2024.08.1
     resource_class: large
@@ -1187,7 +1194,7 @@ jobs:
             echo "FAILED: frontend server didn't come up after ~4 minutes"
             exit 1
       - run:
-          name: Run Playwright localdb tests
+          name: Run Playwright localdb shard
           working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
           environment:
             PLAYWRIGHT_JUNIT_OUTPUT_NAME: test-results/junit.xml
@@ -1201,26 +1208,45 @@ jobs:
             export NVM_DIR="$HOME/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
             nvm use 22.18.0
-            mkdir -p test-results
             # Playwright shards are 1-based; CIRCLE_NODE_INDEX is 0-based.
-            # Each parallel runner gets ~1/CIRCLE_NODE_TOTAL of the test
-            # files, with describe.serial blocks staying intact (Playwright
-            # shards by file). Each shard prints its own pass/fail; the
-            # CircleCI test-results UI aggregates the junit XMLs across
-            # shards so the job-level totals reflect all 346 tests.
             SHARD_NUM=$((CIRCLE_NODE_INDEX + 1))
             echo "Running Playwright shard ${SHARD_NUM}/${CIRCLE_NODE_TOTAL}"
+            mkdir -p test-results blob-report
+            set +e
             npx playwright test tests/local \
               --shard="${SHARD_NUM}/${CIRCLE_NODE_TOTAL}" \
-              --reporter=list,junit
+              --reporter=list,junit,blob
+            EXIT=$?
+            set -e
+            # uniquify the blob filename so the merge job's artifact downloads
+            # don't collide on a shared `blob-report/*.zip` name.
+            mv blob-report/report-*.zip blob-report/blob-${CIRCLE_NODE_INDEX}.zip || true
+            # Stash the real exit code for the trailing `when: always` step.
+            # We exit 0 here so the `store_*` special steps below run even
+            # on failure (they default to on_success). The final step
+            # re-exits with the captured code so the shard is correctly red
+            # and "Rerun failed only" can target it.
+            echo "$EXIT" > /tmp/playwright_exit
+            if [ "$EXIT" != "0" ]; then
+              echo "*** TESTS FAILED on this shard (exit $EXIT). Blobs will still be"
+              echo "*** persisted; the trailing step will re-exit with $EXIT."
+            else
+              echo "playwright exit: 0 (this shard passed)"
+            fi
+            exit 0
       - store_test_results:
           path: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright/test-results
       - store_artifacts:
           path: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright/test-results
           destination: test-results
+      # Store blob-report as a CircleCI artifact rather than persisting it
+      # to the workflow workspace. The downstream merge job uses the
+      # public artifacts API to fetch these — workspaces only flow along
+      # the `requires:` graph, and the merge job is intentionally not
+      # `requires:`-chained to this job (so it can run on red shards).
       - store_artifacts:
-          path: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright/playwright-report
-          destination: playwright-report
+          path: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright/blob-report
+          destination: blob-report
       - store_artifacts:
           # Auto-generated screenshot baselines for the new localdb
           # specs. Download and commit these, then remove
@@ -1229,6 +1255,227 @@ jobs:
           destination: snapshots
       - store_artifacts:
           path: /tmp/repo/docker-compose-logs.txt
+      - run:
+          name: Propagate Playwright exit code
+          # Run regardless of any earlier step failures so the shard's red/green
+          # state always reflects Playwright's real exit code, not e.g. a flaky
+          # store_artifacts upload.
+          when: always
+          command: |
+            EXIT=$(cat /tmp/playwright_exit 2>/dev/null || echo 1)
+            if [ "$EXIT" = "0" ]; then
+              echo "Playwright shard exit: 0"
+              exit 0
+            fi
+            # When this shard is red, this is the step a reviewer lands on
+            # after clicking the red `e2e_localdb_shards` check on the
+            # PR. Make that landing experience point them at the
+            # consolidated report, since this shard is just one of N and
+            # the merge job is the authoritative verdict for the run.
+            # NOTE: CircleCI v2.1 reserves the double-angle-bracket
+            # sequence for parameter substitution and rejects unescaped
+            # uses of it anywhere in the YAML — including in comments.
+            # That's why we use `echo` lines below rather than a bash
+            # heredoc.
+            echo "================================================================"
+            echo "Tests failed in this shard (Playwright exit $EXIT)."
+            echo
+            echo "This is ONE OF $CIRCLE_NODE_TOTAL parallel shards. Don't try"
+            echo "to debug from here — the consolidated, screenshot-diff-rich"
+            echo "HTML report lives in the 'e2e_localdb_merge' job:"
+            echo
+            echo "  e2e_localdb_merge (same workflow)"
+            echo "    → Artifacts tab"
+            echo "    → playwright-report/index.html"
+            echo
+            echo "This shard intentionally exits non-zero so that CircleCI's"
+            echo "'Rerun failed jobs' button reruns just the failed shard"
+            echo "parallel-run indices, not all $CIRCLE_NODE_TOTAL shards."
+            echo "That's why both 'e2e_localdb_shards' and 'e2e_localdb_merge'"
+            echo "are red — they're reporting the same underlying failures."
+            echo "For branch-protection purposes, only 'e2e_localdb_merge'"
+            echo "needs to be required."
+            echo "================================================================"
+            exit $EXIT
+
+  # The user-facing Playwright localdb e2e status check. Merges all shards'
+  # blob reports into one HTML report (with the screenshot diff/comparison
+  # UI) and inspects the merged JUnit XML to fail the build when any test
+  # failed.
+  #
+  # This job intentionally has NO `requires:` on e2e_localdb_shards in
+  # the workflow. Instead it starts at workflow time and polls the CircleCI
+  # v2 API until the shards job's rolled-up status is terminal. This way
+  # the merged HTML is produced even when shards are red — `requires:` only
+  # chains on success, which would skip this job exactly when it's most
+  # useful.
+  e2e_localdb_merge:
+    docker:
+      - image: ghcr.io/cbioportal/cbioportal-frontend-playwright-ci:v1.59.1-jammy
+    resource_class: medium
+    working_directory: /tmp/repo/cbioportal-frontend
+    environment:
+      HOME: /tmp
+      # Must match parallelism on e2e_localdb_shards. Used as a sanity
+      # check after the artifact download step — if fewer blobs were
+      # uploaded, at least one shard died before its store_artifacts ran.
+      EXPECTED_SHARDS: '12'
+    steps:
+      - checkout
+      - run:
+          name: Install jq (not present in the Playwright Docker image)
+          command: apt-get update && apt-get install -y jq
+      - run:
+          name: Wait for all e2e_localdb_shards parallel runs to terminate
+          # Polls the workflow's job list until the shards job is in a
+          # terminal state. CircleCI rolls the parallelism job up to a
+          # single status entry that stays "running" until every parallel
+          # run has terminated, so this can't proceed before all shards
+          # are done — even if a few shards fail early.
+          command: |
+            API="https://circleci.com/api/v2/workflow/${CIRCLE_WORKFLOW_ID}/job"
+            TERMINAL_RE='^(success|failed|canceled|unauthorized|not_run|terminated-unknown)$'
+            DEADLINE=$(( $(date +%s) + 60 * 60 * 2 ))   # 2h cap
+            POLL_INTERVAL=30
+            while :; do
+              if [ "$(date +%s)" -gt "$DEADLINE" ]; then
+                echo "ERROR: shards did not reach terminal state within 2h — bailing"
+                exit 1
+              fi
+              BODY=$(curl -fsS "$API" || true)
+              if [ -z "$BODY" ]; then
+                echo "API call failed; retrying in ${POLL_INTERVAL}s"
+                sleep "$POLL_INTERVAL"
+                continue
+              fi
+              STATUS=$(echo "$BODY" | jq -r '.items[] | select(.name=="e2e_localdb_shards") | .status' | head -n1)
+              JOB_NUMBER=$(echo "$BODY" | jq -r '.items[] | select(.name=="e2e_localdb_shards") | .job_number' | head -n1)
+              if [ -z "$STATUS" ]; then
+                echo "e2e_localdb_shards not yet visible in workflow — waiting"
+                sleep "$POLL_INTERVAL"
+                continue
+              fi
+              if echo "$STATUS" | grep -qE "$TERMINAL_RE"; then
+                echo "e2e_localdb_shards terminal status: $STATUS  (job_number=$JOB_NUMBER)"
+                echo "$JOB_NUMBER" > /tmp/shards_job_number
+                break
+              fi
+              echo "e2e_localdb_shards status: $STATUS — waiting ${POLL_INTERVAL}s"
+              sleep "$POLL_INTERVAL"
+            done
+      - run:
+          name: Download per-shard blob artifacts from the shards job
+          # Reads the public v2 artifacts API for the shards job and
+          # downloads every blob-report/*.zip into a local directory.
+          # `attach_workspace` doesn't work here because workspaces only
+          # flow along the `requires:` graph and we deliberately broke
+          # that chain so the merge runs on red shards.
+          working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
+          command: |
+            JOB_NUMBER=$(cat /tmp/shards_job_number)
+            : "${JOB_NUMBER:?missing shards job_number from previous step}"
+            API="https://circleci.com/api/v2/project/gh/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/${JOB_NUMBER}/artifacts"
+            mkdir -p blob-report
+            cd blob-report
+            URLS=$(curl -fsS "$API" | jq -r '.items[] | select(.path | startswith("blob-report/")) | select(.path | endswith(".zip")) | .url')
+            COUNT=$(echo "$URLS" | grep -c . || true)
+            echo "Found $COUNT blob artifacts on job ${JOB_NUMBER}."
+            if [ "$COUNT" = "0" ]; then
+              echo "ERROR: no blob-report artifacts on the shards job. Cannot merge."
+              exit 1
+            fi
+            echo "$URLS" | while read -r URL; do
+              [ -z "$URL" ] && continue
+              echo "GET $URL"
+              curl -fsSLO --retry 3 --retry-delay 2 "$URL"
+            done
+            ls -la
+      - run:
+          name: Install dependencies
+          working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
+          # See remote_e2e_shards "Install Playwright suite dependencies"
+          # for why --ignore-workspace is required.
+          command: pnpm install --frozen-lockfile --ignore-workspace
+      - run:
+          name: Merge per-shard blob reports and fail the build if any test failed
+          working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
+          command: |
+            mkdir -p test-results
+            if ! ls blob-report/*.zip >/dev/null 2>&1; then
+                echo "ERROR: no blob-report/*.zip files locally after download step."
+                echo "Check the previous 'Download per-shard blob artifacts' step."
+                exit 1
+            fi
+            ACTUAL=$(ls blob-report/*.zip | wc -l)
+            echo "Found $ACTUAL of $EXPECTED_SHARDS expected shard blobs."
+            if [ "$ACTUAL" -lt "$EXPECTED_SHARDS" ]; then
+                echo "WARNING: missing $((EXPECTED_SHARDS - ACTUAL)) shard blob(s) — merging with what we have."
+                echo "The missing shard(s) will already be red in the workflow; the merged HTML"
+                echo "below will simply not include their tests."
+                ls blob-report/
+            fi
+
+            # Force junit.xml and results.json to known absolute paths.
+            # With CLI-supplied reporters, `merge-reports` constructs the
+            # junit/json reporters without a configDir, which makes the
+            # relative-path resolution in PLAYWRIGHT_*_OUTPUT_NAME
+            # unreliable. The _FILE form is absolute and bypasses that.
+            JUNIT="$PWD/test-results/junit.xml"
+            JSON="$PWD/test-results/results.json"
+            export PLAYWRIGHT_JUNIT_OUTPUT_FILE="$JUNIT"
+            export PLAYWRIGHT_JSON_OUTPUT_FILE="$JSON"
+            rm -f "$JUNIT" "$JSON"
+
+            pnpm exec playwright merge-reports --reporter=html,junit,json blob-report
+
+            if [ ! -s "$JUNIT" ]; then
+                echo "ERROR: merge-reports did not produce a junit.xml at $JUNIT"
+                echo "--- test-results/ ---"
+                ls -la test-results/ || true
+                echo "--- looking for stray junit files ---"
+                find . -path ./node_modules -prune -o -name 'junit.xml' -print | head
+                exit 1
+            fi
+            if [ ! -s "$JSON" ]; then
+                echo "ERROR: merge-reports did not produce a results.json at $JSON"
+                echo "--- test-results/ ---"
+                ls -la test-results/ || true
+                echo "--- looking for stray json files ---"
+                find . -path ./node_modules -prune -o -name 'results.json' -print | head
+                exit 1
+            fi
+
+            # Count <failure> and <error> tags rather than reading the
+            # failures="N" attribute on <testsuites>. In merged reports
+            # that root attribute has come back as 0 even when individual
+            # <testsuite>s carry failures, so counting tags is the
+            # bulletproof signal.
+            FAILS=$(grep -cE '<failure([ />]|$)' "$JUNIT" || true)
+            ERRS=$(grep -cE '<error([ />]|$)' "$JUNIT" || true)
+            echo "merged junit at:   $JUNIT"
+            echo "merged json at:    $JSON  ($(wc -c < "$JSON") bytes)"
+            echo "merged <failure> tags: $FAILS"
+            echo "merged <error>   tags: $ERRS"
+            echo "Browse the merged report from this job's Artifacts tab → playwright-report/index.html"
+            echo "Programmatic results: test-results/results.json, test-results/junit.xml"
+            # If any blobs were missing, fail the merge job as well so the
+            # workflow never appears green when shards are missing.
+            if [ "$ACTUAL" -lt "$EXPECTED_SHARDS" ]; then
+              echo "Failing merge because $((EXPECTED_SHARDS - ACTUAL)) shard blob(s) were missing."
+              exit 1
+            fi
+            [ "$FAILS" = "0" ] && [ "$ERRS" = "0" ]
+      - store_artifacts:
+          path: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright/playwright-report
+          destination: playwright-report
+      # Make junit.xml + results.json downloadable from the Artifacts tab
+      # (store_test_results only feeds the JUnit into CircleCI's "Tests"
+      # tab; it doesn't expose the files for download).
+      - store_artifacts:
+          path: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright/test-results
+          destination: test-results
+      - store_test_results:
+          path: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright/test-results
 
 workflows:
   tests:
@@ -1255,16 +1502,22 @@ workflows:
       # The legacy WDIO `e2e_tests` (remote) job and the WDIO
       # `e2e_localdb_tests` job are both disabled — the Playwright suite
       # below is the candidate replacement for both. The Playwright
-      # localdb job (e2e_localdb_playwright_tests) is the local-db
-      # successor; flip the WDIO job back on if you need to compare.
+      # localdb jobs (e2e_localdb_shards + e2e_localdb_merge) are the
+      # local-db successor; flip the WDIO job back on if you need to
+      # compare.
       # - e2e_localdb_tests:
       #     requires:
       #       - pull_cbioportal_test_codebase
       #       - build_frontend
-      - e2e_localdb_playwright_tests:
+      - e2e_localdb_shards:
           requires:
             - pull_cbioportal_test_codebase
             - build_frontend
+      # Intentionally NOT requiring e2e_localdb_shards: same pattern as
+      # remote_e2e — this job polls the CircleCI API for the shards'
+      # terminal state and merges, so the merged HTML is produced even
+      # when shards are red.
+      - e2e_localdb_merge
       - remote_e2e_shards:
           requires:
             - build_frontend
@@ -1318,15 +1571,18 @@ workflows:
       - build_frontend:
           requires:
             - checkout
-      # WDIO localdb is disabled in favor of e2e_localdb_playwright_tests.
+      # WDIO localdb is disabled in favor of e2e_localdb_shards + merge.
       # - e2e_localdb_tests:
       #     requires:
       #       - pull_cbioportal_test_codebase
       #       - build_frontend
-      - e2e_localdb_playwright_tests:
+      - e2e_localdb_shards:
           requires:
             - pull_cbioportal_test_codebase
             - build_frontend
+      # See `tests` workflow comment: merge polls the API rather than
+      # depending on shards, so the merged HTML is produced even on red.
+      - e2e_localdb_merge
       # Playwright remote e2e replaces the legacy WDIO `e2e_tests` job in
       # the nightly workflow. `remote_e2e` polls the CircleCI API for the
       # shards' terminal state and merges the report, so it intentionally
