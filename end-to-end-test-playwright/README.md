@@ -26,6 +26,9 @@ runs are for fast dev iteration; they don't count as references.
 - pnpm (the rest of the repo uses pnpm; `corepack enable` will pick up the
   version pinned in the root `package.json`'s `packageManager` field)
 - Docker (only for the canonical/Docker lane)
+  - **Apple Silicon (M1/M2/M3)**: the CI image is amd64-only and runs via
+    Rosetta emulation automatically — Docker Desktop must have "Use Rosetta
+    for x86_64/amd64 emulation on Apple Silicon" enabled in settings
 
 ```bash
 # --ignore-workspace is required because this suite lives below the
@@ -44,6 +47,15 @@ pnpm exec playwright install chromium   # only needed for host-mode runs
 pnpm run test:docker                    # verify against tracked baselines
 pnpm run test:docker:update             # regenerate tracked baselines
 
+# Local-DB lane (Docker against a localhost backend, runs tests/local only)
+pnpm run test:docker:localdb            # verify against tracked baselines
+pnpm run test:docker:localdb:update     # regenerate tracked baselines
+
+# Local-DB lane (host-mode, scratch snapshots) — for fast local iteration
+pnpm run test:localdb                   # verify against local scratch snapshots
+pnpm run test:localdb:update            # regenerate local scratch snapshots
+pnpm run test:localdb:ui                # interactive runner + trace viewer
+
 # Host-mode (fast, scratch snapshots) — for local iteration
 pnpm test                               # verify against local scratch
 pnpm run test:update                    # regenerate local scratch
@@ -54,6 +66,21 @@ pnpm run report                         # open the last HTML report
 ./scripts/docker-test.sh timeline       # grep-filter specs
 CBIOPORTAL_URL=https://rc.cbioportal.org pnpm run test:docker
 ```
+
+The `test:docker:localdb` scripts set `PW_LOCAL=1` and point
+`CBIOPORTAL_URL` at `http://localhost:8080`, then forward `tests/local`
+to the wrapper. They assume a local cBioPortal backend is already
+listening on port 8080; the wrapper's `host.docker.internal` remap
+makes that reachable from inside the Playwright container.
+
+The `test:localdb` and `test:localdb:update` commands run the same
+`tests/local` suite directly on the host (no Docker) against a backend
+already listening on `http://localhost:8080`. They write scratch
+snapshots to `tests/**/__local_snapshots__/` (gitignored) so they never
+overwrite the tracked Docker references. `LOCALDEV=0` is set explicitly
+because the backend serves the full app directly — no separate frontend
+dev server is involved. These commands are the fastest way to iterate on
+localdb tests without waiting for a Docker pull.
 
 `./scripts/docker-test.sh` is a thin wrapper — anything after the
 script name is forwarded to `playwright test`, so flags like
