@@ -298,12 +298,22 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
             lo: toSvg(e.start) - 2,
             hi: toSvg(e.end) + 2,
         }));
+        // Chevrons in the non-retained portion of the gene render gray to match
+        // the gray non-retained exons — those nucleotides aren't transcribed in
+        // the fusion product, so the direction cue shouldn't claim they are.
+        const shadeLeft = is5Prime ? strand === '+' : strand === '-';
         for (let cx = chevronStart; cx <= chevronEnd; cx += CHEVRON_SPACING) {
             const tickMid = cx + CHEVRON_WIDTH / 2;
             const insideExon = exonRanges.some(
                 r => tickMid >= r.lo && tickMid <= r.hi
             );
             if (insideExon) continue;
+            const chevronRetained =
+                retainedExonNumbers === undefined
+                    ? true
+                    : shadeLeft
+                    ? tickMid <= bpX
+                    : tickMid >= bpX;
             const points = pointsRight
                 ? `${cx},${mid - CHEVRON_HALF_H} ${cx +
                       CHEVRON_WIDTH},${mid} ${cx},${mid + CHEVRON_HALF_H}`
@@ -314,12 +324,12 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
                 <polyline
                     key={`chevron-${transcript.transcriptId}-${cx}`}
                     points={points}
-                    stroke={color}
+                    stroke={chevronRetained ? color : '#ddd'}
                     strokeWidth={1.2}
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     fill="none"
-                    opacity={opacity}
+                    opacity={chevronRetained ? opacity : 1}
                 />
             );
         }
