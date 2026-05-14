@@ -202,8 +202,18 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
     const labelY = y;
     const forteY = y + LABEL_HEIGHT;
 
-    const strandArrow = strand === '+' ? ' \u25B6' : ' \u25C0';
+    const pointsRight = strand === '+';
+    const strandArrow = pointsRight ? ' \u25B6' : ' \u25C0';
+    const pillText = pointsRight ? 'TRANSCRIBED \u25B6' : '\u25C0 TRANSCRIBED';
     const bpX = toSvg(position);
+
+    // ---- Outermost exon X-coords across all rendered transcripts ----
+    // Used for the 5\u2032/3\u2032 end caps so they remain anchored to the overall
+    // gene extent rather than re-anchoring per active transcript.
+    const allRenderedExonStarts = allExons.map(e => toSvg(e.start));
+    const allRenderedExonEnds = allExons.map(e => toSvg(e.end));
+    const outerLeft = Math.min(...allRenderedExonStarts);
+    const outerRight = Math.max(...allRenderedExonEnds);
 
     // ---- Active transcript row geometry (for GSAP-animated chrome) ----
     const rowList: { transcript: TranscriptData; yPos: number }[] = [
@@ -269,6 +279,46 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
                     y2={intronY}
                     stroke={color}
                     strokeWidth={1}
+                    opacity={opacity}
+                />
+            );
+        }
+
+        // ---- Direction chevrons on the intron line (cue B) ----
+        // IGV / UCSC convention: regular tick marks along the gene body that
+        // point in the transcription direction. Spaced every 30 px; ticks
+        // whose midpoint falls inside an exon (with 2 px padding) are skipped.
+        const CHEVRON_SPACING = 30;
+        const CHEVRON_WIDTH = 6;
+        const CHEVRON_HALF_H = 2;
+        const mid = intronY;
+        const chevronStart = drawX + 15;
+        const chevronEnd = drawX + drawWidth - 15;
+        const exonRanges = exons.map(e => ({
+            lo: toSvg(e.start) - 2,
+            hi: toSvg(e.end) + 2,
+        }));
+        for (let cx = chevronStart; cx <= chevronEnd; cx += CHEVRON_SPACING) {
+            const tickMid = cx + CHEVRON_WIDTH / 2;
+            const insideExon = exonRanges.some(
+                r => tickMid >= r.lo && tickMid <= r.hi
+            );
+            if (insideExon) continue;
+            const points = pointsRight
+                ? `${cx},${mid - CHEVRON_HALF_H} ${cx +
+                      CHEVRON_WIDTH},${mid} ${cx},${mid + CHEVRON_HALF_H}`
+                : `${cx + CHEVRON_WIDTH},${mid -
+                      CHEVRON_HALF_H} ${cx},${mid} ${cx + CHEVRON_WIDTH},${mid +
+                      CHEVRON_HALF_H}`;
+            elements.push(
+                <polyline
+                    key={`chevron-${transcript.transcriptId}-${cx}`}
+                    points={points}
+                    stroke={color}
+                    strokeWidth={1.2}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    fill="none"
                     opacity={opacity}
                 />
             );
@@ -422,10 +472,42 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
                 fill="#333"
             >
                 {symbol}
-                <tspan fontSize={11} fill="#888">
+                <tspan fontSize={13} fontWeight={900} fill={color}>
                     {strandArrow}
                 </tspan>
             </text>
+
+            {/* "TRANSCRIBED" pill — direction cue D part 2.
+                Sits in the existing LABEL_HEIGHT band, no layout growth. */}
+            <g style={{ pointerEvents: 'none' }}>
+                <rect
+                    x={
+                        drawX +
+                        // Rough gene-symbol width estimate: bold 13px ~ 8.5px/char,
+                        // plus ~10px for the strand arrow tspan, plus 4px gap.
+                        symbol.length * 8.5 +
+                        10 +
+                        4
+                    }
+                    y={labelY + 2}
+                    width={92}
+                    height={14}
+                    rx={7}
+                    fill={color + '1A'}
+                    stroke={color}
+                    strokeWidth={1}
+                />
+                <text
+                    x={drawX + symbol.length * 8.5 + 10 + 4 + 92 / 2}
+                    y={labelY + 2 + 10}
+                    textAnchor="middle"
+                    fontSize={9}
+                    fontWeight={700}
+                    fill={color}
+                >
+                    {pillText}
+                </text>
+            </g>
 
             {/* Transcript ID label — hidden when FORTE is the active row;
                 the red+white pill inside its active outline shows the name. */}
@@ -592,6 +674,31 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
                 fill={COLOR_BREAKPOINT}
             >
                 chr{chromosome}:{position.toLocaleString()}
+            </text>
+
+            {/* 5′ / 3′ end caps — direction cue C.
+                Anchored to the outermost exon extents across all rendered
+                transcripts so they don't reflow when the active transcript
+                changes. Vertically centered on the FORTE row's intron line. */}
+            <text
+                x={outerLeft - 4}
+                y={forteY + INTRON_Y_OFFSET + 3}
+                textAnchor="end"
+                fontSize={10}
+                fontWeight={700}
+                fill="#333"
+            >
+                {pointsRight ? '5′' : '3′'}
+            </text>
+            <text
+                x={outerRight + 4}
+                y={forteY + INTRON_Y_OFFSET + 3}
+                textAnchor="start"
+                fontSize={10}
+                fontWeight={700}
+                fill="#333"
+            >
+                {pointsRight ? '3′' : '5′'}
             </text>
         </g>
     );
