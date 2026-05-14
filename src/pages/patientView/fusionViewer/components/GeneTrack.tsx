@@ -478,36 +478,44 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
             </text>
 
             {/* "TRANSCRIBED" pill — direction cue D part 2.
-                Sits in the existing LABEL_HEIGHT band, no layout growth. */}
-            <g style={{ pointerEvents: 'none' }}>
-                <rect
-                    x={
-                        drawX +
-                        // Rough gene-symbol width estimate: bold 13px ~ 8.5px/char,
-                        // plus ~10px for the strand arrow tspan, plus 4px gap.
-                        symbol.length * 8.5 +
-                        10 +
-                        4
-                    }
-                    y={labelY + 2}
-                    width={92}
-                    height={14}
-                    rx={7}
-                    fill={color + '1A'}
-                    stroke={color}
-                    strokeWidth={1}
-                />
-                <text
-                    x={drawX + symbol.length * 8.5 + 10 + 4 + 92 / 2}
-                    y={labelY + 2 + 10}
-                    textAnchor="middle"
-                    fontSize={9}
-                    fontWeight={700}
-                    fill={color}
-                >
-                    {pillText}
-                </text>
-            </g>
+                Sits in the existing LABEL_HEIGHT band, no layout growth.
+                pillX = drawX + symbol width estimate + strand arrow width + gap. */}
+            {(() => {
+                const PILL_WIDTH = 92;
+                const PILL_HEIGHT = 14;
+                const SYMBOL_CHAR_WIDTH = 8.5; // bold 13px sans-serif estimate
+                const STRAND_ARROW_WIDTH = 10;
+                const PILL_GAP = 18;
+                const pillX =
+                    drawX +
+                    symbol.length * SYMBOL_CHAR_WIDTH +
+                    STRAND_ARROW_WIDTH +
+                    PILL_GAP;
+                return (
+                    <g style={{ pointerEvents: 'none' }}>
+                        <rect
+                            x={pillX}
+                            y={labelY + 2}
+                            width={PILL_WIDTH}
+                            height={PILL_HEIGHT}
+                            rx={7}
+                            fill={color + '1A'}
+                            stroke={color}
+                            strokeWidth={1}
+                        />
+                        <text
+                            x={pillX + PILL_WIDTH / 2}
+                            y={labelY + 2 + 10}
+                            textAnchor="middle"
+                            fontSize={9}
+                            fontWeight={700}
+                            fill={color}
+                        >
+                            {pillText}
+                        </text>
+                    </g>
+                );
+            })()}
 
             {/* Transcript ID label — hidden when FORTE is the active row;
                 the red+white pill inside its active outline shows the name. */}
