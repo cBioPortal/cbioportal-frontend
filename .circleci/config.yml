@@ -1153,22 +1153,18 @@ jobs:
             ./utils/gen-keycloak-config.sh --studies="$STUDIES" --template='/tmp/repo/cbioportal-docker-compose/dev/keycloak/keycloak-config.json' --out='/tmp/repo/keycloak-config-generated.json'
       - run:
           name: Start backend server with keycloak
+          # Kicks off docker-compose in the background (nohup ... &) so the
+          # step itself returns immediately. The Check keycloak / Check
+          # backend steps further down poll for the stack to be ready —
+          # but Playwright install + Chromium install run between this
+          # step and those checks, so they overlap with the ~78s of backend
+          # boot rather than running serially after it (Phase 2 saving).
           environment:
             KEYCLOAK_CONFIG_PATH: '/tmp/repo/keycloak-config-generated.json'
             APPLICATION_PROPERTIES_PATH: '/tmp/repo/cbioportal-frontend/end-to-end-test/local/runtime-config/portal.properties'
           command: |
             cd cbioportal-test
             nohup ./scripts/docker-compose.sh --portal_type='keycloak' --compose_extensions='-f addon/clickhouse/docker-compose.remote.clickhouse.yml'  >> /tmp/repo/docker-compose-logs.txt 2>&1 &
-      - run:
-          name: Check keycloak connection at localhost
-          command: |
-            cd cbioportal-test
-            ./utils/check-connection.sh --url=localhost:8081 --max_retries=50
-      - run:
-          name: Check backend connection at localhost
-          command: |
-            cd cbioportal-test
-            ./utils/check-connection.sh --url=localhost:${BACKEND_PORT} --max_retries=250
       - run:
           name: Install Playwright suite dependencies
           working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
@@ -1220,6 +1216,21 @@ jobs:
           key: v1-playwright-browsers-{{ checksum "cbioportal-frontend/end-to-end-test-playwright/pnpm-lock.yaml" }}
           paths:
             - ~/.cache/ms-playwright
+      - run:
+          name: Check keycloak connection at localhost
+          # Reached after Playwright install (~30s) has already been
+          # running concurrently with docker-compose. By the time we
+          # arrive here, keycloak has typically been booting for ~30s
+          # already, so this wait is shorter than it would be at the
+          # original position right after the backend start.
+          command: |
+            cd cbioportal-test
+            ./utils/check-connection.sh --url=localhost:8081 --max_retries=50
+      - run:
+          name: Check backend connection at localhost
+          command: |
+            cd cbioportal-test
+            ./utils/check-connection.sh --url=localhost:${BACKEND_PORT} --max_retries=250
       - run:
           name: Start frontend dist server (pnpm serveDistLocalDb) on https://localhost:3000
           background: true
