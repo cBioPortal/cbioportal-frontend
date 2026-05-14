@@ -20,12 +20,35 @@ const SNAPSHOT_DIR = inDocker ? '__snapshots__' : '__local_snapshots__';
 // bundle on the public origin instead.
 const isLocaldev = process.env.LOCALDEV !== '0';
 
+// PW_UPDATE_SNAPSHOTS lets CI auto-generate missing screenshot
+// baselines on first run without making every developer pass a CLI
+// flag. Set to 'missing' / 'changed' / 'all' / 'none'. When unset, we
+// pass `undefined` so Playwright falls back to its built-in default
+// ('missing'), which is what the remote shards job has always relied
+// on — overriding to 'none' here previously slowed the remote suite
+// from ~12 min to ~35 min by forcing failures + retries on any test
+// whose baseline drifted vs. silently re-baselining.
+const updateSnapshots = process.env.PW_UPDATE_SNAPSHOTS as
+    | 'all'
+    | 'changed'
+    | 'missing'
+    | 'none'
+    | undefined;
+
+// The remote `playwright_e2e_shards` job runs `npx playwright test`
+// with no path filter and would otherwise pick up tests/local/**, where
+// the Keycloak/SAML helpers hang against the public origin and add
+// 5+ minutes to slow shards. The localdb job opts in via PW_LOCAL=1.
+const includeLocalDb = process.env.PW_LOCAL === '1';
+
 export default defineConfig({
     testDir: './tests',
+    testIgnore: includeLocalDb ? [] : ['**/local/**'],
     fullyParallel: false,
     forbidOnly: !!process.env.CI,
     retries: process.env.CI ? 1 : 0,
     workers: 1,
+    updateSnapshots,
     reporter: [
         ['list'],
         ['html', { open: 'never' }],
@@ -90,27 +113,23 @@ export default defineConfig({
                                   // to be disabled for public→loopback
                                   // subresource loads.
                                   '--disable-features=BlockInsecurePrivateNetworkRequests,PrivateNetworkAccessPreflightSupport,PrivateNetworkAccessRespectPreflightResults,LocalNetworkAccessChecks,LocalNetworkAccessChecksWarnings',
-                                  // Inside the Playwright Docker image
-                                  // *on a developer machine* (scripts/docker-test.sh),
-                                  // `localhost` resolves to the test
-                                  // container, not the host running
-                                  // `yarn startSSL`, so we remap it to
+                                  // Opt-in remap for the one caller that
+                                  // needs it: scripts/docker-test.sh runs
+                                  // Playwright inside the pinned image on a
+                                  // developer machine while `yarn startSSL`
+                                  // serves the bundle on the host. From
+                                  // inside that container, `localhost` is
+                                  // the container itself, so we map it to
                                   // host.docker.internal (provided by
                                   // Docker Desktop on macOS, added via
-                                  // --add-host on Linux). Skip on host
-                                  // runs — `localhost` already works.
-                                  // Also skip on CircleCI: there, the
-                                  // playwright image IS the job container
-                                  // and `serveDist` runs in the same
-                                  // container, so `localhost` already
-                                  // points at the bundle and
-                                  // host.docker.internal doesn't resolve
-                                  // at all (no Docker Desktop) — without
-                                  // this skip, chromium can't fetch the
-                                  // local bundle, the page never boots,
-                                  // and waitForNetworkQuiet never sees
-                                  // window.ajaxQuiet flip to true.
-                                  ...(inDocker && !process.env.CIRCLECI
+                                  // --add-host on Linux). Every other
+                                  // setup — host runs, CircleCI jobs
+                                  // (Playwright + serveDist colocated),
+                                  // and any VPS/CI runner that boots the
+                                  // backend in docker but runs Playwright
+                                  // on the host — leaves this unset and
+                                  // `localhost` resolves naturally.
+                                  ...(process.env.PW_REMAP_LOCALHOST === '1'
                                       ? [
                                             '--host-resolver-rules=MAP localhost host.docker.internal',
                                         ]

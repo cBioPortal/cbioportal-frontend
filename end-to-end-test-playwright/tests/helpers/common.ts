@@ -35,6 +35,13 @@ export async function expectElementScreenshot(
         masks?: string[];
         hide?: string[];
         pauseMs?: number;
+        // When true, the mouse is NOT moved to (0,0) before the snapshot.
+        // Use this for tooltip tests where the hover must remain active so
+        // the tooltip stays visible in the capture. In Docker/headless mode
+        // the browser processes mouseleave events fast enough that the
+        // tooltip disappears within its 50 ms leave-delay before the
+        // screenshot is taken if the mouse is moved away.
+        keepMouse?: boolean;
     } = {}
 ) {
     const target = page.locator(selector);
@@ -48,7 +55,9 @@ export async function expectElementScreenshot(
         });
     }
 
-    await page.mouse.move(0, 0);
+    if (!opts.keepMouse) {
+        await page.mouse.move(0, 0);
+    }
     if (opts.pauseMs) await page.waitForTimeout(opts.pauseMs);
 
     const mask = (opts.masks ?? ['.qtip']).map(s => page.locator(s));

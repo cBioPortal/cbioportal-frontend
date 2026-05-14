@@ -118,7 +118,7 @@ export async function expectOncoprintScreenshot(
     snapshotName: string,
     opts: { selector?: string; extraMasks?: string[] } = {}
 ) {
-    const target = page.locator(opts.selector ?? '.oncoprintContainer');
+    const target = page.locator(opts.selector ?? '#oncoprintDiv');
 
     // If the view-dropdown ended up open from a prior interaction, close it
     // so it doesn't leak into the screenshot (mirrors wdio behavior).

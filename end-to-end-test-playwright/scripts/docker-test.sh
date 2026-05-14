@@ -56,16 +56,23 @@ if [[ "${LOCALDEV}" != "0" ]]; then
     LOCALDEV_ARGS+=(--add-host=host.docker.internal:host-gateway)
 fi
 
+# The CI image is built for linux/amd64 only; on Apple Silicon we need
+# Rosetta emulation. Passing --platform on amd64 hosts is harmless.
+PLATFORM_ARGS=(--platform linux/amd64)
+
 exec docker run --rm -i \
+    "${PLATFORM_ARGS[@]}" \
     --ipc=host \
     --user "$(id -u):$(id -g)" \
     -v "$(pwd):/work" \
     -w /work \
     -e PW_DOCKER=1 \
+    -e PW_REMAP_LOCALHOST=1 \
     -e HOME=/tmp \
     -e CBIOPORTAL_URL="${CBIOPORTAL_URL:-https://www.cbioportal.org}" \
     -e CI="${CI:-}" \
     -e LOCALDEV="${LOCALDEV}" \
+    -e PW_LOCAL="${PW_LOCAL:-}" \
     ${LOCALDEV_ARGS[@]+"${LOCALDEV_ARGS[@]}"} \
     "${IMAGE}" \
     pnpm exec playwright test "$@"
