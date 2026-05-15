@@ -86,6 +86,50 @@ localdb tests without waiting for a Docker pull.
 script name is forwarded to `playwright test`, so flags like
 `--debug`, `--headed`, `--grep`, `--trace on` all work.
 
+## HAR record/replay (optional)
+
+Backend response timing is a major source of remote_e2e flakiness — the
+same test, same code, but a slightly different DOM at screenshot time
+because a dozen XHRs landed in a slightly different order. The
+`fixtures.ts` `context` fixture can route `*.cbioportal.org` traffic
+through a per-test [Playwright HAR
+file](https://playwright.dev/docs/mock#mocking-with-har-files) so the
+network is byte-identical run to run.
+
+```bash
+# Record fixtures for a spec (passes through to the real network AND
+# saves responses to tests/__hars__/<spec>/<test-slug>.har plus a few
+# sibling response-body files).
+PW_HAR_MODE=record pnpm exec playwright test tests/config.spec.ts
+
+# Replay fixtures (network is mocked; missing entries fall back to the
+# real network so an incomplete HAR still works while you grow it).
+PW_HAR_MODE=replay pnpm exec playwright test tests/config.spec.ts
+
+# Default — `PW_HAR_MODE` unset → the fixture is a no-op and tests hit
+# the real backend, same as today.
+pnpm exec playwright test tests/config.spec.ts
+```
+
+Scope is restricted to `*.cbioportal.org` so the local frontend bundle
+(`localhost:3000` in LOCALDEV mode) and third-party APIs (OncoKB,
+Genome Nexus) flow through untouched — the HAR captures only the
+variable-timing backend, not the code under test.
+
+HAR fixtures are large (~5 MB per test) and currently **gitignored**;
+treat record/replay as a local-only workflow for now. Whether to commit
+them, LFS them, or run a periodic refresh job in CI is an open
+question. Once a workflow is chosen, this section will be updated and
+CI can flip `PW_HAR_MODE=replay` to lock the backend behind
+deterministic fixtures.
+
+When fixtures are present, screenshot baselines should be regenerated
+under `PW_HAR_MODE=replay`. The first screenshot capture under HAR
+replay differs slightly from the recorded one (one-off render-order
+difference); subsequent replays then match the new baseline byte for
+byte. Anecdotally on `patient-screenshot.spec.ts`: three back-to-back
+replays produced identical pixels every time.
+
 ## Updating references when a real visual change lands
 
 1. Land the code change.

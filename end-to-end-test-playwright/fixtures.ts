@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import {
     test as baseTest,
     expect,
@@ -5,6 +7,7 @@ import {
     BrowserContext,
     Locator,
     Page,
+    TestInfo,
 } from '@playwright/test';
 
 // LOCALDEV defaults ON: the suite runs against the public cbioportal
@@ -79,11 +82,90 @@ function patchBrowser(browser: Browser): Browser {
     return browser;
 }
 
+// HAR record/replay against *.cbioportal.org. Backend response timing is a
+// significant source of remote_e2e flakiness — same test, slightly
+// different DOM at screenshot time depending on which order/latency a
+// dozen XHRs finished in. Routing those XHRs through a per-test HAR
+// fixture takes the network out of the loop on replay: identical bytes,
+// identical timing, identical screenshots.
+//
+// PW_HAR_MODE controls behavior:
+//   record  — pass requests through to the real backend AND write them
+//             to tests/__hars__/<spec>/<test-slug>.har. Use this to
+//             refresh fixtures.
+//   replay  — serve from the HAR. Requests missing from it pass through
+//             to the network (notFound: 'fallback'); this lets a partial
+//             HAR still work while you grow the corpus.
+//   off (or unset) — fixture is a no-op; tests hit the real backend.
+//
+// Scope is restricted by URL to *.cbioportal.org so the local frontend
+// bundle (localhost:3000 in LOCALDEV mode) and third-party origins
+// (oncokb.org, genomenexus.org) flow through untouched. Limiting scope
+// keeps HARs small and keeps "the frontend code under test" out of the
+// frozen-in-time fixture.
+const HAR_MODE = (process.env.PW_HAR_MODE || '').toLowerCase();
+const HAR_URL_PATTERN = /^https?:\/\/[^/]*cbioportal\.org\//i;
+
+function harPathFor(testInfo: TestInfo): string {
+    // Per-test HAR (not per-spec) because routeFromHAR in `update: true`
+    // overwrites the file on context close — multiple tests sharing one
+    // HAR would clobber each other's recordings. Per-test files mean
+    // `record` mode is idempotent: rerun a single test, only its HAR
+    // moves.
+    const specBasename = path.basename(testInfo.file).replace(/\.spec\.[tj]sx?$/, '');
+    const slug = testInfo.titlePath
+        .slice(1)
+        .join('-')
+        .replace(/[^a-zA-Z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .toLowerCase()
+        .slice(0, 120);
+    return path.join(
+        path.dirname(testInfo.file),
+        '__hars__',
+        specBasename,
+        `${slug}.har`
+    );
+}
+
+async function setupHar(
+    context: BrowserContext,
+    testInfo: TestInfo
+): Promise<void> {
+    if (HAR_MODE !== 'record' && HAR_MODE !== 'replay') return;
+    const harPath = harPathFor(testInfo);
+    const recording = HAR_MODE === 'record';
+    if (!recording && !fs.existsSync(harPath)) {
+        // No fixture yet → don't install the route at all. The first
+        // record run for this test will create it.
+        return;
+    }
+    await context.routeFromHAR(harPath, {
+        url: HAR_URL_PATTERN,
+        update: recording,
+        // 'attach' stores response bodies as separate sibling files
+        // rather than base64-inlining them, keeping the .har JSON
+        // small/diffable and the binary blobs as opaque files git can
+        // still LFS-handle if needed.
+        updateContent: 'attach',
+        // 'minimal' drops timing, server IP, and other fields that
+        // would otherwise churn on every re-record without changing
+        // replay behavior.
+        updateMode: 'minimal',
+        // Fallback to the network on a miss in replay mode rather than
+        // failing the request. Stricter ('abort') would surface gaps
+        // immediately but breaks the test on the first new endpoint;
+        // fallback lets the suite limp along until a fresh record pass.
+        ...(recording ? {} : { notFound: 'fallback' as const }),
+    });
+}
+
 export const test = baseTest.extend({
     browser: async ({ browser }, use) => {
         await use(patchBrowser(browser));
     },
-    context: async ({ context }, use) => {
+    context: async ({ context }, use, testInfo) => {
+        await setupHar(context, testInfo);
         await use(patchContext(context));
     },
     page: async ({ page }, use) => {
