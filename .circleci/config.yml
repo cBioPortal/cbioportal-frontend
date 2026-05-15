@@ -358,9 +358,15 @@ jobs:
       BRANCH_ENV: master
       FRONTEND_TEST_USE_LOCAL_DIST: 'true'
       PLAYWRIGHT_JUNIT_OUTPUT_NAME: test-results/junit.xml
-      # Optional grep filter for targeted smoke runs. Empty by default →
-      # whole suite runs. Set to e.g. 'patient-screenshot' to narrow.
-      PLAYWRIGHT_GREP: ''
+      # *** TEMP for cache-proxy smoke: limit shards to two specs (config +
+      # patient-screenshot). Revert to '' to restore the full suite once
+      # we're confident the proxy wiring is sound.
+      PLAYWRIGHT_GREP: '(homepage config overrides|Patient cohort)'
+      # Route the browser through the always-on caching proxy (see
+      # cbioportal-cache-proxy repo). PW_WF_STAMP is set in the Run
+      # Playwright shard step below because env: blocks don't expand
+      # CIRCLE_WORKFLOW_ID.
+      HTTPS_PROXY: 'http://15.204.174.231:47821'
     steps:
       - attach_workspace:
           at: /tmp/repo
@@ -429,6 +435,12 @@ jobs:
                 GREP_ARG="--grep=$PLAYWRIGHT_GREP"
                 echo "Filtering with --grep=$PLAYWRIGHT_GREP"
             fi
+            # CIRCLE_WORKFLOW_ID isn't expanded inside env: blocks, so
+            # PW_WF_STAMP has to be set here. playwright.config.ts reads
+            # it and forwards as X-PW-Workflow-ID on every request so
+            # the cache proxy gives this workflow its own namespace.
+            export PW_WF_STAMP="$CIRCLE_WORKFLOW_ID"
+            echo "Cache-proxy stamp: $PW_WF_STAMP via $HTTPS_PROXY"
             set +e
             # --workers=3 on resource_class large (4 vCPU / 8 GB) leaves
             # one vCPU for the runner / serveDist while running 3 chromium
@@ -1575,15 +1587,14 @@ workflows:
       #     requires:
       #       - pull_cbioportal_test_codebase
       #       - build_frontend
-      - e2e_localdb_shards:
-          requires:
-            - pull_cbioportal_test_codebase
-            - build_frontend
-      # Intentionally NOT requiring e2e_localdb_shards: same pattern as
-      # remote_e2e — this job polls the CircleCI API for the shards'
-      # terminal state and merges, so the merged HTML is produced even
-      # when shards are red.
-      - e2e_localdb_merge
+      # *** TEMP: localdb jobs commented out while we smoke-test the
+      # cache-proxy wiring on remote_e2e_shards. Re-enable before
+      # merging this branch.
+      # - e2e_localdb_shards:
+      #     requires:
+      #       - pull_cbioportal_test_codebase
+      #       - build_frontend
+      # - e2e_localdb_merge
       - remote_e2e_shards:
           requires:
             - build_frontend

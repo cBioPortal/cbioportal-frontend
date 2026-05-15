@@ -41,6 +41,14 @@ const updateSnapshots = process.env.PW_UPDATE_SNAPSHOTS as
 // 5+ minutes to slow shards. The localdb job opts in via PW_LOCAL=1.
 const includeLocalDb = process.env.PW_LOCAL === '1';
 
+// Always-on caching forward proxy in front of *.cbioportal.org. When
+// HTTPS_PROXY is set, route the browser through it and stamp every
+// request with PW_WF_STAMP so the proxy can key its cache per-workflow.
+// See https://github.com/cBioPortal/cbioportal-frontend-cache-proxy
+// (or wherever the service is hosted).
+const PROXY_SERVER = process.env.HTTPS_PROXY;
+const WF_STAMP = process.env.PW_WF_STAMP || '';
+
 export default defineConfig({
     testDir: './tests',
     testIgnore: includeLocalDb ? [] : ['**/local/**'],
@@ -80,7 +88,19 @@ export default defineConfig({
         video: 'retain-on-failure',
         actionTimeout: 15_000,
         navigationTimeout: 60_000,
-        ...(isLocaldev && { ignoreHTTPSErrors: true }),
+        // ignoreHTTPSErrors is needed in localdev mode (to accept the
+        // serveDist self-signed cert) and any time we route through
+        // the cache proxy (to accept mitmproxy's generated CA).
+        ...((isLocaldev || PROXY_SERVER) && { ignoreHTTPSErrors: true }),
+        ...(PROXY_SERVER && {
+            proxy: { server: PROXY_SERVER },
+            extraHTTPHeaders: {
+                // The cache proxy keys entries by this header so each
+                // CI workflow run gets its own cache namespace. Locally
+                // unset is fine — the proxy treats blank as "default".
+                'X-PW-Workflow-ID': WF_STAMP,
+            },
+        }),
     },
 
     projects: [
@@ -106,6 +126,21 @@ export default defineConfig({
                         '--disable-font-subpixel-positioning',
                         '--disable-lcd-text',
                         '--font-render-hinting=none',
+                        // When routed through the cache proxy, mitmproxy
+                        // presents a self-signed cert. Chromium gates
+                        // proxy/MITM certs before the CDP-level
+                        // ignoreHTTPSErrors gets a chance, so launch-level
+                        // --ignore-certificate-errors is required. The
+                        // --proxy-server flag also has to be at launch
+                        // time: chromium-headless-shell was observed to
+                        // silently no-op the CDP-level proxy setting for
+                        // HTTPS traffic.
+                        ...(PROXY_SERVER
+                            ? [
+                                  '--ignore-certificate-errors',
+                                  `--proxy-server=${PROXY_SERVER}`,
+                              ]
+                            : []),
                         ...(isLocaldev
                             ? [
                                   // Private Network Access + the newer
