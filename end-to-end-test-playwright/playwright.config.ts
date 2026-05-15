@@ -41,6 +41,18 @@ const updateSnapshots = process.env.PW_UPDATE_SNAPSHOTS as
 // 5+ minutes to slow shards. The localdb job opts in via PW_LOCAL=1.
 const includeLocalDb = process.env.PW_LOCAL === '1';
 
+// When scripts/run-with-cache-proxy.sh is in play, HTTPS_PROXY points
+// at a local mitmdump that caches *.cbioportal.org responses for the
+// duration of a single test run. Routing Playwright's browser through
+// it requires (a) the proxy server setting and (b) accepting the
+// proxy's self-signed CA — easier than installing the CA into Chromium.
+const proxyServer = process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
+const proxy = proxyServer ? { server: proxyServer } : undefined;
+if (proxy) {
+    // eslint-disable-next-line no-console
+    console.log(`[playwright.config] routing through proxy ${proxy.server}`);
+}
+
 export default defineConfig({
     testDir: './tests',
     testIgnore: includeLocalDb ? [] : ['**/local/**'],
@@ -80,7 +92,8 @@ export default defineConfig({
         video: 'retain-on-failure',
         actionTimeout: 15_000,
         navigationTimeout: 60_000,
-        ...(isLocaldev && { ignoreHTTPSErrors: true }),
+        ...((isLocaldev || proxy) && { ignoreHTTPSErrors: true }),
+        ...(proxy && { proxy }),
     },
 
     projects: [
@@ -106,6 +119,24 @@ export default defineConfig({
                         '--disable-font-subpixel-positioning',
                         '--disable-lcd-text',
                         '--font-render-hinting=none',
+                        // When routed through scripts/run-with-cache-proxy.sh,
+                        // mitmdump presents a self-signed cert generated on
+                        // first use. Chromium gates proxy/MITM certs *before*
+                        // Playwright's context-level ignoreHTTPSErrors gets a
+                        // chance to respond to the CDP request, so the only
+                        // reliable way to make TLS interception work is the
+                        // launch-level --ignore-certificate-errors flag.
+                        // We also pass --proxy-server here in addition to
+                        // use.proxy: in chromium-headless-shell builds the
+                        // CDP-level proxy setting (use.proxy) was observed to
+                        // silently no-op for HTTPS traffic, while the
+                        // launch-level switch is honoured reliably.
+                        ...(proxy
+                            ? [
+                                  '--ignore-certificate-errors',
+                                  `--proxy-server=${proxy.server}`,
+                              ]
+                            : []),
                         ...(isLocaldev
                             ? [
                                   // Private Network Access + the newer

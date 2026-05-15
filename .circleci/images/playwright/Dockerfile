@@ -19,10 +19,20 @@
 
 FROM mcr.microsoft.com/playwright:v1.59.1-jammy
 
-# Install jq (used by scripts/env_vars.sh to parse the GitHub API response when
-# resolving the PR's base branch).
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends jq \
+# Install jq (used by scripts/env_vars.sh to parse the GitHub API response
+# when resolving the PR's base branch) and mitmproxy via pip (used by
+# end-to-end-test-playwright/scripts/run-with-cache-proxy.sh to cache repeat
+# requests to *.cbioportal.org during a single test run; see that script's
+# header for the wiring).
+#
+# Why pip rather than apt: Ubuntu jammy ships mitmproxy 6.0.2, which has
+# unreliable HTTP/2 + addon-hook firing on modern Chromium TLS. The pip
+# release (11.x at time of writing) has a working request/response hook
+# pipeline. DEBIAN_FRONTEND=noninteractive prevents tzdata (pulled in
+# transitively by python3-pip) from blocking on its interactive prompt.
+RUN DEBIAN_FRONTEND=noninteractive apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends jq python3-pip \
+    && pip3 install --no-cache-dir 'mitmproxy>=11,<12' \
     && rm -rf /var/lib/apt/lists/*
 
 # Enable corepack so the `pnpm` shim is on PATH, then pre-fetch and activate

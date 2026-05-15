@@ -1,0 +1,27 @@
+# Thin overlay used only for local development while the canonical CI
+# image (.circleci/images/playwright/Dockerfile) is being rebuilt with
+# mitmproxy baked in. Build once:
+#
+#   docker build --platform linux/amd64 \
+#     -f end-to-end-test-playwright/proxy/Dockerfile.overlay \
+#     -t cbioportal-frontend-playwright-ci:cache-local \
+#     end-to-end-test-playwright/proxy
+#
+# Then run the suite via:
+#
+#   PW_CACHE_PROXY=1 \
+#   PW_CACHE_IMAGE=cbioportal-frontend-playwright-ci:cache-local \
+#   ./scripts/docker-test.sh tests/your-spec.ts
+#
+# Once the GHCR image is republished, drop this overlay and the
+# PW_CACHE_IMAGE override.
+FROM ghcr.io/cbioportal/cbioportal-frontend-playwright-ci:v1.59.1-jammy
+USER root
+# Ubuntu jammy's apt mitmproxy is 6.0.2, which has known HTTP/2 +
+# addon-hook reliability issues. pip pulls a current release (11.x at
+# time of writing) with a working request/response hook pipeline. Pin
+# loosely so security backports flow in.
+RUN DEBIAN_FRONTEND=noninteractive apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends python3-pip \
+    && pip3 install --no-cache-dir 'mitmproxy>=11,<12' \
+    && rm -rf /var/lib/apt/lists/*

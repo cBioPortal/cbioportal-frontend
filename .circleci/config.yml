@@ -361,6 +361,14 @@ jobs:
       # Optional grep filter for targeted smoke runs. Empty by default →
       # whole suite runs. Set to e.g. 'patient-screenshot' to narrow.
       PLAYWRIGHT_GREP: ''
+      # Cache repeat requests to *.cbioportal.org through a local
+      # mitmdump backed by a SQLite file. restore_cache (below) seeds
+      # the file from a previous workflow run; the merge_playwright_cache
+      # job unions all 12 shards' contributions back into one for the
+      # next workflow. See end-to-end-test-playwright/proxy/cache_addon.py
+      # for the addon and proxy/merge_cache.py for the union step.
+      PW_CACHE_PROXY: '1'
+      PW_CACHE_DB: /tmp/pw-cache/cache.sqlite
     steps:
       - attach_workspace:
           at: /tmp/repo
@@ -390,6 +398,17 @@ jobs:
           # --frozen-lockfile: fail if pnpm-lock.yaml would change,
           # the pnpm equivalent of `npm ci`.
           command: pnpm install --frozen-lockfile --ignore-workspace
+      # Restore the response-cache SQLite file (if any prior workflow
+      # run produced one). The `keys:` list is tried in order; the
+      # first matching cache is used. We prefer branch-local caches
+      # because feature branches may hit different URLs than master,
+      # but fall back to master and finally to any v1 cache.
+      - restore_cache:
+          name: Restore playwright response cache
+          keys:
+            - playwright-cache-v1-{{ .Branch }}-
+            - playwright-cache-v1-master-
+            - playwright-cache-v1-
       - run:
           name: Start frontend dev server (pnpm serveDist) on localhost:3000
           background: true
@@ -429,6 +448,16 @@ jobs:
                 GREP_ARG="--grep=$PLAYWRIGHT_GREP"
                 echo "Filtering with --grep=$PLAYWRIGHT_GREP"
             fi
+            # When PW_CACHE_PROXY=1, route the playwright invocation
+            # through scripts/run-with-cache-proxy.sh, which spins up a
+            # local mitmdump that caches *.cbioportal.org responses for
+            # the lifetime of this shard. Cache is per-process — each
+            # shard is its own container and starts with an empty cache.
+            if [ "${PW_CACHE_PROXY:-0}" = "1" ]; then
+              PW_RUNNER=(./scripts/run-with-cache-proxy.sh)
+            else
+              PW_RUNNER=(pnpm exec playwright test)
+            fi
             set +e
             # --workers=3 on resource_class large (4 vCPU / 8 GB) leaves
             # one vCPU for the runner / serveDist while running 3 chromium
@@ -436,7 +465,7 @@ jobs:
             # (CPU-bound contention with serveDist + runner sharing the
             # 4th core). Only describes opted into mode: 'parallel'
             # actually use the extra workers; the rest still serialize.
-            pnpm exec playwright test --workers=3 \
+            "${PW_RUNNER[@]}" --workers=3 \
               --shard="${SHARD_NUM}/${CIRCLE_NODE_TOTAL}" \
               --reporter=list,junit,blob \
               $GREP_ARG
@@ -458,6 +487,26 @@ jobs:
               echo "playwright exit: 0 (this shard passed)"
             fi
             exit 0
+      # Persist this shard's cache.sqlite under a per-shard filename so
+      # the merge_playwright_cache job can union them all. The
+      # `exit 0` above means this step runs regardless of test
+      # pass/fail. cp is guarded in case the cache file is missing
+      # — e.g. when a shard crashes before producing any response.
+      - run:
+          name: Stage shard cache for workspace
+          command: |
+            mkdir -p /tmp/pw-cache-shards
+            if [ -f /tmp/pw-cache/cache.sqlite ]; then
+              cp /tmp/pw-cache/cache.sqlite \
+                 "/tmp/pw-cache-shards/cache-${CIRCLE_NODE_INDEX}.sqlite"
+              ls -la /tmp/pw-cache-shards/
+            else
+              echo "No /tmp/pw-cache/cache.sqlite to stage."
+            fi
+      - persist_to_workspace:
+          root: /tmp
+          paths:
+            - pw-cache-shards
       - store_test_results:
           path: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright/test-results
       - store_artifacts:
@@ -721,6 +770,50 @@ jobs:
           destination: test-results
       - store_test_results:
           path: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright/test-results
+
+  # Unions the 12 per-shard cache.sqlite files produced by
+  # remote_e2e_shards into a single file and persists it via save_cache
+  # under a branch-scoped key. The shards job's restore_cache picks the
+  # most recent matching key on the next workflow run, so each run
+  # starts hot with the union of every shard's previous contributions.
+  #
+  # Wired with `requires: [remote_e2e_shards]` (not the API-polling
+  # pattern remote_e2e uses) on purpose: if any shard is red, the
+  # workflow's tests are broken and we don't want to expand the cache
+  # with potentially-wrong responses. The next green run will refresh
+  # it. Skipping cache updates on red runs is a feature.
+  merge_playwright_cache:
+    docker:
+      - image: ghcr.io/cbioportal/cbioportal-frontend-playwright-ci:v1.59.1-jammy
+    resource_class: small
+    working_directory: /tmp/repo
+    environment:
+      HOME: /tmp
+    steps:
+      # Source comes via the workspace persisted by build_frontend; the
+      # shards job adds pw-cache-shards/ to the same workspace tree.
+      - attach_workspace:
+          at: /tmp/repo
+      - run:
+          name: Merge per-shard cache.sqlite files
+          command: |
+            mkdir -p /tmp/pw-cache
+            python3 cbioportal-frontend/end-to-end-test-playwright/proxy/merge_cache.py \
+              /tmp/repo/pw-cache-shards \
+              /tmp/pw-cache/cache.sqlite
+            ls -la /tmp/pw-cache/
+      - save_cache:
+          name: Save merged playwright cache
+          # epoch in the key makes each run write a fresh entry rather
+          # than colliding with the existing key (which save_cache would
+          # silently no-op). restore_cache uses the prefix and picks
+          # the most recent, so older entries naturally age out.
+          key: playwright-cache-v1-{{ .Branch }}-{{ epoch }}
+          paths:
+            - /tmp/pw-cache/cache.sqlite
+      - store_artifacts:
+          path: /tmp/pw-cache/cache.sqlite
+          destination: cache.sqlite
 
   analyze_flakes:
     # Read-only post-step that surfaces tests whose pass/fail outcome
@@ -1593,6 +1686,16 @@ workflows:
       # uses CircleCI's public workflow API (no auth), so this works on
       # fork PRs too.
       - remote_e2e
+      # Unions all 12 shard caches into one file and save_caches it for
+      # the next workflow run. Requires green shards (see comment on
+      # the job for why).
+      - merge_playwright_cache:
+          requires:
+            # Need build_frontend so the workspace carries the source
+            # (merge_cache.py). And remote_e2e_shards for the per-shard
+            # cache.sqlite files.
+            - build_frontend
+            - remote_e2e_shards
       # Read-only post-step on remote_e2e: detects cross-run flakes
       # (pass in some PRs, fail in others) and writes a Claude-authored
       # analysis as a build artifact. Runs after remote_e2e so this

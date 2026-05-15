@@ -60,6 +60,22 @@ fi
 # Rosetta emulation. Passing --platform on amd64 hosts is harmless.
 PLATFORM_ARGS=(--platform linux/amd64)
 
+# When PW_CACHE_PROXY=1, route the inner command through the caching
+# mitmproxy wrapper (proxy/cache_addon.py). The wrapper script starts
+# mitmdump on 127.0.0.1:8888, exports HTTPS_PROXY, runs playwright,
+# and cleans up. The image must have mitmproxy installed
+# (.circleci/images/playwright/Dockerfile bakes it in); PW_CACHE_IMAGE
+# lets developers point at a local overlay tag while waiting for that
+# image to republish.
+PW_CACHE_PROXY="${PW_CACHE_PROXY:-0}"
+if [[ "${PW_CACHE_PROXY}" == "1" ]]; then
+    IMAGE="${PW_CACHE_IMAGE:-$IMAGE}"
+    INNER_CMD=(./scripts/run-with-cache-proxy.sh "$@")
+    echo "Caching proxy: enabled (image=${IMAGE}, hosts=${PW_CACHE_HOSTS:-cbioportal.org})"
+else
+    INNER_CMD=(pnpm exec playwright test "$@")
+fi
+
 exec docker run --rm -i \
     "${PLATFORM_ARGS[@]}" \
     --ipc=host \
@@ -73,6 +89,10 @@ exec docker run --rm -i \
     -e CI="${CI:-}" \
     -e LOCALDEV="${LOCALDEV}" \
     -e PW_LOCAL="${PW_LOCAL:-}" \
+    -e PW_CACHE_PROXY="${PW_CACHE_PROXY}" \
+    -e PW_CACHE_HOSTS="${PW_CACHE_HOSTS:-}" \
+    -e PW_CACHE_STATUSES="${PW_CACHE_STATUSES:-}" \
+    -e PW_CACHE_LOG="${PW_CACHE_LOG:-}" \
     ${LOCALDEV_ARGS[@]+"${LOCALDEV_ARGS[@]}"} \
     "${IMAGE}" \
-    pnpm exec playwright test "$@"
+    "${INNER_CMD[@]}"
