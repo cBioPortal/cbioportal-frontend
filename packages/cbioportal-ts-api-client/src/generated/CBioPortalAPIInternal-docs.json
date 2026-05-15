@@ -671,7 +671,7 @@
         "operationId": "fetchCNAGenesUsingPOST"
       }
     },
-    "/api/column-store/treatments/patient-counts/fetch": {
+    "/api/treatments/patient-counts/fetch": {
       "post": {
         "consumes": [
           "application/json"
@@ -715,7 +715,7 @@
         "operationId": "fetchPatientTreatmentCountsUsingPOST"
       }
     },
-    "/api/column-store/treatments/sample-counts/fetch": {
+    "/api/treatments/sample-counts/fetch": {
       "post": {
         "consumes": [
           "application/json"
