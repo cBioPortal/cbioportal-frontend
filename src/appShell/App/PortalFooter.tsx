@@ -49,217 +49,284 @@ export default class PortalFooter extends React.Component<
             return (
                 <div id="footer">
                     <div className="footer-layout">
-                        <div className="footer-elem">
-                            <img
-                                src={require('../../globalStyles/images/cbioportal_logo.png')}
-                                style={{
-                                    width: 142,
-                                    filter: 'grayscale(100%)',
-                                }}
-                                alt="cBioPortal Logo"
-                            />
-                            {version && (
-                                <a href={`${getLoadConfig().apiRoot}api/info`}>
-                                    <div
-                                        style={{
-                                            paddingTop: 9,
-                                            textAlign: 'center',
-                                        }}
-                                    >
-                                        {version}
-                                    </div>
-                                </a>
-                            )}
-                        </div>
-                        <If
-                            condition={
-                                getServerConfig().skin_show_tutorials_tab !==
-                                    false ||
-                                getServerConfig().skin_show_faqs_tab
-                            }
-                        >
+                        <div className="footer-left">
                             <div className="footer-elem">
-                                <h3>HELP</h3>
-                                <ul>
-                                    <If
-                                        condition={
-                                            getServerConfig()
-                                                .skin_show_tutorials_tab !==
-                                            false
-                                        }
-                                    >
-                                        <li>
-                                            <a
-                                                target="_blank"
-                                                href="https://docs.cbioportal.org/user-guide/overview/"
-                                            >
-                                                Tutorials
-                                            </a>
-                                        </li>
-                                    </If>
-                                    <If
-                                        condition={
-                                            getServerConfig().skin_show_faqs_tab
-                                        }
-                                    >
-                                        <li>
-                                            <a
-                                                target={'_blank'}
-                                                href="https://docs.cbioportal.org/user-guide/faq/"
-                                            >
-                                                FAQ
-                                            </a>
-                                        </li>
-                                    </If>
-                                    <li>
-                                        <a
-                                            target="_blank"
-                                            href="https://groups.google.com/forum/#!forum/cbioportal"
-                                        >
-                                            User Group
-                                        </a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </If>
-                        <If
-                            condition={
-                                getServerConfig().skin_show_news_tab ||
-                                getServerConfig().skin_show_about_tab
-                            }
-                        >
-                            <div className="footer-elem">
-                                <h3>INFO</h3>
-                                <ul>
-                                    <If
-                                        condition={
-                                            getServerConfig().skin_show_news_tab
-                                        }
-                                    >
-                                        <li>
-                                            <a
-                                                target="_blank"
-                                                href="https://docs.cbioportal.org/news/"
-                                            >
-                                                News
-                                            </a>
-                                        </li>
-                                    </If>
-                                    <If
-                                        condition={
-                                            getServerConfig()
-                                                .skin_show_about_tab
-                                        }
-                                    >
-                                        <li>
-                                            <a
-                                                target={'_blank'}
-                                                href="https://about.cbioportal.org/"
-                                            >
-                                                About
-                                            </a>
-                                        </li>
-                                    </If>
-                                    <If
-                                        condition={
-                                            getServerConfig()
-                                                .skin_show_roadmap_tab
-                                        }
-                                    >
-                                        <li>
-                                            <a
-                                                target={'_blank'}
-                                                href="https://about.cbioportal.org/roadmap"
-                                            >
-                                                Roadmap
-                                            </a>
-                                        </li>
-                                    </If>
-                                    <If
-                                        condition={
-                                            getServerConfig()
-                                                .skin_show_r_matlab_tab ||
-                                            getServerConfig()
-                                                .skin_show_web_api_tab
-                                        }
-                                    >
-                                        <li>
-                                            <a
-                                                href={`${
-                                                    getLoadConfig().apiRoot
-                                                }api`}
-                                            >
-                                                API Docs
-                                            </a>
-                                        </li>
-                                    </If>
-                                    <If
-                                        condition={
-                                            getServerConfig()
-                                                .skin_right_nav_show_twitter
-                                        }
-                                    >
-                                        <li>
-                                            <a
-                                                target="_blank"
-                                                href="https://www.twitter.com/cbioportal"
-                                            >
-                                                Twitter
-                                            </a>
-                                        </li>
-                                    </If>
-                                </ul>
-                            </div>
-                        </If>
-                        <If condition={getServerConfig().skin_footer_show_dev}>
-                            <div className="footer-elem">
-                                <h3>DEV</h3>
-                                <ul>
-                                    <li>
-                                        <Link to="/software">Software</Link>
-                                    </li>
-                                    <li>
-                                        <a
-                                            target="_blank"
-                                            href="https://github.com/cBioPortal/"
-                                        >
-                                            GitHub
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a
-                                            target="_blank"
-                                            href="https://slack.cbioportal.org"
-                                        >
-                                            Slack
-                                        </a>
-                                    </li>
-                                </ul>
-                            </div>
-                            <div className="footer-elem">
-                                <h3>STATUS</h3>
-                                <ul>
-                                    <li>
-                                        <a href="https://status.cbioportal.org">
-                                            cBioPortal Status
-                                        </a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </If>
-                        <div className="footer-elem">
-                            <h3>CONTACT</h3>
-                            <ul>
-                                <li>
+                                <img
+                                    src={require('../../globalStyles/images/cbioportal_logo.png')}
+                                    style={{
+                                        width: 142,
+                                        filter: 'grayscale(100%)',
+                                    }}
+                                    alt="cBioPortal Logo"
+                                />
+                                {version && (
                                     <a
-                                        href={`mailto:${
-                                            getServerConfig().skin_email_contact
-                                        }`}
+                                        href={`${
+                                            getLoadConfig().apiRoot
+                                        }api/info`}
                                     >
-                                        {getServerConfig().skin_email_contact}
+                                        <div
+                                            style={{
+                                                paddingTop: 9,
+                                                textAlign: 'center',
+                                            }}
+                                        >
+                                            {version}
+                                        </div>
                                     </a>
-                                </li>
-                            </ul>
+                                )}
+                            </div>
+                            <If
+                                condition={
+                                    getServerConfig()
+                                        .skin_show_tutorials_tab !== false ||
+                                    getServerConfig().skin_show_faqs_tab
+                                }
+                            >
+                                <div className="footer-elem">
+                                    <h3>HELP</h3>
+                                    <ul>
+                                        <If
+                                            condition={
+                                                getServerConfig()
+                                                    .skin_show_tutorials_tab !==
+                                                false
+                                            }
+                                        >
+                                            <li>
+                                                <a
+                                                    target="_blank"
+                                                    href="https://docs.cbioportal.org/user-guide/overview/"
+                                                >
+                                                    Tutorials
+                                                </a>
+                                            </li>
+                                        </If>
+                                        <If
+                                            condition={
+                                                getServerConfig()
+                                                    .skin_show_faqs_tab
+                                            }
+                                        >
+                                            <li>
+                                                <a
+                                                    target={'_blank'}
+                                                    href="https://docs.cbioportal.org/user-guide/faq/"
+                                                >
+                                                    FAQ
+                                                </a>
+                                            </li>
+                                        </If>
+                                        <li>
+                                            <a
+                                                target="_blank"
+                                                href="https://groups.google.com/forum/#!forum/cbioportal"
+                                            >
+                                                User Group
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </If>
+                            <If
+                                condition={
+                                    getServerConfig().skin_show_news_tab ||
+                                    getServerConfig().skin_show_about_tab
+                                }
+                            >
+                                <div className="footer-elem">
+                                    <h3>INFO</h3>
+                                    <ul>
+                                        <If
+                                            condition={
+                                                getServerConfig()
+                                                    .skin_show_news_tab
+                                            }
+                                        >
+                                            <li>
+                                                <a
+                                                    target="_blank"
+                                                    href="https://docs.cbioportal.org/news/"
+                                                >
+                                                    News
+                                                </a>
+                                            </li>
+                                        </If>
+                                        <If
+                                            condition={
+                                                getServerConfig()
+                                                    .skin_show_about_tab
+                                            }
+                                        >
+                                            <li>
+                                                <a
+                                                    target={'_blank'}
+                                                    href="https://about.cbioportal.org/"
+                                                >
+                                                    About
+                                                </a>
+                                            </li>
+                                        </If>
+                                        <If
+                                            condition={
+                                                getServerConfig()
+                                                    .skin_show_roadmap_tab
+                                            }
+                                        >
+                                            <li>
+                                                <a
+                                                    target={'_blank'}
+                                                    href="https://about.cbioportal.org/roadmap"
+                                                >
+                                                    Roadmap
+                                                </a>
+                                            </li>
+                                        </If>
+                                        <If
+                                            condition={
+                                                getServerConfig()
+                                                    .skin_show_r_matlab_tab ||
+                                                getServerConfig()
+                                                    .skin_show_web_api_tab
+                                            }
+                                        >
+                                            <li>
+                                                <a
+                                                    href={`${
+                                                        getLoadConfig().apiRoot
+                                                    }api`}
+                                                >
+                                                    API Docs
+                                                </a>
+                                            </li>
+                                        </If>
+                                        <If
+                                            condition={
+                                                getServerConfig()
+                                                    .skin_right_nav_show_twitter
+                                            }
+                                        >
+                                            <li>
+                                                <a
+                                                    target="_blank"
+                                                    href="https://www.twitter.com/cbioportal"
+                                                >
+                                                    Twitter
+                                                </a>
+                                            </li>
+                                        </If>
+                                    </ul>
+                                </div>
+                            </If>
+                            <If
+                                condition={
+                                    getServerConfig().skin_footer_show_dev
+                                }
+                            >
+                                <div className="footer-elem">
+                                    <h3>DEV</h3>
+                                    <ul>
+                                        <li>
+                                            <Link to="/software">Software</Link>
+                                        </li>
+                                        <li>
+                                            <a
+                                                target="_blank"
+                                                href="https://github.com/cBioPortal/"
+                                            >
+                                                GitHub
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a
+                                                target="_blank"
+                                                href="https://slack.cbioportal.org"
+                                            >
+                                                Slack
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div className="footer-elem">
+                                    <h3>STATUS</h3>
+                                    <ul>
+                                        <li>
+                                            <a href="https://status.cbioportal.org">
+                                                cBioPortal Status
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </If>
+                            <div className="footer-elem">
+                                <h3>CONTACT</h3>
+                                <ul>
+                                    <li>
+                                        <a
+                                            href={`mailto:${
+                                                getServerConfig()
+                                                    .skin_email_contact
+                                            }`}
+                                        >
+                                            {
+                                                getServerConfig()
+                                                    .skin_email_contact
+                                            }
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div className="footer-right">
+                            <a
+                                href="https://clickhouse.com"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="clickhouse-badge"
+                                aria-label="Powered by ClickHouse"
+                            >
+                                <span className="clickhouse-badge-label">
+                                    Powered by
+                                </span>
+                                <svg
+                                    className="clickhouse-badge-logo"
+                                    viewBox="0 0 32 32"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    aria-hidden="true"
+                                >
+                                    <rect
+                                        x="0"
+                                        y="0"
+                                        width="6"
+                                        height="32"
+                                        fill="#FAFF69"
+                                    />
+                                    <rect
+                                        x="8"
+                                        y="0"
+                                        width="6"
+                                        height="32"
+                                        fill="#FAFF69"
+                                    />
+                                    <rect
+                                        x="16"
+                                        y="0"
+                                        width="6"
+                                        height="32"
+                                        fill="#FAFF69"
+                                    />
+                                    <rect
+                                        x="24"
+                                        y="14"
+                                        width="8"
+                                        height="4"
+                                        fill="#FAFF69"
+                                    />
+                                </svg>
+                                <span className="clickhouse-badge-name">
+                                    ClickHouse
+                                </span>
+                            </a>
                         </div>
                     </div>
                 </div>
