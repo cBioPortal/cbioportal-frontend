@@ -23,9 +23,26 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 if ! command -v mitmdump >/dev/null 2>&1; then
-    echo "error: mitmdump not on PATH inside container — rebuild the CI image" >&2
-    echo "       (.circleci/images/playwright/Dockerfile installs it via pip)" >&2
-    exit 1
+    # The canonical CI image installs mitmproxy at build time (see
+    # .circleci/images/playwright/Dockerfile). On a PR whose Dockerfile
+    # change hasn't reached GHCR yet — typically the first run of a
+    # branch from a fork, since the image-rebuild workflow only fires
+    # on the main repo — install at runtime so we can still exercise
+    # the cache wiring. Once the canonical image is rebuilt this whole
+    # block is skipped because mitmdump is already on PATH.
+    echo "[proxy] mitmdump not present; installing via pip (one-time-per-container)..."
+    if ! command -v pip3 >/dev/null 2>&1; then
+        DEBIAN_FRONTEND=noninteractive apt-get update -qq \
+            && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends python3-pip
+    fi
+    pip3 install --quiet --no-cache-dir 'mitmproxy>=11,<12' || {
+        echo "error: pip install mitmproxy failed" >&2
+        exit 1
+    }
+    command -v mitmdump >/dev/null 2>&1 || {
+        echo "error: mitmdump still missing after pip install" >&2
+        exit 1
+    }
 fi
 
 PROXY_HOST="${PW_CACHE_PROXY_HOST:-127.0.0.1}"
