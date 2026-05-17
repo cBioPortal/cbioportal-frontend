@@ -45,24 +45,44 @@
         margin-left: auto;
     }
 
+    @media (max-width: 767px) {
+        padding: 0 15px;
+
+        .footer-layout {
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .footer-left {
+            gap: 25px;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .footer-right {
+            margin-left: 0;
+            justify-content: center;
+            width: 100%;
+            padding-top: 5px;
+        }
+    }
+
     .clickhouse-badge {
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        padding: 6px 10px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        background: #fff;
+        padding: 4px 2px;
         color: #555 !important;
         font-size: 12px;
         line-height: 1;
         white-space: nowrap;
-        transition: border-color 0.15s ease, box-shadow 0.15s ease;
 
         &:hover {
-            border-color: #bbb;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
             text-decoration: none;
+
+            .clickhouse-badge-name {
+                text-decoration: underline;
+            }
         }
 
         .clickhouse-badge-label {
@@ -70,7 +90,7 @@
         }
 
         .clickhouse-badge-name {
-            color: #222;
+            color: #333;
             font-weight: 600;
         }
 
