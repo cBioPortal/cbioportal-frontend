@@ -141,6 +141,15 @@ export default defineConfig({
                             ? [
                                   '--ignore-certificate-errors',
                                   `--proxy-server=${PROXY_SERVER}`,
+                                  // Local frontend dev server traffic
+                                  // (localhost:3000 in LOCALDEV mode, or
+                                  // its --host-resolver-rules remap to
+                                  // host.docker.internal) must NOT go
+                                  // through the proxy — the proxy lives
+                                  // on a remote host and can't reach
+                                  // the test runner's loopback. Bypass
+                                  // covers both names plus 127.0.0.1.
+                                  '--proxy-bypass-list=localhost;127.0.0.1;host.docker.internal',
                               ]
                             : []),
                         ...(isLocaldev
