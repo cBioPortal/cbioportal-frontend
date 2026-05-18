@@ -360,8 +360,12 @@ jobs:
       PLAYWRIGHT_JUNIT_OUTPUT_NAME: test-results/junit.xml
       # *** TEMP for cache-proxy smoke: limit shards to two specs (config +
       # patient-screenshot). Revert to '' to restore the full suite once
-      # we're confident the proxy wiring is sound.
-      PLAYWRIGHT_GREP: '(homepage config overrides|Patient cohort)'
+      # we're confident the proxy wiring is sound. The regex is space-free
+      # because the existing shard step passes $GREP_ARG unquoted; bash
+      # would otherwise word-split a value like "(homepage config|...)"
+      # into 4 separate args and Playwright would see an unbalanced
+      # regex. .* covers the elided spaces.
+      PLAYWRIGHT_GREP: '(homepage.*config.*overrides|Patient.*cohort.*view)'
       # Route the browser through the always-on caching proxy (see
       # cbioportal-cache-proxy repo). PW_WF_STAMP is set in the Run
       # Playwright shard step below because env: blocks don't expand
@@ -443,7 +447,7 @@ jobs:
             # it and forwards as X-PW-Workflow-ID on every request so
             # the cache proxy gives this workflow its own namespace.
             export PW_WF_STAMP="$CIRCLE_WORKFLOW_ID"
-            echo "Cache-proxy stamp: $PW_WF_STAMP via $HTTPS_PROXY"
+            echo "Cache-proxy stamp: $PW_WF_STAMP via $PW_PROXY_SERVER"
             set +e
             # --workers=3 on resource_class large (4 vCPU / 8 GB) leaves
             # one vCPU for the runner / serveDist while running 3 chromium
