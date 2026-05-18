@@ -1,6 +1,7 @@
 const assert = require('assert');
 const {
     goToUrlAndSetLocalStorage,
+    goToUrlAndSetLocalStorageWithProperty,
     getElement,
     getNestedElement,
     clickElement,
@@ -12,6 +13,69 @@ const {
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
 describe('study select page', function() {
+    describe('mixed authorization visibility for a single user', () => {
+        it('shows both authorized and unauthorized studies and only authorized study-view links', async function() {
+            await goToUrlAndSetLocalStorageWithProperty(CBIOPORTAL_URL, true, {
+                skin_home_page_show_unauthorized_studies: true,
+            });
+            await getElement('[data-test=cancerTypeListContainer]', {
+                waitForExist: true,
+            });
+
+            const unauthorizedStudies = await $$(
+                '//li[@data-test="StudySelect"][.//i[contains(@class,"fa-lock")]]'
+            );
+            assert(
+                unauthorizedStudies.length > 0,
+                'Expected at least one unauthorized study for testuser'
+            );
+
+            const unauthorizedStudyViewLinks = await $$(
+                '//li[@data-test="StudySelect"][.//i[contains(@class,"fa-lock")]]//a[.//i[contains(@class,"ci-pie-chart")]]'
+            );
+            assert.equal(
+                unauthorizedStudyViewLinks.length,
+                0,
+                'Unauthorized studies should not show study-view links'
+            );
+
+            const authorizedStudyViewLinks = await $$(
+                '//li[@data-test="StudySelect"][not(.//i[contains(@class,"fa-lock")])]//a[.//i[contains(@class,"ci-pie-chart")]]'
+            );
+            assert(
+                authorizedStudyViewLinks.length > 0,
+                'Expected at least one authorized study-view link for testuser'
+            );
+
+            await goToUrlAndSetLocalStorageWithProperty(
+                `${CBIOPORTAL_URL}/datasets`,
+                true,
+                {
+                    skin_home_page_show_unauthorized_studies: true,
+                }
+            );
+            await getElement('[data-test=LazyMobXTable]', {
+                waitForExist: true,
+            });
+
+            const datasetsStudyLinks = await $$(
+                '//*[@data-test="LazyMobXTable"]//tr/td[1]//a[contains(@href,"/study?id=")]'
+            );
+            assert(
+                datasetsStudyLinks.length > 0,
+                'Expected at least one authorized study link on Data Sets page'
+            );
+
+            const datasetsStudyNamesWithoutLink = await $$(
+                '//*[@data-test="LazyMobXTable"]//tr/td[1]/span[normalize-space(text())!=""]'
+            );
+            assert(
+                datasetsStudyNamesWithoutLink.length > 0,
+                'Expected at least one unauthorized study name without link on Data Sets page'
+            );
+        });
+    });
+
     describe.skip('error messaging for invalid study id(s)', function() {
         // FIXME: on authenticated portals the alert does not show because the backend throws 403 because
         // the user does not have permission to access a non-existing study.
