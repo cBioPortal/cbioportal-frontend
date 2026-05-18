@@ -66,6 +66,20 @@ export class AppStore {
         return this.serverConfig.app_name === 'public-portal';
     }
 
+    get isMskManagedPortal() {
+        return [
+            'public-portal',
+            'genie-public-portal',
+            'cbioportal-genie-private',
+            'mskcc-portal',
+            'eks-private',
+            'eks-triage-blue',
+            'eks-triage-green',
+            'eks-sclc',
+            'cbioportal-msk-nci',
+        ].includes(this.serverConfig.app_name!);
+    }
+
     @computed get logoutUrl() {
         return 'logout';
     }
