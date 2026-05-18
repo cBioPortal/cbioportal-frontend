@@ -69,7 +69,6 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
     skin_email_contact: 'cbioportal at googlegroups dot com',
     skin_documentation_faq: 'user-guide/faq.md',
     skin_footer_show_dev: false,
-    skin_footer_show_clickhouse: false,
     skin_login_saml_registration_html: 'Sign in with MSK',
     skin_documentation_news: 'https://docs.cbioportal.org/news/',
     skin_documentation_oql: 'user-guide/oql.md',

@@ -101,7 +101,6 @@ export interface IServerConfig {
     skin_documentation_faq: string | null;
     skin_footer: string | null;
     skin_footer_show_dev: boolean;
-    skin_footer_show_clickhouse: boolean;
     skin_login_contact_html: string | null;
     skin_login_saml_registration_html: string | null;
     skin_citation_rule_text: string | null;

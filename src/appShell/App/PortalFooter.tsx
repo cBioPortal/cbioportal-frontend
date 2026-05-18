@@ -261,11 +261,7 @@ export default class PortalFooter extends React.Component<
                                 </li>
                             </ul>
                         </div>
-                        <If
-                            condition={
-                                getServerConfig().skin_footer_show_clickhouse
-                            }
-                        >
+                        <If condition={this.props.appStore.isMskManagedPortal}>
                             <div className="footer-elem clickhouse-elem">
                                 <h3>Powered by</h3>
                                 <a
