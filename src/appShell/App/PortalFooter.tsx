@@ -91,6 +91,7 @@ export default class PortalFooter extends React.Component<
                                         <li>
                                             <a
                                                 target="_blank"
+                                                rel="noopener noreferrer"
                                                 href="https://docs.cbioportal.org/user-guide/overview/"
                                             >
                                                 Tutorials
@@ -104,7 +105,8 @@ export default class PortalFooter extends React.Component<
                                     >
                                         <li>
                                             <a
-                                                target={'_blank'}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
                                                 href="https://docs.cbioportal.org/user-guide/faq/"
                                             >
                                                 FAQ
@@ -114,6 +116,7 @@ export default class PortalFooter extends React.Component<
                                     <li>
                                         <a
                                             target="_blank"
+                                            rel="noopener noreferrer"
                                             href="https://groups.google.com/forum/#!forum/cbioportal"
                                         >
                                             User Group
@@ -139,6 +142,7 @@ export default class PortalFooter extends React.Component<
                                         <li>
                                             <a
                                                 target="_blank"
+                                                rel="noopener noreferrer"
                                                 href="https://docs.cbioportal.org/news/"
                                             >
                                                 News
@@ -153,7 +157,8 @@ export default class PortalFooter extends React.Component<
                                     >
                                         <li>
                                             <a
-                                                target={'_blank'}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
                                                 href="https://about.cbioportal.org/"
                                             >
                                                 About
@@ -168,7 +173,8 @@ export default class PortalFooter extends React.Component<
                                     >
                                         <li>
                                             <a
-                                                target={'_blank'}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
                                                 href="https://about.cbioportal.org/roadmap"
                                             >
                                                 Roadmap
@@ -202,6 +208,7 @@ export default class PortalFooter extends React.Component<
                                         <li>
                                             <a
                                                 target="_blank"
+                                                rel="noopener noreferrer"
                                                 href="https://www.twitter.com/cbioportal"
                                             >
                                                 Twitter
@@ -221,6 +228,7 @@ export default class PortalFooter extends React.Component<
                                     <li>
                                         <a
                                             target="_blank"
+                                            rel="noopener noreferrer"
                                             href="https://github.com/cBioPortal/"
                                         >
                                             GitHub
@@ -229,6 +237,7 @@ export default class PortalFooter extends React.Component<
                                     <li>
                                         <a
                                             target="_blank"
+                                            rel="noopener noreferrer"
                                             href="https://slack.cbioportal.org"
                                         >
                                             Slack
