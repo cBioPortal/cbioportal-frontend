@@ -11,19 +11,33 @@ const {
 } = require('../../../shared/specUtils_Async');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
+const IS_AUTHENTICATED = true;
+const UNAUTHORIZED_STUDY_ROW_WITH_LOCK =
+    '//li[@data-test="StudySelect"][.//i[contains(@class,"fa-lock")]]';
+const UNAUTHORIZED_STUDY_VIEW_LINK = `${UNAUTHORIZED_STUDY_ROW_WITH_LOCK}//a[.//i[contains(@class,"ci-pie-chart")]]`;
+const AUTHORIZED_STUDY_VIEW_LINK =
+    '//li[@data-test="StudySelect"][not(.//i[contains(@class,"fa-lock")])]//a[.//i[contains(@class,"ci-pie-chart")]]';
+const DATASETS_AUTHORIZED_STUDY_LINK =
+    '//*[@data-test="LazyMobXTable"]//tr/td[1]//a[contains(@href,"/study?id=")]';
+const DATASETS_UNAUTHORIZED_STUDY_TEXT =
+    '//*[@data-test="LazyMobXTable"]//tr/td[1]/span[normalize-space(text())!=""]';
 
 describe('study select page', function() {
     describe('mixed authorization visibility for a single user', () => {
         it('shows both authorized and unauthorized studies and only authorized study-view links', async function() {
-            await goToUrlAndSetLocalStorageWithProperty(CBIOPORTAL_URL, true, {
-                skin_home_page_show_unauthorized_studies: true,
-            });
+            await goToUrlAndSetLocalStorageWithProperty(
+                CBIOPORTAL_URL,
+                IS_AUTHENTICATED,
+                {
+                    skin_home_page_show_unauthorized_studies: true,
+                }
+            );
             await getElement('[data-test=cancerTypeListContainer]', {
                 waitForExist: true,
             });
 
             const unauthorizedStudies = await $$(
-                '//li[@data-test="StudySelect"][.//i[contains(@class,"fa-lock")]]'
+                UNAUTHORIZED_STUDY_ROW_WITH_LOCK
             );
             assert(
                 unauthorizedStudies.length > 0,
@@ -31,7 +45,7 @@ describe('study select page', function() {
             );
 
             const unauthorizedStudyViewLinks = await $$(
-                '//li[@data-test="StudySelect"][.//i[contains(@class,"fa-lock")]]//a[.//i[contains(@class,"ci-pie-chart")]]'
+                UNAUTHORIZED_STUDY_VIEW_LINK
             );
             assert.equal(
                 unauthorizedStudyViewLinks.length,
@@ -40,7 +54,7 @@ describe('study select page', function() {
             );
 
             const authorizedStudyViewLinks = await $$(
-                '//li[@data-test="StudySelect"][not(.//i[contains(@class,"fa-lock")])]//a[.//i[contains(@class,"ci-pie-chart")]]'
+                AUTHORIZED_STUDY_VIEW_LINK
             );
             assert(
                 authorizedStudyViewLinks.length > 0,
@@ -49,7 +63,7 @@ describe('study select page', function() {
 
             await goToUrlAndSetLocalStorageWithProperty(
                 `${CBIOPORTAL_URL}/datasets`,
-                true,
+                IS_AUTHENTICATED,
                 {
                     skin_home_page_show_unauthorized_studies: true,
                 }
@@ -58,16 +72,14 @@ describe('study select page', function() {
                 waitForExist: true,
             });
 
-            const datasetsStudyLinks = await $$(
-                '//*[@data-test="LazyMobXTable"]//tr/td[1]//a[contains(@href,"/study?id=")]'
-            );
+            const datasetsStudyLinks = await $$(DATASETS_AUTHORIZED_STUDY_LINK);
             assert(
                 datasetsStudyLinks.length > 0,
                 'Expected at least one authorized study link on Data Sets page'
             );
 
             const datasetsStudyNamesWithoutLink = await $$(
-                '//*[@data-test="LazyMobXTable"]//tr/td[1]/span[normalize-space(text())!=""]'
+                DATASETS_UNAUTHORIZED_STUDY_TEXT
             );
             assert(
                 datasetsStudyNamesWithoutLink.length > 0,
