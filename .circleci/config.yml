@@ -373,7 +373,10 @@ jobs:
       # of the standard HTTPS_PROXY: at job scope HTTPS_PROXY would also
       # apply to pnpm install, which times out trying to fetch the npm
       # registry through a proxy that only allowlists *.cbioportal.org.
-      PW_PROXY_SERVER: 'http://15.204.174.231:47821'
+      # Port 443 because OVH's upstream firewall silently drops packets
+      # to non-standard high ports — the previous 47821 endpoint was
+      # unreachable from CircleCI (all external probes timed out).
+      PW_PROXY_SERVER: 'http://15.204.174.231:443'
     steps:
       - attach_workspace:
           at: /tmp/repo
