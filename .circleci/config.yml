@@ -365,8 +365,11 @@ jobs:
       # Route the browser through the always-on caching proxy (see
       # cbioportal-cache-proxy repo). PW_WF_STAMP is set in the Run
       # Playwright shard step below because env: blocks don't expand
-      # CIRCLE_WORKFLOW_ID.
-      HTTPS_PROXY: 'http://15.204.174.231:47821'
+      # CIRCLE_WORKFLOW_ID. We deliberately use PW_PROXY_SERVER instead
+      # of the standard HTTPS_PROXY: at job scope HTTPS_PROXY would also
+      # apply to pnpm install, which times out trying to fetch the npm
+      # registry through a proxy that only allowlists *.cbioportal.org.
+      PW_PROXY_SERVER: 'http://15.204.174.231:47821'
     steps:
       - attach_workspace:
           at: /tmp/repo

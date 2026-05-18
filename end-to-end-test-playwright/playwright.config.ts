@@ -42,11 +42,13 @@ const updateSnapshots = process.env.PW_UPDATE_SNAPSHOTS as
 const includeLocalDb = process.env.PW_LOCAL === '1';
 
 // Always-on caching forward proxy in front of *.cbioportal.org. When
-// HTTPS_PROXY is set, route the browser through it and stamp every
+// PW_PROXY_SERVER is set, route the browser through it and stamp every
 // request with PW_WF_STAMP so the proxy can key its cache per-workflow.
-// See https://github.com/cBioPortal/cbioportal-frontend-cache-proxy
-// (or wherever the service is hosted).
-const PROXY_SERVER = process.env.HTTPS_PROXY;
+// HTTPS_PROXY is honored as a fallback for local-dev convenience, but
+// CI must use PW_PROXY_SERVER: setting HTTPS_PROXY at job scope makes
+// pnpm install try to fetch the npm registry through the proxy too,
+// which times out (the proxy allowlists only *.cbioportal.org).
+const PROXY_SERVER = process.env.PW_PROXY_SERVER || process.env.HTTPS_PROXY;
 const WF_STAMP = process.env.PW_WF_STAMP || '';
 
 export default defineConfig({
