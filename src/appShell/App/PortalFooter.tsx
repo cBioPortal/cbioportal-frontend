@@ -261,22 +261,28 @@ export default class PortalFooter extends React.Component<
                                 </li>
                             </ul>
                         </div>
-                        <div className="footer-elem clickhouse-elem">
-                            <h3>Powered by</h3>
-                            <a
-                                href="https://clickhouse.com"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="clickhouse-badge"
-                                aria-label="ClickHouse"
-                            >
-                                <img
-                                    className="clickhouse-badge-logo"
-                                    src={require('../../globalStyles/images/clickhouse-logo.svg')}
-                                    alt="ClickHouse"
-                                />
-                            </a>
-                        </div>
+                        <If
+                            condition={
+                                getServerConfig().skin_footer_show_clickhouse
+                            }
+                        >
+                            <div className="footer-elem clickhouse-elem">
+                                <h3>Powered by</h3>
+                                <a
+                                    href="https://clickhouse.com"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="clickhouse-badge"
+                                    aria-label="ClickHouse"
+                                >
+                                    <img
+                                        className="clickhouse-badge-logo"
+                                        src={require('../../globalStyles/images/clickhouse-logo.svg')}
+                                        alt="ClickHouse"
+                                    />
+                                </a>
+                            </div>
+                        </If>
                     </div>
                 </div>
             );
