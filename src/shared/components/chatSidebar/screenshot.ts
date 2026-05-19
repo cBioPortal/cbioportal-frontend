@@ -6,6 +6,52 @@ import html2canvas from 'html2canvas';
 // readability vs. token cost. ~1024 is plenty for an oncoprint at this scale.
 const MAX_LONG_SIDE = 1024;
 
+// cBioPortal renders <LoadingIndicator data-test="LoadingIndicator"> while
+// remote queries / oncoprint paints are pending. Wait until none of those
+// are visible before snapping — otherwise Claude sees a half-empty page.
+export async function waitForViewReady(timeoutMs = 8000): Promise<void> {
+    const deadline = Date.now() + timeoutMs;
+    while (Date.now() < deadline) {
+        const indicators = document.querySelectorAll(
+            '[data-test="LoadingIndicator"]'
+        );
+        const anyVisible = Array.from(indicators).some(el => {
+            const node = el as HTMLElement;
+            if (node.offsetParent === null) return false;
+            const rect = node.getBoundingClientRect();
+            return rect.width > 0 && rect.height > 0;
+        });
+        if (!anyVisible) {
+            // Small settling delay so the post-load paint commits.
+            await new Promise(r => setTimeout(r, 200));
+            return;
+        }
+        await new Promise(r => setTimeout(r, 150));
+    }
+}
+
+// The oncoprint paints to a WebGL canvas without preserveDrawingBuffer, so
+// html2canvas renders it as black. Use oncoprintjs's own toCanvas() (the same
+// path the built-in "Download PNG" button uses) to get a real raster, then
+// splice it into the cloned DOM html2canvas hands us.
+async function rasterizeOncoprint(): Promise<string | null> {
+    const onco = (window as any).donk?.oncoprintJs;
+    if (!onco || typeof onco.toCanvas !== 'function') return null;
+    return new Promise(resolve => {
+        try {
+            onco.toCanvas((c: HTMLCanvasElement) => {
+                try {
+                    resolve(c.toDataURL('image/png'));
+                } catch {
+                    resolve(null);
+                }
+            }, 1);
+        } catch {
+            resolve(null);
+        }
+    });
+}
+
 export async function captureViewport(): Promise<string | null> {
     try {
         const sidebar = document.querySelector(
@@ -14,6 +60,13 @@ export async function captureViewport(): Promise<string | null> {
         const launcher = document.querySelector(
             '.chat-sidebar-launcher'
         ) as HTMLElement | null;
+        const oncoprintPng = await rasterizeOncoprint();
+        const liveOnco = document.querySelector(
+            '.oncoprintContainer'
+        ) as HTMLElement | null;
+        const oncoSize = liveOnco
+            ? { w: liveOnco.offsetWidth, h: liveOnco.offsetHeight }
+            : null;
         const canvas = await html2canvas(document.body, {
             x: window.scrollX,
             y: window.scrollY,
@@ -23,6 +76,21 @@ export async function captureViewport(): Promise<string | null> {
             useCORS: true,
             logging: false,
             ignoreElements: el => el === sidebar || el === launcher,
+            onclone: doc => {
+                if (!oncoprintPng || !oncoSize) return;
+                const clonedOnco = doc.querySelector(
+                    '.oncoprintContainer'
+                ) as HTMLElement | null;
+                if (!clonedOnco) return;
+                const img = doc.createElement('img');
+                img.src = oncoprintPng;
+                img.style.width = oncoSize.w + 'px';
+                img.style.height = oncoSize.h + 'px';
+                img.style.display = 'block';
+                img.style.objectFit = 'contain';
+                clonedOnco.innerHTML = '';
+                clonedOnco.appendChild(img);
+            },
         });
         return downscaleToPng(canvas, MAX_LONG_SIDE);
     } catch (err) {

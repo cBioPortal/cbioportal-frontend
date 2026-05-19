@@ -4,7 +4,7 @@ import { observable, makeObservable, action } from 'mobx';
 import { getLoadConfig } from 'config/config';
 import AlterationBeacons from './AlterationBeacons';
 import { getChatServerBase } from './chatServerBase';
-import { captureViewport } from './screenshot';
+import { captureViewport, waitForViewReady } from './screenshot';
 import './ChatSidebar.scss';
 
 interface IChatSidebarProps {
@@ -13,9 +13,22 @@ interface IChatSidebarProps {
     tab?: string;
 }
 
+const OPEN_STORAGE_KEY = 'chat-sidebar:open';
+
+function readStoredOpen(): boolean {
+    try {
+        const v = localStorage.getItem(OPEN_STORAGE_KEY);
+        if (v === 'true') return true;
+        if (v === 'false') return false;
+    } catch {
+        /* localStorage may be unavailable */
+    }
+    return true;
+}
+
 @observer
 export default class ChatSidebar extends React.Component<IChatSidebarProps, {}> {
-    @observable open = true;
+    @observable open = readStoredOpen();
 
     constructor(props: IChatSidebarProps) {
         super(props);
@@ -27,6 +40,11 @@ export default class ChatSidebar extends React.Component<IChatSidebarProps, {}> 
     @action.bound
     toggle() {
         this.open = !this.open;
+        try {
+            localStorage.setItem(OPEN_STORAGE_KEY, String(this.open));
+        } catch {
+            /* ignore */
+        }
     }
 
     componentDidMount() {
@@ -47,6 +65,7 @@ export default class ChatSidebar extends React.Component<IChatSidebarProps, {}> 
             return;
         }
         const requestId = e.data.requestId;
+        await waitForViewReady();
         const dataUrl = await captureViewport();
         this.iframeRef.current?.contentWindow?.postMessage(
             { type: 'chat-sidebar:screenshot', requestId, dataUrl },
@@ -69,10 +88,15 @@ export default class ChatSidebar extends React.Component<IChatSidebarProps, {}> 
     render() {
         return (
             <>
-                <AlterationBeacons studyId={this.props.studyId} />
+                {this.open && (
+                    <AlterationBeacons studyId={this.props.studyId} />
+                )}
                 <button
                     type="button"
-                    className="chat-sidebar-launcher"
+                    className={
+                        'chat-sidebar-launcher' +
+                        (this.open ? ' is-open' : '')
+                    }
                     onClick={this.toggle}
                     aria-label={
                         this.open ? 'Close study chat' : 'Open study chat'

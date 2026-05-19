@@ -5,17 +5,20 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { fetchPaperForStudy, PaperContext } from './paper.js';
 
-export const MODEL = 'claude-opus-4-7';
+export const SUGGEST_MODEL = 'claude-opus-4-7';
+export const HIGHLIGHTS_MODEL = 'claude-sonnet-4-6';
+// Kept for the /health endpoint and the iframe banner.
+export const MODEL = SUGGEST_MODEL;
 
-// Opus 4.7 prices per 1M tokens, USD. Cache write at 1.25x input (5-minute
-// TTL) or 2x input (1-hour TTL); cache read at 0.1x input.
-const PRICE_INPUT = 5.0;
-const PRICE_OUTPUT = 25.0;
-const PRICE_CACHE_WRITE_5M = PRICE_INPUT * 1.25;
-const PRICE_CACHE_WRITE_1H = PRICE_INPUT * 2.0;
-const PRICE_CACHE_READ = PRICE_INPUT * 0.1;
+// Per-1M-token base prices in USD. Cache write is 1.25x input (5-min TTL) or
+// 2x (1-hour TTL); cache read is 0.1x input — same multipliers across models.
+const PRICES: Record<string, { input: number; output: number }> = {
+    'claude-opus-4-7': { input: 5.0, output: 25.0 },
+    'claude-sonnet-4-6': { input: 3.0, output: 15.0 },
+};
 
-export function computeCost(usage: any) {
+export function computeCost(usage: any, model: string = SUGGEST_MODEL) {
+    const price = PRICES[model] ?? PRICES[SUGGEST_MODEL];
     const inputTok = usage?.input_tokens ?? 0;
     const cacheRead = usage?.cache_read_input_tokens ?? 0;
     const outputTok = usage?.output_tokens ?? 0;
@@ -26,13 +29,12 @@ export function computeCost(usage: any) {
     const cacheWriteTotal =
         usage?.cache_creation_input_tokens ?? cacheWrite5m + cacheWrite1h;
 
-    const inputCost = (inputTok * PRICE_INPUT) / 1_000_000;
+    const inputCost = (inputTok * price.input) / 1_000_000;
     const cacheWriteCost =
-        (cacheWrite5m * PRICE_CACHE_WRITE_5M +
-            cacheWrite1h * PRICE_CACHE_WRITE_1H) /
+        (cacheWrite5m * price.input * 1.25 + cacheWrite1h * price.input * 2.0) /
         1_000_000;
-    const cacheReadCost = (cacheRead * PRICE_CACHE_READ) / 1_000_000;
-    const outputCost = (outputTok * PRICE_OUTPUT) / 1_000_000;
+    const cacheReadCost = (cacheRead * price.input * 0.1) / 1_000_000;
+    const outputCost = (outputTok * price.output) / 1_000_000;
     return {
         total: inputCost + cacheWriteCost + cacheReadCost + outputCost,
         inputCost,
@@ -48,7 +50,7 @@ export function computeCost(usage: any) {
             output: outputTok,
         },
         currency: 'USD',
-        model: MODEL,
+        model,
     };
 }
 
@@ -130,6 +132,7 @@ function buildSuggestUserText(ctx: {
     genes?: string[];
     tab?: string;
     preset?: SuggestPreset;
+    userPrompt?: string;
     screenshot?: string;
 }): string {
     const lines = [`The user is currently viewing this study in cBioPortal.`];
@@ -144,9 +147,13 @@ function buildSuggestUserText(ctx: {
             `- A screenshot of what they're currently seeing in the browser is attached. Reference it concretely when relevant (specific genes/tracks/legend buckets visible, patterns in the plot, etc.).`
         );
     }
-    const directive =
-        SUGGEST_PRESETS[ctx.preset ?? 'keyFinding'] ??
-        SUGGEST_PRESETS.keyFinding;
+    const userPrompt = ctx.userPrompt?.trim();
+    const directive = userPrompt
+        ? `The user asks: ${userPrompt}\n\nAnswer their question grounded in the paper. ` +
+          `Stay relevant to the genes/tab they're looking at when applicable. ` +
+          `If the paper does not address it, say so plainly.`
+        : (SUGGEST_PRESETS[ctx.preset ?? 'keyFinding'] ??
+          SUGGEST_PRESETS.keyFinding);
     lines.push('', directive);
     return lines.join('\n');
 }
@@ -332,6 +339,8 @@ export interface SuggestInput {
     genes?: string[];
     tab?: string;
     preset?: SuggestPreset;
+    // Free-form user prompt. When present, overrides the preset directive.
+    userPrompt?: string;
     // base64 PNG data URL of the current viewport, captured client-side.
     screenshot?: string;
 }
@@ -348,7 +357,7 @@ export async function runSuggest(
 ): Promise<SuggestResult> {
     const paper = await getPaperContext(input.studyId);
     const stream = client().messages.stream({
-        model: MODEL,
+        model: SUGGEST_MODEL,
         max_tokens: 1024,
         system: [
             {
@@ -373,7 +382,7 @@ export async function runSuggest(
         suggestion,
         paper: paperInfo(paper),
         usage: finalMessage.usage,
-        cost: computeCost(finalMessage.usage),
+        cost: computeCost(finalMessage.usage, SUGGEST_MODEL),
     };
 }
 
@@ -393,7 +402,7 @@ export async function runHighlights(
 ): Promise<HighlightsResult> {
     const paper = await getPaperContext(input.studyId);
     const response = await client().messages.create({
-        model: MODEL,
+        model: HIGHLIGHTS_MODEL,
         max_tokens: 4096,
         output_config: {
             format: {
@@ -431,6 +440,6 @@ export async function runHighlights(
         highlights: parsed.highlights ?? [],
         paper: paperInfo(paper),
         usage: response.usage,
-        cost: computeCost(response.usage),
+        cost: computeCost(response.usage, HIGHLIGHTS_MODEL),
     };
 }

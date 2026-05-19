@@ -21,7 +21,8 @@ app.get('/api/chat/health', (_req, res) => {
 });
 
 app.post('/api/chat/suggest', async (req, res) => {
-    const { studyId, genes, tab, preset, screenshot } = req.body ?? {};
+    const { studyId, genes, tab, preset, userPrompt, screenshot } =
+        req.body ?? {};
     if (!studyId || typeof studyId !== 'string') {
         res.status(400).json({ error: 'studyId (string) required' });
         return;
@@ -32,6 +33,7 @@ app.post('/api/chat/suggest', async (req, res) => {
             genes,
             tab,
             preset,
+            userPrompt,
             screenshot,
         });
         res.json(result);

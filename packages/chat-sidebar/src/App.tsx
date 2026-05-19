@@ -60,7 +60,7 @@ let screenshotRequestSeq = 0;
 // Ask the parent (cBioPortal host page) for a screenshot of the current
 // viewport. Returns null if the parent doesn't reply within the timeout
 // (e.g. we're loaded standalone for dev, or html2canvas failed there).
-function requestScreenshot(timeoutMs = 5000): Promise<string | null> {
+function requestScreenshot(timeoutMs = 15000): Promise<string | null> {
     if (window.parent === window) return Promise.resolve(null);
     const requestId = ++screenshotRequestSeq;
     return new Promise(resolve => {
@@ -101,12 +101,17 @@ export function App() {
     const [suggestion, setSuggestion] = useState<SuggestResponse | null>(null);
     const [suggestError, setSuggestError] = useState<string | null>(null);
     const [activePreset, setActivePreset] = useState<Preset | null>(null);
+    const [lastUserPrompt, setLastUserPrompt] = useState<string | null>(null);
+    const [lastScreenshot, setLastScreenshot] = useState<string | null>(null);
+    const [showScreenshot, setShowScreenshot] = useState(false);
+    const [input, setInput] = useState('');
     const autoRunRef = useRef(false);
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
 
     useEffect(() => {
         if (!studyId || autoRunRef.current) return;
         autoRunRef.current = true;
-        requestSuggestion('keyFinding');
+        runRequest({ preset: 'keyFinding' });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [studyId]);
 
@@ -128,14 +133,19 @@ export function App() {
         };
     }, [apiRoot, studyId]);
 
-    const requestSuggestion = async (preset: Preset) => {
+    const runRequest = async (opts: {
+        preset?: Preset;
+        userPrompt?: string;
+    }) => {
         if (!studyId) return;
-        setActivePreset(preset);
+        setActivePreset(opts.preset ?? null);
+        setLastUserPrompt(opts.userPrompt ?? null);
         setLoading(true);
         setSuggestError(null);
         setSuggestion(null);
         try {
             const screenshot = await requestScreenshot();
+            setLastScreenshot(screenshot);
             const r = await fetch('/api/chat/suggest', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -143,7 +153,8 @@ export function App() {
                     studyId,
                     genes,
                     tab,
-                    preset,
+                    preset: opts.preset,
+                    userPrompt: opts.userPrompt,
                     screenshot,
                 }),
             });
@@ -158,6 +169,14 @@ export function App() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const submitInput = () => {
+        const text = input.trim();
+        if (!text || loading) return;
+        setInput('');
+        textareaRef.current?.blur();
+        runRequest({ userPrompt: text });
     };
 
     return (
@@ -195,7 +214,7 @@ export function App() {
                                 'preset-btn' +
                                 (activePreset === p.id ? ' active' : '')
                             }
-                            onClick={() => requestSuggestion(p.id)}
+                            onClick={() => runRequest({ preset: p.id })}
                             disabled={loading || !studyId}
                         >
                             {p.label}
@@ -205,6 +224,10 @@ export function App() {
             </section>
 
             <div className="chat-messages">
+                {lastUserPrompt && (
+                    <div className="msg msg-user">{lastUserPrompt}</div>
+                )}
+
                 {loading && (
                     <div className="msg msg-assistant msg-loading muted">
                         Reading the paper and thinking…
@@ -235,11 +258,79 @@ export function App() {
                                     {' · out '}
                                     {formatTokens(suggestion.cost.tokens.output)})
                                 </span>
+                                {lastScreenshot && (
+                                    <>
+                                        {' · '}
+                                        <button
+                                            type="button"
+                                            className="link-btn"
+                                            onClick={() => setShowScreenshot(true)}
+                                        >
+                                            view screenshot
+                                        </button>
+                                    </>
+                                )}
                             </div>
                         )}
                     </>
                 )}
             </div>
+
+            <form
+                className="chat-input"
+                onSubmit={e => {
+                    e.preventDefault();
+                    submitInput();
+                }}
+            >
+                <textarea
+                    ref={textareaRef}
+                    className="chat-input-textarea"
+                    value={input}
+                    onChange={e => setInput(e.target.value)}
+                    onKeyDown={e => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            submitInput();
+                        }
+                    }}
+                    placeholder="Ask anything about this study…"
+                    disabled={!studyId}
+                />
+                <button
+                    type="submit"
+                    disabled={!input.trim() || loading || !studyId}
+                >
+                    Send
+                </button>
+            </form>
+
+            {showScreenshot && lastScreenshot && (
+                <div
+                    className="screenshot-modal"
+                    role="dialog"
+                    aria-label="Submitted screenshot"
+                    onClick={() => setShowScreenshot(false)}
+                >
+                    <div
+                        className="screenshot-modal-inner"
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <button
+                            type="button"
+                            className="screenshot-modal-close"
+                            onClick={() => setShowScreenshot(false)}
+                            aria-label="Close"
+                        >
+                            ✕
+                        </button>
+                        <img
+                            src={lastScreenshot}
+                            alt="Screenshot sent to Claude"
+                        />
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
