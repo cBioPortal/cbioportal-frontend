@@ -172,6 +172,26 @@ body,
     border-bottom-left-radius: 2px;
 }
 
+.msg-loading {
+    background: linear-gradient(
+        90deg,
+        var(--assistant-bg) 0%,
+        #e1e5ea 50%,
+        var(--assistant-bg) 100%
+    );
+    background-size: 200% 100%;
+    animation: msg-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes msg-shimmer {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
 .chat-input {
     display: flex;
     gap: 8px;

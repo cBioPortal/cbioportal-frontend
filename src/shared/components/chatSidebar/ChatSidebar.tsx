@@ -4,6 +4,7 @@ import { observable, makeObservable, action } from 'mobx';
 import { getLoadConfig } from 'config/config';
 import AlterationBeacons from './AlterationBeacons';
 import { getChatServerBase } from './chatServerBase';
+import { captureViewport } from './screenshot';
 import './ChatSidebar.scss';
 
 interface IChatSidebarProps {
@@ -21,10 +22,37 @@ export default class ChatSidebar extends React.Component<IChatSidebarProps, {}> 
         makeObservable(this);
     }
 
+    private iframeRef = React.createRef<HTMLIFrameElement>();
+
     @action.bound
     toggle() {
         this.open = !this.open;
     }
+
+    componentDidMount() {
+        window.addEventListener('message', this.onMessage);
+    }
+
+    componentWillUnmount() {
+        window.removeEventListener('message', this.onMessage);
+    }
+
+    onMessage = async (e: MessageEvent) => {
+        // The iframe asks for a screenshot before each preset request so the
+        // model sees what the user is actually looking at.
+        if (
+            e.source !== this.iframeRef.current?.contentWindow ||
+            e.data?.type !== 'chat-sidebar:requestScreenshot'
+        ) {
+            return;
+        }
+        const requestId = e.data.requestId;
+        const dataUrl = await captureViewport();
+        this.iframeRef.current?.contentWindow?.postMessage(
+            { type: 'chat-sidebar:screenshot', requestId, dataUrl },
+            '*'
+        );
+    };
 
     get iframeSrc(): string {
         const apiRoot = getLoadConfig().apiRoot || '/';
@@ -59,6 +87,7 @@ export default class ChatSidebar extends React.Component<IChatSidebarProps, {}> 
                     hidden={!this.open}
                 >
                     <iframe
+                        ref={this.iframeRef}
                         title="Study chat"
                         src={this.iframeSrc}
                         className="chat-sidebar-iframe"
