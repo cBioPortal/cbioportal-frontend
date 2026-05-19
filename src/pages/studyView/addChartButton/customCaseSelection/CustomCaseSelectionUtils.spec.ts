@@ -120,6 +120,12 @@ describe('CustomCaseSelectionUtils', () => {
             assert.equal(result.caseId, 'test1');
             assert.equal(result.value, 'group1');
         });
+        it('bare case id with group value (single-study auto-populate format) is split correctly', () => {
+            const result = getLine('test1 group1');
+            assert.isUndefined(result.studyId);
+            assert.equal(result.caseId, 'test1');
+            assert.equal(result.value, 'group1');
+        });
     });
 
     describe('getLines', () => {

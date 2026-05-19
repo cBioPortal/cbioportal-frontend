@@ -143,11 +143,8 @@ export default class CustomCaseSelection extends React.Component<
                 this.caseIdsMode === ClinicalDataTypeEnum.SAMPLE
                     ? sample.sampleId
                     : sample.patientId;
-            // For a single study, users can omit `study_id:`. We represent
-            // "omitted study id" with a leading `:` so the parser can still
-            // extract the case id and the optional group value.
             const caseIdWithOptionalStudyPrefix = this.isSingleStudy
-                ? `:${caseId}`
+                ? caseId
                 : `${sample.studyId}:${caseId}`;
 
             return `${caseIdWithOptionalStudyPrefix}${

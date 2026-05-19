@@ -52,7 +52,7 @@ describe('CustomCaseSelection', () => {
             const textarea = wrapper.find('[data-test="CustomCaseSetInput"]');
             assert.equal(
                 textarea.prop('value'),
-                `:sample1 ${DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT}`
+                `sample1 ${DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT}`
             );
         });
 
@@ -74,7 +74,7 @@ describe('CustomCaseSelection', () => {
             const textarea = wrapper.find('[data-test="CustomCaseSetInput"]');
             assert.equal(
                 textarea.prop('value'),
-                `:sample2 ${DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT}`
+                `sample2 ${DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT}`
             );
         });
 
