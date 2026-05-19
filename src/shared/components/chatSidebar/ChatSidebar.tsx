@@ -4,7 +4,11 @@ import { observable, makeObservable, action } from 'mobx';
 import { getLoadConfig } from 'config/config';
 import AlterationBeacons from './AlterationBeacons';
 import { getChatServerBase } from './chatServerBase';
-import { captureViewport, waitForViewReady } from './screenshot';
+import {
+    captureViewport,
+    waitForNetworkIdle,
+    waitForViewReady,
+} from './screenshot';
 import './ChatSidebar.scss';
 
 interface IChatSidebarProps {
@@ -65,6 +69,7 @@ export default class ChatSidebar extends React.Component<IChatSidebarProps, {}> 
             return;
         }
         const requestId = e.data.requestId;
+        await waitForNetworkIdle(1000);
         await waitForViewReady();
         const dataUrl = await captureViewport();
         this.iframeRef.current?.contentWindow?.postMessage(
