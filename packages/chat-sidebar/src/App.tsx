@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { fetchStudy, type Study } from './cbioportal';
 
 interface PaperInfo {
@@ -32,6 +32,14 @@ interface SuggestResponse {
     cost?: Cost;
 }
 
+type Preset = 'keyFinding' | 'cohort' | 'limitations';
+
+const PRESETS: { id: Preset; label: string }[] = [
+    { id: 'keyFinding', label: 'Key finding' },
+    { id: 'cohort', label: 'Cohort' },
+    { id: 'limitations', label: 'Limitations' },
+];
+
 function formatCost(n: number): string {
     // Sub-cent precision so a $0.0023 call doesn't read as "$0.00".
     if (n < 0.01) return `$${n.toFixed(4)}`;
@@ -47,21 +55,13 @@ function getQueryParam(name: string): string | null {
     return new URLSearchParams(window.location.search).get(name);
 }
 
-function paperSourceLabel(source: PaperInfo['source']): string {
-    switch (source) {
-        case 'pmc':
-            return 'Full text available (PMC)';
-        case 'abstract':
-            return 'Abstract only';
-        case 'none':
-            return 'No paper available';
-    }
-}
-
 export function App() {
     const studyId = useMemo(() => getQueryParam('studyId'), []);
     const apiRoot = useMemo(() => getQueryParam('apiRoot') ?? '/', []);
-    const gene = useMemo(() => getQueryParam('gene'), []);
+    const genes = useMemo(() => {
+        const raw = getQueryParam('genes');
+        return raw ? raw.split(',').filter(Boolean) : [];
+    }, []);
     const tab = useMemo(() => getQueryParam('tab'), []);
 
     const [study, setStudy] = useState<Study | null>(null);
@@ -69,6 +69,15 @@ export function App() {
     const [loading, setLoading] = useState(false);
     const [suggestion, setSuggestion] = useState<SuggestResponse | null>(null);
     const [suggestError, setSuggestError] = useState<string | null>(null);
+    const [activePreset, setActivePreset] = useState<Preset | null>(null);
+    const autoRunRef = useRef(false);
+
+    useEffect(() => {
+        if (!studyId || autoRunRef.current) return;
+        autoRunRef.current = true;
+        requestSuggestion('keyFinding');
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [studyId]);
 
     useEffect(() => {
         if (!studyId) {
@@ -88,8 +97,9 @@ export function App() {
         };
     }, [apiRoot, studyId]);
 
-    const requestSuggestion = async () => {
+    const requestSuggestion = async (preset: Preset) => {
         if (!studyId) return;
+        setActivePreset(preset);
         setLoading(true);
         setSuggestError(null);
         setSuggestion(null);
@@ -97,7 +107,7 @@ export function App() {
             const r = await fetch('/api/chat/suggest', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ studyId, gene, tab }),
+                body: JSON.stringify({ studyId, genes, tab, preset }),
             });
             if (!r.ok) {
                 const body = await r.json().catch(() => ({}));
@@ -118,46 +128,45 @@ export function App() {
                 <div className="chat-title">Study Chat</div>
                 {study && (
                     <div className="chat-subtitle" title={study.description}>
-                        {study.name}
+                        {suggestion?.paper?.paperUrl ? (
+                            <a
+                                href={suggestion.paper.paperUrl}
+                                target="_blank"
+                                rel="noreferrer noopener"
+                            >
+                                {study.name} ↗
+                            </a>
+                        ) : (
+                            study.name
+                        )}
                     </div>
                 )}
+                {studyError && <div className="error">{studyError}</div>}
             </header>
 
-            <section className="chat-context">
-                {studyError && <div className="error">{studyError}</div>}
-                {!study && !studyError && (
-                    <div className="muted">Loading study…</div>
-                )}
-                {study && (
-                    <dl className="study-meta">
-                        <dt>Study</dt>
-                        <dd>{study.studyId}</dd>
-                        {study.pmid && (
-                            <>
-                                <dt>PubMed</dt>
-                                <dd>
-                                    <a
-                                        href={`https://pubmed.ncbi.nlm.nih.gov/${study.pmid}/`}
-                                        target="_blank"
-                                        rel="noreferrer noopener"
-                                    >
-                                        {study.pmid}
-                                    </a>
-                                </dd>
-                            </>
-                        )}
-                    </dl>
-                )}
+            <section className="ask-prompts" aria-label="Ask about the current view">
+                <div className="ask-prompts-label muted">
+                    Based on the paper and query:
+                </div>
+                <div className="ask-prompts-row">
+                    {PRESETS.map(p => (
+                        <button
+                            key={p.id}
+                            type="button"
+                            className={
+                                'preset-btn' +
+                                (activePreset === p.id ? ' active' : '')
+                            }
+                            onClick={() => requestSuggestion(p.id)}
+                            disabled={loading || !studyId}
+                        >
+                            {p.label}
+                        </button>
+                    ))}
+                </div>
             </section>
 
             <div className="chat-messages">
-                {!suggestion && !loading && !suggestError && (
-                    <div className="muted hint">
-                        Click "Suggest insight" to get a paper-grounded
-                        observation about this study.
-                    </div>
-                )}
-
                 {loading && (
                     <div className="msg msg-assistant muted">
                         Reading the paper and thinking…
@@ -170,20 +179,6 @@ export function App() {
 
                 {suggestion && (
                     <>
-                        <div className="paper-banner">
-                            <span className={`pill pill-${suggestion.paper.source}`}>
-                                {paperSourceLabel(suggestion.paper.source)}
-                            </span>
-                            {suggestion.paper.paperUrl && (
-                                <a
-                                    href={suggestion.paper.paperUrl}
-                                    target="_blank"
-                                    rel="noreferrer noopener"
-                                >
-                                    Open paper ↗
-                                </a>
-                            )}
-                        </div>
                         <div className="msg msg-assistant">
                             {suggestion.suggestion}
                         </div>
@@ -206,16 +201,6 @@ export function App() {
                         )}
                     </>
                 )}
-            </div>
-
-            <div className="chat-input">
-                <button
-                    type="button"
-                    onClick={requestSuggestion}
-                    disabled={loading || !studyId}
-                >
-                    {suggestion ? '↻ Regenerate' : 'Suggest insight'}
-                </button>
             </div>
         </div>
     );

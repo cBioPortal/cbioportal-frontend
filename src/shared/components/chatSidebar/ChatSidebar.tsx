@@ -3,15 +3,18 @@ import { observer } from 'mobx-react';
 import { observable, makeObservable, action } from 'mobx';
 import { getLoadConfig } from 'config/config';
 import AlterationBeacons from './AlterationBeacons';
+import { getChatServerBase } from './chatServerBase';
 import './ChatSidebar.scss';
 
 interface IChatSidebarProps {
     studyId: string | undefined;
+    genes?: string[];
+    tab?: string;
 }
 
 @observer
 export default class ChatSidebar extends React.Component<IChatSidebarProps, {}> {
-    @observable open = false;
+    @observable open = true;
 
     constructor(props: IChatSidebarProps) {
         super(props);
@@ -27,13 +30,12 @@ export default class ChatSidebar extends React.Component<IChatSidebarProps, {}> 
         const apiRoot = getLoadConfig().apiRoot || '/';
         const params = new URLSearchParams();
         if (this.props.studyId) params.set('studyId', this.props.studyId);
+        if (this.props.tab) params.set('tab', this.props.tab);
+        if (this.props.genes && this.props.genes.length > 0) {
+            params.set('genes', this.props.genes.join(','));
+        }
         params.set('apiRoot', apiRoot);
-        const host =
-            typeof window !== 'undefined' ? window.location.hostname : '';
-        const base = host.endsWith('cbioportal.org')
-            ? 'https://cbioportal-frontend-sidebar.vercel.app/'
-            : 'https://vps-870e202d.tailf02841.ts.net:5174/';
-        return `${base}?${params.toString()}`;
+        return `${getChatServerBase()}/?${params.toString()}`;
     }
 
     render() {
@@ -51,15 +53,17 @@ export default class ChatSidebar extends React.Component<IChatSidebarProps, {}> 
                 >
                     {this.open ? '✕' : '💬'}
                 </button>
-                {this.open && (
-                    <aside className="chat-sidebar-panel" aria-label="Study chat">
-                        <iframe
-                            title="Study chat"
-                            src={this.iframeSrc}
-                            className="chat-sidebar-iframe"
-                        />
-                    </aside>
-                )}
+                <aside
+                    className="chat-sidebar-panel"
+                    aria-label="Study chat"
+                    hidden={!this.open}
+                >
+                    <iframe
+                        title="Study chat"
+                        src={this.iframeSrc}
+                        className="chat-sidebar-iframe"
+                    />
+                </aside>
             </>
         );
     }

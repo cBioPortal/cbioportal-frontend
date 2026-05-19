@@ -16,18 +16,18 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: '1mb' }));
 
-app.get('/health', (_req, res) => {
+app.get('/api/chat/health', (_req, res) => {
     res.json({ ok: true, model: MODEL });
 });
 
-app.post('/suggest', async (req, res) => {
-    const { studyId, gene, tab } = req.body ?? {};
+app.post('/api/chat/suggest', async (req, res) => {
+    const { studyId, genes, tab, preset } = req.body ?? {};
     if (!studyId || typeof studyId !== 'string') {
         res.status(400).json({ error: 'studyId (string) required' });
         return;
     }
     try {
-        const result = await runSuggest({ studyId, gene, tab });
+        const result = await runSuggest({ studyId, genes, tab, preset });
         res.json(result);
     } catch (err: any) {
         console.error('suggest failed:', err);
@@ -37,7 +37,7 @@ app.post('/suggest', async (req, res) => {
     }
 });
 
-app.post('/highlights', async (req, res) => {
+app.post('/api/chat/highlights', async (req, res) => {
     const { studyId } = req.body ?? {};
     if (!studyId || typeof studyId !== 'string') {
         res.status(400).json({ error: 'studyId (string) required' });
