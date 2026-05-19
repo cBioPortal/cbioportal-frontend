@@ -6,7 +6,9 @@
     "type": "module",
     "scripts": {
         "dev": "tsx watch src/server.ts",
-        "start": "tsx src/server.ts"
+        "start": "tsx src/server.ts",
+        "vercel-dev": "vercel dev --listen 4000",
+        "vercel-build": "cd ../.. && pnpm --filter chat-sidebar build && rm -rf packages/chat-sidebar-server/public && mkdir -p packages/chat-sidebar-server/public && cp -R packages/chat-sidebar/dist/. packages/chat-sidebar-server/public/"
     },
     "dependencies": {
         "@anthropic-ai/sdk": "^0.88.0",
@@ -18,7 +20,9 @@
         "@types/cors": "^2.8.17",
         "@types/express": "^4.17.21",
         "@types/node": "^22.10.0",
+        "@vercel/node": "^3.2.0",
         "tsx": "^4.19.2",
-        "typescript": "^5.7.2"
+        "typescript": "^5.7.2",
+        "vercel": "^39.0.0"
     }
 }

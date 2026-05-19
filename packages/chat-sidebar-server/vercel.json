@@ -1,0 +1,10 @@
+{
+    "$schema": "https://openapi.vercel.sh/vercel.json",
+    "installCommand": "cd ../.. && pnpm install --no-frozen-lockfile",
+    "buildCommand": "pnpm vercel-build",
+    "outputDirectory": "public",
+    "functions": {
+        "api/chat/suggest.ts": { "maxDuration": 60 },
+        "api/chat/highlights.ts": { "maxDuration": 60 }
+    }
+}
