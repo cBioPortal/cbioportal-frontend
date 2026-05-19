@@ -35,6 +35,13 @@ export default defineConfig({
         host: '0.0.0.0',
         port: 5174,
         https,
+        // The host cBioPortal page (cbioportal.org with localdev, or localhost)
+        // hits /api/chat/* here cross-origin. Vite intercepts OPTIONS preflights
+        // before the proxy can run, so its own cors config has to permit them.
+        cors: {
+            origin: true,
+            credentials: false,
+        },
         proxy: {
             '/api': 'http://localhost:4000',
         },
