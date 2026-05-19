@@ -55,6 +55,37 @@ function getQueryParam(name: string): string | null {
     return new URLSearchParams(window.location.search).get(name);
 }
 
+let screenshotRequestSeq = 0;
+
+// Ask the parent (cBioPortal host page) for a screenshot of the current
+// viewport. Returns null if the parent doesn't reply within the timeout
+// (e.g. we're loaded standalone for dev, or html2canvas failed there).
+function requestScreenshot(timeoutMs = 5000): Promise<string | null> {
+    if (window.parent === window) return Promise.resolve(null);
+    const requestId = ++screenshotRequestSeq;
+    return new Promise(resolve => {
+        const onMsg = (e: MessageEvent) => {
+            if (
+                e.data?.type !== 'chat-sidebar:screenshot' ||
+                e.data.requestId !== requestId
+            ) {
+                return;
+            }
+            window.removeEventListener('message', onMsg);
+            resolve(e.data.dataUrl ?? null);
+        };
+        window.addEventListener('message', onMsg);
+        window.parent.postMessage(
+            { type: 'chat-sidebar:requestScreenshot', requestId },
+            '*'
+        );
+        setTimeout(() => {
+            window.removeEventListener('message', onMsg);
+            resolve(null);
+        }, timeoutMs);
+    });
+}
+
 export function App() {
     const studyId = useMemo(() => getQueryParam('studyId'), []);
     const apiRoot = useMemo(() => getQueryParam('apiRoot') ?? '/', []);
@@ -104,10 +135,17 @@ export function App() {
         setSuggestError(null);
         setSuggestion(null);
         try {
+            const screenshot = await requestScreenshot();
             const r = await fetch('/api/chat/suggest', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ studyId, genes, tab, preset }),
+                body: JSON.stringify({
+                    studyId,
+                    genes,
+                    tab,
+                    preset,
+                    screenshot,
+                }),
             });
             if (!r.ok) {
                 const body = await r.json().catch(() => ({}));
@@ -168,7 +206,7 @@ export function App() {
 
             <div className="chat-messages">
                 {loading && (
-                    <div className="msg msg-assistant muted">
+                    <div className="msg msg-assistant msg-loading muted">
                         Reading the paper and thinking…
                     </div>
                 )}

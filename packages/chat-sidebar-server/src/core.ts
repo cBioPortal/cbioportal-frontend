@@ -125,11 +125,12 @@ export const SUGGEST_PRESETS = {
 
 export type SuggestPreset = keyof typeof SUGGEST_PRESETS;
 
-function buildSuggestUserPrompt(ctx: {
+function buildSuggestUserText(ctx: {
     studyId: string;
     genes?: string[];
     tab?: string;
     preset?: SuggestPreset;
+    screenshot?: string;
 }): string {
     const lines = [`The user is currently viewing this study in cBioPortal.`];
     if (ctx.tab) lines.push(`- Results-view tab: ${ctx.tab}`);
@@ -138,11 +139,43 @@ function buildSuggestUserPrompt(ctx: {
             `- Queried gene${ctx.genes.length === 1 ? '' : 's'}: ${ctx.genes.join(', ')}`
         );
     }
+    if (ctx.screenshot) {
+        lines.push(
+            `- A screenshot of what they're currently seeing in the browser is attached. Reference it concretely when relevant (specific genes/tracks/legend buckets visible, patterns in the plot, etc.).`
+        );
+    }
     const directive =
         SUGGEST_PRESETS[ctx.preset ?? 'keyFinding'] ??
         SUGGEST_PRESETS.keyFinding;
     lines.push('', directive);
     return lines.join('\n');
+}
+
+function buildSuggestUserMessage(
+    ctx: SuggestInput
+): Anthropic.MessageParam['content'] {
+    const text = buildSuggestUserText(ctx);
+    const shot = ctx.screenshot;
+    if (!shot) return text;
+    // Strip "data:image/png;base64," prefix; Anthropic wants the raw base64.
+    const match = /^data:(image\/(?:png|jpeg|webp|gif));base64,(.+)$/.exec(shot);
+    if (!match) return text;
+    const [, mediaType, data] = match;
+    return [
+        {
+            type: 'image',
+            source: {
+                type: 'base64',
+                media_type: mediaType as
+                    | 'image/png'
+                    | 'image/jpeg'
+                    | 'image/webp'
+                    | 'image/gif',
+                data,
+            },
+        },
+        { type: 'text', text },
+    ];
 }
 
 // Canonical alteration types we know how to anchor on the oncoprint legend.
@@ -299,6 +332,8 @@ export interface SuggestInput {
     genes?: string[];
     tab?: string;
     preset?: SuggestPreset;
+    // base64 PNG data URL of the current viewport, captured client-side.
+    screenshot?: string;
 }
 
 export interface SuggestResult {
@@ -325,7 +360,7 @@ export async function runSuggest(
         messages: [
             {
                 role: 'user',
-                content: buildSuggestUserPrompt(input),
+                content: buildSuggestUserMessage(input),
             },
         ],
     });
