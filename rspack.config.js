@@ -225,6 +225,14 @@ var config = {
                     from: './src/globalStyles/prefixed-bootstrap.min.css.map',
                     to: 'reactapp/prefixed-bootstrap.min.css.map',
                 },
+                // Standalone iframe sidebar app (React 19, isolated bundle).
+                // Built by `pnpm --filter chat-sidebar build`. Served at
+                // /chat-sidebar/index.html from the host dev/prod server.
+                {
+                    from: './packages/chat-sidebar/dist',
+                    to: 'chat-sidebar',
+                    noErrorOnMissing: true,
+                },
             ],
         }), // destination is relative to dist directory
         new TypedCssModulesPlugin({
@@ -457,9 +465,20 @@ var config = {
             },
         },
         server: 'https',
-        host: 'localhost',
+        host: devHost,
         headers: { 'Access-Control-Allow-Origin': '*' },
         allowedHosts: 'all',
+        // Proxy chat-sidebar backend calls so the iframe can hit /api/chat/*
+        // without CORS. Backend lives in packages/chat-sidebar-server (port 4000).
+        proxy: [
+            {
+                context: ['/api/chat'],
+                target: 'http://127.0.0.1:4000',
+                pathRewrite: { '^/api/chat': '' },
+                secure: false,
+                changeOrigin: true,
+            },
+        ],
         devMiddleware: {
             publicPath: '/',
             stats: 'errors-only',
@@ -618,9 +637,10 @@ if (isDev || isTest) {
     config.devServer.port = devPort;
     //config.devServer.hostname = devHost;
 
-    // force hot module reloader to hit absolute path so it can load
-    // from dev server
-    config.output.publicPath = `//localhost:${devPort}/`;
+    // Serve bundles from the same origin as the page so the dev server
+    // works whether accessed via localhost or a LAN/Tailscale IP. The
+    // previous hardcoded `//localhost:${port}/` broke remote viewing.
+    config.output.publicPath = '/';
 } else {
     config.output.publicPath = '/';
 
