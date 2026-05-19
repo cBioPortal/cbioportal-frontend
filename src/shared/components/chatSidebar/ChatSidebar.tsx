@@ -2,6 +2,7 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import { observable, makeObservable, action } from 'mobx';
 import { getLoadConfig } from 'config/config';
+import AlterationBeacons from './AlterationBeacons';
 import './ChatSidebar.scss';
 
 interface IChatSidebarProps {
@@ -33,6 +34,7 @@ export default class ChatSidebar extends React.Component<IChatSidebarProps, {}> 
     render() {
         return (
             <>
+                <AlterationBeacons studyId={this.props.studyId} />
                 <button
                     type="button"
                     className="chat-sidebar-launcher"
