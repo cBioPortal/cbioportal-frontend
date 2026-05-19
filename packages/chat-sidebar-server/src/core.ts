@@ -108,19 +108,40 @@ GROUNDING RULES — read carefully:
     return header + body + rules;
 }
 
+export const SUGGEST_PRESETS = {
+    keyFinding:
+        `Surface one concrete, non-obvious finding from the paper that pertains specifically to what the user is looking at — ` +
+        `the genes and/or tab listed above. Prefer findings that touch the listed genes or the analysis the listed tab shows. ` +
+        `If the paper does not address this view, say so plainly instead of giving a generic summary.`,
+    cohort:
+        `Describe the patient cohort: how samples were collected, the cohort size, and any selection criteria. ` +
+        `Lean toward cohort details that matter for interpreting what the user is looking at (e.g. sample counts for the listed genes, ` +
+        `or subgroups relevant to the listed tab). Quote the paper for sample size and inclusion/exclusion language.`,
+    limitations:
+        `What limitations or caveats does the paper itself acknowledge that are most relevant to interpreting what the user is looking at? ` +
+        `Prefer caveats the authors raise about the listed genes, the analysis shown in the listed tab, or the cohort makeup. ` +
+        `Stick to limitations the authors explicitly name; do not invent your own.`,
+} as const;
+
+export type SuggestPreset = keyof typeof SUGGEST_PRESETS;
+
 function buildSuggestUserPrompt(ctx: {
     studyId: string;
-    gene?: string;
+    genes?: string[];
     tab?: string;
+    preset?: SuggestPreset;
 }): string {
     const lines = [`The user is currently viewing this study in cBioPortal.`];
     if (ctx.tab) lines.push(`- Results-view tab: ${ctx.tab}`);
-    if (ctx.gene) lines.push(`- Focused gene: ${ctx.gene}`);
-    lines.push(
-        '',
-        `Given what they're looking at, surface one concrete, non-obvious observation from the paper that pertains to this view. ` +
-            `If nothing in the paper is directly relevant, say so plainly.`
-    );
+    if (ctx.genes && ctx.genes.length > 0) {
+        lines.push(
+            `- Queried gene${ctx.genes.length === 1 ? '' : 's'}: ${ctx.genes.join(', ')}`
+        );
+    }
+    const directive =
+        SUGGEST_PRESETS[ctx.preset ?? 'keyFinding'] ??
+        SUGGEST_PRESETS.keyFinding;
+    lines.push('', directive);
     return lines.join('\n');
 }
 
@@ -275,8 +296,9 @@ function paperInfo(paper: PaperContext): PaperInfo {
 
 export interface SuggestInput {
     studyId: string;
-    gene?: string;
+    genes?: string[];
     tab?: string;
+    preset?: SuggestPreset;
 }
 
 export interface SuggestResult {

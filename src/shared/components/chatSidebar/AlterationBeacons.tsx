@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import { observable, makeObservable, action, runInAction } from 'mobx';
+import { getChatServerBase } from './chatServerBase';
 
 // Map canonical alteration_type keys to the legend_label strings rendered
 // by oncoprintjs/geneticrules.ts. Prefix-matched because oncoprint sometimes
@@ -151,7 +152,7 @@ export default class AlterationBeacons extends React.Component<
         const { studyId } = this.props;
         if (!studyId) return;
         try {
-            const r = await fetch('/api/chat/highlights', {
+            const r = await fetch(`${getChatServerBase()}/api/chat/highlights`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ studyId }),
