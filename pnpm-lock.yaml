@@ -937,13 +937,13 @@ importers:
         version: 19.2.3(@types/react@16.14.15)
       '@vitejs/plugin-react':
         specifier: ^4.3.4
-        version: 4.7.0(vite@6.4.2(@types/node@22.19.19)(sass@1.32.4)(terser@5.46.1)(tsx@4.22.3)(yaml@2.8.3))
+        version: 4.7.0(vite@6.4.2)
       typescript:
         specifier: ^5.7.2
         version: 5.9.3
       vite:
         specifier: ^6.0.7
-        version: 6.4.2(@types/node@22.19.19)(sass@1.32.4)(terser@5.46.1)(tsx@4.22.3)(yaml@2.8.3)
+        version: 6.4.2
 
   packages/chat-sidebar-server:
     dependencies:
@@ -13632,11 +13632,11 @@ snapshots:
       '@babel/helpers': 7.29.2
       '@babel/parser': 7.29.2
       '@babel/template': 7.28.6
-      '@babel/traverse': 7.28.5(supports-color@5.5.0)
+      '@babel/traverse': 7.28.5
       '@babel/types': 7.29.0
       '@jridgewell/remapping': 2.3.5
       convert-source-map: 2.0.0
-      debug: 4.4.3(supports-color@5.5.0)
+      debug: 4.4.3
       gensync: 1.0.0-beta.2
       json5: 2.2.3
       semver: 6.3.1
@@ -13722,6 +13722,13 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@babel/helper-module-imports@7.28.6':
+    dependencies:
+      '@babel/traverse': 7.28.5
+      '@babel/types': 7.29.0
+    transitivePeerDependencies:
+      - supports-color
+
   '@babel/helper-module-imports@7.28.6(supports-color@5.5.0)':
     dependencies:
       '@babel/traverse': 7.28.5(supports-color@5.5.0)
@@ -13732,9 +13739,9 @@ snapshots:
   '@babel/helper-module-transforms@7.28.6(@babel/core@7.29.0)':
     dependencies:
       '@babel/core': 7.29.0
-      '@babel/helper-module-imports': 7.28.6(supports-color@5.5.0)
+      '@babel/helper-module-imports': 7.28.6
       '@babel/helper-validator-identifier': 7.28.5
-      '@babel/traverse': 7.28.5(supports-color@5.5.0)
+      '@babel/traverse': 7.28.5
     transitivePeerDependencies:
       - supports-color
 
@@ -14504,6 +14511,18 @@ snapshots:
       '@babel/code-frame': 7.29.0
       '@babel/parser': 7.29.2
       '@babel/types': 7.29.0
+
+  '@babel/traverse@7.28.5':
+    dependencies:
+      '@babel/code-frame': 7.29.0
+      '@babel/generator': 7.29.1
+      '@babel/helper-globals': 7.28.0
+      '@babel/parser': 7.29.2
+      '@babel/template': 7.28.6
+      '@babel/types': 7.29.0
+      debug: 4.4.3
+    transitivePeerDependencies:
+      - supports-color
 
   '@babel/traverse@7.28.5(supports-color@5.5.0)':
     dependencies:
@@ -17510,7 +17529,7 @@ snapshots:
       json-schema-to-ts: 1.6.4
       ts-morph: 12.0.0
 
-  '@vitejs/plugin-react@4.7.0(vite@6.4.2(@types/node@22.19.19)(sass@1.32.4)(terser@5.46.1)(tsx@4.22.3)(yaml@2.8.3))':
+  '@vitejs/plugin-react@4.7.0(vite@6.4.2)':
     dependencies:
       '@babel/core': 7.29.0
       '@babel/plugin-transform-react-jsx-self': 7.27.1(@babel/core@7.29.0)
@@ -17518,7 +17537,7 @@ snapshots:
       '@rolldown/pluginutils': 1.0.0-beta.27
       '@types/babel__core': 7.20.5
       react-refresh: 0.17.0
-      vite: 6.4.2(@types/node@22.19.19)(sass@1.32.4)(terser@5.46.1)(tsx@4.22.3)(yaml@2.8.3)
+      vite: 6.4.2
     transitivePeerDependencies:
       - supports-color
 
@@ -20319,6 +20338,10 @@ snapshots:
   debug@4.3.4:
     dependencies:
       ms: 2.1.2
+
+  debug@4.4.3:
+    dependencies:
+      ms: 2.1.3
 
   debug@4.4.3(supports-color@5.5.0):
     dependencies:
@@ -29204,7 +29227,7 @@ snapshots:
 
   viewport-dimensions@0.2.0: {}
 
-  vite@6.4.2(@types/node@22.19.19)(sass@1.32.4)(terser@5.46.1)(tsx@4.22.3)(yaml@2.8.3):
+  vite@6.4.2:
     dependencies:
       esbuild: 0.25.12
       fdir: 6.5.0(picomatch@2.3.0)
@@ -29213,12 +29236,7 @@ snapshots:
       rollup: 4.60.4
       tinyglobby: 0.2.16
     optionalDependencies:
-      '@types/node': 22.19.19
       fsevents: 2.3.3
-      sass: 1.32.4
-      terser: 5.46.1
-      tsx: 4.22.3
-      yaml: 2.8.3
 
   vm-browserify@1.1.2: {}
 
