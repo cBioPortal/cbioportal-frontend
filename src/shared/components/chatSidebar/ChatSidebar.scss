@@ -24,6 +24,25 @@
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
 }
 
+.chat-sidebar-launcher.is-open {
+    top: 12px;
+    right: 12px;
+    bottom: auto;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    background: transparent;
+    color: #1f2328;
+    font-size: 16px;
+    box-shadow: none;
+}
+
+.chat-sidebar-launcher.is-open:hover {
+    transform: none;
+    background: rgba(0, 0, 0, 0.06);
+    box-shadow: none;
+}
+
 .chat-sidebar-panel {
     position: fixed;
     top: 0;
@@ -44,4 +63,42 @@
     width: 100%;
     height: 100%;
     border: 0;
+}
+
+.chat-sidebar-beacons-loader {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    padding: 6px 12px 6px 10px;
+    background: #2563eb;
+    color: #fff;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+    z-index: 10001;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.chat-sidebar-beacons-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #fff;
+    animation: chat-sidebar-beacons-pulse 0.9s ease-in-out infinite;
+}
+
+@keyframes chat-sidebar-beacons-pulse {
+    0%,
+    100% {
+        opacity: 0.35;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.4);
+    }
 }
