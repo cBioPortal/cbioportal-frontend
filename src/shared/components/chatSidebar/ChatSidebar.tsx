@@ -28,7 +28,12 @@ export default class ChatSidebar extends React.Component<IChatSidebarProps, {}> 
         const params = new URLSearchParams();
         if (this.props.studyId) params.set('studyId', this.props.studyId);
         params.set('apiRoot', apiRoot);
-        return `https://cbioportal-frontend-sidebar.vercel.app/?${params.toString()}`;
+        const host =
+            typeof window !== 'undefined' ? window.location.hostname : '';
+        const base = host.endsWith('cbioportal.org')
+            ? 'https://cbioportal-frontend-sidebar.vercel.app/'
+            : 'https://vps-870e202d.tailf02841.ts.net:5174/';
+        return `${base}?${params.toString()}`;
     }
 
     render() {
