@@ -6,9 +6,87 @@ import html2canvas from 'html2canvas';
 // readability vs. token cost. ~1024 is plenty for an oncoprint at this scale.
 const MAX_LONG_SIDE = 1024;
 
-// cBioPortal renders <LoadingIndicator data-test="LoadingIndicator"> while
-// remote queries / oncoprint paints are pending. Wait until none of those
-// are visible before snapping — otherwise Claude sees a half-empty page.
+// Track in-flight host-page network requests so we can defer the screenshot
+// until cBioPortal is quiescent. Patches fetch + XHR exactly once.
+const PATCH_FLAG = '__chatSidebarNetIdlePatched';
+let inflight = 0;
+let lastChangeAt = Date.now();
+
+function bump() {
+    inflight++;
+    lastChangeAt = Date.now();
+}
+function drop() {
+    inflight = Math.max(0, inflight - 1);
+    lastChangeAt = Date.now();
+}
+
+function isOurRequest(url: string): boolean {
+    // Don't count our own chat-sidebar traffic as "page activity".
+    return (
+        url.includes('/api/chat/') ||
+        url.includes('cbioportal-frontend-sidebar.vercel.app') ||
+        url.includes('tailf02841.ts.net:5174')
+    );
+}
+
+(function installNetworkPatch() {
+    const w = window as any;
+    if (typeof window === 'undefined' || w[PATCH_FLAG]) return;
+    w[PATCH_FLAG] = true;
+
+    const origFetch = window.fetch;
+    window.fetch = function patchedFetch(input: any, init?: any) {
+        const url =
+            typeof input === 'string'
+                ? input
+                : input instanceof URL
+                  ? input.toString()
+                  : (input as Request).url;
+        const tracked = !isOurRequest(url);
+        if (tracked) bump();
+        return origFetch.call(this, input, init).finally(() => {
+            if (tracked) drop();
+        });
+    } as typeof fetch;
+
+    const origOpen = XMLHttpRequest.prototype.open;
+    const origSend = XMLHttpRequest.prototype.send;
+    XMLHttpRequest.prototype.open = function (
+        method: string,
+        url: string | URL,
+        ...rest: any[]
+    ) {
+        (this as any).__chatSidebarUrl = String(url);
+        return (origOpen as any).apply(this, [method, url, ...rest]);
+    } as any;
+    XMLHttpRequest.prototype.send = function (body?: any) {
+        const url = (this as any).__chatSidebarUrl || '';
+        const tracked = !isOurRequest(url);
+        if (tracked) {
+            bump();
+            this.addEventListener('loadend', drop, { once: true });
+        }
+        return origSend.call(this, body);
+    } as any;
+})();
+
+// Resolve once the host page has had no in-flight cBioPortal requests for
+// `idleMs` consecutive milliseconds. Falls through on timeout so a stuck
+// connection can't block the screenshot forever.
+export async function waitForNetworkIdle(
+    idleMs = 1000,
+    timeoutMs = 20000
+): Promise<void> {
+    const deadline = Date.now() + timeoutMs;
+    while (Date.now() < deadline) {
+        if (inflight === 0 && Date.now() - lastChangeAt >= idleMs) return;
+        await new Promise(r => setTimeout(r, 100));
+    }
+}
+
+// Legacy DOM-based check; complements waitForNetworkIdle for cases where a
+// component is rendering after data has landed but before paint settles.
 export async function waitForViewReady(timeoutMs = 8000): Promise<void> {
     const deadline = Date.now() + timeoutMs;
     while (Date.now() < deadline) {
@@ -22,7 +100,6 @@ export async function waitForViewReady(timeoutMs = 8000): Promise<void> {
             return rect.width > 0 && rect.height > 0;
         });
         if (!anyVisible) {
-            // Small settling delay so the post-load paint commits.
             await new Promise(r => setTimeout(r, 200));
             return;
         }
