@@ -99,6 +99,7 @@ export default class AlterationBeacons extends React.Component<
     @observable.ref activeHighlight: Highlight | null = null;
     @observable.ref activeAnchor: DOMRect | null = null;
     @observable loadError: string | null = null;
+    @observable loading = false;
 
     private placed: PlacedBeacon[] = [];
     private observer: MutationObserver | null = null;
@@ -151,6 +152,9 @@ export default class AlterationBeacons extends React.Component<
     private async loadHighlights() {
         const { studyId } = this.props;
         if (!studyId) return;
+        runInAction(() => {
+            this.loading = true;
+        });
         try {
             const r = await fetch(`${getChatServerBase()}/api/chat/highlights`, {
                 method: 'POST',
@@ -174,6 +178,12 @@ export default class AlterationBeacons extends React.Component<
             runInAction(() => {
                 this.loadError = String(err.message ?? err);
             });
+        } finally {
+            if (!this.cancelled) {
+                runInAction(() => {
+                    this.loading = false;
+                });
+            }
         }
     }
 
@@ -371,7 +381,13 @@ export default class AlterationBeacons extends React.Component<
     render() {
         const h = this.activeHighlight;
         const anchor = this.activeAnchor;
-        if (!h || !anchor) return null;
+        const loadingChip = this.loading ? (
+            <div className="chat-sidebar-beacons-loader">
+                <span className="chat-sidebar-beacons-dot" />
+                Loading beacons…
+            </div>
+        ) : null;
+        if (!h || !anchor) return loadingChip;
         const top = anchor.bottom + window.scrollY + 8;
         const left = Math.min(
             anchor.left + window.scrollX,
@@ -379,6 +395,7 @@ export default class AlterationBeacons extends React.Component<
         );
         return (
             <>
+                {loadingChip}
                 <div
                     onClick={this.dismissTooltip}
                     style={{
