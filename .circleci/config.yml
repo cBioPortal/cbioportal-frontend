@@ -398,6 +398,17 @@ jobs:
           # the pnpm equivalent of `npm ci`.
           command: pnpm install --frozen-lockfile --ignore-workspace
       - run:
+          # Dedicated step so the resolved backend appears in the CircleCI
+          # step list at-a-glance, without having to expand "Run Playwright
+          # shard". The actual env resolution still happens inside
+          # with-env.sh at playwright-test invocation time — this step is
+          # purely a visibility pre-flight, runs the same wrapper with a
+          # noop command, so what it prints is exactly what the test step
+          # will use.
+          name: Resolved backend URL
+          working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
+          command: ./scripts/with-env.sh true
+      - run:
           name: Start frontend dev server (pnpm serveDist) on localhost:3000
           background: true
           working_directory: /tmp/repo/cbioportal-frontend

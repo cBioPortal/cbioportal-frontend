@@ -27,4 +27,13 @@ if [[ -z "${CBIOPORTAL_URL:-}" ]]; then
     fi
 fi
 
+# Surface the resolved backend loudly so anyone reading test output (CI
+# log, local terminal, docker run) can see at a glance what the suite
+# is actually pointed at. Without this it's surprisingly easy to spend
+# 20 minutes debugging a "test failure" that's really an instance mismatch.
+echo "============================================================"
+echo "  CBIOPORTAL_URL: ${CBIOPORTAL_URL:-(unset — playwright.config.ts default kicks in)}"
+echo "  BRANCH_ENV:     ${BRANCH_ENV:-(unset)}"
+echo "============================================================"
+
 exec "$@"
