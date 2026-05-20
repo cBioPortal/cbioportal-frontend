@@ -1,2 +1,2 @@
-export CBIOPORTAL_URL="https://staging.cbioportal.org"
+export CBIOPORTAL_URL="https://www.cbioportal.org"
 export GENOME_NEXUS_URL="${GENOME_NEXUS_URL:-https://www.genomenexus.org}"
