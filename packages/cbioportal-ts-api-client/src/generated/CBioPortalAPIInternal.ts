@@ -3768,7 +3768,7 @@ export default class CBioPortalAPIInternal {
         });
     };
     fetchClinicalEnrichmentsUsingPOSTURL(parameters: {
-        'groupFilter': GroupFilter,
+        'groupFilter' ? : GroupFilter,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -3791,9 +3791,9 @@ export default class CBioPortalAPIInternal {
      * @param {} groupFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      */
     fetchClinicalEnrichmentsUsingPOSTWithHttpInfo(parameters: {
-        'groupFilter': GroupFilter,
+        'groupFilter' ? : GroupFilter,
         $queryParameters ? : any,
-        $domain ? : string
+            $domain ? : string
     }): Promise < request.Response > {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
@@ -3809,11 +3809,6 @@ export default class CBioPortalAPIInternal {
 
             if (parameters['groupFilter'] !== undefined) {
                 body = parameters['groupFilter'];
-            }
-
-            if (parameters['groupFilter'] === undefined) {
-                reject(new Error('Missing required  parameter: groupFilter'));
-                return;
             }
 
             if (parameters.$queryParameters) {
@@ -3835,9 +3830,9 @@ export default class CBioPortalAPIInternal {
      * @param {} groupFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      */
     fetchClinicalEnrichmentsUsingPOST(parameters: {
-            'groupFilter': GroupFilter,
+            'groupFilter' ? : GroupFilter,
             $queryParameters ? : any,
-            $domain ? : string
+                $domain ? : string
         }): Promise < Array < ClinicalDataEnrichmentDTO >
         > {
             return this.fetchClinicalEnrichmentsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
