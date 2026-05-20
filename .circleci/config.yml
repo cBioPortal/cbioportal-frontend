@@ -354,8 +354,15 @@ jobs:
       CI: 'true'
       HOME: /tmp
       LOCALDEV: '1'
-      CBIOPORTAL_URL: https://www.cbioportal.org
-      BRANCH_ENV: master
+      # CBIOPORTAL_URL and BRANCH_ENV are intentionally NOT hardcoded here.
+      # scripts/with-env.sh dispatches through scripts/env_vars.sh, which
+      # picks env/${BRANCH}.sh based on the PR's target branch (queried via
+      # the GitHub API). That way rc-targeted PRs hit rc.cbioportal.org,
+      # release-targeted PRs hit the appropriate release backend, etc.
+      # Override for a one-off manual trigger by setting the
+      # manual_trigger_branch_env pipeline parameter — forwarded below
+      # and read by env_vars.sh's MANUAL_TRIGGER_BRANCH_ENV branch.
+      MANUAL_TRIGGER_BRANCH_ENV: << pipeline.parameters.manual_trigger_branch_env >>
       FRONTEND_TEST_USE_LOCAL_DIST: 'true'
       PLAYWRIGHT_JUNIT_OUTPUT_NAME: test-results/junit.xml
       # Optional grep filter for targeted smoke runs. Empty by default →
@@ -390,6 +397,17 @@ jobs:
           # --frozen-lockfile: fail if pnpm-lock.yaml would change,
           # the pnpm equivalent of `npm ci`.
           command: pnpm install --frozen-lockfile --ignore-workspace
+      - run:
+          # Dedicated step so the resolved backend appears in the CircleCI
+          # step list at-a-glance, without having to expand "Run Playwright
+          # shard". The actual env resolution still happens inside
+          # with-env.sh at playwright-test invocation time — this step is
+          # purely a visibility pre-flight, runs the same wrapper with a
+          # noop command, so what it prints is exactly what the test step
+          # will use.
+          name: Resolved backend URL
+          working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
+          command: ./scripts/with-env.sh true
       - run:
           name: Start frontend dev server (pnpm serveDist) on localhost:3000
           background: true
@@ -436,7 +454,10 @@ jobs:
             # (CPU-bound contention with serveDist + runner sharing the
             # 4th core). Only describes opted into mode: 'parallel'
             # actually use the extra workers; the rest still serialize.
-            pnpm exec playwright test --workers=3 \
+            #
+            # with-env.sh resolves CBIOPORTAL_URL via scripts/env_vars.sh
+            # (PR-target-branch aware) before exec'ing playwright.
+            ./scripts/with-env.sh pnpm exec playwright test --workers=3 \
               --shard="${SHARD_NUM}/${CIRCLE_NODE_TOTAL}" \
               --reporter=list,junit,blob \
               $GREP_ARG

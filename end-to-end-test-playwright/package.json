@@ -7,9 +7,9 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "playwright test --headed",
-    "test:update": "playwright test --update-snapshots",
-    "test:ui": "playwright test --headed --ui",
+    "test": "./scripts/with-env.sh playwright test --headed",
+    "test:update": "./scripts/with-env.sh playwright test --update-snapshots",
+    "test:ui": "./scripts/with-env.sh playwright test --headed --ui",
     "test:docker": "./scripts/docker-test.sh",
     "test:docker:update": "./scripts/docker-test.sh --update-snapshots",
     "test:docker:localdb": "PW_LOCAL=1 CBIOPORTAL_URL=http://localhost:8080 ./scripts/docker-test.sh tests/local",
