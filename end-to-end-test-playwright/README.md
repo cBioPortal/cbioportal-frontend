@@ -86,6 +86,27 @@ localdb tests without waiting for a Docker pull.
 script name is forwarded to `playwright test`, so flags like
 `--debug`, `--headed`, `--grep`, `--trace on` all work.
 
+## Pointing at a different backend (CBIOPORTAL_URL)
+
+All test entry points route through `scripts/with-env.sh`, which resolves
+`CBIOPORTAL_URL` in this order — first match wins:
+
+1. **`CBIOPORTAL_URL` already set in your shell** — used as-is. The simple
+   one-off override:
+   ```bash
+   CBIOPORTAL_URL=https://rc.cbioportal.org pnpm test
+   ```
+2. **`BRANCH_ENV` set (local) or `CIRCLECI`/`NETLIFY` set (CI)** — delegate
+   to `../scripts/env_vars.sh`, which picks `../env/${BRANCH}.sh` based on
+   `$BRANCH_ENV` locally, or the PR's target branch in CI. `../env/custom.sh`
+   layers on top for personal overrides.
+3. **Nothing set** — `playwright.config.ts`'s hardcoded default
+   (`https://www.cbioportal.org`) kicks in.
+
+In CI, this means a PR targeting `rc` automatically runs against
+`rc.cbioportal.org`; a PR targeting `master` runs against
+`www.cbioportal.org`; etc. — matching the legacy WebdriverIO behavior.
+
 ## Updating references when a real visual change lands
 
 1. Land the code change.
