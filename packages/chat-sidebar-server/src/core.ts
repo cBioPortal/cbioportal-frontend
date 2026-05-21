@@ -1,69 +1,31 @@
 // Shared chat-sidebar logic. Both the Express server (src/server.ts) and the
 // Vercel serverless functions (api/chat/*.ts) call into runSuggest() and
 // runHighlights() here so the two stacks never drift.
+//
+// LLM calls route through the Vercel AI Gateway via `ai@^6` (plain
+// "provider/model" slugs auto-route). Auth is the VERCEL_OIDC_TOKEN env var
+// locally (refresh with `vercel env pull .env.local --yes`) and the
+// platform-injected OIDC token on deploy.
 
-import Anthropic from '@anthropic-ai/sdk';
+import {
+    generateText,
+    generateObject,
+    type ModelMessage,
+    type UserContent,
+} from 'ai';
+import { z } from 'zod';
 import { fetchPaperForStudy, PaperContext } from './paper.js';
+import {
+    computeCostFromUsage,
+    type CostBreakdown,
+} from './pricing.js';
 
-export const SUGGEST_MODEL = 'claude-opus-4-7';
-export const HIGHLIGHTS_MODEL = 'claude-sonnet-4-6';
+// Default Gateway slugs (dots, not hyphens — verified against
+// gateway.getAvailableModels()). Callers may override the model per request.
+export const SUGGEST_MODEL = 'anthropic/claude-opus-4.7';
+export const HIGHLIGHTS_MODEL = 'anthropic/claude-sonnet-4.6';
 // Kept for the /health endpoint and the iframe banner.
 export const MODEL = SUGGEST_MODEL;
-
-// Per-1M-token base prices in USD. Cache write is 1.25x input (5-min TTL) or
-// 2x (1-hour TTL); cache read is 0.1x input — same multipliers across models.
-const PRICES: Record<string, { input: number; output: number }> = {
-    'claude-opus-4-7': { input: 5.0, output: 25.0 },
-    'claude-sonnet-4-6': { input: 3.0, output: 15.0 },
-};
-
-export function computeCost(usage: any, model: string = SUGGEST_MODEL) {
-    const price = PRICES[model] ?? PRICES[SUGGEST_MODEL];
-    const inputTok = usage?.input_tokens ?? 0;
-    const cacheRead = usage?.cache_read_input_tokens ?? 0;
-    const outputTok = usage?.output_tokens ?? 0;
-    const cacheWrite5m =
-        usage?.cache_creation?.ephemeral_5m_input_tokens ?? 0;
-    const cacheWrite1h =
-        usage?.cache_creation?.ephemeral_1h_input_tokens ?? 0;
-    const cacheWriteTotal =
-        usage?.cache_creation_input_tokens ?? cacheWrite5m + cacheWrite1h;
-
-    const inputCost = (inputTok * price.input) / 1_000_000;
-    const cacheWriteCost =
-        (cacheWrite5m * price.input * 1.25 + cacheWrite1h * price.input * 2.0) /
-        1_000_000;
-    const cacheReadCost = (cacheRead * price.input * 0.1) / 1_000_000;
-    const outputCost = (outputTok * price.output) / 1_000_000;
-    return {
-        total: inputCost + cacheWriteCost + cacheReadCost + outputCost,
-        inputCost,
-        cacheWriteCost,
-        cacheReadCost,
-        outputCost,
-        tokens: {
-            input: inputTok,
-            cacheWrite: cacheWriteTotal,
-            cacheWrite5m,
-            cacheWrite1h,
-            cacheRead,
-            output: outputTok,
-        },
-        currency: 'USD',
-        model,
-    };
-}
-
-// Anthropic client is lazy so we don't crash at import time on Vercel cold
-// starts when ANTHROPIC_API_KEY hasn't been resolved yet.
-let _anthropic: Anthropic | null = null;
-function client(): Anthropic {
-    if (!process.env.ANTHROPIC_API_KEY) {
-        throw new Error('ANTHROPIC_API_KEY is not set');
-    }
-    if (!_anthropic) _anthropic = new Anthropic();
-    return _anthropic;
-}
 
 // Per-process paper cache. Persistent on the Express server; per-warm-Lambda
 // on Vercel (each warm function reuses; cold starts fetch fresh from PMC).
@@ -158,29 +120,17 @@ function buildSuggestUserText(ctx: {
     return lines.join('\n');
 }
 
-function buildSuggestUserMessage(
-    ctx: SuggestInput
-): Anthropic.MessageParam['content'] {
+// Build the user-message content for runSuggest. When a screenshot is
+// provided we send a multi-part content array (image + text); otherwise a
+// plain string keeps the wire format minimal. The AI SDK accepts a data URL
+// directly as the image source — mediaType is parsed from the URL.
+function buildSuggestUserContent(ctx: SuggestInput): UserContent {
     const text = buildSuggestUserText(ctx);
     const shot = ctx.screenshot;
     if (!shot) return text;
-    // Strip "data:image/png;base64," prefix; Anthropic wants the raw base64.
-    const match = /^data:(image\/(?:png|jpeg|webp|gif));base64,(.+)$/.exec(shot);
-    if (!match) return text;
-    const [, mediaType, data] = match;
+    if (!/^data:image\/(?:png|jpeg|webp|gif);base64,/.test(shot)) return text;
     return [
-        {
-            type: 'image',
-            source: {
-                type: 'base64',
-                media_type: mediaType as
-                    | 'image/png'
-                    | 'image/jpeg'
-                    | 'image/webp'
-                    | 'image/gif',
-                data,
-            },
-        },
+        { type: 'image', image: shot },
         { type: 'text', text },
     ];
 }
@@ -216,66 +166,50 @@ const TAB_HINTS = [
     'pathways',
 ] as const;
 
-const HIGHLIGHT_SCHEMA = {
-    type: 'object',
-    properties: {
-        highlights: {
-            type: 'array',
-            items: {
-                type: 'object',
-                properties: {
-                    type: {
-                        type: 'string',
-                        enum: ['alteration', 'gene', 'tab'],
-                        description:
-                            'alteration = beacon on an oncoprint legend label; gene = beacon on an oncoprint gene track title; tab = beacon on a results-view tab.',
-                    },
-                    alterationType: {
-                        type: 'string',
-                        enum: ALTERATION_TYPES as unknown as string[],
-                        description:
-                            'Required when type=alteration. Canonical oncoprint legend bucket.',
-                    },
-                    gene: {
-                        type: 'string',
-                        description:
-                            'Required when type=gene. HUGO symbol, e.g. TP53.',
-                    },
-                    genes: {
-                        type: 'array',
-                        items: { type: 'string' },
-                        description:
-                            'Optional when type=alteration. Genes the paper ties to this alteration type.',
-                    },
-                    tabHint: {
-                        type: 'string',
-                        enum: TAB_HINTS as unknown as string[],
-                        description:
-                            'Required when type=tab. Which results-view tab the paper has pertinent content for.',
-                    },
-                    note: {
-                        type: 'string',
-                        description:
-                            'One-sentence paper-grounded observation, <= 220 chars. No filler.',
-                    },
-                    quote: {
-                        type: 'string',
-                        description:
-                            'Verbatim substring from the paper that grounds the note. <= 320 chars.',
-                    },
-                    importance: {
-                        type: 'string',
-                        enum: ['high', 'medium', 'low'],
-                    },
-                },
-                required: ['type', 'note', 'quote', 'importance'],
-                additionalProperties: false,
-            },
-        },
-    },
-    required: ['highlights'],
-    additionalProperties: false,
-} as const;
+const HighlightSchema = z.object({
+    type: z
+        .enum(['alteration', 'gene', 'tab'])
+        .describe(
+            'alteration = beacon on an oncoprint legend label; gene = beacon on an oncoprint gene track title; tab = beacon on a results-view tab.'
+        ),
+    alterationType: z
+        .enum(ALTERATION_TYPES)
+        .optional()
+        .describe(
+            'Required when type=alteration. Canonical oncoprint legend bucket.'
+        ),
+    gene: z
+        .string()
+        .optional()
+        .describe('Required when type=gene. HUGO symbol, e.g. TP53.'),
+    genes: z
+        .array(z.string())
+        .optional()
+        .describe(
+            'Optional when type=alteration. Genes the paper ties to this alteration type.'
+        ),
+    tabHint: z
+        .enum(TAB_HINTS)
+        .optional()
+        .describe(
+            'Required when type=tab. Which results-view tab the paper has pertinent content for.'
+        ),
+    note: z
+        .string()
+        .describe(
+            'One-sentence paper-grounded observation, <= 220 chars. No filler.'
+        ),
+    quote: z
+        .string()
+        .describe(
+            'Verbatim substring from the paper that grounds the note. <= 320 chars.'
+        ),
+    importance: z.enum(['high', 'medium', 'low']),
+});
+
+const HighlightsResponseSchema = z.object({
+    highlights: z.array(HighlightSchema),
+});
 
 function buildHighlightSystemPrompt(paper: PaperContext): string {
     return [
@@ -369,6 +303,26 @@ function paperInfo(paper: PaperContext): PaperInfo {
     };
 }
 
+// Build the `messages` array with the big paper-grounded system prompt
+// marked as an Anthropic 1h cache breakpoint. Putting the system message in
+// the messages array (rather than as a top-level `system:` option) is what
+// lets us attach providerOptions.anthropic.cacheControl to it.
+function buildMessages(
+    systemText: string,
+    userContent: UserContent
+): ModelMessage[] {
+    return [
+        {
+            role: 'system',
+            content: systemText,
+            providerOptions: {
+                anthropic: { cacheControl: { type: 'ephemeral', ttl: '1h' } },
+            },
+        },
+        { role: 'user', content: userContent },
+    ];
+}
+
 export interface SuggestInput {
     studyId: string;
     genes?: string[];
@@ -378,46 +332,44 @@ export interface SuggestInput {
     userPrompt?: string;
     // base64 PNG data URL of the current viewport, captured client-side.
     screenshot?: string;
+    // Optional Gateway slug override (e.g. "openai/gpt-5.4"). Falls back to
+    // SUGGEST_MODEL when absent.
+    model?: string;
 }
 
 export interface SuggestResult {
     suggestion: string;
     paper: PaperInfo;
     usage: any;
-    cost: ReturnType<typeof computeCost>;
+    cost: CostBreakdown;
 }
 
 export async function runSuggest(
     input: SuggestInput
 ): Promise<SuggestResult> {
     const paper = await getPaperContext(input.studyId);
-    const stream = client().messages.stream({
-        model: SUGGEST_MODEL,
-        max_tokens: 1024,
-        system: [
-            {
-                type: 'text',
-                text: buildSuggestSystemPrompt(paper),
-                cache_control: { type: 'ephemeral', ttl: '1h' },
-            },
-        ],
-        messages: [
-            {
-                role: 'user',
-                content: buildSuggestUserMessage(input),
-            },
-        ],
+    const model = input.model ?? SUGGEST_MODEL;
+    const result = await generateText({
+        model,
+        maxOutputTokens: 1024,
+        // The system role lives inside messages so we can attach a
+        // providerOptions.anthropic.cacheControl breakpoint to it — the
+        // top-level `system` option doesn't accept per-message options.
+        // Our system content is internally constructed (never user-derived),
+        // so the SDK's prompt-injection warning is not a real concern here.
+        // The Anthropic-namespaced providerOptions are silently ignored by
+        // non-Anthropic providers, so this is safe to send unconditionally.
+        allowSystemInMessages: true,
+        messages: buildMessages(
+            buildSuggestSystemPrompt(paper),
+            buildSuggestUserContent(input)
+        ),
     });
-    const finalMessage = await stream.finalMessage();
-    const suggestion = finalMessage.content
-        .filter((b): b is Anthropic.TextBlock => b.type === 'text')
-        .map(b => b.text)
-        .join('');
     return {
-        suggestion,
+        suggestion: result.text,
         paper: paperInfo(paper),
-        usage: finalMessage.usage,
-        cost: computeCost(finalMessage.usage, SUGGEST_MODEL),
+        usage: result.usage,
+        cost: await computeCostFromUsage(result.usage, model),
     };
 }
 
@@ -432,57 +384,36 @@ export interface HighlightsInput {
         genes?: string[];
         tabs?: string[];
     };
+    // Optional Gateway slug override; falls back to HIGHLIGHTS_MODEL.
+    model?: string;
 }
 
 export interface HighlightsResult {
     highlights: any[];
     paper: PaperInfo;
     usage: any;
-    cost: ReturnType<typeof computeCost>;
+    cost: CostBreakdown;
 }
 
 export async function runHighlights(
     input: HighlightsInput
 ): Promise<HighlightsResult> {
     const paper = await getPaperContext(input.studyId);
-    const response = await client().messages.create({
-        model: HIGHLIGHTS_MODEL,
-        max_tokens: 4096,
-        output_config: {
-            format: {
-                type: 'json_schema',
-                schema: HIGHLIGHT_SCHEMA,
-            },
-        },
-        system: [
-            {
-                type: 'text',
-                text: buildHighlightSystemPrompt(paper),
-                cache_control: { type: 'ephemeral', ttl: '1h' },
-            },
-        ],
-        messages: [
-            {
-                role: 'user',
-                content: buildHighlightsUserText(input.inventory),
-            },
-        ],
+    const model = input.model ?? HIGHLIGHTS_MODEL;
+    const result = await generateObject({
+        model,
+        maxOutputTokens: 4096,
+        schema: HighlightsResponseSchema,
+        allowSystemInMessages: true,
+        messages: buildMessages(
+            buildHighlightSystemPrompt(paper),
+            buildHighlightsUserText(input.inventory)
+        ),
     });
-    const textBlock = response.content.find(
-        (b): b is Anthropic.TextBlock => b.type === 'text'
-    );
-    let parsed: any = { highlights: [] };
-    if (textBlock) {
-        try {
-            parsed = JSON.parse(textBlock.text);
-        } catch {
-            /* fall through with empty list */
-        }
-    }
     return {
-        highlights: parsed.highlights ?? [],
+        highlights: result.object.highlights,
         paper: paperInfo(paper),
-        usage: response.usage,
-        cost: computeCost(response.usage, HIGHLIGHTS_MODEL),
+        usage: result.usage,
+        cost: await computeCostFromUsage(result.usage, model),
     };
 }

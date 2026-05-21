@@ -15,8 +15,8 @@ export default async function handler(
         res.status(405).json({ error: 'Method not allowed' });
         return;
     }
-    const { studyId, genes, tab, preset, userPrompt, screenshot } = (req.body ??
-        {}) as any;
+    const { studyId, genes, tab, preset, userPrompt, screenshot, model } =
+        (req.body ?? {}) as any;
     if (!studyId || typeof studyId !== 'string') {
         res.status(400).json({ error: 'studyId (string) required' });
         return;
@@ -29,6 +29,7 @@ export default async function handler(
             preset,
             userPrompt,
             screenshot,
+            model,
         });
         res.json(result);
     } catch (err: any) {

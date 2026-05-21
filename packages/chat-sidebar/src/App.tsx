@@ -32,6 +32,18 @@ interface SuggestResponse {
     cost?: Cost;
 }
 
+interface ModelInfo {
+    id: string;
+    name: string;
+    description: string;
+    pricing: {
+        input: number;
+        output: number;
+        cachedInput: number;
+        cacheCreation: number;
+    };
+}
+
 type Preset = 'keyFinding' | 'cohort' | 'limitations';
 
 const PRESETS: { id: Preset; label: string }[] = [
@@ -39,6 +51,15 @@ const PRESETS: { id: Preset; label: string }[] = [
     { id: 'cohort', label: 'Cohort' },
     { id: 'limitations', label: 'Limitations' },
 ];
+
+const MODEL_STORAGE_KEY = 'chat-sidebar:selectedModel';
+
+// $X/M-tokens display for the dropdown tooltip. Pricing comes through as
+// per-token dollars, so multiply by 1M for the human-readable form.
+function formatPerMillion(perToken: number): string {
+    const perMillion = perToken * 1_000_000;
+    return `$${perMillion.toFixed(2)}/M`;
+}
 
 function formatCost(n: number): string {
     // Sub-cent precision so a $0.0023 call doesn't read as "$0.00".
@@ -105,8 +126,52 @@ export function App() {
     const [lastScreenshot, setLastScreenshot] = useState<string | null>(null);
     const [showScreenshot, setShowScreenshot] = useState(false);
     const [input, setInput] = useState('');
+    const [models, setModels] = useState<ModelInfo[]>([]);
+    const [selectedModel, setSelectedModel] = useState<string | null>(() => {
+        try {
+            return localStorage.getItem(MODEL_STORAGE_KEY);
+        } catch {
+            return null;
+        }
+    });
     const autoRunRef = useRef(false);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+    // Fetch the curated model catalog once on mount. If localStorage already
+    // had a selection, keep it; otherwise default to the first model the
+    // backend returns (currently anthropic/claude-opus-4.7).
+    useEffect(() => {
+        let cancelled = false;
+        fetch('/api/chat/models')
+            .then(r => r.json())
+            .then((data: { models: ModelInfo[] }) => {
+                if (cancelled) return;
+                setModels(data.models);
+                if (
+                    !selectedModel ||
+                    !data.models.some(m => m.id === selectedModel)
+                ) {
+                    setSelectedModel(data.models[0]?.id ?? null);
+                }
+            })
+            .catch(() => {
+                /* dropdown will fall back to "(default)" */
+            });
+        return () => {
+            cancelled = true;
+        };
+        // Run once — selectedModel is read but not a dep on purpose.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    const onSelectModel = (id: string) => {
+        setSelectedModel(id);
+        try {
+            localStorage.setItem(MODEL_STORAGE_KEY, id);
+        } catch {
+            /* private mode etc — selection just doesn't persist */
+        }
+    };
 
     useEffect(() => {
         if (!studyId || autoRunRef.current) return;
@@ -156,6 +221,7 @@ export function App() {
                     preset: opts.preset,
                     userPrompt: opts.userPrompt,
                     screenshot,
+                    model: selectedModel ?? undefined,
                 }),
             });
             if (!r.ok) {
@@ -182,7 +248,39 @@ export function App() {
     return (
         <div className="chat-shell">
             <header className="chat-header">
-                <div className="chat-title">Study Chat</div>
+                <div className="chat-header-row">
+                    <div className="chat-title">Study Chat</div>
+                    {models.length > 0 && (
+                        <select
+                            className="model-select"
+                            value={selectedModel ?? ''}
+                            onChange={e => onSelectModel(e.target.value)}
+                            disabled={loading}
+                            title={
+                                selectedModel
+                                    ? (models.find(
+                                          m => m.id === selectedModel
+                                      )?.description ?? '')
+                                    : ''
+                            }
+                            aria-label="Model"
+                        >
+                            {models.map(m => (
+                                <option
+                                    key={m.id}
+                                    value={m.id}
+                                    title={`in ${formatPerMillion(m.pricing.input)} · out ${formatPerMillion(m.pricing.output)}${
+                                        m.pricing.cachedInput > 0
+                                            ? ` · cached ${formatPerMillion(m.pricing.cachedInput)}`
+                                            : ''
+                                    }`}
+                                >
+                                    {m.name}
+                                </option>
+                            ))}
+                        </select>
+                    )}
+                </div>
                 {study && (
                     <div className="chat-subtitle" title={study.description}>
                         {suggestion?.paper?.paperUrl ? (
