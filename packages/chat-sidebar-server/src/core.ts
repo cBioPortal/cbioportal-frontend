@@ -316,6 +316,41 @@ function buildHighlightSystemPrompt(paper: PaperContext): string {
     ].join('\n');
 }
 
+function buildHighlightsUserText(
+    inventory?: HighlightsInput['inventory']
+): string {
+    if (!inventory) {
+        return 'List paper-grounded highlights, ordered by importance.';
+    }
+    const lines: string[] = [
+        `The user has the following items present on their cBioPortal results view right now:`,
+        ``,
+    ];
+    if (inventory.genes && inventory.genes.length > 0) {
+        lines.push(`Queried genes (oncoprint gene tracks):`);
+        lines.push(`  ${inventory.genes.join(', ')}`);
+    }
+    if (inventory.alterations && inventory.alterations.length > 0) {
+        lines.push(`Alteration buckets visible in the oncoprint legend:`);
+        lines.push(`  ${inventory.alterations.join(', ')}`);
+    }
+    if (inventory.tabs && inventory.tabs.length > 0) {
+        lines.push(`Available results-view tabs:`);
+        lines.push(`  ${inventory.tabs.join(', ')}`);
+    }
+    lines.push(
+        ``,
+        `For EACH item above where the paper has something concrete and non-trivial to say, emit one highlight. ` +
+            `Skip items where the paper says nothing meaningful — do NOT pad. Highlights for items NOT in the lists above will be silently dropped, so don't waste budget on them.`,
+        ``,
+        `Order by importance (high → low). Cap at 10 total. ` +
+            `For type=alteration, alterationType MUST be one of the listed alteration buckets. ` +
+            `For type=gene, gene MUST be one of the listed queried genes. ` +
+            `For type=tab, tabHint MUST be one of the listed tabs, and only emit it when the paper's analyses meaningfully overlap with what that tab shows (e.g., mutualExclusivity only if the paper actually discusses co-occurrence or exclusivity of the queried genes).`
+    );
+    return lines.join('\n');
+}
+
 interface PaperInfo {
     source: string;
     pmid: string | null;
@@ -388,6 +423,15 @@ export async function runSuggest(
 
 export interface HighlightsInput {
     studyId: string;
+    // What's actually present on the user's page right now. The model is
+    // told to return highlights only for items in here; anything outside
+    // the inventory has no DOM target and would be silently dropped, so
+    // there's no point spending output budget on it.
+    inventory?: {
+        alterations?: string[];
+        genes?: string[];
+        tabs?: string[];
+    };
 }
 
 export interface HighlightsResult {
@@ -420,8 +464,7 @@ export async function runHighlights(
         messages: [
             {
                 role: 'user',
-                content:
-                    'List paper-grounded highlights, ordered by importance.',
+                content: buildHighlightsUserText(input.inventory),
             },
         ],
     });

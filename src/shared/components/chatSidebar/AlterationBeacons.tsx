@@ -2,6 +2,7 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import { observable, makeObservable, action, runInAction } from 'mobx';
 import { getChatServerBase } from './chatServerBase';
+import { waitForNetworkIdle, waitForViewReady } from './screenshot';
 
 // Map canonical alteration_type keys to the legend_label strings rendered
 // by oncoprintjs/geneticrules.ts. Prefix-matched because oncoprint sometimes
@@ -82,7 +83,22 @@ interface PaperInfo {
 
 interface IAlterationBeaconsProps {
     studyId: string | undefined;
+    genes?: string[];
 }
+
+const TAB_HINTS = [
+    'oncoprint',
+    'mutations',
+    'cancerTypesSummary',
+    'mutualExclusivity',
+    'plots',
+    'survival',
+    'cnSegments',
+    'coexpression',
+    'comparison',
+    'structuralVariants',
+    'pathways',
+] as const;
 
 interface PlacedBeacon {
     el: HTMLDivElement;
@@ -127,7 +143,10 @@ export default class AlterationBeacons extends React.Component<
     }
 
     componentDidUpdate(prev: IAlterationBeaconsProps) {
-        if (prev.studyId !== this.props.studyId) {
+        const studyChanged = prev.studyId !== this.props.studyId;
+        const genesChanged =
+            (prev.genes ?? []).join(',') !== (this.props.genes ?? []).join(',');
+        if (studyChanged || genesChanged) {
             this.clearBeacons();
             runInAction(() => {
                 this.highlights = [];
@@ -137,6 +156,35 @@ export default class AlterationBeacons extends React.Component<
             });
             this.loadHighlights();
         }
+    }
+
+    private buildInventory(): {
+        alterations: string[];
+        genes: string[];
+        tabs: string[];
+    } {
+        // Which canonical alteration buckets have visible legend labels.
+        const presentAlterations = new Set<string>();
+        const textNodes = document.querySelectorAll<SVGTextElement>('svg text');
+        for (const t of Array.from(textNodes)) {
+            const txt = (t.textContent || '').trim();
+            if (!txt) continue;
+            for (const [altType, prefixes] of Object.entries(LABEL_PREFIXES)) {
+                if (prefixes.some(p => txt.startsWith(p))) {
+                    presentAlterations.add(altType);
+                    break;
+                }
+            }
+        }
+        // Tabs: which tab anchors exist on the page right now.
+        const tabs = TAB_HINTS.filter(h =>
+            document.querySelector(`.tabAnchor_${h}`)
+        );
+        return {
+            alterations: Array.from(presentAlterations),
+            genes: this.props.genes ?? [],
+            tabs,
+        };
     }
 
     componentWillUnmount() {
@@ -156,10 +204,16 @@ export default class AlterationBeacons extends React.Component<
             this.loading = true;
         });
         try {
+            // Wait until the page settles so the inventory reflects what the
+            // user actually sees, not a half-rendered shell.
+            await waitForNetworkIdle(1000);
+            await waitForViewReady();
+            if (this.cancelled) return;
+            const inventory = this.buildInventory();
             const r = await fetch(`${getChatServerBase()}/api/chat/highlights`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ studyId }),
+                body: JSON.stringify({ studyId, inventory }),
             });
             if (!r.ok) {
                 const body = await r.json().catch(() => ({}));
@@ -196,10 +250,11 @@ export default class AlterationBeacons extends React.Component<
     }
 
     private scheduleScan = () => {
-        if (this.scheduled) return;
+        if (this.scheduled || this.cancelled) return;
         this.scheduled = true;
         requestAnimationFrame(() => {
             this.scheduled = false;
+            if (this.cancelled) return;
             this.scanAndPlace();
         });
     };
