@@ -285,8 +285,8 @@
             "default": "sample",
             "description": "Type of the clinical data",
             "enum": [
-              "SAMPLE",
-              "PATIENT"
+              "sample",
+              "patient"
             ],
             "in": "query",
             "name": "clinicalDataType",
@@ -2024,10 +2024,7 @@
           "200": {
             "description": "OK",
             "schema": {
-              "items": {
-                "$ref": "#/definitions/Mutation"
-              },
-              "type": "array"
+              "$ref": "#/definitions/ResponseEntityListMutationDTO"
             }
           }
         },
@@ -2636,10 +2633,7 @@
           "200": {
             "description": "OK",
             "schema": {
-              "items": {
-                "$ref": "#/definitions/CancerStudy"
-              },
-              "type": "array"
+              "$ref": "#/definitions/ResponseEntityListCancerStudyMetadata"
             }
           }
         },
@@ -2810,7 +2804,7 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/CancerStudy"
+              "$ref": "#/definitions/ResponseEntityCancerStudyMetadata"
             }
           }
         },
@@ -6805,13 +6799,24 @@
     },
     "Sample": {
       "properties": {
+        "cancerStudyIdentifier": {
+          "type": "string"
+        },
         "copyNumberSegmentPresent": {
           "type": "boolean"
         },
-        "patientId": {
-          "type": "string"
+        "internalId": {
+          "format": "int32",
+          "type": "integer"
         },
-        "sampleId": {
+        "patient": {
+          "$ref": "#/definitions/Patient"
+        },
+        "patientId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "patientStableId": {
           "type": "string"
         },
         "sampleType": {
@@ -6829,7 +6834,7 @@
         "sequenced": {
           "type": "boolean"
         },
-        "studyId": {
+        "stableId": {
           "type": "string"
         },
         "uniquePatientKey": {
@@ -6839,11 +6844,6 @@
           "type": "string"
         }
       },
-      "required": [
-        "patientId",
-        "sampleId",
-        "studyId"
-      ],
       "type": "object"
     },
     "SampleFilter": {

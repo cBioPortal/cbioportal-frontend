@@ -2,7 +2,7 @@ export * from './model/ClinicalDataBySampleId';
 export * from './model/RequestStatus';
 
 export * from './generated/CBioPortalAPI';
-export { default as CBioPortalAPI } from './generated/CBioPortalAPI';
+export { default as CBioPortalAPI } from './CBioPortalAPICompat';
 
 // We need to do named exports here. We cannot simply do
 //  export * from './generated/CBioPortalAPIInternal';
@@ -27,7 +27,7 @@ export {
     ClinicalDataCount,
     ClinicalDataCountFilter,
     ClinicalDataCountItem,
-    ClinicalDataEnrichment,
+    ClinicalDataEnrichmentDTO as ClinicalDataEnrichment,
     ClinicalDataFilter,
     ClinicalEvent,
     ClinicalEventAttributeRequest,
@@ -112,7 +112,7 @@ export {
     ReferenceGenomeGene,
     ResourceData,
     ResourceDefinition,
-    Sample,
+    SampleDTO as Sample,
     SampleClinicalDataCollection,
     SampleIdentifier,
     SampleMolecularIdentifier,
@@ -129,5 +129,8 @@ export {
     SurvivalRequest,
     VariantCount,
     VariantCountIdentifier,
-    default as CBioPortalAPIInternal,
 } from './generated/CBioPortalAPIInternal';
+
+// Use the compat wrapper class as the exported CBioPortalAPIInternal class
+// (fixes ResponseEntity return types and re-adds fetchCNAGenesUsingPOST alias)
+export { default as CBioPortalAPIInternal } from './CBioPortalAPIInternalCompat';

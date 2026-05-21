@@ -225,6 +225,16 @@ export type ClinicalDataCountItem = {
         'counts': Array < ClinicalDataCount >
 
 };
+export type ClinicalDataEnrichmentDTO = {
+    'clinicalAttribute': ClinicalAttributeDTO
+
+        'method': string
+
+        'pValue': number
+
+        'score': number
+
+};
 export type ClinicalDataFilter = {
     'attributeId': string
 
@@ -2317,7 +2327,7 @@ export type ResponseEntityListGenomicDataCountItem = {
 
 };
 export type ResponseEntityListSampleDTO = {
-    'body': Array < Sample >
+    'body': Array < SampleDTO >
 
         'headers': {
             'host': {
@@ -2710,6 +2720,24 @@ export type SampleClinicalDataCollection = {
     'byUniqueSampleKey': {}
 
 };
+export type SampleDTO = {
+    'copyNumberSegmentPresent': boolean
+
+        'patientId': string
+
+        'sampleId': string
+
+        'sampleType': "Primary Solid Tumor" | "Recurrent Solid Tumor" | "Primary Blood Tumor" | "Recurrent Blood Tumor" | "Metastatic" | "Blood Derived Normal" | "Solid Tissues Normal"
+
+        'sequenced': boolean
+
+        'studyId': string
+
+        'uniquePatientKey': string
+
+        'uniqueSampleKey': string
+
+};
 export type SampleIdentifier = {
     'sampleId': string
 
@@ -2973,34 +3001,6 @@ export type VariantCountIdentifier = {
     'entrezGeneId': number
 
         'keyword': string
-
-};
-export type Sample = {
-    'copyNumberSegmentPresent': boolean
-
-        'patientId': string
-
-        'sampleId': string
-
-        'sampleType': "Primary Solid Tumor" | "Recurrent Solid Tumor" | "Primary Blood Tumor" | "Recurrent Blood Tumor" | "Metastatic" | "Blood Derived Normal" | "Solid Tissues Normal"
-
-        'sequenced': boolean
-
-        'studyId': string
-
-        'uniquePatientKey': string
-
-        'uniqueSampleKey': string
-
-};
-export type ClinicalDataEnrichment = {
-    'clinicalAttribute': ClinicalAttribute
-
-        'method': string
-
-        'pValue': number
-
-        'score': number
 
 };
 
@@ -3477,16 +3477,15 @@ export default class CBioPortalAPIInternal {
      * @param {} clinicalDataBinCountFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      */
     fetchClinicalDataBinCountsUsingPOST(parameters: {
-            'dataBinMethod' ? : "STATIC" | "DYNAMIC",
-            'clinicalDataBinCountFilter' ? : ClinicalDataBinCountFilter,
-            $queryParameters ? : any,
-                $domain ? : string
-        }): Promise < Array < ClinicalDataBin >
-        > {
-            return this.fetchClinicalDataBinCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
+        'dataBinMethod' ? : "STATIC" | "DYNAMIC",
+        'clinicalDataBinCountFilter' ? : ClinicalDataBinCountFilter,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < ResponseEntityListClinicalDataBin > {
+        return this.fetchClinicalDataBinCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
     fetchClinicalDataCountsUsingPOSTURL(parameters: {
         'clinicalDataCountFilter' ? : ClinicalDataCountFilter,
         $queryParameters ? : any
@@ -3550,15 +3549,14 @@ export default class CBioPortalAPIInternal {
      * @param {} clinicalDataCountFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      */
     fetchClinicalDataCountsUsingPOST(parameters: {
-            'clinicalDataCountFilter' ? : ClinicalDataCountFilter,
-            $queryParameters ? : any,
-                $domain ? : string
-        }): Promise < Array < ClinicalDataCountItem >
-        > {
-            return this.fetchClinicalDataCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
+        'clinicalDataCountFilter' ? : ClinicalDataCountFilter,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < ResponseEntityListClinicalDataCountItem > {
+        return this.fetchClinicalDataCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
     fetchClinicalDataDensityPlotUsingPOSTURL(parameters: {
         'xAxisAttributeId': string,
         'xAxisBinCount' ? : number,
@@ -3835,7 +3833,7 @@ export default class CBioPortalAPIInternal {
             'groupFilter' ? : GroupFilter,
             $queryParameters ? : any,
                 $domain ? : string
-        }): Promise < Array < ClinicalDataEnrichment >
+        }): Promise < Array < ClinicalDataEnrichmentDTO >
         > {
             return this.fetchClinicalEnrichmentsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
@@ -4291,7 +4289,7 @@ export default class CBioPortalAPIInternal {
                 return response.body;
             });
         };
-    fetchCNAGenesUsingPOSTURL(parameters: {
+    fetchCnaGenesUsingPOSTURL(parameters: {
         'studyViewFilter' ? : StudyViewFilter,
         $queryParameters ? : any
     }): string {
@@ -4311,10 +4309,10 @@ export default class CBioPortalAPIInternal {
     /**
      * 
      * @method
-     * @name CBioPortalAPIInternal#fetchCNAGenesUsingPOST
+     * @name CBioPortalAPIInternal#fetchCnaGenesUsingPOST
      * @param {} studyViewFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      */
-    fetchCNAGenesUsingPOSTWithHttpInfo(parameters: {
+    fetchCnaGenesUsingPOSTWithHttpInfo(parameters: {
         'studyViewFilter' ? : StudyViewFilter,
         $queryParameters ? : any,
             $domain ? : string
@@ -4350,19 +4348,18 @@ export default class CBioPortalAPIInternal {
     /**
      * 
      * @method
-     * @name CBioPortalAPIInternal#fetchCNAGenesUsingPOST
+     * @name CBioPortalAPIInternal#fetchCnaGenesUsingPOST
      * @param {} studyViewFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      */
-    fetchCNAGenesUsingPOST(parameters: {
-            'studyViewFilter' ? : StudyViewFilter,
-            $queryParameters ? : any,
-                $domain ? : string
-        }): Promise < Array < CopyNumberCountByGene >
-        > {
-            return this.fetchCNAGenesUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
+    fetchCnaGenesUsingPOST(parameters: {
+        'studyViewFilter' ? : StudyViewFilter,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < ResponseEntityListCopyNumberCountByGene > {
+        return this.fetchCnaGenesUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
     fetchCustomDataBinCountsUsingPOSTURL(parameters: {
         'dataBinMethod' ? : "STATIC" | "DYNAMIC",
         'clinicalDataBinCountFilter' ? : ClinicalDataBinCountFilter,
@@ -5207,16 +5204,15 @@ export default class CBioPortalAPIInternal {
      * @param {} studyViewFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      */
     fetchFilteredSamplesUsingPOST(parameters: {
-            'negateFilters' ? : boolean,
-            'studyViewFilter' ? : StudyViewFilter,
-            $queryParameters ? : any,
-                $domain ? : string
-        }): Promise < Array < Sample >
-        > {
-            return this.fetchFilteredSamplesUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
+        'negateFilters' ? : boolean,
+        'studyViewFilter' ? : StudyViewFilter,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < ResponseEntityListSampleDTO > {
+        return this.fetchFilteredSamplesUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
     fetchGenericAssayBinaryDataEnrichmentInMultipleMolecularProfilesUsingPOSTURL(parameters: {
         'enrichmentType' ? : "SAMPLE" | "PATIENT",
         'groupsContainingSampleAndMolecularProfileIdentifiers' ? : Array < MolecularProfileCasesGroupFilter > ,
@@ -6640,18 +6636,17 @@ export default class CBioPortalAPIInternal {
      * @param {} coExpressionFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      */
     fetchCoExpressionsUsingPOST(parameters: {
-            'molecularProfileIdA': string,
-            'molecularProfileIdB': string,
-            'threshold' ? : number,
-            'coExpressionFilter': CoExpressionFilter,
-            $queryParameters ? : any,
-            $domain ? : string
-        }): Promise < Array < CoExpression >
-        > {
-            return this.fetchCoExpressionsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
+        'molecularProfileIdA': string,
+        'molecularProfileIdB': string,
+        'threshold' ? : number,
+        'coExpressionFilter': CoExpressionFilter,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < ResponseEntityListCoExpression > {
+        return this.fetchCoExpressionsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
     fetchCopyNumberCountsUsingPOSTURL(parameters: {
         'molecularProfileId': string,
         'copyNumberCountIdentifiers': Array < CopyNumberCountIdentifier > ,
@@ -7096,15 +7091,14 @@ export default class CBioPortalAPIInternal {
      * @param {} studyViewFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      */
     fetchMutatedGenesUsingPOST(parameters: {
-            'studyViewFilter' ? : StudyViewFilter,
-            $queryParameters ? : any,
-                $domain ? : string
-        }): Promise < Array < AlterationCountByGene >
-        > {
-            return this.fetchMutatedGenesUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
+        'studyViewFilter' ? : StudyViewFilter,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < ResponseEntityListAlterationCountByGene > {
+        return this.fetchMutatedGenesUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
     fetchMutationCountsByPositionUsingPOSTURL(parameters: {
         'mutationPositionIdentifiers': Array < MutationPositionIdentifier > ,
         $queryParameters ? : any
@@ -7268,17 +7262,16 @@ export default class CBioPortalAPIInternal {
      * @param {} genomicDataCountFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      */
     fetchMutationDataCountsUsingPOST(parameters: {
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-            'includeSampleIds' ? : boolean,
-            'genomicDataCountFilter' ? : GenomicDataCountFilter,
-            $queryParameters ? : any,
-                $domain ? : string
-        }): Promise < Array < GenomicDataCountItem >
-        > {
-            return this.fetchMutationDataCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
+        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'includeSampleIds' ? : boolean,
+        'genomicDataCountFilter' ? : GenomicDataCountFilter,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < ResponseEntityListGenomicDataCountItem > {
+        return this.fetchMutationDataCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
     getNamespaceAttributeCountsUsingPOSTURL(parameters: {
         'namespaceAttributeCountFilter' ? : NamespaceAttributeCountFilter,
         $queryParameters ? : any
