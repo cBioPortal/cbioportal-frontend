@@ -3,7 +3,12 @@
 import { config as loadEnv } from 'dotenv';
 import express from 'express';
 import cors from 'cors';
-import { MODEL, runSuggest, runHighlights } from './core.js';
+import {
+    MODEL,
+    runSuggest,
+    runHighlights,
+    getPaperContext,
+} from './core.js';
 import { getShortlistedModels } from './pricing.js';
 
 // Load .env then layer .env.local on top — VERCEL_OIDC_TOKEN lands in
@@ -27,6 +32,28 @@ app.use(express.json({ limit: '8mb' }));
 
 app.get('/api/chat/health', (_req, res) => {
     res.json({ ok: true, model: MODEL });
+});
+
+app.get('/api/chat/paper-status', async (req, res) => {
+    const studyId = req.query.studyId;
+    if (!studyId || typeof studyId !== 'string') {
+        res.status(400).json({ error: 'studyId (string) required' });
+        return;
+    }
+    try {
+        const paper = await getPaperContext(studyId);
+        res.json({
+            studyId,
+            source: paper.source,
+            paperUrl: paper.paperUrl,
+            studyName: paper.study.name,
+        });
+    } catch (err: any) {
+        console.error('paper-status failed:', err);
+        res.status(500).json({
+            error: err?.message ?? 'paper status failed',
+        });
+    }
 });
 
 app.get('/api/chat/models', async (_req, res) => {

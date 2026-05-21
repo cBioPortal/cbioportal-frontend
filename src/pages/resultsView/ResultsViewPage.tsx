@@ -892,7 +892,7 @@ export default class ResultsViewPage extends React.Component<
                         {this.pageContent}
                     </PageLayout>
                     <ChatSidebar
-                        studyId={studyIds && studyIds[0]}
+                        studyIds={studyIds}
                         genes={this.resultsViewPageStore.hugoGeneSymbols}
                         tab={this.resultsViewPageStore.tabId}
                     />

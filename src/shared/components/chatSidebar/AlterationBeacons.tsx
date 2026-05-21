@@ -81,9 +81,35 @@ interface PaperInfo {
     studyName: string;
 }
 
+interface Cost {
+    total: number;
+    tokens: {
+        input: number;
+        cacheWrite: number;
+        cacheRead: number;
+        output: number;
+    };
+    model: string;
+}
+
+function formatBeaconCost(n: number): string {
+    if (n < 0.01) return `$${n.toFixed(4)}`;
+    return `$${n.toFixed(3)}`;
+}
+
+function shortModelName(slug: string): string {
+    // anthropic/claude-sonnet-4.6 → claude-sonnet-4.6
+    const i = slug.indexOf('/');
+    return i >= 0 ? slug.slice(i + 1) : slug;
+}
+
 interface IAlterationBeaconsProps {
     studyId: string | undefined;
     genes?: string[];
+    // Gateway slug picked by the user in the iframe dropdown. Undefined
+    // means "use whatever the server default is" — for first render before
+    // the iframe's modelChanged postMessage has arrived.
+    model?: string;
 }
 
 const TAB_HINTS = [
@@ -116,6 +142,10 @@ export default class AlterationBeacons extends React.Component<
     @observable.ref activeAnchor: DOMRect | null = null;
     @observable loadError: string | null = null;
     @observable loading = false;
+    // Cost of the last completed /api/chat/highlights call. We keep the
+    // bubble visible after loading and replace the spinner copy with the
+    // model name + price so you can compare beacon spend across models.
+    @observable.ref lastCost: Cost | null = null;
 
     private placed: PlacedBeacon[] = [];
     private observer: MutationObserver | null = null;
@@ -146,13 +176,15 @@ export default class AlterationBeacons extends React.Component<
         const studyChanged = prev.studyId !== this.props.studyId;
         const genesChanged =
             (prev.genes ?? []).join(',') !== (this.props.genes ?? []).join(',');
-        if (studyChanged || genesChanged) {
+        const modelChanged = prev.model !== this.props.model;
+        if (studyChanged || genesChanged || modelChanged) {
             this.clearBeacons();
             runInAction(() => {
                 this.highlights = [];
                 this.paper = null;
                 this.activeHighlight = null;
                 this.activeAnchor = null;
+                this.lastCost = null;
             });
             this.loadHighlights();
         }
@@ -213,7 +245,11 @@ export default class AlterationBeacons extends React.Component<
             const r = await fetch(`${getChatServerBase()}/api/chat/highlights`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ studyId, inventory }),
+                body: JSON.stringify({
+                    studyId,
+                    inventory,
+                    model: this.props.model,
+                }),
             });
             if (!r.ok) {
                 const body = await r.json().catch(() => ({}));
@@ -224,6 +260,7 @@ export default class AlterationBeacons extends React.Component<
             runInAction(() => {
                 this.highlights = data.highlights ?? [];
                 this.paper = data.paper ?? null;
+                this.lastCost = data.cost ?? null;
                 this.loadError = null;
             });
             this.scheduleScan();
@@ -433,16 +470,62 @@ export default class AlterationBeacons extends React.Component<
         this.activeAnchor = null;
     }
 
+    // While loading: animated dot + "Loading beacons…"
+    // After load: static chip with model name and price so the user can
+    // see how much each model costs to run beacons against this paper.
+    // On error: red chip with a tooltip carrying the message so the user
+    // doesn't stare at an empty bottom-left wondering what happened.
+    private renderBeaconChip(): React.ReactNode {
+        if (this.loading) {
+            return (
+                <div className="chat-sidebar-beacons-loader">
+                    <span className="chat-sidebar-beacons-dot" />
+                    Loading beacons…
+                </div>
+            );
+        }
+        if (this.loadError) {
+            return (
+                <div
+                    className="chat-sidebar-beacons-loader chat-sidebar-beacons-error"
+                    title={this.loadError}
+                >
+                    <span className="chat-sidebar-beacons-cost-label">
+                        Beacons
+                    </span>
+                    <span className="chat-sidebar-beacons-cost-price">
+                        failed
+                    </span>
+                </div>
+            );
+        }
+        const cost = this.lastCost;
+        if (!cost) return null;
+        const t = cost.tokens;
+        const tokensTooltip = `input ${t.input} · cache-write ${t.cacheWrite} · cache-read ${t.cacheRead} · output ${t.output} tokens`;
+        return (
+            <div
+                className="chat-sidebar-beacons-loader chat-sidebar-beacons-cost"
+                title={tokensTooltip}
+            >
+                <span className="chat-sidebar-beacons-cost-label">
+                    Beacons
+                </span>
+                <span className="chat-sidebar-beacons-cost-model">
+                    {shortModelName(cost.model)}
+                </span>
+                <span className="chat-sidebar-beacons-cost-price">
+                    {formatBeaconCost(cost.total)}
+                </span>
+            </div>
+        );
+    }
+
     render() {
         const h = this.activeHighlight;
         const anchor = this.activeAnchor;
-        const loadingChip = this.loading ? (
-            <div className="chat-sidebar-beacons-loader">
-                <span className="chat-sidebar-beacons-dot" />
-                Loading beacons…
-            </div>
-        ) : null;
-        if (!h || !anchor) return loadingChip;
+        const chip = this.renderBeaconChip();
+        if (!h || !anchor) return chip;
         const top = anchor.bottom + window.scrollY + 8;
         const left = Math.min(
             anchor.left + window.scrollX,
@@ -450,7 +533,7 @@ export default class AlterationBeacons extends React.Component<
         );
         return (
             <>
-                {loadingChip}
+                {chip}
                 <div
                     onClick={this.dismissTooltip}
                     style={{
@@ -520,7 +603,7 @@ export default class AlterationBeacons extends React.Component<
                                 target="_blank"
                                 rel="noreferrer noopener"
                                 style={{
-                                    color: '#2563eb',
+                                    color: '#3786C2',
                                     textDecoration: 'none',
                                 }}
                             >

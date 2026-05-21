@@ -76,6 +76,15 @@ function getQueryParam(name: string): string | null {
     return new URLSearchParams(window.location.search).get(name);
 }
 
+function notifyModelChanged(model: string) {
+    if (window.parent && window.parent !== window) {
+        window.parent.postMessage(
+            { type: 'chat-sidebar:modelChanged', model },
+            '*'
+        );
+    }
+}
+
 let screenshotRequestSeq = 0;
 
 // Ask the parent (cBioPortal host page) for a screenshot of the current
@@ -171,7 +180,27 @@ export function App() {
         } catch {
             /* private mode etc — selection just doesn't persist */
         }
+        // Tell the host page so it can re-fetch beacons with the new model.
+        notifyModelChanged(id);
+        // Auto-refire the last submission with the new model so the user
+        // can compare models without re-typing or re-clicking a preset.
+        // Read the latest values directly — setSelectedModel above is
+        // batched and runRequest below won't see the new selectedModel
+        // unless we pass it through explicitly.
+        if (lastUserPrompt) {
+            runRequest({ userPrompt: lastUserPrompt, model: id });
+        } else if (activePreset) {
+            runRequest({ preset: activePreset, model: id });
+        }
     };
+
+    // Once we know which model we're using (either from localStorage on
+    // first mount or from the default the backend reports), tell the host
+    // page so AlterationBeacons uses the same model for its highlights
+    // request. The host stores nothing; it just reacts to this message.
+    useEffect(() => {
+        if (selectedModel) notifyModelChanged(selectedModel);
+    }, [selectedModel]);
 
     useEffect(() => {
         if (!studyId || autoRunRef.current) return;
@@ -201,6 +230,7 @@ export function App() {
     const runRequest = async (opts: {
         preset?: Preset;
         userPrompt?: string;
+        model?: string;
     }) => {
         if (!studyId) return;
         setActivePreset(opts.preset ?? null);
@@ -221,7 +251,7 @@ export function App() {
                     preset: opts.preset,
                     userPrompt: opts.userPrompt,
                     screenshot,
-                    model: selectedModel ?? undefined,
+                    model: opts.model ?? selectedModel ?? undefined,
                 }),
             });
             if (!r.ok) {
@@ -248,9 +278,8 @@ export function App() {
     return (
         <div className="chat-shell">
             <header className="chat-header">
-                <div className="chat-header-row">
-                    <div className="chat-title">Study Chat</div>
-                    {models.length > 0 && (
+                {models.length > 0 && (
+                    <div className="header-controls">
                         <select
                             className="model-select"
                             value={selectedModel ?? ''}
@@ -279,8 +308,15 @@ export function App() {
                                 </option>
                             ))}
                         </select>
-                    )}
-                </div>
+                        <span
+                            className="header-divider"
+                            aria-hidden="true"
+                        >
+                            |
+                        </span>
+                    </div>
+                )}
+                <div className="chat-title">Study Chat</div>
                 {study && (
                     <div className="chat-subtitle" title={study.description}>
                         {suggestion?.paper?.paperUrl ? (
@@ -346,7 +382,12 @@ export function App() {
                                 className="cost-line muted"
                                 title={`input ${suggestion.cost.tokens.input} · cache-write ${suggestion.cost.tokens.cacheWrite} · cache-read ${suggestion.cost.tokens.cacheRead} · output ${suggestion.cost.tokens.output} tokens`}
                             >
-                                Cost: {formatCost(suggestion.cost.total)}{' '}
+                                <span className="cost-model">
+                                    {models.find(
+                                        m => m.id === suggestion.cost!.model
+                                    )?.name ?? suggestion.cost.model}
+                                </span>{' · '}
+                                {formatCost(suggestion.cost.total)}{' '}
                                 <span className="cost-breakdown">
                                     (in {formatTokens(suggestion.cost.tokens.input)}
                                     {suggestion.cost.tokens.cacheWrite > 0 &&

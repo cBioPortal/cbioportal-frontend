@@ -351,7 +351,10 @@ export async function runSuggest(
     const model = input.model ?? SUGGEST_MODEL;
     const result = await generateText({
         model,
-        maxOutputTokens: 1024,
+        // Larger than the 120-word target answer would need on its own, so
+        // reasoning models (DeepSeek V4 Pro, o3-mini, etc.) have headroom
+        // for internal thinking tokens before they get to the actual text.
+        maxOutputTokens: 4096,
         // The system role lives inside messages so we can attach a
         // providerOptions.anthropic.cacheControl breakpoint to it — the
         // top-level `system` option doesn't accept per-message options.
@@ -402,7 +405,12 @@ export async function runHighlights(
     const model = input.model ?? HIGHLIGHTS_MODEL;
     const result = await generateObject({
         model,
-        maxOutputTokens: 4096,
+        // Highlights JSON is at most ~10 entries (~2-3k output tokens). The
+        // headroom above that is for reasoning models, which spend most of
+        // the budget on internal thinking before emitting the schema. With
+        // a 4k cap, deepseek-v4-pro consistently truncated mid-thought and
+        // generateObject threw NoObjectGenerated.
+        maxOutputTokens: 16384,
         schema: HighlightsResponseSchema,
         allowSystemInMessages: true,
         messages: buildMessages(
