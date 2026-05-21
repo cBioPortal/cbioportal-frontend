@@ -11,10 +11,11 @@
         "vercel-build": "cd ../.. && pnpm --filter chat-sidebar build && rm -rf packages/chat-sidebar-server/public && mkdir -p packages/chat-sidebar-server/public && cp -R packages/chat-sidebar/dist/. packages/chat-sidebar-server/public/"
     },
     "dependencies": {
-        "@anthropic-ai/sdk": "^0.88.0",
+        "ai": "^6.0.188",
         "cors": "^2.8.5",
         "dotenv": "^16.4.5",
-        "express": "^4.21.2"
+        "express": "^4.21.2",
+        "zod": "4.4.3"
     },
     "devDependencies": {
         "@types/cors": "^2.8.17",

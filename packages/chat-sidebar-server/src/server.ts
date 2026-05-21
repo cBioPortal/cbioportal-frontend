@@ -1,14 +1,22 @@
 // Express dev server — wraps the shared logic in core.ts so that
 // `pnpm dev` here mirrors what the Vercel functions in api/chat/* do.
-import 'dotenv/config';
+import { config as loadEnv } from 'dotenv';
 import express from 'express';
 import cors from 'cors';
 import { MODEL, runSuggest, runHighlights } from './core.js';
 
+// Load .env then layer .env.local on top — VERCEL_OIDC_TOKEN lands in
+// .env.local via `vercel env pull`, so the local order has to match what
+// Vercel does in deployed envs.
+loadEnv();
+loadEnv({ path: '.env.local', override: true });
+
 const PORT = Number(process.env.PORT || 4000);
 
-if (!process.env.ANTHROPIC_API_KEY) {
-    console.error('ANTHROPIC_API_KEY is not set. Add it to .env.');
+if (!process.env.VERCEL_OIDC_TOKEN && !process.env.AI_GATEWAY_API_KEY) {
+    console.error(
+        'No AI Gateway credentials found. Run `vercel env pull .env.local --yes` to provision VERCEL_OIDC_TOKEN, or set AI_GATEWAY_API_KEY.'
+    );
     process.exit(1);
 }
 
