@@ -60,6 +60,16 @@
                     </execution>
 
                     <execution>
+                        <id>enable pnpm shim</id>
+                        <goals>
+                            <goal>corepack</goal>
+                        </goals>
+                        <configuration>
+                            <arguments>enable --install-directory ./node pnpm</arguments>
+                        </configuration>
+                    </execution>
+
+                    <execution>
                         <id>pnpm install</id>
                         <goals>
                             <goal>corepack</goal>
