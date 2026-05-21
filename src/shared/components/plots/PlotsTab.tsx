@@ -145,7 +145,6 @@ import { GENERIC_ASSAY_CONFIG } from 'shared/lib/GenericAssayUtils/GenericAssayC
 import { getServerConfig } from 'config/config';
 import { ExtendedClinicalAttribute } from 'pages/resultsView/ResultsViewPageStoreUtils';
 import MobxPromiseCache from 'shared/lib/MobxPromiseCache';
-import { CustomDriverNumericGeneMolecularData } from 'shared/model/CustomDriverNumericGeneMolecularData';
 import {
     AnnotatedMutation,
     AnnotatedStructuralVariant,
@@ -239,7 +238,7 @@ export interface IPlotsTabProps {
         {
             entrezGeneId: number;
         },
-        CustomDriverNumericGeneMolecularData[]
+        AnnotatedNumericGeneMolecularData[]
     >;
     annotatedMutationCache: MobxPromiseCache<
         {
@@ -376,8 +375,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     private selectionHistory = new LastPlotsTabSelectionForDatatype();
     private coloringMenuSelection: ColoringMenuSelection;
 
-    private scrollPane: HTMLDivElement;
-    private dummyScrollPane: HTMLDivElement;
+    private scrollPane!: HTMLDivElement;
+    private dummyScrollPane!: HTMLDivElement;
     private scrollingDummyPane = false;
     @observable plotElementWidth = 0;
     @observable sortByDropDownOptions: { value: string; label: string }[] = [];
@@ -2415,8 +2414,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                 ].forEach(meta => {
                                     acc[meta.stableId] = { meta, profile };
                                 });
-                                return acc;
                             }
+                            return acc;
                         }, {} as { [stableId: string]: { meta: GenericAssayMeta; profile: MolecularProfile } })
                         .map(metaProfilePair =>
                             makeGenericAssayPlotsTabOption(
@@ -2474,8 +2473,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                 ].forEach(meta => {
                                     acc[meta.stableId] = { meta, profile };
                                 });
-                                return acc;
                             }
+                            return acc;
                         }, {} as { [stableId: string]: { meta: GenericAssayMeta; profile: MolecularProfile } })
                         .map(metaProfilePair =>
                             makeGenericAssayPlotsTabOption(
@@ -2541,10 +2540,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     });
 
     private showGeneSelectBox(
-        dataType: string,
+        dataType: string | undefined,
         isGenericAssaySelected: boolean
     ): boolean {
         return (
+            !!dataType &&
             dataType !== NONE_SELECTED_OPTION_STRING_VALUE &&
             dataType !== GENESET_DATA_TYPE &&
             dataType !== CLIN_ATTR_DATA_TYPE &&
@@ -2553,7 +2553,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         );
     }
 
-    private showGenesetSelectBox(dataType: string): boolean {
+    private showGenesetSelectBox(dataType: string | undefined): boolean {
+        if (!dataType) return false;
         return (
             dataType !== NONE_SELECTED_OPTION_STRING_VALUE &&
             dataType === GENESET_DATA_TYPE
@@ -2561,10 +2562,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     }
 
     private showGenericAssaySelectBox(
-        dataType: string,
+        dataType: string | undefined,
         isGenericAssaySelected: boolean
     ): boolean {
         return (
+            !!dataType &&
             dataType !== NONE_SELECTED_OPTION_STRING_VALUE &&
             isGenericAssaySelected
         );

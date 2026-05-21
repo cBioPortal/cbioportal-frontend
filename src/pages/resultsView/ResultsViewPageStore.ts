@@ -210,6 +210,7 @@ import {
     UNALTERED_COLOR,
 } from './comparison/ResultsViewComparisonUtils';
 import { makeUniqueColorGetter } from '../../shared/components/plots/PlotUtils';
+import { PlotsTabStore } from 'shared/components/plots/PlotsTabStore';
 import ComplexKeyMap from '../../shared/lib/complexKeyDataStructures/ComplexKeyMap';
 import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
 import {
@@ -372,25 +373,27 @@ export function extendSamplesWithCancerType(
     );
     // note that this table is actually mutating underlying sample.  it's not worth it to clone samples just
     // for purity
-    const extendedSamples = samples.map((sample: ExtendedSample) => {
-        const clinicalData =
-            clinicalDataGroupedBySampleId[sample.uniqueSampleKey];
-        if (clinicalData) {
-            clinicalData.forEach((clinicalDatum: ClinicalData) => {
-                switch (clinicalDatum.clinicalAttributeId) {
-                    case CLINICAL_ATTRIBUTE_ID_ENUM.CANCER_TYPE_DETAILED:
-                        sample.cancerTypeDetailed = clinicalDatum.value;
-                        break;
-                    case CLINICAL_ATTRIBUTE_ID_ENUM.CANCER_TYPE:
-                        sample.cancerType = clinicalDatum.value;
-                        break;
-                    default:
-                        break;
-                }
-            });
+    const extendedSamples = (samples as ExtendedSample[]).map(
+        (sample: ExtendedSample) => {
+            const clinicalData =
+                clinicalDataGroupedBySampleId[sample.uniqueSampleKey];
+            if (clinicalData) {
+                clinicalData.forEach((clinicalDatum: ClinicalData) => {
+                    switch (clinicalDatum.clinicalAttributeId) {
+                        case CLINICAL_ATTRIBUTE_ID_ENUM.CANCER_TYPE_DETAILED:
+                            sample.cancerTypeDetailed = clinicalDatum.value;
+                            break;
+                        case CLINICAL_ATTRIBUTE_ID_ENUM.CANCER_TYPE:
+                            sample.cancerType = clinicalDatum.value;
+                            break;
+                        default:
+                            break;
+                    }
+                });
+            }
+            return sample;
         }
-        return sample;
-    });
+    );
 
     //make a map by studyId for easy access in following loop
     const studyMap = _.keyBy(studies, (study: CancerStudy) => study.studyId);
@@ -498,6 +501,42 @@ export class ResultsViewPageStore extends AnalysisStore
                 clinicalTracksColorConfig
             );
         }
+
+        this.plotsTabStore = new PlotsTabStore({
+            molecularProfiles: this.molecularProfilesInStudies,
+            plotsSelectedGenes: this.genes,
+            entrezGeneIdToGene: this.entrezGeneIdToGene,
+            studyToDataQueryFilter: this.studyToDataQueryFilter,
+            patientsForCoverage: this.patients,
+            samplesForSVQueries: this.samples,
+            samplesForPatientKeyGrouping: this.filteredSamples,
+            studies: this.studies,
+            driverAnnotationSettings: this.driverAnnotationSettings,
+            oncoKbAnnotatedGenes: this.oncoKbAnnotatedGenes,
+            internalClient: internalClient,
+            get genomeNexusInternalClient() {
+                return store.genomeNexusInternalClient;
+            },
+            genes: this.genes,
+            filteredSamples: this.filteredSamples,
+            patients: this.patients,
+            get clinicalDataCache() {
+                return store.clinicalDataCache;
+            },
+            clinicalAttributes: this.plotClinicalAttributes,
+            customAttributes: this.customAttributes,
+            genesets: this.genesets,
+            genericAssayEntitiesGroupByMolecularProfileId: this
+                .genericAssayEntitiesGroupByMolecularProfileId,
+            get selectedGenericAssayEntitiesGroupByMolecularProfileId() {
+                return store.selectedGenericAssayEntitiesGroupByMolecularProfileId;
+            },
+            molecularProfilesWithData: this.molecularProfilesWithData,
+            hasNoQueriedGenes: false,
+            filteredSampleKeyToSample: this.filteredSampleKeyToSample,
+            sampleKeyToSample: this.sampleKeyToSample,
+            studyIdToStudy: this.studyIdToStudy,
+        });
     }
 
     destroy() {
@@ -509,6 +548,9 @@ export class ResultsViewPageStore extends AnalysisStore
     private mutationMapperStoreByGeneWithDriverKey: {
         [hugoGeneSymbolWithDriver: string]: ResultsViewMutationMapperStore;
     } = {};
+
+    public readonly plotsTabStore: PlotsTabStore;
+
     @computed get oqlText() {
         return this.urlWrapper.query.gene_list;
     }
@@ -3716,7 +3758,9 @@ export class ResultsViewPageStore extends AnalysisStore
     @computed get customDataFilterAppliers() {
         return {
             [ANNOTATED_PROTEIN_IMPACT_FILTER_TYPE]: createAnnotatedProteinImpactTypeFilter(
-                this.isPutativeDriver
+                this.isPutativeDriver as
+                    | ((mutation: Partial<Mutation>) => boolean)
+                    | undefined
             ),
             [MutationTableColumnType.CLONAL]: createNumericalFilter(
                 (d: Mutation) => {
@@ -4640,6 +4684,7 @@ export class ResultsViewPageStore extends AnalysisStore
             // throwing this allows sentry to report it
             throw err;
         },
+        default: [],
     });
 
     @computed
@@ -4737,6 +4782,7 @@ export class ResultsViewPageStore extends AnalysisStore
         onResult: (genesets: Geneset[]) => {
             this.genesetCache.addData(genesets);
         },
+        default: [],
     });
 
     readonly geneticEntities = remoteData<GeneticEntity[]>({
@@ -5123,6 +5169,11 @@ export class ResultsViewPageStore extends AnalysisStore
             ),
     });
 
+    // annotatedMutationCache and annotatedCnaCache are intentionally kept here
+    // alongside the equivalent caches in plotsTabStore.  Other ResultsView tabs
+    // (e.g. Oncoprint, ExpressionWrapper) depend on these caches with
+    // ResultsView-specific OQL filtering; the PlotsTab uses plotsTabStore's
+    // versions instead.
     public annotatedMutationCache = new MobxPromiseCache<
         { entrezGeneId: number },
         AnnotatedMutation[]
@@ -5237,7 +5288,7 @@ export class ResultsViewPageStore extends AnalysisStore
 
     public annotatedCnaCache = new MobxPromiseCache<
         { entrezGeneId: number },
-        CustomDriverNumericGeneMolecularData[]
+        AnnotatedNumericGeneMolecularData[]
     >(q => ({
         await: () =>
             this.numericGeneMolecularDataCache.await(
@@ -5340,35 +5391,32 @@ export class ResultsViewPageStore extends AnalysisStore
             return toAwait;
         },
         invoke: () => {
-            return Promise.resolve(
-                (
-                    cnaDatum: CustomDriverNumericGeneMolecularData
-                ): {
-                    oncoKb: string;
-                    customDriverBinary: boolean;
-                    customDriverTier?: string | undefined;
-                } => {
-                    const getOncoKBAnnotationFunc = this
-                        .getOncoKbCnaAnnotationForOncoprint.result!;
-                    const oncoKbDatum:
-                        | IndicatorQueryResp
-                        | undefined
-                        | null
-                        | false =
-                        this.driverAnnotationSettings.oncoKb &&
-                        getOncoKBAnnotationFunc &&
-                        !(getOncoKBAnnotationFunc instanceof Error) &&
-                        getOncoKBAnnotationFunc(cnaDatum);
+            return Promise.resolve((cnaDatum: NumericGeneMolecularData): {
+                oncoKb: string;
+                customDriverBinary: boolean;
+                customDriverTier?: string | undefined;
+            } => {
+                const customCnaDatum = cnaDatum as CustomDriverNumericGeneMolecularData;
+                const getOncoKBAnnotationFunc = this
+                    .getOncoKbCnaAnnotationForOncoprint.result!;
+                const oncoKbDatum:
+                    | IndicatorQueryResp
+                    | undefined
+                    | null
+                    | false =
+                    this.driverAnnotationSettings.oncoKb &&
+                    getOncoKBAnnotationFunc &&
+                    !(getOncoKBAnnotationFunc instanceof Error) &&
+                    getOncoKBAnnotationFunc(customCnaDatum);
 
-                    // Note: custom driver annotations are part of the incoming datum
-                    return evaluatePutativeDriverInfo(
-                        cnaDatum,
-                        oncoKbDatum,
-                        this.driverAnnotationSettings.customBinary,
-                        this.driverAnnotationSettings.driverTiers
-                    );
-                }
-            );
+                // Note: custom driver annotations are part of the incoming datum
+                return evaluatePutativeDriverInfo(
+                    customCnaDatum,
+                    oncoKbDatum,
+                    this.driverAnnotationSettings.customBinary,
+                    this.driverAnnotationSettings.driverTiers
+                );
+            });
         },
     });
 

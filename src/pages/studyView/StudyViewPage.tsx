@@ -79,7 +79,6 @@ import {
     prepareCustomTabConfigurations,
 } from 'shared/lib/customTabs/customTabHelpers';
 import { VirtualStudyModal } from 'pages/studyView/virtualStudy/VirtualStudyModal';
-import PlotsTab from 'shared/components/plots/PlotsTab';
 import { PlotsTabWrapper } from 'pages/studyView/StudyViewPlotsTabWrapper';
 
 export interface IStudyViewPageProps {

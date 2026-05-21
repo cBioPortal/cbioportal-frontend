@@ -39,7 +39,6 @@ import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
 import MutationTableWrapper from './mutation/MutationTableWrapper';
 import { PatientViewPageInner } from 'pages/patientView/PatientViewPage';
 import { Else, If } from 'react-if';
-import PlotsTab from 'shared/components/plots/PlotsTab';
 import { PatientViewPlotsTabWrapper } from './PatientViewPlotsTabWrapper';
 
 export enum PatientViewPageTabs {
@@ -496,12 +495,11 @@ export function tabs(
 
     tabs.push(
         <MSKTab key={9} id={PatientViewPageTabs.Plots} linkText="Plots">
-            {pageComponent.patientViewPageStore.patientViewPlotsStore
-                .samplesInCohort.isComplete &&
-            pageComponent.patientViewPageStore.patientViewPlotsStore
-                .highlightedCancerTypes.isComplete &&
-            pageComponent.patientViewPageStore.patientViewPlotsStore
-                .highlightedDetailedCancerTypes.isComplete ? (
+            {pageComponent.patientViewPageStore.samplesInCohort.isComplete &&
+            pageComponent.patientViewPageStore.highlightedCancerTypes
+                .isComplete &&
+            pageComponent.patientViewPageStore.highlightedDetailedCancerTypes
+                .isComplete ? (
                 <PatientViewPlotsTabWrapper
                     store={pageComponent.patientViewPageStore}
                     urlWrapper={urlWrapper}

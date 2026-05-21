@@ -2803,7 +2803,7 @@ export function makeBoxScatterPlotData(
     },
     copyNumberAlterations?: {
         molecularProfileIds: string[];
-        data: CustomDriverNumericGeneMolecularData[];
+        data: AnnotatedNumericGeneMolecularData[];
     },
     structuralVariants?: {
         molecularProfileIds: string[];
@@ -2855,7 +2855,7 @@ export function makeScatterPlotData(
     },
     copyNumberAlterations?: {
         molecularProfileIds: string[];
-        data: CustomDriverNumericGeneMolecularData[];
+        data: AnnotatedNumericGeneMolecularData[];
     },
     structuralVariants?: {
         molecularProfileIds: string[];
@@ -2879,7 +2879,7 @@ export function makeScatterPlotData(
     },
     copyNumberAlterations?: {
         molecularProfileIds: string[];
-        data: CustomDriverNumericGeneMolecularData[];
+        data: AnnotatedNumericGeneMolecularData[];
     },
     structuralVariants?: {
         molecularProfileIds: string[];

@@ -42,13 +42,13 @@ type QuickPlot = {
         vertical: TypeSourcePair,
         horizontal: TypeSourcePair,
         dataTypes: PlotsTabOption[],
-        dataSources?: PlotsTabDataSource
+        dataSources: PlotsTabDataSource
     ) => ButtonInfo;
     isApplicableToQuery: (
         dataTypes: PlotsTabOption[],
         dataSources: PlotsTabDataSource,
-        cancerTypes?: string[],
-        mutationCount?: number
+        cancerTypes: string[],
+        mutationCount: number
     ) => boolean;
 };
 

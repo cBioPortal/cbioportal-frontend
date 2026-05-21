@@ -182,7 +182,7 @@ export function makeScatterPlotSizeFunction<D>(
 export function scatterPlotSize(
     d: any,
     active: boolean,
-    isHighlighted: boolean,
+    isHighlighted?: boolean,
     isLineHighlighted?: boolean
 ) {
     if (isHighlighted) {

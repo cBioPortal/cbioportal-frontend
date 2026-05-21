@@ -19,17 +19,12 @@ export const PatientViewPlotsTabWrapper: React.FunctionComponent<{
     const cohortSelector = () => (
         <CohortSelector
             includeNavCohortOption={store.patientIdsInCohort.length > 0}
-            samplesInCohort={store.patientViewPlotsStore.samplesInCohort.result}
+            samplesInCohort={store.samplesInCohort.result}
             study={store.studies.result![0].name}
-            cancerTypes={
-                store.patientViewPlotsStore.highlightedCancerTypes.result
-            }
-            cancerTypesDetailed={
-                store.patientViewPlotsStore.highlightedDetailedCancerTypes
-                    .result
-            }
-            cohortSelection={store.patientViewPlotsStore.cohortSelection}
-            handleCohortChange={store.patientViewPlotsStore.handleCohortChange}
+            cancerTypes={store.highlightedCancerTypes.result}
+            cancerTypesDetailed={store.highlightedDetailedCancerTypes.result}
+            cohortSelection={store.cohortSelection}
+            handleCohortChange={store.handleCohortChange}
         />
     );
 
@@ -45,96 +40,76 @@ export const PatientViewPlotsTabWrapper: React.FunctionComponent<{
     return (
         <PlotsTab
             filteredSamplesByDetailedCancerType={
-                store.patientViewPlotsStore.filteredSamplesByDetailedCancerType
+                store.filteredSamplesByDetailedCancerType
             }
-            mutations={store.patientViewPlotsStore.mutations}
-            studies={store.patientViewPlotsStore.cohortStudies}
+            mutations={store.plotsTabStore.mutations}
+            studies={store.plotsTabStore.studies}
             molecularProfileIdSuffixToMolecularProfiles={
-                store.patientViewPlotsStore
-                    .molecularProfileIdSuffixToMolecularProfiles
+                store.plotsTabStore.molecularProfileIdSuffixToMolecularProfiles
             }
-            entrezGeneIdToGene={
-                store.patientViewPlotsStore.entrezGeneIdToGeneAll
-            }
-            sampleKeyToSample={
-                store.patientViewPlotsStore.selectedReferenceCohortSampleMap
-            }
-            genes={store.patientViewPlotsStore.allGenes}
-            clinicalAttributes={store.patientViewPlotsStore.clinicalAttributes}
-            genesets={store.patientViewPlotsStore.genesets}
+            entrezGeneIdToGene={store.plotsTabStore.entrezGeneIdToGene}
+            sampleKeyToSample={store.plotsTabStore.sampleKeyToSample}
+            genes={store.plotsTabStore.genes}
+            clinicalAttributes={store.plotsTabStore.clinicalAttributes}
+            genesets={store.plotsTabStore.genesets}
             genericAssayEntitiesGroupByMolecularProfileId={
-                store.patientViewPlotsStore
-                    .genericAssayEntitiesGroupedByProfileId
+                store.plotsTabStore
+                    .genericAssayEntitiesGroupByMolecularProfileId
             }
-            customAttributes={store.patientViewPlotsStore.customAttributes}
-            studyIds={store.patientViewPlotsStore.cohortStudyIds}
+            customAttributes={store.plotsTabStore.customAttributes}
+            studyIds={store.plotsTabStore.studyIds}
             molecularProfilesWithData={
-                store.patientViewPlotsStore.molecularProfilesInCohortStudies
+                store.plotsTabStore.molecularProfilesWithData
             }
             molecularProfilesInStudies={
-                store.patientViewPlotsStore.molecularProfilesInCohortStudies
+                store.plotsTabStore.molecularProfilesInStudies
             }
-            annotatedCnaCache={store.patientViewPlotsStore.annotatedCnaCache}
-            annotatedMutationCache={
-                store.patientViewPlotsStore.annotatedMutationCache
-            }
-            structuralVariantCache={
-                store.patientViewPlotsStore.structuralVariantCache
-            }
+            annotatedCnaCache={store.plotsTabStore.annotatedCnaCache}
+            annotatedMutationCache={store.plotsTabStore.annotatedMutationCache}
+            structuralVariantCache={store.plotsTabStore.structuralVariantCache}
             studyToMutationMolecularProfile={
-                store.patientViewPlotsStore.studyToMutationMolecularProfile
+                store.plotsTabStore.studyToMutationMolecularProfile
             }
             studyToMolecularProfileDiscreteCna={
-                store.patientViewPlotsStore.studyToMolecularProfileDiscreteCna
+                store.plotsTabStore.studyToMolecularProfileDiscreteCna
             }
-            clinicalDataCache={store.patientViewPlotsStore.clinicalDataCache}
+            clinicalDataCache={store.plotsTabStore.clinicalDataCache}
             patientKeyToFilteredSamples={
-                store.patientViewPlotsStore.patientKeyToFilteredSamples
+                store.plotsTabStore.patientKeyToFilteredSamples
             }
             numericGeneMolecularDataCache={
-                store.patientViewPlotsStore.numericGeneMolecularDataCache
+                store.plotsTabStore.numericGeneMolecularDataCache
             }
-            coverageInformation={
-                store.patientViewPlotsStore.coverageInformation
-            }
-            filteredSamples={
-                store.patientViewPlotsStore.selectedReferenceCohortSamples
-            }
+            coverageInformation={store.plotsTabStore.coverageInformation}
+            filteredSamples={store.plotsTabStore.filteredSamples}
             genesetMolecularDataCache={
-                store.patientViewPlotsStore.genesetMolecularDataCache
+                store.plotsTabStore.genesetMolecularDataCache
             }
             genericAssayMolecularDataCache={
-                store.patientViewPlotsStore.genericAssayMolecularDataCache
+                store.plotsTabStore.genericAssayMolecularDataCache
             }
             studyToStructuralVariantMolecularProfile={
-                store.patientViewPlotsStore
-                    .studyToStructuralVariantMolecularProfile
+                store.plotsTabStore.studyToStructuralVariantMolecularProfile
             }
             driverAnnotationSettings={
-                store.patientViewPlotsStore.driverAnnotationSettings
+                store.plotsTabStore.driverAnnotationSettings
             }
-            studyIdToStudy={
-                store.patientViewPlotsStore.cohortStudyIdsToStudy.result
-            }
-            structuralVariants={
-                store.patientViewPlotsStore.structuralVariants.result
-            }
-            hugoGeneSymbols={
-                store.patientViewPlotsStore.allHugoGeneSymbols.result
-            }
+            studyIdToStudy={store.plotsTabStore.studyIdToStudy}
+            structuralVariants={store.plotsTabStore.structuralVariants.result}
+            hugoGeneSymbols={store.plotsTabStore.hugoGeneSymbols}
             selectedGenericAssayEntitiesGroupByMolecularProfileId={
-                store.patientViewPlotsStore
+                store.plotsTabStore
                     .selectedGenericAssayEntitiesGroupByMolecularProfileId
             }
             molecularProfileIdToMolecularProfile={
-                store.patientViewPlotsStore.molecularProfileIdToMolecularProfile
+                store.plotsTabStore.molecularProfileIdToMolecularProfile
             }
             urlWrapper={urlWrapper}
-            hasNoQueriedGenes={true}
+            hasNoQueriedGenes={store.plotsTabStore.hasNoQueriedGenes}
             genePanelDataForAllProfiles={
-                store.patientViewPlotsStore.genePanelDataForAllProfiles.result
+                store.plotsTabStore.genePanelDataForAllProfiles.result
             }
-            patients={store.patientViewPlotsStore.patientsInCohort}
+            patients={store.plotsTabStore.patients}
             highlightedSamples={store.sampleIds}
             additionalControls={cohortSelector}
             customSamplePointComponent={customSamplePointComponent}
