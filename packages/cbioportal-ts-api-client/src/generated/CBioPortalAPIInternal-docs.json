@@ -209,7 +209,10 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/ResponseEntityListClinicalDataBin"
+              "items": {
+                "$ref": "#/definitions/ClinicalDataBin"
+              },
+              "type": "array"
             }
           }
         },
@@ -240,7 +243,10 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/ResponseEntityListClinicalDataCountItem"
+              "items": {
+                "$ref": "#/definitions/ClinicalDataCountItem"
+              },
+              "type": "array"
             }
           }
         },
@@ -380,7 +386,7 @@
             "description": "OK",
             "schema": {
               "items": {
-                "$ref": "#/definitions/ClinicalDataEnrichmentDTO"
+                "$ref": "#/definitions/ClinicalDataEnrichment"
               },
               "type": "array"
             }
@@ -648,14 +654,17 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/ResponseEntityListCopyNumberCountByGene"
+              "items": {
+                "$ref": "#/definitions/CopyNumberCountByGene"
+              },
+              "type": "array"
             }
           }
         },
         "tags": [
           "Study View"
         ],
-        "operationId": "fetchCnaGenesUsingPOST"
+        "operationId": "fetchCNAGenesUsingPOST"
       }
     },
     "/api/custom-data-bin-counts/fetch": {
@@ -1003,7 +1012,10 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/ResponseEntityListSampleDTO"
+              "items": {
+                "$ref": "#/definitions/Sample"
+              },
+              "type": "array"
             }
           }
         },
@@ -1756,7 +1768,10 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/ResponseEntityListCoExpression"
+              "items": {
+                "$ref": "#/definitions/CoExpression"
+              },
+              "type": "array"
             }
           }
         },
@@ -1979,7 +1994,10 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/ResponseEntityListAlterationCountByGene"
+              "items": {
+                "$ref": "#/definitions/AlterationCountByGene"
+              },
+              "type": "array"
             }
           }
         },
@@ -2072,7 +2090,10 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/ResponseEntityListGenomicDataCountItem"
+              "items": {
+                "$ref": "#/definitions/GenomicDataCountItem"
+              },
+              "type": "array"
             }
           }
         },
@@ -4236,23 +4257,6 @@
             "$ref": "#/definitions/ClinicalDataCount"
           },
           "type": "array"
-        }
-      },
-      "type": "object"
-    },
-    "ClinicalDataEnrichmentDTO": {
-      "properties": {
-        "clinicalAttribute": {
-          "$ref": "#/definitions/ClinicalAttributeDTO"
-        },
-        "method": {
-          "type": "string"
-        },
-        "pValue": {
-          "type": "number"
-        },
-        "score": {
-          "type": "number"
         }
       },
       "type": "object"
@@ -8679,7 +8683,7 @@
       "properties": {
         "body": {
           "items": {
-            "$ref": "#/definitions/SampleDTO"
+            "$ref": "#/definitions/Sample"
           },
           "type": "array"
         },
@@ -9470,44 +9474,6 @@
       },
       "type": "object"
     },
-    "SampleDTO": {
-      "properties": {
-        "copyNumberSegmentPresent": {
-          "type": "boolean"
-        },
-        "patientId": {
-          "type": "string"
-        },
-        "sampleId": {
-          "type": "string"
-        },
-        "sampleType": {
-          "enum": [
-            "Primary Solid Tumor",
-            "Recurrent Solid Tumor",
-            "Primary Blood Tumor",
-            "Recurrent Blood Tumor",
-            "Metastatic",
-            "Blood Derived Normal",
-            "Solid Tissues Normal"
-          ],
-          "type": "string"
-        },
-        "sequenced": {
-          "type": "boolean"
-        },
-        "studyId": {
-          "type": "string"
-        },
-        "uniquePatientKey": {
-          "type": "string"
-        },
-        "uniqueSampleKey": {
-          "type": "string"
-        }
-      },
-      "type": "object"
-    },
     "SampleIdentifier": {
       "properties": {
         "sampleId": {
@@ -10074,6 +10040,61 @@
         },
         "keyword": {
           "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "Sample": {
+      "properties": {
+        "copyNumberSegmentPresent": {
+          "type": "boolean"
+        },
+        "patientId": {
+          "type": "string"
+        },
+        "sampleId": {
+          "type": "string"
+        },
+        "sampleType": {
+          "enum": [
+            "Primary Solid Tumor",
+            "Recurrent Solid Tumor",
+            "Primary Blood Tumor",
+            "Recurrent Blood Tumor",
+            "Metastatic",
+            "Blood Derived Normal",
+            "Solid Tissues Normal"
+          ],
+          "type": "string"
+        },
+        "sequenced": {
+          "type": "boolean"
+        },
+        "studyId": {
+          "type": "string"
+        },
+        "uniquePatientKey": {
+          "type": "string"
+        },
+        "uniqueSampleKey": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "ClinicalDataEnrichment": {
+      "properties": {
+        "clinicalAttribute": {
+          "$ref": "#/definitions/ClinicalAttribute"
+        },
+        "method": {
+          "type": "string"
+        },
+        "pValue": {
+          "type": "number"
+        },
+        "score": {
+          "type": "number"
         }
       },
       "type": "object"

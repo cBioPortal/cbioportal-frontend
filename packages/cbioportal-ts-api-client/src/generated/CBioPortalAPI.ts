@@ -1347,23 +1347,17 @@ export type ResponseEntityListMutationDTO = {
 
 };
 export type Sample = {
-    'cancerStudyIdentifier': string
+    'copyNumberSegmentPresent': boolean
 
-        'copyNumberSegmentPresent': boolean
+        'patientId': string
 
-        'internalId': number
-
-        'patient': Patient
-
-        'patientId': number
-
-        'patientStableId': string
+        'sampleId': string
 
         'sampleType': "Primary Solid Tumor" | "Recurrent Solid Tumor" | "Primary Blood Tumor" | "Recurrent Blood Tumor" | "Metastatic" | "Blood Derived Normal" | "Solid Tissues Normal"
 
         'sequenced': boolean
 
-        'stableId': string
+        'studyId': string
 
         'uniquePatientKey': string
 
@@ -1894,7 +1888,7 @@ export default class CBioPortalAPI {
             });
         };
     fetchClinicalDataUsingPOSTURL(parameters: {
-        'clinicalDataType' ? : "sample" | "patient",
+        'clinicalDataType' ? : "SAMPLE" | "PATIENT",
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'clinicalDataMultiStudyFilter' ? : ClinicalDataMultiStudyFilter,
         $queryParameters ? : any
@@ -1928,7 +1922,7 @@ export default class CBioPortalAPI {
      * @param {} clinicalDataMultiStudyFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      */
     fetchClinicalDataUsingPOSTWithHttpInfo(parameters: {
-        'clinicalDataType' ? : "sample" | "patient",
+        'clinicalDataType' ? : "SAMPLE" | "PATIENT",
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'clinicalDataMultiStudyFilter' ? : ClinicalDataMultiStudyFilter,
         $queryParameters ? : any,
@@ -1979,7 +1973,7 @@ export default class CBioPortalAPI {
      * @param {} clinicalDataMultiStudyFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      */
     fetchClinicalDataUsingPOST(parameters: {
-            'clinicalDataType' ? : "sample" | "patient",
+            'clinicalDataType' ? : "SAMPLE" | "PATIENT",
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'clinicalDataMultiStudyFilter' ? : ClinicalDataMultiStudyFilter,
             $queryParameters ? : any,
@@ -4905,19 +4899,20 @@ export default class CBioPortalAPI {
      * @param {} mutationMultipleStudyFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      */
     fetchMutationsInMultipleMolecularProfilesUsingPOST(parameters: {
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'pageSize' ? : number,
-        'pageNumber' ? : number,
-        'sortBy' ? : "entrezGeneId" | "center" | "mutationStatus" | "validationStatus" | "tumorAltCount" | "tumorRefCount" | "normalAltCount" | "normalRefCount" | "aminoAcidChange" | "startPosition" | "endPosition" | "referenceAllele" | "variantAllele" | "proteinChange" | "mutationType" | "ncbiBuild" | "variantType" | "refseqMrnaId" | "proteinPosStart" | "proteinPosEnd" | "keyword",
-        'direction' ? : "ASC" | "DESC",
-        'mutationMultipleStudyFilter' ? : MutationMultipleStudyFilter,
-        $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < ResponseEntityListMutationDTO > {
-        return this.fetchMutationsInMultipleMolecularProfilesUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
-            return response.body;
-        });
-    };
+            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'pageSize' ? : number,
+            'pageNumber' ? : number,
+            'sortBy' ? : "entrezGeneId" | "center" | "mutationStatus" | "validationStatus" | "tumorAltCount" | "tumorRefCount" | "normalAltCount" | "normalRefCount" | "aminoAcidChange" | "startPosition" | "endPosition" | "referenceAllele" | "variantAllele" | "proteinChange" | "mutationType" | "ncbiBuild" | "variantType" | "refseqMrnaId" | "proteinPosStart" | "proteinPosEnd" | "keyword",
+            'direction' ? : "ASC" | "DESC",
+            'mutationMultipleStudyFilter' ? : MutationMultipleStudyFilter,
+            $queryParameters ? : any,
+                $domain ? : string
+        }): Promise < Array < Mutation >
+        > {
+            return this.fetchMutationsInMultipleMolecularProfilesUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
     fetchNamespaceUsingPOSTURL(parameters: {
         'studyIds': Array < string > ,
         $queryParameters ? : any
@@ -5925,19 +5920,20 @@ export default class CBioPortalAPI {
      * @param {string} direction - Direction of the sort
      */
     getAllStudiesUsingGET(parameters: {
-        'keyword' ? : string,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'sortBy' ? : "studyId" | "cancerTypeId" | "name" | "description" | "publicStudy" | "pmid" | "citation" | "groups" | "status" | "importDate",
-        'pageSize' ? : number,
-        'pageNumber' ? : number,
-        'direction' ? : "ASC" | "DESC",
-        $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < ResponseEntityListCancerStudyMetadata > {
-        return this.getAllStudiesUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
-            return response.body;
-        });
-    };
+            'keyword' ? : string,
+            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'sortBy' ? : "studyId" | "cancerTypeId" | "name" | "description" | "publicStudy" | "pmid" | "citation" | "groups" | "status" | "importDate",
+            'pageSize' ? : number,
+            'pageNumber' ? : number,
+            'direction' ? : "ASC" | "DESC",
+            $queryParameters ? : any,
+                $domain ? : string
+        }): Promise < Array < CancerStudy >
+        > {
+            return this.getAllStudiesUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
     fetchStudiesUsingPOSTURL(parameters: {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'studyIds': Array < string > ,
@@ -6272,7 +6268,7 @@ export default class CBioPortalAPI {
         'studyId': string,
         $queryParameters ? : any,
         $domain ? : string
-    }): Promise < ResponseEntityCancerStudyMetadata > {
+    }): Promise < CancerStudy > {
         return this.getStudyUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
             return response.body;
         });
