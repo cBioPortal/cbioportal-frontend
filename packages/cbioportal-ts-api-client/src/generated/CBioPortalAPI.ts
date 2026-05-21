@@ -19,24 +19,6 @@ export type AlleleSpecificCopyNumber = {
         'totalCopyNumber': number
 
 };
-export type AlleleSpecificCopyNumberDTO = {
-    'ascnIntegerCopyNumber': number
-
-        'ascnMethod': string
-
-        'ccfExpectedCopies': number
-
-        'ccfExpectedCopiesUpper': number
-
-        'clonal': string
-
-        'expectedAltCopies': number
-
-        'minorCopyNumber': number
-
-        'totalCopyNumber': number
-
-};
 export type CancerStudy = {
     'allSampleCount': number
 
@@ -91,62 +73,6 @@ export type CancerStudy = {
         'studyId': string
 
         'treatmentCount': number
-
-};
-export type CancerStudyMetadata = {
-    'allSampleCount': number
-
-        'cancerStudyId': number
-
-        'cancerStudyIdentifier': string
-
-        'citation': string
-
-        'cnaSampleCount': number
-
-        'completeSampleCount': number
-
-        'description': string
-
-        'groups': string
-
-        'importDate': string
-
-        'massSpectrometrySampleCount': number
-
-        'methylationHm27SampleCount': number
-
-        'miRnaSampleCount': number
-
-        'mrnaMicroarraySampleCount': number
-
-        'mrnaRnaSeqSampleCount': number
-
-        'mrnaRnaSeqV2SampleCount': number
-
-        'name': string
-
-        'pmid': string
-
-        'publicStudy': boolean
-
-        'referenceGenome': string
-
-        'resourceCounts': Array < ResourceCount >
-
-        'rppaSampleCount': number
-
-        'sequencedSampleCount': number
-
-        'status': number
-
-        'structuralVariantCount': number
-
-        'treatmentCount': number
-
-        'typeOfCancer': TypeOfCancer
-
-        'typeOfCancerId': string
 
 };
 export type CancerStudyTags = {
@@ -209,33 +135,6 @@ export type ClinicalDataSingleStudyFilter = {
     'attributeIds': Array < string >
 
         'ids': Array < string >
-
-};
-export type ContentDisposition = {
-    'attachment': boolean
-
-        'charset': {
-        'registered': boolean
-
-    }
-
-        'creationDate': string
-
-        'filename': string
-
-        'formData': boolean
-
-        'inline': boolean
-
-        'modificationDate': string
-
-        'name': string
-
-        'readDate': string
-
-        'size': number
-
-        'type': string
 
 };
 export type CopyNumberSeg = {
@@ -302,14 +201,6 @@ export type Gene = {
     'entrezGeneId': number
 
         'geneticEntityId': number
-
-        'hugoGeneSymbol': string
-
-        'type': string
-
-};
-export type GeneDTO = {
-    'entrezGeneId': number
 
         'hugoGeneSymbol': string
 
@@ -412,22 +303,6 @@ export type GenericAssayMetaFilter = {
         'molecularProfileIds': Array < string >
 
 };
-export type HttpMethod = {};
-export type HttpRange = {};
-export type HttpStatusCode = {
-    'error': boolean
-
-        'is1xxInformational': boolean
-
-        'is2xxSuccessful': boolean
-
-        'is3xxRedirection': boolean
-
-        'is4xxClientError': boolean
-
-        'is5xxServerError': boolean
-
-};
 export type Info = {
     'dbVersion': string
 
@@ -458,29 +333,6 @@ export type Info = {
         'gitDirty': boolean
 
         'portalVersion': string
-
-};
-export type MediaType = {
-    'parameters': {}
-
-    'charset': {
-        'registered': boolean
-
-    }
-
-    'concrete': boolean
-
-        'qualityValue': number
-
-        'subtype': string
-
-        'subtypeSuffix': string
-
-        'type': string
-
-        'wildcardSubtype': boolean
-
-        'wildcardType': boolean
 
 };
 export type MolecularDataFilter = {
@@ -563,76 +415,6 @@ export type Mutation = {
         'mutationType': string
 
         'namespaceColumns': {}
-
-        'ncbiBuild': string
-
-        'normalAltCount': number
-
-        'normalRefCount': number
-
-        'patientId': string
-
-        'proteinChange': string
-
-        'proteinPosEnd': number
-
-        'proteinPosStart': number
-
-        'referenceAllele': string
-
-        'refseqMrnaId': string
-
-        'sampleId': string
-
-        'startPosition': number
-
-        'studyId': string
-
-        'tumorAltCount': number
-
-        'tumorRefCount': number
-
-        'uniquePatientKey': string
-
-        'uniqueSampleKey': string
-
-        'validationStatus': string
-
-        'variantAllele': string
-
-        'variantType': string
-
-};
-export type MutationDTO = {
-    'alleleSpecificCopyNumber': AlleleSpecificCopyNumberDTO
-
-        'aminoAcidChange': string
-
-        'center': string
-
-        'chr': string
-
-        'driverFilter': string
-
-        'driverFilterAnnotation': string
-
-        'driverTiersFilter': string
-
-        'driverTiersFilterAnnotation': string
-
-        'endPosition': number
-
-        'entrezGeneId': number
-
-        'gene': GeneDTO
-
-        'keyword': string
-
-        'molecularProfileId': string
-
-        'mutationStatus': string
-
-        'mutationType': string
 
         'ncbiBuild': string
 
@@ -761,609 +543,18 @@ export type ResourceCount = {
         'studyId': string
 
 };
-export type ResponseEntityCancerStudyMetadata = {
-    'body': CancerStudyMetadata
-
-        'headers': {
-        'host': {
-            'address': {
-                'address': string
-
-                    'anyLocalAddress': boolean
-
-                    'canonicalHostName': string
-
-                    'hostAddress': string
-
-                    'hostName': string
-
-                    'linkLocalAddress': boolean
-
-                    'loopbackAddress': boolean
-
-                    'mcglobal': boolean
-
-                    'mclinkLocal': boolean
-
-                    'mcnodeLocal': boolean
-
-                    'mcorgLocal': boolean
-
-                    'mcsiteLocal': boolean
-
-                    'multicastAddress': boolean
-
-                    'siteLocalAddress': boolean
-
-            }
-
-            'hostName': string
-
-                'hostString': string
-
-                'port': number
-
-                'unresolved': boolean
-
-        }
-
-        'accept': Array < MediaType >
-
-            'acceptCharset': Array < {
-                'registered': boolean
-
-            } >
-
-            'acceptLanguage': Array < {
-                'range': string
-
-                    'weight': number
-
-            } >
-
-            'acceptLanguageAsLocales': Array < {
-                'country': string
-
-                    'displayCountry': string
-
-                    'displayLanguage': string
-
-                    'displayName': string
-
-                    'displayScript': string
-
-                    'displayVariant': string
-
-                    'extensionKeys': Array < string >
-
-                    'iso3Country': string
-
-                    'iso3Language': string
-
-                    'language': string
-
-                    'script': string
-
-                    'unicodeLocaleAttributes': Array < string >
-
-                    'unicodeLocaleKeys': Array < string >
-
-                    'variant': string
-
-            } >
-
-            'acceptPatch': Array < MediaType >
-
-            'accessControlAllowCredentials': boolean
-
-            'accessControlAllowHeaders': Array < string >
-
-            'accessControlAllowMethods': Array < HttpMethod >
-
-            'accessControlAllowOrigin': string
-
-            'accessControlExposeHeaders': Array < string >
-
-            'accessControlMaxAge': number
-
-            'accessControlRequestHeaders': Array < string >
-
-            'accessControlRequestMethod': HttpMethod
-
-            'all': {}
-
-            'allow': Array < HttpMethod >
-
-            'basicAuth': string
-
-            'bearerAuth': string
-
-            'cacheControl': string
-
-            'connection': Array < string >
-
-            'contentDisposition': ContentDisposition
-
-            'contentLanguage': {
-            'country': string
-
-                'displayCountry': string
-
-                'displayLanguage': string
-
-                'displayName': string
-
-                'displayScript': string
-
-                'displayVariant': string
-
-                'extensionKeys': Array < string >
-
-                'iso3Country': string
-
-                'iso3Language': string
-
-                'language': string
-
-                'script': string
-
-                'unicodeLocaleAttributes': Array < string >
-
-                'unicodeLocaleKeys': Array < string >
-
-                'variant': string
-
-        }
-
-            'contentLength': number
-
-            'contentType': MediaType
-
-            'date': number
-
-            'empty': boolean
-
-            'etag': string
-
-            'expires': number
-
-            'ifMatch': Array < string >
-
-            'ifModifiedSince': number
-
-            'ifNoneMatch': Array < string >
-
-            'ifUnmodifiedSince': number
-
-            'lastModified': number
-
-            'location': string
-
-            'origin': string
-
-            'pragma': string
-
-            'range': Array < HttpRange >
-
-            'upgrade': string
-
-            'vary': Array < string >
-
-    }
-
-        'statusCode': HttpStatusCode
-
-        'statusCodeValue': number
-
-};
-export type ResponseEntityListCancerStudyMetadata = {
-    'body': Array < CancerStudyMetadata >
-
-        'headers': {
-            'host': {
-                'address': {
-                    'address': string
-
-                        'anyLocalAddress': boolean
-
-                        'canonicalHostName': string
-
-                        'hostAddress': string
-
-                        'hostName': string
-
-                        'linkLocalAddress': boolean
-
-                        'loopbackAddress': boolean
-
-                        'mcglobal': boolean
-
-                        'mclinkLocal': boolean
-
-                        'mcnodeLocal': boolean
-
-                        'mcorgLocal': boolean
-
-                        'mcsiteLocal': boolean
-
-                        'multicastAddress': boolean
-
-                        'siteLocalAddress': boolean
-
-                }
-
-                'hostName': string
-
-                    'hostString': string
-
-                    'port': number
-
-                    'unresolved': boolean
-
-            }
-
-            'accept': Array < MediaType >
-
-                'acceptCharset': Array < {
-                    'registered': boolean
-
-                } >
-
-                'acceptLanguage': Array < {
-                    'range': string
-
-                        'weight': number
-
-                } >
-
-                'acceptLanguageAsLocales': Array < {
-                    'country': string
-
-                        'displayCountry': string
-
-                        'displayLanguage': string
-
-                        'displayName': string
-
-                        'displayScript': string
-
-                        'displayVariant': string
-
-                        'extensionKeys': Array < string >
-
-                        'iso3Country': string
-
-                        'iso3Language': string
-
-                        'language': string
-
-                        'script': string
-
-                        'unicodeLocaleAttributes': Array < string >
-
-                        'unicodeLocaleKeys': Array < string >
-
-                        'variant': string
-
-                } >
-
-                'acceptPatch': Array < MediaType >
-
-                'accessControlAllowCredentials': boolean
-
-                'accessControlAllowHeaders': Array < string >
-
-                'accessControlAllowMethods': Array < HttpMethod >
-
-                'accessControlAllowOrigin': string
-
-                'accessControlExposeHeaders': Array < string >
-
-                'accessControlMaxAge': number
-
-                'accessControlRequestHeaders': Array < string >
-
-                'accessControlRequestMethod': HttpMethod
-
-                'all': {}
-
-                'allow': Array < HttpMethod >
-
-                'basicAuth': string
-
-                'bearerAuth': string
-
-                'cacheControl': string
-
-                'connection': Array < string >
-
-                'contentDisposition': ContentDisposition
-
-                'contentLanguage': {
-                'country': string
-
-                    'displayCountry': string
-
-                    'displayLanguage': string
-
-                    'displayName': string
-
-                    'displayScript': string
-
-                    'displayVariant': string
-
-                    'extensionKeys': Array < string >
-
-                    'iso3Country': string
-
-                    'iso3Language': string
-
-                    'language': string
-
-                    'script': string
-
-                    'unicodeLocaleAttributes': Array < string >
-
-                    'unicodeLocaleKeys': Array < string >
-
-                    'variant': string
-
-            }
-
-                'contentLength': number
-
-                'contentType': MediaType
-
-                'date': number
-
-                'empty': boolean
-
-                'etag': string
-
-                'expires': number
-
-                'ifMatch': Array < string >
-
-                'ifModifiedSince': number
-
-                'ifNoneMatch': Array < string >
-
-                'ifUnmodifiedSince': number
-
-                'lastModified': number
-
-                'location': string
-
-                'origin': string
-
-                'pragma': string
-
-                'range': Array < HttpRange >
-
-                'upgrade': string
-
-                'vary': Array < string >
-
-        }
-
-        'statusCode': HttpStatusCode
-
-        'statusCodeValue': number
-
-};
-export type ResponseEntityListMutationDTO = {
-    'body': Array < MutationDTO >
-
-        'headers': {
-            'host': {
-                'address': {
-                    'address': string
-
-                        'anyLocalAddress': boolean
-
-                        'canonicalHostName': string
-
-                        'hostAddress': string
-
-                        'hostName': string
-
-                        'linkLocalAddress': boolean
-
-                        'loopbackAddress': boolean
-
-                        'mcglobal': boolean
-
-                        'mclinkLocal': boolean
-
-                        'mcnodeLocal': boolean
-
-                        'mcorgLocal': boolean
-
-                        'mcsiteLocal': boolean
-
-                        'multicastAddress': boolean
-
-                        'siteLocalAddress': boolean
-
-                }
-
-                'hostName': string
-
-                    'hostString': string
-
-                    'port': number
-
-                    'unresolved': boolean
-
-            }
-
-            'accept': Array < MediaType >
-
-                'acceptCharset': Array < {
-                    'registered': boolean
-
-                } >
-
-                'acceptLanguage': Array < {
-                    'range': string
-
-                        'weight': number
-
-                } >
-
-                'acceptLanguageAsLocales': Array < {
-                    'country': string
-
-                        'displayCountry': string
-
-                        'displayLanguage': string
-
-                        'displayName': string
-
-                        'displayScript': string
-
-                        'displayVariant': string
-
-                        'extensionKeys': Array < string >
-
-                        'iso3Country': string
-
-                        'iso3Language': string
-
-                        'language': string
-
-                        'script': string
-
-                        'unicodeLocaleAttributes': Array < string >
-
-                        'unicodeLocaleKeys': Array < string >
-
-                        'variant': string
-
-                } >
-
-                'acceptPatch': Array < MediaType >
-
-                'accessControlAllowCredentials': boolean
-
-                'accessControlAllowHeaders': Array < string >
-
-                'accessControlAllowMethods': Array < HttpMethod >
-
-                'accessControlAllowOrigin': string
-
-                'accessControlExposeHeaders': Array < string >
-
-                'accessControlMaxAge': number
-
-                'accessControlRequestHeaders': Array < string >
-
-                'accessControlRequestMethod': HttpMethod
-
-                'all': {}
-
-                'allow': Array < HttpMethod >
-
-                'basicAuth': string
-
-                'bearerAuth': string
-
-                'cacheControl': string
-
-                'connection': Array < string >
-
-                'contentDisposition': ContentDisposition
-
-                'contentLanguage': {
-                'country': string
-
-                    'displayCountry': string
-
-                    'displayLanguage': string
-
-                    'displayName': string
-
-                    'displayScript': string
-
-                    'displayVariant': string
-
-                    'extensionKeys': Array < string >
-
-                    'iso3Country': string
-
-                    'iso3Language': string
-
-                    'language': string
-
-                    'script': string
-
-                    'unicodeLocaleAttributes': Array < string >
-
-                    'unicodeLocaleKeys': Array < string >
-
-                    'variant': string
-
-            }
-
-                'contentLength': number
-
-                'contentType': MediaType
-
-                'date': number
-
-                'empty': boolean
-
-                'etag': string
-
-                'expires': number
-
-                'ifMatch': Array < string >
-
-                'ifModifiedSince': number
-
-                'ifNoneMatch': Array < string >
-
-                'ifUnmodifiedSince': number
-
-                'lastModified': number
-
-                'location': string
-
-                'origin': string
-
-                'pragma': string
-
-                'range': Array < HttpRange >
-
-                'upgrade': string
-
-                'vary': Array < string >
-
-        }
-
-        'statusCode': HttpStatusCode
-
-        'statusCodeValue': number
-
-};
 export type Sample = {
-    'cancerStudyIdentifier': string
+    'copyNumberSegmentPresent': boolean
 
-        'copyNumberSegmentPresent': boolean
+        'patientId': string
 
-        'internalId': number
-
-        'patient': Patient
-
-        'patientId': number
-
-        'patientStableId': string
+        'sampleId': string
 
         'sampleType': "Primary Solid Tumor" | "Recurrent Solid Tumor" | "Primary Blood Tumor" | "Recurrent Blood Tumor" | "Metastatic" | "Blood Derived Normal" | "Solid Tissues Normal"
 
         'sequenced': boolean
 
-        'stableId': string
+        'studyId': string
 
         'uniquePatientKey': string
 
@@ -1894,7 +1085,7 @@ export default class CBioPortalAPI {
             });
         };
     fetchClinicalDataUsingPOSTURL(parameters: {
-        'clinicalDataType' ? : "sample" | "patient",
+        'clinicalDataType' ? : "SAMPLE" | "PATIENT",
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'clinicalDataMultiStudyFilter' ? : ClinicalDataMultiStudyFilter,
         $queryParameters ? : any
@@ -1928,7 +1119,7 @@ export default class CBioPortalAPI {
      * @param {} clinicalDataMultiStudyFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      */
     fetchClinicalDataUsingPOSTWithHttpInfo(parameters: {
-        'clinicalDataType' ? : "sample" | "patient",
+        'clinicalDataType' ? : "SAMPLE" | "PATIENT",
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'clinicalDataMultiStudyFilter' ? : ClinicalDataMultiStudyFilter,
         $queryParameters ? : any,
@@ -1979,7 +1170,7 @@ export default class CBioPortalAPI {
      * @param {} clinicalDataMultiStudyFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      */
     fetchClinicalDataUsingPOST(parameters: {
-            'clinicalDataType' ? : "sample" | "patient",
+            'clinicalDataType' ? : "SAMPLE" | "PATIENT",
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'clinicalDataMultiStudyFilter' ? : ClinicalDataMultiStudyFilter,
             $queryParameters ? : any,
@@ -2551,95 +1742,6 @@ export default class CBioPortalAPI {
                 return response.body;
             });
         };
-    fetchGenericAssayMetaUsingPOSTURL(parameters: {
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'genericAssayMetaFilter': GenericAssayMetaFilter,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/api/generic-assay-meta/fetch';
-        if (parameters['projection'] !== undefined) {
-            queryParameters['projection'] = parameters['projection'];
-        }
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Fetch meta data for generic-assay by ID
-     * @method
-     * @name CBioPortalAPI#fetchGenericAssayMetaUsingPOST
-     * @param {string} projection - Level of detail of the response
-     * @param {} genericAssayMetaFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     */
-    fetchGenericAssayMetaUsingPOSTWithHttpInfo(parameters: {
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'genericAssayMetaFilter': GenericAssayMetaFilter,
-        $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/api/generic-assay-meta/fetch';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters['projection'] !== undefined) {
-                queryParameters['projection'] = parameters['projection'];
-            }
-
-            if (parameters['genericAssayMetaFilter'] !== undefined) {
-                body = parameters['genericAssayMetaFilter'];
-            }
-
-            if (parameters['genericAssayMetaFilter'] === undefined) {
-                reject(new Error('Missing required  parameter: genericAssayMetaFilter'));
-                return;
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Fetch meta data for generic-assay by ID
-     * @method
-     * @name CBioPortalAPI#fetchGenericAssayMetaUsingPOST
-     * @param {string} projection - Level of detail of the response
-     * @param {} genericAssayMetaFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     */
-    fetchGenericAssayMetaUsingPOST(parameters: {
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-            'genericAssayMetaFilter': GenericAssayMetaFilter,
-            $queryParameters ? : any,
-                $domain ? : string
-        }): Promise < Array < GenericAssayMeta >
-        > {
-            return this.fetchGenericAssayMetaUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
     getGenericAssayMetaByStableIdUsingGETURL(parameters: {
         'genericAssayStableId': string,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
@@ -3000,6 +2102,95 @@ export default class CBioPortalAPI {
         }): Promise < Array < GenericAssayData >
         > {
             return this.fetchGenericAssayDataInMolecularProfileUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    fetchGenericAssayMetaUsingPOSTURL(parameters: {
+        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'genericAssayMetaFilter': GenericAssayMetaFilter,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/api/generic_assay_meta/fetch';
+        if (parameters['projection'] !== undefined) {
+            queryParameters['projection'] = parameters['projection'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Fetch meta data for generic-assay by ID
+     * @method
+     * @name CBioPortalAPI#fetchGenericAssayMetaUsingPOST
+     * @param {string} projection - Level of detail of the response
+     * @param {} genericAssayMetaFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     */
+    fetchGenericAssayMetaUsingPOSTWithHttpInfo(parameters: {
+        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'genericAssayMetaFilter': GenericAssayMetaFilter,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/api/generic_assay_meta/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['projection'] !== undefined) {
+                queryParameters['projection'] = parameters['projection'];
+            }
+
+            if (parameters['genericAssayMetaFilter'] !== undefined) {
+                body = parameters['genericAssayMetaFilter'];
+            }
+
+            if (parameters['genericAssayMetaFilter'] === undefined) {
+                reject(new Error('Missing required  parameter: genericAssayMetaFilter'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Fetch meta data for generic-assay by ID
+     * @method
+     * @name CBioPortalAPI#fetchGenericAssayMetaUsingPOST
+     * @param {string} projection - Level of detail of the response
+     * @param {} genericAssayMetaFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     */
+    fetchGenericAssayMetaUsingPOST(parameters: {
+            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'genericAssayMetaFilter': GenericAssayMetaFilter,
+            $queryParameters ? : any,
+                $domain ? : string
+        }): Promise < Array < GenericAssayMeta >
+        > {
+            return this.fetchGenericAssayMetaUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
@@ -4825,7 +4016,7 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * 
+     * Fetch mutations in multiple molecular profiles by sample IDs
      * @method
      * @name CBioPortalAPI#fetchMutationsInMultipleMolecularProfilesUsingPOST
      * @param {string} projection - Level of detail of the response
@@ -4894,7 +4085,7 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * 
+     * Fetch mutations in multiple molecular profiles by sample IDs
      * @method
      * @name CBioPortalAPI#fetchMutationsInMultipleMolecularProfilesUsingPOST
      * @param {string} projection - Level of detail of the response
@@ -4905,19 +4096,20 @@ export default class CBioPortalAPI {
      * @param {} mutationMultipleStudyFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      */
     fetchMutationsInMultipleMolecularProfilesUsingPOST(parameters: {
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'pageSize' ? : number,
-        'pageNumber' ? : number,
-        'sortBy' ? : "entrezGeneId" | "center" | "mutationStatus" | "validationStatus" | "tumorAltCount" | "tumorRefCount" | "normalAltCount" | "normalRefCount" | "aminoAcidChange" | "startPosition" | "endPosition" | "referenceAllele" | "variantAllele" | "proteinChange" | "mutationType" | "ncbiBuild" | "variantType" | "refseqMrnaId" | "proteinPosStart" | "proteinPosEnd" | "keyword",
-        'direction' ? : "ASC" | "DESC",
-        'mutationMultipleStudyFilter' ? : MutationMultipleStudyFilter,
-        $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < ResponseEntityListMutationDTO > {
-        return this.fetchMutationsInMultipleMolecularProfilesUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
-            return response.body;
-        });
-    };
+            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'pageSize' ? : number,
+            'pageNumber' ? : number,
+            'sortBy' ? : "entrezGeneId" | "center" | "mutationStatus" | "validationStatus" | "tumorAltCount" | "tumorRefCount" | "normalAltCount" | "normalRefCount" | "aminoAcidChange" | "startPosition" | "endPosition" | "referenceAllele" | "variantAllele" | "proteinChange" | "mutationType" | "ncbiBuild" | "variantType" | "refseqMrnaId" | "proteinPosStart" | "proteinPosEnd" | "keyword",
+            'direction' ? : "ASC" | "DESC",
+            'mutationMultipleStudyFilter' ? : MutationMultipleStudyFilter,
+            $queryParameters ? : any,
+                $domain ? : string
+        }): Promise < Array < Mutation >
+        > {
+            return this.fetchMutationsInMultipleMolecularProfilesUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
     fetchNamespaceUsingPOSTURL(parameters: {
         'studyIds': Array < string > ,
         $queryParameters ? : any
@@ -5803,9 +4995,9 @@ export default class CBioPortalAPI {
     getAllStudiesUsingGETURL(parameters: {
         'keyword' ? : string,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'sortBy' ? : "studyId" | "cancerTypeId" | "name" | "description" | "publicStudy" | "pmid" | "citation" | "groups" | "status" | "importDate",
         'pageSize' ? : number,
         'pageNumber' ? : number,
+        'sortBy' ? : "studyId" | "cancerTypeId" | "name" | "description" | "publicStudy" | "pmid" | "citation" | "groups" | "status" | "importDate",
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any
     }): string {
@@ -5819,16 +5011,16 @@ export default class CBioPortalAPI {
             queryParameters['projection'] = parameters['projection'];
         }
 
-        if (parameters['sortBy'] !== undefined) {
-            queryParameters['sortBy'] = parameters['sortBy'];
-        }
-
         if (parameters['pageSize'] !== undefined) {
             queryParameters['pageSize'] = parameters['pageSize'];
         }
 
         if (parameters['pageNumber'] !== undefined) {
             queryParameters['pageNumber'] = parameters['pageNumber'];
+        }
+
+        if (parameters['sortBy'] !== undefined) {
+            queryParameters['sortBy'] = parameters['sortBy'];
         }
 
         if (parameters['direction'] !== undefined) {
@@ -5846,22 +5038,22 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * 
+     * Get all studies
      * @method
      * @name CBioPortalAPI#getAllStudiesUsingGET
      * @param {string} keyword - Search keyword that applies to name and cancer type of the studies
      * @param {string} projection - Level of detail of the response
-     * @param {string} sortBy - Name of the property that the result list is sorted by
      * @param {integer} pageSize - Page size of the result list
      * @param {integer} pageNumber - Page number of the result list
+     * @param {string} sortBy - Name of the property that the result list is sorted by
      * @param {string} direction - Direction of the sort
      */
     getAllStudiesUsingGETWithHttpInfo(parameters: {
         'keyword' ? : string,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'sortBy' ? : "studyId" | "cancerTypeId" | "name" | "description" | "publicStudy" | "pmid" | "citation" | "groups" | "status" | "importDate",
         'pageSize' ? : number,
         'pageNumber' ? : number,
+        'sortBy' ? : "studyId" | "cancerTypeId" | "name" | "description" | "publicStudy" | "pmid" | "citation" | "groups" | "status" | "importDate",
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any,
             $domain ? : string
@@ -5885,16 +5077,16 @@ export default class CBioPortalAPI {
                 queryParameters['projection'] = parameters['projection'];
             }
 
-            if (parameters['sortBy'] !== undefined) {
-                queryParameters['sortBy'] = parameters['sortBy'];
-            }
-
             if (parameters['pageSize'] !== undefined) {
                 queryParameters['pageSize'] = parameters['pageSize'];
             }
 
             if (parameters['pageNumber'] !== undefined) {
                 queryParameters['pageNumber'] = parameters['pageNumber'];
+            }
+
+            if (parameters['sortBy'] !== undefined) {
+                queryParameters['sortBy'] = parameters['sortBy'];
             }
 
             if (parameters['direction'] !== undefined) {
@@ -5914,30 +5106,31 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * 
+     * Get all studies
      * @method
      * @name CBioPortalAPI#getAllStudiesUsingGET
      * @param {string} keyword - Search keyword that applies to name and cancer type of the studies
      * @param {string} projection - Level of detail of the response
-     * @param {string} sortBy - Name of the property that the result list is sorted by
      * @param {integer} pageSize - Page size of the result list
      * @param {integer} pageNumber - Page number of the result list
+     * @param {string} sortBy - Name of the property that the result list is sorted by
      * @param {string} direction - Direction of the sort
      */
     getAllStudiesUsingGET(parameters: {
-        'keyword' ? : string,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'sortBy' ? : "studyId" | "cancerTypeId" | "name" | "description" | "publicStudy" | "pmid" | "citation" | "groups" | "status" | "importDate",
-        'pageSize' ? : number,
-        'pageNumber' ? : number,
-        'direction' ? : "ASC" | "DESC",
-        $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < ResponseEntityListCancerStudyMetadata > {
-        return this.getAllStudiesUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
-            return response.body;
-        });
-    };
+            'keyword' ? : string,
+            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'pageSize' ? : number,
+            'pageNumber' ? : number,
+            'sortBy' ? : "studyId" | "cancerTypeId" | "name" | "description" | "publicStudy" | "pmid" | "citation" | "groups" | "status" | "importDate",
+            'direction' ? : "ASC" | "DESC",
+            $queryParameters ? : any,
+                $domain ? : string
+        }): Promise < Array < CancerStudy >
+        > {
+            return this.getAllStudiesUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
     fetchStudiesUsingPOSTURL(parameters: {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'studyIds': Array < string > ,
@@ -6027,104 +5220,6 @@ export default class CBioPortalAPI {
                 return response.body;
             });
         };
-    getAllStudiesMetaUsingGETURL(parameters: {
-        'keyword' ? : string,
-        'sortBy' ? : "studyId" | "cancerTypeId" | "name" | "description" | "publicStudy" | "pmid" | "citation" | "groups" | "status" | "importDate",
-        'direction' ? : "ASC" | "DESC",
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/api/studies/meta';
-        if (parameters['keyword'] !== undefined) {
-            queryParameters['keyword'] = parameters['keyword'];
-        }
-
-        if (parameters['sortBy'] !== undefined) {
-            queryParameters['sortBy'] = parameters['sortBy'];
-        }
-
-        if (parameters['direction'] !== undefined) {
-            queryParameters['direction'] = parameters['direction'];
-        }
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * 
-     * @method
-     * @name CBioPortalAPI#getAllStudiesMetaUsingGET
-     * @param {string} keyword - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {string} sortBy - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {string} direction - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     */
-    getAllStudiesMetaUsingGETWithHttpInfo(parameters: {
-        'keyword' ? : string,
-        'sortBy' ? : "studyId" | "cancerTypeId" | "name" | "description" | "publicStudy" | "pmid" | "citation" | "groups" | "status" | "importDate",
-        'direction' ? : "ASC" | "DESC",
-        $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/api/studies/meta';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-
-            if (parameters['keyword'] !== undefined) {
-                queryParameters['keyword'] = parameters['keyword'];
-            }
-
-            if (parameters['sortBy'] !== undefined) {
-                queryParameters['sortBy'] = parameters['sortBy'];
-            }
-
-            if (parameters['direction'] !== undefined) {
-                queryParameters['direction'] = parameters['direction'];
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * 
-     * @method
-     * @name CBioPortalAPI#getAllStudiesMetaUsingGET
-     * @param {string} keyword - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {string} sortBy - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {string} direction - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     */
-    getAllStudiesMetaUsingGET(parameters: {
-        'keyword' ? : string,
-        'sortBy' ? : "studyId" | "cancerTypeId" | "name" | "description" | "publicStudy" | "pmid" | "citation" | "groups" | "status" | "importDate",
-        'direction' ? : "ASC" | "DESC",
-        $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < any > {
-        return this.getAllStudiesMetaUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
-            return response.body;
-        });
-    };
     getTagsForMultipleStudiesUsingPOSTURL(parameters: {
         'studyIds': Array < string > ,
         $queryParameters ? : any
@@ -6222,10 +5317,10 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * 
+     * Get a study
      * @method
      * @name CBioPortalAPI#getStudyUsingGET
-     * @param {string} studyId - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {string} studyId - Study ID e.g. acc_tcga
      */
     getStudyUsingGETWithHttpInfo(parameters: {
         'studyId': string,
@@ -6263,16 +5358,16 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * 
+     * Get a study
      * @method
      * @name CBioPortalAPI#getStudyUsingGET
-     * @param {string} studyId - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {string} studyId - Study ID e.g. acc_tcga
      */
     getStudyUsingGET(parameters: {
         'studyId': string,
         $queryParameters ? : any,
         $domain ? : string
-    }): Promise < ResponseEntityCancerStudyMetadata > {
+    }): Promise < CancerStudy > {
         return this.getStudyUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
             return response.body;
         });
