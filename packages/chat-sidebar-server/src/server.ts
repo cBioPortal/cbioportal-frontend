@@ -46,13 +46,13 @@ app.post('/api/chat/suggest', async (req, res) => {
 });
 
 app.post('/api/chat/highlights', async (req, res) => {
-    const { studyId } = req.body ?? {};
+    const { studyId, inventory } = req.body ?? {};
     if (!studyId || typeof studyId !== 'string') {
         res.status(400).json({ error: 'studyId (string) required' });
         return;
     }
     try {
-        const result = await runHighlights({ studyId });
+        const result = await runHighlights({ studyId, inventory });
         res.json(result);
     } catch (err: any) {
         console.error('highlights failed:', err);

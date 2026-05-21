@@ -49,14 +49,21 @@ export default class ChatSidebar extends React.Component<IChatSidebarProps, {}> 
         } catch {
             /* ignore */
         }
+        this.syncBodyClass();
+    }
+
+    private syncBodyClass() {
+        document.body.classList.toggle('chat-sidebar-closed', !this.open);
     }
 
     componentDidMount() {
         window.addEventListener('message', this.onMessage);
+        this.syncBodyClass();
     }
 
     componentWillUnmount() {
         window.removeEventListener('message', this.onMessage);
+        document.body.classList.remove('chat-sidebar-closed');
     }
 
     onMessage = async (e: MessageEvent) => {
@@ -94,7 +101,10 @@ export default class ChatSidebar extends React.Component<IChatSidebarProps, {}> 
         return (
             <>
                 {this.open && (
-                    <AlterationBeacons studyId={this.props.studyId} />
+                    <AlterationBeacons
+                        studyId={this.props.studyId}
+                        genes={this.props.genes}
+                    />
                 )}
                 <button
                     type="button"
