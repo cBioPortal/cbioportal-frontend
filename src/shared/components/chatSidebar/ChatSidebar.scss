@@ -6,7 +6,7 @@
     height: 48px;
     border-radius: 50%;
     border: none;
-    background: #2563eb;
+    background: #3786C2;
     color: #fff;
     font-size: 22px;
     line-height: 1;
@@ -24,23 +24,33 @@
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
 }
 
-.chat-sidebar-launcher.is-open {
-    top: 12px;
-    right: 12px;
-    bottom: auto;
-    width: 32px;
-    height: 32px;
-    border-radius: 6px;
+/* Close button in the panel's top-right corner. Rendered inside
+ * `.chat-sidebar-panel` so absolute positioning is panel-relative.
+ * Matches the iframe header controls' vertical box (22px at top:8) so
+ * the chevron, the `|` divider, and the model dropdown all sit on the
+ * same horizontal axis. */
+.chat-sidebar-collapse {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 22px;
+    height: 22px;
+    border: none;
+    border-radius: 3px;
     background: transparent;
-    color: #1f2328;
-    font-size: 16px;
-    box-shadow: none;
+    color: #b0b5bb;
+    font-size: 12px;
+    line-height: 1;
+    padding: 0;
+    cursor: pointer;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.chat-sidebar-launcher.is-open:hover {
-    transform: none;
-    background: rgba(0, 0, 0, 0.06);
-    box-shadow: none;
+.chat-sidebar-collapse:hover {
+    color: #6e7681;
 }
 
 .chat-sidebar-panel {
@@ -65,6 +75,29 @@
     border: 0;
 }
 
+.chat-sidebar-disabled {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 32px 24px;
+    color: #6e7681;
+    font: 13px/1.5 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+        'Helvetica Neue', Arial, sans-serif;
+    background: #fafafb;
+}
+
+.chat-sidebar-disabled-title {
+    font-weight: 600;
+    color: #1f2328;
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+
+.chat-sidebar-disabled-body {
+    line-height: 1.55;
+}
+
 body.chat-sidebar-closed [data-chat-beacon],
 body.chat-sidebar-closed .chat-sidebar-beacons-loader {
     display: none !important;
@@ -75,7 +108,7 @@ body.chat-sidebar-closed .chat-sidebar-beacons-loader {
     bottom: 20px;
     left: 20px;
     padding: 6px 12px 6px 10px;
-    background: #2563eb;
+    background: #3786C2;
     color: #fff;
     border-radius: 999px;
     font-size: 12px;
@@ -85,6 +118,48 @@ body.chat-sidebar-closed .chat-sidebar-beacons-loader {
     display: flex;
     align-items: center;
     gap: 6px;
+}
+
+.chat-sidebar-beacons-cost {
+    /* Post-load state: muted, less prominent than the spinner. The user
+     * has seen the beacons appear; the chip is now a quiet receipt. */
+    background: #f4f5f7;
+    color: #1f2328;
+    border: 1px solid #e5e5e7;
+    padding: 4px 10px;
+    font-weight: 400;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.chat-sidebar-beacons-error {
+    background: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+    padding: 4px 10px;
+    font-weight: 500;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.chat-sidebar-beacons-cost-label {
+    font-weight: 600;
+}
+
+.chat-sidebar-beacons-cost-model {
+    color: #6e7681;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+        monospace;
+    font-size: 11px;
+}
+
+.chat-sidebar-beacons-cost-model::before {
+    content: '· ';
+    color: #c8ccd0;
+    font-family: inherit;
+}
+
+.chat-sidebar-beacons-cost-price::before {
+    content: '· ';
+    color: #c8ccd0;
 }
 
 .chat-sidebar-beacons-dot {
