@@ -65,6 +65,11 @@
     border: 0;
 }
 
+body.chat-sidebar-closed [data-chat-beacon],
+body.chat-sidebar-closed .chat-sidebar-beacons-loader {
+    display: none !important;
+}
+
 .chat-sidebar-beacons-loader {
     position: fixed;
     bottom: 20px;
