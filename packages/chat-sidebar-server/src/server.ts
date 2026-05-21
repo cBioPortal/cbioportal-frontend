@@ -4,6 +4,7 @@ import { config as loadEnv } from 'dotenv';
 import express from 'express';
 import cors from 'cors';
 import { MODEL, runSuggest, runHighlights } from './core.js';
+import { getShortlistedModels } from './pricing.js';
 
 // Load .env then layer .env.local on top — VERCEL_OIDC_TOKEN lands in
 // .env.local via `vercel env pull`, so the local order has to match what
@@ -28,8 +29,20 @@ app.get('/api/chat/health', (_req, res) => {
     res.json({ ok: true, model: MODEL });
 });
 
+app.get('/api/chat/models', async (_req, res) => {
+    try {
+        const models = await getShortlistedModels();
+        res.json({ models });
+    } catch (err: any) {
+        console.error('models failed:', err);
+        res.status(500).json({
+            error: err?.message ?? 'Could not fetch model catalog',
+        });
+    }
+});
+
 app.post('/api/chat/suggest', async (req, res) => {
-    const { studyId, genes, tab, preset, userPrompt, screenshot } =
+    const { studyId, genes, tab, preset, userPrompt, screenshot, model } =
         req.body ?? {};
     if (!studyId || typeof studyId !== 'string') {
         res.status(400).json({ error: 'studyId (string) required' });
@@ -43,6 +56,7 @@ app.post('/api/chat/suggest', async (req, res) => {
             preset,
             userPrompt,
             screenshot,
+            model,
         });
         res.json(result);
     } catch (err: any) {
@@ -54,13 +68,13 @@ app.post('/api/chat/suggest', async (req, res) => {
 });
 
 app.post('/api/chat/highlights', async (req, res) => {
-    const { studyId, inventory } = req.body ?? {};
+    const { studyId, inventory, model } = req.body ?? {};
     if (!studyId || typeof studyId !== 'string') {
         res.status(400).json({ error: 'studyId (string) required' });
         return;
     }
     try {
-        const result = await runHighlights({ studyId, inventory });
+        const result = await runHighlights({ studyId, inventory, model });
         res.json(result);
     } catch (err: any) {
         console.error('highlights failed:', err);

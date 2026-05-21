@@ -15,65 +15,17 @@ import {
 } from 'ai';
 import { z } from 'zod';
 import { fetchPaperForStudy, PaperContext } from './paper.js';
+import {
+    computeCostFromUsage,
+    type CostBreakdown,
+} from './pricing.js';
 
-// Gateway slugs use dots for versions (anthropic/claude-opus-4.7), not
-// hyphens. Verified against gateway.getAvailableModels() during the refactor.
+// Default Gateway slugs (dots, not hyphens — verified against
+// gateway.getAvailableModels()). Callers may override the model per request.
 export const SUGGEST_MODEL = 'anthropic/claude-opus-4.7';
 export const HIGHLIGHTS_MODEL = 'anthropic/claude-sonnet-4.6';
 // Kept for the /health endpoint and the iframe banner.
 export const MODEL = SUGGEST_MODEL;
-
-// Per-1M-token base prices in USD. Cache write is 1.25x input (5-min TTL) or
-// 2x (1-hour TTL); cache read is 0.1x input — same multipliers across models.
-// AI Gateway is zero-markup so these are the underlying Anthropic prices.
-const PRICES: Record<string, { input: number; output: number }> = {
-    'anthropic/claude-opus-4.7': { input: 5.0, output: 25.0 },
-    'anthropic/claude-sonnet-4.6': { input: 3.0, output: 15.0 },
-};
-
-export function computeCost(usage: any, model: string = SUGGEST_MODEL) {
-    const price = PRICES[model] ?? PRICES[SUGGEST_MODEL];
-    const inputTok = usage?.input_tokens ?? 0;
-    const cacheRead = usage?.cache_read_input_tokens ?? 0;
-    const outputTok = usage?.output_tokens ?? 0;
-    const cacheWrite5m =
-        usage?.cache_creation?.ephemeral_5m_input_tokens ?? 0;
-    const cacheWrite1h =
-        usage?.cache_creation?.ephemeral_1h_input_tokens ?? 0;
-    const cacheWriteTotal =
-        usage?.cache_creation_input_tokens ?? cacheWrite5m + cacheWrite1h;
-
-    const inputCost = (inputTok * price.input) / 1_000_000;
-    const cacheWriteCost =
-        (cacheWrite5m * price.input * 1.25 + cacheWrite1h * price.input * 2.0) /
-        1_000_000;
-    const cacheReadCost = (cacheRead * price.input * 0.1) / 1_000_000;
-    const outputCost = (outputTok * price.output) / 1_000_000;
-    return {
-        total: inputCost + cacheWriteCost + cacheReadCost + outputCost,
-        inputCost,
-        cacheWriteCost,
-        cacheReadCost,
-        outputCost,
-        tokens: {
-            input: inputTok,
-            cacheWrite: cacheWriteTotal,
-            cacheWrite5m,
-            cacheWrite1h,
-            cacheRead,
-            output: outputTok,
-        },
-        currency: 'USD',
-        model,
-    };
-}
-
-// The Anthropic-native usage shape we feed to computeCost is nested under
-// providerMetadata.anthropic.usage by the AI SDK. Pull it out defensively so
-// computeCost keeps working even if the shape shifts.
-function extractAnthropicUsage(providerMetadata: any): any {
-    return providerMetadata?.anthropic?.usage ?? {};
-}
 
 // Per-process paper cache. Persistent on the Express server; per-warm-Lambda
 // on Vercel (each warm function reuses; cold starts fetch fresh from PMC).
@@ -380,39 +332,44 @@ export interface SuggestInput {
     userPrompt?: string;
     // base64 PNG data URL of the current viewport, captured client-side.
     screenshot?: string;
+    // Optional Gateway slug override (e.g. "openai/gpt-5.4"). Falls back to
+    // SUGGEST_MODEL when absent.
+    model?: string;
 }
 
 export interface SuggestResult {
     suggestion: string;
     paper: PaperInfo;
     usage: any;
-    cost: ReturnType<typeof computeCost>;
+    cost: CostBreakdown;
 }
 
 export async function runSuggest(
     input: SuggestInput
 ): Promise<SuggestResult> {
     const paper = await getPaperContext(input.studyId);
+    const model = input.model ?? SUGGEST_MODEL;
     const result = await generateText({
-        model: SUGGEST_MODEL,
+        model,
         maxOutputTokens: 1024,
         // The system role lives inside messages so we can attach a
         // providerOptions.anthropic.cacheControl breakpoint to it — the
         // top-level `system` option doesn't accept per-message options.
         // Our system content is internally constructed (never user-derived),
         // so the SDK's prompt-injection warning is not a real concern here.
+        // The Anthropic-namespaced providerOptions are silently ignored by
+        // non-Anthropic providers, so this is safe to send unconditionally.
         allowSystemInMessages: true,
         messages: buildMessages(
             buildSuggestSystemPrompt(paper),
             buildSuggestUserContent(input)
         ),
     });
-    const usage = extractAnthropicUsage(result.providerMetadata);
     return {
         suggestion: result.text,
         paper: paperInfo(paper),
-        usage,
-        cost: computeCost(usage, SUGGEST_MODEL),
+        usage: result.usage,
+        cost: await computeCostFromUsage(result.usage, model),
     };
 }
 
@@ -427,21 +384,24 @@ export interface HighlightsInput {
         genes?: string[];
         tabs?: string[];
     };
+    // Optional Gateway slug override; falls back to HIGHLIGHTS_MODEL.
+    model?: string;
 }
 
 export interface HighlightsResult {
     highlights: any[];
     paper: PaperInfo;
     usage: any;
-    cost: ReturnType<typeof computeCost>;
+    cost: CostBreakdown;
 }
 
 export async function runHighlights(
     input: HighlightsInput
 ): Promise<HighlightsResult> {
     const paper = await getPaperContext(input.studyId);
+    const model = input.model ?? HIGHLIGHTS_MODEL;
     const result = await generateObject({
-        model: HIGHLIGHTS_MODEL,
+        model,
         maxOutputTokens: 4096,
         schema: HighlightsResponseSchema,
         allowSystemInMessages: true,
@@ -450,11 +410,10 @@ export async function runHighlights(
             buildHighlightsUserText(input.inventory)
         ),
     });
-    const usage = extractAnthropicUsage(result.providerMetadata);
     return {
         highlights: result.object.highlights,
         paper: paperInfo(paper),
-        usage,
-        cost: computeCost(usage, HIGHLIGHTS_MODEL),
+        usage: result.usage,
+        cost: await computeCostFromUsage(result.usage, model),
     };
 }
