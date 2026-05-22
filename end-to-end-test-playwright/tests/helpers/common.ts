@@ -27,12 +27,29 @@ export async function waitForNetworkQuiet(page: Page, timeoutMs = 30000) {
  * reference. Calling this right before each snapshot eliminates that
  * race regardless of proxy presence.
  */
-export async function waitForFontsLoaded(page: Page, timeoutMs = 5000) {
+export async function waitForFontsLoaded(page: Page, timeoutMs = 8000) {
     try {
         await Promise.race([
-            page.evaluate(
-                () => (document as any).fonts && (document as any).fonts.ready
-            ),
+            page.evaluate(async () => {
+                const fonts = (document as any).fonts;
+                if (!fonts) return;
+                // document.fonts.ready only awaits fonts the browser
+                // has *already chosen to fetch*. Chromium fetches
+                // @font-face entries lazily — only when a glyph that
+                // resolves to that family is needed for rendering —
+                // so fonts.ready can resolve true before the icon
+                // font (FontAwesome) has even been requested, even if
+                // the page is already mid-render. Iterating and
+                // calling load() on each registered FontFace forces
+                // every declared @font-face to be fetched, after
+                // which fonts.ready actually waits for them.
+                const promises: Promise<unknown>[] = [];
+                for (const f of fonts) {
+                    promises.push(f.load().catch(() => {}));
+                }
+                await Promise.allSettled(promises);
+                await fonts.ready;
+            }),
             new Promise(resolve => setTimeout(resolve, timeoutMs)),
         ]);
     } catch {
