@@ -39,12 +39,39 @@ function withLocaldev(url: string): string {
 // double-patching is a no-op, but the symbol guard avoids stacking wrappers.
 const PATCHED = Symbol.for('cbio-localdev-patched');
 
+// Wait up to FONTS_READY_TIMEOUT_MS for document.fonts.ready to resolve.
+// goto() fires "load" before webfonts have finished — screenshots taken
+// immediately after see fallback-font glyph metrics, which shift text by
+// sub-pixels across the entire page and tank every screenshot diff.
+// Bounded so a stuck font fetch can't deadlock the test.
+const FONTS_READY_TIMEOUT_MS = 5000;
+async function awaitFontsSettled(page: Page): Promise<void> {
+    try {
+        await Promise.race([
+            page.evaluate(
+                () => (document as any).fonts && (document as any).fonts.ready
+            ),
+            new Promise(resolve =>
+                setTimeout(resolve, FONTS_READY_TIMEOUT_MS)
+            ),
+        ]);
+    } catch {
+        // page closed / nav races — never block the test on this
+    }
+}
+
 function patchPageGoto(page: Page): Page {
     if ((page as any)[PATCHED]) return page;
     (page as any)[PATCHED] = true;
     const originalGoto = page.goto.bind(page);
-    page.goto = ((url: string, options?: Parameters<typeof originalGoto>[1]) =>
-        originalGoto(withLocaldev(url), options)) as typeof page.goto;
+    page.goto = (async (
+        url: string,
+        options?: Parameters<typeof originalGoto>[1]
+    ) => {
+        const response = await originalGoto(withLocaldev(url), options);
+        await awaitFontsSettled(page);
+        return response;
+    }) as typeof page.goto;
     return page;
 }
 
