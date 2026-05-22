@@ -95,21 +95,13 @@ export default defineConfig({
         // the cache proxy (to accept mitmproxy's generated CA).
         ...((isLocaldev || PROXY_SERVER) && { ignoreHTTPSErrors: true }),
         ...(PROXY_SERVER && {
-            proxy: {
-                server: PROXY_SERVER,
-                // Playwright's context-level proxy overrides the
-                // launch-level --proxy-bypass-list flag and starts
-                // with NO bypass — so without this, localhost:3000
-                // (the LOCALDEV dev-server) gets sent to the remote
-                // proxy, which obviously can't reach the runner's
-                // loopback. Matching syntax: comma-separated, no
-                // wildcards; Playwright matches by hostname.
-                bypass: 'localhost,127.0.0.1,host.docker.internal',
-            },
+            // Proxy is configured at launch level (--proxy-server /
+            // --proxy-bypass-list flags below) — NOT here. Setting
+            // both context-level `proxy` and launch-level flags
+            // produced ERR_EMPTY_RESPONSE for normal requests; the
+            // two configurations conflict inside chromium. We keep
+            // just the X-PW-Workflow-ID stamp header at this level.
             extraHTTPHeaders: {
-                // The cache proxy keys entries by this header so each
-                // CI workflow run gets its own cache namespace. Locally
-                // unset is fine — the proxy treats blank as "default".
                 'X-PW-Workflow-ID': WF_STAMP,
             },
         }),
