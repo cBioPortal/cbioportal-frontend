@@ -151,15 +151,51 @@ export default defineConfig({
                         ...(PROXY_SERVER
                             ? [
                                   `--proxy-server=${PROXY_SERVER}`,
-                                  // Local frontend dev server traffic
-                                  // (localhost:3000 in LOCALDEV mode, or
-                                  // its --host-resolver-rules remap to
-                                  // host.docker.internal) must NOT go
-                                  // through the proxy — the proxy lives
-                                  // on a remote host and can't reach
-                                  // the test runner's loopback. Bypass
-                                  // covers both names plus 127.0.0.1.
-                                  '--proxy-bypass-list=localhost;127.0.0.1;host.docker.internal',
+                                  // Only proxy cbioportal traffic; route
+                                  // everything else direct. Reasons:
+                                  //  1. loopback (localhost/127.0.0.1/
+                                  //     host.docker.internal) can't be
+                                  //     reached from the remote proxy.
+                                  //  2. 3rd-party static-asset hosts
+                                  //     (cdnjs font-awesome, googleapis,
+                                  //     gstatic) loaded font/icon
+                                  //     subresources through the proxy
+                                  //     unreliably — icons rendered as
+                                  //     glyph squares and screenshot
+                                  //     specs failed en masse.
+                                  //  3. Analytics endpoints (gtm, heap,
+                                  //     contentsquare) add nothing to
+                                  //     test correctness but add
+                                  //     proxy-MITM overhead.
+                                  //  4. docs.cbioportal.org renders an
+                                  //     embedded news iframe; it's not
+                                  //     part of the API surface we want
+                                  //     to cache, just let it through.
+                                  // Semicolons are chromium's bypass
+                                  // delimiter; wildcards match
+                                  // subdomains only (so we list each
+                                  // bare-host + *.host pair we care
+                                  // about).
+                                  '--proxy-bypass-list=' +
+                                      [
+                                          'localhost',
+                                          '127.0.0.1',
+                                          'host.docker.internal',
+                                          'cdnjs.cloudflare.com',
+                                          '*.cloudflare.com',
+                                          'googletagmanager.com',
+                                          '*.googletagmanager.com',
+                                          'heapanalytics.com',
+                                          '*.heapanalytics.com',
+                                          'contentsquare.net',
+                                          '*.contentsquare.net',
+                                          '*.netlify.app',
+                                          'docs.cbioportal.org',
+                                          '*.googleapis.com',
+                                          '*.gstatic.com',
+                                          '*.oncokb.org',
+                                          '*.genomenexus.org',
+                                      ].join(';'),
                               ]
                             : []),
                         ...(isLocaldev
