@@ -128,18 +128,20 @@ export default defineConfig({
                         '--disable-font-subpixel-positioning',
                         '--disable-lcd-text',
                         '--font-render-hinting=none',
-                        // When routed through the cache proxy, mitmproxy
-                        // presents a self-signed cert. Chromium gates
-                        // proxy/MITM certs before the CDP-level
-                        // ignoreHTTPSErrors gets a chance, so launch-level
-                        // --ignore-certificate-errors is required. The
-                        // --proxy-server flag also has to be at launch
-                        // time: chromium-headless-shell was observed to
-                        // silently no-op the CDP-level proxy setting for
-                        // HTTPS traffic.
+                        // --proxy-server has to be at launch time:
+                        // chromium-headless-shell was observed to
+                        // silently no-op the CDP-level proxy setting
+                        // for HTTPS traffic. We rely on CDP-level
+                        // ignoreHTTPSErrors (set in use.ignoreHTTPSErrors
+                        // above) to handle both the proxy's MITM cert
+                        // and the localhost:3000 self-signed dev cert
+                        // — the launch-level --ignore-certificate-errors
+                        // tried earlier appeared to short-circuit the
+                        // CDP path for localhost, leaving the SPA bundle
+                        // unable to load and only the localdev banner
+                        // rendering.
                         ...(PROXY_SERVER
                             ? [
-                                  '--ignore-certificate-errors',
                                   `--proxy-server=${PROXY_SERVER}`,
                                   // Local frontend dev server traffic
                                   // (localhost:3000 in LOCALDEV mode, or
