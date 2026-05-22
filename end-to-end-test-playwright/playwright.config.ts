@@ -150,6 +150,17 @@ export default defineConfig({
                         // rendering.
                         ...(PROXY_SERVER
                             ? [
+                                  // Chromium intermittently rejects the
+                                  // mitmproxy-generated cert even when
+                                  // ignoreHTTPSErrors: true is set at
+                                  // the CDP context level — the launch
+                                  // flag forces the always-accept path
+                                  // before CDP gets a chance. Re-added
+                                  // after fly logs showed periodic
+                                  // "ssl/tls alert certificate unknown"
+                                  // rejections from Chromium →
+                                  // ERR_EMPTY_RESPONSE on the test side.
+                                  '--ignore-certificate-errors',
                                   `--proxy-server=${PROXY_SERVER}`,
                                   // Only proxy cbioportal traffic; route
                                   // everything else direct. Reasons:
