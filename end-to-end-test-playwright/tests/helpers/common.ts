@@ -16,6 +16,30 @@ export async function waitForNetworkQuiet(page: Page, timeoutMs = 30000) {
     });
 }
 
+/**
+ * Wait for all in-flight CSS-driven font loads to settle, bounded so a
+ * stuck @font-face fetch can't deadlock the test. ajaxQuiet only covers
+ * XHRs — font subresources (e.g. font-awesome from cdnjs, app webfonts
+ * from /reactapp/) aren't XHRs and finish independently. When the proxy
+ * makes cbioportal API responses cache-fast, ajaxQuiet flips before the
+ * icon font arrives, the screenshot snaps with system-font fallback
+ * glyphs, and every text/icon line diffs by sub-pixels against the
+ * reference. Calling this right before each snapshot eliminates that
+ * race regardless of proxy presence.
+ */
+export async function waitForFontsLoaded(page: Page, timeoutMs = 5000) {
+    try {
+        await Promise.race([
+            page.evaluate(
+                () => (document as any).fonts && (document as any).fonts.ready
+            ),
+            new Promise(resolve => setTimeout(resolve, timeoutMs)),
+        ]);
+    } catch {
+        // Page closed / nav race — never block a screenshot on this.
+    }
+}
+
 /** Convenience locator for elements tagged with a data-test attribute. */
 export function byTestHandle(page: Page, handle: string): Locator {
     return page.locator(`[data-test="${handle}"]`);
@@ -60,6 +84,7 @@ export async function expectElementScreenshot(
     }
     if (opts.pauseMs) await page.waitForTimeout(opts.pauseMs);
 
+    await waitForFontsLoaded(page);
     const mask = (opts.masks ?? ['.qtip']).map(s => page.locator(s));
     await expect(target).toHaveScreenshot(snapshotName, {
         mask,
@@ -92,6 +117,7 @@ export async function expectPageScreenshot(
     await page.mouse.move(0, 0);
     if (opts.pauseMs) await page.waitForTimeout(opts.pauseMs);
 
+    await waitForFontsLoaded(page);
     const mask = (opts.masks ?? ['.qtip']).map(s => page.locator(s));
     await expect(page).toHaveScreenshot(snapshotName, {
         mask,

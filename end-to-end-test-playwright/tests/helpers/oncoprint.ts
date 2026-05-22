@@ -1,4 +1,5 @@
 import { expect, Locator, Page } from '@playwright/test';
+import { waitForFontsLoaded } from './common';
 
 /**
  * Helpers ported from end-to-end-test/shared/specUtils_Async.js.
@@ -155,6 +156,7 @@ export async function expectOncoprintScreenshot(
     ];
     const mask = maskSelectors.map(s => page.locator(s));
 
+    await waitForFontsLoaded(page);
     await expect(target).toHaveScreenshot(snapshotName, { mask });
 }
 
