@@ -89,7 +89,13 @@ export default defineConfig({
         screenshot: 'only-on-failure',
         video: 'retain-on-failure',
         actionTimeout: 15_000,
-        navigationTimeout: 60_000,
+        // First time a workflow runs, the proxy cache is empty and every
+        // request to cbioportal/3rd-parties goes upstream through
+        // mitmproxy's TLS-MITM hop. That adds enough latency (esp. at
+        // CI concurrency) that the standard 60s isn't always enough for
+        // a full SPA boot. Subsequent runs in the same workflow id (or
+        // retries within a run) hit the cache and complete much faster.
+        navigationTimeout: PROXY_SERVER ? 120_000 : 60_000,
         // ignoreHTTPSErrors is needed in localdev mode (to accept the
         // serveDist self-signed cert) and any time we route through
         // the cache proxy (to accept mitmproxy's generated CA).
