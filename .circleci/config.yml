@@ -358,14 +358,9 @@ jobs:
       BRANCH_ENV: master
       FRONTEND_TEST_USE_LOCAL_DIST: 'true'
       PLAYWRIGHT_JUNIT_OUTPUT_NAME: test-results/junit.xml
-      # *** TEMP for cache-proxy smoke: limit shards to two specs (config +
-      # patient-screenshot). Revert to '' to restore the full suite once
-      # we're confident the proxy wiring is sound. The regex is space-free
-      # because the existing shard step passes $GREP_ARG unquoted; bash
-      # would otherwise word-split a value like "(homepage config|...)"
-      # into 4 separate args and Playwright would see an unbalanced
-      # regex. .* covers the elided spaces.
-      PLAYWRIGHT_GREP: '(homepage.*config.*overrides|Patient.*cohort.*view)'
+      # Optional grep filter for targeted smoke runs. Empty by default →
+      # whole suite runs. Set to e.g. 'patient-screenshot' to narrow.
+      PLAYWRIGHT_GREP: ''
       # Route the browser through the always-on caching proxy (see
       # cbioportal-cache-proxy repo, now hosted on Fly.io). PW_WF_STAMP
       # is set in the Run Playwright shard step below because env:
