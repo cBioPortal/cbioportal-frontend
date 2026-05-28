@@ -119,6 +119,8 @@ export interface GeneTrackProps {
     activeTranscriptId?: string;
     /** Called with a transcript ID when the user clicks its row to activate it. */
     onActivateTranscript?: (transcriptId: string) => void;
+    /** Whether to render the upstream promoter tint (5′ track only). Defaults true. */
+    showPromoter?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -173,6 +175,7 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
     retainedExonNumbers,
     activeTranscriptId,
     onActivateTranscript,
+    showPromoter = true,
 }) => {
     // Resolve: prefer array prop, fall back to single
     const userTranscripts: TranscriptData[] = userTranscriptsProp
@@ -186,7 +189,30 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
         ...forteTranscript.exons,
         ...userTranscripts.flatMap(t => t.exons),
     ];
-    const { gMin, gMax } = computeGeneTrackRange(allExons, position);
+    const { gMin: gMinBase, gMax: gMaxBase } = computeGeneTrackRange(
+        allExons,
+        position
+    );
+
+    // Extend the rendered region 5′-ward by min(2 kb, 5% of gene span) so there
+    // is visual breathing room upstream of the TSS. Both tracks extend for
+    // visual symmetry; the promoter tint is gated separately by is5Prime.
+    const allExonStarts = allExons.map(e => e.start);
+    const allExonEnds = allExons.map(e => e.end);
+    const geneMin = Math.min(...allExonStarts);
+    const geneMax = Math.max(...allExonEnds);
+    const geneSpan = Math.max(1, geneMax - geneMin);
+    const upstreamWindow = Math.min(2000, 0.05 * geneSpan);
+    // On + strand the upstream direction is toward lower genomic coords (left).
+    // On − strand it is toward higher coords (right).
+    const gMin =
+        strand === '+'
+            ? Math.min(gMinBase, geneMin - upstreamWindow)
+            : gMinBase;
+    const gMax =
+        strand === '-'
+            ? Math.max(gMaxBase, geneMax + upstreamWindow)
+            : gMaxBase;
 
     const drawX = x + TRACK_PADDING;
     const drawWidth = width - TRACK_PADDING * 2;
@@ -556,6 +582,55 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
                     style={{ pointerEvents: 'none' }}
                 />
             )}
+
+            {/* Upstream promoter tint — 5′ track only, gated by showPromoter */}
+            {is5Prime &&
+                showPromoter &&
+                activeTranscript &&
+                (() => {
+                    const activeTSS =
+                        activeTranscript.strand === '+'
+                            ? activeTranscript.txStart
+                            : activeTranscript.txEnd;
+                    const tintGStart =
+                        activeTranscript.strand === '+'
+                            ? activeTSS - upstreamWindow
+                            : activeTSS;
+                    const tintGEnd =
+                        activeTranscript.strand === '+'
+                            ? activeTSS
+                            : activeTSS + upstreamWindow;
+                    const tintX = Math.min(toSvg(tintGStart), toSvg(tintGEnd));
+                    const tintW = Math.abs(toSvg(tintGEnd) - toSvg(tintGStart));
+                    if (tintW <= 0) return null;
+                    const tintY = forteY + INTRON_Y_OFFSET - EXON_HEIGHT / 4;
+                    return (
+                        <g
+                            key="promoter-tint"
+                            style={{ pointerEvents: 'none' }}
+                        >
+                            <rect
+                                x={tintX}
+                                y={tintY}
+                                width={tintW}
+                                height={EXON_HEIGHT / 2}
+                                fill={color}
+                                fillOpacity={0.2}
+                            />
+                            <text
+                                x={tintX + tintW / 2}
+                                y={tintY + EXON_HEIGHT / 4}
+                                textAnchor="middle"
+                                dominantBaseline="central"
+                                fontSize={10}
+                                fontWeight={700}
+                                fill={color}
+                            >
+                                P
+                            </text>
+                        </g>
+                    );
+                })()}
 
             {/* FORTE transcript */}
             {renderTranscript(

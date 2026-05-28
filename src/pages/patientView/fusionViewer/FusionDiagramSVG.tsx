@@ -55,6 +55,8 @@ export interface FusionDiagramSVGProps {
     onActivate5p: (transcriptId: string) => void;
     /** Called when the user clicks a 3' track to activate it. */
     onActivate3p: (transcriptId: string) => void;
+    /** Whether to render the upstream promoter tint on the 5′ track. Defaults true. */
+    showPromoter?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -69,6 +71,7 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
             forteTranscript3p,
             onActivate5p,
             onActivate3p,
+            showPromoter,
         } = this.props;
 
         // Fall back to FORTE if the active transcript is missing the
@@ -260,6 +263,7 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
                     retainedExonNumbers={retained5pNums}
                     activeTranscriptId={activeTranscript5p.transcriptId}
                     onActivateTranscript={onActivate5p}
+                    showPromoter={showPromoter}
                 />
 
                 {/* 3-prime gene track or intergenic placeholder */}
@@ -285,6 +289,7 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
                                 : ''
                         }
                         onActivateTranscript={onActivate3p}
+                        showPromoter={showPromoter}
                     />
                 ) : (
                     <g>
