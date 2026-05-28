@@ -20,6 +20,7 @@ function makeTx(
         txEnd,
         isForteSelected: false,
         domains: [],
+        utrs: [],
     };
 }
 

@@ -197,6 +197,11 @@ function mapTranscript(
             cdsSegments,
             strand
         ),
+        utrs: (gn.utrs || []).map(u => ({
+            start: u.start,
+            end: u.end,
+            type: u.type as 'five_prime' | 'three_prime',
+        })),
     };
 }
 
