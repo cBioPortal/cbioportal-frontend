@@ -590,7 +590,9 @@ export type GenericAssayDataCount = {
 
 };
 export type GenericAssayDataCountFilter = {
-    'genericAssayDataFilters': Array < GenericAssayDataFilter >
+    'genericAssayDataFilters'?: Array < GenericAssayDataFilter >
+
+        'profileType'?: string
 
         'studyViewFilter': StudyViewFilter
 

@@ -5620,21 +5620,14 @@ export class StudyViewPageStore
                             [],
                         meta => meta.stableId
                     );
-                    const entityStableIds = _.keys(entityMetaByStableId);
-                    if (_.isEmpty(entityStableIds)) {
+                    if (_.isEmpty(entityMetaByStableId)) {
                         return [];
                     }
 
                     const result = await this.internalClient.fetchGenericAssayDataCountsUsingPOST(
                         {
                             genericAssayDataCountFilter: {
-                                genericAssayDataFilters: entityStableIds.map(
-                                    stableId =>
-                                        ({
-                                            stableId,
-                                            profileType: chartInfo.profileType,
-                                        }) as GenericAssayDataFilter
-                                ),
+                                profileType: chartInfo.profileType,
                                 studyViewFilter: this.filters,
                             } as GenericAssayDataCountFilter,
                         }
