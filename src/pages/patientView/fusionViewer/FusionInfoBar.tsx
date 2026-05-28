@@ -173,6 +173,18 @@ export class FusionInfoBar extends React.Component<IFusionInfoBarProps> {
                         />
                     )}
 
+                    <div style={{ alignSelf: 'center', marginLeft: 16 }}>
+                        <label style={inlineStyles.checkboxLabel}>
+                            <input
+                                type="checkbox"
+                                style={inlineStyles.checkbox}
+                                checked={store.showPromoter}
+                                onChange={() => store.toggleShowPromoter()}
+                            />
+                            Show promoter
+                        </label>
+                    </div>
+
                     <span style={inlineStyles.genomeBuildLabel}>
                         {store.genomeBuild}
                     </span>
