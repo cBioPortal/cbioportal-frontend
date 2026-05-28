@@ -191,6 +191,64 @@ const BADGE_LABEL = 'DRIVING FUSION';
 const NAME_PILL_WIDTH = 160;
 
 // ---------------------------------------------------------------------------
+// 5′ UTR helper
+// ---------------------------------------------------------------------------
+
+/**
+ * Split a single exon into CDS and 5′-UTR segments so each can be rendered
+ * at the correct height (full vs half). Three-prime UTRs are intentionally
+ * ignored here — they affect protein only, not the promoter/breakpoint-
+ * interpretation question this cue is meant to answer.
+ */
+function splitExonByFivePrimeUtr(
+    exon: { start: number; end: number },
+    utrs: { start: number; end: number; type: 'five_prime' | 'three_prime' }[]
+): { start: number; end: number; isUtr: boolean }[] {
+    const fiveUtrs = utrs.filter(u => u.type === 'five_prime');
+    if (fiveUtrs.length === 0) return [{ ...exon, isUtr: false }];
+
+    // Sort ascending for predictable iteration
+    const sorted = [...fiveUtrs].sort((a, b) => a.start - b.start);
+
+    let segments: { start: number; end: number; isUtr: boolean }[] = [
+        { start: exon.start, end: exon.end, isUtr: false },
+    ];
+
+    for (const utr of sorted) {
+        const next: typeof segments = [];
+        for (const seg of segments) {
+            if (utr.end < seg.start || utr.start > seg.end) {
+                next.push(seg);
+                continue;
+            }
+            // Overlap — split into up to 3 pieces: pre-UTR | UTR | post-UTR.
+            if (utr.start > seg.start) {
+                next.push({
+                    start: seg.start,
+                    end: utr.start - 1,
+                    isUtr: seg.isUtr,
+                });
+            }
+            next.push({
+                start: Math.max(utr.start, seg.start),
+                end: Math.min(utr.end, seg.end),
+                isUtr: true,
+            });
+            if (utr.end < seg.end) {
+                next.push({
+                    start: utr.end + 1,
+                    end: seg.end,
+                    isUtr: seg.isUtr,
+                });
+            }
+        }
+        segments = next;
+    }
+
+    return segments.filter(s => s.end >= s.start);
+}
+
+// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 export const GeneTrack: React.FC<GeneTrackProps> = ({
@@ -394,10 +452,8 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
         const totalExons = exons.length;
         exons.forEach((exon, idx) => {
             const ex = toSvg(exon.start);
-            // Minimum visible width of 5px — small exons (e.g. 80-200 bp
-            // against a ~40 kb gene span) would otherwise render as 1-2 px
-            // ticks that read as missing data.
-            const ew = Math.max(5, toSvg(exon.end) - ex);
+            // Full exon width — used for the exon-number label center.
+            const ewFull = Math.max(5, toSvg(exon.end) - ex);
             const displayNumber = strand === '-' ? totalExons - idx : idx + 1;
             // Use genomic position to determine retention — exon.number is not
             // consistent across alternative transcripts, so we match the same
@@ -413,33 +469,54 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
                     ? exon.end >= position
                     : exon.start <= position;
 
-            // Base exon rect
+            // Split the exon into CDS and 5′-UTR segments so UTR portions
+            // render at half height (UCSC/IGV convention). Always on.
+            const segments = splitExonByFivePrimeUtr(exon, transcript.utrs);
+
+            // One tooltip wrapper per exon; all segments live inside it so
+            // the hover target is the conceptual exon, not individual pieces.
             elements.push(
                 <ExonTooltip
                     key={`exon-${transcript.transcriptId}-${displayNumber}`}
                     gene={symbol}
                     exon={{ ...exon, number: displayNumber }}
                 >
-                    <rect
-                        x={ex}
-                        y={yPos}
-                        width={ew}
-                        height={EXON_HEIGHT}
-                        fill={isRetained ? color : '#ddd'}
-                        stroke={isRetained ? color : '#ddd'}
-                        strokeWidth={strokeWidth}
-                        opacity={isRetained ? opacity : 1}
-                        rx={1}
-                    />
+                    <g>
+                        {segments.map((seg, si) => {
+                            const sx = toSvg(seg.start);
+                            const sw = Math.max(5, toSvg(seg.end) - sx);
+                            const sh = seg.isUtr
+                                ? EXON_HEIGHT / 2
+                                : EXON_HEIGHT;
+                            const sy = seg.isUtr
+                                ? yPos + EXON_HEIGHT / 4
+                                : yPos;
+                            return (
+                                <rect
+                                    key={si}
+                                    x={sx}
+                                    y={sy}
+                                    width={sw}
+                                    height={sh}
+                                    fill={isRetained ? color : '#ddd'}
+                                    stroke={isRetained ? color : '#ddd'}
+                                    strokeWidth={strokeWidth}
+                                    opacity={isRetained ? opacity : 1}
+                                    rx={1}
+                                />
+                            );
+                        })}
+                    </g>
                 </ExonTooltip>
             );
 
-            // Exon number label below the exon block — only when highlighting is active
+            // Exon number label below the exon block — only when highlighting is active.
+            // Centered over the full exon extent (not per-segment).
             if (retainedExonNumbers !== undefined) {
                 elements.push(
                     <text
                         key={`exon-label-${transcript.transcriptId}-${displayNumber}`}
-                        x={ex + ew / 2}
+                        x={ex + ewFull / 2}
                         y={yPos + EXON_HEIGHT + EXON_LABEL_OFFSET}
                         textAnchor="middle"
                         fontSize={7}
