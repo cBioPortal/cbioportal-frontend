@@ -66,6 +66,7 @@ export enum ChartTypeEnum {
     BAR_CHART = 'BAR_CHART',
     SURVIVAL = 'SURVIVAL',
     TABLE = 'TABLE',
+    GENERIC_ASSAY_FREQUENCY_TABLE = 'GENERIC_ASSAY_FREQUENCY_TABLE',
     SCATTER = 'SCATTER',
     VIOLIN_PLOT_TABLE = 'VIOLIN_PLOT_TABLE',
     VARIANT_ANNOTATIONS_TABLE = 'VARIANT_ANNOTATIONS_TABLE',
@@ -91,6 +92,7 @@ export enum ChartTypeNameEnum {
     BAR_CHART = 'bar chart',
     SURVIVAL = 'survival plot',
     TABLE = 'table',
+    GENERIC_ASSAY_FREQUENCY_TABLE = 'table',
     SCATTER = 'density plot',
     VIOLIN_PLOT_TABLE = 'table',
     MUTATED_GENES_TABLE = 'table',
@@ -199,6 +201,11 @@ const studyViewFrontEnd = {
                 minW: 2,
             },
             [ChartTypeEnum.TABLE]: {
+                w: 2,
+                h: 2,
+                minW: 2,
+            },
+            [ChartTypeEnum.GENERIC_ASSAY_FREQUENCY_TABLE]: {
                 w: 2,
                 h: 2,
                 minW: 2,

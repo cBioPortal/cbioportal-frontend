@@ -9,6 +9,7 @@ import {
     ChartMeta,
     chartMetaComparator,
     ChartMetaDataTypeEnum,
+    buildGenericAssayFrequencyTableDataFilters,
     clinicalDataCountComparator,
     customBinsAreValid,
     DataBin,
@@ -16,6 +17,7 @@ import {
     filterCategoryBins,
     filterIntervalBins,
     filterNumericalBins,
+    flattenGenericAssayFrequencyTableRows,
     findSpot,
     formatFrequency,
     formatNumericalTickValues,
@@ -39,6 +41,7 @@ import {
     getFilteredSampleIdentifiers,
     getFilteredStudiesWithSamples,
     getFrequencyStr,
+    getGenericAssayFrequencyTableSelectedRowKeys,
     getGroupedClinicalDataByBins,
     getNonZeroUniqueBins,
     getPatientIdentifiers,
@@ -105,6 +108,7 @@ import { autorun, observable, runInAction } from 'mobx';
 
 import { AlterationTypeConstants, DataTypeConstants } from 'shared/constants';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
+import { COMMON_GENERIC_ASSAY_PROPERTY } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import {
     oqlQueryToStructVarGenePair,
     updateStructuralVariantQuery,
@@ -4041,6 +4045,156 @@ describe('StudyViewUtils', () => {
             );
             assert.equal(promises.length, 1);
             assert.isTrue(promises[0] === initialVisibleAttributesPromise);
+        });
+
+        describe('generic assay frequency table helpers', () => {
+            const entityMetaByStableId = {
+                entityA: {
+                    stableId: 'entityA',
+                    genericEntityMetaProperties: {
+                        [COMMON_GENERIC_ASSAY_PROPERTY.NAME]: 'Entity A Label',
+                    },
+                },
+                entityB: {
+                    stableId: 'entityB',
+                    genericEntityMetaProperties: {
+                        [COMMON_GENERIC_ASSAY_PROPERTY.NAME]: 'Entity B Label',
+                    },
+                },
+            } as any;
+
+            it('flattens categorical counts into selectable table rows', () => {
+                const rows = flattenGenericAssayFrequencyTableRows(
+                    [
+                        {
+                            stableId: 'entityA',
+                            counts: [
+                                { value: 'Subtype A', count: 4 },
+                                { value: 'Subtype B', count: 2 },
+                            ],
+                        },
+                        {
+                            stableId: 'entityB',
+                            counts: [{ value: 'Subtype C', count: 1 }],
+                        },
+                    ] as any,
+                    DataTypeConstants.CATEGORICAL,
+                    'profile_type',
+                    'MUTATIONAL_SIGNATURE',
+                    10,
+                    entityMetaByStableId
+                );
+
+                assert.deepEqual(rows, [
+                    {
+                        uniqueKey: 'entityA::Subtype A::profile_type',
+                        entityStableId: 'entityA',
+                        entityLabel: 'Entity A Label',
+                        profileType: 'profile_type',
+                        category: 'Subtype A',
+                        count: 4,
+                        totalCount: 10,
+                    },
+                    {
+                        uniqueKey: 'entityA::Subtype B::profile_type',
+                        entityStableId: 'entityA',
+                        entityLabel: 'Entity A Label',
+                        profileType: 'profile_type',
+                        category: 'Subtype B',
+                        count: 2,
+                        totalCount: 10,
+                    },
+                    {
+                        uniqueKey: 'entityB::Subtype C::profile_type',
+                        entityStableId: 'entityB',
+                        entityLabel: 'Entity B Label',
+                        profileType: 'profile_type',
+                        category: 'Subtype C',
+                        count: 1,
+                        totalCount: 10,
+                    },
+                ]);
+            });
+
+            it('derives selected row keys from filters for one profile only', () => {
+                const selectedRowKeys = getGenericAssayFrequencyTableSelectedRowKeys(
+                    [
+                        {
+                            stableId: 'entityA',
+                            profileType: 'profile_type',
+                            values: [
+                                { value: 'Subtype A' } as DataFilterValue,
+                                { value: 'Subtype B' } as DataFilterValue,
+                            ],
+                        },
+                        {
+                            stableId: 'entityB',
+                            profileType: 'other_profile',
+                            values: [{ value: 'Subtype C' } as DataFilterValue],
+                        },
+                    ] as any,
+                    'profile_type'
+                );
+
+                assert.deepEqual(selectedRowKeys, [
+                    'entityA::Subtype A::profile_type',
+                    'entityA::Subtype B::profile_type',
+                ]);
+            });
+
+            it('groups selected rows back into generic assay filters by entity', () => {
+                const rows = [
+                    {
+                        uniqueKey: 'entityA::Subtype A::profile_type',
+                        entityStableId: 'entityA',
+                        entityLabel: 'Entity A Label',
+                        profileType: 'profile_type',
+                        category: 'Subtype A',
+                        count: 4,
+                        totalCount: 10,
+                    },
+                    {
+                        uniqueKey: 'entityA::Subtype B::profile_type',
+                        entityStableId: 'entityA',
+                        entityLabel: 'Entity A Label',
+                        profileType: 'profile_type',
+                        category: 'Subtype B',
+                        count: 2,
+                        totalCount: 10,
+                    },
+                    {
+                        uniqueKey: 'entityB::Subtype C::profile_type',
+                        entityStableId: 'entityB',
+                        entityLabel: 'Entity B Label',
+                        profileType: 'profile_type',
+                        category: 'Subtype C',
+                        count: 1,
+                        totalCount: 10,
+                    },
+                ];
+
+                const filters = buildGenericAssayFrequencyTableDataFilters(rows, [
+                    'entityA::Subtype A::profile_type',
+                    'entityA::Subtype B::profile_type',
+                    'entityB::Subtype C::profile_type',
+                ]);
+
+                assert.deepEqual(filters, [
+                    {
+                        stableId: 'entityA',
+                        profileType: 'profile_type',
+                        values: [
+                            { value: 'Subtype A' } as DataFilterValue,
+                            { value: 'Subtype B' } as DataFilterValue,
+                        ],
+                    },
+                    {
+                        stableId: 'entityB',
+                        profileType: 'profile_type',
+                        values: [{ value: 'Subtype C' } as DataFilterValue],
+                    },
+                ]);
+            });
         });
         it('newlyAddedUnfilteredPromise should be used when the chart is not default visible attribute, at the time the chart is not filtered', () => {
             const promises = getRequestedAwaitPromisesForClinicalData(

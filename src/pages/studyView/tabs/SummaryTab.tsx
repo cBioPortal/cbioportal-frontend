@@ -206,6 +206,15 @@ export class StudySummaryTab extends React.Component<
                     values
                 );
             },
+            onGenericAssayFrequencyTableSelection: (
+                chartMeta: ChartMeta,
+                values: string[]
+            ) => {
+                this.store.setGenericAssayFrequencyTableFilters(
+                    chartMeta.uniqueKey,
+                    values
+                );
+            },
         };
 
         this.chartTypeConfig = (
@@ -446,6 +455,16 @@ export class StudySummaryTab extends React.Component<
                     onValueSelection: this.handlers.onValueSelection,
                     onResetSelection: this.handlers.onValueSelection,
                 }),
+            }),
+            [ChartTypeEnum.GENERIC_ASSAY_FREQUENCY_TABLE]: () => ({
+                filters: this.store.getGenericAssayFrequencyTableSelectedRowKeys(
+                    chartMeta.uniqueKey
+                ),
+                onValueSelection:
+                    this.handlers.onGenericAssayFrequencyTableSelection,
+                onResetSelection:
+                    this.handlers.onGenericAssayFrequencyTableSelection,
+                promise: this.store.getGenericAssayFrequencyTableData(chartMeta),
             }),
             [ChartTypeEnum.MUTATED_GENES_TABLE]: () => ({
                 filters: this.store.getGeneFiltersByUniqueKey(

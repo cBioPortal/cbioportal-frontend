@@ -21,6 +21,7 @@ import {
     GenericAssayDataBin,
     GenericAssayDataFilter,
     GenericAssayDataMultipleStudyFilter,
+    GenericAssayMeta,
     GenomicDataBin,
     GenomicDataCount,
     MolecularDataMultipleStudyFilter,
@@ -124,6 +125,13 @@ import { toast } from 'react-toastify';
 import { useCallback } from 'react';
 import { MutationOptionConstants } from 'shared/constants';
 import { MolecularAlterationType_filenameSuffix } from 'shared/lib/StoreUtils';
+import {
+    COMMON_GENERIC_ASSAY_PROPERTY,
+    formatGenericAssayCompactLabelByNameAndId,
+    GenericAssayDataType,
+    getGenericAssayPropertyOrDefault,
+} from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
+import { GENERIC_ASSAY_CONFIG } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
 import { MultiSelectionTableRow } from './table/MultiSelectionTable';
 import Survival from 'pages/groupComparison/Survival';
 import { StructVarMultiSelectionTableRow } from './table/StructuralVariantMultiSelectionTable';
@@ -147,6 +155,19 @@ export enum DataType {
 }
 
 export type ClinicalDataType = 'SAMPLE' | 'PATIENT';
+
+export type GenericAssayFrequencyTableRow = {
+    uniqueKey: string;
+    entityStableId: string;
+    entityLabel: string;
+    profileType: string;
+    category: string;
+    count: number;
+    totalCount: number;
+};
+
+export const GENERIC_ASSAY_FREQUENCY_TABLE_ENTITY_ID =
+    '__GENERIC_ASSAY_FREQUENCY_TABLE__';
 
 export type ChartType = keyof typeof ChartTypeEnum;
 
@@ -861,6 +882,20 @@ export function getGenericAssayChartUniqueKey(
     profileType: string
 ): string {
     return entityId + '_' + profileType;
+}
+
+export function getGenericAssayFrequencyTableUniqueKey(
+    profileType: string
+): string {
+    return `GENERIC_ASSAY_FREQUENCY_TABLE_${profileType}`;
+}
+
+export function getGenericAssayFrequencyTableRowUniqueKey(
+    stableId: string,
+    value: string,
+    profileType: string
+): string {
+    return `${stableId}::${value}::${profileType}`;
 }
 
 const UNIQUE_KEY_SEPARATOR = ':';
@@ -4328,6 +4363,139 @@ export function getDefaultClinicalDataBinFilter(
 
 export function generateColorMapKey(id: string, value: string): string {
     return `${id}.${value}`;
+}
+
+const GENERIC_ASSAY_HIDDEN_CATEGORY_VALUES = new Set(['', 'na']);
+const GENERIC_ASSAY_BINARY_NEGATIVE_VALUES = new Set([
+    '0',
+    'absent',
+    'false',
+    'n',
+    'negative',
+    'no',
+]);
+
+function normalizeGenericAssayFrequencyValue(value: string): string {
+    return value.trim().toLowerCase();
+}
+
+function shouldIncludeGenericAssayFrequencyValue(
+    value: string,
+    dataType: string
+): boolean {
+    const normalizedValue = normalizeGenericAssayFrequencyValue(value);
+    if (GENERIC_ASSAY_HIDDEN_CATEGORY_VALUES.has(normalizedValue)) {
+        return false;
+    }
+
+    if (dataType === GenericAssayDataType.BINARY) {
+        return !GENERIC_ASSAY_BINARY_NEGATIVE_VALUES.has(normalizedValue);
+    }
+
+    return true;
+}
+
+function getGenericAssayFrequencyTableEntityLabel(
+    stableId: string,
+    genericAssayType: string,
+    entityMetaByStableId: { [stableId: string]: GenericAssayMeta }
+): string {
+    const meta = entityMetaByStableId[stableId];
+    if (meta === undefined) {
+        return stableId;
+    }
+
+    const entityName = getGenericAssayPropertyOrDefault(
+        meta.genericEntityMetaProperties,
+        COMMON_GENERIC_ASSAY_PROPERTY.NAME,
+        stableId
+    );
+
+    return GENERIC_ASSAY_CONFIG.genericAssayConfigByType[genericAssayType]
+        ?.selectionConfig?.formatChartNameUsingCompactLabel
+        ? formatGenericAssayCompactLabelByNameAndId(stableId, entityName)
+        : entityName;
+}
+
+export function flattenGenericAssayFrequencyTableRows(
+    countItems: GenericAssayDataCountItem[],
+    dataType: string,
+    profileType: string,
+    genericAssayType: string,
+    totalCount: number,
+    entityMetaByStableId: { [stableId: string]: GenericAssayMeta }
+): GenericAssayFrequencyTableRow[] {
+    return _.flatMap(countItems, countItem =>
+        countItem.counts
+            .filter(
+                count =>
+                    count.count > 0 &&
+                    shouldIncludeGenericAssayFrequencyValue(
+                        count.value,
+                        dataType
+                    )
+            )
+            .map(count => ({
+                uniqueKey: getGenericAssayFrequencyTableRowUniqueKey(
+                    countItem.stableId,
+                    count.value,
+                    profileType
+                ),
+                entityStableId: countItem.stableId,
+                entityLabel: getGenericAssayFrequencyTableEntityLabel(
+                    countItem.stableId,
+                    genericAssayType,
+                    entityMetaByStableId
+                ),
+                profileType,
+                category: count.value,
+                count: count.count,
+                totalCount,
+            }))
+    );
+}
+
+export function getGenericAssayFrequencyTableSelectedRowKeys(
+    genericAssayDataFilters: GenericAssayDataFilter[],
+    profileType: string
+): string[] {
+    return _.flatMap(
+        genericAssayDataFilters.filter(
+            genericAssayDataFilter =>
+                genericAssayDataFilter.profileType === profileType
+        ),
+        genericAssayDataFilter =>
+            (genericAssayDataFilter.values || [])
+                .map(value => value.value)
+                .filter((value): value is string => !!value)
+                .map(value =>
+                    getGenericAssayFrequencyTableRowUniqueKey(
+                        genericAssayDataFilter.stableId,
+                        value,
+                        profileType
+                    )
+                )
+    );
+}
+
+export function buildGenericAssayFrequencyTableDataFilters(
+    rows: GenericAssayFrequencyTableRow[],
+    selectedRowKeys: string[]
+): GenericAssayDataFilter[] {
+    return _.chain(rows)
+        .filter(row => selectedRowKeys.includes(row.uniqueKey))
+        .groupBy(row => row.entityStableId)
+        .map(entityRows => ({
+            stableId: entityRows[0].entityStableId,
+            profileType: entityRows[0].profileType,
+            values: entityRows.map(
+                entityRow =>
+                    ({
+                        value: entityRow.category,
+                    }) as DataFilterValue
+            ),
+        }))
+        .value();
 }
 
 export async function invokeGenericAssayDataCount(

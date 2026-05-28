@@ -76,6 +76,7 @@ import { PatientSurvival } from 'shared/model/PatientSurvival';
 import ClinicalEventTypeCountTable, {
     ClinicalEventTypeCountColumnKey,
 } from 'pages/studyView/table/ClinicalEventTypeCountTable';
+import GenericAssayFrequencyTable from 'pages/studyView/table/GenericAssayFrequencyTable';
 import {
     StructuralVariantMultiSelectionTable,
     StructVarMultiSelectionTableColumn,
@@ -83,6 +84,7 @@ import {
 } from 'pages/studyView/table/StructuralVariantMultiSelectionTable';
 import { StructVarGenePair } from 'pages/studyView/StructVarUtils';
 import { Modal } from 'react-bootstrap';
+import { GenericAssayDataType } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 
 export interface AbstractChart {
     toSVGDOMNode: () => Element;
@@ -634,6 +636,28 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             </div>
                         )}
                     </>
+                );
+            }
+            case ChartTypeEnum.GENERIC_ASSAY_FREQUENCY_TABLE: {
+                return () => (
+                    <GenericAssayFrequencyTable
+                        promise={this.props.promise}
+                        width={getWidthByDimension(
+                            this.props.dimension,
+                            this.borderWidth
+                        )}
+                        height={getTableHeightByDimension(
+                            this.props.dimension,
+                            this.chartHeaderHeight
+                        )}
+                        selectedRowsKeys={this.props.filters}
+                        onSelectionChange={this.handlers.onValueSelection}
+                        showCategoryColumn={
+                            this.props.store.getMolecularChartDataType(
+                                this.props.chartMeta.uniqueKey
+                            ) !== GenericAssayDataType.BINARY
+                        }
+                    />
                 );
             }
             case ChartTypeEnum.MUTATED_GENES_TABLE: {
