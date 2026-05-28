@@ -44,6 +44,9 @@ export class FusionViewerStore {
     // Genome build selection (GRCh38 or GRCh37)
     @observable public genomeBuild: GenomeBuild = 'GRCh38';
 
+    // UI display toggles
+    @observable public showPromoter: boolean = true;
+
     constructor() {
         makeObservable(this);
     }
@@ -209,6 +212,11 @@ export class FusionViewerStore {
     @action
     public setActiveTranscript3p(transcriptId: string): void {
         this.activeTranscript3pId = transcriptId;
+    }
+
+    @action
+    public toggleShowPromoter(): void {
+        this.showPromoter = !this.showPromoter;
     }
 
     // -----------------------------------------------------------------------

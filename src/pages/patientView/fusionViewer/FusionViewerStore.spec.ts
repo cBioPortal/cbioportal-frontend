@@ -626,4 +626,21 @@ describe('FusionViewerStore', () => {
             assert.equal(store.activeTranscript3pId, 'ENST_3P_FORTE');
         });
     });
+
+    // -------------------------------------------------------------------
+    // showPromoter toggle
+    // -------------------------------------------------------------------
+    describe('showPromoter toggle', () => {
+        it('defaults to true', () => {
+            const store = new FusionViewerStore();
+            assert.equal(store.showPromoter, true);
+        });
+        it('flips state on toggleShowPromoter()', () => {
+            const store = new FusionViewerStore();
+            store.toggleShowPromoter();
+            assert.equal(store.showPromoter, false);
+            store.toggleShowPromoter();
+            assert.equal(store.showPromoter, true);
+        });
+    });
 });
