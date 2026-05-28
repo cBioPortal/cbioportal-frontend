@@ -147,8 +147,21 @@ export const ProteinDomainTrack: React.FC<ProteinDomainTrackProps> = ({
             const is3p = side === '3p';
             const occurrence = new Map<string, number>();
             domains.forEach(domain => {
+                // Skip domains with missing/non-finite AA coordinates —
+                // some Pfam ranges from Genome Nexus can come back with
+                // null start/end, which would otherwise produce NaN x/width
+                // and break SVG rendering.
+                if (
+                    !Number.isFinite(domain.startAA) ||
+                    !Number.isFinite(domain.endAA)
+                ) {
+                    return;
+                }
                 const dx = aaToSvgX(domain.startAA, is3p);
                 const dEnd = aaToSvgX(domain.endAA, is3p);
+                if (!Number.isFinite(dx) || !Number.isFinite(dEnd)) {
+                    return;
+                }
                 const dWidth = Math.max(4, dEnd - dx);
 
                 const domainName = domain.name || domain.pfamId || '';
