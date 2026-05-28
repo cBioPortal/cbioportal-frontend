@@ -40,6 +40,42 @@ export function computeGeneTrackRange(
 }
 
 /**
+ * Extend the base gMin/gMax upstream by min(2 kb, 5% of gene span) to make
+ * room for the promoter tint. Both GeneTrack and FusionDiagramSVG must use
+ * this same helper so arc endpoints land on the same SVG x-coordinate as the
+ * breakpoint dashed line.
+ *
+ * "Upstream" is strand-aware:
+ *   + strand → extend gMin leftward (toward lower genomic coords)
+ *   − strand → extend gMax rightward (toward higher genomic coords)
+ */
+export function applyUpstreamExtension(
+    gMinBase: number,
+    gMaxBase: number,
+    strand: '+' | '-',
+    exons: Exon[]
+): { gMin: number; gMax: number; upstreamWindow: number } {
+    const allStarts = exons.map(e => e.start);
+    const allEnds = exons.map(e => e.end);
+    const geneMin = Math.min(...allStarts);
+    const geneMax = Math.max(...allEnds);
+    const geneSpan = Math.max(1, geneMax - geneMin);
+    const upstreamWindow = Math.min(2000, 0.05 * geneSpan);
+    if (strand === '+') {
+        return {
+            gMin: Math.min(gMinBase, geneMin - upstreamWindow),
+            gMax: gMaxBase,
+            upstreamWindow,
+        };
+    }
+    return {
+        gMin: gMinBase,
+        gMax: Math.max(gMaxBase, geneMax + upstreamWindow),
+        upstreamWindow,
+    };
+}
+
+/**
  * Compute the x position and width of the retained-exon shade rect.
  *
  * The retained side depends on both strand and whether this is the 5′ or 3′ gene:
@@ -197,22 +233,14 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
     // Extend the rendered region 5′-ward by min(2 kb, 5% of gene span) so there
     // is visual breathing room upstream of the TSS. Both tracks extend for
     // visual symmetry; the promoter tint is gated separately by is5Prime.
-    const allExonStarts = allExons.map(e => e.start);
-    const allExonEnds = allExons.map(e => e.end);
-    const geneMin = Math.min(...allExonStarts);
-    const geneMax = Math.max(...allExonEnds);
-    const geneSpan = Math.max(1, geneMax - geneMin);
-    const upstreamWindow = Math.min(2000, 0.05 * geneSpan);
-    // On + strand the upstream direction is toward lower genomic coords (left).
-    // On − strand it is toward higher coords (right).
-    const gMin =
-        strand === '+'
-            ? Math.min(gMinBase, geneMin - upstreamWindow)
-            : gMinBase;
-    const gMax =
-        strand === '-'
-            ? Math.max(gMaxBase, geneMax + upstreamWindow)
-            : gMaxBase;
+    // NOTE: FusionDiagramSVG.computeBreakpointX must apply the same extension
+    // via applyUpstreamExtension so arc endpoints align with the breakpoint line.
+    const { gMin, gMax, upstreamWindow } = applyUpstreamExtension(
+        gMinBase,
+        gMaxBase,
+        strand,
+        allExons
+    );
 
     const drawX = x + TRACK_PADDING;
     const drawWidth = width - TRACK_PADDING * 2;
@@ -605,10 +633,7 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
                     if (tintW <= 0) return null;
                     const tintY = forteY + INTRON_Y_OFFSET - EXON_HEIGHT / 4;
                     return (
-                        <g
-                            key="promoter-tint"
-                            style={{ pointerEvents: 'none' }}
-                        >
+                        <g style={{ pointerEvents: 'none' }}>
                             <rect
                                 x={tintX}
                                 y={tintY}
