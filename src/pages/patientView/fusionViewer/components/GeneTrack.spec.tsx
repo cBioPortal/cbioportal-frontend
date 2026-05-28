@@ -134,14 +134,26 @@ function renderGeneTrack(strand: '+' | '-') {
     );
 }
 
-describe('GeneTrack — direction cue D: label arrow upsize', () => {
-    it('renders the strand <tspan> with the gene color and font-size 13', () => {
+describe('GeneTrack — direction cue D: strand label', () => {
+    it('renders the strand <tspan> with the gene color and font-size 11', () => {
         const wrapper = renderGeneTrack('+');
         const tspans = wrapper.find('tspan');
         assert.isAtLeast(tspans.length, 1);
         const tspan = tspans.first();
         assert.equal(tspan.prop('fill'), GENE_COLOR);
-        assert.equal(String(tspan.prop('fontSize')), '13');
+        assert.equal(String(tspan.prop('fontSize')), '11');
+    });
+
+    it('plus strand renders "(+)" next to gene symbol', () => {
+        const wrapper = renderGeneTrack('+');
+        const text = wrapper.text();
+        assert.include(text, '(+)');
+    });
+
+    it('minus strand renders "(-)" next to gene symbol', () => {
+        const wrapper = renderGeneTrack('-');
+        const text = wrapper.text();
+        assert.include(text, '(-)');
     });
 });
 

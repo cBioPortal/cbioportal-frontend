@@ -203,7 +203,7 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
     const forteY = y + LABEL_HEIGHT;
 
     const pointsRight = strand === '+';
-    const strandArrow = pointsRight ? ' \u25B6' : ' \u25C0';
+    const strandLabel = ` (${strand})`;
     const pillText = pointsRight ? 'TRANSCRIBED \u25B6' : '\u25C0 TRANSCRIBED';
     const bpX = toSvg(position);
 
@@ -340,7 +340,10 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
         const totalExons = exons.length;
         exons.forEach((exon, idx) => {
             const ex = toSvg(exon.start);
-            const ew = Math.max(2, toSvg(exon.end) - ex);
+            // Minimum visible width of 5px — small exons (e.g. 80-200 bp
+            // against a ~40 kb gene span) would otherwise render as 1-2 px
+            // ticks that read as missing data.
+            const ew = Math.max(5, toSvg(exon.end) - ex);
             const displayNumber = strand === '-' ? totalExons - idx : idx + 1;
             // Use genomic position to determine retention — exon.number is not
             // consistent across alternative transcripts, so we match the same
@@ -482,8 +485,8 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
                 fill="#333"
             >
                 {symbol}
-                <tspan fontSize={13} fontWeight={900} fill={color}>
-                    {strandArrow}
+                <tspan fontSize={11} fontWeight={700} fill={color}>
+                    {strandLabel}
                 </tspan>
             </text>
 
@@ -494,12 +497,12 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
                 const PILL_WIDTH = 92;
                 const PILL_HEIGHT = 14;
                 const SYMBOL_CHAR_WIDTH = 8.5; // bold 13px sans-serif estimate
-                const STRAND_ARROW_WIDTH = 10;
+                const STRAND_LABEL_WIDTH = 24;
                 const PILL_GAP = 18;
                 const pillX =
                     drawX +
                     symbol.length * SYMBOL_CHAR_WIDTH +
-                    STRAND_ARROW_WIDTH +
+                    STRAND_LABEL_WIDTH +
                     PILL_GAP;
                 return (
                     <g style={{ pointerEvents: 'none' }}>
