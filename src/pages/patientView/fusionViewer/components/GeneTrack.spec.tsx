@@ -218,18 +218,132 @@ describe('GeneTrack — direction cue C: 5′ / 3′ end caps', () => {
     });
 });
 
+describe('GeneTrack — direction cue A: TSS arrow', () => {
+    it('plus strand: renders a tss-arrow polyline for the FORTE transcript', () => {
+        const wrapper = renderGeneTrack('+');
+        const arrow = wrapper.find('[data-testid="tss-arrow-ENST_FORTE"]');
+        assert.equal(arrow.length, 1);
+    });
+
+    it('minus strand: renders a tss-arrow polyline for the FORTE transcript', () => {
+        const wrapper = renderGeneTrack('-');
+        const arrow = wrapper.find('[data-testid="tss-arrow-ENST_FORTE"]');
+        assert.equal(arrow.length, 1);
+    });
+
+    it('plus strand: arrow points to the right (horizontal segment goes right)', () => {
+        const wrapper = renderGeneTrack('+');
+        const arrow = wrapper.find('[data-testid="tss-arrow-ENST_FORTE"]');
+        const pts = String(arrow.prop('points'))
+            .trim()
+            .split(/\s+/)
+            .map(t => Number(t.split(',')[0]));
+        // Points[0] = tssX (vertical leg base), Points[2] = tssX + 10 (horizontal tip)
+        // On + strand the horizontal tip X must be greater than the TSS X.
+        assert.isAbove(pts[2], pts[0]);
+    });
+
+    it('minus strand: arrow points to the left (horizontal segment goes left)', () => {
+        const wrapper = renderGeneTrack('-');
+        const arrow = wrapper.find('[data-testid="tss-arrow-ENST_FORTE"]');
+        const pts = String(arrow.prop('points'))
+            .trim()
+            .split(/\s+/)
+            .map(t => Number(t.split(',')[0]));
+        // On - strand the horizontal tip X must be less than the TSS X.
+        assert.isBelow(pts[2], pts[0]);
+    });
+
+    it('showPromoter=false: no tss-arrow polyline rendered', () => {
+        const forte = makeTranscript({
+            transcriptId: 'ENST_FORTE',
+            isForteSelected: true,
+            strand: '+',
+        });
+        const wrapper = mount(
+            <svg>
+                <GeneTrack
+                    symbol="GENE_A"
+                    chromosome="1"
+                    position={250}
+                    strand="+"
+                    siteDescription=""
+                    forteTranscript={forte}
+                    color={GENE_COLOR}
+                    x={0}
+                    y={0}
+                    width={400}
+                    is5Prime={true}
+                    showPromoter={false}
+                />
+            </svg>
+        );
+        const arrow = wrapper.find('[data-testid="tss-arrow-ENST_FORTE"]');
+        assert.equal(arrow.length, 0);
+    });
+
+    it('user transcript also gets a tss-arrow', () => {
+        const forte = makeTranscript({
+            transcriptId: 'ENST_FORTE',
+            isForteSelected: true,
+            strand: '+',
+        });
+        const user = makeTranscript({
+            transcriptId: 'ENST_USER',
+            isForteSelected: false,
+            strand: '+',
+        });
+        const wrapper = mount(
+            <svg>
+                <GeneTrack
+                    symbol="GENE_A"
+                    chromosome="1"
+                    position={250}
+                    strand="+"
+                    siteDescription=""
+                    forteTranscript={forte}
+                    userTranscripts={[user]}
+                    color={GENE_COLOR}
+                    x={0}
+                    y={0}
+                    width={400}
+                    is5Prime={true}
+                    showPromoter={true}
+                />
+            </svg>
+        );
+        assert.equal(
+            wrapper.find('[data-testid="tss-arrow-ENST_FORTE"]').length,
+            1
+        );
+        assert.equal(
+            wrapper.find('[data-testid="tss-arrow-ENST_USER"]').length,
+            1
+        );
+    });
+});
+
 describe('GeneTrack — direction cue B: intron-line chevrons', () => {
     function chevronPoints(wrapper: ReturnType<typeof renderGeneTrack>) {
-        return wrapper
-            .find('polyline')
-            .map(n => String(n.prop('points')))
-            .map(p => {
-                const triples = p.trim().split(/\s+/);
-                // Three "x,y" pairs. Base (tail) is the doubled X (first and
-                // third triple share the same X); tip is the middle triple.
-                const xs = triples.map(t => Number(t.split(',')[0]));
-                return { baseX: xs[0], tipX: xs[1], tailX: xs[2] };
-            });
+        return (
+            wrapper
+                .find('polyline')
+                // Exclude TSS arrows — they have a data-testid starting with "tss-arrow"
+                .filterWhere(
+                    n =>
+                        !String(n.prop('data-testid') ?? '').startsWith(
+                            'tss-arrow'
+                        )
+                )
+                .map(n => String(n.prop('points')))
+                .map(p => {
+                    const triples = p.trim().split(/\s+/);
+                    // Three "x,y" pairs. Base (tail) is the doubled X (first and
+                    // third triple share the same X); tip is the middle triple.
+                    const xs = triples.map(t => Number(t.split(',')[0]));
+                    return { baseX: xs[0], tipX: xs[1], tailX: xs[2] };
+                })
+        );
     }
 
     it('plus strand: every chevron tip X is greater than its base X', () => {
@@ -259,7 +373,13 @@ describe('GeneTrack — direction cue B: intron-line chevrons', () => {
         // Skip rule operates on SVG-space exon ranges. Just verify that
         // every emitted chevron's midpoint avoids the SVG-space exon
         // projections (with 2 px padding).
-        const polylines = wrapper.find('polyline');
+        // Exclude TSS arrows — they aren't chevrons
+        const polylines = wrapper
+            .find('polyline')
+            .filterWhere(
+                n =>
+                    !String(n.prop('data-testid') ?? '').startsWith('tss-arrow')
+            );
         const midpoints = polylines.map(n => {
             const triples = String(n.prop('points'))
                 .trim()

@@ -396,6 +396,44 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
             );
         }
 
+        // ---- TSS arrow (cue A) — IGV/UCSC bent right-angle arrow at this
+        //      transcript's transcription start site. Per-transcript so
+        //      alternative TSSes (CDKN2A p14ARF vs p16INK4a etc.) are all
+        //      visible simultaneously. Gated by showPromoter. ----
+        if (showPromoter && exons.length > 0) {
+            // + strand: TSS is the start of the first (leftmost) exon.
+            // − strand: TSS is the end of the last (rightmost) exon.
+            // Exons arrive sorted ascending, so first = lowest genomic coord.
+            const tssGenomic =
+                strand === '+' ? exons[0].start : exons[exons.length - 1].end;
+            const tssX = toSvg(tssGenomic);
+
+            const arrowPoints =
+                strand === '+'
+                    ? `${tssX},${yPos + INTRON_Y_OFFSET} ${tssX},${yPos -
+                          12} ${tssX + 10},${yPos - 12} ${tssX + 6},${yPos -
+                          14} ${tssX + 10},${yPos - 12} ${tssX + 6},${yPos -
+                          10}`
+                    : `${tssX},${yPos + INTRON_Y_OFFSET} ${tssX},${yPos -
+                          12} ${tssX - 10},${yPos - 12} ${tssX - 6},${yPos -
+                          14} ${tssX - 10},${yPos - 12} ${tssX - 6},${yPos -
+                          10}`;
+
+            elements.push(
+                <polyline
+                    key={`tss-arrow-${transcript.transcriptId}`}
+                    data-testid={`tss-arrow-${transcript.transcriptId}`}
+                    points={arrowPoints}
+                    stroke={color}
+                    strokeWidth={1.5}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    fill="none"
+                    pointerEvents="none"
+                />
+            );
+        }
+
         // ---- Direction chevrons on the intron line (cue B) ----
         // IGV / UCSC convention: regular tick marks along the gene body that
         // point in the transcription direction. Spaced every 30 px; ticks
