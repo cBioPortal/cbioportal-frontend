@@ -200,7 +200,7 @@ const NAME_PILL_WIDTH = 160;
  * ignored here — they affect protein only, not the promoter/breakpoint-
  * interpretation question this cue is meant to answer.
  */
-function splitExonByFivePrimeUtr(
+export function splitExonByFivePrimeUtr(
     exon: { start: number; end: number },
     utrs: { start: number; end: number; type: 'five_prime' | 'three_prime' }[]
 ): { start: number; end: number; isUtr: boolean }[] {
@@ -532,6 +532,11 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
                             return (
                                 <rect
                                     key={si}
+                                    data-testid={
+                                        seg.isUtr
+                                            ? 'exon-utr-rect'
+                                            : 'exon-cds-rect'
+                                    }
                                     x={sx}
                                     y={sy}
                                     width={sw}
@@ -750,6 +755,7 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
                     return (
                         <g style={{ pointerEvents: 'none' }}>
                             <rect
+                                data-testid="promoter-tint"
                                 x={tintX}
                                 y={tintY}
                                 width={tintW}
