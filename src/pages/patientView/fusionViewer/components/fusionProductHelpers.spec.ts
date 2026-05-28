@@ -61,6 +61,7 @@ function makeTranscript(
         exons,
         isForteSelected: true,
         domains: [],
+        utrs: [],
     };
 }
 

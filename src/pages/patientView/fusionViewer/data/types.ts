@@ -27,6 +27,7 @@ export interface TranscriptData {
     isForteSelected: boolean;
     proteinLength?: number;
     domains: ProteinDomain[];
+    utrs: { start: number; end: number; type: 'five_prime' | 'three_prime' }[];
 }
 
 export interface GenePartner {

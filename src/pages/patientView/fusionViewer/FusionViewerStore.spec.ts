@@ -38,6 +38,7 @@ function makeTranscript(
         exons: [{ number: 1, start: 100, end: 200 }],
         isForteSelected: false,
         domains: [],
+        utrs: [],
         ...overrides,
     };
 }

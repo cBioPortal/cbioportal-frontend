@@ -36,6 +36,7 @@ function makeTranscript(
             },
         ],
         proteinLength: 100,
+        utrs: [],
         ...overrides,
     };
 }

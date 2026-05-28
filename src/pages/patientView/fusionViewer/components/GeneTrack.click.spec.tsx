@@ -22,6 +22,7 @@ function makeTranscript(
         ],
         isForteSelected: false,
         domains: [],
+        utrs: [],
         ...overrides,
     };
 }
