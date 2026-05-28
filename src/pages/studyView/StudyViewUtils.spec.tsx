@@ -4,6 +4,8 @@ import {
     ALTERATION_FILTER_DEFAULTS,
     annotationFilterActive,
     calcIntervalBinValues,
+    getGenericAssayChartDisplayName,
+    getGenericAssayEntityLabel,
     calculateLayout,
     calculateNewLayoutForFocusedChart,
     ChartMeta,
@@ -4062,6 +4064,26 @@ describe('StudyViewUtils', () => {
                     },
                 },
             } as any;
+
+            it('formats generic assay entity and chart labels from metadata', () => {
+                assert.equal(
+                    getGenericAssayEntityLabel(
+                        'entityA',
+                        'MUTATIONAL_SIGNATURE',
+                        entityMetaByStableId
+                    ),
+                    'Entity A Label'
+                );
+                assert.equal(
+                    getGenericAssayChartDisplayName(
+                        'entityA',
+                        'Mutational Signature v2',
+                        'MUTATIONAL_SIGNATURE',
+                        entityMetaByStableId
+                    ),
+                    'Entity A Label: Mutational Signature v2'
+                );
+            });
 
             it('flattens categorical counts into selectable table rows', () => {
                 const rows = flattenGenericAssayFrequencyTableRows(

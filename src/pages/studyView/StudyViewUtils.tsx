@@ -4395,7 +4395,7 @@ function shouldIncludeGenericAssayFrequencyValue(
     return true;
 }
 
-function getGenericAssayFrequencyTableEntityLabel(
+export function getGenericAssayEntityLabel(
     stableId: string,
     genericAssayType: string,
     entityMetaByStableId: { [stableId: string]: GenericAssayMeta }
@@ -4415,6 +4415,19 @@ function getGenericAssayFrequencyTableEntityLabel(
         ?.selectionConfig?.formatChartNameUsingCompactLabel
         ? formatGenericAssayCompactLabelByNameAndId(stableId, entityName)
         : entityName;
+}
+
+export function getGenericAssayChartDisplayName(
+    stableId: string,
+    profileLabel: string,
+    genericAssayType: string,
+    entityMetaByStableId: { [stableId: string]: GenericAssayMeta }
+): string {
+    return `${getGenericAssayEntityLabel(
+        stableId,
+        genericAssayType,
+        entityMetaByStableId
+    )}: ${profileLabel}`;
 }
 
 export function flattenGenericAssayFrequencyTableRows(
@@ -4442,7 +4455,7 @@ export function flattenGenericAssayFrequencyTableRows(
                     profileType
                 ),
                 entityStableId: countItem.stableId,
-                entityLabel: getGenericAssayFrequencyTableEntityLabel(
+                entityLabel: getGenericAssayEntityLabel(
                     countItem.stableId,
                     genericAssayType,
                     entityMetaByStableId

@@ -23,7 +23,7 @@ export enum GenericAssayFrequencyTableColumnKey {
     ENTITY = 'Entity',
     CATEGORY = 'Category',
     COUNT = '# Samples',
-    FREQ = 'Frequency',
+    FREQ = 'Freq',
 }
 
 export interface IGenericAssayFrequencyTableProps {

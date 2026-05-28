@@ -138,6 +138,7 @@ import {
     getFilteredSampleIdentifiers,
     getFilteredStudiesWithSamples,
     getGenericAssayChartUniqueKey,
+    getGenericAssayChartDisplayName,
     buildGenericAssayFrequencyTableDataFilters,
     flattenGenericAssayFrequencyTableRows,
     GENERIC_ASSAY_FREQUENCY_TABLE_ENTITY_ID,
@@ -4817,6 +4818,47 @@ export class StudyViewPageStore
         return this._genericAssayDataFilterSet.has(uniqueKey)
             ? this._genericAssayDataFilterSet.get(uniqueKey)!.values
             : [];
+    }
+
+    public getGenericAssayFilterDisplayName(
+        stableId: string,
+        profileType: string
+    ): string {
+        const uniqueKey = getGenericAssayChartUniqueKey(stableId, profileType);
+        const chartMeta = this._genericAssayCharts.get(uniqueKey);
+        if (chartMeta) {
+            return chartMeta.displayName;
+        }
+
+        let genericAssayType = '';
+        let profileLabel = profileType;
+
+        for (const [type, options] of Object.entries(
+            this.genericAssayProfileOptionsByType.result || {}
+        )) {
+            const profileOption = options.find(
+                option => option.value === profileType
+            );
+            if (profileOption) {
+                genericAssayType = type;
+                profileLabel = profileOption.label;
+                break;
+            }
+        }
+
+        const entityMetaByStableId = _.keyBy(
+            this.genericAssayEntitiesGroupedByProfileIdSuffix.result?.[
+                profileType
+            ] || [],
+            meta => meta.stableId
+        );
+
+        return getGenericAssayChartDisplayName(
+            stableId,
+            profileLabel,
+            genericAssayType,
+            entityMetaByStableId
+        );
     }
 
     @autobind
