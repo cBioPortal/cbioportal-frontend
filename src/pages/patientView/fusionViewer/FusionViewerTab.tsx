@@ -102,6 +102,7 @@ export class FusionViewerTab extends React.Component<IFusionViewerTabProps> {
                                 onActivate3p={id =>
                                     this.store.setActiveTranscript3p(id)
                                 }
+                                showPromoter={this.store.showPromoter}
                             />
                         ) : (
                             <div
