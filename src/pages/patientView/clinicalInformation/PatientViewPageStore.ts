@@ -1479,14 +1479,36 @@ export class PatientViewPageStore {
             ),
     });
 
-    // Resolve the mRNA tab gene symbols to Gene objects (for entrez ids).
-    readonly mrnaTabGenes = remoteData<Gene[]>(
+    // Genes selected in the mRNA tab gene chooser (drives the chart).
+    @observable.ref mrnaTabGeneSymbols: string[] = MRNA_TAB_GENES;
+
+    @action.bound
+    setMrnaTabGeneSymbols(symbols: string[]) {
+        this.mrnaTabGeneSymbols = symbols;
+    }
+
+    // Full gene list for the mRNA tab gene chooser options.
+    readonly mrnaTabAllGenes = remoteData<Gene[]>(
         {
             invoke: () =>
-                getClient().fetchGenesUsingPOST({
+                getClient().getAllGenesUsingGET({ projection: 'SUMMARY' }),
+        },
+        []
+    );
+
+    // Resolve the selected gene symbols to Gene objects (for entrez ids).
+    readonly mrnaTabGenes = remoteData<Gene[]>(
+        {
+            invoke: () => {
+                const symbols = this.mrnaTabGeneSymbols;
+                if (symbols.length === 0) {
+                    return Promise.resolve([]);
+                }
+                return getClient().fetchGenesUsingPOST({
                     geneIdType: 'HUGO_GENE_SYMBOL',
-                    geneIds: MRNA_TAB_GENES.map(g => g.toUpperCase()),
-                }),
+                    geneIds: symbols.map(g => g.toUpperCase()),
+                });
+            },
         },
         []
     );
