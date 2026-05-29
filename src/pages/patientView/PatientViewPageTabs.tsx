@@ -21,6 +21,7 @@ import { getDigitalSlideArchiveIFrameUrl } from 'shared/api/urls';
 import TrialMatchTable from 'pages/patientView/trialMatch/TrialMatchTable';
 import _ from 'lodash';
 import MutationalSignaturesContainer from 'pages/patientView/mutationalSignatures/MutationalSignaturesContainer';
+import MrnaTabContent from 'pages/patientView/mrna/MrnaTabContent';
 import { buildCustomTabs } from 'shared/lib/customTabs/customTabHelpers';
 import * as React from 'react';
 import SampleManager from 'pages/patientView/SampleManager';
@@ -49,6 +50,7 @@ export enum PatientViewPageTabs {
     TrialMatchTab = 'trialMatchTab',
     MutationalSignatures = 'mutationalSignatures',
     PathwayMapper = 'pathways',
+    MRNA = 'mrna',
 }
 
 export const PatientViewResourceTabPrefix = 'openResource_';
@@ -704,6 +706,12 @@ export function tabs(
                 />
             </MSKTab>
         );
+
+    tabs.push(
+        <MSKTab key={9} id={PatientViewPageTabs.MRNA} linkText="MRNA">
+            <MrnaTabContent store={pageComponent.patientViewPageStore} />
+        </MSKTab>
+    );
 
     pageComponent.resourceTabs.component &&
         /* @ts-ignore */
