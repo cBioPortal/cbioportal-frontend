@@ -15,8 +15,10 @@ import {
     VictoryLine,
     VictoryScatter,
 } from 'victory';
+import { CBIOPORTAL_VICTORY_THEME } from 'cbioportal-frontend-commons';
 import ReactSelect from 'react-select';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
+import ChartContainer from 'shared/components/ChartContainer/ChartContainer';
 import { PatientViewPageStore } from 'pages/patientView/clinicalInformation/PatientViewPageStore';
 
 interface IGeneOption {
@@ -75,6 +77,8 @@ export default class MrnaTabContent extends React.Component<
     {}
 > {
     private logDisposer: IReactionDisposer | undefined;
+    private svgContainer: SVGElement | null = null;
+    private getSvg = () => this.svgContainer;
 
     constructor(props: IMrnaTabContentProps) {
         super(props);
@@ -361,6 +365,12 @@ export default class MrnaTabContent extends React.Component<
         return study ? study.name : store.studyId;
     }
 
+    @computed get chartTitle(): string {
+        const profile = this.props.store.mrnaExpressionMolecularProfile.result;
+        const label = profile ? profile.name : 'mRNA expression';
+        return `${label} - ${this.cohortName}`;
+    }
+
     render() {
         const { store } = this.props;
         return (
@@ -368,9 +378,10 @@ export default class MrnaTabContent extends React.Component<
                 className="mrnaTabContent"
                 style={{ padding: 20, maxWidth: 760 }}
             >
-                <div
-                    style={{ maxWidth: 460, marginLeft: 70, marginBottom: 16 }}
-                >
+                <h3 style={{ marginTop: 0, marginBottom: 16 }}>
+                    {this.chartTitle}
+                </h3>
+                <div style={{ maxWidth: 460, marginBottom: 16 }}>
                     <label
                         style={{
                             fontSize: 12,
@@ -435,51 +446,45 @@ export default class MrnaTabContent extends React.Component<
         const valueLabel = profile.name;
 
         return (
-            <>
-                <div
-                    style={{
-                        fontSize: 16,
-                        fontWeight: 'bold',
-                        marginLeft: 70,
-                        marginBottom: -10,
-                    }}
-                >
-                    {valueLabel} - {this.cohortName}
-                </div>
+            <ChartContainer
+                getSVGElement={this.getSvg}
+                exportFileName={`mrna_expression_${this.cohortName}`}
+            >
                 <VictoryChart
+                    theme={CBIOPORTAL_VICTORY_THEME}
                     height={height}
                     width={720}
                     domain={{ x: this.valueDomain, y: [0, n + 0.5] }}
                     domainPadding={{ y: [0, 18] }}
                     padding={{ top: 20, bottom: 80, left: 70, right: 25 }}
-                    scale={{ x: this.useLog ? 'log' : 'linear', y: 'linear' }}
+                    scale={{
+                        x: this.useLog ? 'log' : 'linear',
+                        y: 'linear',
+                    }}
+                    containerComponent={
+                        <svg
+                            ref={(el: SVGSVGElement | null) => {
+                                this.svgContainer = el;
+                            }}
+                        />
+                    }
                 >
                     {/* expression value (x) */}
                     <VictoryAxis
                         label={valueLabel}
                         tickValues={this.valueTicks}
-                        style={{
-                            axis: { stroke: '#cccccc' },
-                            grid: { stroke: '#ededed', strokeWidth: 1 },
-                            tickLabels: { fontSize: 11, fill: '#333333' },
-                            axisLabel: { fontSize: 12, padding: 36 },
-                        }}
                         tickFormat={(t: number) =>
                             t >= 1 ? Number(t).toLocaleString('en-US') : `${t}`
                         }
+                        style={{ axisLabel: { padding: 38 } }}
                     />
                     {/* gene rows (y) */}
                     <VictoryAxis
                         dependentAxis
                         tickValues={this.genes.map((g, i) => i + 1)}
                         tickFormat={this.genes.map(g => g.symbol)}
-                        style={{
-                            axis: { stroke: '#cccccc' },
-                            grid: { stroke: '#ededed', strokeWidth: 1 },
-                            tickLabels: { fontSize: 11, fill: '#333333' },
-                        }}
                     />
-                    {/* cohort (FALSE) */}
+                    {/* cohort */}
                     <VictoryScatter
                         data={this.cohortPoints}
                         size={2}
@@ -502,7 +507,7 @@ export default class MrnaTabContent extends React.Component<
                         }}
                     />
                 </VictoryChart>
-            </>
+            </ChartContainer>
         );
     }
 }
