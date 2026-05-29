@@ -347,7 +347,7 @@ jobs:
       # .circleci/images/playwright/Dockerfile changes.
       - image: ghcr.io/cbioportal/cbioportal-frontend-playwright-ci:v1.59.1-jammy
     resource_class: large
-    parallelism: 12
+    parallelism: 4
     working_directory: /tmp/repo
     environment:
       PW_DOCKER: '1'
@@ -507,7 +507,7 @@ jobs:
             # When this shard is red, this is the step a reviewer lands on
             # after clicking the red `remote_e2e_shards` check on the
             # PR. Make that landing experience point them at the
-            # consolidated report, since this shard is just one of 12 and
+            # consolidated report, since this shard is just one of 4 and
             # the merge job is the authoritative verdict for the run.
             # NOTE: CircleCI v2.1 reserves the double-angle-bracket
             # sequence for parameter substitution and rejects unescaped
@@ -535,7 +535,7 @@ jobs:
             echo "================================================================"
             exit $EXIT
 
-  # The user-facing Playwright e2e status check. Merges all 12 shards' blob
+  # The user-facing Playwright e2e status check. Merges all 4 shards' blob
   # reports into one HTML report (with the screenshot diff/comparison UI)
   # and inspects the merged JUnit XML to fail the build when any test
   # failed.
@@ -562,7 +562,7 @@ jobs:
       # Must match parallelism on remote_e2e_shards. Used as a sanity
       # check after the artifact download step — if fewer blobs were
       # uploaded, at least one shard died before its store_artifacts ran.
-      EXPECTED_SHARDS: '12'
+      EXPECTED_SHARDS: '4'
       # PLAYWRIGHT_JUNIT_OUTPUT_NAME is honored by `playwright test` but
       # `playwright merge-reports` resolves it relative to a configDir that
       # isn't set when reporters come from the CLI, so the file lands in
