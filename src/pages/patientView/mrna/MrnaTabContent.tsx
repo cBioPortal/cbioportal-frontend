@@ -12,6 +12,8 @@ import { CBIOPORTAL_VICTORY_THEME } from 'cbioportal-frontend-commons';
 import ReactSelect from 'react-select';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import ChartContainer from 'shared/components/ChartContainer/ChartContainer';
+import SampleLabelSVG from 'shared/components/sampleLabel/SampleLabel';
+import SampleManager from 'pages/patientView/SampleManager';
 import { PatientViewPageStore } from 'pages/patientView/clinicalInformation/PatientViewPageStore';
 
 interface IGeneOption {
@@ -21,6 +23,7 @@ interface IGeneOption {
 
 interface IMrnaTabContentProps {
     store: PatientViewPageStore;
+    sampleManager: SampleManager | null;
 }
 
 interface IBoxDatum {
@@ -35,6 +38,7 @@ interface IBoxDatum {
 interface IPoint {
     x: number;
     y: number;
+    sampleId?: string;
 }
 
 const RED = '#e8493a';
@@ -63,6 +67,20 @@ function hash01(s: string): number {
     }
     return ((h >>> 0) % 10000) / 10000;
 }
+
+// Victory data component: render the numbered sample icon (color + order
+// number) at the point, matching the icons used in the patient header.
+const HighlightSampleMarker: React.FunctionComponent<any> = props => {
+    const { x, y, datum, sampleManager } = props;
+    if (x == null || y == null || !datum) {
+        return null;
+    }
+    const sampleId: string = datum.sampleId;
+    const label = (sampleManager && sampleManager.sampleLabels[sampleId]) || '';
+    const color =
+        (sampleManager && sampleManager.sampleColors[sampleId]) || RED;
+    return <SampleLabelSVG label={label} color={color} x={x} y={y} r={8} />;
+};
 
 @observer
 export default class MrnaTabContent extends React.Component<
@@ -135,8 +153,13 @@ export default class MrnaTabContent extends React.Component<
         }));
     }
 
-    @computed get patientSampleIds(): Set<string> {
-        return new Set(this.props.store.sampleIds);
+    // Samples to highlight: in patient mode, all of the patient's samples;
+    // in sample mode, only the focused sample.
+    @computed get highlightedSampleIds(): Set<string> {
+        const { store } = this.props;
+        return store.pageMode === 'sample'
+            ? new Set([store.sampleId])
+            : new Set(store.sampleIds);
     }
 
     @computed get allValues(): number[] {
@@ -215,7 +238,7 @@ export default class MrnaTabContent extends React.Component<
         return this.pointsFor(true);
     }
 
-    private pointsFor(patient: boolean): IPoint[] {
+    private pointsFor(highlighted: boolean): IPoint[] {
         const byEntrez = _.groupBy(
             this.props.store.mrnaExpressionDataForGenes.result,
             d => d.entrezGeneId
@@ -223,17 +246,18 @@ export default class MrnaTabContent extends React.Component<
         const points: IPoint[] = [];
         this.genes.forEach((gene, rowIndex) => {
             (byEntrez[gene.entrezGeneId] || []).forEach(d => {
-                const isPatient = this.patientSampleIds.has(d.sampleId);
-                if (isPatient !== patient) {
+                const isHighlighted = this.highlightedSampleIds.has(d.sampleId);
+                if (isHighlighted !== highlighted) {
                     return;
                 }
-                const offset = patient
+                const offset = highlighted
                     ? 0
                     : (hash01(d.sampleId + ':' + d.entrezGeneId) - 0.5) *
                       2 *
                       BOX_BAND;
                 // value on x, gene row on y (manual horizontal layout)
                 points.push({
+                    sampleId: d.sampleId,
                     x: this.clamp(d.value),
                     y: rowIndex + 1 + offset,
                 });
@@ -469,17 +493,14 @@ export default class MrnaTabContent extends React.Component<
                     />
                     {/* distribution (boxes drawn as line segments) */}
                     {this.boxLines}
-                    {/* this patient */}
+                    {/* highlighted samples (numbered sample icons) */}
                     <VictoryScatter
                         data={this.patientPoints}
-                        size={8}
-                        style={{
-                            data: {
-                                fill: RED,
-                                stroke: '#ffffff',
-                                strokeWidth: 0.5,
-                            },
-                        }}
+                        dataComponent={
+                            <HighlightSampleMarker
+                                sampleManager={this.props.sampleManager}
+                            />
+                        }
                     />
                 </VictoryChart>
             </ChartContainer>
