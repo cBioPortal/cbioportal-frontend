@@ -708,7 +708,7 @@ export function tabs(
         );
 
     tabs.push(
-        <MSKTab key={9} id={PatientViewPageTabs.MRNA} linkText="MRNA">
+        <MSKTab key={9} id={PatientViewPageTabs.MRNA} linkText="mRNA">
             <MrnaTabContent
                 store={pageComponent.patientViewPageStore}
                 sampleManager={sampleManager}
