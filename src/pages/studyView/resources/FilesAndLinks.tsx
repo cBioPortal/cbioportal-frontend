@@ -103,6 +103,8 @@ function buildItemsAndResources(resourceData: {
                 description: resource?.resourceDefinition?.description,
                 url: resource?.url,
                 resourceId: resource?.resourceId,
+                externalTarget:
+                    resource?.resourceDefinition?.externalTarget || '',
             }))
         )
         .value();
@@ -308,7 +310,7 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
                             <a
                                 href={data.url}
                                 style={{ fontSize: 10 }}
-                                target={'_blank'}
+                                target={data.externalTarget || '_blank'}
                             >
                                 <i
                                     className={`fa fa-external-link fa-sm`}

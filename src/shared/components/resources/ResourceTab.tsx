@@ -78,6 +78,38 @@ export default class ResourceTab extends React.Component<
         return this.currentResourceIndex === this.props.resourceData.length - 1;
     }
 
+    @computed get externalTarget() {
+        return this.currentResourceDatum.resourceDefinition?.externalTarget;
+    }
+
+    @computed get shouldAutoOpenExternal() {
+        return !!this.externalTarget && this.externalTarget !== '_blank';
+    }
+
+    private lastAutoOpenedKey?: string;
+
+    private maybeAutoOpenExternal() {
+        if (!this.shouldAutoOpenExternal) return;
+        const url = this.currentResourceDatum.url;
+        const target = this.externalTarget!;
+        const key = `${target}|${url}`;
+        if (this.lastAutoOpenedKey === key) return;
+        this.lastAutoOpenedKey = key;
+        try {
+            window.open(url, target, 'noopener,noreferrer');
+        } catch (e) {
+            console.warn('ResourceTab: failed to auto-open external target', e);
+        }
+    }
+
+    componentDidMount() {
+        this.maybeAutoOpenExternal();
+    }
+
+    componentDidUpdate() {
+        this.maybeAutoOpenExternal();
+    }
+
     @computed get httpIframeWithHttpsPortal() {
         return (
             getBrowserWindow().location.protocol === 'https:' &&
@@ -155,14 +187,27 @@ export default class ResourceTab extends React.Component<
                             />
                         </div>
                     )}
-                    {this.httpIframeWithHttpsPortal ? (
-                        <div>
+                    {this.httpIframeWithHttpsPortal || this.externalTarget ? (
+                        <div
+                            style={{
+                                flex: 1,
+                                textAlign: 'center',
+                                wordBreak: 'break-all',
+                            }}
+                        >
                             <span>
-                                We can't show this URL in the portal. Please use
-                                the link below:
+                                {this.shouldAutoOpenExternal
+                                    ? 'Opening resource in another tab. If nothing happens, click the link below:'
+                                    : this.externalTarget
+                                    ? 'Please click the link below to view the resource.'
+                                    : "We can't show this URL in the portal. Please use the link below:"}
                             </span>
                             <br />
-                            <a href={this.currentResourceDatum.url}>
+                            <a
+                                href={this.currentResourceDatum.url}
+                                target={this.externalTarget || '_blank'}
+                                rel="noopener noreferrer"
+                            >
                                 {this.currentResourceDatum.url}
                             </a>
                         </div>

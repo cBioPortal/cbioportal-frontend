@@ -1139,6 +1139,8 @@ export type ResourceDefinition = {
 
         'studyId': string
 
+        'externalTarget': string
+
 };
 export type ResponseEntityReferenceGenomeGene = {
     'body': ReferenceGenomeGene

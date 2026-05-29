@@ -87,7 +87,10 @@ const ResourceTable = observer(
                                     <a
                                         href={resource.url}
                                         style={{ fontSize: 10 }}
-                                        target={'_blank'}
+                                        target={
+                                            resource.resourceDefinition
+                                                ?.externalTarget || '_blank'
+                                        }
                                     >
                                         <i
                                             className={`fa fa-external-link fa-sm`}
