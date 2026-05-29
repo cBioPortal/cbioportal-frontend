@@ -1,14 +1,7 @@
 import * as React from 'react';
 import _ from 'lodash';
 import { observer } from 'mobx-react';
-import {
-    action,
-    computed,
-    IReactionDisposer,
-    makeObservable,
-    observable,
-    reaction,
-} from 'mobx';
+import { action, computed, makeObservable, observable } from 'mobx';
 import {
     VictoryAxis,
     VictoryChart,
@@ -76,30 +69,12 @@ export default class MrnaTabContent extends React.Component<
     IMrnaTabContentProps,
     {}
 > {
-    private logDisposer: IReactionDisposer | undefined;
     private svgContainer: SVGElement | null = null;
     private getSvg = () => this.svgContainer;
 
     constructor(props: IMrnaTabContentProps) {
         super(props);
         makeObservable(this);
-    }
-
-    componentDidMount() {
-        const { store } = this.props;
-        this.logDisposer = reaction(
-            () => store.mrnaExpressionDataForGenes.isComplete,
-            isComplete => {
-                if (isComplete) {
-                    console.log(store.mrnaExpressionDataForGenes.result);
-                }
-            },
-            { fireImmediately: true }
-        );
-    }
-
-    componentWillUnmount() {
-        this.logDisposer?.();
     }
 
     // Gene symbols that actually have data, in selected order, with row index.
