@@ -6,10 +6,8 @@ import {
     CopyNumberCount,
     DiscreteCopyNumberData,
     DiscreteCopyNumberFilter,
-    Gene,
     GenePanel,
     GenePanelData,
-    MolecularDataFilter,
     MolecularProfile,
     Mutation,
     MutationFilter,
@@ -24,6 +22,7 @@ import {
     GenericAssayMetaFilter,
 } from 'cbioportal-ts-api-client';
 import { getClient } from '../../../shared/api/cbioportalClientInstance';
+import { PatientViewPlotsStore } from './PatientViewPlotsStore';
 import internalClient from '../../../shared/api/cbioportalInternalClientInstance';
 import oncokbClient from '../../../shared/api/oncokbClientInstance';
 import { computed, observable, action, makeObservable } from 'mobx';
@@ -322,8 +321,6 @@ function transformClinicalInformationToStoreShape(
     return rv;
 }
 
-export const MRNA_TAB_GENES = ['TP53', 'EGFR', 'KRAS'];
-
 export class PatientViewPageStore {
     constructor(
         private appStore: AppStore,
@@ -344,9 +341,14 @@ export class PatientViewPageStore {
         this._sampleId = sampleId;
 
         this.studyId = studyId;
+
+        this.plotsStore = new PatientViewPlotsStore(this);
     }
 
     public internalClient: CBioPortalAPIInternal;
+
+    // Sub-store for the patient view plots (e.g. the mRNA tab).
+    public readonly plotsStore: PatientViewPlotsStore;
 
     @observable public activeLocus: string | undefined;
     @observable public activeTabId = '';
@@ -1453,97 +1455,6 @@ export class PatientViewPageStore {
                 ),
         },
         null
-    );
-
-    // All samples in the study the current patient belongs to (mRNA tab).
-    readonly allSamplesInStudy = remoteData<Sample[]>(
-        {
-            invoke: () =>
-                getClient().getAllSamplesInStudyUsingGET({
-                    studyId: this.studyId,
-                }),
-        },
-        []
-    );
-
-    // First mRNA expression molecular profile in the study (mRNA tab).
-    readonly mrnaExpressionMolecularProfile = remoteData<
-        MolecularProfile | undefined
-    >({
-        await: () => [this.molecularProfilesInStudy],
-        invoke: async () =>
-            this.molecularProfilesInStudy.result!.find(
-                p =>
-                    p.molecularAlterationType ===
-                    AlterationTypeConstants.MRNA_EXPRESSION
-            ),
-    });
-
-    // Genes selected in the mRNA tab gene chooser (drives the chart).
-    @observable.ref mrnaTabGeneSymbols: string[] = MRNA_TAB_GENES;
-
-    @action.bound
-    setMrnaTabGeneSymbols(symbols: string[]) {
-        this.mrnaTabGeneSymbols = symbols;
-    }
-
-    // Full gene list for the mRNA tab gene chooser options.
-    readonly mrnaTabAllGenes = remoteData<Gene[]>(
-        {
-            invoke: () =>
-                getClient().getAllGenesUsingGET({ projection: 'SUMMARY' }),
-        },
-        []
-    );
-
-    // Resolve the selected gene symbols to Gene objects (for entrez ids).
-    readonly mrnaTabGenes = remoteData<Gene[]>(
-        {
-            invoke: () => {
-                const symbols = this.mrnaTabGeneSymbols;
-                if (symbols.length === 0) {
-                    return Promise.resolve([]);
-                }
-                return getClient().fetchGenesUsingPOST({
-                    geneIdType: 'HUGO_GENE_SYMBOL',
-                    geneIds: symbols.map(g => g.toUpperCase()),
-                });
-            },
-        },
-        []
-    );
-
-    // mRNA expression data for MRNA_TAB_GENES across all samples in the study.
-    readonly mrnaExpressionDataForGenes = remoteData<
-        NumericGeneMolecularData[]
-    >(
-        {
-            await: () => [
-                this.mrnaExpressionMolecularProfile,
-                this.allSamplesInStudy,
-                this.mrnaTabGenes,
-            ],
-            invoke: async () => {
-                const profile = this.mrnaExpressionMolecularProfile.result;
-                if (!profile) {
-                    return [];
-                }
-                return getClient().fetchAllMolecularDataInMolecularProfileUsingPOST(
-                    {
-                        molecularProfileId: profile.molecularProfileId,
-                        molecularDataFilter: {
-                            entrezGeneIds: this.mrnaTabGenes.result!.map(
-                                g => g.entrezGeneId
-                            ),
-                            sampleIds: this.allSamplesInStudy.result!.map(
-                                s => s.sampleId
-                            ),
-                        } as MolecularDataFilter,
-                    }
-                );
-            },
-        },
-        []
     );
 
     readonly discreteCNAData = remoteData<DiscreteCopyNumberData[]>(
