@@ -95,15 +95,21 @@ export default class MrnaTabContent extends React.Component<
         makeObservable(this);
     }
 
+    private get plotsStore() {
+        return this.props.store.plotsStore;
+    }
+
     // Gene symbols that actually have data, in selected order, with row index.
     @computed get genes(): { symbol: string; entrezGeneId: number }[] {
         const { store } = this.props;
         const present = new Set(
-            store.mrnaExpressionDataForGenes.result.map(d => d.entrezGeneId)
+            this.plotsStore.mrnaExpressionDataForGenes.result.map(
+                d => d.entrezGeneId
+            )
         );
-        return store.mrnaTabGeneSymbols
+        return this.plotsStore.mrnaTabGeneSymbols
             .map(symbol => {
-                const gene = store.mrnaTabGenes.result.find(
+                const gene = this.plotsStore.mrnaTabGenes.result.find(
                     g => g.hugoGeneSymbol.toUpperCase() === symbol.toUpperCase()
                 );
                 return gene && present.has(gene.entrezGeneId)
@@ -121,7 +127,7 @@ export default class MrnaTabContent extends React.Component<
     }
 
     @computed get geneOptions(): IGeneOption[] {
-        return this.props.store.mrnaTabAllGenes.result.map(g => ({
+        return this.plotsStore.mrnaTabAllGenes.result.map(g => ({
             label: g.hugoGeneSymbol,
             value: g.hugoGeneSymbol,
         }));
@@ -147,7 +153,7 @@ export default class MrnaTabContent extends React.Component<
     }
 
     @computed get selectedGeneOptions(): IGeneOption[] {
-        return this.props.store.mrnaTabGeneSymbols.map(s => ({
+        return this.plotsStore.mrnaTabGeneSymbols.map(s => ({
             label: s,
             value: s,
         }));
@@ -163,7 +169,7 @@ export default class MrnaTabContent extends React.Component<
     }
 
     @computed get allValues(): number[] {
-        return this.props.store.mrnaExpressionDataForGenes.result
+        return this.plotsStore.mrnaExpressionDataForGenes.result
             .map(d => d.value)
             .filter(v => !isNaN(v));
     }
@@ -195,7 +201,7 @@ export default class MrnaTabContent extends React.Component<
 
     @computed get boxData(): IBoxDatum[] {
         const byEntrez = _.groupBy(
-            this.props.store.mrnaExpressionDataForGenes.result,
+            this.plotsStore.mrnaExpressionDataForGenes.result,
             d => d.entrezGeneId
         );
         return this.genes.map((gene, rowIndex) => {
@@ -240,7 +246,7 @@ export default class MrnaTabContent extends React.Component<
 
     private pointsFor(highlighted: boolean): IPoint[] {
         const byEntrez = _.groupBy(
-            this.props.store.mrnaExpressionDataForGenes.result,
+            this.plotsStore.mrnaExpressionDataForGenes.result,
             d => d.entrezGeneId
         );
         const points: IPoint[] = [];
@@ -365,7 +371,7 @@ export default class MrnaTabContent extends React.Component<
     }
 
     @computed get chartTitle(): string {
-        const profile = this.props.store.mrnaExpressionMolecularProfile.result;
+        const profile = this.plotsStore.mrnaExpressionMolecularProfile.result;
         const label = profile ? profile.name : 'mRNA expression';
         return `${label} - ${this.cohortName}`;
     }
@@ -393,7 +399,7 @@ export default class MrnaTabContent extends React.Component<
                     </label>
                     <ReactSelect
                         isMulti
-                        isLoading={store.mrnaTabAllGenes.isPending}
+                        isLoading={this.plotsStore.mrnaTabAllGenes.isPending}
                         options={this.filteredGeneOptions}
                         value={this.selectedGeneOptions}
                         placeholder="Add genes…"
@@ -408,7 +414,7 @@ export default class MrnaTabContent extends React.Component<
                                 : 'Type to search genes'
                         }
                         onChange={(selected: any) =>
-                            store.setMrnaTabGeneSymbols(
+                            this.plotsStore.setMrnaTabGeneSymbols(
                                 (selected || []).map(
                                     (o: IGeneOption) => o.value
                                 )
@@ -425,13 +431,13 @@ export default class MrnaTabContent extends React.Component<
         const { store } = this.props;
 
         if (
-            store.mrnaExpressionDataForGenes.isPending ||
-            store.mrnaTabGenes.isPending
+            this.plotsStore.mrnaExpressionDataForGenes.isPending ||
+            this.plotsStore.mrnaTabGenes.isPending
         ) {
             return <LoadingIndicator isLoading={true} size="big" center />;
         }
 
-        const profile = store.mrnaExpressionMolecularProfile.result;
+        const profile = this.plotsStore.mrnaExpressionMolecularProfile.result;
         if (!profile || this.genes.length === 0) {
             return (
                 <div style={{ padding: '10px 0' }}>
