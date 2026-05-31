@@ -364,10 +364,22 @@ export default class MrnaTabContent extends React.Component<
         return ticks.length ? ticks : undefined;
     }
 
-    @computed get cohortName(): string {
+    @computed get studyName(): string {
         const { store } = this.props;
         const study = store.studies.result && store.studies.result[0];
         return study ? study.name : store.studyId;
+    }
+
+    // Human-readable name of the active reference cohort, used in the title
+    // and export filename. When the user has cancer-type filters selected,
+    // we list the chosen values; otherwise we show the study name.
+    @computed get cohortName(): string {
+        const filters = this.plotsStore.selectedCancerTypeFilters;
+        const values = _.flatMap(Object.keys(filters), k => filters[k]);
+        if (values.length === 0) {
+            return this.studyName;
+        }
+        return _.uniq(values).join(' or ');
     }
 
     @computed get chartTitle(): string {
@@ -422,9 +434,207 @@ export default class MrnaTabContent extends React.Component<
                         }
                     />
                 </div>
+                {this.renderReferenceCohortFilter()}
                 {this.renderChart()}
             </div>
         );
+    }
+
+    // Interactive reference-cohort selector. Lists each cancer-type
+    // clinical attribute the study exposes and its distinct values with sample
+    // counts; each value is a checkbox. Selecting values drives the reference
+    // cohort (sample set the box plot compares against) via a study-view
+    // filtered-samples fetch. Within an attribute, multiple selections OR
+    // together; across attributes they AND together.
+    private renderReferenceCohortFilter() {
+        const remote = this.plotsStore.cancerTypeValueCounts;
+        const filters = this.plotsStore.selectedCancerTypeFilters;
+        const hasFilters = this.plotsStore.hasCancerTypeFilters;
+        const filteredSamples = this.plotsStore.studyViewFilteredSamples;
+        return (
+            <div
+                style={{
+                    marginBottom: 16,
+                    padding: '10px 14px',
+                    border: '1px solid #ddd',
+                    borderRadius: 4,
+                    background: '#fafafa',
+                    maxWidth: 720,
+                }}
+            >
+                <div
+                    style={{
+                        display: 'flex',
+                        alignItems: 'baseline',
+                        marginBottom: 6,
+                    }}
+                >
+                    <div style={{ fontSize: 13, fontWeight: 'bold' }}>
+                        Reference cohort
+                    </div>
+                    <div
+                        style={{
+                            marginLeft: 10,
+                            fontSize: 12,
+                            color: '#666',
+                        }}
+                    >
+                        {this.referenceCohortSummary}
+                    </div>
+                    {hasFilters && (
+                        <a
+                            href="#"
+                            style={{ marginLeft: 'auto', fontSize: 12 }}
+                            onClick={e => {
+                                e.preventDefault();
+                                this.plotsStore.clearCancerTypeFilters();
+                            }}
+                        >
+                            Clear
+                        </a>
+                    )}
+                </div>
+                {remote.isPending && (
+                    <div style={{ fontSize: 12, color: '#666' }}>Loading…</div>
+                )}
+                {remote.isError && (
+                    <div style={{ fontSize: 12, color: '#c00' }}>
+                        Failed to load cancer-type data.
+                    </div>
+                )}
+                {remote.isComplete && remote.result!.length === 0 && (
+                    <div style={{ fontSize: 12, color: '#666' }}>
+                        No cancer-type clinical attributes are defined at the
+                        sample level for this study. Using the whole study as
+                        the reference cohort.
+                    </div>
+                )}
+                {remote.isComplete &&
+                    remote.result!.map(a => {
+                        const selected =
+                            filters[a.attribute.clinicalAttributeId] || [];
+                        return (
+                            <div
+                                key={a.attribute.clinicalAttributeId}
+                                style={{ marginTop: 8 }}
+                            >
+                                <div
+                                    style={{
+                                        fontSize: 12,
+                                        fontWeight: 'bold',
+                                    }}
+                                >
+                                    {a.attribute.displayName}{' '}
+                                    <span
+                                        style={{
+                                            fontWeight: 'normal',
+                                            color: '#888',
+                                        }}
+                                    >
+                                        ({a.attribute.clinicalAttributeId})
+                                    </span>
+                                </div>
+                                {a.counts.length === 0 ? (
+                                    <div
+                                        style={{
+                                            fontSize: 12,
+                                            color: '#666',
+                                        }}
+                                    >
+                                        (no values)
+                                    </div>
+                                ) : (
+                                    <ul
+                                        style={{
+                                            margin: '4px 0 0 4px',
+                                            padding: 0,
+                                            listStyle: 'none',
+                                            fontSize: 12,
+                                        }}
+                                    >
+                                        {a.counts.map(c => {
+                                            const checked = selected.includes(
+                                                c.value
+                                            );
+                                            return (
+                                                <li
+                                                    key={c.value}
+                                                    style={{
+                                                        padding: '1px 0',
+                                                    }}
+                                                >
+                                                    <label
+                                                        style={{
+                                                            cursor: 'pointer',
+                                                            fontWeight: 'normal',
+                                                            display: 'inline-flex',
+                                                            alignItems: 'center',
+                                                        }}
+                                                    >
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={checked}
+                                                            onChange={() =>
+                                                                this.plotsStore.toggleCancerTypeValue(
+                                                                    a.attribute
+                                                                        .clinicalAttributeId,
+                                                                    c.value
+                                                                )
+                                                            }
+                                                            style={{
+                                                                marginRight: 6,
+                                                            }}
+                                                        />
+                                                        {c.value}{' '}
+                                                        <span
+                                                            style={{
+                                                                color: '#888',
+                                                                marginLeft: 4,
+                                                            }}
+                                                        >
+                                                            (
+                                                            {c.count.toLocaleString(
+                                                                'en-US'
+                                                            )}
+                                                            )
+                                                        </span>
+                                                    </label>
+                                                </li>
+                                            );
+                                        })}
+                                    </ul>
+                                )}
+                            </div>
+                        );
+                    })}
+                {hasFilters && filteredSamples.isPending && (
+                    <div
+                        style={{
+                            fontSize: 11,
+                            color: '#666',
+                            marginTop: 8,
+                        }}
+                    >
+                        Loading filtered samples…
+                    </div>
+                )}
+            </div>
+        );
+    }
+
+    // Live summary line shown next to the "Reference cohort" header.
+    @computed private get referenceCohortSummary(): string {
+        const cohort = this.plotsStore.effectiveCohortSamples;
+        if (cohort.isPending) {
+            return 'computing…';
+        }
+        const n = cohort.isComplete ? cohort.result!.length : 0;
+        const samples = `${n.toLocaleString('en-US')} sample${
+            n === 1 ? '' : 's'
+        }`;
+        return this.plotsStore.hasCancerTypeFilters
+            ? `${samples} match the selected filter`
+            : `${samples} (whole study)`;
     }
 
     private renderChart() {
