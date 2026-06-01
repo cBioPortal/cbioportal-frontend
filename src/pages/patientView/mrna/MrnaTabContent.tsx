@@ -228,22 +228,31 @@ export default class MrnaTabContent extends React.Component<
         }));
     }
 
-    // Default suggestions (when the picker has no query): the top 50 most-
-    // mutated genes in the current effective cohort, labelled with their
-    // mutation frequency so the user can pick interesting candidates without
-    // typing.
-    @computed get topAlteredGeneOptions(): IGeneOption[] {
-        return this.plotsStore.topAlteredGenes.result.map(g => {
-            const profiled = g.numberOfProfiledCases;
-            const pct =
-                profiled > 0
-                    ? (g.numberOfAlteredCases / profiled) * 100
-                    : 0;
-            return {
-                value: g.hugoGeneSymbol,
-                label: `${g.hugoGeneSymbol} (${pct.toFixed(1)}% mutated)`,
-            };
+    // Patient-mutated genes annotated with their mutation frequency in the
+    // current reference cohort. Ordered by cohort frequency desc; genes the
+    // cohort never mutates fall to the bottom with "—".
+    @computed get patientMutatedWithCohortFreqOptions(): IGeneOption[] {
+        const byEntrez = this.plotsStore.cohortMutatedGenesByEntrez;
+        const annotated = this.plotsStore.patientMutatedGenes.map(g => {
+            const c = byEntrez[g.entrezGeneId];
+            const profiled = c ? c.numberOfProfiledCases : 0;
+            const altered = c ? c.numberOfAlteredCases : 0;
+            const pct = profiled > 0 ? (altered / profiled) * 100 : -1;
+            return { gene: g, pct };
         });
+        return _.orderBy(
+            annotated,
+            ['pct', 'gene.hugoGeneSymbol'],
+            ['desc', 'asc']
+        ).map(({ gene, pct }) => ({
+            value: gene.hugoGeneSymbol,
+            label:
+                pct >= 0
+                    ? `${gene.hugoGeneSymbol} (${pct.toFixed(
+                          1
+                      )}% mutated in cohort)`
+                    : `${gene.hugoGeneSymbol} (— in cohort)`,
+        }));
     }
 
     // Group "preset" options (one row per non-empty predefined group),
@@ -259,9 +268,15 @@ export default class MrnaTabContent extends React.Component<
         }));
     }
 
-    // Picker sections: "Gene groups" (preset group items) on top, then a
-    // section of individual genes — top altered when the query is empty, or
-    // substring matches across all genes when the user is typing.
+    @computed private get patientMutatedSectionLabel(): string {
+        return this.props.store.pageMode === 'sample'
+            ? 'Mutated in this sample'
+            : 'Mutated in this patient';
+    }
+
+    // Picker sections: "Gene groups" (preset group items), then the
+    // patient-mutated section annotated with cohort frequency (empty query),
+    // or substring search results (typed query).
     @computed get filteredGeneOptions(): Array<{
         label: string;
         options: IGeneOption[];
@@ -272,24 +287,26 @@ export default class MrnaTabContent extends React.Component<
         if (groupOpts.length > 0) {
             out.push({ label: 'Gene groups', options: groupOpts });
         }
-        let genes: IGeneOption[];
-        if (!q) {
-            genes = this.topAlteredGeneOptions;
-        } else {
-            genes = [];
+        if (q) {
+            const matches: IGeneOption[] = [];
             for (const o of this.geneOptions) {
                 if (o.label.toLowerCase().includes(q)) {
-                    genes.push(o);
-                    if (genes.length >= MAX_GENE_OPTIONS) {
+                    matches.push(o);
+                    if (matches.length >= MAX_GENE_OPTIONS) {
                         break;
                     }
                 }
             }
+            if (matches.length > 0) {
+                out.push({ label: 'Search results', options: matches });
+            }
+            return out;
         }
-        if (genes.length > 0) {
+        const patientGenes = this.patientMutatedWithCohortFreqOptions;
+        if (patientGenes.length > 0) {
             out.push({
-                label: q ? 'Search results' : 'Top mutated in cohort',
-                options: genes,
+                label: this.patientMutatedSectionLabel,
+                options: patientGenes,
             });
         }
         return out;
@@ -589,7 +606,7 @@ export default class MrnaTabContent extends React.Component<
                         isMulti
                         isLoading={
                             this.plotsStore.mrnaTabAllGenes.isPending ||
-                            this.plotsStore.topAlteredGenes.isPending
+                            this.plotsStore.cohortMutatedGenes.isPending
                         }
                         components={{ MenuList: GenePickerMenuList }}
                         options={this.filteredGeneOptions}

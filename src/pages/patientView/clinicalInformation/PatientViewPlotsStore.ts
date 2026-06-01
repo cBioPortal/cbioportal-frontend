@@ -163,6 +163,21 @@ export class PatientViewPlotsStore {
         this.mrnaTabSelections = items;
     }
 
+    // Unique genes mutated in the current patient's (or sample's) samples,
+    // derived from the parent store's mutation data. Returns gene symbol +
+    // entrez id for downstream cohort-frequency lookup.
+    @computed get patientMutatedGenes(): MutatedGenePick[] {
+        return _(this.parentStore.mutationData.result || [])
+            .map(m => m.gene)
+            .filter(g => !!(g && g.hugoGeneSymbol && g.entrezGeneId))
+            .uniqBy(g => g.entrezGeneId)
+            .map(g => ({
+                hugoGeneSymbol: g.hugoGeneSymbol,
+                entrezGeneId: g.entrezGeneId,
+            }))
+            .value();
+    }
+
     // Flatten group selections into their constituent gene symbols, preserving
     // selection order and de-duplicating across overlapping picks.
     @computed get effectiveGeneSymbols(): string[] {
@@ -353,10 +368,11 @@ export class PatientViewPlotsStore {
         []
     );
 
-    // Top 50 most-mutated genes in the currently effective reference cohort,
-    // used to seed the Genes picker's default options. Re-ranks when cohort
-    // filters change.
-    readonly topAlteredGenes = remoteData<AlterationCountByGene[]>(
+    // Full list of cohort-mutated genes in the currently effective reference
+    // cohort, sorted by altered-case count desc. Re-runs when the cohort
+    // narrows. Used to look up per-gene cohort mutation frequency in the
+    // Genes picker.
+    readonly cohortMutatedGenes = remoteData<AlterationCountByGene[]>(
         {
             await: () => [this.mutationMolecularProfile],
             invoke: async () => {
@@ -372,11 +388,22 @@ export class PatientViewPlotsStore {
                     result,
                     ['numberOfAlteredCases', 'hugoGeneSymbol'],
                     ['desc', 'asc']
-                ).slice(0, 50);
+                );
             },
         },
         []
     );
+
+    // entrezGeneId -> cohort altered-case entry, for O(1) lookups when
+    // annotating patient-mutated genes with their cohort frequency.
+    @computed get cohortMutatedGenesByEntrez(): {
+        [entrezId: number]: AlterationCountByGene;
+    } {
+        return _.keyBy(
+            this.cohortMutatedGenes.result || [],
+            g => g.entrezGeneId
+        );
+    }
 
     // Study's primary mutation / CNA / SV profiles, used when constructing
     // gene-based study-view filters.
