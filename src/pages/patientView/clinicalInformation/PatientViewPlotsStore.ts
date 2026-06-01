@@ -19,6 +19,7 @@ import { getClient } from '../../../shared/api/cbioportalClientInstance';
 import internalClient from '../../../shared/api/cbioportalInternalClientInstance';
 import { AlterationTypeConstants } from 'shared/constants';
 import { GENE_FILTER_QUERY_DEFAULTS } from 'pages/studyView/StudyViewUtils';
+import { findGroupByValue } from 'pages/patientView/mrna/mrnaTabGeneGroups';
 // Imported for its type only (used as a constructor-param annotation, which is
 // erased at runtime) so this does not create a runtime import cycle.
 import { PatientViewPageStore } from './PatientViewPageStore';
@@ -88,12 +89,32 @@ export class PatientViewPlotsStore {
         makeObservable(this);
     }
 
-    // Genes selected in the mRNA tab gene chooser (drives the chart).
-    @observable.ref mrnaTabGeneSymbols: string[] = MRNA_TAB_GENES;
+    // Items selected in the mRNA tab gene chooser. Each entry is either a
+    // Hugo gene symbol or a "group:<id>" token for a predefined preset; the
+    // chart renders one row per unique resolved gene (see effectiveGeneSymbols).
+    @observable.ref mrnaTabSelections: string[] = MRNA_TAB_GENES;
 
     @action.bound
-    setMrnaTabGeneSymbols(symbols: string[]) {
-        this.mrnaTabGeneSymbols = symbols;
+    setMrnaTabSelections(items: string[]) {
+        this.mrnaTabSelections = items;
+    }
+
+    // Flatten group selections into their constituent gene symbols, preserving
+    // selection order and de-duplicating across overlapping picks.
+    @computed get effectiveGeneSymbols(): string[] {
+        const seen = new Set<string>();
+        const out: string[] = [];
+        for (const item of this.mrnaTabSelections) {
+            const group = findGroupByValue(item);
+            const symbols = group ? group.genes : [item];
+            for (const sym of symbols) {
+                if (!seen.has(sym)) {
+                    seen.add(sym);
+                    out.push(sym);
+                }
+            }
+        }
+        return out;
     }
 
     // User's reference-cohort filter: per clinical-attribute id, the set of
@@ -343,11 +364,12 @@ export class PatientViewPlotsStore {
         []
     );
 
-    // Resolve the selected gene symbols to Gene objects (for entrez ids).
+    // Resolve the effective gene symbols (after expanding groups) to Gene
+    // objects (for entrez ids).
     readonly mrnaTabGenes = remoteData<Gene[]>(
         {
             invoke: () => {
-                const symbols = this.mrnaTabGeneSymbols;
+                const symbols = this.effectiveGeneSymbols;
                 if (symbols.length === 0) {
                     return Promise.resolve([]);
                 }
