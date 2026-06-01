@@ -653,192 +653,103 @@ export default class MrnaTabContent extends React.Component<
         );
     }
 
-    // Compact, always-visible summary of the reference cohort: live sample
-    // count, a chip per active attribute:value pair (× removes a single chip),
-    // an "Add filter" button that opens the chooser modal, and "Clear all"
-    // when filters are active.
+    // Simplified reference-cohort summary bar: the live sample count plus a
+    // three-radio selector ("All samples" / "Same cancer type" / "Same
+    // cancer type detailed"). Cancer-type options only render when the
+    // current patient or sample actually carries that value. The
+    // modal-trigger button and chips are hidden for now.
     private renderCohortSummaryBar() {
-        const filters = this.plotsStore.selectedClinicalFilters;
-        const attrs =
-            this.plotsStore.filterableClinicalAttributes.result || [];
-        const attrById = _.keyBy(attrs, a => a.clinicalAttributeId);
         const cohort = this.plotsStore.effectiveCohortSamples;
-        const hasFilters = this.plotsStore.hasAnyFilter;
         const sampleCount = cohort.isComplete
             ? cohort.result!.length.toLocaleString('en-US')
             : '…';
-        const clinicalChips: {
-            attrId: string;
-            value: DataFilterValue;
-            label: string;
-        }[] = [];
-        Object.keys(filters).forEach(attrId => {
-            const attr = attrById[attrId];
-            filters[attrId].forEach(v => {
-                const valueLabel =
-                    v.value !== undefined && v.value !== ''
-                        ? v.value
-                        : formatRange(v.start, v.end);
-                const prefix = attr ? attr.displayName : attrId;
-                clinicalChips.push({
-                    attrId,
-                    value: v,
-                    label: `${prefix}: ${valueLabel}`,
-                });
-            });
-        });
-        const alterationChips: Array<{
-            key: string;
-            label: string;
-            color: string;
-            background: string;
-            border: string;
-            gene: MutatedGenePick;
-            remove: () => void;
-        }> = [];
-        this.plotsStore.selectedMutatedGenes.forEach(g =>
-            alterationChips.push({
-                key: `mut:${g.entrezGeneId}`,
-                label: `Mutated: ${g.hugoGeneSymbol}`,
-                color: '#a04020',
-                background: '#fce7df',
-                border: '#f0c8b8',
-                gene: g,
-                remove: () => this.plotsStore.toggleMutatedGene(g),
-            })
-        );
-        this.plotsStore.selectedCNAGenes.forEach(g =>
-            alterationChips.push({
-                key: `cna:${g.entrezGeneId}`,
-                label: `CNA: ${g.hugoGeneSymbol}`,
-                color: '#205aa0',
-                background: '#e0e9f3',
-                border: '#c2d3eb',
-                gene: g,
-                remove: () => this.plotsStore.toggleCNAGene(g),
-            })
-        );
-        this.plotsStore.selectedSVGenes.forEach(g =>
-            alterationChips.push({
-                key: `sv:${g.entrezGeneId}`,
-                label: `SV: ${g.hugoGeneSymbol}`,
-                color: '#208040',
-                background: '#e0efe5',
-                border: '#c2dccb',
-                gene: g,
-                remove: () => this.plotsStore.toggleSVGene(g),
-            })
-        );
+        const mode = this.plotsStore.referenceCohortMode;
+        const cancerTypes = this.plotsStore.currentSampleCancerTypes;
+        const cancerTypesDetailed = this.plotsStore
+            .currentSampleCancerTypesDetailed;
+        const radioStyle: React.CSSProperties = {
+            display: 'inline-flex',
+            alignItems: 'center',
+            fontSize: 13,
+            fontWeight: 'normal',
+            cursor: 'pointer',
+            margin: 0,
+            whiteSpace: 'nowrap',
+        };
         return (
             <div
                 style={{
                     display: 'flex',
-                    flexWrap: 'wrap',
+                    flexWrap: 'nowrap',
                     alignItems: 'center',
-                    gap: 6,
+                    gap: 14,
                     marginBottom: 16,
-                    maxWidth: 720,
+                    whiteSpace: 'nowrap',
                 }}
             >
                 <strong style={{ fontSize: 13 }}>Reference cohort</strong>
                 <span style={{ fontSize: 13, color: '#666' }}>
                     &bull; {sampleCount} sample{sampleCount === '1' ? '' : 's'}
-                    {!hasFilters && (
-                        <span style={{ marginLeft: 4 }}>(whole study)</span>
-                    )}
                 </span>
-                {clinicalChips.map((c, i) => (
-                    <span
-                        key={`${c.attrId}:${i}`}
-                        style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            background: '#e6f0fa',
-                            color: '#0b5fae',
-                            border: '1px solid #c7dcee',
-                            borderRadius: 12,
-                            padding: '1px 4px 1px 10px',
-                            fontSize: 12,
-                            lineHeight: 1.5,
-                        }}
-                    >
-                        {c.label}
-                        <button
-                            onClick={() =>
-                                this.plotsStore.removeClinicalFilterValue(
-                                    c.attrId,
-                                    c.value
+                <label style={radioStyle}>
+                    <input
+                        type="radio"
+                        name="reference-cohort-mode"
+                        checked={mode === 'all'}
+                        onChange={() =>
+                            this.plotsStore.setReferenceCohortMode('all')
+                        }
+                        style={{ marginRight: 5 }}
+                    />
+                    All samples
+                </label>
+                {cancerTypes.length > 0 && (
+                    <label style={radioStyle}>
+                        <input
+                            type="radio"
+                            name="reference-cohort-mode"
+                            checked={mode === 'cancer-type'}
+                            onChange={() =>
+                                this.plotsStore.setReferenceCohortMode(
+                                    'cancer-type'
                                 )
                             }
-                            title="Remove filter"
+                            style={{ marginRight: 5 }}
+                        />
+                        Same cancer type
+                        <span
                             style={{
                                 marginLeft: 4,
-                                border: 'none',
-                                background: 'transparent',
-                                color: '#0b5fae',
-                                cursor: 'pointer',
-                                fontSize: 14,
-                                lineHeight: 1,
-                                padding: '0 4px',
+                                color: '#666',
                             }}
                         >
-                            ×
-                        </button>
-                    </span>
-                ))}
-                {alterationChips.map(c => (
-                    <span
-                        key={c.key}
-                        style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            background: c.background,
-                            color: c.color,
-                            border: `1px solid ${c.border}`,
-                            borderRadius: 12,
-                            padding: '1px 4px 1px 10px',
-                            fontSize: 12,
-                            lineHeight: 1.5,
-                        }}
-                    >
-                        {c.label}
-                        <button
-                            onClick={c.remove}
-                            title="Remove gene"
+                            ({cancerTypes.join(' or ')})
+                        </span>
+                    </label>
+                )}
+                {cancerTypesDetailed.length > 0 && (
+                    <label style={radioStyle}>
+                        <input
+                            type="radio"
+                            name="reference-cohort-mode"
+                            checked={mode === 'cancer-type-detailed'}
+                            onChange={() =>
+                                this.plotsStore.setReferenceCohortMode(
+                                    'cancer-type-detailed'
+                                )
+                            }
+                            style={{ marginRight: 5 }}
+                        />
+                        Same cancer type detailed
+                        <span
                             style={{
                                 marginLeft: 4,
-                                border: 'none',
-                                background: 'transparent',
-                                color: c.color,
-                                cursor: 'pointer',
-                                fontSize: 14,
-                                lineHeight: 1,
-                                padding: '0 4px',
+                                color: '#666',
                             }}
                         >
-                            ×
-                        </button>
-                    </span>
-                ))}
-                <button
-                    type="button"
-                    className="btn btn-default"
-                    style={{ marginLeft: 4 }}
-                    onClick={this.openCohortModal}
-                >
-                    + Add filter
-                </button>
-                {hasFilters && (
-                    <a
-                        href="#"
-                        style={{ fontSize: 12, marginLeft: 4 }}
-                        onClick={e => {
-                            e.preventDefault();
-                            this.plotsStore.clearAllFilters();
-                        }}
-                    >
-                        Clear all
-                    </a>
+                            ({cancerTypesDetailed.join(' or ')})
+                        </span>
+                    </label>
                 )}
             </div>
         );
