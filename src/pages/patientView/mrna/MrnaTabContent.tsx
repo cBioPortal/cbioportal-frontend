@@ -156,12 +156,31 @@ export default class MrnaTabContent extends React.Component<
         }));
     }
 
-    // Only the matches for the current query, capped, so react-select never
-    // renders the full ~20k gene list (which freezes the UI).
+    // Default suggestions (when the picker has no query): the top 50 most-
+    // mutated genes in the current effective cohort, labelled with their
+    // mutation frequency so the user can pick interesting candidates without
+    // typing.
+    @computed get topAlteredGeneOptions(): IGeneOption[] {
+        return this.plotsStore.topAlteredGenes.result.map(g => {
+            const profiled = g.numberOfProfiledCases;
+            const pct =
+                profiled > 0
+                    ? (g.numberOfAlteredCases / profiled) * 100
+                    : 0;
+            return {
+                value: g.hugoGeneSymbol,
+                label: `${g.hugoGeneSymbol} (${pct.toFixed(1)}% mutated)`,
+            };
+        });
+    }
+
+    // When the picker has a query, search across all genes (capped so
+    // react-select never renders the full ~20k list); when empty, fall back
+    // to topAlteredGeneOptions.
     @computed get filteredGeneOptions(): IGeneOption[] {
         const q = this.geneQuery.trim().toLowerCase();
         if (!q) {
-            return [];
+            return this.topAlteredGeneOptions;
         }
         const out: IGeneOption[] = [];
         for (const o of this.geneOptions) {
@@ -446,7 +465,10 @@ export default class MrnaTabContent extends React.Component<
                     </label>
                     <ReactSelect
                         isMulti
-                        isLoading={this.plotsStore.mrnaTabAllGenes.isPending}
+                        isLoading={
+                            this.plotsStore.mrnaTabAllGenes.isPending ||
+                            this.plotsStore.topAlteredGenes.isPending
+                        }
                         options={this.filteredGeneOptions}
                         value={this.selectedGeneOptions}
                         placeholder="Add genes…"
@@ -458,7 +480,7 @@ export default class MrnaTabContent extends React.Component<
                         noOptionsMessage={() =>
                             this.geneQuery
                                 ? 'No matching genes'
-                                : 'Type to search genes'
+                                : 'No mutation data available'
                         }
                         onChange={(selected: any) =>
                             this.plotsStore.setMrnaTabGeneSymbols(

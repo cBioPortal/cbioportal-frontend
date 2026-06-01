@@ -2,6 +2,7 @@ import { action, computed, makeObservable, observable } from 'mobx';
 import _ from 'lodash';
 import { remoteData } from 'cbioportal-frontend-commons';
 import {
+    AlterationCountByGene,
     ClinicalAttribute,
     ClinicalDataFilter,
     DataFilterValue,
@@ -230,6 +231,31 @@ export class PatientViewPlotsStore {
                         a => a.displayName.toLowerCase()
                     )
                 ),
+        },
+        []
+    );
+
+    // Top 50 most-mutated genes in the currently effective reference cohort,
+    // used to seed the Genes picker's default options. Re-ranks when cohort
+    // filters change.
+    readonly topAlteredGenes = remoteData<AlterationCountByGene[]>(
+        {
+            await: () => [this.mutationMolecularProfile],
+            invoke: async () => {
+                if (!this.mutationMolecularProfile.result) {
+                    return [];
+                }
+                const result = await internalClient.fetchMutatedGenesUsingPOST(
+                    {
+                        studyViewFilter: this.committedStudyViewFilter,
+                    }
+                );
+                return _.orderBy(
+                    result,
+                    ['numberOfAlteredCases', 'hugoGeneSymbol'],
+                    ['desc', 'asc']
+                ).slice(0, 50);
+            },
         },
         []
     );
