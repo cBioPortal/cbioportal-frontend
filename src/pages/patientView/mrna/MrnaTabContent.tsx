@@ -16,6 +16,7 @@ import ChartContainer from 'shared/components/ChartContainer/ChartContainer';
 import SampleLabelSVG from 'shared/components/sampleLabel/SampleLabel';
 import SampleManager from 'pages/patientView/SampleManager';
 import { PatientViewPageStore } from 'pages/patientView/clinicalInformation/PatientViewPageStore';
+import { MutatedGenePick } from 'pages/patientView/clinicalInformation/PatientViewPlotsStore';
 import ReferenceCohortModal from 'pages/patientView/mrna/ReferenceCohortModal';
 import {
     findGroupByValue,
@@ -239,7 +240,7 @@ export default class MrnaTabContent extends React.Component<
         }
         if (genes.length > 0) {
             out.push({
-                label: q ? 'Search results' : 'Top altered in cohort',
+                label: q ? 'Search results' : 'Top mutated in cohort',
                 options: genes,
             });
         }
@@ -495,6 +496,12 @@ export default class MrnaTabContent extends React.Component<
         this.plotsStore.selectedMutatedGenes.forEach(g =>
             labels.push(`mutated ${g.hugoGeneSymbol}`)
         );
+        this.plotsStore.selectedCNAGenes.forEach(g =>
+            labels.push(`CNA ${g.hugoGeneSymbol}`)
+        );
+        this.plotsStore.selectedSVGenes.forEach(g =>
+            labels.push(`SV ${g.hugoGeneSymbol}`)
+        );
         if (labels.length === 0) {
             return this.studyName;
         }
@@ -603,7 +610,48 @@ export default class MrnaTabContent extends React.Component<
                 });
             });
         });
-        const geneChips = this.plotsStore.selectedMutatedGenes;
+        const alterationChips: Array<{
+            key: string;
+            label: string;
+            color: string;
+            background: string;
+            border: string;
+            gene: MutatedGenePick;
+            remove: () => void;
+        }> = [];
+        this.plotsStore.selectedMutatedGenes.forEach(g =>
+            alterationChips.push({
+                key: `mut:${g.entrezGeneId}`,
+                label: `Mutated: ${g.hugoGeneSymbol}`,
+                color: '#a04020',
+                background: '#fce7df',
+                border: '#f0c8b8',
+                gene: g,
+                remove: () => this.plotsStore.toggleMutatedGene(g),
+            })
+        );
+        this.plotsStore.selectedCNAGenes.forEach(g =>
+            alterationChips.push({
+                key: `cna:${g.entrezGeneId}`,
+                label: `CNA: ${g.hugoGeneSymbol}`,
+                color: '#205aa0',
+                background: '#e0e9f3',
+                border: '#c2d3eb',
+                gene: g,
+                remove: () => this.plotsStore.toggleCNAGene(g),
+            })
+        );
+        this.plotsStore.selectedSVGenes.forEach(g =>
+            alterationChips.push({
+                key: `sv:${g.entrezGeneId}`,
+                label: `SV: ${g.hugoGeneSymbol}`,
+                color: '#208040',
+                background: '#e0efe5',
+                border: '#c2dccb',
+                gene: g,
+                remove: () => this.plotsStore.toggleSVGene(g),
+            })
+        );
         return (
             <div
                 style={{
@@ -661,32 +709,30 @@ export default class MrnaTabContent extends React.Component<
                         </button>
                     </span>
                 ))}
-                {geneChips.map(g => (
+                {alterationChips.map(c => (
                     <span
-                        key={`mut:${g.entrezGeneId}`}
+                        key={c.key}
                         style={{
                             display: 'inline-flex',
                             alignItems: 'center',
-                            background: '#fce7df',
-                            color: '#a04020',
-                            border: '1px solid #f0c8b8',
+                            background: c.background,
+                            color: c.color,
+                            border: `1px solid ${c.border}`,
                             borderRadius: 12,
                             padding: '1px 4px 1px 10px',
                             fontSize: 12,
                             lineHeight: 1.5,
                         }}
                     >
-                        Mutated: {g.hugoGeneSymbol}
+                        {c.label}
                         <button
-                            onClick={() =>
-                                this.plotsStore.toggleMutatedGene(g)
-                            }
+                            onClick={c.remove}
                             title="Remove gene"
                             style={{
                                 marginLeft: 4,
                                 border: 'none',
                                 background: 'transparent',
-                                color: '#a04020',
+                                color: c.color,
                                 cursor: 'pointer',
                                 fontSize: 14,
                                 lineHeight: 1,
@@ -699,7 +745,7 @@ export default class MrnaTabContent extends React.Component<
                 ))}
                 <button
                     type="button"
-                    className="btn btn-default btn-xs"
+                    className="btn btn-default"
                     style={{ marginLeft: 4 }}
                     onClick={this.openCohortModal}
                 >

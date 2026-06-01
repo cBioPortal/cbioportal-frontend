@@ -34,12 +34,16 @@ import {
     PatientViewPlotsStore,
 } from 'pages/patientView/clinicalInformation/PatientViewPlotsStore';
 
-// Sentinel id used in selectedAttributeId to indicate the right pane should
-// show the Mutated Gene picker rather than a clinical-attribute editor.
+// Sentinel ids used in selectedAttributeId to indicate the right pane should
+// show one of the gene-alteration pickers rather than a clinical-attribute editor.
 const MUTATED_GENE_SECTION_ID = '__mutated_gene__';
-// Cap the rendered mutated-gene list (full list can be 10k+); user can refine
+const CNA_GENE_SECTION_ID = '__cna_gene__';
+const SV_GENE_SECTION_ID = '__sv_gene__';
+// Cap the rendered ranked-gene list (full list can be 10k+); user can refine
 // via the search box.
-const MUTATED_GENE_DISPLAY_LIMIT = 200;
+const RANKED_GENE_DISPLAY_LIMIT = 200;
+
+type AlterationKind = 'mutation' | 'cna' | 'sv';
 
 interface IReferenceCohortModalProps {
     plotsStore: PatientViewPlotsStore;
@@ -117,12 +121,22 @@ export default class ReferenceCohortModal extends React.Component<
     } = {};
 
     @observable.ref draftMutatedGenes: MutatedGenePick[] = [];
+    @observable.ref draftCNAGenes: MutatedGenePick[] = [];
+    @observable.ref draftSVGenes: MutatedGenePick[] = [];
 
     @observable selectedAttributeId: string | null = null;
 
     @observable attributeSearch: string = '';
 
     @observable geneSearch: string = '';
+
+    // Which top-level sections are currently collapsed (by stable id).
+    // Default to all collapsed so the modal opens to a tidy state.
+    @observable.ref collapsedSections: Set<string> = new Set<string>([
+        'sample',
+        'patient',
+        'alterations',
+    ]);
 
     constructor(props: IReferenceCohortModalProps) {
         super(props);
@@ -136,13 +150,16 @@ export default class ReferenceCohortModal extends React.Component<
                     ...this.props.plotsStore.selectedClinicalFilters,
                 };
                 this.draftMutatedGenes = this.props.plotsStore.selectedMutatedGenes.slice();
+                this.draftCNAGenes = this.props.plotsStore.selectedCNAGenes.slice();
+                this.draftSVGenes = this.props.plotsStore.selectedSVGenes.slice();
                 this.attributeSearch = '';
                 this.geneSearch = '';
-                const attrs = this.attributes;
-                this.selectedAttributeId =
-                    attrs.length > 0
-                        ? attrs[0].clinicalAttributeId
-                        : MUTATED_GENE_SECTION_ID;
+                this.collapsedSections = new Set([
+                    'sample',
+                    'patient',
+                    'alterations',
+                ]);
+                this.selectedAttributeId = null;
             });
         }
     }
@@ -155,6 +172,23 @@ export default class ReferenceCohortModal extends React.Component<
     @action.bound
     private setAttributeSearch(s: string) {
         this.attributeSearch = s;
+    }
+
+    @action.bound
+    private toggleSection(id: string) {
+        const next = new Set(this.collapsedSections);
+        if (next.has(id)) {
+            next.delete(id);
+        } else {
+            next.add(id);
+        }
+        this.collapsedSections = next;
+    }
+
+    private isSectionCollapsed(id: string): boolean {
+        // Searching always expands sections so the user sees matches.
+        if (this.attributeSearch.trim().length > 0) return false;
+        return this.collapsedSections.has(id);
     }
 
     @action.bound
@@ -196,25 +230,35 @@ export default class ReferenceCohortModal extends React.Component<
     private clearDraft() {
         this.draft = {};
         this.draftMutatedGenes = [];
+        this.draftCNAGenes = [];
+        this.draftSVGenes = [];
     }
 
     @action.bound
     private apply() {
         this.props.plotsStore.setClinicalFilters(this.draft);
         this.props.plotsStore.setMutatedGenes(this.draftMutatedGenes);
+        this.props.plotsStore.setCNAGenes(this.draftCNAGenes);
+        this.props.plotsStore.setSVGenes(this.draftSVGenes);
         this.props.onClose();
     }
 
     @action.bound
-    private toggleDraftMutatedGene(gene: MutatedGenePick) {
-        const exists = this.draftMutatedGenes.some(
-            g => g.entrezGeneId === gene.entrezGeneId
-        );
-        this.draftMutatedGenes = exists
-            ? this.draftMutatedGenes.filter(
-                  g => g.entrezGeneId !== gene.entrezGeneId
-              )
-            : [...this.draftMutatedGenes, gene];
+    private toggleDraftGene(kind: AlterationKind, gene: MutatedGenePick) {
+        const list = this.getDraftList(kind);
+        const exists = list.some(g => g.entrezGeneId === gene.entrezGeneId);
+        const next = exists
+            ? list.filter(g => g.entrezGeneId !== gene.entrezGeneId)
+            : [...list, gene];
+        if (kind === 'mutation') this.draftMutatedGenes = next;
+        else if (kind === 'cna') this.draftCNAGenes = next;
+        else this.draftSVGenes = next;
+    }
+
+    private getDraftList(kind: AlterationKind): MutatedGenePick[] {
+        if (kind === 'mutation') return this.draftMutatedGenes;
+        if (kind === 'cna') return this.draftCNAGenes;
+        return this.draftSVGenes;
     }
 
     @action.bound
@@ -230,6 +274,8 @@ export default class ReferenceCohortModal extends React.Component<
     @computed get hasDraftFilters(): boolean {
         return (
             this.draftMutatedGenes.length > 0 ||
+            this.draftCNAGenes.length > 0 ||
+            this.draftSVGenes.length > 0 ||
             Object.values(this.draft).some(v => v.length > 0)
         );
     }
@@ -239,7 +285,12 @@ export default class ReferenceCohortModal extends React.Component<
             (n, v) => n + v.length,
             0
         );
-        return clinical + this.draftMutatedGenes.length;
+        return (
+            clinical +
+            this.draftMutatedGenes.length +
+            this.draftCNAGenes.length +
+            this.draftSVGenes.length
+        );
     }
 
     @computed get draftStudyViewFilter(): StudyViewFilter {
@@ -247,7 +298,11 @@ export default class ReferenceCohortModal extends React.Component<
             this.props.studyId,
             this.draft,
             this.draftMutatedGenes,
-            this.props.plotsStore.mutationMolecularProfile.result
+            this.draftCNAGenes,
+            this.draftSVGenes,
+            this.props.plotsStore.mutationMolecularProfile.result,
+            this.props.plotsStore.cnaMolecularProfile.result,
+            this.props.plotsStore.svMolecularProfile.result
         );
     }
 
@@ -265,6 +320,14 @@ export default class ReferenceCohortModal extends React.Component<
                 a.displayName.toLowerCase().includes(q) ||
                 a.clinicalAttributeId.toLowerCase().includes(q)
         );
+    }
+
+    @computed private get sampleLevelAttributes(): ClinicalAttribute[] {
+        return this.filteredAttributes.filter(a => !a.patientAttribute);
+    }
+
+    @computed private get patientLevelAttributes(): ClinicalAttribute[] {
+        return this.filteredAttributes.filter(a => a.patientAttribute);
     }
 
     @computed private get selectedAttribute(): ClinicalAttribute | undefined {
@@ -337,10 +400,14 @@ export default class ReferenceCohortModal extends React.Component<
         { bins: [], min: 0, max: 0, naCount: 0 }
     );
 
-    // Live sample count for the draft selection (clinical + mutated genes).
+    // Live sample count for the draft selection (clinical + alteration genes).
     readonly draftFilteredSamples = remoteData<Sample[]>(
         {
-            await: () => [this.props.plotsStore.mutationMolecularProfile],
+            await: () => [
+                this.props.plotsStore.mutationMolecularProfile,
+                this.props.plotsStore.cnaMolecularProfile,
+                this.props.plotsStore.svMolecularProfile,
+            ],
             invoke: async () => {
                 if (!this.hasDraftFilters) return [];
                 return internalClient.fetchFilteredSamplesUsingPOST({
@@ -351,24 +418,53 @@ export default class ReferenceCohortModal extends React.Component<
         []
     );
 
-    // Lazy fetcher for the gene-mutation picker: ranks genes by mutation
-    // frequency in the DRAFT cohort (re-runs as the user toggles other
-    // filters or gene picks). Only invoked when the gene section is active.
-    readonly currentMutatedGenes = remoteData<AlterationCountByGene[]>(
+    // Lazy fetcher for the active gene picker (mutation / CNA / SV). Ranks
+    // genes by altered-case count in the DRAFT cohort, so the list re-ranks
+    // as the user toggles other filters. Only invoked when one of the
+    // gene-picker sections is active.
+    readonly currentRankedGenes = remoteData<AlterationCountByGene[]>(
         {
-            await: () => [this.props.plotsStore.mutationMolecularProfile],
+            await: () => [
+                this.props.plotsStore.mutationMolecularProfile,
+                this.props.plotsStore.cnaMolecularProfile,
+                this.props.plotsStore.svMolecularProfile,
+            ],
             invoke: async () => {
-                if (
-                    this.selectedAttributeId !== MUTATED_GENE_SECTION_ID ||
-                    !this.props.plotsStore.mutationMolecularProfile.result
-                ) {
-                    return [];
+                const kind = this.activeAlterationKind;
+                if (!kind) return [];
+                let raw: AlterationCountByGene[] = [];
+                if (kind === 'mutation') {
+                    if (!this.props.plotsStore.mutationMolecularProfile.result)
+                        return [];
+                    raw = await internalClient.fetchMutatedGenesUsingPOST({
+                        studyViewFilter: this.draftStudyViewFilter,
+                    });
+                } else if (kind === 'cna') {
+                    if (!this.props.plotsStore.cnaMolecularProfile.result)
+                        return [];
+                    const cnaRaw = await internalClient.fetchCNAGenesUsingPOST(
+                        { studyViewFilter: this.draftStudyViewFilter }
+                    );
+                    // CNA endpoint returns one row per gene-and-alteration; we
+                    // present one row per gene, keeping the highest altered
+                    // count for that gene.
+                    raw = _.uniqBy(
+                        _.orderBy(
+                            cnaRaw,
+                            ['numberOfAlteredCases'],
+                            ['desc']
+                        ),
+                        'entrezGeneId'
+                    ) as AlterationCountByGene[];
+                } else {
+                    if (!this.props.plotsStore.svMolecularProfile.result)
+                        return [];
+                    raw = await internalClient.fetchStructuralVariantGenesUsingPOST(
+                        { studyViewFilter: this.draftStudyViewFilter }
+                    );
                 }
-                const result = await internalClient.fetchMutatedGenesUsingPOST(
-                    { studyViewFilter: this.draftStudyViewFilter }
-                );
                 return _.orderBy(
-                    result,
+                    raw,
                     ['numberOfAlteredCases', 'hugoGeneSymbol'],
                     ['desc', 'asc']
                 );
@@ -376,6 +472,14 @@ export default class ReferenceCohortModal extends React.Component<
         },
         []
     );
+
+    @computed get activeAlterationKind(): AlterationKind | null {
+        if (this.selectedAttributeId === MUTATED_GENE_SECTION_ID)
+            return 'mutation';
+        if (this.selectedAttributeId === CNA_GENE_SECTION_ID) return 'cna';
+        if (this.selectedAttributeId === SV_GENE_SECTION_ID) return 'sv';
+        return null;
+    }
 
     @computed get matchCountText(): string {
         if (!this.hasDraftFilters) {
@@ -398,10 +502,46 @@ export default class ReferenceCohortModal extends React.Component<
     }
 
     private renderLeftPane() {
-        const items = this.filteredAttributes;
-        const mutationProfile = this.props.plotsStore.mutationMolecularProfile;
-        const showMutations =
-            mutationProfile.isComplete && !!mutationProfile.result;
+        const plots = this.props.plotsStore;
+        const hasMut = !!plots.mutationMolecularProfile.result;
+        const hasCna = !!plots.cnaMolecularProfile.result;
+        const hasSv = !!plots.svMolecularProfile.result;
+        const alterationItems: Array<{
+            sectionId: string;
+            kind: AlterationKind;
+            label: string;
+            badge: string;
+            color: string;
+        }> = [];
+        if (hasMut)
+            alterationItems.push({
+                sectionId: MUTATED_GENE_SECTION_ID,
+                kind: 'mutation',
+                label: 'Mutated gene',
+                badge: 'MUT',
+                color: '#a04020',
+            });
+        if (hasCna)
+            alterationItems.push({
+                sectionId: CNA_GENE_SECTION_ID,
+                kind: 'cna',
+                label: 'Copy number altered gene',
+                badge: 'CNA',
+                color: '#205aa0',
+            });
+        if (hasSv)
+            alterationItems.push({
+                sectionId: SV_GENE_SECTION_ID,
+                kind: 'sv',
+                label: 'Structural variant gene',
+                badge: 'SV',
+                color: '#208040',
+            });
+        const showAlterations = alterationItems.length > 0;
+        const sampleItems = this.sampleLevelAttributes;
+        const patientItems = this.patientLevelAttributes;
+        const allEmpty =
+            this.filteredAttributes.length === 0 && !showAlterations;
         return (
             <div
                 style={{
@@ -429,112 +569,180 @@ export default class ReferenceCohortModal extends React.Component<
                     }}
                 />
                 <div style={{ overflowY: 'auto', flex: 1 }}>
-                    {this.renderLeftPaneHeader('Clinical')}
-                    {items.length === 0 && (
+                    {allEmpty && (
                         <div style={{ fontSize: 12, color: '#666' }}>
                             No filters match.
                         </div>
                     )}
-                    {items.map(a => {
-                        const active =
-                            a.clinicalAttributeId === this.selectedAttributeId;
-                        const draftEntry = this.draft[a.clinicalAttributeId];
-                        const selectedCount = draftEntry
-                            ? draftEntry.length
-                            : 0;
-                        const level = a.patientAttribute ? 'P' : 'S';
-                        const datatypeBadge =
-                            a.datatype === 'NUMBER' ? '#' : '';
-                        return (
-                            <div
-                                key={a.clinicalAttributeId}
-                                onClick={() =>
-                                    this.selectAttribute(a.clinicalAttributeId)
-                                }
-                                style={{
-                                    padding: '5px 8px',
-                                    cursor: 'pointer',
-                                    borderRadius: 3,
-                                    background: active
-                                        ? '#e6f0fa'
-                                        : 'transparent',
-                                    color: active ? '#0b5fae' : '#333',
-                                    fontWeight: active ? 600 : 'normal',
-                                    fontSize: 13,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                }}
-                            >
-                                <span
-                                    title={
-                                        a.patientAttribute
-                                            ? 'Patient-level'
-                                            : 'Sample-level'
-                                    }
-                                    style={{
-                                        fontSize: 9,
-                                        marginRight: 6,
-                                        background: '#888',
-                                        color: 'white',
-                                        borderRadius: 2,
-                                        padding: '1px 4px',
-                                        fontWeight: 'bold',
-                                    }}
-                                >
-                                    {level}
-                                    {datatypeBadge}
-                                </span>
-                                <span style={{ flex: 1 }}>{a.displayName}</span>
-                                {selectedCount > 0 && (
-                                    <span
-                                        style={{
-                                            marginLeft: 6,
-                                            fontSize: 11,
-                                            background: '#0b5fae',
-                                            color: 'white',
-                                            borderRadius: 10,
-                                            padding: '1px 7px',
-                                        }}
-                                    >
-                                        {selectedCount}
-                                    </span>
-                                )}
-                            </div>
-                        );
-                    })}
-                    {showMutations && this.renderLeftPaneHeader('Mutations')}
-                    {showMutations &&
-                        this.renderLeftPaneMutationItem()}
+                    {sampleItems.length > 0 &&
+                        this.renderCollapsibleSection(
+                            'sample',
+                            'Sample',
+                            sampleItems.length,
+                            !this.isSectionCollapsed('sample') &&
+                                sampleItems.map(a =>
+                                    this.renderAttributeRow(a)
+                                )
+                        )}
+                    {patientItems.length > 0 &&
+                        this.renderCollapsibleSection(
+                            'patient',
+                            'Patient',
+                            patientItems.length,
+                            !this.isSectionCollapsed('patient') &&
+                                patientItems.map(a =>
+                                    this.renderAttributeRow(a)
+                                )
+                        )}
+                    {showAlterations &&
+                        this.renderCollapsibleSection(
+                            'alterations',
+                            'Alterations',
+                            alterationItems.length,
+                            !this.isSectionCollapsed('alterations') &&
+                                alterationItems.map(i =>
+                                    this.renderAlterationItem(
+                                        i.sectionId,
+                                        i.kind,
+                                        i.label,
+                                        i.badge,
+                                        i.color
+                                    )
+                                )
+                        )}
                 </div>
             </div>
         );
     }
 
-    private renderLeftPaneHeader(label: string) {
+    private renderAttributeRow(a: ClinicalAttribute) {
+        const active = a.clinicalAttributeId === this.selectedAttributeId;
+        const draftEntry = this.draft[a.clinicalAttributeId];
+        const selectedCount = draftEntry ? draftEntry.length : 0;
+        const datatypeBadge = a.datatype === 'NUMBER' ? '#' : '';
         return (
             <div
-                key={`__header__${label}`}
+                key={a.clinicalAttributeId}
+                onClick={() => this.selectAttribute(a.clinicalAttributeId)}
                 style={{
-                    fontSize: 10,
-                    fontWeight: 'bold',
-                    color: '#888',
-                    textTransform: 'uppercase',
-                    letterSpacing: 0.5,
-                    margin: '8px 0 4px',
+                    padding: '5px 8px',
+                    cursor: 'pointer',
+                    borderRadius: 3,
+                    background: active ? '#e6f0fa' : 'transparent',
+                    color: active ? '#0b5fae' : '#333',
+                    fontWeight: active ? 600 : 'normal',
+                    fontSize: 13,
+                    display: 'flex',
+                    alignItems: 'center',
                 }}
             >
-                {label}
+                <span style={{ flex: 1 }}>
+                    {a.displayName}
+                    {datatypeBadge && (
+                        <span
+                            title="Numeric"
+                            style={{
+                                fontSize: 9,
+                                marginLeft: 5,
+                                background: '#888',
+                                color: 'white',
+                                borderRadius: 2,
+                                padding: '1px 4px',
+                                fontWeight: 'bold',
+                                verticalAlign: 'middle',
+                            }}
+                        >
+                            {datatypeBadge}
+                        </span>
+                    )}
+                </span>
+                {selectedCount > 0 && (
+                    <span
+                        style={{
+                            marginLeft: 6,
+                            fontSize: 11,
+                            background: '#0b5fae',
+                            color: 'white',
+                            borderRadius: 10,
+                            padding: '1px 7px',
+                        }}
+                    >
+                        {selectedCount}
+                    </span>
+                )}
             </div>
         );
     }
 
-    private renderLeftPaneMutationItem() {
-        const active = this.selectedAttributeId === MUTATED_GENE_SECTION_ID;
-        const count = this.draftMutatedGenes.length;
+    private renderCollapsibleSection(
+        id: string,
+        label: string,
+        count: number,
+        body: React.ReactNode
+    ) {
+        const collapsed = this.isSectionCollapsed(id);
+        return (
+            <div key={`__section__${id}`}>
+                <div
+                    onClick={() => this.toggleSection(id)}
+                    style={{
+                        cursor: 'pointer',
+                        userSelect: 'none',
+                        display: 'flex',
+                        alignItems: 'center',
+                        margin: '8px 0 4px',
+                    }}
+                >
+                    <span
+                        style={{
+                            fontSize: 10,
+                            color: '#888',
+                            marginRight: 4,
+                            width: 10,
+                        }}
+                    >
+                        {collapsed ? '▸' : '▾'}
+                    </span>
+                    <span
+                        style={{
+                            fontSize: 10,
+                            fontWeight: 'bold',
+                            color: '#888',
+                            textTransform: 'uppercase',
+                            letterSpacing: 0.5,
+                            flex: 1,
+                        }}
+                    >
+                        {label}
+                    </span>
+                    <span
+                        style={{
+                            fontSize: 10,
+                            color: '#bbb',
+                            marginLeft: 4,
+                        }}
+                    >
+                        {count}
+                    </span>
+                </div>
+                {body}
+            </div>
+        );
+    }
+
+    private renderAlterationItem(
+        sectionId: string,
+        kind: AlterationKind,
+        label: string,
+        badgeText: string,
+        badgeColor: string
+    ) {
+        const active = this.selectedAttributeId === sectionId;
+        const count = this.getDraftList(kind).length;
         return (
             <div
-                key={MUTATED_GENE_SECTION_ID}
-                onClick={() => this.selectAttribute(MUTATED_GENE_SECTION_ID)}
+                key={sectionId}
+                onClick={() => this.selectAttribute(sectionId)}
                 style={{
                     padding: '5px 8px',
                     cursor: 'pointer',
@@ -548,20 +756,20 @@ export default class ReferenceCohortModal extends React.Component<
                 }}
             >
                 <span
-                    title="Mutated gene"
+                    title={label}
                     style={{
                         fontSize: 9,
                         marginRight: 6,
-                        background: '#a04020',
+                        background: badgeColor,
                         color: 'white',
                         borderRadius: 2,
                         padding: '1px 4px',
                         fontWeight: 'bold',
                     }}
                 >
-                    MUT
+                    {badgeText}
                 </span>
-                <span style={{ flex: 1 }}>Mutated gene</span>
+                <span style={{ flex: 1 }}>{label}</span>
                 {count > 0 && (
                     <span
                         style={{
@@ -580,8 +788,8 @@ export default class ReferenceCohortModal extends React.Component<
         );
     }
 
-    private renderMutatedGeneRightPane() {
-        const remote = this.currentMutatedGenes;
+    private renderGeneAlterationRightPane(kind: AlterationKind) {
+        const remote = this.currentRankedGenes;
         const loading = remote.isPending;
         const all = remote.result || [];
         const q = this.geneSearch.trim().toUpperCase();
@@ -590,14 +798,26 @@ export default class ReferenceCohortModal extends React.Component<
                   g.hugoGeneSymbol.toUpperCase().includes(q)
               )
             : all;
-        const visible = filtered.slice(0, MUTATED_GENE_DISPLAY_LIMIT);
+        const visible = filtered.slice(0, RANKED_GENE_DISPLAY_LIMIT);
         const truncated =
-            filtered.length > MUTATED_GENE_DISPLAY_LIMIT
-                ? filtered.length - MUTATED_GENE_DISPLAY_LIMIT
+            filtered.length > RANKED_GENE_DISPLAY_LIMIT
+                ? filtered.length - RANKED_GENE_DISPLAY_LIMIT
                 : 0;
         const draftIds = new Set(
-            this.draftMutatedGenes.map(g => g.entrezGeneId)
+            this.getDraftList(kind).map(g => g.entrezGeneId)
         );
+        const emptyMessage =
+            kind === 'mutation'
+                ? 'No mutated genes in the current cohort.'
+                : kind === 'cna'
+                ? 'No copy-number-altered genes in the current cohort.'
+                : 'No structural-variant genes in the current cohort.';
+        const loadingMessage =
+            kind === 'mutation'
+                ? 'Loading mutated genes…'
+                : kind === 'cna'
+                ? 'Loading copy-number-altered genes…'
+                : 'Loading structural-variant genes…';
         return (
             <>
                 <input
@@ -616,13 +836,13 @@ export default class ReferenceCohortModal extends React.Component<
                 />
                 {loading ? (
                     <div style={{ fontSize: 12, color: '#666' }}>
-                        Loading mutated genes…
+                        {loadingMessage}
                     </div>
                 ) : visible.length === 0 ? (
                     <div style={{ fontSize: 12, color: '#666' }}>
                         {q
                             ? `No genes match "${this.geneSearch}".`
-                            : 'No mutated genes in the current cohort.'}
+                            : emptyMessage}
                     </div>
                 ) : (
                     <>
@@ -660,7 +880,8 @@ export default class ReferenceCohortModal extends React.Component<
                                                 type="checkbox"
                                                 checked={checked}
                                                 onChange={() =>
-                                                    this.toggleDraftMutatedGene(
+                                                    this.toggleDraftGene(
+                                                        kind,
                                                         {
                                                             hugoGeneSymbol:
                                                                 g.hugoGeneSymbol,
@@ -963,7 +1184,25 @@ export default class ReferenceCohortModal extends React.Component<
     }
 
     private renderRightPane() {
-        if (this.selectedAttributeId === MUTATED_GENE_SECTION_ID) {
+        const kind = this.activeAlterationKind;
+        if (kind) {
+            const titles = {
+                mutation: {
+                    label: 'Mutated gene',
+                    hint: 'ranked by mutation frequency in current cohort',
+                },
+                cna: {
+                    label: 'Copy number altered gene',
+                    hint:
+                        'ranked by deep CNA (AMP/HOMDEL) frequency in current cohort',
+                },
+                sv: {
+                    label: 'Structural variant gene',
+                    hint:
+                        'ranked by structural-variant frequency in current cohort',
+                },
+            } as const;
+            const t = titles[kind];
             return (
                 <div
                     style={{
@@ -980,7 +1219,7 @@ export default class ReferenceCohortModal extends React.Component<
                             marginBottom: 8,
                         }}
                     >
-                        Mutated gene{' '}
+                        {t.label}{' '}
                         <span
                             style={{
                                 fontWeight: 'normal',
@@ -988,10 +1227,10 @@ export default class ReferenceCohortModal extends React.Component<
                                 fontSize: 12,
                             }}
                         >
-                            (ranked by mutation frequency in current cohort)
+                            ({t.hint})
                         </span>
                     </div>
-                    {this.renderMutatedGeneRightPane()}
+                    {this.renderGeneAlterationRightPane(kind)}
                 </div>
             );
         }
