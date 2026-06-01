@@ -9,12 +9,14 @@ import {
     VictoryScatter,
 } from 'victory';
 import { CBIOPORTAL_VICTORY_THEME } from 'cbioportal-frontend-commons';
+import { DataFilterValue } from 'cbioportal-ts-api-client';
 import ReactSelect from 'react-select';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import ChartContainer from 'shared/components/ChartContainer/ChartContainer';
 import SampleLabelSVG from 'shared/components/sampleLabel/SampleLabel';
 import SampleManager from 'pages/patientView/SampleManager';
 import { PatientViewPageStore } from 'pages/patientView/clinicalInformation/PatientViewPageStore';
+import ReferenceCohortModal from 'pages/patientView/mrna/ReferenceCohortModal';
 
 interface IGeneOption {
     label: string;
@@ -57,6 +59,15 @@ function quantileSorted(sorted: number[], q: number): number {
     return next !== undefined
         ? sorted[base] + rest * (next - sorted[base])
         : sorted[base];
+}
+
+// Compact text for a numeric range from a DataFilterValue ({start,end}).
+function formatRange(start?: number, end?: number): string {
+    const lo =
+        start !== undefined && !isNaN(start as number) ? String(start) : '−∞';
+    const hi =
+        end !== undefined && !isNaN(end as number) ? String(end) : '+∞';
+    return `${lo}–${hi}`;
 }
 
 // Deterministic [0,1) hash so jitter is stable across renders.
@@ -124,6 +135,18 @@ export default class MrnaTabContent extends React.Component<
     @action.bound
     setGeneQuery(q: string) {
         this.geneQuery = q;
+    }
+
+    @observable isCohortModalOpen: boolean = false;
+
+    @action.bound
+    openCohortModal() {
+        this.isCohortModalOpen = true;
+    }
+
+    @action.bound
+    closeCohortModal() {
+        this.isCohortModalOpen = false;
     }
 
     @computed get geneOptions(): IGeneOption[] {
@@ -371,15 +394,27 @@ export default class MrnaTabContent extends React.Component<
     }
 
     // Human-readable name of the active reference cohort, used in the title
-    // and export filename. When the user has cancer-type filters selected,
-    // we list the chosen values; otherwise we show the study name.
+    // and export filename. When the user has filters selected, we list the
+    // chosen values/ranges/genes; otherwise we show the study name.
     @computed get cohortName(): string {
-        const filters = this.plotsStore.selectedCancerTypeFilters;
-        const values = _.flatMap(Object.keys(filters), k => filters[k]);
-        if (values.length === 0) {
+        const filters = this.plotsStore.selectedClinicalFilters;
+        const labels: string[] = [];
+        Object.keys(filters).forEach(k => {
+            filters[k].forEach(v => {
+                if (v.value !== undefined && v.value !== '') {
+                    labels.push(v.value);
+                } else {
+                    labels.push(`${formatRange(v.start, v.end)}`);
+                }
+            });
+        });
+        this.plotsStore.selectedMutatedGenes.forEach(g =>
+            labels.push(`mutated ${g.hugoGeneSymbol}`)
+        );
+        if (labels.length === 0) {
             return this.studyName;
         }
-        return _.uniq(values).join(' or ');
+        return _.uniq(labels).join(' or ');
     }
 
     @computed get chartTitle(): string {
@@ -434,207 +469,168 @@ export default class MrnaTabContent extends React.Component<
                         }
                     />
                 </div>
-                {this.renderReferenceCohortFilter()}
+                {this.renderCohortSummaryBar()}
                 {this.renderChart()}
+                <ReferenceCohortModal
+                    plotsStore={this.plotsStore}
+                    studyId={store.studyId}
+                    isOpen={this.isCohortModalOpen}
+                    onClose={this.closeCohortModal}
+                />
             </div>
         );
     }
 
-    // Interactive reference-cohort selector. Lists each cancer-type
-    // clinical attribute the study exposes and its distinct values with sample
-    // counts; each value is a checkbox. Selecting values drives the reference
-    // cohort (sample set the box plot compares against) via a study-view
-    // filtered-samples fetch. Within an attribute, multiple selections OR
-    // together; across attributes they AND together.
-    private renderReferenceCohortFilter() {
-        const remote = this.plotsStore.cancerTypeValueCounts;
-        const filters = this.plotsStore.selectedCancerTypeFilters;
-        const hasFilters = this.plotsStore.hasCancerTypeFilters;
-        const filteredSamples = this.plotsStore.studyViewFilteredSamples;
+    // Compact, always-visible summary of the reference cohort: live sample
+    // count, a chip per active attribute:value pair (× removes a single chip),
+    // an "Add filter" button that opens the chooser modal, and "Clear all"
+    // when filters are active.
+    private renderCohortSummaryBar() {
+        const filters = this.plotsStore.selectedClinicalFilters;
+        const attrs =
+            this.plotsStore.filterableClinicalAttributes.result || [];
+        const attrById = _.keyBy(attrs, a => a.clinicalAttributeId);
+        const cohort = this.plotsStore.effectiveCohortSamples;
+        const hasFilters = this.plotsStore.hasAnyFilter;
+        const sampleCount = cohort.isComplete
+            ? cohort.result!.length.toLocaleString('en-US')
+            : '…';
+        const clinicalChips: {
+            attrId: string;
+            value: DataFilterValue;
+            label: string;
+        }[] = [];
+        Object.keys(filters).forEach(attrId => {
+            const attr = attrById[attrId];
+            filters[attrId].forEach(v => {
+                const valueLabel =
+                    v.value !== undefined && v.value !== ''
+                        ? v.value
+                        : formatRange(v.start, v.end);
+                const prefix = attr ? attr.displayName : attrId;
+                clinicalChips.push({
+                    attrId,
+                    value: v,
+                    label: `${prefix}: ${valueLabel}`,
+                });
+            });
+        });
+        const geneChips = this.plotsStore.selectedMutatedGenes;
         return (
             <div
                 style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    alignItems: 'center',
+                    gap: 6,
                     marginBottom: 16,
-                    padding: '10px 14px',
-                    border: '1px solid #ddd',
-                    borderRadius: 4,
-                    background: '#fafafa',
                     maxWidth: 720,
                 }}
             >
-                <div
-                    style={{
-                        display: 'flex',
-                        alignItems: 'baseline',
-                        marginBottom: 6,
-                    }}
-                >
-                    <div style={{ fontSize: 13, fontWeight: 'bold' }}>
-                        Reference cohort
-                    </div>
-                    <div
+                <strong style={{ fontSize: 13 }}>Reference cohort</strong>
+                <span style={{ fontSize: 13, color: '#666' }}>
+                    &bull; {sampleCount} sample{sampleCount === '1' ? '' : 's'}
+                    {!hasFilters && (
+                        <span style={{ marginLeft: 4 }}>(whole study)</span>
+                    )}
+                </span>
+                {clinicalChips.map((c, i) => (
+                    <span
+                        key={`${c.attrId}:${i}`}
                         style={{
-                            marginLeft: 10,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            background: '#e6f0fa',
+                            color: '#0b5fae',
+                            border: '1px solid #c7dcee',
+                            borderRadius: 12,
+                            padding: '1px 4px 1px 10px',
                             fontSize: 12,
-                            color: '#666',
+                            lineHeight: 1.5,
                         }}
                     >
-                        {this.referenceCohortSummary}
-                    </div>
-                    {hasFilters && (
-                        <a
-                            href="#"
-                            style={{ marginLeft: 'auto', fontSize: 12 }}
-                            onClick={e => {
-                                e.preventDefault();
-                                this.plotsStore.clearCancerTypeFilters();
+                        {c.label}
+                        <button
+                            onClick={() =>
+                                this.plotsStore.removeClinicalFilterValue(
+                                    c.attrId,
+                                    c.value
+                                )
+                            }
+                            title="Remove filter"
+                            style={{
+                                marginLeft: 4,
+                                border: 'none',
+                                background: 'transparent',
+                                color: '#0b5fae',
+                                cursor: 'pointer',
+                                fontSize: 14,
+                                lineHeight: 1,
+                                padding: '0 4px',
                             }}
                         >
-                            Clear
-                        </a>
-                    )}
-                </div>
-                {remote.isPending && (
-                    <div style={{ fontSize: 12, color: '#666' }}>Loading…</div>
-                )}
-                {remote.isError && (
-                    <div style={{ fontSize: 12, color: '#c00' }}>
-                        Failed to load cancer-type data.
-                    </div>
-                )}
-                {remote.isComplete && remote.result!.length === 0 && (
-                    <div style={{ fontSize: 12, color: '#666' }}>
-                        No cancer-type clinical attributes are defined at the
-                        sample level for this study. Using the whole study as
-                        the reference cohort.
-                    </div>
-                )}
-                {remote.isComplete &&
-                    remote.result!.map(a => {
-                        const selected =
-                            filters[a.attribute.clinicalAttributeId] || [];
-                        return (
-                            <div
-                                key={a.attribute.clinicalAttributeId}
-                                style={{ marginTop: 8 }}
-                            >
-                                <div
-                                    style={{
-                                        fontSize: 12,
-                                        fontWeight: 'bold',
-                                    }}
-                                >
-                                    {a.attribute.displayName}{' '}
-                                    <span
-                                        style={{
-                                            fontWeight: 'normal',
-                                            color: '#888',
-                                        }}
-                                    >
-                                        ({a.attribute.clinicalAttributeId})
-                                    </span>
-                                </div>
-                                {a.counts.length === 0 ? (
-                                    <div
-                                        style={{
-                                            fontSize: 12,
-                                            color: '#666',
-                                        }}
-                                    >
-                                        (no values)
-                                    </div>
-                                ) : (
-                                    <ul
-                                        style={{
-                                            margin: '4px 0 0 4px',
-                                            padding: 0,
-                                            listStyle: 'none',
-                                            fontSize: 12,
-                                        }}
-                                    >
-                                        {a.counts.map(c => {
-                                            const checked = selected.includes(
-                                                c.value
-                                            );
-                                            return (
-                                                <li
-                                                    key={c.value}
-                                                    style={{
-                                                        padding: '1px 0',
-                                                    }}
-                                                >
-                                                    <label
-                                                        style={{
-                                                            cursor: 'pointer',
-                                                            fontWeight: 'normal',
-                                                            display: 'inline-flex',
-                                                            alignItems: 'center',
-                                                        }}
-                                                    >
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={checked}
-                                                            onChange={() =>
-                                                                this.plotsStore.toggleCancerTypeValue(
-                                                                    a.attribute
-                                                                        .clinicalAttributeId,
-                                                                    c.value
-                                                                )
-                                                            }
-                                                            style={{
-                                                                marginRight: 6,
-                                                            }}
-                                                        />
-                                                        {c.value}{' '}
-                                                        <span
-                                                            style={{
-                                                                color: '#888',
-                                                                marginLeft: 4,
-                                                            }}
-                                                        >
-                                                            (
-                                                            {c.count.toLocaleString(
-                                                                'en-US'
-                                                            )}
-                                                            )
-                                                        </span>
-                                                    </label>
-                                                </li>
-                                            );
-                                        })}
-                                    </ul>
-                                )}
-                            </div>
-                        );
-                    })}
-                {hasFilters && filteredSamples.isPending && (
-                    <div
+                            ×
+                        </button>
+                    </span>
+                ))}
+                {geneChips.map(g => (
+                    <span
+                        key={`mut:${g.entrezGeneId}`}
                         style={{
-                            fontSize: 11,
-                            color: '#666',
-                            marginTop: 8,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            background: '#fce7df',
+                            color: '#a04020',
+                            border: '1px solid #f0c8b8',
+                            borderRadius: 12,
+                            padding: '1px 4px 1px 10px',
+                            fontSize: 12,
+                            lineHeight: 1.5,
                         }}
                     >
-                        Loading filtered samples…
-                    </div>
+                        Mutated: {g.hugoGeneSymbol}
+                        <button
+                            onClick={() =>
+                                this.plotsStore.toggleMutatedGene(g)
+                            }
+                            title="Remove gene"
+                            style={{
+                                marginLeft: 4,
+                                border: 'none',
+                                background: 'transparent',
+                                color: '#a04020',
+                                cursor: 'pointer',
+                                fontSize: 14,
+                                lineHeight: 1,
+                                padding: '0 4px',
+                            }}
+                        >
+                            ×
+                        </button>
+                    </span>
+                ))}
+                <button
+                    type="button"
+                    className="btn btn-default btn-xs"
+                    style={{ marginLeft: 4 }}
+                    onClick={this.openCohortModal}
+                >
+                    + Add filter
+                </button>
+                {hasFilters && (
+                    <a
+                        href="#"
+                        style={{ fontSize: 12, marginLeft: 4 }}
+                        onClick={e => {
+                            e.preventDefault();
+                            this.plotsStore.clearAllFilters();
+                        }}
+                    >
+                        Clear all
+                    </a>
                 )}
             </div>
         );
-    }
-
-    // Live summary line shown next to the "Reference cohort" header.
-    @computed private get referenceCohortSummary(): string {
-        const cohort = this.plotsStore.effectiveCohortSamples;
-        if (cohort.isPending) {
-            return 'computing…';
-        }
-        const n = cohort.isComplete ? cohort.result!.length : 0;
-        const samples = `${n.toLocaleString('en-US')} sample${
-            n === 1 ? '' : 's'
-        }`;
-        return this.plotsStore.hasCancerTypeFilters
-            ? `${samples} match the selected filter`
-            : `${samples} (whole study)`;
     }
 
     private renderChart() {
