@@ -13,32 +13,61 @@ import {
     MolecularProfile,
     NumericGeneMolecularData,
     Sample,
+    StructuralVariantFilterQuery,
     StudyViewFilter,
+    StudyViewStructuralVariantFilter,
 } from 'cbioportal-ts-api-client';
 import { getClient } from '../../../shared/api/cbioportalClientInstance';
 import internalClient from '../../../shared/api/cbioportalInternalClientInstance';
 import { AlterationTypeConstants } from 'shared/constants';
-import { GENE_FILTER_QUERY_DEFAULTS } from 'pages/studyView/StudyViewUtils';
-import { findGroupByValue } from 'pages/patientView/mrna/mrnaTabGeneGroups';
+import {
+    GENE_FILTER_QUERY_DEFAULTS,
+    STRUCTURAL_VARIANT_FILTER_QUERY_DEFAULTS,
+} from 'pages/studyView/StudyViewUtils';
+import {
+    findGroupByValue,
+    groupValue,
+    MRNA_TAB_GENE_GROUPS,
+} from 'pages/patientView/mrna/mrnaTabGeneGroups';
 // Imported for its type only (used as a constructor-param annotation, which is
 // erased at runtime) so this does not create a runtime import cycle.
 import { PatientViewPageStore } from './PatientViewPageStore';
 
-export const MRNA_TAB_GENES = ['TP53', 'EGFR', 'KRAS'];
+// Initial picker selection when the user first lands on the mRNA tab.
+// Defaults to the FDA-approved ADC targets group token; falls back to a small
+// set of well-known genes if that group has been removed.
+const FDA_ADC_GROUP = MRNA_TAB_GENE_GROUPS.find(g => g.id === 'fda-adc');
+export const MRNA_TAB_DEFAULT_SELECTIONS: string[] = FDA_ADC_GROUP
+    ? [groupValue(FDA_ADC_GROUP)]
+    : ['TP53', 'EGFR', 'KRAS'];
 
 export interface MutatedGenePick {
     hugoGeneSymbol: string;
     entrezGeneId: number;
 }
 
+function togglePick(
+    current: MutatedGenePick[],
+    gene: MutatedGenePick
+): MutatedGenePick[] {
+    const exists = current.some(g => g.entrezGeneId === gene.entrezGeneId);
+    return exists
+        ? current.filter(g => g.entrezGeneId !== gene.entrezGeneId)
+        : [...current, gene];
+}
+
 // Translate the patient-view filter selections into a StudyViewFilter the
-// internal /filtered-samples and /mutated-genes endpoints understand.
-// Exported so the modal's draft state can produce the same shape.
+// internal /filtered-samples and /<x>-genes endpoints understand. Exported so
+// the modal's draft state can produce the same shape.
 export function buildStudyViewFilter(
     studyId: string,
     clinicalFilters: { [attrId: string]: DataFilterValue[] },
     mutatedGenes: MutatedGenePick[],
-    mutationProfile: MolecularProfile | undefined
+    cnaGenes: MutatedGenePick[],
+    svGenes: MutatedGenePick[],
+    mutationProfile: MolecularProfile | undefined,
+    cnaProfile: MolecularProfile | undefined,
+    svProfile: MolecularProfile | undefined
 ): StudyViewFilter {
     const clinicalDataFilters: ClinicalDataFilter[] = Object.keys(
         clinicalFilters
@@ -63,10 +92,45 @@ export function buildStudyViewFilter(
             ]),
         });
     }
+    if (cnaGenes.length > 0 && cnaProfile) {
+        // Match deep CNAs (AMP / HOMDEL) — the standard "altered" CNA criterion.
+        geneFilters.push({
+            molecularProfileIds: [cnaProfile.molecularProfileId],
+            geneQueries: cnaGenes.map(g => [
+                {
+                    ...GENE_FILTER_QUERY_DEFAULTS,
+                    alterations: ['AMP', 'HOMDEL'],
+                    hugoGeneSymbol: g.hugoGeneSymbol,
+                    entrezGeneId: g.entrezGeneId,
+                } as GeneFilterQuery,
+            ]),
+        });
+    }
+    const structuralVariantFilters: StudyViewStructuralVariantFilter[] = [];
+    if (svGenes.length > 0 && svProfile) {
+        structuralVariantFilters.push({
+            molecularProfileIds: [svProfile.molecularProfileId],
+            structVarQueries: svGenes.map(g => [
+                {
+                    ...STRUCTURAL_VARIANT_FILTER_QUERY_DEFAULTS,
+                    gene1Query: {
+                        hugoSymbol: g.hugoGeneSymbol,
+                        entrezId: g.entrezGeneId,
+                        specialValue: 'NO_GENE',
+                    },
+                    gene2Query: {
+                        ...STRUCTURAL_VARIANT_FILTER_QUERY_DEFAULTS.gene2Query,
+                        specialValue: 'ANY_GENE',
+                    },
+                } as StructuralVariantFilterQuery,
+            ]),
+        });
+    }
     return {
         studyIds: [studyId],
         clinicalDataFilters,
         geneFilters,
+        structuralVariantFilters,
     } as StudyViewFilter;
 }
 
@@ -92,7 +156,7 @@ export class PatientViewPlotsStore {
     // Items selected in the mRNA tab gene chooser. Each entry is either a
     // Hugo gene symbol or a "group:<id>" token for a predefined preset; the
     // chart renders one row per unique resolved gene (see effectiveGeneSymbols).
-    @observable.ref mrnaTabSelections: string[] = MRNA_TAB_GENES;
+    @observable.ref mrnaTabSelections: string[] = MRNA_TAB_DEFAULT_SELECTIONS;
 
     @action.bound
     setMrnaTabSelections(items: string[]) {
@@ -172,33 +236,64 @@ export class PatientViewPlotsStore {
         this.selectedClinicalFilters = {};
     }
 
-    // Selected mutated genes (cohort = samples with ≥1 mutation in any of
-    // these genes in the study's mutation profile). Multiple genes OR.
+    // Selected mutated / CNA / SV genes. Each list = samples with ≥1 alteration
+    // of that kind in ANY of the selected genes (OR within the list).
     @observable.ref selectedMutatedGenes: MutatedGenePick[] = [];
+    @observable.ref selectedCNAGenes: MutatedGenePick[] = [];
+    @observable.ref selectedSVGenes: MutatedGenePick[] = [];
 
     @computed get hasMutatedGenes(): boolean {
         return this.selectedMutatedGenes.length > 0;
     }
 
+    @computed get hasCNAGenes(): boolean {
+        return this.selectedCNAGenes.length > 0;
+    }
+
+    @computed get hasSVGenes(): boolean {
+        return this.selectedSVGenes.length > 0;
+    }
+
     @computed get hasAnyFilter(): boolean {
-        return this.hasClinicalFilters || this.hasMutatedGenes;
+        return (
+            this.hasClinicalFilters ||
+            this.hasMutatedGenes ||
+            this.hasCNAGenes ||
+            this.hasSVGenes
+        );
     }
 
     @action.bound
     toggleMutatedGene(gene: MutatedGenePick) {
-        const exists = this.selectedMutatedGenes.some(
-            g => g.entrezGeneId === gene.entrezGeneId
+        this.selectedMutatedGenes = togglePick(
+            this.selectedMutatedGenes,
+            gene
         );
-        this.selectedMutatedGenes = exists
-            ? this.selectedMutatedGenes.filter(
-                  g => g.entrezGeneId !== gene.entrezGeneId
-              )
-            : [...this.selectedMutatedGenes, gene];
+    }
+
+    @action.bound
+    toggleCNAGene(gene: MutatedGenePick) {
+        this.selectedCNAGenes = togglePick(this.selectedCNAGenes, gene);
+    }
+
+    @action.bound
+    toggleSVGene(gene: MutatedGenePick) {
+        this.selectedSVGenes = togglePick(this.selectedSVGenes, gene);
     }
 
     @action.bound
     setMutatedGenes(genes: MutatedGenePick[]) {
         this.selectedMutatedGenes = genes.slice();
+    }
+
+    @action.bound
+    setCNAGenes(genes: MutatedGenePick[]) {
+        this.selectedCNAGenes = genes.slice();
+    }
+
+    @action.bound
+    setSVGenes(genes: MutatedGenePick[]) {
+        this.selectedSVGenes = genes.slice();
     }
 
     @action.bound
@@ -210,6 +305,8 @@ export class PatientViewPlotsStore {
     clearAllFilters() {
         this.selectedClinicalFilters = {};
         this.selectedMutatedGenes = [];
+        this.selectedCNAGenes = [];
+        this.selectedSVGenes = [];
     }
 
     // All samples in the study the current patient belongs to.
@@ -281,8 +378,8 @@ export class PatientViewPlotsStore {
         []
     );
 
-    // Study's primary mutation profile, used when constructing gene-mutation
-    // study-view filters.
+    // Study's primary mutation / CNA / SV profiles, used when constructing
+    // gene-based study-view filters.
     readonly mutationMolecularProfile = remoteData<
         MolecularProfile | undefined
     >({
@@ -295,14 +392,39 @@ export class PatientViewPlotsStore {
             ),
     });
 
+    readonly cnaMolecularProfile = remoteData<MolecularProfile | undefined>({
+        await: () => [this.parentStore.molecularProfilesInStudy],
+        invoke: async () =>
+            this.parentStore.molecularProfilesInStudy.result!.find(
+                p =>
+                    p.molecularAlterationType ===
+                    AlterationTypeConstants.COPY_NUMBER_ALTERATION &&
+                    p.datatype === 'DISCRETE'
+            ),
+    });
+
+    readonly svMolecularProfile = remoteData<MolecularProfile | undefined>({
+        await: () => [this.parentStore.molecularProfilesInStudy],
+        invoke: async () =>
+            this.parentStore.molecularProfilesInStudy.result!.find(
+                p =>
+                    p.molecularAlterationType ===
+                    AlterationTypeConstants.STRUCTURAL_VARIANT
+            ),
+    });
+
     // Build the study-view filter representing the currently committed cohort
-    // (clinical filters + mutated-gene filters).
+    // (clinical filters + mutated/CNA/SV gene filters).
     @computed get committedStudyViewFilter(): StudyViewFilter {
         return buildStudyViewFilter(
             this.parentStore.studyId,
             this.selectedClinicalFilters,
             this.selectedMutatedGenes,
-            this.mutationMolecularProfile.result
+            this.selectedCNAGenes,
+            this.selectedSVGenes,
+            this.mutationMolecularProfile.result,
+            this.cnaMolecularProfile.result,
+            this.svMolecularProfile.result
         );
     }
 
@@ -311,7 +433,11 @@ export class PatientViewPlotsStore {
     // endpoint. Empty when no filters are set.
     readonly studyViewFilteredSamples = remoteData<Sample[]>(
         {
-            await: () => [this.mutationMolecularProfile],
+            await: () => [
+                this.mutationMolecularProfile,
+                this.cnaMolecularProfile,
+                this.svMolecularProfile,
+            ],
             invoke: async () => {
                 if (!this.hasAnyFilter) {
                     return [];
