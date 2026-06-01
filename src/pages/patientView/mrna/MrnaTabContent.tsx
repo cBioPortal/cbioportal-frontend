@@ -10,13 +10,18 @@ import {
 } from 'victory';
 import { CBIOPORTAL_VICTORY_THEME } from 'cbioportal-frontend-commons';
 import { DataFilterValue } from 'cbioportal-ts-api-client';
-import ReactSelect from 'react-select';
+import ReactSelect, { components as reactSelectComponents } from 'react-select';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import ChartContainer from 'shared/components/ChartContainer/ChartContainer';
 import SampleLabelSVG from 'shared/components/sampleLabel/SampleLabel';
 import SampleManager from 'pages/patientView/SampleManager';
 import { PatientViewPageStore } from 'pages/patientView/clinicalInformation/PatientViewPageStore';
 import ReferenceCohortModal from 'pages/patientView/mrna/ReferenceCohortModal';
+import {
+    findGroupByValue,
+    groupValue,
+    MRNA_TAB_GENE_GROUPS,
+} from 'pages/patientView/mrna/mrnaTabGeneGroups';
 
 interface IGeneOption {
     label: string;
@@ -60,6 +65,24 @@ function quantileSorted(sorted: number[], q: number): number {
         ? sorted[base] + rest * (next - sorted[base])
         : sorted[base];
 }
+
+// Custom MenuList for the Genes react-select that pins a small hint at the
+// top of the dropdown explaining the search-vs-select affordance.
+const GenePickerMenuList: React.FunctionComponent<any> = props => (
+    <reactSelectComponents.MenuList {...props}>
+        <div
+            style={{
+                padding: '6px 12px',
+                fontSize: 11,
+                color: '#888',
+                borderBottom: '1px solid #eee',
+            }}
+        >
+            Search for any gene or select below
+        </div>
+        {props.children}
+    </reactSelectComponents.MenuList>
+);
 
 // Compact text for a numeric range from a DataFilterValue ({start,end}).
 function formatRange(start?: number, end?: number): string {
@@ -110,15 +133,15 @@ export default class MrnaTabContent extends React.Component<
         return this.props.store.plotsStore;
     }
 
-    // Gene symbols that actually have data, in selected order, with row index.
+    // Effective gene rows for the chart, in resolved selection order, deduped,
+    // and restricted to genes that actually have expression data.
     @computed get genes(): { symbol: string; entrezGeneId: number }[] {
-        const { store } = this.props;
         const present = new Set(
             this.plotsStore.mrnaExpressionDataForGenes.result.map(
                 d => d.entrezGeneId
             )
         );
-        return this.plotsStore.mrnaTabGeneSymbols
+        return this.plotsStore.effectiveGeneSymbols
             .map(symbol => {
                 const gene = this.plotsStore.mrnaTabGenes.result.find(
                     g => g.hugoGeneSymbol.toUpperCase() === symbol.toUpperCase()
@@ -174,31 +197,63 @@ export default class MrnaTabContent extends React.Component<
         });
     }
 
-    // When the picker has a query, search across all genes (capped so
-    // react-select never renders the full ~20k list); when empty, fall back
-    // to topAlteredGeneOptions.
-    @computed get filteredGeneOptions(): IGeneOption[] {
+    // Group "preset" options (one row per non-empty predefined group),
+    // filtered by the current query against the group label. Always pinned
+    // at the top of the picker.
+    @computed get groupOptions(): IGeneOption[] {
         const q = this.geneQuery.trim().toLowerCase();
-        if (!q) {
-            return this.topAlteredGeneOptions;
+        return MRNA_TAB_GENE_GROUPS.filter(
+            g => g.genes.length > 0 && (!q || g.label.toLowerCase().includes(q))
+        ).map(g => ({
+            value: groupValue(g),
+            label: `${g.label} (${g.genes.length} genes)`,
+        }));
+    }
+
+    // Picker sections: "Gene groups" (preset group items) on top, then a
+    // section of individual genes — top altered when the query is empty, or
+    // substring matches across all genes when the user is typing.
+    @computed get filteredGeneOptions(): Array<{
+        label: string;
+        options: IGeneOption[];
+    }> {
+        const q = this.geneQuery.trim().toLowerCase();
+        const out: Array<{ label: string; options: IGeneOption[] }> = [];
+        const groupOpts = this.groupOptions;
+        if (groupOpts.length > 0) {
+            out.push({ label: 'Gene groups', options: groupOpts });
         }
-        const out: IGeneOption[] = [];
-        for (const o of this.geneOptions) {
-            if (o.label.toLowerCase().includes(q)) {
-                out.push(o);
-                if (out.length >= MAX_GENE_OPTIONS) {
-                    break;
+        let genes: IGeneOption[];
+        if (!q) {
+            genes = this.topAlteredGeneOptions;
+        } else {
+            genes = [];
+            for (const o of this.geneOptions) {
+                if (o.label.toLowerCase().includes(q)) {
+                    genes.push(o);
+                    if (genes.length >= MAX_GENE_OPTIONS) {
+                        break;
+                    }
                 }
             }
+        }
+        if (genes.length > 0) {
+            out.push({
+                label: q ? 'Search results' : 'Top altered in cohort',
+                options: genes,
+            });
         }
         return out;
     }
 
     @computed get selectedGeneOptions(): IGeneOption[] {
-        return this.plotsStore.mrnaTabGeneSymbols.map(s => ({
-            label: s,
-            value: s,
-        }));
+        return this.plotsStore.mrnaTabSelections.map(item => {
+            const group = findGroupByValue(item);
+            return {
+                value: item,
+                label: group ? group.label : item,
+            };
+        });
     }
 
     // Samples to highlight: in patient mode, all of the patient's samples;
@@ -216,18 +271,28 @@ export default class MrnaTabContent extends React.Component<
             .filter(v => !isNaN(v));
     }
 
-    // Use a log scale for non-negative data (e.g. TPM/RSEM) with enough spread.
-    // Zeros are allowed and rendered at a small positive floor; negatives
-    // (z-scores) force a linear scale.
-    @computed get useLog(): boolean {
+    // User-controlled log-scale toggle; defaults to log. When data has
+    // negatives (e.g. z-scores), the toggle is force-disabled and the chart
+    // falls back to linear regardless of the user's preference.
+    @observable userLogScale: boolean = true;
+
+    @action.bound
+    setLogScale(v: boolean) {
+        this.userLogScale = v;
+    }
+
+    @computed get canRenderLog(): boolean {
         const vals = this.allValues;
         const positives = vals.filter(v => v > 0);
         return (
             vals.length > 0 &&
             vals.every(v => v >= 0) &&
-            positives.length >= 2 &&
-            _.max(positives)! / _.min(positives)! > 10
+            positives.length >= 2
         );
+    }
+
+    @computed get useLog(): boolean {
+        return this.userLogScale && this.canRenderLog;
     }
 
     // Smallest positive value; the lower bound for the log scale so zeros and
@@ -469,6 +534,7 @@ export default class MrnaTabContent extends React.Component<
                             this.plotsStore.mrnaTabAllGenes.isPending ||
                             this.plotsStore.topAlteredGenes.isPending
                         }
+                        components={{ MenuList: GenePickerMenuList }}
                         options={this.filteredGeneOptions}
                         value={this.selectedGeneOptions}
                         placeholder="Add genes…"
@@ -483,7 +549,7 @@ export default class MrnaTabContent extends React.Component<
                                 : 'No mutation data available'
                         }
                         onChange={(selected: any) =>
-                            this.plotsStore.setMrnaTabGeneSymbols(
+                            this.plotsStore.setMrnaTabSelections(
                                 (selected || []).map(
                                     (o: IGeneOption) => o.value
                                 )
@@ -679,6 +745,32 @@ export default class MrnaTabContent extends React.Component<
         const valueLabel = profile.name;
 
         return (
+            <div>
+                <label
+                    style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        fontSize: 12,
+                        fontWeight: 'normal',
+                        marginBottom: 8,
+                        cursor: this.canRenderLog ? 'pointer' : 'not-allowed',
+                        color: this.canRenderLog ? '#333' : '#999',
+                    }}
+                    title={
+                        this.canRenderLog
+                            ? 'Toggle between log and linear x-axis'
+                            : 'Linear only — data contains non-positive values'
+                    }
+                >
+                    <input
+                        type="checkbox"
+                        checked={this.useLog}
+                        disabled={!this.canRenderLog}
+                        onChange={e => this.setLogScale(e.target.checked)}
+                        style={{ marginRight: 6 }}
+                    />
+                    Log scale
+                </label>
             <ChartContainer
                 getSVGElement={this.getSvg}
                 exportFileName={`mrna_expression_${this.cohortName}`}
@@ -738,6 +830,7 @@ export default class MrnaTabContent extends React.Component<
                     />
                 </VictoryChart>
             </ChartContainer>
+            </div>
         );
     }
 }
