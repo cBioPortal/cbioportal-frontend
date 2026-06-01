@@ -13,7 +13,8 @@ import { DataFilterValue } from 'cbioportal-ts-api-client';
 import ReactSelect, { components as reactSelectComponents } from 'react-select';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import ChartContainer from 'shared/components/ChartContainer/ChartContainer';
-import SampleLabelSVG from 'shared/components/sampleLabel/SampleLabel';
+import { SampleLabelHTML } from 'shared/components/sampleLabel/SampleLabel';
+import SampleInline from 'pages/patientView/patientHeader/SampleInline';
 import SampleManager from 'pages/patientView/SampleManager';
 import { PatientViewPageStore } from 'pages/patientView/clinicalInformation/PatientViewPageStore';
 import { MutatedGenePick } from 'pages/patientView/clinicalInformation/PatientViewPlotsStore';
@@ -103,8 +104,11 @@ function hash01(s: string): number {
     return ((h >>> 0) % 10000) / 10000;
 }
 
-// Victory data component: render the numbered sample icon (color + order
-// number) at the point, matching the icons used in the patient header.
+// Victory data component: render the numbered sample bubble at the point.
+// Reuses the same SampleInline + SampleLabelHTML the patient header uses, so
+// the bubble color, size, and hover tooltip (sample id + clinical data table)
+// are identical to the bubbles in the header strip.
+const BUBBLE_SIZE = 12;
 const HighlightSampleMarker: React.FunctionComponent<any> = props => {
     const { x, y, datum, sampleManager } = props;
     if (x == null || y == null || !datum) {
@@ -114,7 +118,27 @@ const HighlightSampleMarker: React.FunctionComponent<any> = props => {
     const label = (sampleManager && sampleManager.sampleLabels[sampleId]) || '';
     const color =
         (sampleManager && sampleManager.sampleColors[sampleId]) || RED;
-    return <SampleLabelSVG label={label} color={color} x={x} y={y} r={8} />;
+    const sample =
+        sampleManager &&
+        sampleManager.samples.find((s: any) => s.id === sampleId);
+    const bubble = (
+        <SampleLabelHTML label={label} color={color} fillOpacity={1} />
+    );
+    return (
+        <foreignObject
+            x={x - BUBBLE_SIZE / 2}
+            y={y - BUBBLE_SIZE / 2}
+            width={BUBBLE_SIZE}
+            height={BUBBLE_SIZE}
+            style={{ overflow: 'visible' }}
+        >
+            {sample ? (
+                <SampleInline sample={sample}>{bubble}</SampleInline>
+            ) : (
+                bubble
+            )}
+        </foreignObject>
+    );
 };
 
 @observer
