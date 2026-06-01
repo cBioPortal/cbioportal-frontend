@@ -139,12 +139,14 @@ const HighlightSampleMarker: React.FunctionComponent<any> = props => {
     const bubble = (
         <SampleLabelHTML label={label} color={color} fillOpacity={1} />
     );
-    // Build a small "GENE: value" line for the tooltip when the gene/value
-    // are available; falls back to no extra text otherwise so SampleInline
-    // behaves identically to its other call sites.
-    const extra =
+    // Build a "GENE expression: value" body line for the tooltip when the
+    // gene/value are available; falls back to no extra text otherwise so
+    // SampleInline behaves identically to its other call sites.
+    const extraBody =
         datum.geneSymbol && datum.rawValue !== undefined
-            ? `${datum.geneSymbol}: ${formatExpressionValue(datum.rawValue)}`
+            ? `${datum.geneSymbol} expression: ${formatExpressionValue(
+                  datum.rawValue
+              )}`
             : undefined;
     return (
         <foreignObject
@@ -155,7 +157,10 @@ const HighlightSampleMarker: React.FunctionComponent<any> = props => {
             style={{ overflow: 'visible' }}
         >
             {sample ? (
-                <SampleInline sample={sample} extraTooltipText={extra}>
+                <SampleInline
+                    sample={sample}
+                    extraTooltipBody={extraBody}
+                >
                     {bubble}
                 </SampleInline>
             ) : (
