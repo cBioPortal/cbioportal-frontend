@@ -48,6 +48,10 @@ interface IPoint {
     x: number;
     y: number;
     sampleId?: string;
+    // Carried for the highlighted-sample tooltip so it can show the raw
+    // expression value alongside the sample id.
+    rawValue?: number;
+    geneSymbol?: string;
 }
 
 const RED = '#e8493a';
@@ -85,6 +89,17 @@ const GenePickerMenuList: React.FunctionComponent<any> = props => (
         {props.children}
     </reactSelectComponents.MenuList>
 );
+
+// Short, readable rendering of an mRNA expression value for the bubble
+// tooltip — uses up to 3 significant digits and falls back to fixed notation
+// for typical microarray/log-ratio ranges.
+function formatExpressionValue(v: number): string {
+    if (!Number.isFinite(v)) return String(v);
+    const abs = Math.abs(v);
+    if (abs >= 100) return v.toFixed(0);
+    if (abs >= 10) return v.toFixed(1);
+    return v.toFixed(2);
+}
 
 // Compact text for a numeric range from a DataFilterValue ({start,end}).
 function formatRange(start?: number, end?: number): string {
@@ -124,6 +139,13 @@ const HighlightSampleMarker: React.FunctionComponent<any> = props => {
     const bubble = (
         <SampleLabelHTML label={label} color={color} fillOpacity={1} />
     );
+    // Build a small "GENE: value" line for the tooltip when the gene/value
+    // are available; falls back to no extra text otherwise so SampleInline
+    // behaves identically to its other call sites.
+    const extra =
+        datum.geneSymbol && datum.rawValue !== undefined
+            ? `${datum.geneSymbol}: ${formatExpressionValue(datum.rawValue)}`
+            : undefined;
     return (
         <foreignObject
             x={x - BUBBLE_SIZE / 2}
@@ -133,7 +155,9 @@ const HighlightSampleMarker: React.FunctionComponent<any> = props => {
             style={{ overflow: 'visible' }}
         >
             {sample ? (
-                <SampleInline sample={sample}>{bubble}</SampleInline>
+                <SampleInline sample={sample} extraTooltipText={extra}>
+                    {bubble}
+                </SampleInline>
             ) : (
                 bubble
             )}
@@ -398,6 +422,8 @@ export default class MrnaTabContent extends React.Component<
                     sampleId: d.sampleId,
                     x: this.clamp(d.value),
                     y: rowIndex + 1 + offset,
+                    rawValue: d.value,
+                    geneSymbol: gene.symbol,
                 });
             });
         });
@@ -815,14 +841,21 @@ export default class MrnaTabContent extends React.Component<
         const valueLabel = profile.name;
 
         return (
-            <div>
+            <ChartContainer
+                getSVGElement={this.getSvg}
+                exportFileName={`mrna_expression_${this.cohortName}`}
+            >
                 <label
                     style={{
+                        position: 'absolute',
+                        top: 12,
+                        right: 50,
+                        zIndex: 10,
                         display: 'inline-flex',
                         alignItems: 'center',
+                        background: 'white',
                         fontSize: 12,
                         fontWeight: 'normal',
-                        marginBottom: 8,
                         cursor: this.canRenderLog ? 'pointer' : 'not-allowed',
                         color: this.canRenderLog ? '#333' : '#999',
                     }}
@@ -841,10 +874,6 @@ export default class MrnaTabContent extends React.Component<
                     />
                     Log scale
                 </label>
-            <ChartContainer
-                getSVGElement={this.getSvg}
-                exportFileName={`mrna_expression_${this.cohortName}`}
-            >
                 <VictoryChart
                     theme={CBIOPORTAL_VICTORY_THEME}
                     height={height}
@@ -900,7 +929,6 @@ export default class MrnaTabContent extends React.Component<
                     />
                 </VictoryChart>
             </ChartContainer>
-            </div>
         );
     }
 }
