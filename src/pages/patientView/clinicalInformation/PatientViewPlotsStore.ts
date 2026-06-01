@@ -46,6 +46,11 @@ export interface MutatedGenePick {
     entrezGeneId: number;
 }
 
+export type ReferenceCohortMode =
+    | 'all'
+    | 'cancer-type'
+    | 'cancer-type-detailed';
+
 function togglePick(
     current: MutatedGenePick[],
     gene: MutatedGenePick
@@ -249,6 +254,70 @@ export class PatientViewPlotsStore {
     @action.bound
     clearClinicalFilters() {
         this.selectedClinicalFilters = {};
+    }
+
+    // Distinct CANCER_TYPE / CANCER_TYPE_DETAILED values of the current
+    // patient's (or sample's) samples, used by the simplified
+    // three-radio reference-cohort selector.
+    @computed get currentSampleCancerTypes(): string[] {
+        return _(this.parentStore.clinicalDataForSamples.result || [])
+            .filter(d => d.clinicalAttributeId === 'CANCER_TYPE')
+            .map(d => d.value)
+            .filter(v => !!v && v.trim().length > 0)
+            .uniq()
+            .value();
+    }
+
+    @computed get currentSampleCancerTypesDetailed(): string[] {
+        return _(this.parentStore.clinicalDataForSamples.result || [])
+            .filter(d => d.clinicalAttributeId === 'CANCER_TYPE_DETAILED')
+            .map(d => d.value)
+            .filter(v => !!v && v.trim().length > 0)
+            .uniq()
+            .value();
+    }
+
+    // Which radio is active for the simplified cohort selector. Derived
+    // from selectedClinicalFilters so the radios stay in sync with the
+    // underlying filter state.
+    @computed get referenceCohortMode(): ReferenceCohortMode {
+        const filters = this.selectedClinicalFilters;
+        if (
+            filters['CANCER_TYPE_DETAILED'] &&
+            filters['CANCER_TYPE_DETAILED'].length > 0
+        ) {
+            return 'cancer-type-detailed';
+        }
+        if (filters['CANCER_TYPE'] && filters['CANCER_TYPE'].length > 0) {
+            return 'cancer-type';
+        }
+        return 'all';
+    }
+
+    @action.bound
+    setReferenceCohortMode(mode: ReferenceCohortMode) {
+        // The radio selector replaces (rather than augments) any existing
+        // filter, including mutated/CNA/SV gene picks.
+        this.selectedMutatedGenes = [];
+        this.selectedCNAGenes = [];
+        this.selectedSVGenes = [];
+        if (mode === 'all') {
+            this.selectedClinicalFilters = {};
+            return;
+        }
+        const values =
+            mode === 'cancer-type'
+                ? this.currentSampleCancerTypes
+                : this.currentSampleCancerTypesDetailed;
+        if (values.length === 0) {
+            this.selectedClinicalFilters = {};
+            return;
+        }
+        const attributeId =
+            mode === 'cancer-type' ? 'CANCER_TYPE' : 'CANCER_TYPE_DETAILED';
+        this.selectedClinicalFilters = {
+            [attributeId]: values.map(v => ({ value: v } as DataFilterValue)),
+        };
     }
 
     // Selected mutated / CNA / SV genes. Each list = samples with ≥1 alteration
