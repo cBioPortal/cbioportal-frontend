@@ -3,10 +3,11 @@ import _ from 'lodash';
 import { remoteData } from 'cbioportal-frontend-commons';
 import {
     ClinicalAttribute,
-    ClinicalDataCountItem,
     ClinicalDataFilter,
     DataFilterValue,
     Gene,
+    GeneFilter,
+    GeneFilterQuery,
     MolecularDataFilter,
     MolecularProfile,
     NumericGeneMolecularData,
@@ -16,21 +17,67 @@ import {
 import { getClient } from '../../../shared/api/cbioportalClientInstance';
 import internalClient from '../../../shared/api/cbioportalInternalClientInstance';
 import { AlterationTypeConstants } from 'shared/constants';
+import { GENE_FILTER_QUERY_DEFAULTS } from 'pages/studyView/StudyViewUtils';
 // Imported for its type only (used as a constructor-param annotation, which is
 // erased at runtime) so this does not create a runtime import cycle.
 import { PatientViewPageStore } from './PatientViewPageStore';
 
-// Sample-level clinical attributes the patient mRNA tab treats as "cancer-type"
-// categorizations. The set of these actually present in a given study is
-// determined dynamically (see cancerTypeAttributesInStudy below).
-const CANCER_TYPE_ATTRIBUTE_IDS = ['CANCER_TYPE', 'CANCER_TYPE_DETAILED'];
-
 export const MRNA_TAB_GENES = ['TP53', 'EGFR', 'KRAS'];
 
-export interface CancerTypeAttributeValues {
-    attribute: ClinicalAttribute;
-    counts: Array<{ value: string; count: number }>;
+export interface MutatedGenePick {
+    hugoGeneSymbol: string;
+    entrezGeneId: number;
 }
+
+// Translate the patient-view filter selections into a StudyViewFilter the
+// internal /filtered-samples and /mutated-genes endpoints understand.
+// Exported so the modal's draft state can produce the same shape.
+export function buildStudyViewFilter(
+    studyId: string,
+    clinicalFilters: { [attrId: string]: DataFilterValue[] },
+    mutatedGenes: MutatedGenePick[],
+    mutationProfile: MolecularProfile | undefined
+): StudyViewFilter {
+    const clinicalDataFilters: ClinicalDataFilter[] = Object.keys(
+        clinicalFilters
+    )
+        .filter(attrId => clinicalFilters[attrId].length > 0)
+        .map(attributeId => ({
+            attributeId,
+            values: clinicalFilters[attributeId],
+        }));
+    const geneFilters: GeneFilter[] = [];
+    if (mutatedGenes.length > 0 && mutationProfile) {
+        // Each selected gene is its own OR row; samples mutated in ANY of the
+        // selected genes match.
+        geneFilters.push({
+            molecularProfileIds: [mutationProfile.molecularProfileId],
+            geneQueries: mutatedGenes.map(g => [
+                {
+                    ...GENE_FILTER_QUERY_DEFAULTS,
+                    hugoGeneSymbol: g.hugoGeneSymbol,
+                    entrezGeneId: g.entrezGeneId,
+                } as GeneFilterQuery,
+            ]),
+        });
+    }
+    return {
+        studyIds: [studyId],
+        clinicalDataFilters,
+        geneFilters,
+    } as StudyViewFilter;
+}
+
+// Clinical attribute IDs we never want to expose as cohort filters — IDs and
+// other identifier-shaped fields that don't make sense to filter on.
+const FILTER_DENY_LIST = new Set([
+    'SAMPLE_ID',
+    'PATIENT_ID',
+    'UNIQUE_SAMPLE_KEY',
+    'UNIQUE_PATIENT_KEY',
+    'OTHER_SAMPLE_ID',
+    'OTHER_PATIENT_ID',
+]);
 
 // Holds state/data for the patient view plots (currently the mRNA tab).
 // Kept out of PatientViewPageStore; references the parent store for shared
@@ -48,37 +95,99 @@ export class PatientViewPlotsStore {
         this.mrnaTabGeneSymbols = symbols;
     }
 
-    // User's reference-cohort filter: per attribute id (e.g. CANCER_TYPE_DETAILED),
-    // the set of selected values. Values within the same attribute OR together;
-    // different attributes AND together (standard study-view semantics).
-    @observable.ref selectedCancerTypeFilters: {
-        [attributeId: string]: string[];
+    // User's reference-cohort filter: per clinical-attribute id, the set of
+    // selected DataFilterValues. Each entry is either a categorical value
+    // ({ value: 'X' }) or a numeric range ({ start: N, end: M }). Within an
+    // attribute the values OR together; across attributes they AND together
+    // (standard study-view semantics).
+    @observable.ref selectedClinicalFilters: {
+        [attributeId: string]: DataFilterValue[];
     } = {};
 
-    @computed get hasCancerTypeFilters(): boolean {
-        return Object.values(this.selectedCancerTypeFilters).some(
+    @computed get hasClinicalFilters(): boolean {
+        return Object.values(this.selectedClinicalFilters).some(
             v => v.length > 0
         );
     }
 
+    // Atomic replace — used by the modal chooser to commit a draft of edits
+    // in one shot (no intermediate refetches while the user is picking).
     @action.bound
-    toggleCancerTypeValue(attributeId: string, value: string) {
-        const current = this.selectedCancerTypeFilters[attributeId] || [];
-        const next = current.includes(value)
-            ? current.filter(v => v !== value)
-            : [...current, value];
-        const updated = { ...this.selectedCancerTypeFilters };
+    setClinicalFilters(filters: { [attributeId: string]: DataFilterValue[] }) {
+        const next: { [attributeId: string]: DataFilterValue[] } = {};
+        for (const k of Object.keys(filters)) {
+            if (filters[k].length > 0) {
+                next[k] = filters[k].slice();
+            }
+        }
+        this.selectedClinicalFilters = next;
+    }
+
+    // Remove a single value (categorical) or single range (numeric) from a
+    // single attribute. Used by the summary-bar chip's × button.
+    @action.bound
+    removeClinicalFilterValue(attributeId: string, dfv: DataFilterValue) {
+        const current = this.selectedClinicalFilters[attributeId] || [];
+        const next = current.filter(
+            v =>
+                !(
+                    v.value === dfv.value &&
+                    v.start === dfv.start &&
+                    v.end === dfv.end
+                )
+        );
+        const updated = { ...this.selectedClinicalFilters };
         if (next.length === 0) {
             delete updated[attributeId];
         } else {
             updated[attributeId] = next;
         }
-        this.selectedCancerTypeFilters = updated;
+        this.selectedClinicalFilters = updated;
     }
 
     @action.bound
-    clearCancerTypeFilters() {
-        this.selectedCancerTypeFilters = {};
+    clearClinicalFilters() {
+        this.selectedClinicalFilters = {};
+    }
+
+    // Selected mutated genes (cohort = samples with ≥1 mutation in any of
+    // these genes in the study's mutation profile). Multiple genes OR.
+    @observable.ref selectedMutatedGenes: MutatedGenePick[] = [];
+
+    @computed get hasMutatedGenes(): boolean {
+        return this.selectedMutatedGenes.length > 0;
+    }
+
+    @computed get hasAnyFilter(): boolean {
+        return this.hasClinicalFilters || this.hasMutatedGenes;
+    }
+
+    @action.bound
+    toggleMutatedGene(gene: MutatedGenePick) {
+        const exists = this.selectedMutatedGenes.some(
+            g => g.entrezGeneId === gene.entrezGeneId
+        );
+        this.selectedMutatedGenes = exists
+            ? this.selectedMutatedGenes.filter(
+                  g => g.entrezGeneId !== gene.entrezGeneId
+              )
+            : [...this.selectedMutatedGenes, gene];
+    }
+
+    @action.bound
+    setMutatedGenes(genes: MutatedGenePick[]) {
+        this.selectedMutatedGenes = genes.slice();
+    }
+
+    @action.bound
+    clearMutatedGenes() {
+        this.selectedMutatedGenes = [];
+    }
+
+    @action.bound
+    clearAllFilters() {
+        this.selectedClinicalFilters = {};
+        this.selectedMutatedGenes = [];
     }
 
     // All samples in the study the current patient belongs to.
@@ -92,8 +201,7 @@ export class PatientViewPlotsStore {
         []
     );
 
-    // All clinical attributes defined for the current study (used to discover
-    // which "cancer type" categorizations are actually available).
+    // All clinical attributes defined for the current study.
     readonly studyClinicalAttributes = remoteData<ClinicalAttribute[]>(
         {
             invoke: () =>
@@ -104,114 +212,82 @@ export class PatientViewPlotsStore {
         []
     );
 
-    // The cancer-type clinical attributes actually defined as sample-level
-    // attributes in this study (subset of CANCER_TYPE_ATTRIBUTE_IDS).
-    readonly cancerTypeAttributesInStudy = remoteData<ClinicalAttribute[]>(
+    // The clinical attributes we expose in the reference-cohort chooser:
+    // STRING or NUMBER datatype, excluding identifier-shaped fields. Sorted
+    // by displayName for stable left-pane order.
+    readonly filterableClinicalAttributes = remoteData<ClinicalAttribute[]>(
         {
             await: () => [this.studyClinicalAttributes],
             invoke: () =>
                 Promise.resolve(
-                    this.studyClinicalAttributes.result!.filter(
-                        a =>
-                            !a.patientAttribute &&
-                            CANCER_TYPE_ATTRIBUTE_IDS.includes(
-                                a.clinicalAttributeId
-                            )
+                    _.sortBy(
+                        this.studyClinicalAttributes.result!.filter(
+                            a =>
+                                (a.datatype === 'STRING' ||
+                                    a.datatype === 'NUMBER') &&
+                                !FILTER_DENY_LIST.has(a.clinicalAttributeId)
+                        ),
+                        a => a.displayName.toLowerCase()
                     )
                 ),
         },
         []
     );
 
-    // For each available cancer-type attribute, the distinct values in the
-    // study with their sample counts, sorted by count desc. One server-side
-    // aggregation (no client-side rollup needed).
-    readonly cancerTypeValueCounts = remoteData<CancerTypeAttributeValues[]>(
-        {
-            await: () => [this.cancerTypeAttributesInStudy],
-            invoke: async () => {
-                const attrs = this.cancerTypeAttributesInStudy.result!;
-                if (attrs.length === 0) {
-                    return [];
-                }
-                const studyViewFilter = {
-                    studyIds: [this.parentStore.studyId],
-                } as StudyViewFilter;
-                const items: ClinicalDataCountItem[] = await internalClient.fetchClinicalDataCountsUsingPOST(
-                    {
-                        clinicalDataCountFilter: {
-                            attributes: attrs.map(
-                                a =>
-                                    ({
-                                        attributeId: a.clinicalAttributeId,
-                                        values: [],
-                                    } as ClinicalDataFilter)
-                            ),
-                            studyViewFilter,
-                        },
-                    }
-                );
-                const byAttr = _.keyBy(items, i => i.attributeId);
-                return attrs.map(a => ({
-                    attribute: a,
-                    counts: _.orderBy(
-                        byAttr[a.clinicalAttributeId]
-                            ? byAttr[a.clinicalAttributeId].counts
-                            : [],
-                        ['count', 'value'],
-                        ['desc', 'asc']
-                    ),
-                }));
-            },
-        },
-        []
-    );
+    // Study's primary mutation profile, used when constructing gene-mutation
+    // study-view filters.
+    readonly mutationMolecularProfile = remoteData<
+        MolecularProfile | undefined
+    >({
+        await: () => [this.parentStore.molecularProfilesInStudy],
+        invoke: async () =>
+            this.parentStore.molecularProfilesInStudy.result!.find(
+                p =>
+                    p.molecularAlterationType ===
+                    AlterationTypeConstants.MUTATION_EXTENDED
+            ),
+    });
 
-    // Samples matching the user's cancer-type filter. Built as a study-view
-    // filter (per-attribute clinical-data filters) and fetched server-side via
-    // the internal /filtered-samples endpoint. Empty when no filters are set.
+    // Build the study-view filter representing the currently committed cohort
+    // (clinical filters + mutated-gene filters).
+    @computed get committedStudyViewFilter(): StudyViewFilter {
+        return buildStudyViewFilter(
+            this.parentStore.studyId,
+            this.selectedClinicalFilters,
+            this.selectedMutatedGenes,
+            this.mutationMolecularProfile.result
+        );
+    }
+
+    // Samples matching the user's filter selection. Built as a study-view
+    // filter and resolved server-side via the internal /filtered-samples
+    // endpoint. Empty when no filters are set.
     readonly studyViewFilteredSamples = remoteData<Sample[]>(
         {
+            await: () => [this.mutationMolecularProfile],
             invoke: async () => {
-                if (!this.hasCancerTypeFilters) {
+                if (!this.hasAnyFilter) {
                     return [];
                 }
-                const clinicalDataFilters: ClinicalDataFilter[] = Object.keys(
-                    this.selectedCancerTypeFilters
-                )
-                    .filter(
-                        attrId =>
-                            this.selectedCancerTypeFilters[attrId].length > 0
-                    )
-                    .map(attributeId => ({
-                        attributeId,
-                        values: this.selectedCancerTypeFilters[attributeId].map(
-                            v => ({ value: v } as DataFilterValue)
-                        ),
-                    }));
-                const studyViewFilter = {
-                    studyIds: [this.parentStore.studyId],
-                    clinicalDataFilters,
-                } as StudyViewFilter;
                 return internalClient.fetchFilteredSamplesUsingPOST({
-                    studyViewFilter,
+                    studyViewFilter: this.committedStudyViewFilter,
                 });
             },
         },
         []
     );
 
-    // The reference cohort actually used by the box plot: the user's
-    // cancer-type-filtered set if any, otherwise the whole study.
+    // The reference cohort actually used by the box plot: the filtered set if
+    // any filters are active, otherwise the whole study.
     readonly effectiveCohortSamples = remoteData<Sample[]>(
         {
             await: () =>
-                this.hasCancerTypeFilters
+                this.hasAnyFilter
                     ? [this.studyViewFilteredSamples]
                     : [this.allSamplesInStudy],
             invoke: () =>
                 Promise.resolve(
-                    this.hasCancerTypeFilters
+                    this.hasAnyFilter
                         ? this.studyViewFilteredSamples.result!
                         : this.allSamplesInStudy.result!
                 ),
