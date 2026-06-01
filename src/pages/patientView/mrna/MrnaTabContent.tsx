@@ -352,6 +352,15 @@ export default class MrnaTabContent extends React.Component<
         this.userLogScale = v;
     }
 
+    // When true, gene rows become columns (categories on the x-axis) and
+    // expression values run on the y-axis.
+    @observable axesSwapped: boolean = false;
+
+    @action.bound
+    setAxesSwapped(v: boolean) {
+        this.axesSwapped = v;
+    }
+
     @computed get canRenderLog(): boolean {
         const vals = this.allValues;
         const positives = vals.filter(v => v > 0);
@@ -428,6 +437,7 @@ export default class MrnaTabContent extends React.Component<
             d => d.entrezGeneId
         );
         const points: IPoint[] = [];
+        const swap = this.axesSwapped;
         this.genes.forEach((gene, rowIndex) => {
             (byEntrez[gene.entrezGeneId] || []).forEach(d => {
                 const isHighlighted = this.highlightedSampleIds.has(d.sampleId);
@@ -439,11 +449,14 @@ export default class MrnaTabContent extends React.Component<
                     : (hash01(d.sampleId + ':' + d.entrezGeneId) - 0.5) *
                       2 *
                       BOX_BAND;
-                // value on x, gene row on y (manual horizontal layout)
+                const valueCoord = this.clamp(d.value);
+                const categoryCoord = rowIndex + 1 + offset;
+                // In the default orientation, value is on x and the gene
+                // category on y; swapped flips them.
                 points.push({
                     sampleId: d.sampleId,
-                    x: this.clamp(d.value),
-                    y: rowIndex + 1 + offset,
+                    x: swap ? categoryCoord : valueCoord,
+                    y: swap ? valueCoord : categoryCoord,
                     rawValue: d.value,
                     geneSymbol: gene.symbol,
                 });
@@ -459,6 +472,13 @@ export default class MrnaTabContent extends React.Component<
         const h = 0.28;
         const stroke = '#333333';
         const els: JSX.Element[] = [];
+        const swap = this.axesSwapped;
+        // Each box has a (value, category) coordinate. In the default layout
+        // value goes on x and category on y; swap transposes the segment.
+        const xy = (valueCoord: number, categoryCoord: number) =>
+            swap
+                ? { x: categoryCoord, y: valueCoord }
+                : { x: valueCoord, y: categoryCoord };
         this.boxData.forEach(box => {
             const row = box.x;
             const seg = (key: string, a: IPoint, b: IPoint, width: number) =>
@@ -469,38 +489,18 @@ export default class MrnaTabContent extends React.Component<
                         style={{ data: { stroke, strokeWidth: width } }}
                     />
                 );
-            // whisker min -> max
-            seg(`w${row}`, { x: box.min, y: row }, { x: box.max, y: row }, 1);
-            // IQR box outline
-            seg(
-                `t${row}`,
-                { x: box.q1, y: row + h },
-                { x: box.q3, y: row + h },
-                1
-            );
-            seg(
-                `bt${row}`,
-                { x: box.q1, y: row - h },
-                { x: box.q3, y: row - h },
-                1
-            );
-            seg(
-                `l${row}`,
-                { x: box.q1, y: row - h },
-                { x: box.q1, y: row + h },
-                1
-            );
-            seg(
-                `r${row}`,
-                { x: box.q3, y: row - h },
-                { x: box.q3, y: row + h },
-                1
-            );
-            // median
+            // whisker min -> max along the value axis
+            seg(`w${row}`, xy(box.min, row), xy(box.max, row), 1);
+            // IQR box outline (two horizontal sides + two vertical sides)
+            seg(`t${row}`, xy(box.q1, row + h), xy(box.q3, row + h), 1);
+            seg(`bt${row}`, xy(box.q1, row - h), xy(box.q3, row - h), 1);
+            seg(`l${row}`, xy(box.q1, row - h), xy(box.q1, row + h), 1);
+            seg(`r${row}`, xy(box.q3, row - h), xy(box.q3, row + h), 1);
+            // median tick
             seg(
                 `m${row}`,
-                { x: box.median, y: row - h },
-                { x: box.median, y: row + h },
+                xy(box.median, row - h),
+                xy(box.median, row + h),
                 1.8
             );
         });
@@ -591,7 +591,12 @@ export default class MrnaTabContent extends React.Component<
         return (
             <div
                 className="mrnaTabContent"
-                style={{ padding: 20, maxWidth: 760 }}
+                style={{
+                    padding: 20,
+                    // No outer maxWidth when axes are swapped — the chart
+                    // grows horizontally with the number of genes.
+                    maxWidth: this.axesSwapped ? undefined : 760,
+                }}
             >
                 <h3 style={{ marginTop: 0, marginBottom: 16 }}>
                     {this.chartTitle}
@@ -859,53 +864,141 @@ export default class MrnaTabContent extends React.Component<
         }
 
         const n = this.genes.length;
-        const height = 140 + n * 70;
+        const swap = this.axesSwapped;
+        // Each gene needs roughly the same per-row/column space regardless of
+        // orientation; pick a fixed cross-axis size for the value axis.
+        const VALUE_AXIS_SIZE = 480;
+        const PER_GENE = 70;
+        const chartWidth = swap ? 160 + n * PER_GENE : 720;
+        const chartHeight = swap ? VALUE_AXIS_SIZE : 140 + n * PER_GENE;
+        // Swapped layout needs more left padding (so the rotated value-axis
+        // label clears the tick numbers) and more bottom padding (so the
+        // angled gene tick labels fit beneath the axis).
+        const padding = swap
+            ? { top: 30, bottom: 110, left: 90, right: 25 }
+            : { top: 20, bottom: 80, left: 70, right: 25 };
         const valueLabel = profile.name;
+        const valueScale = this.useLog ? 'log' : 'linear';
+        const categoryDomain: [number, number] = [0, n + 0.5];
+        const categoryTickValues = this.genes.map((g, i) => i + 1);
+        const categoryTickFormat = this.genes.map(g => g.symbol);
+        const valueTickFormat = (t: number) =>
+            t >= 1 ? Number(t).toLocaleString('en-US') : `${t}`;
+        // The value-axis label rotates with the axis. When it's on the left
+        // (swapped layout), it needs more outward padding so it sits clear of
+        // the tick numbers.
+        const valueAxisProps = {
+            label: valueLabel,
+            tickValues: this.valueTicks,
+            tickFormat: valueTickFormat,
+            style: { axisLabel: { padding: swap ? 55 : 38 } },
+        };
+        // When the gene axis is on the bottom (swapped), rotate the gene
+        // labels -45° so they don't run into each other across narrow columns.
+        const categoryAxisProps = swap
+            ? {
+                  tickValues: categoryTickValues,
+                  tickFormat: categoryTickFormat,
+                  style: {
+                      tickLabels: {
+                          angle: -45,
+                          textAnchor: 'end',
+                          fontSize: 10,
+                          padding: 4,
+                      },
+                  },
+              }
+            : {
+                  tickValues: categoryTickValues,
+                  tickFormat: categoryTickFormat,
+              };
 
         return (
             <ChartContainer
                 getSVGElement={this.getSvg}
                 exportFileName={`mrna_expression_${this.cohortName}`}
             >
-                <label
+                <div
                     style={{
                         position: 'absolute',
                         top: 12,
                         right: 50,
                         zIndex: 10,
-                        display: 'inline-flex',
+                        display: 'flex',
+                        gap: 12,
                         alignItems: 'center',
                         background: 'white',
-                        fontSize: 12,
-                        fontWeight: 'normal',
-                        cursor: this.canRenderLog ? 'pointer' : 'not-allowed',
-                        color: this.canRenderLog ? '#333' : '#999',
+                        padding: '0 4px',
                     }}
-                    title={
-                        this.canRenderLog
-                            ? 'Toggle between log and linear x-axis'
-                            : 'Linear only — data contains non-positive values'
-                    }
                 >
-                    <input
-                        type="checkbox"
-                        checked={this.useLog}
-                        disabled={!this.canRenderLog}
-                        onChange={e => this.setLogScale(e.target.checked)}
-                        style={{ marginRight: 6 }}
-                    />
-                    Log scale
-                </label>
+                    <label
+                        style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            fontSize: 12,
+                            fontWeight: 'normal',
+                            margin: 0,
+                            cursor: this.canRenderLog
+                                ? 'pointer'
+                                : 'not-allowed',
+                            color: this.canRenderLog ? '#333' : '#999',
+                        }}
+                        title={
+                            this.canRenderLog
+                                ? 'Toggle between log and linear value axis'
+                                : 'Linear only — data contains non-positive values'
+                        }
+                    >
+                        <input
+                            type="checkbox"
+                            checked={this.useLog}
+                            disabled={!this.canRenderLog}
+                            onChange={e =>
+                                this.setLogScale(e.target.checked)
+                            }
+                            style={{ marginRight: 6 }}
+                        />
+                        Log scale
+                    </label>
+                    <label
+                        style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            fontSize: 12,
+                            fontWeight: 'normal',
+                            margin: 0,
+                            cursor: 'pointer',
+                            color: '#333',
+                        }}
+                        title="Rotate the chart so genes run along the x-axis"
+                    >
+                        <input
+                            type="checkbox"
+                            checked={this.axesSwapped}
+                            onChange={e =>
+                                this.setAxesSwapped(e.target.checked)
+                            }
+                            style={{ marginRight: 6 }}
+                        />
+                        Swap axes
+                    </label>
+                </div>
                 <VictoryChart
                     theme={CBIOPORTAL_VICTORY_THEME}
-                    height={height}
-                    width={720}
-                    domain={{ x: this.valueDomain, y: [0, n + 0.5] }}
-                    domainPadding={{ y: [0, 18] }}
-                    padding={{ top: 20, bottom: 80, left: 70, right: 25 }}
+                    height={chartHeight}
+                    width={chartWidth}
+                    domain={
+                        swap
+                            ? { x: categoryDomain, y: this.valueDomain }
+                            : { x: this.valueDomain, y: categoryDomain }
+                    }
+                    domainPadding={
+                        swap ? { x: [0, 18] } : { y: [0, 18] }
+                    }
+                    padding={padding}
                     scale={{
-                        x: this.useLog ? 'log' : 'linear',
-                        y: 'linear',
+                        x: swap ? 'linear' : valueScale,
+                        y: swap ? valueScale : 'linear',
                     }}
                     containerComponent={
                         <svg
@@ -915,21 +1008,18 @@ export default class MrnaTabContent extends React.Component<
                         />
                     }
                 >
-                    {/* expression value (x) */}
-                    <VictoryAxis
-                        label={valueLabel}
-                        tickValues={this.valueTicks}
-                        tickFormat={(t: number) =>
-                            t >= 1 ? Number(t).toLocaleString('en-US') : `${t}`
-                        }
-                        style={{ axisLabel: { padding: 38 } }}
-                    />
-                    {/* gene rows (y) */}
-                    <VictoryAxis
-                        dependentAxis
-                        tickValues={this.genes.map((g, i) => i + 1)}
-                        tickFormat={this.genes.map(g => g.symbol)}
-                    />
+                    {/* independent (bottom) axis */}
+                    {swap ? (
+                        <VictoryAxis {...categoryAxisProps} />
+                    ) : (
+                        <VictoryAxis {...valueAxisProps} />
+                    )}
+                    {/* dependent (left) axis */}
+                    {swap ? (
+                        <VictoryAxis dependentAxis {...valueAxisProps} />
+                    ) : (
+                        <VictoryAxis dependentAxis {...categoryAxisProps} />
+                    )}
                     {/* cohort */}
                     <VictoryScatter
                         data={this.cohortPoints}
