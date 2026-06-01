@@ -1295,7 +1295,7 @@ export default class ReferenceCohortModal extends React.Component<
                 bsSize="large"
             >
                 <Modal.Header closeButton>
-                    <Modal.Title>Reference cohort</Modal.Title>
+                    <Modal.Title>Reference Cohort Builder</Modal.Title>
                 </Modal.Header>
                 <Modal.Body style={{ minHeight: 460 }}>
                     {loadingAttrs ? (
