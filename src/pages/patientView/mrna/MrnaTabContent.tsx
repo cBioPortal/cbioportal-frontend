@@ -802,6 +802,17 @@ export default class MrnaTabContent extends React.Component<
                         placeholder="Add genes…"
                         closeMenuOnSelect={false}
                         filterOption={() => true}
+                        menuPortalTarget={
+                            typeof document !== 'undefined'
+                                ? document.body
+                                : undefined
+                        }
+                        styles={{
+                            menuPortal: (base: any) => ({
+                                ...base,
+                                zIndex: 9999,
+                            }),
+                        }}
                         onInputChange={(input: string) =>
                             this.setGeneQuery(input)
                         }
