@@ -10,8 +10,9 @@ import {
     VictoryScatter,
 } from 'victory';
 import { CBIOPORTAL_VICTORY_THEME } from 'cbioportal-frontend-commons';
-import { DataFilterValue } from 'cbioportal-ts-api-client';
+import { DataFilterValue, Gene } from 'cbioportal-ts-api-client';
 import ReactSelect, { components as reactSelectComponents } from 'react-select';
+import { Modal, Button } from 'react-bootstrap';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import ChartContainer from 'shared/components/ChartContainer/ChartContainer';
 import { SampleLabelHTML } from 'shared/components/sampleLabel/SampleLabel';
@@ -50,9 +51,11 @@ interface IPoint {
     y: number;
     sampleId?: string;
     // Carried for the highlighted-sample tooltip so it can show the raw
-    // expression value, the gene, and the patient z-score vs cohort.
+    // expression value, the gene, and the patient z-score vs cohort, plus
+    // look up co-expression suggestions keyed by entrez id.
     rawValue?: number;
     geneSymbol?: string;
+    entrezGeneId?: number;
     zScore?: number;
     percentile?: number;
 }
@@ -173,9 +176,6 @@ const HighlightSampleMarker: React.FunctionComponent<any> = props => {
     const bubble = (
         <SampleLabelHTML label={label} color={color} fillOpacity={1} />
     );
-    // Build a body block for the tooltip: gene + value, plus a robust z and
-    // cohort percentile when we have them. Falls back to undefined otherwise
-    // so SampleInline behaves identically to its other call sites.
     const lines: React.ReactNode[] = [];
     if (datum.geneSymbol && datum.rawValue !== undefined) {
         lines.push(
@@ -206,10 +206,7 @@ const HighlightSampleMarker: React.FunctionComponent<any> = props => {
             style={{ overflow: 'visible' }}
         >
             {sample ? (
-                <SampleInline
-                    sample={sample}
-                    extraTooltipBody={extraBody}
-                >
+                <SampleInline sample={sample} extraTooltipBody={extraBody}>
                     {bubble}
                 </SampleInline>
             ) : (
@@ -218,6 +215,305 @@ const HighlightSampleMarker: React.FunctionComponent<any> = props => {
         </foreignObject>
     );
 };
+
+// Two-pane dialog for finding genes co-expressed with anything currently on
+// the chart. Left pane lists the chart's genes; clicking one triggers a lazy
+// per-gene fetch and reveals top-correlated genes on the right. The user
+// checks any subset and confirms to add them as new chart rows.
+const CoExpressionDialog: React.FunctionComponent<{
+    isOpen: boolean;
+    onClose: () => void;
+    chartGenes: { symbol: string; entrezGeneId: number }[];
+    plotsStore: any;
+    allGenesByEntrezId: { [k: number]: Gene };
+    onAddGenes: (symbols: string[]) => void;
+}> = observer(props => {
+    const {
+        isOpen,
+        onClose,
+        chartGenes,
+        plotsStore,
+        allGenesByEntrezId,
+        onAddGenes,
+    } = props;
+    const [selectedEnt, setSelectedEnt] = React.useState<number | undefined>(
+        undefined
+    );
+    const [picked, setPicked] = React.useState<Set<string>>(new Set());
+    React.useEffect(() => {
+        if (!isOpen) {
+            setSelectedEnt(undefined);
+            setPicked(new Set());
+        }
+    }, [isOpen]);
+    const promise =
+        selectedEnt !== undefined
+            ? plotsStore.peekCoExpressionsForGene(selectedEnt)
+            : undefined;
+    const chips: any[] = (promise && promise.result) || [];
+    const pending = !!(promise && promise.isPending);
+    const selectedGene =
+        selectedEnt !== undefined ? allGenesByEntrezId[selectedEnt] : undefined;
+    const chipSymbols: string[] = chips
+        .map(
+            c =>
+                allGenesByEntrezId[Number(c.geneticEntityId)] &&
+                allGenesByEntrezId[Number(c.geneticEntityId)].hugoGeneSymbol
+        )
+        .filter(Boolean) as string[];
+    const allPicked =
+        chipSymbols.length > 0 && chipSymbols.every(s => picked.has(s));
+    const togglePick = (sym: string) => {
+        const next = new Set(picked);
+        if (next.has(sym)) next.delete(sym);
+        else next.add(sym);
+        setPicked(next);
+    };
+    const togglePickAll = () => {
+        const next = new Set(picked);
+        if (allPicked) chipSymbols.forEach(s => next.delete(s));
+        else chipSymbols.forEach(s => next.add(s));
+        setPicked(next);
+    };
+    return (
+        <Modal show={isOpen} onHide={onClose} bsSize="large">
+            <Modal.Header closeButton>
+                <Modal.Title>Find co-expressed genes</Modal.Title>
+            </Modal.Header>
+            <Modal.Body style={{ minHeight: 420 }}>
+                <div style={{ display: 'flex', gap: 16 }}>
+                    <div
+                        style={{
+                            flex: '0 0 200px',
+                            borderRight: '1px solid #eee',
+                            paddingRight: 12,
+                            maxHeight: 480,
+                            overflowY: 'auto',
+                        }}
+                    >
+                        <div style={{ fontWeight: 'bold', marginBottom: 8 }}>
+                            Chart genes
+                        </div>
+                        <ul
+                            style={{
+                                listStyle: 'none',
+                                padding: 0,
+                                margin: 0,
+                            }}
+                        >
+                            {chartGenes.map(g => (
+                                <li
+                                    key={g.entrezGeneId}
+                                    onClick={() => {
+                                        setSelectedEnt(g.entrezGeneId);
+                                        plotsStore.requestCoExpressionsForGene(
+                                            g.entrezGeneId
+                                        );
+                                    }}
+                                    style={{
+                                        padding: '6px 8px',
+                                        cursor: 'pointer',
+                                        borderRadius: 3,
+                                        background:
+                                            selectedEnt === g.entrezGeneId
+                                                ? '#e8f0ff'
+                                                : 'transparent',
+                                        fontWeight:
+                                            selectedEnt === g.entrezGeneId
+                                                ? 'bold'
+                                                : 'normal',
+                                    }}
+                                >
+                                    {g.symbol}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                        {selectedEnt === undefined && (
+                            <div style={{ color: '#888', padding: 12 }}>
+                                Select a gene to see its top-correlated genes
+                                in the cohort.
+                            </div>
+                        )}
+                        {selectedEnt !== undefined && pending && (
+                            <LoadingIndicator
+                                isLoading={true}
+                                size="big"
+                                center
+                            />
+                        )}
+                        {selectedEnt !== undefined && !pending && (
+                            <>
+                                <div
+                                    style={{
+                                        fontWeight: 'bold',
+                                        marginBottom: 8,
+                                    }}
+                                >
+                                    Top correlated with{' '}
+                                    {(selectedGene &&
+                                        selectedGene.hugoGeneSymbol) ||
+                                        selectedEnt}
+                                    <span
+                                        style={{
+                                            fontWeight: 'normal',
+                                            color: '#888',
+                                            marginLeft: 6,
+                                        }}
+                                    >
+                                        ({chipSymbols.length} genes)
+                                    </span>
+                                </div>
+                                {chipSymbols.length === 0 ? (
+                                    <div style={{ color: '#888' }}>
+                                        No strong correlations in this cohort.
+                                    </div>
+                                ) : (
+                                    <>
+                                        <label
+                                            style={{
+                                                display: 'block',
+                                                marginBottom: 8,
+                                                fontWeight: 'normal',
+                                            }}
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                checked={allPicked}
+                                                onChange={togglePickAll}
+                                                style={{ marginRight: 6 }}
+                                            />
+                                            Select all
+                                        </label>
+                                        <ul
+                                            style={{
+                                                listStyle: 'none',
+                                                padding: 0,
+                                                margin: 0,
+                                            }}
+                                        >
+                                            {chips.map((c: any) => {
+                                                const ent = Number(
+                                                    c.geneticEntityId
+                                                );
+                                                const sym =
+                                                    (allGenesByEntrezId[ent] &&
+                                                        allGenesByEntrezId[ent]
+                                                            .hugoGeneSymbol) ||
+                                                    `${ent}`;
+                                                const rho =
+                                                    c.spearmansCorrelation;
+                                                const sign = rho >= 0
+                                                    ? '+'
+                                                    : '−';
+                                                const onChart = chartGenes.some(
+                                                    g =>
+                                                        g.entrezGeneId === ent
+                                                );
+                                                return (
+                                                    <li
+                                                        key={ent}
+                                                        style={{
+                                                            padding: '4px 0',
+                                                        }}
+                                                    >
+                                                        <label
+                                                            style={{
+                                                                display:
+                                                                    'flex',
+                                                                alignItems:
+                                                                    'center',
+                                                                gap: 8,
+                                                                fontWeight:
+                                                                    'normal',
+                                                                cursor:
+                                                                    onChart
+                                                                        ? 'default'
+                                                                        : 'pointer',
+                                                                opacity:
+                                                                    onChart
+                                                                        ? 0.55
+                                                                        : 1,
+                                                            }}
+                                                        >
+                                                            <input
+                                                                type="checkbox"
+                                                                disabled={
+                                                                    onChart
+                                                                }
+                                                                checked={picked.has(
+                                                                    sym
+                                                                )}
+                                                                onChange={() =>
+                                                                    togglePick(
+                                                                        sym
+                                                                    )
+                                                                }
+                                                            />
+                                                            <span
+                                                                style={{
+                                                                    fontWeight:
+                                                                        'bold',
+                                                                    minWidth: 110,
+                                                                }}
+                                                            >
+                                                                {sym}
+                                                            </span>
+                                                            <span
+                                                                style={{
+                                                                    color:
+                                                                        '#888',
+                                                                    fontVariantNumeric:
+                                                                        'tabular-nums',
+                                                                }}
+                                                            >
+                                                                ρ = {sign}
+                                                                {Math.abs(
+                                                                    rho
+                                                                ).toFixed(2)}
+                                                            </span>
+                                                            {onChart && (
+                                                                <span
+                                                                    style={{
+                                                                        color:
+                                                                            '#888',
+                                                                        fontSize: 11,
+                                                                    }}
+                                                                >
+                                                                    already on
+                                                                    chart
+                                                                </span>
+                                                            )}
+                                                        </label>
+                                                    </li>
+                                                );
+                                            })}
+                                        </ul>
+                                    </>
+                                )}
+                            </>
+                        )}
+                    </div>
+                </div>
+            </Modal.Body>
+            <Modal.Footer>
+                <Button onClick={onClose}>Cancel</Button>
+                <Button
+                    bsStyle="primary"
+                    disabled={picked.size === 0}
+                    onClick={() => {
+                        onAddGenes([...picked]);
+                        onClose();
+                    }}
+                >
+                    Add {picked.size} gene{picked.size === 1 ? '' : 's'} to
+                    chart
+                </Button>
+            </Modal.Footer>
+        </Modal>
+    );
+});
 
 @observer
 export default class MrnaTabContent extends React.Component<
@@ -428,6 +724,34 @@ export default class MrnaTabContent extends React.Component<
         this.sortByZScore = v;
     }
 
+    // Adds one or more hugo symbols to the picker's selection list, skipping
+    // any that are already on the chart. Used by the co-expression dialog
+    // when the user confirms a multi-select.
+    @action.bound
+    addGeneSymbolsToChart(symbols: string[]) {
+        const onChart = new Set(this.plotsStore.effectiveGeneSymbols);
+        const current = this.plotsStore.mrnaTabSelections;
+        const currentSet = new Set(current);
+        const toAdd = symbols.filter(
+            s => !onChart.has(s) && !currentSet.has(s)
+        );
+        if (toAdd.length === 0) return;
+        this.plotsStore.setMrnaTabSelections([...current, ...toAdd]);
+    }
+
+    @observable coExpressionDialogOpen: boolean = false;
+
+    @action.bound
+    openCoExpressionDialog() {
+        this.coExpressionDialogOpen = true;
+    }
+
+    @action.bound
+    closeCoExpressionDialog() {
+        this.coExpressionDialogOpen = false;
+    }
+
+
     // Per-gene cohort stats (median + MAD) computed on log-transformed values
     // when the log toggle is on, so the z-score lives on the same axis the
     // user is looking at. Keyed by entrezGeneId.
@@ -514,6 +838,12 @@ export default class MrnaTabContent extends React.Component<
             };
         });
         return out;
+    }
+
+    // Entrez ids of the genes currently on the chart, used so the bubble
+    // tooltip can quickly tell whether a co-expressed gene is also on chart.
+    @computed get chartGeneEntrezIdSet(): Set<number> {
+        return new Set(this.genes.map(g => g.entrezGeneId));
     }
 
     // Max(|z|) across the patient's samples for each gene, used to sort rows
@@ -634,6 +964,7 @@ export default class MrnaTabContent extends React.Component<
                     y: swap ? valueCoord : categoryCoord,
                     rawValue: d.value,
                     geneSymbol: gene.symbol,
+                    entrezGeneId: gene.entrezGeneId,
                     zScore: sampleScore ? sampleScore.z : undefined,
                     percentile: sampleScore
                         ? sampleScore.percentile
@@ -832,7 +1163,26 @@ export default class MrnaTabContent extends React.Component<
                     />
                 </div>
                 {this.renderCohortSummaryBar()}
+                <div style={{ margin: '6px 0 18px' }}>
+                    <Button
+                        bsStyle="default"
+                        bsSize="small"
+                        onClick={this.openCoExpressionDialog}
+                        disabled={this.genes.length === 0}
+                        style={{ whiteSpace: 'nowrap' }}
+                    >
+                        Find co-expressed genes
+                    </Button>
+                </div>
                 {this.renderChart()}
+                <CoExpressionDialog
+                    isOpen={this.coExpressionDialogOpen}
+                    onClose={this.closeCoExpressionDialog}
+                    chartGenes={this.genes}
+                    plotsStore={this.plotsStore}
+                    allGenesByEntrezId={this.plotsStore.allGenesByEntrezId}
+                    onAddGenes={this.addGeneSymbolsToChart}
+                />
                 <ReferenceCohortModal
                     plotsStore={this.plotsStore}
                     studyId={store.studyId}
@@ -982,43 +1332,9 @@ export default class MrnaTabContent extends React.Component<
         const valueScale = this.useLog ? 'log' : 'linear';
         const categoryDomain: [number, number] = [0, n + 0.5];
         const categoryTickValues = this.genes.map((g, i) => i + 1);
-        // Always-on two-line tick label: gene symbol on top, per-sample z
-        // on a second muted line below. Single sample: "TP53\n+3.2 σ".
-        // Multi-sample (uses the bubble numbers): "FOLR1\n1:+2.7, 2:−0.7 σ".
-        const sampleManager = this.props.sampleManager;
-        const categoryTickFormat = this.genes.map(g => {
-            const perSample = this.patientSampleScores[g.entrezGeneId] || {};
-            const entries = Object.keys(perSample);
-            if (entries.length === 0) return g.symbol;
-            const formatted = entries
-                .map(sid => {
-                    const z = perSample[sid].z;
-                    const sign = z >= 0 ? '+' : '−';
-                    const num = `${sign}${Math.abs(z).toFixed(1)}`;
-                    const label =
-                        (sampleManager &&
-                            sampleManager.sampleLabels[sid]) ||
-                        '';
-                    return entries.length > 1 && label
-                        ? `${label}:${num}`
-                        : num;
-                })
-                .join(', ');
-            return `${g.symbol}\n${formatted} σ`;
-        });
-        // Custom VictoryLabel that styles the two lines independently — the
-        // gene name in the default color, the z line in a smaller muted grey
-        // so the name visually dominates.
+        const categoryTickFormat = this.genes.map(g => g.symbol);
         const categoryTickLabel = (
-            <VictoryLabel
-                style={
-                    [
-                        { fontSize: 16, fill: '#333' },
-                        { fontSize: 13, fill: '#888' },
-                    ] as any
-                }
-                lineHeight={[1, 1.2] as any}
-            />
+            <VictoryLabel style={{ fontSize: 16, fill: '#333' } as any} />
         );
         const valueTickFormat = (t: number) =>
             t >= 1 ? Number(t).toLocaleString('en-US') : `${t}`;
