@@ -5,6 +5,7 @@ import { action, computed, makeObservable, observable } from 'mobx';
 import {
     VictoryAxis,
     VictoryChart,
+    VictoryLabel,
     VictoryLine,
     VictoryScatter,
 } from 'victory';
@@ -49,7 +50,7 @@ interface IPoint {
     y: number;
     sampleId?: string;
     // Carried for the highlighted-sample tooltip so it can show the raw
-    // expression value, the gene, and the patient outlierness vs cohort.
+    // expression value, the gene, and the patient z-score vs cohort.
     rawValue?: number;
     geneSymbol?: string;
     zScore?: number;
@@ -75,7 +76,7 @@ function quantileSorted(sorted: number[], q: number): number {
 }
 
 // Median absolute deviation — robust spread measure used by the patient
-// outlierness score.
+// z-score score.
 function madOf(values: number[], median: number): number {
     if (values.length === 0) return 0;
     const dev = values.map(v => Math.abs(v - median));
@@ -237,7 +238,7 @@ export default class MrnaTabContent extends React.Component<
 
     // Effective gene rows for the chart, in resolved selection order, deduped,
     // and restricted to genes that actually have expression data. When the
-    // sort-by-outlierness toggle is on, rows are reordered by max(|z|) across
+    // sort-by-z-score toggle is on, rows are reordered by max(|z|) across
     // the patient's samples desc.
     @computed get genes(): { symbol: string; entrezGeneId: number }[] {
         const present = new Set(
@@ -255,8 +256,8 @@ export default class MrnaTabContent extends React.Component<
                     : null;
             })
             .filter((g): g is { symbol: string; entrezGeneId: number } => !!g);
-        if (!this.sortByOutlierness) return base;
-        const outlier = this.geneOutlierness;
+        if (!this.sortByZScore) return base;
+        const outlier = this.geneMaxAbsZ;
         return [...base].sort(
             (a, b) =>
                 (outlier[b.entrezGeneId] || 0) -
@@ -419,12 +420,12 @@ export default class MrnaTabContent extends React.Component<
     }
 
     // When true, the chart's gene rows are reordered by patient
-    // outlierness (max |robust z-score| across the patient's samples).
-    @observable sortByOutlierness: boolean = false;
+    // z-score (max |robust z-score| across the patient's samples).
+    @observable sortByZScore: boolean = false;
 
     @action.bound
-    setSortByOutlierness(v: boolean) {
-        this.sortByOutlierness = v;
+    setSortByZScore(v: boolean) {
+        this.sortByZScore = v;
     }
 
     // Per-gene cohort stats (median + MAD) computed on log-transformed values
@@ -516,8 +517,8 @@ export default class MrnaTabContent extends React.Component<
     }
 
     // Max(|z|) across the patient's samples for each gene, used to sort rows
-    // when sortByOutlierness is on.
-    @computed get geneOutlierness(): { [entrezGeneId: number]: number } {
+    // when sortByZScore is on.
+    @computed get geneMaxAbsZ(): { [entrezGeneId: number]: number } {
         const out: { [entrezGeneId: number]: number } = {};
         Object.keys(this.patientSampleScores).forEach(k => {
             const entrezId = Number(k);
@@ -965,64 +966,60 @@ export default class MrnaTabContent extends React.Component<
 
         const n = this.genes.length;
         const swap = this.axesSwapped;
-        // When sort-by-outlierness is on the gene tick labels grow from e.g.
-        // "TP53" to "TP53 (1:+2.7, 2:−0.7 σ)" — give them more room.
-        const longLabels = this.sortByOutlierness;
         // Each gene needs roughly the same per-row/column space regardless of
         // orientation; pick a fixed cross-axis size for the value axis.
-        const VALUE_AXIS_SIZE = 480;
-        const PER_GENE = swap && longLabels ? 110 : 70;
-        const chartWidth = swap ? 160 + n * PER_GENE : 720;
+        const VALUE_AXIS_SIZE = 520;
+        const PER_GENE = swap ? 90 : 80;
+        const chartWidth = swap ? 170 + n * PER_GENE : 720;
         const chartHeight = swap ? VALUE_AXIS_SIZE : 140 + n * PER_GENE;
         // Swapped layout needs more left padding (so the rotated value-axis
         // label clears the tick numbers) and more bottom padding (so the
-        // angled gene tick labels fit beneath the axis). When sorting the
-        // category-axis labels are longer, so the corresponding padding
-        // grows further.
+        // angled two-line gene tick labels fit beneath the axis).
         const padding = swap
-            ? {
-                  top: 30,
-                  bottom: longLabels ? 170 : 110,
-                  left: 90,
-                  right: 25,
-              }
-            : {
-                  top: 20,
-                  bottom: 80,
-                  left: longLabels ? 210 : 70,
-                  right: 25,
-              };
+            ? { top: 30, bottom: 170, left: 90, right: 25 }
+            : { top: 20, bottom: 80, left: 140, right: 25 };
         const valueLabel = profile.name;
         const valueScale = this.useLog ? 'log' : 'linear';
         const categoryDomain: [number, number] = [0, n + 0.5];
         const categoryTickValues = this.genes.map((g, i) => i + 1);
-        // When sort-by-outlierness is on, append the per-sample z-score(s)
-        // to each gene tick label. Single sample: "TP53 (+3.2 σ)". Multiple:
-        // "TP53 (1:+1.5, 2:+3.2 σ)" — the numbers match the bubble labels.
+        // Always-on two-line tick label: gene symbol on top, per-sample z
+        // on a second muted line below. Single sample: "TP53\n+3.2 σ".
+        // Multi-sample (uses the bubble numbers): "FOLR1\n1:+2.7, 2:−0.7 σ".
         const sampleManager = this.props.sampleManager;
-        const categoryTickFormat = this.sortByOutlierness
-            ? this.genes.map(g => {
-                  const perSample =
-                      this.patientSampleScores[g.entrezGeneId] || {};
-                  const entries = Object.keys(perSample);
-                  if (entries.length === 0) return g.symbol;
-                  const formatted = entries
-                      .map(sid => {
-                          const z = perSample[sid].z;
-                          const sign = z >= 0 ? '+' : '−';
-                          const num = `${sign}${Math.abs(z).toFixed(1)}`;
-                          const label =
-                              (sampleManager &&
-                                  sampleManager.sampleLabels[sid]) ||
-                              '';
-                          return entries.length > 1 && label
-                              ? `${label}:${num}`
-                              : num;
-                      })
-                      .join(', ');
-                  return `${g.symbol} (${formatted} σ)`;
-              })
-            : this.genes.map(g => g.symbol);
+        const categoryTickFormat = this.genes.map(g => {
+            const perSample = this.patientSampleScores[g.entrezGeneId] || {};
+            const entries = Object.keys(perSample);
+            if (entries.length === 0) return g.symbol;
+            const formatted = entries
+                .map(sid => {
+                    const z = perSample[sid].z;
+                    const sign = z >= 0 ? '+' : '−';
+                    const num = `${sign}${Math.abs(z).toFixed(1)}`;
+                    const label =
+                        (sampleManager &&
+                            sampleManager.sampleLabels[sid]) ||
+                        '';
+                    return entries.length > 1 && label
+                        ? `${label}:${num}`
+                        : num;
+                })
+                .join(', ');
+            return `${g.symbol}\n${formatted} σ`;
+        });
+        // Custom VictoryLabel that styles the two lines independently — the
+        // gene name in the default color, the z line in a smaller muted grey
+        // so the name visually dominates.
+        const categoryTickLabel = (
+            <VictoryLabel
+                style={
+                    [
+                        { fontSize: 16, fill: '#333' },
+                        { fontSize: 13, fill: '#888' },
+                    ] as any
+                }
+                lineHeight={[1, 1.2] as any}
+            />
+        );
         const valueTickFormat = (t: number) =>
             t >= 1 ? Number(t).toLocaleString('en-US') : `${t}`;
         // The value-axis label rotates with the axis. When it's on the left
@@ -1036,15 +1033,15 @@ export default class MrnaTabContent extends React.Component<
         };
         // When the gene axis is on the bottom (swapped), rotate the gene
         // labels -45° so they don't run into each other across narrow columns.
-        const categoryAxisProps = swap
+        const categoryAxisProps: any = swap
             ? {
                   tickValues: categoryTickValues,
                   tickFormat: categoryTickFormat,
+                  tickLabelComponent: categoryTickLabel,
                   style: {
                       tickLabels: {
                           angle: -45,
                           textAnchor: 'end',
-                          fontSize: 10,
                           padding: 4,
                       },
                   },
@@ -1052,6 +1049,7 @@ export default class MrnaTabContent extends React.Component<
             : {
                   tickValues: categoryTickValues,
                   tickFormat: categoryTickFormat,
+                  tickLabelComponent: categoryTickLabel,
               };
 
         return (
@@ -1137,13 +1135,13 @@ export default class MrnaTabContent extends React.Component<
                     >
                         <input
                             type="checkbox"
-                            checked={this.sortByOutlierness}
+                            checked={this.sortByZScore}
                             onChange={e =>
-                                this.setSortByOutlierness(e.target.checked)
+                                this.setSortByZScore(e.target.checked)
                             }
                             style={{ marginRight: 6 }}
                         />
-                        Sort by outlierness
+                        Sort by z-score
                     </label>
                 </div>
                 <VictoryChart
