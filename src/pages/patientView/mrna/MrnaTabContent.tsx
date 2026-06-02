@@ -1324,9 +1324,9 @@ export default class MrnaTabContent extends React.Component<
         const chartHeight = swap ? VALUE_AXIS_SIZE : 140 + n * PER_GENE;
         // Swapped layout needs more left padding (so the rotated value-axis
         // label clears the tick numbers) and more bottom padding (so the
-        // angled two-line gene tick labels fit beneath the axis).
+        // angled gene tick labels fit beneath the axis without overlapping).
         const padding = swap
-            ? { top: 30, bottom: 170, left: 90, right: 25 }
+            ? { top: 30, bottom: 110, left: 90, right: 25 }
             : { top: 20, bottom: 80, left: 140, right: 25 };
         const valueLabel = profile.name;
         const valueScale = this.useLog ? 'log' : 'linear';
@@ -1358,7 +1358,7 @@ export default class MrnaTabContent extends React.Component<
                       tickLabels: {
                           angle: -45,
                           textAnchor: 'end',
-                          padding: 4,
+                          padding: 14,
                       },
                   },
               }
