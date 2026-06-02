@@ -1,10 +1,11 @@
 import { action, computed, makeObservable, observable } from 'mobx';
 import _ from 'lodash';
-import { remoteData } from 'cbioportal-frontend-commons';
+import { MobxPromise, remoteData } from 'cbioportal-frontend-commons';
 import {
     AlterationCountByGene,
     ClinicalAttribute,
     ClinicalDataFilter,
+    CoExpression,
     DataFilterValue,
     Gene,
     GeneFilter,
@@ -18,7 +19,9 @@ import {
     StudyViewStructuralVariantFilter,
 } from 'cbioportal-ts-api-client';
 import { getClient } from '../../../shared/api/cbioportalClientInstance';
-import internalClient from '../../../shared/api/cbioportalInternalClientInstance';
+import internalClient, {
+    getInternalClient,
+} from '../../../shared/api/cbioportalInternalClientInstance';
 import { AlterationTypeConstants } from 'shared/constants';
 import {
     GENE_FILTER_QUERY_DEFAULTS,
@@ -563,6 +566,97 @@ export class PatientViewPlotsStore {
         },
         []
     );
+
+    // entrezGeneId -> Gene lookup so the co-expression results (which only
+    // carry entrez ids) can be resolved to hugo symbols.
+    @computed get allGenesByEntrezId(): { [entrezGeneId: number]: Gene } {
+        return _.keyBy(
+            this.mrnaTabAllGenes.result || [],
+            g => g.entrezGeneId
+        );
+    }
+
+    // Lazy per-gene cache of top-correlated genes within the effective cohort.
+    // Populated only when something (tooltip hover, chip-row hover) calls
+    // requestCoExpressionsForGene — we don't want to spend N parallel fetches
+    // on chart load when the user might never hover any of those rows.
+    // The cohort/profile identity is baked into the cache key so a cohort or
+    // profile change invalidates the cache.
+    @observable.shallow private _coExpressionCache = new Map<
+        string,
+        MobxPromise<CoExpression[]>
+    >();
+
+    @computed private get coExpressionCacheKeyPrefix(): string {
+        const profileId =
+            (this.mrnaExpressionMolecularProfile.result &&
+                this.mrnaExpressionMolecularProfile.result.molecularProfileId) ||
+            '';
+        const sampleIds = (this.effectiveCohortSamples.result || [])
+            .map(s => s.sampleId)
+            .sort()
+            .join(',');
+        return `${profileId}|${sampleIds}`;
+    }
+
+    @action.bound
+    requestCoExpressionsForGene(
+        entrezGeneId: number
+    ): MobxPromise<CoExpression[]> {
+        const key = `${this.coExpressionCacheKeyPrefix}|${entrezGeneId}`;
+        let p = this._coExpressionCache.get(key);
+        if (p) return p;
+        const profilePromise = this.mrnaExpressionMolecularProfile;
+        const samplesPromise = this.effectiveCohortSamples;
+        p = remoteData<CoExpression[]>(
+            {
+                await: () => [profilePromise, samplesPromise],
+                invoke: async () => {
+                    const profile = profilePromise.result;
+                    if (!profile) return [];
+                    const sampleIds = (samplesPromise.result || []).map(
+                        s => s.sampleId
+                    );
+                    if (sampleIds.length === 0) return [];
+                    const client = getInternalClient();
+                    const data = await client
+                        .fetchCoExpressionsUsingPOST({
+                            molecularProfileIdA: profile.molecularProfileId,
+                            molecularProfileIdB: profile.molecularProfileId,
+                            threshold: 0.3,
+                            coExpressionFilter: {
+                                entrezGeneId,
+                                sampleIds,
+                            } as any,
+                        })
+                        .catch(() => [] as CoExpression[]);
+                    return _.orderBy(
+                        data.filter(
+                            r =>
+                                Number(r.geneticEntityId) !== entrezGeneId &&
+                                r.spearmansCorrelation !== null &&
+                                Number.isFinite(r.spearmansCorrelation)
+                        ),
+                        r => Math.abs(r.spearmansCorrelation),
+                        'desc'
+                    ).slice(0, 5);
+                },
+            },
+            []
+        );
+        this._coExpressionCache.set(key, p);
+        return p;
+    }
+
+    // Read-only accessor for components that want to display whatever is
+    // already in the cache without triggering a fetch. Returns undefined when
+    // nothing has asked for this gene yet.
+    peekCoExpressionsForGene(
+        entrezGeneId: number
+    ): MobxPromise<CoExpression[]> | undefined {
+        const key = `${this.coExpressionCacheKeyPrefix}|${entrezGeneId}`;
+        return this._coExpressionCache.get(key);
+    }
 
     // First mRNA expression molecular profile in the study.
     readonly mrnaExpressionMolecularProfile = remoteData<
