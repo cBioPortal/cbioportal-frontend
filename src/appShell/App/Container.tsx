@@ -35,6 +35,7 @@ import { ErrorAlert } from 'shared/components/errorScreen/ErrorAlert';
 import { ErrorInfo } from 'react';
 import { observable } from 'mobx';
 import { sendToLoggly } from 'shared/lib/tracking';
+import ChatbotFloatingButton from 'shared/components/chatbot/ChatbotFloatingButton';
 
 interface IContainerProps {
     location: Location;
@@ -154,6 +155,9 @@ export default class Container extends React.Component<IContainerProps, {}> {
                                     <ErrorAlert appStore={this.appStore} />
 
                                     {makeRoutes()}
+
+                                    {/* AI Assistant Chatbot */}
+                                    <ChatbotFloatingButton />
                                 </div>
                             </Else>
                         </If>
