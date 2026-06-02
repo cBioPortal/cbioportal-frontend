@@ -49,9 +49,11 @@ interface IPoint {
     y: number;
     sampleId?: string;
     // Carried for the highlighted-sample tooltip so it can show the raw
-    // expression value alongside the sample id.
+    // expression value, the gene, and the patient outlierness vs cohort.
     rawValue?: number;
     geneSymbol?: string;
+    zScore?: number;
+    percentile?: number;
 }
 
 const RED = '#e8493a';
@@ -70,6 +72,37 @@ function quantileSorted(sorted: number[], q: number): number {
     return next !== undefined
         ? sorted[base] + rest * (next - sorted[base])
         : sorted[base];
+}
+
+// Median absolute deviation — robust spread measure used by the patient
+// outlierness score.
+function madOf(values: number[], median: number): number {
+    if (values.length === 0) return 0;
+    const dev = values.map(v => Math.abs(v - median));
+    dev.sort((a, b) => a - b);
+    return quantileSorted(dev, 0.5);
+}
+
+// Fraction of cohort values <= the patient value, using a binary search on
+// an already-sorted ascending array.
+function percentileOf(value: number, sorted: number[]): number {
+    if (sorted.length === 0) return 0;
+    let lo = 0;
+    let hi = sorted.length;
+    while (lo < hi) {
+        const mid = (lo + hi) >>> 1;
+        if (sorted[mid] <= value) lo = mid + 1;
+        else hi = mid;
+    }
+    return lo / sorted.length;
+}
+
+// Modified z-score: 0.6745·(x − median)/MAD. The 0.6745 calibrates MAD so the
+// score is on the same scale as the classical z for normally-distributed data
+// while staying robust to long tails common in expression data.
+function robustZ(value: number, median: number, mad: number): number {
+    const denom = mad > 0 ? mad : 1e-9;
+    return (0.6745 * (value - median)) / denom;
 }
 
 // Custom MenuList for the Genes react-select that pins a small hint at the
@@ -139,15 +172,30 @@ const HighlightSampleMarker: React.FunctionComponent<any> = props => {
     const bubble = (
         <SampleLabelHTML label={label} color={color} fillOpacity={1} />
     );
-    // Build a "GENE expression: value" body line for the tooltip when the
-    // gene/value are available; falls back to no extra text otherwise so
-    // SampleInline behaves identically to its other call sites.
-    const extraBody =
-        datum.geneSymbol && datum.rawValue !== undefined
-            ? `${datum.geneSymbol} expression: ${formatExpressionValue(
-                  datum.rawValue
-              )}`
-            : undefined;
+    // Build a body block for the tooltip: gene + value, plus a robust z and
+    // cohort percentile when we have them. Falls back to undefined otherwise
+    // so SampleInline behaves identically to its other call sites.
+    const lines: React.ReactNode[] = [];
+    if (datum.geneSymbol && datum.rawValue !== undefined) {
+        lines.push(
+            <div key="value">
+                {datum.geneSymbol} expression:{' '}
+                {formatExpressionValue(datum.rawValue)}
+            </div>
+        );
+    }
+    if (datum.zScore !== undefined && datum.percentile !== undefined) {
+        const sign = datum.zScore >= 0 ? '+' : '−';
+        const pct = Math.round(datum.percentile * 100);
+        lines.push(
+            <div key="z">
+                z = {sign}
+                {Math.abs(datum.zScore).toFixed(2)} ({pct}th percentile in
+                cohort)
+            </div>
+        );
+    }
+    const extraBody = lines.length > 0 ? <>{lines}</> : undefined;
     return (
         <foreignObject
             x={x - BUBBLE_SIZE / 2}
@@ -188,14 +236,16 @@ export default class MrnaTabContent extends React.Component<
     }
 
     // Effective gene rows for the chart, in resolved selection order, deduped,
-    // and restricted to genes that actually have expression data.
+    // and restricted to genes that actually have expression data. When the
+    // sort-by-outlierness toggle is on, rows are reordered by max(|z|) across
+    // the patient's samples desc.
     @computed get genes(): { symbol: string; entrezGeneId: number }[] {
         const present = new Set(
             this.plotsStore.mrnaExpressionDataForGenes.result.map(
                 d => d.entrezGeneId
             )
         );
-        return this.plotsStore.effectiveGeneSymbols
+        const base = this.plotsStore.effectiveGeneSymbols
             .map(symbol => {
                 const gene = this.plotsStore.mrnaTabGenes.result.find(
                     g => g.hugoGeneSymbol.toUpperCase() === symbol.toUpperCase()
@@ -205,6 +255,13 @@ export default class MrnaTabContent extends React.Component<
                     : null;
             })
             .filter((g): g is { symbol: string; entrezGeneId: number } => !!g);
+        if (!this.sortByOutlierness) return base;
+        const outlier = this.geneOutlierness;
+        return [...base].sort(
+            (a, b) =>
+                (outlier[b.entrezGeneId] || 0) -
+                (outlier[a.entrezGeneId] || 0)
+        );
     }
 
     @observable geneQuery: string = '';
@@ -361,6 +418,119 @@ export default class MrnaTabContent extends React.Component<
         this.axesSwapped = v;
     }
 
+    // When true, the chart's gene rows are reordered by patient
+    // outlierness (max |robust z-score| across the patient's samples).
+    @observable sortByOutlierness: boolean = false;
+
+    @action.bound
+    setSortByOutlierness(v: boolean) {
+        this.sortByOutlierness = v;
+    }
+
+    // Per-gene cohort stats (median + MAD) computed on log-transformed values
+    // when the log toggle is on, so the z-score lives on the same axis the
+    // user is looking at. Keyed by entrezGeneId.
+    @computed get geneCohortStats(): {
+        [entrezGeneId: number]: {
+            median: number;
+            mad: number;
+            sortedTransformed: number[];
+        };
+    } {
+        const result: {
+            [entrezGeneId: number]: {
+                median: number;
+                mad: number;
+                sortedTransformed: number[];
+            };
+        } = {};
+        const transform = (v: number) =>
+            this.useLog ? Math.log10(Math.max(v, this.logFloor)) : v;
+        const byEntrez = _.groupBy(
+            this.plotsStore.mrnaExpressionDataForGenes.result,
+            d => d.entrezGeneId
+        );
+        Object.keys(byEntrez).forEach(k => {
+            const entrezId = Number(k);
+            const transformed = byEntrez[entrezId]
+                .map(d => transform(d.value))
+                .filter(Number.isFinite)
+                .sort((a, b) => a - b);
+            if (transformed.length === 0) {
+                result[entrezId] = {
+                    median: 0,
+                    mad: 0,
+                    sortedTransformed: [],
+                };
+                return;
+            }
+            const median = quantileSorted(transformed, 0.5);
+            const mad = madOf(transformed, median);
+            result[entrezId] = {
+                median,
+                mad,
+                sortedTransformed: transformed,
+            };
+        });
+        return result;
+    }
+
+    // For each (entrezGeneId, patient sampleId), the patient's expression
+    // value, its robust z, and its cohort percentile (fraction ≤). Empty if
+    // the sample wasn't profiled for that gene.
+    @computed get patientSampleScores(): {
+        [entrezGeneId: number]: {
+            [sampleId: string]: {
+                value: number;
+                z: number;
+                percentile: number;
+            };
+        };
+    } {
+        const out: {
+            [entrezGeneId: number]: {
+                [sampleId: string]: {
+                    value: number;
+                    z: number;
+                    percentile: number;
+                };
+            };
+        } = {};
+        const transform = (v: number) =>
+            this.useLog ? Math.log10(Math.max(v, this.logFloor)) : v;
+        this.plotsStore.mrnaExpressionDataForGenes.result.forEach(d => {
+            if (!this.highlightedSampleIds.has(d.sampleId)) return;
+            if (!Number.isFinite(d.value)) return;
+            const stats = this.geneCohortStats[d.entrezGeneId];
+            if (!stats || stats.sortedTransformed.length < 5) return;
+            const tv = transform(d.value);
+            const z = robustZ(tv, stats.median, stats.mad);
+            const percentile = percentileOf(tv, stats.sortedTransformed);
+            (out[d.entrezGeneId] = out[d.entrezGeneId] || {})[d.sampleId] = {
+                value: d.value,
+                z,
+                percentile,
+            };
+        });
+        return out;
+    }
+
+    // Max(|z|) across the patient's samples for each gene, used to sort rows
+    // when sortByOutlierness is on.
+    @computed get geneOutlierness(): { [entrezGeneId: number]: number } {
+        const out: { [entrezGeneId: number]: number } = {};
+        Object.keys(this.patientSampleScores).forEach(k => {
+            const entrezId = Number(k);
+            const samples = this.patientSampleScores[entrezId];
+            let max = 0;
+            Object.values(samples).forEach(s => {
+                if (Math.abs(s.z) > max) max = Math.abs(s.z);
+            });
+            out[entrezId] = max;
+        });
+        return out;
+    }
+
     @computed get canRenderLog(): boolean {
         const vals = this.allValues;
         const positives = vals.filter(v => v > 0);
@@ -451,6 +621,10 @@ export default class MrnaTabContent extends React.Component<
                       BOX_BAND;
                 const valueCoord = this.clamp(d.value);
                 const categoryCoord = rowIndex + 1 + offset;
+                const sampleScore =
+                    highlighted &&
+                    this.patientSampleScores[gene.entrezGeneId] &&
+                    this.patientSampleScores[gene.entrezGeneId][d.sampleId];
                 // In the default orientation, value is on x and the gene
                 // category on y; swapped flips them.
                 points.push({
@@ -459,6 +633,10 @@ export default class MrnaTabContent extends React.Component<
                     y: swap ? valueCoord : categoryCoord,
                     rawValue: d.value,
                     geneSymbol: gene.symbol,
+                    zScore: sampleScore ? sampleScore.z : undefined,
+                    percentile: sampleScore
+                        ? sampleScore.percentile
+                        : undefined,
                 });
             });
         });
@@ -776,23 +954,64 @@ export default class MrnaTabContent extends React.Component<
 
         const n = this.genes.length;
         const swap = this.axesSwapped;
+        // When sort-by-outlierness is on the gene tick labels grow from e.g.
+        // "TP53" to "TP53 (1:+2.7, 2:−0.7 σ)" — give them more room.
+        const longLabels = this.sortByOutlierness;
         // Each gene needs roughly the same per-row/column space regardless of
         // orientation; pick a fixed cross-axis size for the value axis.
         const VALUE_AXIS_SIZE = 480;
-        const PER_GENE = 70;
+        const PER_GENE = swap && longLabels ? 110 : 70;
         const chartWidth = swap ? 160 + n * PER_GENE : 720;
         const chartHeight = swap ? VALUE_AXIS_SIZE : 140 + n * PER_GENE;
         // Swapped layout needs more left padding (so the rotated value-axis
         // label clears the tick numbers) and more bottom padding (so the
-        // angled gene tick labels fit beneath the axis).
+        // angled gene tick labels fit beneath the axis). When sorting the
+        // category-axis labels are longer, so the corresponding padding
+        // grows further.
         const padding = swap
-            ? { top: 30, bottom: 110, left: 90, right: 25 }
-            : { top: 20, bottom: 80, left: 70, right: 25 };
+            ? {
+                  top: 30,
+                  bottom: longLabels ? 170 : 110,
+                  left: 90,
+                  right: 25,
+              }
+            : {
+                  top: 20,
+                  bottom: 80,
+                  left: longLabels ? 210 : 70,
+                  right: 25,
+              };
         const valueLabel = profile.name;
         const valueScale = this.useLog ? 'log' : 'linear';
         const categoryDomain: [number, number] = [0, n + 0.5];
         const categoryTickValues = this.genes.map((g, i) => i + 1);
-        const categoryTickFormat = this.genes.map(g => g.symbol);
+        // When sort-by-outlierness is on, append the per-sample z-score(s)
+        // to each gene tick label. Single sample: "TP53 (+3.2 σ)". Multiple:
+        // "TP53 (1:+1.5, 2:+3.2 σ)" — the numbers match the bubble labels.
+        const sampleManager = this.props.sampleManager;
+        const categoryTickFormat = this.sortByOutlierness
+            ? this.genes.map(g => {
+                  const perSample =
+                      this.patientSampleScores[g.entrezGeneId] || {};
+                  const entries = Object.keys(perSample);
+                  if (entries.length === 0) return g.symbol;
+                  const formatted = entries
+                      .map(sid => {
+                          const z = perSample[sid].z;
+                          const sign = z >= 0 ? '+' : '−';
+                          const num = `${sign}${Math.abs(z).toFixed(1)}`;
+                          const label =
+                              (sampleManager &&
+                                  sampleManager.sampleLabels[sid]) ||
+                              '';
+                          return entries.length > 1 && label
+                              ? `${label}:${num}`
+                              : num;
+                      })
+                      .join(', ');
+                  return `${g.symbol} (${formatted} σ)`;
+              })
+            : this.genes.map(g => g.symbol);
         const valueTickFormat = (t: number) =>
             t >= 1 ? Number(t).toLocaleString('en-US') : `${t}`;
         // The value-axis label rotates with the axis. When it's on the left
@@ -892,6 +1111,28 @@ export default class MrnaTabContent extends React.Component<
                             style={{ marginRight: 6 }}
                         />
                         Swap axes
+                    </label>
+                    <label
+                        style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            fontSize: 12,
+                            fontWeight: 'normal',
+                            margin: 0,
+                            cursor: 'pointer',
+                            color: '#333',
+                        }}
+                        title="Reorder gene rows by how far the patient is from the cohort (max |robust z-score|)"
+                    >
+                        <input
+                            type="checkbox"
+                            checked={this.sortByOutlierness}
+                            onChange={e =>
+                                this.setSortByOutlierness(e.target.checked)
+                            }
+                            style={{ marginRight: 6 }}
+                        />
+                        Sort by outlierness
                     </label>
                 </div>
                 <VictoryChart
