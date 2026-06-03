@@ -10,7 +10,18 @@ import {
     VictoryScatter,
 } from 'victory';
 import { CBIOPORTAL_VICTORY_THEME } from 'cbioportal-frontend-commons';
-import { DataFilterValue, Gene } from 'cbioportal-ts-api-client';
+import {
+    DataFilterValue,
+    DiscreteCopyNumberData,
+    Gene,
+    Mutation,
+    StructuralVariant,
+} from 'cbioportal-ts-api-client';
+import {
+    tooltipMutationsSection,
+    tooltipCnaSection,
+    tooltipSvSection,
+} from 'shared/components/plots/PlotsTabUtils';
 import ReactSelect from 'react-select';
 import { Modal, Button } from 'react-bootstrap';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
@@ -72,6 +83,12 @@ interface IPoint {
     entrezGeneId?: number;
     zScore?: number;
     percentile?: number;
+    // The sample's other alterations in this row's gene, for the bubble
+    // tooltip (only attached to highlighted points). Shaped by the plots store
+    // for the plots-tab tooltip section helpers.
+    mutations?: Mutation[];
+    copyNumberAlterations?: DiscreteCopyNumberData[];
+    structuralVariants?: StructuralVariant[];
 }
 
 const RED = '#e8493a';
@@ -155,8 +172,10 @@ function hash01(s: string): number {
 
 // Victory data component: render the numbered sample bubble at the point.
 // Reuses the same SampleInline + SampleLabelHTML the patient header uses, so
-// the bubble color, size, and hover tooltip (sample id + clinical data table)
-// are identical to the bubbles in the header strip.
+// the bubble color and size match the header strip. The hover tooltip drops
+// SampleInline's clinical-data table in favor of this gene's expression value,
+// the patient z-score, and the sample's other alterations in the gene
+// (mutations / CNA / SVs), rendered with the Plots-tab tooltip section helpers.
 const BUBBLE_SIZE = 12;
 const HighlightSampleMarker: React.FunctionComponent<any> = props => {
     const { x, y, datum, sampleManager } = props;
@@ -193,6 +212,44 @@ const HighlightSampleMarker: React.FunctionComponent<any> = props => {
             </div>
         );
     }
+    // This sample's other alterations in the row's gene, rendered with the same
+    // section helpers the results-view Plots tab uses. The minimal datum is
+    // marked profiled so the helpers list only alterations that exist (rather
+    // than emitting "Not profiled" lines). Cast to any: the patient's raw
+    // mutation/CNA data is structurally compatible with what the helpers read,
+    // but not the fully-annotated plot types.
+    const altDatum: any = {
+        mutations: datum.mutations || [],
+        copyNumberAlterations: datum.copyNumberAlterations || [],
+        structuralVariants: datum.structuralVariants || [],
+        isProfiledMutations: true,
+        isProfiledCna: true,
+        isProfiledStructuralVariants: true,
+    };
+    const mutationsSection = tooltipMutationsSection(altDatum);
+    const cnaSection = tooltipCnaSection(altDatum);
+    const svSection = tooltipSvSection(altDatum);
+    if (mutationsSection || cnaSection || svSection) {
+        lines.push(
+            <div
+                key="alts"
+                style={{
+                    marginTop: 5,
+                    paddingTop: 4,
+                    borderTop: '1px solid #eee',
+                }}
+            >
+                <div style={{ color: '#888', marginBottom: 2 }}>
+                    Alterations in {datum.geneSymbol}:
+                </div>
+                {mutationsSection}
+                {!!mutationsSection && (!!cnaSection || !!svSection) && <br />}
+                {cnaSection}
+                {!!cnaSection && !!svSection && <br />}
+                {svSection}
+            </div>
+        );
+    }
     const extraBody = lines.length > 0 ? <>{lines}</> : undefined;
     return (
         <foreignObject
@@ -203,7 +260,11 @@ const HighlightSampleMarker: React.FunctionComponent<any> = props => {
             style={{ overflow: 'visible' }}
         >
             {sample ? (
-                <SampleInline sample={sample} extraTooltipBody={extraBody}>
+                <SampleInline
+                    sample={sample}
+                    extraTooltipBody={extraBody}
+                    hideClinicalTable={true}
+                >
                     {bubble}
                 </SampleInline>
             ) : (
@@ -1171,6 +1232,14 @@ export default class MrnaTabContent extends React.Component<
                     highlighted &&
                     this.patientSampleScores[gene.entrezGeneId] &&
                     this.patientSampleScores[gene.entrezGeneId][d.sampleId];
+                // Only highlighted points get a tooltip, so only they need the
+                // sample's alterations in this gene.
+                const alterations = highlighted
+                    ? this.plotsStore.geneAlterationsForSample(
+                          d.sampleId,
+                          gene.entrezGeneId
+                      )
+                    : undefined;
                 // In the default orientation, value is on x and the gene
                 // category on y; swapped flips them.
                 points.push({
@@ -1184,6 +1253,11 @@ export default class MrnaTabContent extends React.Component<
                     percentile: sampleScore
                         ? sampleScore.percentile
                         : undefined,
+                    mutations: alterations && alterations.mutations,
+                    copyNumberAlterations:
+                        alterations && alterations.copyNumberAlterations,
+                    structuralVariants:
+                        alterations && alterations.structuralVariants,
                 });
             });
         });
