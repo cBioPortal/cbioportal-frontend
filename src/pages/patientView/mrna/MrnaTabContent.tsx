@@ -1880,14 +1880,13 @@ export default class MrnaTabContent extends React.Component<
 
         const n = this.genes.length;
         const swap = this.axesSwapped;
-        // Each gene needs roughly the same per-row/column space regardless of
-        // orientation; pick a fixed cross-axis size for the value axis. The
-        // non-swapped per-row size is deliberately compact (30px) to keep the
-        // vertically stacked gene rows from making the chart too tall — this
-        // sets both the row spacing and, since the box/jitter extents are in
-        // category units, each gene's vertical box extent.
+        // Per-gene size along the category axis, the same in both orientations
+        // so the row/column spacing — and, since the box/jitter extents are in
+        // category units, each gene's box extent — stay compact and identical
+        // whether the axes are flipped or not. VALUE_AXIS_SIZE fixes the value
+        // axis length in the swapped layout.
         const VALUE_AXIS_SIZE = 520;
-        const PER_GENE = swap ? 90 : 30;
+        const PER_GENE = 30;
         const chartWidth = swap ? 170 + n * PER_GENE : 720;
         const chartHeight = swap ? VALUE_AXIS_SIZE : 140 + n * PER_GENE;
         // .borderedChart (ChartContainer) adds 10px padding + 1px dashed border
@@ -1909,6 +1908,16 @@ export default class MrnaTabContent extends React.Component<
         const categoryTickFormat = this.genes.map(g => g.symbol);
         const categoryTickLabel = (
             <VictoryLabel style={{ fontSize: 12, fill: '#333' } as any} />
+        );
+        // Swapped layout: the gene labels are the angled -45° x-axis labels.
+        // Nudge them left (dx) so the end of each label lines up with its tick
+        // — the rotated-baseline padding otherwise drifts the label's end to
+        // the right of the tick.
+        const categoryTickLabelSwap = (
+            <VictoryLabel
+                style={{ fontSize: 12, fill: '#333' } as any}
+                dx={-8}
+            />
         );
         // Abbreviate thousands so 4+ digit ticks stay compact: 2000 -> "2k",
         // 1500 -> "1.5k", 12000 -> "12k".
@@ -1934,7 +1943,7 @@ export default class MrnaTabContent extends React.Component<
             ? {
                   tickValues: categoryTickValues,
                   tickFormat: categoryTickFormat,
-                  tickLabelComponent: categoryTickLabel,
+                  tickLabelComponent: categoryTickLabelSwap,
                   style: {
                       tickLabels: {
                           angle: -45,
