@@ -436,7 +436,6 @@ export default class GenericAssayFrequencyTable extends React.Component<
                         toggleSelectionOperator={this.toggleSelectionOperator}
                         defaultSelectionOperator={this.selectionType}
                         extraButtons={this.props.extraButtons}
-                        showControlsAtTop={true}
                     />
                 )}
             </div>
