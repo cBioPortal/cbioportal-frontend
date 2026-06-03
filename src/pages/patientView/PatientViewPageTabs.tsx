@@ -49,6 +49,7 @@ export enum PatientViewPageTabs {
     TrialMatchTab = 'trialMatchTab',
     MutationalSignatures = 'mutationalSignatures',
     PathwayMapper = 'pathways',
+    NewFeatureTab = 'newFeatureTab',
 }
 
 export const PatientViewResourceTabPrefix = 'openResource_';
@@ -704,6 +705,19 @@ export function tabs(
                 />
             </MSKTab>
         );
+
+    tabs.push(
+        <MSKTab
+            key={PatientViewPageTabs.NewFeatureTab}
+            id={PatientViewPageTabs.NewFeatureTab}
+            linkText="New Feature Tab"
+        >
+            <div style={{ padding: '20px' }}>
+                <h3>New Feature Tab</h3>
+                <p>This is where the new feature will go.</p>
+            </div>
+        </MSKTab>
+    );
 
     pageComponent.resourceTabs.component &&
         /* @ts-ignore */
