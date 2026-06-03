@@ -12,6 +12,7 @@ import {
     GeneFilterQuery,
     MolecularDataFilter,
     MolecularProfile,
+    MrnaPercentile,
     NumericGeneMolecularData,
     Sample,
     StructuralVariantFilterQuery,
@@ -30,7 +31,12 @@ import {
 import {
     findGroupByValue,
     groupValue,
+    isGroupValue,
+    GENE_GROUP_VALUE_PREFIX,
     MRNA_TAB_GENE_GROUPS,
+    PATIENT_MUTATIONS_GROUP_ID,
+    PATIENT_SV_GROUP_ID,
+    PATIENT_CNA_GROUP_ID,
 } from 'pages/patientView/mrna/mrnaTabGeneGroups';
 // Imported for its type only (used as a constructor-param annotation, which is
 // erased at runtime) so this does not create a runtime import cycle.
@@ -186,14 +192,68 @@ export class PatientViewPlotsStore {
             .value();
     }
 
+    // Unique genes involved in any structural variant in the patient's
+    // samples (both fusion partners), preserving first-seen order.
+    @computed get patientStructuralVariantGenes(): string[] {
+        const seen = new Set<string>();
+        const out: string[] = [];
+        (this.parentStore.structuralVariantData.result || []).forEach(sv => {
+            [sv.site1HugoSymbol, sv.site2HugoSymbol].forEach(s => {
+                if (s && !seen.has(s)) {
+                    seen.add(s);
+                    out.push(s);
+                }
+            });
+        });
+        return out;
+    }
+
+    // Unique genes with a discrete copy-number alteration in the patient's
+    // samples, preserving first-seen order.
+    @computed get patientCnaGenes(): string[] {
+        const seen = new Set<string>();
+        const out: string[] = [];
+        (this.parentStore.discreteCNAData.result || []).forEach(d => {
+            const s = d.gene && d.gene.hugoGeneSymbol;
+            if (s && !seen.has(s)) {
+                seen.add(s);
+                out.push(s);
+            }
+        });
+        return out;
+    }
+
+    // Member genes for each patient-derived dynamic gene set, keyed by group
+    // id. Used to expand the dynamic "group:<id>" tokens and to size/label
+    // the picker options.
+    @computed get dynamicGroupSymbols(): { [id: string]: string[] } {
+        return {
+            [PATIENT_MUTATIONS_GROUP_ID]: this.patientMutatedGenes.map(
+                g => g.hugoGeneSymbol
+            ),
+            [PATIENT_SV_GROUP_ID]: this.patientStructuralVariantGenes,
+            [PATIENT_CNA_GROUP_ID]: this.patientCnaGenes,
+        };
+    }
+
     // Flatten group selections into their constituent gene symbols, preserving
-    // selection order and de-duplicating across overlapping picks.
+    // selection order and de-duplicating across overlapping picks. Resolves
+    // both static preset groups and patient-derived dynamic groups.
     @computed get effectiveGeneSymbols(): string[] {
         const seen = new Set<string>();
         const out: string[] = [];
+        const dynamic = this.dynamicGroupSymbols;
         for (const item of this.mrnaTabSelections) {
-            const group = findGroupByValue(item);
-            const symbols = group ? group.genes : [item];
+            const staticGroup = findGroupByValue(item);
+            let symbols: string[];
+            if (staticGroup) {
+                symbols = staticGroup.genes;
+            } else if (isGroupValue(item)) {
+                symbols =
+                    dynamic[item.slice(GENE_GROUP_VALUE_PREFIX.length)] || [];
+            } else {
+                symbols = [item];
+            }
             for (const sym of symbols) {
                 if (!seen.has(sym)) {
                     seen.add(sym);
@@ -710,22 +770,122 @@ export class PatientViewPlotsStore {
             ],
             invoke: async () => {
                 const profile = this.mrnaExpressionMolecularProfile.result;
-                if (!profile) {
+                const entrezGeneIds = this.mrnaTabGenes.result!.map(
+                    g => g.entrezGeneId
+                );
+                const sampleIds = this.effectiveCohortSamples.result!.map(
+                    s => s.sampleId
+                );
+                // Don't hit the API with an empty gene or sample list — the
+                // backend rejects it. No genes selected simply means no data.
+                if (
+                    !profile ||
+                    entrezGeneIds.length === 0 ||
+                    sampleIds.length === 0
+                ) {
                     return [];
                 }
                 return getClient().fetchAllMolecularDataInMolecularProfileUsingPOST(
                     {
                         molecularProfileId: profile.molecularProfileId,
                         molecularDataFilter: {
-                            entrezGeneIds: this.mrnaTabGenes.result!.map(
-                                g => g.entrezGeneId
-                            ),
-                            sampleIds: this.effectiveCohortSamples.result!.map(
-                                s => s.sampleId
-                            ),
+                            entrezGeneIds,
+                            sampleIds,
                         } as MolecularDataFilter,
                     }
                 );
+            },
+        },
+        []
+    );
+
+    // Expression for every gene measured in any of the patient's own samples,
+    // independent of the chart's gene selection. Drives the always-on
+    // expression table (the chart, by contrast, only plots the selected
+    // genes). Fetches the patient's samples only — not the reference cohort —
+    // across all genes.
+    readonly patientSamplesExpression = remoteData<NumericGeneMolecularData[]>(
+        {
+            await: () => [
+                this.mrnaExpressionMolecularProfile,
+                this.mrnaTabAllGenes,
+            ],
+            invoke: async () => {
+                const profile = this.mrnaExpressionMolecularProfile.result;
+                const entrezGeneIds = (this.mrnaTabAllGenes.result || []).map(
+                    g => g.entrezGeneId
+                );
+                const sampleIds = this.parentStore.sampleIds;
+                if (
+                    !profile ||
+                    entrezGeneIds.length === 0 ||
+                    sampleIds.length === 0
+                ) {
+                    return [];
+                }
+                return getClient().fetchAllMolecularDataInMolecularProfileUsingPOST(
+                    {
+                        molecularProfileId: profile.molecularProfileId,
+                        molecularDataFilter: {
+                            entrezGeneIds,
+                            sampleIds,
+                        } as MolecularDataFilter,
+                    }
+                );
+            },
+        },
+        []
+    );
+
+    // The patient's highlighted sample ids — the focused sample in sample mode,
+    // or all of the patient's samples in patient mode. Mirrors the chart's
+    // highlighted-sample logic.
+    @computed get outlierSampleIds(): string[] {
+        return this.parentStore.pageMode === 'sample'
+            ? [this.parentStore.sampleId]
+            : this.parentStore.sampleIds;
+    }
+
+    // Per-gene cohort percentile of the patient's sample(s), computed
+    // server-side by the /mrna-percentile endpoint, used by the outlier-gene
+    // finder. This pushes the genes×cohort reduction down to the backend — only
+    // one small percentile row per gene per sample crosses the wire (vs. the
+    // whole expression matrix). The percentile is computed against the entire
+    // ranking profile population, so it does NOT honor the reference-cohort
+    // narrowing; outliers are always relative to the full study. Lazily fetched
+    // — only invoked when the outlier dialog observes it.
+    readonly mrnaSamplePercentiles = remoteData<MrnaPercentile[]>(
+        {
+            await: () => [
+                this.parentStore.mrnaRankMolecularProfileId,
+                this.mrnaTabAllGenes,
+            ],
+            invoke: async () => {
+                const profileId = this.parentStore.mrnaRankMolecularProfileId
+                    .result;
+                if (!profileId) {
+                    return [];
+                }
+                const entrezGeneIds = this.mrnaTabAllGenes.result!.map(
+                    g => g.entrezGeneId
+                );
+                const sampleIds = this.outlierSampleIds;
+                if (sampleIds.length === 0 || entrezGeneIds.length === 0) {
+                    return [];
+                }
+                const client = getInternalClient();
+                const perSample = await Promise.all(
+                    sampleIds.map(sampleId =>
+                        client
+                            .fetchMrnaPercentileUsingPOST({
+                                molecularProfileId: profileId,
+                                sampleId,
+                                entrezGeneIds,
+                            })
+                            .catch(() => [] as MrnaPercentile[])
+                    )
+                );
+                return _.flatten(perSample);
             },
         },
         []
