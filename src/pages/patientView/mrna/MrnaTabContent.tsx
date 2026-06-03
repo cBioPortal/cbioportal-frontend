@@ -92,7 +92,9 @@ interface IPoint {
 }
 
 const RED = '#e8493a';
-const BOX_BAND = 0.34; // half-height of the jitter band around a gene row
+// Half-height of the jitter band around a gene row. Kept below the box
+// half-height (h in boxLines) so the jittered cohort dots stay inside the box.
+const BOX_BAND = 0.18;
 const OUTLIER_HI_PERCENTILE = 0.95; // patient ≥ 95th percentile = over-expressed
 const OUTLIER_LO_PERCENTILE = 0.05; // patient ≤ 5th percentile = under-expressed
 
@@ -259,17 +261,31 @@ const HighlightSampleMarker: React.FunctionComponent<any> = props => {
             height={BUBBLE_SIZE}
             style={{ overflow: 'visible' }}
         >
-            {sample ? (
-                <SampleInline
-                    sample={sample}
-                    extraTooltipBody={extraBody}
-                    hideClinicalTable={true}
-                >
-                    {bubble}
-                </SampleInline>
-            ) : (
-                bubble
-            )}
+            {/* Flex-center the bubble in the box (and zero the line-height) so
+                the inline <svg> isn't pushed down by the line-box baseline/
+                descender gap, which otherwise makes the icon sit too low. */}
+            <div
+                style={{
+                    width: BUBBLE_SIZE,
+                    height: BUBBLE_SIZE,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    lineHeight: 0,
+                }}
+            >
+                {sample ? (
+                    <SampleInline
+                        sample={sample}
+                        extraTooltipBody={extraBody}
+                        hideClinicalTable={true}
+                    >
+                        {bubble}
+                    </SampleInline>
+                ) : (
+                    bubble
+                )}
+            </div>
         </foreignObject>
     );
 };
@@ -1268,7 +1284,7 @@ export default class MrnaTabContent extends React.Component<
     // stays consistent with the scatter; VictoryBoxPlot's horizontal mode
     // mis-scales its category against the log value axis.
     @computed get boxLines(): JSX.Element[] {
-        const h = 0.28;
+        const h = 0.2268;
         const stroke = '#333333';
         const els: JSX.Element[] = [];
         const swap = this.axesSwapped;
@@ -1322,23 +1338,48 @@ export default class MrnaTabContent extends React.Component<
         return [min - pad, max + pad];
     }
 
-    // 1-2-5 ticks per decade across the value domain (clean even when the
-    // range spans less than a full decade).
+    // Value-axis ticks, kept deliberately sparse so the bottom axis labels
+    // don't crowd (Victory's auto-ticks, and a naive 1-2-5-per-decade rule,
+    // are too dense for this chart's width).
     @computed get valueTicks(): number[] | undefined {
-        if (!this.useLog) {
+        const [lo, hi] = this.valueDomain;
+        if (this.useLog) {
+            const startExp = Math.floor(Math.log10(lo));
+            const endExp = Math.ceil(Math.log10(hi));
+            const decades = endExp - startExp;
+            // Few decades: 1-2-5 per decade. Many decades: powers of ten only
+            // (optionally every other decade) so the axis stays readable.
+            const mantissas = decades <= 2 ? [1, 2, 5] : [1];
+            const expStep = decades > 6 ? 2 : 1;
+            const ticks: number[] = [];
+            for (let e = startExp; e <= endExp; e += expStep) {
+                mantissas.forEach(m => {
+                    const v = m * Math.pow(10, e);
+                    if (v >= lo && v <= hi) {
+                        ticks.push(v);
+                    }
+                });
+            }
+            return ticks.length ? ticks : undefined;
+        }
+        const span = hi - lo;
+        if (!(span > 0)) {
             return undefined;
         }
-        const [lo, hi] = this.valueDomain;
+        // Round the raw step (span / targetTicks) UP to the next 1-2-5 value so
+        // the tick count never exceeds the target (rounding down would double
+        // it). ~5 ticks across the domain.
+        const targetTicks = 5;
+        const rawStep = span / targetTicks;
+        const mag = Math.pow(10, Math.floor(Math.log10(rawStep)));
+        const norm = rawStep / mag;
+        const niceMul = norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 5 ? 5 : 10;
+        const step = niceMul * mag;
         const ticks: number[] = [];
-        const startExp = Math.floor(Math.log10(lo));
-        const endExp = Math.ceil(Math.log10(hi));
-        for (let e = startExp; e <= endExp; e++) {
-            [1, 2, 5].forEach(m => {
-                const v = m * Math.pow(10, e);
-                if (v >= lo && v <= hi) {
-                    ticks.push(v);
-                }
-            });
+        const start = Math.ceil(lo / step) * step;
+        for (let v = start; v <= hi + step * 1e-9; v += step) {
+            // Snap away float fuzz (and -0) so ticks land on clean values.
+            ticks.push(Number(v.toFixed(10)));
         }
         return ticks.length ? ticks : undefined;
     }
@@ -1840,9 +1881,13 @@ export default class MrnaTabContent extends React.Component<
         const n = this.genes.length;
         const swap = this.axesSwapped;
         // Each gene needs roughly the same per-row/column space regardless of
-        // orientation; pick a fixed cross-axis size for the value axis.
+        // orientation; pick a fixed cross-axis size for the value axis. The
+        // non-swapped per-row size is deliberately compact (30px) to keep the
+        // vertically stacked gene rows from making the chart too tall — this
+        // sets both the row spacing and, since the box/jitter extents are in
+        // category units, each gene's vertical box extent.
         const VALUE_AXIS_SIZE = 520;
-        const PER_GENE = swap ? 90 : 80;
+        const PER_GENE = swap ? 90 : 30;
         const chartWidth = swap ? 170 + n * PER_GENE : 720;
         const chartHeight = swap ? VALUE_AXIS_SIZE : 140 + n * PER_GENE;
         // .borderedChart (ChartContainer) adds 10px padding + 1px dashed border
@@ -1865,8 +1910,15 @@ export default class MrnaTabContent extends React.Component<
         const categoryTickLabel = (
             <VictoryLabel style={{ fontSize: 12, fill: '#333' } as any} />
         );
-        const valueTickFormat = (t: number) =>
-            t >= 1 ? Number(t).toLocaleString('en-US') : `${t}`;
+        // Abbreviate thousands so 4+ digit ticks stay compact: 2000 -> "2k",
+        // 1500 -> "1.5k", 12000 -> "12k".
+        const valueTickFormat = (t: number) => {
+            if (Math.abs(t) >= 1000) {
+                const k = t / 1000;
+                return `${Number.isInteger(k) ? k : k.toFixed(1)}k`;
+            }
+            return t >= 1 ? Number(t).toLocaleString('en-US') : `${t}`;
+        };
         // The value-axis label rotates with the axis. When it's on the left
         // (swapped layout), it needs more outward padding so it sits clear of
         // the tick numbers.
@@ -2021,7 +2073,7 @@ export default class MrnaTabContent extends React.Component<
                         data={this.cohortPoints}
                         size={2}
                         style={{
-                            data: { fill: '#9e9e9e', fillOpacity: 0.25 },
+                            data: { fill: '#7e7e7e', fillOpacity: 0.25 },
                         }}
                     />
                     {/* distribution (boxes drawn as line segments) */}
