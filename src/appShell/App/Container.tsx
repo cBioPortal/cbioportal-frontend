@@ -35,6 +35,8 @@ import { ErrorAlert } from 'shared/components/errorScreen/ErrorAlert';
 import { ErrorInfo } from 'react';
 import { observable } from 'mobx';
 import { sendToLoggly } from 'shared/lib/tracking';
+import { FeatureFlagEnum } from 'shared/featureFlags';
+import { ChatSidebar, chatStore } from 'shared/components/chatSidebar';
 
 interface IContainerProps {
     location: Location;
@@ -101,6 +103,9 @@ export default class Container extends React.Component<IContainerProps, {}> {
                 <ErrorBoundary>
                     <div>
                         <ToastContainer />
+                        {this.appStore.featureFlagStore.has(
+                            FeatureFlagEnum.ASSISTANT
+                        ) && <ChatSidebar store={chatStore} />}
                         <Helmet>
                             <meta charSet="utf-8" />
                             <title>{getServerConfig().skin_title}</title>

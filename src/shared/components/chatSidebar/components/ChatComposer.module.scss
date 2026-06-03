@@ -1,0 +1,70 @@
+.composer {
+    border-top: 1px solid #e0e0e0;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: #fff;
+}
+
+.textarea {
+    width: 100%;
+    resize: none;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 13px;
+    font-family: inherit;
+    line-height: 1.4;
+    outline: none;
+    box-sizing: border-box;
+
+    &:focus {
+        border-color: #0066cc;
+        box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.15);
+    }
+
+    &:disabled {
+        background: #f5f5f5;
+        color: #999;
+    }
+}
+
+.actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.sendBtn,
+.cancelBtn {
+    padding: 6px 16px;
+    border-radius: 5px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: background 0.15s;
+}
+
+.sendBtn {
+    background: #0066cc;
+    color: #fff;
+
+    &:hover:not(:disabled) {
+        background: #0055aa;
+    }
+
+    &:disabled {
+        background: #99bbdd;
+        cursor: not-allowed;
+    }
+}
+
+.cancelBtn {
+    background: #e0e0e0;
+    color: #333;
+
+    &:hover {
+        background: #cccccc;
+    }
+}

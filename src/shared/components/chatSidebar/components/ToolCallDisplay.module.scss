@@ -1,0 +1,27 @@
+.section {
+    // Separate the "Received" section from "Sent" within the block.
+    & + & {
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid #e8e8e8;
+    }
+}
+
+.label {
+    font-size: 10px;
+    font-weight: 600;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 3px;
+}
+
+.code {
+    font-family: monospace;
+    font-size: 11px;
+    color: #555;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 160px;
+    overflow-y: auto;
+}

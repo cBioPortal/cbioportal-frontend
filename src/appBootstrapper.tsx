@@ -62,6 +62,10 @@ export interface ICBioWindow {
     rawServerConfig: IServerConfig;
     postLoadForMskCIS: () => void;
     isMSKCIS: boolean;
+
+    // Chat assistant sidebar
+    chatStore?: import('./shared/components/chatSidebar/store/ChatStore').ChatStore;
+    studyViewPageStore?: any;
 }
 
 const browserWindow: ICBioWindow = window as any;

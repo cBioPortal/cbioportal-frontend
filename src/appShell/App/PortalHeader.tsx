@@ -14,6 +14,7 @@ import { DataAccessTokensDropdown } from '../../shared/components/dataAccessToke
 import { getLoadConfig, getServerConfig } from 'config/config';
 import FontAwesome from 'react-fontawesome';
 import { FeatureFlagEnum } from 'shared/featureFlags';
+import { chatStore } from 'shared/components/chatSidebar';
 
 @observer
 export default class PortalHeader extends React.Component<
@@ -106,8 +107,7 @@ export default class PortalHeader extends React.Component<
                 id: 'chat',
                 text: (
                     <>
-                        Chat{' '}
-                        <strong className={'beta-text'}>Beta!</strong>
+                        Chat <strong className={'beta-text'}>Beta!</strong>
                     </>
                 ),
                 address:
@@ -182,6 +182,26 @@ export default class PortalHeader extends React.Component<
                     </nav>
                 </div>
                 <div id="rightHeaderContent">
+                    {this.props.appStore.featureFlagStore.has(
+                        FeatureFlagEnum.ASSISTANT
+                    ) && (
+                        <button
+                            onClick={() => chatStore.toggleSidebar()}
+                            title="Toggle AI Assistant"
+                            style={{
+                                background: 'none',
+                                border: '1px solid #ccc',
+                                borderRadius: 5,
+                                cursor: 'pointer',
+                                padding: '4px 10px',
+                                fontSize: 13,
+                                marginRight: 8,
+                                color: '#333',
+                            }}
+                        >
+                            <FontAwesome name="comment" /> Assistant
+                        </button>
+                    )}
                     <If
                         condition={
                             !getLoadConfig().hide_login &&

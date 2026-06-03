@@ -1,0 +1,124 @@
+.message {
+    display: flex;
+    margin-bottom: 12px;
+
+    &.user {
+        justify-content: flex-end;
+    }
+
+    &.assistant {
+        justify-content: flex-start;
+    }
+}
+
+.bubble {
+    max-width: 85%;
+    padding: 8px 12px;
+    border-radius: 12px;
+    font-size: 13px;
+    line-height: 1.5;
+
+    .user & {
+        background: #0066cc;
+        color: #fff;
+        border-bottom-right-radius: 3px;
+
+        // Markdown inside user bubble
+        :global(p) {
+            margin: 0;
+            color: #fff;
+        }
+    }
+
+    .assistant & {
+        // Assistant responses render on the plain background (no bubble); the
+        // reasoning block and tool calls provide their own framing. Full width
+        // so blocks don't resize to fit their text.
+        width: 100%;
+        max-width: 100%;
+        padding: 0;
+        background: transparent;
+        color: #222;
+        border-radius: 0;
+
+        :global(p) {
+            margin: 0 0 6px;
+
+            &:last-child {
+                margin-bottom: 0;
+            }
+        }
+
+        :global(code) {
+            background: #e0e0e0;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+
+        :global(pre) {
+            background: #e8e8e8;
+            padding: 8px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+
+        :global(ul),
+        :global(ol) {
+            padding-left: 18px;
+            margin: 4px 0;
+        }
+
+        // GFM tables — scroll horizontally if wider than the sidebar.
+        :global(table) {
+            display: block;
+            width: 100%;
+            overflow-x: auto;
+            border-collapse: collapse;
+            margin: 4px 0 8px;
+            font-size: 12px;
+        }
+
+        :global(th),
+        :global(td) {
+            border: 1px solid #ddd;
+            padding: 4px 8px;
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        :global(th) {
+            background: #f5f5f5;
+            font-weight: 600;
+        }
+    }
+}
+
+// "Thinking" indicator shown in the assistant bubble before the first tokens
+// arrive (replaces the otherwise-empty grey placeholder).
+.thinking {
+    display: inline-flex;
+    align-items: center;
+    height: 16px;
+}
+
+.dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #999;
+    animation: chatThinkingPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes chatThinkingPulse {
+    0%,
+    100% {
+        opacity: 0.3;
+        transform: scale(0.75);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
