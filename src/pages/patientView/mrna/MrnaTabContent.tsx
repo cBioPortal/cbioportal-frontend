@@ -822,6 +822,22 @@ export default class MrnaTabContent extends React.Component<
         this.geneQuery = q;
     }
 
+    // Free-text filter for the expression table (matches gene symbol).
+    @observable geneTableQuery: string = '';
+
+    @action.bound
+    setGeneTableQuery(q: string) {
+        this.geneTableQuery = q;
+    }
+
+    // Commit the filter on a trailing debounce so the table isn't re-filtered
+    // and re-rendered on every keystroke — only after the user pauses typing.
+    // The input itself is uncontrolled, so keystrokes don't touch observable
+    // state (and thus don't re-render the table) until this fires.
+    private commitGeneTableQuery = _.debounce((q: string) => {
+        this.setGeneTableQuery(q);
+    }, 300);
+
     @observable isCohortModalOpen: boolean = false;
 
     @action.bound
@@ -1654,35 +1670,46 @@ export default class MrnaTabContent extends React.Component<
             textAlign: 'right',
             fontVariantNumeric: 'tabular-nums',
         };
-        const heading = (count: React.ReactNode) => (
-            <h5 style={{ marginBottom: 8 }}>
-                Expression values
-                <span
-                    style={{
-                        fontWeight: 'normal',
-                        color: '#888',
-                        marginLeft: 6,
-                    }}
-                >
-                    ({count})
-                </span>
-            </h5>
+        // Uncontrolled input (defaultValue + debounced onChange) so typing
+        // doesn't re-render the table on every keystroke.
+        const searchBox = (disabled: boolean) => (
+            <input
+                type="text"
+                defaultValue={this.geneTableQuery}
+                onChange={e => this.commitGeneTableQuery(e.currentTarget.value)}
+                placeholder="Filter genes…"
+                disabled={disabled}
+                className="form-control input-sm"
+                style={{ marginBottom: 8, maxWidth: 240 }}
+            />
         );
+        // Fixed column widths so the table (the left "gutter") keeps a constant
+        // width regardless of how many rows the filter leaves — the panel width
+        // is derived from the sample count, not the rendered gene names, and a
+        // fixed table layout stops columns from reflowing to content.
+        const GENE_COL_W = 110;
+        const SAMPLE_COL_W = 80;
+        // Extra room reserved to the right of the fixed-width table for the
+        // vertical scrollbar, so it never overlaps the last number column.
+        const SCROLLBAR_W = 16;
         if (this.plotsStore.patientSamplesExpression.isPending) {
             // Skeleton loader: same column shape as the real table, with
             // shimmering placeholder bars in place of values.
             const colIds = sampleIds.length > 0 ? sampleIds : [''];
+            const skelWidth = GENE_COL_W + colIds.length * SAMPLE_COL_W;
             return (
-                <div style={{ flexShrink: 0 }}>
-                    {heading(
-                        <span
-                            className={styles.skeletonBar}
-                            style={{ width: 48, verticalAlign: 'middle' }}
-                        />
-                    )}
+                <div style={{ flexShrink: 0, width: skelWidth + SCROLLBAR_W }}>
+                    {searchBox(true)}
                     <table
                         className={`table table-striped ${styles.expressionTable}`}
+                        style={{ tableLayout: 'fixed', width: skelWidth }}
                     >
+                        <colgroup>
+                            <col style={{ width: GENE_COL_W }} />
+                            {colIds.map((id, i) => (
+                                <col key={i} style={{ width: SAMPLE_COL_W }} />
+                            ))}
+                        </colgroup>
                         <thead>
                             <tr>
                                 <th>Gene</th>
@@ -1721,15 +1748,23 @@ export default class MrnaTabContent extends React.Component<
                 </div>
             );
         }
-        const rows = this.expressionTableRows;
-        if (sampleIds.length === 0 || rows.length === 0) {
+        const allRows = this.expressionTableRows;
+        if (sampleIds.length === 0 || allRows.length === 0) {
             return null;
         }
-        // Only show columns for samples that have at least one value; list the
-        // rest in a footnote rather than rendering dead all-dash columns.
+        // Apply the free-text gene filter for display.
+        const q = this.geneTableQuery.trim().toLowerCase();
+        const rows = q
+            ? allRows.filter(r => r.symbol.toLowerCase().includes(q))
+            : allRows;
+        // Columns are derived from the full data set (not the filtered rows) so
+        // they stay stable while the user types. Only show columns for samples
+        // that have at least one value; list the rest in a footnote rather than
+        // rendering dead all-dash columns.
         const samplesWithData = sampleIds.filter(id =>
-            rows.some(r => r.values[id] !== undefined)
+            allRows.some(r => r.values[id] !== undefined)
         );
+        const tableWidth = GENE_COL_W + samplesWithData.length * SAMPLE_COL_W;
         const samplesWithoutData = sampleIds.filter(
             id => !samplesWithData.includes(id)
         );
@@ -1747,12 +1782,25 @@ export default class MrnaTabContent extends React.Component<
                       noDataLabels.length === 1 ? 'has' : 'have'
                   } no expression data.`;
         return (
-            <div style={{ flexShrink: 0 }}>
-                {heading(`${rows.length} gene${rows.length === 1 ? '' : 's'}`)}
+            <div style={{ flexShrink: 0, width: tableWidth + SCROLLBAR_W }}>
+                {searchBox(false)}
+                {rows.length === 0 ? (
+                    <div style={{ color: '#888', padding: '8px 2px' }}>
+                        No genes match “{this.geneTableQuery.trim()}”.
+                    </div>
+                ) : (
+                    <>
                 <div style={{ maxHeight: 420, overflowY: 'auto' }}>
                     <table
                         className={`table table-striped ${styles.expressionTable}`}
+                        style={{ tableLayout: 'fixed', width: tableWidth }}
                     >
+                        <colgroup>
+                            <col style={{ width: GENE_COL_W }} />
+                            {samplesWithData.map(id => (
+                                <col key={id} style={{ width: SAMPLE_COL_W }} />
+                            ))}
+                        </colgroup>
                         <thead>
                             <tr>
                                 <th>Gene</th>
@@ -1830,6 +1878,8 @@ export default class MrnaTabContent extends React.Component<
                     >
                         {noDataMessage}
                     </div>
+                )}
+                    </>
                 )}
             </div>
         );
