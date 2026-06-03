@@ -35,4 +35,24 @@ describe('MrnaExprColumnFormatter', () => {
 
         sinon.assert.notCalled(sourceCache.get);
     });
+
+    it('shows loading state instead of Gaussian fallback while raw distribution is loading', () => {
+        const tooltip = (MrnaExprColumnFormatter as any).getTooltipContents(
+            {
+                status: 'complete',
+                data: {
+                    zScore: -0.8672,
+                    percentile: 30.5,
+                },
+            },
+            'S1',
+            1017,
+            { peek: sinon.stub().returns(null) } as any,
+            'study_mrna'
+        );
+
+        const wrapper = shallow(<div>{tooltip}</div>);
+        assert.include(wrapper.text(), 'Loading expression distribution...');
+        assert.notInclude(wrapper.text(), 'mean');
+    });
 });

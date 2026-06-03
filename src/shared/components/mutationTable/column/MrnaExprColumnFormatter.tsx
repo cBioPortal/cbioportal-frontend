@@ -5,6 +5,7 @@ import {
     TableCellStatus,
 } from 'cbioportal-frontend-commons';
 import 'rc-tooltip/assets/bootstrap_white.css';
+import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import {
     MrnaExprRankCacheDataType,
     default as MrnaExprRankCache,
@@ -391,12 +392,13 @@ export default class MrnaExprColumnFormatter {
             // Try to get the actual expression distribution from the raw data cache
             let distributionChart: JSX.Element | null = null;
             let rawExprValue: number | undefined;
-            if (
+            let rawDistributionLoading = false;
+            const hasRawExprSource =
                 mrnaExprSourceCache &&
                 mrnaExprSourceMolecularProfileId &&
                 sampleId !== undefined &&
-                entrezGeneId !== undefined
-            ) {
+                entrezGeneId !== undefined;
+            if (hasRawExprSource) {
                 const sourceDatum = mrnaExprSourceCache.peek({
                     entrezGeneId,
                     molecularProfileId: mrnaExprSourceMolecularProfileId,
@@ -420,10 +422,12 @@ export default class MrnaExprColumnFormatter {
                     if (histogram) {
                         distributionChart = histogram;
                     }
+                } else if (!sourceDatum) {
+                    rawDistributionLoading = true;
                 }
             }
-            // Fall back to Gaussian bell curve if no real distribution data available
-            if (!distributionChart) {
+            // Fall back to Gaussian bell curve only when no raw profile is available.
+            if (!distributionChart && !rawDistributionLoading) {
                 distributionChart =
                     MrnaExprColumnFormatter.getDistributionChart(
                         cacheDatum.data.zScore
@@ -437,7 +441,23 @@ export default class MrnaExprColumnFormatter {
                         study for this gene:
                     </span>
                     <br />
-                    {distributionChart}
+                    {rawDistributionLoading ? (
+                        <div
+                            style={{
+                                margin: '5px 0',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 6,
+                            }}
+                        >
+                            <LoadingIndicator isLoading={true} noFade={true} />
+                            <span style={{ fontSize: '0.9em', color: '#666' }}>
+                                Loading expression distribution...
+                            </span>
+                        </div>
+                    ) : (
+                        distributionChart
+                    )}
                     {rawExprValue !== undefined && (
                         <>
                             <span>
