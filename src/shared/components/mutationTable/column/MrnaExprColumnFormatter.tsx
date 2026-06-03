@@ -58,8 +58,96 @@ export default class MrnaExprColumnFormatter {
         const minVal = Math.min(...values);
         const maxVal = Math.max(...values);
 
-        // When all values are identical, the histogram is trivial (one full-height bar)
-        if (minVal === maxVal) return null;
+        // Thresholds for compact axis label formatting
+        const KILO_THRESHOLD = 10000; // values >= 10000 shown as "Xk"
+        const KILO_DECIMAL_THRESHOLD = 1000; // values >= 1000 shown as "X.Xk"
+        const TINY_THRESHOLD = 0.01; // values < 0.01 shown in scientific notation
+
+        const formatAxisVal = (v: number) => {
+            if (v === 0) return '0';
+            const abs = Math.abs(v);
+            if (abs >= KILO_THRESHOLD) return `${(v / 1000).toFixed(0)}k`;
+            if (abs >= KILO_DECIMAL_THRESHOLD)
+                return `${(v / 1000).toFixed(1)}k`;
+            if (abs < TINY_THRESHOLD) return v.toExponential(0);
+            return v.toFixed(abs < 1 ? 2 : 0);
+        };
+
+        const currentSample = allData.find(
+            d => d.sampleId === currentSampleId
+        );
+        const currentValue = currentSample?.value;
+        const markerXForDegenerate =
+            currentValue !== undefined && isFinite(currentValue)
+                ? padLeft + plotWidth / 2
+                : null;
+
+        // When all values are identical, render a single full-width bar.
+        if (minVal === maxVal) {
+            return (
+                <div style={{ margin: '5px 0' }}>
+                    <svg width={svgWidth} height={svgHeight}>
+                        <rect
+                            x={padLeft}
+                            y={padTop}
+                            width={plotWidth}
+                            height={plotHeight}
+                            fill="#9bbcf7"
+                            stroke="#f2f2f2"
+                            strokeWidth={0.5}
+                            opacity={0.9}
+                        />
+                        <line
+                            x1={padLeft}
+                            y1={axisY}
+                            x2={padLeft + plotWidth}
+                            y2={axisY}
+                            stroke="#999"
+                            strokeWidth={1}
+                        />
+                        <text
+                            x={padLeft}
+                            y={svgHeight - 2}
+                            textAnchor="start"
+                            fontSize={8}
+                            fill="#666"
+                        >
+                            {formatAxisVal(minVal)}
+                        </text>
+                        <text
+                            x={padLeft + plotWidth}
+                            y={svgHeight - 2}
+                            textAnchor="end"
+                            fontSize={8}
+                            fill="#666"
+                        >
+                            {formatAxisVal(maxVal)}
+                        </text>
+                        {markerXForDegenerate !== null && (
+                            <>
+                                <line
+                                    x1={markerXForDegenerate}
+                                    y1={padTop}
+                                    x2={markerXForDegenerate}
+                                    y2={axisY}
+                                    stroke="#c0392b"
+                                    strokeWidth={1.5}
+                                    strokeDasharray="3,2"
+                                />
+                                <circle
+                                    cx={markerXForDegenerate}
+                                    cy={padTop + 2}
+                                    r={3}
+                                    fill="#c0392b"
+                                    stroke="white"
+                                    strokeWidth={1}
+                                />
+                            </>
+                        )}
+                    </svg>
+                </div>
+            );
+        }
 
         const valRange = maxVal - minVal;
         const numBins = 20;
@@ -78,29 +166,10 @@ export default class MrnaExprColumnFormatter {
             padLeft + ((v - minVal) / valRange) * plotWidth;
         const svgBarWidth = plotWidth / numBins;
 
-        const currentSample = allData.find(
-            d => d.sampleId === currentSampleId
-        );
-        const currentValue = currentSample?.value;
         const markerX =
             currentValue !== undefined && isFinite(currentValue)
                 ? toSvgX(Math.max(minVal, Math.min(maxVal, currentValue)))
                 : null;
-
-        // Thresholds for compact axis label formatting
-        const KILO_THRESHOLD = 10000; // values >= 10000 shown as "Xk"
-        const KILO_DECIMAL_THRESHOLD = 1000; // values >= 1000 shown as "X.Xk"
-        const TINY_THRESHOLD = 0.01; // values < 0.01 shown in scientific notation
-
-        const formatAxisVal = (v: number) => {
-            if (v === 0) return '0';
-            const abs = Math.abs(v);
-            if (abs >= KILO_THRESHOLD) return `${(v / 1000).toFixed(0)}k`;
-            if (abs >= KILO_DECIMAL_THRESHOLD)
-                return `${(v / 1000).toFixed(1)}k`;
-            if (abs < TINY_THRESHOLD) return v.toExponential(0);
-            return v.toFixed(abs < 1 ? 2 : 0);
-        };
 
         return (
             <div style={{ margin: '5px 0' }}>
@@ -328,7 +397,7 @@ export default class MrnaExprColumnFormatter {
                 sampleId !== undefined &&
                 entrezGeneId !== undefined
             ) {
-                const sourceDatum = mrnaExprSourceCache.get({
+                const sourceDatum = mrnaExprSourceCache.peek({
                     entrezGeneId,
                     molecularProfileId: mrnaExprSourceMolecularProfileId,
                 });
@@ -520,6 +589,19 @@ export default class MrnaExprColumnFormatter {
         mrnaExprSourceCache?: GeneMolecularDataCache,
         mrnaExprSourceMolecularProfileId?: string
     ) {
+        const maybeLoadExpressionSourceData = (visible: boolean) => {
+            if (
+                visible &&
+                mrnaExprSourceCache &&
+                mrnaExprSourceMolecularProfileId &&
+                entrezGeneId !== undefined
+            ) {
+                mrnaExprSourceCache.get({
+                    entrezGeneId,
+                    molecularProfileId: mrnaExprSourceMolecularProfileId,
+                });
+            }
+        };
         return (
             <DefaultTooltip
                 placement="left"
@@ -531,6 +613,7 @@ export default class MrnaExprColumnFormatter {
                     mrnaExprSourceMolecularProfileId
                 )}
                 arrowContent={<div className="rc-tooltip-arrow-inner" />}
+                onVisibleChange={maybeLoadExpressionSourceData}
             >
                 {MrnaExprColumnFormatter.getTdContents(cacheDatum)}
             </DefaultTooltip>
@@ -547,17 +630,6 @@ export default class MrnaExprColumnFormatter {
         const sampleId = data.length > 0 ? data[0].sampleId : undefined;
         const entrezGeneId =
             data.length > 0 ? data[0].entrezGeneId : undefined;
-        // Trigger lazy loading of distribution data when source cache is available
-        if (
-            mrnaExprSourceCache &&
-            mrnaExprSourceMolecularProfileId &&
-            entrezGeneId !== undefined
-        ) {
-            mrnaExprSourceCache.get({
-                entrezGeneId,
-                molecularProfileId: mrnaExprSourceMolecularProfileId,
-            });
-        }
         return MrnaExprColumnFormatter.renderFromCacheDatum(
             cacheDatum,
             sampleId,
