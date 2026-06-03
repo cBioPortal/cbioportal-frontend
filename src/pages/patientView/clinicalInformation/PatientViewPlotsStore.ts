@@ -7,14 +7,17 @@ import {
     ClinicalDataFilter,
     CoExpression,
     DataFilterValue,
+    DiscreteCopyNumberData,
     Gene,
     GeneFilter,
     GeneFilterQuery,
     MolecularDataFilter,
     MolecularProfile,
     MrnaPercentile,
+    Mutation,
     NumericGeneMolecularData,
     Sample,
+    StructuralVariant,
     StructuralVariantFilterQuery,
     StudyViewFilter,
     StudyViewStructuralVariantFilter,
@@ -221,6 +224,95 @@ export class PatientViewPlotsStore {
             }
         });
         return out;
+    }
+
+    // Per-(sample, gene) alterations the patient has, shaped for the plots-tab
+    // tooltip section helpers (tooltipMutationsSection / tooltipCnaSection /
+    // tooltipSvSection). Keyed by `${sampleId}|${entrezGeneId}`. The mutation
+    // and CNA entries carry the top-level hugoGeneSymbol (and CNA `value`) those
+    // helpers read; OncoKB/hotspot annotation fields are intentionally absent
+    // here, so no annotation icons render. Drives the mRNA chart bubble tooltip,
+    // which lists a sample's other alterations in the row's gene.
+    private static alterationKey(sampleId: string, entrezGeneId: number) {
+        return `${sampleId}|${entrezGeneId}`;
+    }
+
+    @computed get mutationsBySampleGene(): {
+        [key: string]: (Mutation & { hugoGeneSymbol: string })[];
+    } {
+        const out: {
+            [key: string]: (Mutation & { hugoGeneSymbol: string })[];
+        } = {};
+        (this.parentStore.mutationData.result || []).forEach(m => {
+            const hugo = m.gene && m.gene.hugoGeneSymbol;
+            if (!hugo || !m.proteinChange) {
+                return;
+            }
+            const key = PatientViewPlotsStore.alterationKey(
+                m.sampleId,
+                m.entrezGeneId
+            );
+            (out[key] = out[key] || []).push({ ...m, hugoGeneSymbol: hugo });
+        });
+        return out;
+    }
+
+    @computed get cnaBySampleGene(): {
+        [key: string]: (DiscreteCopyNumberData & {
+            hugoGeneSymbol: string;
+            value: number;
+        })[];
+    } {
+        const out: {
+            [key: string]: (DiscreteCopyNumberData & {
+                hugoGeneSymbol: string;
+                value: number;
+            })[];
+        } = {};
+        (this.parentStore.discreteCNAData.result || []).forEach(d => {
+            const hugo = d.gene && d.gene.hugoGeneSymbol;
+            if (!hugo) {
+                return;
+            }
+            const key = PatientViewPlotsStore.alterationKey(
+                d.sampleId,
+                d.entrezGeneId
+            );
+            (out[key] = out[key] || []).push({
+                ...d,
+                hugoGeneSymbol: hugo,
+                value: d.alteration,
+            });
+        });
+        return out;
+    }
+
+    @computed get svBySampleGene(): { [key: string]: StructuralVariant[] } {
+        const out: { [key: string]: StructuralVariant[] } = {};
+        (this.parentStore.structuralVariantData.result || []).forEach(sv => {
+            // A fusion is indexed under both partner genes so it surfaces on
+            // either gene's row.
+            _.uniq(
+                [sv.site1EntrezGeneId, sv.site2EntrezGeneId].filter(
+                    id => !!id
+                ) as number[]
+            ).forEach(id => {
+                const key = PatientViewPlotsStore.alterationKey(sv.sampleId, id);
+                (out[key] = out[key] || []).push(sv);
+            });
+        });
+        return out;
+    }
+
+    // The patient's alterations in a single gene for a single sample, ready to
+    // hand to the plots-tab tooltip section helpers.
+    geneAlterationsForSample(sampleId: string, entrezGeneId: number) {
+        const key = PatientViewPlotsStore.alterationKey(sampleId, entrezGeneId);
+        return {
+            mutations: this.mutationsBySampleGene[key] || [],
+            copyNumberAlterations: this.cnaBySampleGene[key] || [],
+            structuralVariants: this.svBySampleGene[key] || [],
+        };
     }
 
     // Member genes for each patient-derived dynamic gene set, keyed by group

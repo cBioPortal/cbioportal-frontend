@@ -2527,7 +2527,7 @@ export function tooltipCnaSection<D extends IPlotSampleData>(datum: D) {
     );
 }
 
-function tooltipSvSection<D extends IPlotSampleData>(datum: D) {
+export function tooltipSvSection<D extends IPlotSampleData>(datum: D) {
     if (!isPointProfiledForSv(datum)) {
         return <span>Not profiled for structural variants.</span>;
     } else if (datum.structuralVariants.length === 0) {
