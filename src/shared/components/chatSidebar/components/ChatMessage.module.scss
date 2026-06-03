@@ -14,14 +14,13 @@
 .bubble {
     max-width: 85%;
     padding: 8px 12px;
-    border-radius: 12px;
+    border-radius: 4px;
     font-size: 13px;
     line-height: 1.5;
 
     .user & {
         background: #0066cc;
         color: #fff;
-        border-bottom-right-radius: 3px;
 
         // Markdown inside user bubble
         :global(p) {

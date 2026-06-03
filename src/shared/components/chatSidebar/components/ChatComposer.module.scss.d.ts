@@ -1,8 +1,8 @@
 declare const styles: {
-  readonly "actions": string;
-  readonly "cancelBtn": string;
   readonly "composer": string;
+  readonly "iconBtn": string;
   readonly "sendBtn": string;
+  readonly "stopBtn": string;
   readonly "textarea": string;
 };
 export = styles;

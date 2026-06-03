@@ -1,52 +1,77 @@
 .composer {
-    border-top: 1px solid #e0e0e0;
-    padding: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    background: #fff;
-}
-
-.textarea {
-    width: 100%;
-    resize: none;
+    margin: 10px;
     border: 1px solid #ccc;
-    border-radius: 6px;
-    padding: 8px 10px;
-    font-size: 13px;
-    font-family: inherit;
-    line-height: 1.4;
-    outline: none;
-    box-sizing: border-box;
+    border-radius: 4px;
+    background: #fff;
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    padding: 6px 6px 6px 14px;
+    transition: border-color 0.15s, box-shadow 0.15s;
 
-    &:focus {
+    &:focus-within {
         border-color: #0066cc;
         box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.15);
     }
+}
+
+.textarea {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    outline: none;
+    resize: none;
+    background: transparent;
+    font-size: 13px;
+    font-family: inherit;
+    line-height: 1.5;
+    color: #222;
+    padding: 7px 0;
+    max-height: 160px;
+    overflow-y: auto;
+    box-sizing: border-box;
+
+    &::placeholder {
+        color: #999;
+    }
 
     &:disabled {
-        background: #f5f5f5;
         color: #999;
     }
 }
 
-.actions {
+.iconBtn {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    padding: 0;
+    cursor: pointer;
     display: flex;
-    justify-content: flex-end;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    transition: background 0.15s;
+
+    // Paint the icons white directly rather than via `currentColor`, so an
+    // inherited text color can't tint the stroke/fill grey. The send arrow is
+    // a stroked path; the stop glyph is a filled rect.
+    svg {
+        display: block;
+    }
+
+    path {
+        stroke: #fff;
+    }
+
+    rect {
+        fill: #fff;
+    }
 }
 
 .sendBtn,
-.cancelBtn {
-    padding: 6px 16px;
-    border-radius: 5px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    border: none;
-    transition: background 0.15s;
-}
-
-.sendBtn {
+.stopBtn {
     background: #0066cc;
     color: #fff;
 
@@ -55,16 +80,7 @@
     }
 
     &:disabled {
-        background: #99bbdd;
-        cursor: not-allowed;
-    }
-}
-
-.cancelBtn {
-    background: #e0e0e0;
-    color: #333;
-
-    &:hover {
         background: #cccccc;
+        cursor: not-allowed;
     }
 }
