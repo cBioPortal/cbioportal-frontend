@@ -103,3 +103,58 @@ export function isSampleProfiledInProfile(
         genePanelMap[profileId][sampleId].profiled === true
     );
 }
+
+function getPatientProfiledReport(
+    uniquePatientKey: string,
+    coverageInformation: CoverageInformation,
+    hugoGeneSymbol?: string
+): { [molecularProfileId: string]: boolean } {
+    // returns a map whose keys are the profiles which the patient is profiled in
+    const patientCoverage = coverageInformation.patients[uniquePatientKey];
+
+    // no patient coverage for patient
+    if (!patientCoverage) return {};
+
+    const byGeneCoverage = hugoGeneSymbol
+        ? patientCoverage.byGene[hugoGeneSymbol]
+        : _.flatten(_.values(patientCoverage.byGene));
+
+    // no by gene coverage for gene AND there's no allGene data available
+    if (!byGeneCoverage && patientCoverage.allGenes.length === 0) return {};
+
+    const ret: { [m: string]: boolean } = {};
+
+    // does molecular profile appear in the GENE specific panel data
+    for (const gpData of byGeneCoverage || []) {
+        ret[gpData.molecularProfileId] = true;
+    }
+
+    // does molecular profile appear in CROSS gene panel data
+    for (const gpData of patientCoverage.allGenes) {
+        ret[gpData.molecularProfileId] = true;
+    }
+
+    return ret;
+}
+
+export function isPatientProfiledInMultiple(
+    uniquePatientKey: string,
+    molecularProfileIds: string[] | undefined,
+    coverageInformation: CoverageInformation,
+    hugoGeneSymbol?: string
+): boolean[] {
+    // returns empty list if molecularProfileIds is undefined
+    if (!molecularProfileIds) {
+        return [];
+    } else {
+        // returns boolean[] in same order as molecularProfileIds
+        const profiledReport = getPatientProfiledReport(
+            uniquePatientKey,
+            coverageInformation,
+            hugoGeneSymbol
+        );
+        return molecularProfileIds.map(
+            molecularProfileId => !!profiledReport[molecularProfileId]
+        );
+    }
+}
