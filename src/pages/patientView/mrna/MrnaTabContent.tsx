@@ -11,7 +11,7 @@ import {
 } from 'victory';
 import { CBIOPORTAL_VICTORY_THEME } from 'cbioportal-frontend-commons';
 import { DataFilterValue, Gene } from 'cbioportal-ts-api-client';
-import ReactSelect, { components as reactSelectComponents } from 'react-select';
+import ReactSelect from 'react-select';
 import { Modal, Button } from 'react-bootstrap';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import ChartContainer from 'shared/components/ChartContainer/ChartContainer';
@@ -123,24 +123,6 @@ function robustZ(value: number, median: number, mad: number): number {
     const denom = mad > 0 ? mad : 1e-9;
     return (0.6745 * (value - median)) / denom;
 }
-
-// Custom MenuList for the Genes react-select that pins a small hint at the
-// top of the dropdown explaining the search-vs-select affordance.
-const GenePickerMenuList: React.FunctionComponent<any> = props => (
-    <reactSelectComponents.MenuList {...props}>
-        <div
-            style={{
-                padding: '6px 12px',
-                fontSize: 11,
-                color: '#888',
-                borderBottom: '1px solid #eee',
-            }}
-        >
-            Search for any gene or select below
-        </div>
-        {props.children}
-    </reactSelectComponents.MenuList>
-);
 
 // Short, readable rendering of an mRNA expression value for the bubble
 // tooltip — uses up to 3 significant digits and falls back to fixed notation
@@ -798,15 +780,11 @@ export default class MrnaTabContent extends React.Component<
         return [...staticOpts, ...dynamicOpts];
     }
 
-    // Single "Gene sets" section listing every available set.
-    @computed get filteredGeneOptions(): Array<{
-        label: string;
-        options: IGeneOption[];
-    }> {
-        const groupOpts = this.groupOptions;
-        return groupOpts.length > 0
-            ? [{ label: 'Gene sets', options: groupOpts }]
-            : [];
+    // Flat list of every available gene set. Returned ungrouped (not wrapped in
+    // a { label, options } section) since sets are now the only option type, so
+    // react-select renders no section header.
+    @computed get filteredGeneOptions(): IGeneOption[] {
+        return this.groupOptions;
     }
 
     // The single active gene set (the picker is single-select — one list at a
@@ -1367,7 +1345,6 @@ export default class MrnaTabContent extends React.Component<
                             this.props.store.structuralVariantData.isPending ||
                             this.props.store.discreteCNAData.isPending
                         }
-                        components={{ MenuList: GenePickerMenuList }}
                         options={this.filteredGeneOptions}
                         value={this.selectedGroupOption}
                         placeholder="Select a gene set…"
@@ -1405,7 +1382,12 @@ export default class MrnaTabContent extends React.Component<
                         gap: 24,
                         alignItems: 'flex-start',
                         marginTop: 16,
-                        overflowX: 'auto',
+                        // Don't set overflowX here: per CSS, a non-visible
+                        // overflow on one axis forces the other to compute to
+                        // 'auto', which would turn this row into a vertical
+                        // clipping box and cut off the chart's bottom axis. The
+                        // chart (ChartContainer) and the table each scroll
+                        // horizontally on their own.
                     }}
                 >
                     {this.renderExpressionTable()}
@@ -1682,18 +1664,21 @@ export default class MrnaTabContent extends React.Component<
                                                           [r.symbol]
                                                       )
                                         }
-                                        // Selected highlight is a data-driven
-                                        // inline style (only changes when the
-                                        // chart selection changes); hover is
-                                        // pure CSS (see styles.module.scss) so
-                                        // mousing over rows triggers no render.
+                                        // Highlight + hover are data-driven CSS
+                                        // classes (the class only changes when
+                                        // the chart selection changes, and hover
+                                        // is pure CSS — see styles.module.scss),
+                                        // so mousing over rows triggers no
+                                        // render.
+                                        className={
+                                            onChart
+                                                ? styles.selected
+                                                : styles.clickable
+                                        }
                                         style={{
                                             cursor: onChart
                                                 ? 'default'
                                                 : 'pointer',
-                                            background: onChart
-                                                ? '#fdf3d8'
-                                                : undefined,
                                         }}
                                         title={
                                             onChart
@@ -1786,6 +1771,12 @@ export default class MrnaTabContent extends React.Component<
         const PER_GENE = swap ? 90 : 80;
         const chartWidth = swap ? 170 + n * PER_GENE : 720;
         const chartHeight = swap ? VALUE_AXIS_SIZE : 140 + n * PER_GENE;
+        // .borderedChart (ChartContainer) adds 10px padding + 1px dashed border
+        // on each side. The wrapper below must include this chrome, otherwise
+        // the fixed-width SVG overflows ChartContainer's inner scroll div,
+        // which adds a horizontal scrollbar that — combined with that div's
+        // overflowY:hidden — overlays and clips the bottom x-axis.
+        const BORDERED_CHART_CHROME = 22;
         // Swapped layout needs more left padding (so the rotated value-axis
         // label clears the tick numbers) and more bottom padding (so the
         // angled gene tick labels fit beneath the axis without overlapping).
@@ -1833,11 +1824,18 @@ export default class MrnaTabContent extends React.Component<
               };
 
         return (
-            // Pin the wrapper to the chart's intrinsic width so the
-            // `.borderedChart { max-width: 100% }` rule resolves to the real
-            // chart width (not the shrunken flex width next to the table),
-            // keeping the chart from being clipped or scaled down.
-            <div style={{ width: chartWidth, flexShrink: 0 }}>
+            // Pin the wrapper to the chart's intrinsic width (plus the bordered
+            // chart's padding/border chrome) so the `.borderedChart
+            // { max-width: 100% }` rule resolves to the real chart width (not
+            // the shrunken flex width next to the table). Including the chrome
+            // keeps the SVG from overflowing into a horizontal scrollbar that
+            // would clip the bottom x-axis.
+            <div
+                style={{
+                    width: chartWidth + BORDERED_CHART_CHROME,
+                    flexShrink: 0,
+                }}
+            >
             <ChartContainer
                 getSVGElement={this.getSvg}
                 exportFileName={`mrna_expression_${this.cohortName}`}
