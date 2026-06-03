@@ -898,6 +898,24 @@ export function getGenericAssayFrequencyTableRowUniqueKey(
     return `${stableId}::${value}::${profileType}`;
 }
 
+export function splitGenericAssayFrequencyTableRowUniqueKey(uniqueKey: string): {
+    stableId: string;
+    value: string;
+    profileType: string;
+} {
+    const stableIdSeparatorIndex = uniqueKey.indexOf('::');
+    const profileTypeSeparatorIndex = uniqueKey.lastIndexOf('::');
+
+    return {
+        stableId: uniqueKey.slice(0, stableIdSeparatorIndex),
+        value: uniqueKey.slice(
+            stableIdSeparatorIndex + 2,
+            profileTypeSeparatorIndex
+        ),
+        profileType: uniqueKey.slice(profileTypeSeparatorIndex + 2),
+    };
+}
+
 const UNIQUE_KEY_SEPARATOR = ':';
 const CHART_TYPE_SEPARATOR = ';';
 
@@ -5005,6 +5023,38 @@ export async function getMutatedGenesDownloadData(
         });
         return data.join('\n');
     } else return '';
+}
+
+export function getGenericAssayFrequencyTableDownloadData(
+    promise: MobxPromise<GenericAssayFrequencyTableRow[]>,
+    showCategoryColumn: boolean
+): string {
+    if (!promise.result) {
+        return '';
+    }
+
+    const header = showCategoryColumn
+        ? ['Entity', 'Category', '# Samples', 'Freq']
+        : ['Entity', '# Samples', 'Freq'];
+    const data = [header.join('\t')];
+
+    _.each(promise.result, record => {
+        const rowData = showCategoryColumn
+            ? [
+                  record.entityLabel,
+                  record.category,
+                  record.count,
+                  getFrequencyStr((record.count / record.totalCount) * 100),
+              ]
+            : [
+                  record.entityLabel,
+                  record.count,
+                  getFrequencyStr((record.count / record.totalCount) * 100),
+              ];
+        data.push(rowData.join('\t'));
+    });
+
+    return data.join('\n');
 }
 
 export function getStructuralVariantGenesDownloadData(

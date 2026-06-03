@@ -43,6 +43,7 @@ import {
     getFilteredSampleIdentifiers,
     getFilteredStudiesWithSamples,
     getFrequencyStr,
+    getGenericAssayFrequencyTableDownloadData,
     getGenericAssayFrequencyTableSelectedRowKeys,
     getGroupedClinicalDataByBins,
     getNonZeroUniqueBins,
@@ -67,6 +68,7 @@ import {
     pickClinicalDataColors,
     shouldShowChart,
     showOriginStudiesInSummaryDescription,
+    splitGenericAssayFrequencyTableRowUniqueKey,
     statusFilterActive,
     StudyViewFilterWithSampleIdentifierFilters,
     toFixedDigit,
@@ -4216,6 +4218,46 @@ describe('StudyViewUtils', () => {
                         values: [{ value: 'Subtype C' } as DataFilterValue],
                     },
                 ]);
+            });
+
+            it('splits generic assay frequency table row keys safely from the right', () => {
+                assert.deepEqual(
+                    splitGenericAssayFrequencyTableRowUniqueKey(
+                        'entityA::Subtype::A::profile_type'
+                    ),
+                    {
+                        stableId: 'entityA',
+                        value: 'Subtype::A',
+                        profileType: 'profile_type',
+                    }
+                );
+            });
+
+            it('formats generic assay frequency table download rows', () => {
+                const downloadData = getGenericAssayFrequencyTableDownloadData(
+                    {
+                        result: [
+                            {
+                                uniqueKey: 'entityA::Subtype A::profile_type',
+                                entityStableId: 'entityA',
+                                entityLabel: 'Entity A Label',
+                                profileType: 'profile_type',
+                                category: 'Subtype A',
+                                count: 4,
+                                totalCount: 10,
+                            },
+                        ],
+                    } as any,
+                    true
+                );
+
+                assert.equal(
+                    downloadData,
+                    [
+                        'Entity\tCategory\t# Samples\tFreq',
+                        'Entity A Label\tSubtype A\t4\t40.0%',
+                    ].join('\n')
+                );
             });
         });
         it('newlyAddedUnfilteredPromise should be used when the chart is not default visible attribute, at the time the chart is not filtered', () => {

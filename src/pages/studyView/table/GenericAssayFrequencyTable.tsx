@@ -3,12 +3,18 @@ import { observer } from 'mobx-react';
 import { action, computed, makeObservable, observable } from 'mobx';
 import _ from 'lodash';
 import autobind from 'autobind-decorator';
-import { MobxPromise, stringListToSet } from 'cbioportal-frontend-commons';
+import {
+    MobxPromise,
+    stringListToIndexSet,
+    stringListToSet,
+} from 'cbioportal-frontend-commons';
 import {
     Column,
     SortDirection,
 } from 'shared/components/lazyMobXTable/LazyMobXTable';
-import FixedHeaderTable from 'pages/studyView/table/FixedHeaderTable';
+import FixedHeaderTable, {
+    IFixedHeaderTableProps,
+} from 'pages/studyView/table/FixedHeaderTable';
 import LabeledCheckbox from 'shared/components/labeledCheckbox/LabeledCheckbox';
 import styles from 'pages/studyView/table/tables.module.scss';
 import {
@@ -18,6 +24,11 @@ import {
     getFrequencyStr,
 } from 'pages/studyView/StudyViewUtils';
 import { TreatmentGenericColumnHeader } from 'pages/studyView/table/treatments/treatmentsTableUtil';
+import {
+    FreqColumnTypeEnum,
+    SelectionOperatorEnum,
+} from 'pages/studyView/TableUtils';
+import ifNotDefined from 'shared/lib/ifNotDefined';
 
 export enum GenericAssayFrequencyTableColumnKey {
     ENTITY = 'Entity',
@@ -30,8 +41,12 @@ export interface IGenericAssayFrequencyTableProps {
     promise: MobxPromise<GenericAssayFrequencyTableRow[]>;
     width: number;
     height: number;
+    filters: string[][];
     selectedRowsKeys: string[];
-    onSelectionChange: (selectedRowsKeys: string[]) => void;
+    onChangeSelectedRows: (selectedRowsKeys: string[]) => void;
+    onSubmitSelection: (selectedRowsKeys: string[][]) => void;
+    extraButtons?: IFixedHeaderTableProps<GenericAssayFrequencyTableRow>['extraButtons'];
+    setOperationsButtonText: string;
     showCategoryColumn: boolean;
 }
 
@@ -51,6 +66,7 @@ export default class GenericAssayFrequencyTable extends React.Component<
 > {
     @observable protected sortBy: GenericAssayFrequencyTableColumnKey;
     @observable protected sortDirection: SortDirection = 'desc';
+    @observable private _selectionType: SelectionOperatorEnum;
 
     constructor(props: IGenericAssayFrequencyTableProps) {
         super(props);
@@ -64,8 +80,62 @@ export default class GenericAssayFrequencyTable extends React.Component<
     }
 
     @computed
-    get selectedRowKeysSet() {
-        return stringListToSet(this.props.selectedRowsKeys);
+    get flattenedFilters() {
+        return _.flatMap(this.props.filters);
+    }
+
+    @computed
+    get preSelectedRows(): GenericAssayFrequencyTableRow[] {
+        if (this.flattenedFilters.length === 0) {
+            return [];
+        }
+
+        const order = stringListToIndexSet(this.flattenedFilters);
+        return this.tableData
+            .filter(row => this.flattenedFilters.includes(row.uniqueKey))
+            .sort((a, b) =>
+                ifNotDefined(order[a.uniqueKey], Number.POSITIVE_INFINITY) -
+                ifNotDefined(order[b.uniqueKey], Number.POSITIVE_INFINITY)
+            );
+    }
+
+    @computed
+    get preSelectedRowsKeys(): string[] {
+        return this.preSelectedRows.map(row => row.uniqueKey);
+    }
+
+    @computed
+    get selectableTableData(): GenericAssayFrequencyTableRow[] {
+        if (this.flattenedFilters.length === 0) {
+            return this.tableData;
+        }
+
+        return this.tableData.filter(
+            row => !this.flattenedFilters.includes(row.uniqueKey)
+        );
+    }
+
+    @computed
+    get allSelectedRowsKeysSet() {
+        return stringListToSet([
+            ...this.props.selectedRowsKeys,
+            ...this.preSelectedRowsKeys,
+        ]);
+    }
+
+    @computed
+    get filterKeyToIndexSet() {
+        return _.reduce(
+            this.props.filters,
+            (acc, next, index) => {
+                next.forEach(key => {
+                    acc[key] = index;
+                });
+
+                return acc;
+            },
+            {} as { [id: string]: number }
+        );
     }
 
     @computed
@@ -245,15 +315,79 @@ export default class GenericAssayFrequencyTable extends React.Component<
 
     @autobind
     isChecked(uniqueKey: string) {
-        return !!this.selectedRowKeysSet[uniqueKey];
+        return !!this.allSelectedRowsKeysSet[uniqueKey];
+    }
+
+    @autobind
+    isDisabled(uniqueKey: string) {
+        return this.preSelectedRowsKeys.includes(uniqueKey);
     }
 
     @action.bound
     toggleSelectRow(uniqueKey: string) {
-        const selectedRowsKeys = this.isChecked(uniqueKey)
-            ? this.props.selectedRowsKeys.filter(key => key !== uniqueKey)
-            : this.props.selectedRowsKeys.concat(uniqueKey);
-        this.props.onSelectionChange(selectedRowsKeys);
+        if (this.isDisabled(uniqueKey)) {
+            return;
+        }
+
+        const record = _.find(
+            this.props.selectedRowsKeys,
+            key => key === uniqueKey
+        );
+        if (_.isUndefined(record)) {
+            this.props.onChangeSelectedRows(
+                this.props.selectedRowsKeys.concat(uniqueKey)
+            );
+        } else {
+            this.props.onChangeSelectedRows(
+                this.props.selectedRowsKeys.filter(key => key !== uniqueKey)
+            );
+        }
+    }
+
+    @action.bound
+    afterSelectingRows() {
+        if (this.selectionType === SelectionOperatorEnum.UNION) {
+            this.props.onSubmitSelection([this.props.selectedRowsKeys]);
+        } else {
+            this.props.onSubmitSelection(
+                this.props.selectedRowsKeys.map(selectedRowsKey => [
+                    selectedRowsKey,
+                ])
+            );
+        }
+        this.props.onChangeSelectedRows([]);
+    }
+
+    @computed
+    get selectionType() {
+        if (this._selectionType) {
+            return this._selectionType;
+        }
+
+        switch (
+            (
+                localStorage.getItem(FreqColumnTypeEnum.GENERIC_ASSAY) || ''
+            ).toUpperCase()
+        ) {
+            case SelectionOperatorEnum.UNION.toUpperCase():
+                return SelectionOperatorEnum.UNION;
+            case SelectionOperatorEnum.INTERSECTION.toUpperCase():
+            default:
+                return SelectionOperatorEnum.INTERSECTION;
+        }
+    }
+
+    @action.bound
+    toggleSelectionOperator() {
+        const selectionType = this._selectionType || this.selectionType;
+        this._selectionType =
+            selectionType === SelectionOperatorEnum.INTERSECTION
+                ? SelectionOperatorEnum.UNION
+                : SelectionOperatorEnum.INTERSECTION;
+        localStorage.setItem(
+            FreqColumnTypeEnum.GENERIC_ASSAY,
+            this.selectionType
+        );
     }
 
     @autobind
@@ -261,20 +395,48 @@ export default class GenericAssayFrequencyTable extends React.Component<
         return this.isChecked(row.uniqueKey);
     }
 
+    @autobind
+    selectedRowClassName(row: GenericAssayFrequencyTableRow) {
+        const index = this.filterKeyToIndexSet[row.uniqueKey];
+        if (index === undefined) {
+            return this.props.filters.length % 2 === 0
+                ? styles.highlightedEvenRow
+                : styles.highlightedOddRow;
+        }
+
+        return index % 2 === 0
+            ? styles.highlightedEvenRow
+            : styles.highlightedOddRow;
+    }
+
     render() {
         return (
             <div data-test="generic-assay-frequency-table">
                 {this.props.promise.isComplete && (
                     <GenericAssayFrequencyTableComponent
+                        key={`generic-assay-frequency-table-${this.preSelectedRowsKeys.join(
+                            ','
+                        )}`}
                         width={this.props.width}
                         height={this.props.height}
-                        data={this.tableData}
+                        data={this.selectableTableData}
                         columns={this.tableColumns}
                         sortBy={this.sortBy}
                         sortDirection={this.sortDirection}
                         afterSorting={this.afterSorting}
                         isSelectedRow={this.isSelectedRow}
+                        highlightedRowClassName={this.selectedRowClassName}
                         numberOfSelectedRows={this.props.selectedRowsKeys.length}
+                        fixedTopRowsData={this.preSelectedRows}
+                        showSetOperationsButton={true}
+                        setOperationsButtonText={
+                            this.props.setOperationsButtonText
+                        }
+                        afterSelectingRows={this.afterSelectingRows}
+                        toggleSelectionOperator={this.toggleSelectionOperator}
+                        defaultSelectionOperator={this.selectionType}
+                        extraButtons={this.props.extraButtons}
+                        showControlsAtTop={true}
                     />
                 )}
             </div>

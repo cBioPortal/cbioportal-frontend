@@ -104,6 +104,7 @@ const COMPARISON_CHART_TYPES: ChartType[] = [
     ChartTypeEnum.MUTATED_GENES_TABLE,
     ChartTypeEnum.VARIANT_ANNOTATIONS_TABLE,
     ChartTypeEnum.CNA_GENES_TABLE,
+    ChartTypeEnum.GENERIC_ASSAY_FREQUENCY_TABLE,
     ChartTypeEnum.SAMPLE_TREATMENTS_TABLE,
     ChartTypeEnum.SAMPLE_TREATMENT_GROUPS_TABLE,
     ChartTypeEnum.SAMPLE_TREATMENT_TARGET_TABLE,
@@ -650,8 +651,22 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             this.props.dimension,
                             this.chartHeaderHeight
                         )}
-                        selectedRowsKeys={this.props.filters}
-                        onSelectionChange={this.handlers.onValueSelection}
+                        filters={this.props.filters}
+                        selectedRowsKeys={this.selectedRowsKeys}
+                        onChangeSelectedRows={
+                            this.handlers.onChangeSelectedRows
+                        }
+                        onSubmitSelection={this.handlers.onValueSelection}
+                        extraButtons={
+                            this.comparisonButtonForTables && [
+                                this.comparisonButtonForTables,
+                            ]
+                        }
+                        setOperationsButtonText={
+                            this.props.store.hesitateUpdate
+                                ? 'Add Filters '
+                                : 'Select Samples '
+                        }
                         showCategoryColumn={
                             this.props.store.getMolecularChartDataType(
                                 this.props.chartMeta.uniqueKey
