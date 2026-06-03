@@ -1,0 +1,28 @@
+// Pure-CSS hover highlight for the expression table, so mousing over rows
+// triggers no React re-render. !important overrides both the Bootstrap
+// table-striped zebra background and the inline "selected" (on-chart)
+// highlight when a selected row is hovered.
+.expressionTable {
+    tbody > tr:hover {
+        background-color: #eaf3fb !important;
+    }
+}
+
+// Shimmering placeholder bar used for the table skeleton loader.
+.skeletonBar {
+    display: inline-block;
+    height: 12px;
+    border-radius: 3px;
+    background: linear-gradient(90deg, #ececec 25%, #f5f5f5 37%, #ececec 63%);
+    background-size: 400% 100%;
+    animation: skeletonShimmer 1.4s ease infinite;
+}
+
+@keyframes skeletonShimmer {
+    0% {
+        background-position: 100% 0;
+    }
+    100% {
+        background-position: 0 0;
+    }
+}
