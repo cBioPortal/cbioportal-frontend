@@ -22,6 +22,7 @@ import TrialMatchTable from 'pages/patientView/trialMatch/TrialMatchTable';
 import _ from 'lodash';
 import MutationalSignaturesContainer from 'pages/patientView/mutationalSignatures/MutationalSignaturesContainer';
 import MrnaTabContent from 'pages/patientView/mrna/MrnaTabContent';
+import { FeatureFlagEnum } from 'shared/featureFlags';
 import { buildCustomTabs } from 'shared/lib/customTabs/customTabHelpers';
 import * as React from 'react';
 import SampleManager from 'pages/patientView/SampleManager';
@@ -707,23 +708,32 @@ export function tabs(
             </MSKTab>
         );
 
-    tabs.push(
-        <MSKTab
-            key={9}
-            id={PatientViewPageTabs.MRNA}
-            linkText={
-                <span>
-                    mRNA{' '}
-                    <strong className={'beta-text'}>Beta!</strong>
-                </span>
-            }
-        >
-            <MrnaTabContent
-                store={pageComponent.patientViewPageStore}
-                sampleManager={sampleManager}
-            />
-        </MSKTab>
-    );
+    // The mRNA tab is shown only for the MSKCC portal, or when the
+    // "patientMRNATab" feature flag is on (?featureFlags=patientMRNATab).
+    if (
+        getServerConfig().app_name === 'mskcc-portal' ||
+        pageComponent.props.appStore.featureFlagStore.has(
+            FeatureFlagEnum.PATIENT_MRNA_TAB
+        )
+    ) {
+        tabs.push(
+            <MSKTab
+                key={9}
+                id={PatientViewPageTabs.MRNA}
+                linkText={
+                    <span>
+                        mRNA{' '}
+                        <strong className={'beta-text'}>Beta!</strong>
+                    </span>
+                }
+            >
+                <MrnaTabContent
+                    store={pageComponent.patientViewPageStore}
+                    sampleManager={sampleManager}
+                />
+            </MSKTab>
+        );
+    }
 
     pageComponent.resourceTabs.component &&
         /* @ts-ignore */
