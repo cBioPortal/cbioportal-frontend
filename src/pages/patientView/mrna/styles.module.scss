@@ -5,4 +5,13 @@
     :global(.ReactVirtualized__Table__row) {
         cursor: pointer;
     }
+    // Make the search box flush with the table's left edge: drop the controls
+    // bar's left padding and the search input's left margin (the library sets
+    // padding:0 5px on the bar and margin-left:10px on the input at top).
+    :global([class*='controls']) {
+        padding-left: 0 !important;
+    }
+    :global(input.form-control) {
+        margin-left: 0 !important;
+    }
 }
