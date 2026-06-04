@@ -3,6 +3,7 @@ import _ from 'lodash';
 import { observer } from 'mobx-react';
 import { action, computed, makeObservable, observable } from 'mobx';
 import {
+    VictoryArea,
     VictoryAxis,
     VictoryChart,
     VictoryLabel,
@@ -132,6 +133,38 @@ function madOf(values: number[], median: number): number {
     const dev = values.map(v => Math.abs(v - median));
     dev.sort((a, b) => a - b);
     return quantileSorted(dev, 0.5);
+}
+
+// Sample standard deviation of an array.
+function stdDev(values: number[]): number {
+    const n = values.length;
+    if (n < 2) return 0;
+    const mean = values.reduce((a, b) => a + b, 0) / n;
+    const variance =
+        values.reduce((a, b) => a + (b - mean) * (b - mean), 0) / (n - 1);
+    return Math.sqrt(variance);
+}
+
+// Gaussian kernel density estimate of `values` evaluated at each point of
+// `grid`. Used to draw the violin shapes.
+function gaussianKde(
+    values: number[],
+    grid: number[],
+    bandwidth: number
+): number[] {
+    const n = values.length;
+    if (n === 0 || bandwidth <= 0) {
+        return grid.map(() => 0);
+    }
+    const norm = 1 / (n * bandwidth * Math.sqrt(2 * Math.PI));
+    return grid.map(g => {
+        let sum = 0;
+        for (let i = 0; i < n; i++) {
+            const u = (g - values[i]) / bandwidth;
+            sum += Math.exp(-0.5 * u * u);
+        }
+        return norm * sum;
+    });
 }
 
 // Fraction of cohort values <= the patient value, using a binary search on
@@ -915,21 +948,9 @@ export default class MrnaTabContent extends React.Component<
     // User-controlled log-scale toggle; defaults to log. When data has
     // negatives (e.g. z-scores), the toggle is force-disabled and the chart
     // falls back to linear regardless of the user's preference.
-    @observable userLogScale: boolean = true;
-
-    @action.bound
-    setLogScale(v: boolean) {
-        this.userLogScale = v;
-    }
-
-    // When true, gene rows become columns (categories on the x-axis) and
-    // expression values run on the y-axis.
-    @observable axesSwapped: boolean = false;
-
-    @action.bound
-    setAxesSwapped(v: boolean) {
-        this.axesSwapped = v;
-    }
+    // The log / swap-axes / violin toggles and the reference-cohort choice now
+    // live on the plots store (PatientViewPlotsStore), which persists them to
+    // localStorage as one settings blob. Accessed below via this.plotsStore.
 
     // Adds one or more hugo symbols to the picker's selection list, skipping
     // any that are already on the chart. Used by the co-expression dialog
@@ -1230,7 +1251,7 @@ export default class MrnaTabContent extends React.Component<
     }
 
     @computed get useLog(): boolean {
-        return this.userLogScale && this.canRenderLog;
+        return this.plotsStore.logScale && this.canRenderLog;
     }
 
     // Smallest positive value; the lower bound for the log scale so zeros and
@@ -1295,7 +1316,7 @@ export default class MrnaTabContent extends React.Component<
             d => d.entrezGeneId
         );
         const points: IPoint[] = [];
-        const swap = this.axesSwapped;
+        const swap = this.plotsStore.swapAxes;
         this.genes.forEach((gene, rowIndex) => {
             (byEntrez[gene.entrezGeneId] || []).forEach(d => {
                 const isHighlighted = this.highlightedSampleIds.has(d.sampleId);
@@ -1352,7 +1373,7 @@ export default class MrnaTabContent extends React.Component<
         const h = 0.2268;
         const stroke = '#333333';
         const els: JSX.Element[] = [];
-        const swap = this.axesSwapped;
+        const swap = this.plotsStore.swapAxes;
         // Each box has a (value, category) coordinate. In the default layout
         // value goes on x and category on y; swap transposes the segment.
         const xy = (valueCoord: number, categoryCoord: number) =>
@@ -1383,6 +1404,118 @@ export default class MrnaTabContent extends React.Component<
                 xy(box.median, row + h),
                 1.8
             );
+        });
+        return els;
+    }
+
+    // Per-gene violin shapes: a kernel-density estimate of the cohort's
+    // (log/linear-transformed) expression, drawn as a mirrored, filled outline
+    // centered on each gene's row. Each violin is normalized to the same max
+    // half-width so genes are visually comparable. Computed in the same
+    // (value, category) space as boxLines so it honors the log scale and the
+    // swap-axes toggle.
+    @computed get violinShapes(): JSX.Element[] {
+        const swap = this.plotsStore.swapAxes;
+        const VIOLIN_HALF = 0.42; // max half-width of a violin, in category units
+        const GRID = 48; // density samples across the value range
+        const xy = (valueCoord: number, categoryCoord: number) =>
+            swap
+                ? { x: categoryCoord, y: valueCoord }
+                : { x: valueCoord, y: categoryCoord };
+        const transform = (v: number) =>
+            this.useLog ? Math.log10(Math.max(v, this.logFloor)) : v;
+        const invTransform = (t: number) => (this.useLog ? Math.pow(10, t) : t);
+        const [tLo, tHi] = [
+            transform(this.valueDomain[0]),
+            transform(this.valueDomain[1]),
+        ];
+        const els: JSX.Element[] = [];
+        this.genes.forEach((gene, i) => {
+            const row = i + 1;
+            const stats = this.geneCohortStats[gene.entrezGeneId];
+            const all = stats && stats.sortedTransformed;
+            if (!all || all.length < 5) {
+                return;
+            }
+            // Subsample very large cohorts — the density estimate is stable on
+            // a sample and this keeps the per-render cost bounded.
+            const vals =
+                all.length > 1500
+                    ? all.filter(
+                          (_v, idx) => idx % Math.ceil(all.length / 1500) === 0
+                      )
+                    : all;
+            const n = vals.length;
+            // Silverman's rule-of-thumb bandwidth (robust to outliers via IQR).
+            const spread = Math.min(
+                stdDev(vals) || Infinity,
+                (quantileSorted(vals, 0.75) - quantileSorted(vals, 0.25)) /
+                    1.34 || Infinity
+            );
+            const h =
+                !isFinite(spread) || spread === 0
+                    ? (vals[n - 1] - vals[0]) / 10 || 1
+                    : 0.9 * spread * Math.pow(n, -1 / 5);
+            if (!(h > 0)) {
+                return;
+            }
+            const lo = Math.max(vals[0] - 3 * h, tLo);
+            const hi = Math.min(vals[n - 1] + 3 * h, tHi);
+            if (!(hi > lo)) {
+                return;
+            }
+            const grid: number[] = [];
+            for (let k = 0; k < GRID; k++) {
+                grid.push(lo + ((hi - lo) * k) / (GRID - 1));
+            }
+            const dens = gaussianKde(vals, grid, h);
+            const maxD = Math.max(...dens) || 1;
+            const half = dens.map(d => (d / maxD) * VIOLIN_HALF);
+            const style = {
+                data: {
+                    fill: '#bdbdbd',
+                    fillOpacity: 0.5,
+                    stroke: '#8a8a8a',
+                    strokeWidth: 0.75,
+                },
+            };
+            if (!swap) {
+                // Default orientation: value on x. VictoryArea fills between the
+                // upper (y) and lower (y0) density curves around the gene's row
+                // — a smooth, properly filled horizontal violin.
+                const data = grid.map((t, k) => ({
+                    x: invTransform(t),
+                    y: row + half[k],
+                    y0: row - half[k],
+                }));
+                els.push(
+                    <VictoryArea
+                        key={`violin${row}`}
+                        data={data}
+                        interpolation="natural"
+                        style={style}
+                    />
+                );
+            } else {
+                // Swapped: value on y. VictoryArea can't fill along y, so trace
+                // the mirrored outline as a closed, filled polygon instead.
+                const pts: IPoint[] = [];
+                grid.forEach((t, k) => {
+                    pts.push(xy(invTransform(t), row + half[k]));
+                });
+                for (let k = grid.length - 1; k >= 0; k--) {
+                    pts.push(xy(invTransform(grid[k]), row - half[k]));
+                }
+                pts.push(pts[0]);
+                els.push(
+                    <VictoryLine
+                        key={`violin${row}`}
+                        data={pts}
+                        interpolation="linear"
+                        style={style}
+                    />
+                );
+            }
         });
         return els;
     }
@@ -1840,7 +1973,7 @@ export default class MrnaTabContent extends React.Component<
         }
 
         const n = this.genes.length;
-        const swap = this.axesSwapped;
+        const swap = this.plotsStore.swapAxes;
         // Per-gene size along the category axis, the same in both orientations
         // so the row/column spacing — and, since the box/jitter extents are in
         // category units, each gene's box extent — stay compact and identical
@@ -1980,7 +2113,7 @@ export default class MrnaTabContent extends React.Component<
                             checked={this.useLog}
                             disabled={!this.canRenderLog}
                             onChange={e =>
-                                this.setLogScale(e.target.checked)
+                                this.plotsStore.setLogScale(e.target.checked)
                             }
                             style={{ marginRight: 6 }}
                         />
@@ -2000,13 +2133,35 @@ export default class MrnaTabContent extends React.Component<
                     >
                         <input
                             type="checkbox"
-                            checked={this.axesSwapped}
+                            checked={this.plotsStore.swapAxes}
                             onChange={e =>
-                                this.setAxesSwapped(e.target.checked)
+                                this.plotsStore.setSwapAxes(e.target.checked)
                             }
                             style={{ marginRight: 6 }}
                         />
                         Swap axes
+                    </label>
+                    <label
+                        style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            fontSize: 12,
+                            fontWeight: 'normal',
+                            margin: 0,
+                            cursor: 'pointer',
+                            color: '#333',
+                        }}
+                        title="Show the cohort distribution as a violin (kernel density) instead of a scatter cloud"
+                    >
+                        <input
+                            type="checkbox"
+                            checked={this.plotsStore.violin}
+                            onChange={e =>
+                                this.plotsStore.setViolin(e.target.checked)
+                            }
+                            style={{ marginRight: 6 }}
+                        />
+                        Violin
                     </label>
                 </div>
                 <VictoryChart
@@ -2046,16 +2201,21 @@ export default class MrnaTabContent extends React.Component<
                     ) : (
                         <VictoryAxis dependentAxis {...categoryAxisProps} />
                     )}
-                    {/* cohort */}
-                    <VictoryScatter
-                        data={this.cohortPoints}
-                        size={2}
-                        style={{
-                            data: { fill: '#7e7e7e', fillOpacity: 0.25 },
-                        }}
-                    />
-                    {/* distribution (boxes drawn as line segments) */}
+                    {/* violin (KDE) sits at the bottom in violin mode */}
+                    {this.plotsStore.violin ? this.violinShapes : null}
+                    {/* box drawn here so it sits under the scatter cloud (and
+                        over the violin fill) */}
                     {this.boxLines}
+                    {/* scatter cloud on top of the box in scatter mode */}
+                    {this.plotsStore.violin ? null : (
+                        <VictoryScatter
+                            data={this.cohortPoints}
+                            size={2}
+                            style={{
+                                data: { fill: '#7e7e7e', fillOpacity: 0.25 },
+                            }}
+                        />
+                    )}
                     {/* highlighted samples (numbered sample icons) */}
                     <VictoryScatter
                         data={this.patientPoints}

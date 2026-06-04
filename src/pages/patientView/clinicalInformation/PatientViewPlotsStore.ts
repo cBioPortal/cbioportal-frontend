@@ -1,4 +1,10 @@
-import { action, computed, makeObservable, observable } from 'mobx';
+import {
+    action,
+    computed,
+    makeObservable,
+    observable,
+    reaction,
+} from 'mobx';
 import _ from 'lodash';
 import { MobxPromise, remoteData } from 'cbioportal-frontend-commons';
 import {
@@ -162,12 +168,106 @@ const FILTER_DENY_LIST = new Set([
     'OTHER_PATIENT_ID',
 ]);
 
+// The mRNA tab's view settings, serialized to localStorage as one blob so the
+// user's chart preferences (and reference-cohort choice) persist across
+// sessions. The cohort is stored as a mode rather than concrete filters: it is
+// patient-specific, so on load we re-derive it for the current patient.
+export interface MrnaTabViewSettings {
+    logScale: boolean;
+    violin: boolean;
+    swapAxes: boolean;
+    referenceCohortMode: ReferenceCohortMode;
+}
+
+const MRNA_TAB_SETTINGS_LS_KEY = 'patientView.mrnaTab.settings';
+
+function readStoredMrnaTabSettings(): Partial<MrnaTabViewSettings> {
+    try {
+        const raw = localStorage.getItem(MRNA_TAB_SETTINGS_LS_KEY);
+        return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+        return {};
+    }
+}
+
+function writeStoredMrnaTabSettings(settings: MrnaTabViewSettings): void {
+    try {
+        localStorage.setItem(
+            MRNA_TAB_SETTINGS_LS_KEY,
+            JSON.stringify(settings)
+        );
+    } catch (e) {
+        // localStorage may be unavailable (private mode, etc.) — ignore.
+    }
+}
+
 // Holds state/data for the patient view plots (currently the mRNA tab).
 // Kept out of PatientViewPageStore; references the parent store for shared
 // context (studyId, molecular profiles).
 export class PatientViewPlotsStore {
     constructor(private parentStore: PatientViewPageStore) {
         makeObservable(this);
+
+        // Restore persisted view settings. Toggles apply immediately; the
+        // reference-cohort mode is applied once the patient's clinical data
+        // (cancer types) is available, since it is patient-specific.
+        const stored = readStoredMrnaTabSettings();
+        this.logScale = stored.logScale ?? true;
+        this.violin = stored.violin ?? false;
+        this.swapAxes = stored.swapAxes ?? false;
+        this._pendingCohortMode = stored.referenceCohortMode;
+
+        reaction(
+            () => this.parentStore.clinicalDataForSamples.isComplete,
+            isComplete => {
+                if (isComplete && this._pendingCohortMode) {
+                    if (this._pendingCohortMode !== this.referenceCohortMode) {
+                        this.setReferenceCohortMode(this._pendingCohortMode);
+                    }
+                    this._pendingCohortMode = undefined;
+                }
+            },
+            { fireImmediately: true }
+        );
+
+        // Persist all settings whenever any of them change.
+        reaction(
+            () => JSON.stringify(this.viewSettings),
+            json => writeStoredMrnaTabSettings(JSON.parse(json))
+        );
+    }
+
+    // The persisted reference-cohort mode awaiting application (see ctor).
+    private _pendingCohortMode?: ReferenceCohortMode;
+
+    // Chart view toggles (persisted via viewSettings).
+    @observable logScale: boolean = true;
+    @observable violin: boolean = false;
+    @observable swapAxes: boolean = false;
+
+    @action.bound
+    setLogScale(v: boolean) {
+        this.logScale = v;
+    }
+
+    @action.bound
+    setViolin(v: boolean) {
+        this.violin = v;
+    }
+
+    @action.bound
+    setSwapAxes(v: boolean) {
+        this.swapAxes = v;
+    }
+
+    // Serializable snapshot of everything we persist to localStorage.
+    @computed get viewSettings(): MrnaTabViewSettings {
+        return {
+            logScale: this.logScale,
+            violin: this.violin,
+            swapAxes: this.swapAxes,
+            referenceCohortMode: this.referenceCohortMode,
+        };
     }
 
     // Items selected in the mRNA tab gene chooser. Each entry is either a
