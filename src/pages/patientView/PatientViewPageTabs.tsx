@@ -709,12 +709,20 @@ export function tabs(
         );
 
     // The mRNA tab is shown only for the MSKCC portal, or when the
-    // "patientMRNATab" feature flag is on (?featureFlags=patientMRNATab).
+    // "patientMRNATab" feature flag is on (?featureFlags=patientMRNATab) — and
+    // only when the study actually has an mRNA expression profile, so studies
+    // without one don't get an empty tab. The enablement check is evaluated
+    // first so non-enabled portals don't trigger the profile lookup.
+    const mrnaProfilePromise =
+        pageComponent.patientViewPageStore.plotsStore
+            .mrnaExpressionMolecularProfile;
     if (
-        getServerConfig().app_name === 'mskcc-portal' ||
-        pageComponent.props.appStore.featureFlagStore.has(
-            FeatureFlagEnum.PATIENT_MRNA_TAB
-        )
+        (getServerConfig().app_name === 'mskcc-portal' ||
+            pageComponent.props.appStore.featureFlagStore.has(
+                FeatureFlagEnum.PATIENT_MRNA_TAB
+            )) &&
+        mrnaProfilePromise.isComplete &&
+        !!mrnaProfilePromise.result
     ) {
         tabs.push(
             <MSKTab

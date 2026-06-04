@@ -6,6 +6,7 @@ import {
     VictoryArea,
     VictoryAxis,
     VictoryChart,
+    VictoryContainer,
     VictoryLabel,
     VictoryLine,
     VictoryScatter,
@@ -166,6 +167,29 @@ function gaussianKde(
         return norm * sum;
     });
 }
+
+// Renders a violin outline as a single filled SVG <path>, drawing the points
+// in the given order (unlike VictoryLine, which reorders by the independent
+// axis and scrambles the mirrored outline). Used for the swapped layout, where
+// VictoryArea — which only fills along the x-axis — can't make a vertical
+// violin. Victory injects `scale` into chart children, mapping data → pixels.
+const ViolinShape: React.FunctionComponent<any> = props => {
+    const { points, scale, style } = props;
+    if (!scale || !points || points.length === 0) {
+        return null;
+    }
+    // Victory injects a `parent` style key into children; drop it so it isn't
+    // applied as an (invalid) SVG style on the path.
+    const { parent, ...pathStyle } = style || {};
+    const d =
+        points
+            .map(
+                (p: IPoint, i: number) =>
+                    `${i === 0 ? 'M' : 'L'} ${scale.x(p.x)} ${scale.y(p.y)}`
+            )
+            .join(' ') + ' Z';
+    return <path d={d} style={pathStyle} />;
+};
 
 // Fraction of cohort values <= the patient value, using a binary search on
 // an already-sorted ascending array.
@@ -831,6 +855,11 @@ export default class MrnaTabContent extends React.Component<
 > {
     private svgContainer: SVGElement | null = null;
     private getSvg = () => this.svgContainer;
+    // VictoryContainer's containerRef hands back the wrapper <div>; the <svg>
+    // we export for download lives inside it.
+    private setSvgContainer = (container: HTMLDivElement | null) => {
+        this.svgContainer = container ? container.querySelector('svg') : null;
+    };
 
     constructor(props: IMrnaTabContentProps) {
         super(props);
@@ -1284,13 +1313,12 @@ export default class MrnaTabContent extends React.Component<
             const iqr = q3 - q1;
             const lowFence = q1 - 1.5 * iqr;
             const highFence = q3 + 1.5 * iqr;
+            // Whiskers extend to the most extreme in-fence value on each side;
+            // the fallback is the corresponding extreme of the data.
             const whiskerLow = sorted.find(v => v >= lowFence) ?? sorted[0];
-            let whiskerHigh = sorted[0];
-            for (const v of sorted) {
-                if (v <= highFence) {
-                    whiskerHigh = v;
-                }
-            }
+            const whiskerHigh =
+                [...sorted].reverse().find(v => v <= highFence) ??
+                sorted[sorted.length - 1];
             return {
                 x: rowIndex + 1,
                 min: this.clamp(whiskerLow),
@@ -1498,7 +1526,8 @@ export default class MrnaTabContent extends React.Component<
                 );
             } else {
                 // Swapped: value on y. VictoryArea can't fill along y, so trace
-                // the mirrored outline as a closed, filled polygon instead.
+                // the mirrored outline as a single filled SVG path (ViolinShape
+                // keeps the point order; VictoryLine would reorder by x).
                 const pts: IPoint[] = [];
                 grid.forEach((t, k) => {
                     pts.push(xy(invTransform(t), row + half[k]));
@@ -1506,13 +1535,11 @@ export default class MrnaTabContent extends React.Component<
                 for (let k = grid.length - 1; k >= 0; k--) {
                     pts.push(xy(invTransform(grid[k]), row - half[k]));
                 }
-                pts.push(pts[0]);
                 els.push(
-                    <VictoryLine
+                    <ViolinShape
                         key={`violin${row}`}
-                        data={pts}
-                        interpolation="linear"
-                        style={style}
+                        points={pts}
+                        style={style.data}
                     />
                 );
             }
@@ -1622,6 +1649,17 @@ export default class MrnaTabContent extends React.Component<
         const profile = this.plotsStore.mrnaExpressionMolecularProfile.result;
         const label = profile ? profile.name : 'mRNA expression';
         return `${label} - ${this.cohortName}`;
+    }
+
+    // SVG/PDF download filename. The cohort name is a display string (study
+    // name or filter labels) that often contains spaces, slashes, and
+    // parentheses, so slugify it to keep the filename clean and valid; fall
+    // back to the study id if nothing usable remains.
+    @computed get exportFileName(): string {
+        const slug = this.cohortName
+            .replace(/[^a-z0-9]+/gi, '_')
+            .replace(/^_+|_+$/g, '');
+        return `mrna_expression_${slug || this.props.store.studyId}`;
     }
 
     render() {
@@ -2075,7 +2113,7 @@ export default class MrnaTabContent extends React.Component<
             >
             <ChartContainer
                 getSVGElement={this.getSvg}
-                exportFileName={`mrna_expression_${this.cohortName}`}
+                exportFileName={this.exportFileName}
             >
                 <div
                     style={{
@@ -2182,10 +2220,9 @@ export default class MrnaTabContent extends React.Component<
                         y: swap ? valueScale : 'linear',
                     }}
                     containerComponent={
-                        <svg
-                            ref={(el: SVGSVGElement | null) => {
-                                this.svgContainer = el;
-                            }}
+                        <VictoryContainer
+                            containerRef={this.setSvgContainer}
+                            responsive={false}
                         />
                     }
                 >

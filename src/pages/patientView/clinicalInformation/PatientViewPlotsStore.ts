@@ -915,12 +915,30 @@ export class PatientViewPlotsStore {
         MolecularProfile | undefined
     >({
         await: () => [this.parentStore.molecularProfilesInStudy],
-        invoke: async () =>
-            this.parentStore.molecularProfilesInStudy.result!.find(
+        invoke: async () => {
+            const profiles = (
+                this.parentStore.molecularProfilesInStudy.result || []
+            ).filter(
                 p =>
                     p.molecularAlterationType ===
                     AlterationTypeConstants.MRNA_EXPRESSION
-            ),
+            );
+            // Prefer an analysis-tab, non-z-score profile: z-score profiles
+            // (e.g. *_Zscores) are relative values that break the chart's
+            // log-scale / TPM-like assumptions and produce misleading plots.
+            const isZscore = (p: MolecularProfile) =>
+                (p.datatype || '')
+                    .toUpperCase()
+                    .replace(/[^A-Z]/g, '')
+                    .includes('ZSCORE');
+            return (
+                profiles.find(
+                    p => p.showProfileInAnalysisTab && !isZscore(p)
+                ) ||
+                profiles.find(p => !isZscore(p)) ||
+                profiles[0]
+            );
+        },
     });
 
     // Full gene list for the mRNA tab gene chooser options.
