@@ -54,9 +54,6 @@
     color: #fff;
     transition: background 0.15s;
 
-    // Paint the icons white directly rather than via `currentColor`, so an
-    // inherited text color can't tint the stroke/fill grey. The send arrow is
-    // a stroked path; the stop glyph is a filled rect.
     svg {
         display: block;
     }

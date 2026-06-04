@@ -30,9 +30,6 @@
     }
 
     .assistant & {
-        // Assistant responses render on the plain background (no bubble); the
-        // reasoning block and tool calls provide their own framing. Full width
-        // so blocks don't resize to fit their text.
         width: 100%;
         max-width: 100%;
         padding: 0;
