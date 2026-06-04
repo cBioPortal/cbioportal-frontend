@@ -454,8 +454,8 @@ importers:
         specifier: 3.0.1
         version: 3.0.1
       qs:
-        specifier: 6.5.2
-        version: 6.5.2
+        specifier: 6.15.2
+        version: 6.15.2
       query-string:
         specifier: ^6.13.6
         version: 6.14.1
@@ -9718,6 +9718,10 @@ packages:
 
   qs@6.15.1:
     resolution: {integrity: sha512-6YHEFRL9mfgcAvql/XhwTvf5jKcOiiupt2FiJxHkiX1z4j7WL8J/jRHYLluORvc1XxB5rV20KoeK00gVJamspg==}
+    engines: {node: '>=0.6'}
+
+  qs@6.15.2:
+    resolution: {integrity: sha512-Rzq0KEyX/w/tEybncDgdkZrJgVUsUMk3xjh3t5bv3S1HTAtg+uOYt72+ZfwiQwKdysThkTBdL/rTi6HDmX9Ddw==}
     engines: {node: '>=0.6'}
 
   qs@6.5.2:
@@ -22467,7 +22471,7 @@ snapshots:
       node-fetch: 2.7.0(encoding@0.1.13)
       omit.js: 2.0.2
       p-wait-for: 3.2.0
-      qs: 6.15.1
+      qs: 6.15.2
     transitivePeerDependencies:
       - encoding
 
@@ -23943,6 +23947,10 @@ snapshots:
       side-channel: 1.1.0
 
   qs@6.15.1:
+    dependencies:
+      side-channel: 1.1.0
+
+  qs@6.15.2:
     dependencies:
       side-channel: 1.1.0
 
@@ -25790,7 +25798,7 @@ snapshots:
       fast-json-patch: 2.2.1
       isomorphic-form-data: 0.0.1
       lodash: 4.18.1
-      qs: 6.5.2
+      qs: 6.15.2
       querystring-browser: 1.0.4
       url: 0.11.4
       utf8-bytes: 0.0.1

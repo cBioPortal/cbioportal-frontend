@@ -220,7 +220,7 @@
     "postcss-url": "^8.0.0",
     "progress-bar-webpack-plugin": "^2.1.0",
     "pushstate-server": "3.0.1",
-    "qs": "6.5.2",
+    "qs": "6.15.2",
     "query-string": "^6.13.6",
     "range-ts": "^0.1.5",
     "raw-loader": "^0.5.1",
