@@ -67,7 +67,7 @@ export default class ChatComposer extends React.Component<
                     className={styles.textarea}
                     placeholder="Send a message…"
                     value={this.state.text}
-                    disabled={isStreaming}
+                    autoFocus
                     onChange={this.handleChange}
                     onKeyDown={this.handleKeyDown}
                     rows={1}
