@@ -457,7 +457,7 @@ var config = {
             },
         },
         server: 'https',
-        host: process.env.HOST || 'localhost',
+        host: 'localhost',
         headers: { 'Access-Control-Allow-Origin': '*' },
         allowedHosts: 'all',
         devMiddleware: {
@@ -620,7 +620,7 @@ if (isDev || isTest) {
 
     // force hot module reloader to hit absolute path so it can load
     // from dev server
-    config.output.publicPath = `//${process.env.PUBLIC_HOST || 'localhost'}:${devPort}/`;
+    config.output.publicPath = `//localhost:${devPort}/`;
 } else {
     config.output.publicPath = '/';
 
