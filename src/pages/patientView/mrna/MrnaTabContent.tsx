@@ -194,6 +194,10 @@ const ViolinShape: React.FunctionComponent<any> = props => {
     return <path d={d} style={pathStyle} />;
 };
 
+// The compact OncoKB icon (the square oncogenic marker used across the app),
+// not the wide OncoKB wordmark logo which overflows the narrow Gene column.
+const ONCOKB_ICON = require('oncokb-styles/images/oncogenic.svg');
+
 // Tooltip overlay with a gene's OncoKB summary and background. `curated` is an
 // OncoKB CuratedGene with summary/background strings.
 function geneBackgroundOverlay(symbol: string, curated: any): JSX.Element {
@@ -1258,13 +1262,14 @@ export default class MrnaTabContent extends React.Component<
                 mouseEnterDelay={0.2}
                 overlay={geneBackgroundOverlay(symbol, curated)}
             >
-                <i
-                    className="fa fa-info-circle"
+                <img
+                    src={ONCOKB_ICON}
+                    alt="OncoKB"
                     style={{
+                        maxHeight: 12,
                         marginLeft: 5,
-                        color: '#888',
                         cursor: 'pointer',
-                        fontWeight: 'normal',
+                        verticalAlign: 'text-bottom',
                     }}
                 />
             </DefaultTooltip>
@@ -1831,14 +1836,15 @@ export default class MrnaTabContent extends React.Component<
                     </div>
                     <label
                         style={{
-                            display: 'inline-flex',
+                            display: 'flex',
+                            flexDirection: 'row',
                             alignItems: 'center',
+                            flexShrink: 0,
                             fontSize: 12,
                             fontWeight: 'normal',
                             // Nudge up so the checkbox centers on the select
                             // input rather than aligning to its bottom edge.
-                            marginBottom: 8,
-                            whiteSpace: 'nowrap',
+                            margin: '0 0 8px',
                             cursor: 'pointer',
                             color: '#333',
                         }}
@@ -1852,9 +1858,11 @@ export default class MrnaTabContent extends React.Component<
                                     e.target.checked
                                 )
                             }
-                            style={{ marginRight: 6 }}
+                            style={{ margin: '0 6px 0 0', flexShrink: 0 }}
                         />
-                        OncoKB cancer genes only
+                        <span style={{ whiteSpace: 'nowrap' }}>
+                            OncoKB cancer genes only
+                        </span>
                     </label>
                 </div>
                 {this.renderCohortSummaryBar()}
