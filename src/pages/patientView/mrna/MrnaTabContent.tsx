@@ -1856,12 +1856,20 @@ export default class MrnaTabContent extends React.Component<
         // which adds a horizontal scrollbar that — combined with that div's
         // overflowY:hidden — overlays and clips the bottom x-axis.
         const BORDERED_CHART_CHROME = 22;
-        // Swapped layout needs more left padding (so the rotated value-axis
-        // label clears the tick numbers) and more bottom padding (so the
-        // angled gene tick labels fit beneath the axis without overlapping).
+        // Non-swapped: the gene names are the left-axis tick labels, so the
+        // left padding only needs to fit the longest one (~7px/char at
+        // fontSize 12, plus room for the tick mark) — no need for a big fixed
+        // gutter. Swapped layout needs more left padding (so the rotated
+        // value-axis label clears the tick numbers) and more bottom padding (so
+        // the angled gene tick labels fit beneath the axis without overlapping).
+        const maxGeneLabelLen = this.genes.reduce(
+            (m, g) => Math.max(m, g.symbol.length),
+            0
+        );
+        const geneAxisPad = Math.min(140, Math.max(50, maxGeneLabelLen * 7 + 16));
         const padding = swap
             ? { top: 30, bottom: 110, left: 90, right: 25 }
-            : { top: 20, bottom: 80, left: 140, right: 25 };
+            : { top: 20, bottom: 80, left: geneAxisPad, right: 25 };
         const valueLabel = profile.name;
         const valueScale = this.useLog ? 'log' : 'linear';
         const categoryDomain: [number, number] = [0, n + 0.5];
