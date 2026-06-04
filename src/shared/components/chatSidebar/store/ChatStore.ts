@@ -25,6 +25,12 @@ export class ChatStore {
     private pendingToolExecutions: Promise<void>[] = [];
     private clientToolCallsThisTurn: Set<string> = new Set();
 
+    // RAF-based delta buffer: accumulates text/reasoning deltas between frames
+    // so MobX is only updated once per animation frame instead of once per chunk.
+    private pendingTextDeltas: Map<string, string> = new Map();
+    private pendingReasoningDeltas: Map<string, string> = new Map();
+    private rafId: number | null = null;
+
     constructor() {
         makeObservable(this);
     }
@@ -83,6 +89,7 @@ export class ChatStore {
         this.partIndexMap.clear();
         this.pendingToolExecutions = [];
         this.clientToolCallsThisTurn = new Set();
+        this.cancelPendingFlush();
 
         const signal = this.abortController!.signal;
 
@@ -104,18 +111,11 @@ export class ChatStore {
                     });
                 },
                 onTextDelta: (id: string, delta: string) => {
-                    runInAction(() => {
-                        const msg = this.messages[
-                            this.currentAssistantMsgIndex
-                        ];
-                        if (!msg) return;
-                        const idx = this.partIndexMap.get(id);
-                        if (idx === undefined) return;
-                        const part = msg.parts[idx];
-                        if (part?.type === 'text') {
-                            (part as any).text += delta;
-                        }
-                    });
+                    this.pendingTextDeltas.set(
+                        id,
+                        (this.pendingTextDeltas.get(id) ?? '') + delta
+                    );
+                    this.scheduleFlush();
                 },
                 onTextEnd: (_id: string) => {},
                 onReasoningStart: (id: string) => {
@@ -134,18 +134,11 @@ export class ChatStore {
                     });
                 },
                 onReasoningDelta: (id: string, delta: string) => {
-                    runInAction(() => {
-                        const msg = this.messages[
-                            this.currentAssistantMsgIndex
-                        ];
-                        if (!msg) return;
-                        const idx = this.partIndexMap.get(id);
-                        if (idx === undefined) return;
-                        const part = msg.parts[idx];
-                        if (part?.type === 'reasoning') {
-                            (part as any).text += delta;
-                        }
-                    });
+                    this.pendingReasoningDeltas.set(
+                        id,
+                        (this.pendingReasoningDeltas.get(id) ?? '') + delta
+                    );
+                    this.scheduleFlush();
                 },
                 onReasoningEnd: (id: string) => {
                     runInAction(() => {
@@ -245,6 +238,10 @@ export class ChatStore {
                     });
                 },
                 onFinish: () => {
+                    // Flush any deltas that arrived since the last RAF fired.
+                    this.cancelPendingFlush();
+                    this.flushDeltas();
+
                     // Wait for any in-flight client tool executions, then decide
                     // whether to continue the loop with a follow-up request.
                     const hadClientToolCalls =
@@ -297,6 +294,46 @@ export class ChatStore {
         return this.messages.slice();
     }
 
+    private flushDeltas = () => {
+        this.rafId = null;
+        if (
+            this.pendingTextDeltas.size === 0 &&
+            this.pendingReasoningDeltas.size === 0
+        )
+            return;
+        runInAction(() => {
+            const msg = this.messages[this.currentAssistantMsgIndex];
+            if (!msg) return;
+            for (const [id, delta] of this.pendingTextDeltas) {
+                const idx = this.partIndexMap.get(id);
+                const part = idx !== undefined ? msg.parts[idx] : undefined;
+                if (part?.type === 'text') part.text += delta;
+            }
+            for (const [id, delta] of this.pendingReasoningDeltas) {
+                const idx = this.partIndexMap.get(id);
+                const part = idx !== undefined ? msg.parts[idx] : undefined;
+                if (part?.type === 'reasoning') part.text += delta;
+            }
+            this.pendingTextDeltas.clear();
+            this.pendingReasoningDeltas.clear();
+        });
+    };
+
+    private scheduleFlush() {
+        if (this.rafId === null) {
+            this.rafId = requestAnimationFrame(this.flushDeltas);
+        }
+    }
+
+    private cancelPendingFlush() {
+        if (this.rafId !== null) {
+            cancelAnimationFrame(this.rafId);
+            this.rafId = null;
+        }
+        this.pendingTextDeltas.clear();
+        this.pendingReasoningDeltas.clear();
+    }
+
     private toolPart(toolCallId: string) {
         const msg = this.messages[this.currentAssistantMsgIndex];
         if (!msg) return undefined;
@@ -333,6 +370,7 @@ export class ChatStore {
         this.partIndexMap.clear();
         this.pendingToolExecutions = [];
         this.clientToolCallsThisTurn = new Set();
+        this.cancelPendingFlush();
     }
 
     @action
