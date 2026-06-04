@@ -1,42 +1,8 @@
-// Row highlighting reuses the clinical-table palette from the comparison
-// feature (see src/shared/components/simpleTable/styles.scss): a slate-blue
-// "selected" highlight with odd/even shades, and a slightly deeper
-// slate-blue hover on clickable rows. Driven purely by CSS classes, so
-// mousing over rows triggers no React re-render. !important overrides the
-// Bootstrap table-striped zebra background.
-.expressionTable {
-    // Selected (on-chart) rows match the comparison table .highlighted colors.
-    tbody > tr.selected:nth-of-type(odd) {
-        background-color: #9fafd1 !important;
-    }
-    tbody > tr.selected:nth-of-type(even) {
-        background-color: #b0bed9 !important;
-    }
-    // Hover on clickable (not-yet-on-chart) rows matches the comparison table
-    // .clickable:hover colors.
-    tbody > tr.clickable:nth-of-type(odd):hover {
-        background-color: #a7b6d8 !important;
-    }
-    tbody > tr.clickable:nth-of-type(even):hover {
-        background-color: #b6c4df !important;
-    }
-}
-
-// Shimmering placeholder bar used for the table skeleton loader.
-.skeletonBar {
-    display: inline-block;
-    height: 12px;
-    border-radius: 3px;
-    background: linear-gradient(90deg, #ececec 25%, #f5f5f5 37%, #ececec 63%);
-    background-size: 400% 100%;
-    animation: skeletonShimmer 1.4s ease infinite;
-}
-
-@keyframes skeletonShimmer {
-    0% {
-        background-position: 100% 0;
-    }
-    100% {
-        background-position: 0 0;
+// The expression-table rows are clickable (click a gene to add it to the
+// chart), so show a pointer cursor over them. Scoped to the wrapper so it only
+// affects this table's react-virtualized rows.
+.clickableRows {
+    :global(.ReactVirtualized__Table__row) {
+        cursor: pointer;
     }
 }

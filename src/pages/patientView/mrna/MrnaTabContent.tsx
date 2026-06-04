@@ -25,6 +25,8 @@ import {
 import ReactSelect from 'react-select';
 import { Modal, Button } from 'react-bootstrap';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
+import { Column } from 'shared/components/lazyMobXTable/LazyMobXTable';
+import FixedHeaderTable from 'pages/studyView/table/FixedHeaderTable';
 import ChartContainer from 'shared/components/ChartContainer/ChartContainer';
 import { SampleLabelHTML } from 'shared/components/sampleLabel/SampleLabel';
 import SampleInline from 'pages/patientView/patientHeader/SampleInline';
@@ -41,6 +43,17 @@ import {
     MRNA_TAB_PATIENT_GENE_GROUPS,
 } from 'pages/patientView/mrna/mrnaTabGeneGroups';
 import styles from 'pages/patientView/mrna/styles.module.scss';
+
+// One row of the expression table: a gene and its per-sample expression values.
+type ExpressionTableRow = {
+    entrezGeneId: number;
+    symbol: string;
+    values: { [sampleId: string]: number };
+};
+
+// Fixed expression-table column widths so the panel keeps a constant width.
+const EXPR_GENE_COL_W = 110;
+const EXPR_SAMPLE_COL_W = 80;
 
 interface IGeneOption {
     label: string;
@@ -822,21 +835,6 @@ export default class MrnaTabContent extends React.Component<
         this.geneQuery = q;
     }
 
-    // Free-text filter for the expression table (matches gene symbol).
-    @observable geneTableQuery: string = '';
-
-    @action.bound
-    setGeneTableQuery(q: string) {
-        this.geneTableQuery = q;
-    }
-
-    // Commit the filter on a trailing debounce so the table isn't re-filtered
-    // and re-rendered on every keystroke — only after the user pauses typing.
-    // The input itself is uncontrolled, so keystrokes don't touch observable
-    // state (and thus don't re-render the table) until this fires.
-    private commitGeneTableQuery = _.debounce((q: string) => {
-        this.setGeneTableQuery(q);
-    }, 300);
 
     @observable isCohortModalOpen: boolean = false;
 
@@ -1083,11 +1081,7 @@ export default class MrnaTabContent extends React.Component<
     // One row per gene that has expression data for the patient's sample(s),
     // each carrying the gene symbol and a per-sample expression value. Sorted
     // by |value| in the first sample column, descending.
-    @computed get expressionTableRows(): {
-        entrezGeneId: number;
-        symbol: string;
-        values: { [sampleId: string]: number };
-    }[] {
+    @computed get expressionTableRows(): ExpressionTableRow[] {
         const sampleIds = new Set(this.expressionTableSampleIds);
         const byGene: {
             [entrezGeneId: number]: { [sampleId: string]: number };
@@ -1120,6 +1114,61 @@ export default class MrnaTabContent extends React.Component<
             },
             'desc'
         );
+    }
+
+    // Patient samples that have at least one expression value — the only ones
+    // worth a column (the rest are listed in a footnote). Derived from the full
+    // row set so the columns stay stable as the table is filtered.
+    @computed get expressionTableSamplesWithData(): string[] {
+        return this.expressionTableSampleIds.filter(id =>
+            this.expressionTableRows.some(r => r.values[id] !== undefined)
+        );
+    }
+
+    // Column label for a patient sample (uses the sample-manager short label).
+    private sampleColumnLabel(id: string): string {
+        const sm = this.props.sampleManager;
+        return sm ? `Sample ${sm.sampleLabels[id]}` : id;
+    }
+
+    // Table columns: a Gene column (filterable, the table's search matches
+    // gene symbol) plus one right-aligned value column per sample.
+    @computed get expressionTableColumns(): Column<ExpressionTableRow>[] {
+        // Keep header labels on a single line (the column widths are fixed, so
+        // a wrapped two-line header would misalign with the body rows).
+        const noWrapHeader = (name: string) => (
+            <span style={{ whiteSpace: 'nowrap' }}>{name}</span>
+        );
+        const geneCol: Column<ExpressionTableRow> = {
+            name: 'Gene',
+            width: EXPR_GENE_COL_W,
+            headerRender: noWrapHeader,
+            render: d => <span style={{ fontWeight: 'bold' }}>{d.symbol}</span>,
+            sortBy: d => d.symbol,
+            filter: (d, _f, filterStringUpper) =>
+                !!filterStringUpper &&
+                d.symbol.toUpperCase().indexOf(filterStringUpper) > -1,
+            download: d => d.symbol,
+        };
+        const sampleCols = this.expressionTableSamplesWithData.map(
+            (id): Column<ExpressionTableRow> => ({
+                name: this.sampleColumnLabel(id),
+                width: EXPR_SAMPLE_COL_W,
+                align: 'right',
+                headerRender: noWrapHeader,
+                render: d => (
+                    <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+                        {d.values[id] === undefined
+                            ? '—'
+                            : d.values[id].toFixed(2)}
+                    </span>
+                ),
+                sortBy: d => (d.values[id] === undefined ? null : d.values[id]),
+                download: d =>
+                    d.values[id] === undefined ? '' : `${d.values[id]}`,
+            })
+        );
+        return [geneCol, ...sampleCols];
     }
 
     // Genes where the patient's highlighted sample(s) fall in the top or bottom
@@ -1507,23 +1556,29 @@ export default class MrnaTabContent extends React.Component<
                     />
                 </div>
                 {this.renderCohortSummaryBar()}
-                <div
-                    style={{
-                        display: 'flex',
-                        gap: 24,
-                        alignItems: 'flex-start',
-                        marginTop: 16,
-                        // Don't set overflowX here: per CSS, a non-visible
-                        // overflow on one axis forces the other to compute to
-                        // 'auto', which would turn this row into a vertical
-                        // clipping box and cut off the chart's bottom axis. The
-                        // chart (ChartContainer) and the table each scroll
-                        // horizontally on their own.
-                    }}
-                >
-                    {this.renderExpressionTable()}
-                    {this.renderChart()}
-                </div>
+                {this.isMrnaDataPending ? (
+                    <div style={{ marginTop: 16 }}>
+                        <LoadingIndicator isLoading={true} size="big" center />
+                    </div>
+                ) : (
+                    <div
+                        style={{
+                            display: 'flex',
+                            gap: 24,
+                            alignItems: 'flex-start',
+                            marginTop: 16,
+                            // Don't set overflowX here: per CSS, a non-visible
+                            // overflow on one axis forces the other to compute
+                            // to 'auto', which would turn this row into a
+                            // vertical clipping box and cut off the chart's
+                            // bottom axis. The chart (ChartContainer) and the
+                            // table each scroll horizontally on their own.
+                        }}
+                    >
+                        {this.renderExpressionTable()}
+                        {this.renderChart()}
+                    </div>
+                )}
                 <CoExpressionDialog
                     isOpen={this.coExpressionDialogOpen}
                     onClose={this.closeCoExpressionDialog}
@@ -1659,112 +1714,33 @@ export default class MrnaTabContent extends React.Component<
         );
     }
 
+    // All data the chart and the table need. We await all of it before
+    // rendering either, so we never show a placeholder sized from a guessed
+    // column count (the table's columns depend on which samples have data,
+    // which isn't known until the expression results arrive).
+    @computed get isMrnaDataPending(): boolean {
+        return (
+            this.plotsStore.patientSamplesExpression.isPending ||
+            this.plotsStore.mrnaExpressionDataForGenes.isPending ||
+            this.plotsStore.mrnaTabGenes.isPending
+        );
+    }
+
     // A table of every gene with expression data, one column per patient
     // sample, sorted by |value| in the first sample column.
     private renderExpressionTable() {
-        const sm = this.props.sampleManager;
         const sampleIds = this.expressionTableSampleIds;
-        const labelFor = (id: string) =>
-            sm ? `Sample ${sm.sampleLabels[id]}` : id;
-        const numCell: React.CSSProperties = {
-            textAlign: 'right',
-            fontVariantNumeric: 'tabular-nums',
-        };
-        // Uncontrolled input (defaultValue + debounced onChange) so typing
-        // doesn't re-render the table on every keystroke.
-        const searchBox = (disabled: boolean) => (
-            <input
-                type="text"
-                defaultValue={this.geneTableQuery}
-                onChange={e => this.commitGeneTableQuery(e.currentTarget.value)}
-                placeholder="Filter genes…"
-                disabled={disabled}
-                className="form-control input-sm"
-                style={{ marginBottom: 8, maxWidth: 240 }}
-            />
-        );
-        // Fixed column widths so the table (the left "gutter") keeps a constant
-        // width regardless of how many rows the filter leaves — the panel width
-        // is derived from the sample count, not the rendered gene names, and a
-        // fixed table layout stops columns from reflowing to content.
-        const GENE_COL_W = 110;
-        const SAMPLE_COL_W = 80;
+        const labelFor = (id: string) => this.sampleColumnLabel(id);
         // Extra room reserved to the right of the fixed-width table for the
         // vertical scrollbar, so it never overlaps the last number column.
         const SCROLLBAR_W = 16;
-        if (this.plotsStore.patientSamplesExpression.isPending) {
-            // Skeleton loader: same column shape as the real table, with
-            // shimmering placeholder bars in place of values.
-            const colIds = sampleIds.length > 0 ? sampleIds : [''];
-            const skelWidth = GENE_COL_W + colIds.length * SAMPLE_COL_W;
-            return (
-                <div style={{ flexShrink: 0, width: skelWidth + SCROLLBAR_W }}>
-                    {searchBox(true)}
-                    <table
-                        className={`table table-striped ${styles.expressionTable}`}
-                        style={{ tableLayout: 'fixed', width: skelWidth }}
-                    >
-                        <colgroup>
-                            <col style={{ width: GENE_COL_W }} />
-                            {colIds.map((id, i) => (
-                                <col key={i} style={{ width: SAMPLE_COL_W }} />
-                            ))}
-                        </colgroup>
-                        <thead>
-                            <tr>
-                                <th>Gene</th>
-                                {colIds.map((id, i) => (
-                                    <th key={i} style={numCell}>
-                                        {sampleIds.length > 0
-                                            ? labelFor(id)
-                                            : ' '}
-                                    </th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {Array.from({ length: 12 }).map((_unused, row) => (
-                                <tr key={row}>
-                                    <td>
-                                        <span
-                                            className={styles.skeletonBar}
-                                            style={{ width: 70 + (row % 4) * 14 }}
-                                        />
-                                    </td>
-                                    {colIds.map((id, i) => (
-                                        <td key={i} style={numCell}>
-                                            <span
-                                                className={styles.skeletonBar}
-                                                style={{
-                                                    width: 36 + (i % 3) * 8,
-                                                }}
-                                            />
-                                        </td>
-                                    ))}
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            );
-        }
         const allRows = this.expressionTableRows;
         if (sampleIds.length === 0 || allRows.length === 0) {
             return null;
         }
-        // Apply the free-text gene filter for display.
-        const q = this.geneTableQuery.trim().toLowerCase();
-        const rows = q
-            ? allRows.filter(r => r.symbol.toLowerCase().includes(q))
-            : allRows;
-        // Columns are derived from the full data set (not the filtered rows) so
-        // they stay stable while the user types. Only show columns for samples
-        // that have at least one value; list the rest in a footnote rather than
-        // rendering dead all-dash columns.
-        const samplesWithData = sampleIds.filter(id =>
-            allRows.some(r => r.values[id] !== undefined)
-        );
-        const tableWidth = GENE_COL_W + samplesWithData.length * SAMPLE_COL_W;
+        const samplesWithData = this.expressionTableSamplesWithData;
+        const tableWidth =
+            EXPR_GENE_COL_W + samplesWithData.length * EXPR_SAMPLE_COL_W;
         const samplesWithoutData = sampleIds.filter(
             id => !samplesWithData.includes(id)
         );
@@ -1781,105 +1757,40 @@ export default class MrnaTabContent extends React.Component<
                   } ${
                       noDataLabels.length === 1 ? 'has' : 'have'
                   } no expression data.`;
+        // Initial sort: the first sample column, highest expression first.
+        const firstSampleCol =
+            samplesWithData.length > 0
+                ? this.sampleColumnLabel(samplesWithData[0])
+                : 'Gene';
         return (
-            <div style={{ flexShrink: 0, width: tableWidth + SCROLLBAR_W }}>
-                {searchBox(false)}
-                {rows.length === 0 ? (
-                    <div style={{ color: '#888', padding: '8px 2px' }}>
-                        No genes match “{this.geneTableQuery.trim()}”.
-                    </div>
-                ) : (
-                    <>
-                <div style={{ maxHeight: 420, overflowY: 'auto' }}>
-                    <table
-                        className={`table table-striped ${styles.expressionTable}`}
-                        style={{ tableLayout: 'fixed', width: tableWidth }}
-                    >
-                        <colgroup>
-                            <col style={{ width: GENE_COL_W }} />
-                            {samplesWithData.map(id => (
-                                <col key={id} style={{ width: SAMPLE_COL_W }} />
-                            ))}
-                        </colgroup>
-                        <thead>
-                            <tr>
-                                <th>Gene</th>
-                                {samplesWithData.map(id => (
-                                    <th key={id} style={numCell}>
-                                        {labelFor(id)}
-                                    </th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {rows.map(r => {
-                                const onChart = this.chartGeneEntrezIdSet.has(
-                                    r.entrezGeneId
-                                );
-                                return (
-                                    <tr
-                                        key={r.entrezGeneId}
-                                        onClick={
-                                            onChart
-                                                ? undefined
-                                                : () =>
-                                                      this.addGeneSymbolsToChart(
-                                                          [r.symbol]
-                                                      )
-                                        }
-                                        // Highlight + hover are data-driven CSS
-                                        // classes (the class only changes when
-                                        // the chart selection changes, and hover
-                                        // is pure CSS — see styles.module.scss),
-                                        // so mousing over rows triggers no
-                                        // render.
-                                        className={
-                                            onChart
-                                                ? styles.selected
-                                                : styles.clickable
-                                        }
-                                        style={{
-                                            cursor: onChart
-                                                ? 'default'
-                                                : 'pointer',
-                                        }}
-                                        title={
-                                            onChart
-                                                ? 'Already on chart'
-                                                : 'Click to add this gene to the chart'
-                                        }
-                                    >
-                                        <td style={{ fontWeight: 'bold' }}>
-                                            {r.symbol}
-                                        </td>
-                                        {samplesWithData.map(id => {
-                                            const v = r.values[id];
-                                            return (
-                                                <td key={id} style={numCell}>
-                                                    {v === undefined
-                                                        ? '—'
-                                                        : v.toFixed(2)}
-                                                </td>
-                                            );
-                                        })}
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                </div>
+            <div
+                className={styles.clickableRows}
+                style={{ flexShrink: 0, width: tableWidth + SCROLLBAR_W }}
+            >
+                <FixedHeaderTable<ExpressionTableRow>
+                    columns={this.expressionTableColumns}
+                    data={allRows}
+                    width={tableWidth}
+                    height={400}
+                    rowHeight={25}
+                    headerHeight={25}
+                    sortBy={firstSampleCol}
+                    sortDirection="desc"
+                    numberOfSelectedRows={0}
+                    showControlsAtTop={true}
+                    isSelectedRow={(d: ExpressionTableRow) =>
+                        this.chartGeneEntrezIdSet.has(d.entrezGeneId)
+                    }
+                    onRowClick={(d: ExpressionTableRow) => {
+                        if (!this.chartGeneEntrezIdSet.has(d.entrezGeneId)) {
+                            this.addGeneSymbolsToChart([d.symbol]);
+                        }
+                    }}
+                />
                 {noDataMessage && (
-                    <div
-                        style={{
-                            fontSize: 11,
-                            color: '#888',
-                            marginTop: 6,
-                        }}
-                    >
+                    <div style={{ fontSize: 11, color: '#888', marginTop: 6 }}>
                         {noDataMessage}
                     </div>
-                )}
-                    </>
                 )}
             </div>
         );
