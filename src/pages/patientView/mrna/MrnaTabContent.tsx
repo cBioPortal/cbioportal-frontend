@@ -11,7 +11,10 @@ import {
     VictoryLine,
     VictoryScatter,
 } from 'victory';
-import { CBIOPORTAL_VICTORY_THEME } from 'cbioportal-frontend-commons';
+import {
+    CBIOPORTAL_VICTORY_THEME,
+    DefaultTooltip,
+} from 'cbioportal-frontend-commons';
 import {
     DataFilterValue,
     DiscreteCopyNumberData,
@@ -189,6 +192,52 @@ const ViolinShape: React.FunctionComponent<any> = props => {
             )
             .join(' ') + ' Z';
     return <path d={d} style={pathStyle} />;
+};
+
+// Tooltip overlay with a gene's OncoKB summary and background. `curated` is an
+// OncoKB CuratedGene with summary/background strings.
+function geneBackgroundOverlay(symbol: string, curated: any): JSX.Element {
+    return (
+        <div style={{ maxWidth: 360, fontWeight: 'normal' }}>
+            <div style={{ fontWeight: 'bold', marginBottom: 4 }}>{symbol}</div>
+            {curated.summary && (
+                <div style={{ marginBottom: 6 }}>{curated.summary}</div>
+            )}
+            {curated.background && (
+                <div style={{ fontSize: 12, color: '#555' }}>
+                    {curated.background}
+                </div>
+            )}
+            <div style={{ fontSize: 11, color: '#888', marginTop: 6 }}>
+                Source: OncoKB
+            </div>
+        </div>
+    );
+}
+
+// Custom axis tick label for gene rows: a VictoryLabel that, when OncoKB
+// curates the gene, also shows the gene's summary/background on hover (no
+// icon — hovering the gene name itself triggers it). Victory supplies the
+// positioning props (x/y/text/style); the OncoKB lookup comes in as a prop.
+const GeneTickLabel: React.FunctionComponent<any> = props => {
+    const { oncokbGeneBySymbol, ...labelProps } = props;
+    const raw = labelProps.text;
+    const symbol = String(Array.isArray(raw) ? raw[0] : raw || '');
+    const curated =
+        oncokbGeneBySymbol && oncokbGeneBySymbol[symbol.toUpperCase()];
+    const label = <VictoryLabel {...labelProps} />;
+    if (!curated || (!curated.summary && !curated.background)) {
+        return label;
+    }
+    return (
+        <DefaultTooltip
+            placement="top"
+            mouseEnterDelay={0.2}
+            overlay={geneBackgroundOverlay(symbol, curated)}
+        >
+            <g style={{ cursor: 'pointer' }}>{label}</g>
+        </DefaultTooltip>
+    );
 };
 
 // Fraction of cohort values <= the patient value, using a binary search on
@@ -916,19 +965,27 @@ export default class MrnaTabContent extends React.Component<
     // offers sets only; individual genes are not selectable.
     @computed get groupOptions(): IGeneOption[] {
         const q = this.geneQuery.trim().toLowerCase();
+        // When the OncoKB filter is on, the displayed gene count (and which
+        // sets are shown at all) reflects only the OncoKB cancer genes.
+        const oncoFilter = this.plotsStore.applyOncoGeneFilter;
+        const oncoSet = this.plotsStore.oncokbGeneSymbolSet;
+        const countOf = (genes: string[]) =>
+            oncoFilter
+                ? genes.filter(s => oncoSet.has(s.toUpperCase())).length
+                : genes.length;
         const staticOpts = MRNA_TAB_GENE_GROUPS.filter(
-            g => g.genes.length > 0 && (!q || g.label.toLowerCase().includes(q))
+            g => countOf(g.genes) > 0 && (!q || g.label.toLowerCase().includes(q))
         ).map(g => ({
             value: groupValue(g),
-            label: `${g.label} (${g.genes.length} genes)`,
+            label: `${g.label} (${countOf(g.genes)} genes)`,
         }));
         const dynamic = this.plotsStore.dynamicGroupSymbols;
         const dynamicOpts = MRNA_TAB_PATIENT_GENE_GROUPS.filter(g => {
-            const count = (dynamic[g.id] || []).length;
+            const count = countOf(dynamic[g.id] || []);
             return count > 0 && (!q || g.label.toLowerCase().includes(q));
         }).map(g => ({
             value: `${GENE_GROUP_VALUE_PREFIX}${g.id}`,
-            label: `${g.label} (${(dynamic[g.id] || []).length} genes)`,
+            label: `${g.label} (${countOf(dynamic[g.id] || [])} genes)`,
         }));
         return [...staticOpts, ...dynamicOpts];
     }
@@ -1141,15 +1198,20 @@ export default class MrnaTabContent extends React.Component<
             (byGene[d.entrezGeneId] =
                 byGene[d.entrezGeneId] || {})[d.sampleId] = d.value;
         });
-        const rows = Object.keys(byGene).map(k => {
-            const entrezGeneId = Number(k);
-            const gene = this.plotsStore.allGenesByEntrezId[entrezGeneId];
-            return {
-                entrezGeneId,
-                symbol: (gene && gene.hugoGeneSymbol) || `${entrezGeneId}`,
-                values: byGene[entrezGeneId],
-            };
-        });
+        const oncoFilter = this.plotsStore.applyOncoGeneFilter;
+        const oncoSet = this.plotsStore.oncokbGeneSymbolSet;
+        const rows = Object.keys(byGene)
+            .map(k => {
+                const entrezGeneId = Number(k);
+                const gene = this.plotsStore.allGenesByEntrezId[entrezGeneId];
+                return {
+                    entrezGeneId,
+                    symbol: (gene && gene.hugoGeneSymbol) || `${entrezGeneId}`,
+                    values: byGene[entrezGeneId],
+                };
+            })
+            // Restrict to OncoKB cancer genes when the filter is on (and loaded).
+            .filter(r => !oncoFilter || oncoSet.has(r.symbol.toUpperCase()));
         // Sort by the first sample column that actually has data — a sample
         // with no values for any gene is skipped as a sort key.
         const sortSample = this.expressionTableSampleIds.find(id =>
@@ -1181,6 +1243,34 @@ export default class MrnaTabContent extends React.Component<
         return sm ? `Sample ${sm.sampleLabels[id]}` : id;
     }
 
+    // Info icon + tooltip with the gene's OncoKB summary and background, shown
+    // next to a gene symbol when OncoKB curates it. Returns null otherwise.
+    private renderGeneBackgroundIcon(symbol: string): JSX.Element | null {
+        const curated = this.plotsStore.oncokbGeneBySymbol[
+            symbol.toUpperCase()
+        ];
+        if (!curated || (!curated.summary && !curated.background)) {
+            return null;
+        }
+        return (
+            <DefaultTooltip
+                placement="right"
+                mouseEnterDelay={0.2}
+                overlay={geneBackgroundOverlay(symbol, curated)}
+            >
+                <i
+                    className="fa fa-info-circle"
+                    style={{
+                        marginLeft: 5,
+                        color: '#888',
+                        cursor: 'pointer',
+                        fontWeight: 'normal',
+                    }}
+                />
+            </DefaultTooltip>
+        );
+    }
+
     // Table columns: a Gene column (filterable, the table's search matches
     // gene symbol) plus one right-aligned value column per sample.
     @computed get expressionTableColumns(): Column<ExpressionTableRow>[] {
@@ -1193,7 +1283,12 @@ export default class MrnaTabContent extends React.Component<
             name: 'Gene',
             width: EXPR_GENE_COL_W,
             headerRender: noWrapHeader,
-            render: d => <span style={{ fontWeight: 'bold' }}>{d.symbol}</span>,
+            render: d => (
+                <span style={{ fontWeight: 'bold' }}>
+                    {d.symbol}
+                    {this.renderGeneBackgroundIcon(d.symbol)}
+                </span>
+            ),
             sortBy: d => d.symbol,
             filter: (d, _f, filterStringUpper) =>
                 !!filterStringUpper &&
@@ -1678,7 +1773,15 @@ export default class MrnaTabContent extends React.Component<
                 <h3 style={{ marginTop: 0, marginBottom: 16 }}>
                     {this.chartTitle}
                 </h3>
-                <div style={{ maxWidth: 460, marginBottom: 16 }}>
+                <div
+                    style={{
+                        display: 'flex',
+                        alignItems: 'flex-end',
+                        gap: 16,
+                        marginBottom: 16,
+                    }}
+                >
+                    <div style={{ width: 460 }}>
                     <label
                         style={{
                             fontSize: 12,
@@ -1725,6 +1828,34 @@ export default class MrnaTabContent extends React.Component<
                             )
                         }
                     />
+                    </div>
+                    <label
+                        style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            fontSize: 12,
+                            fontWeight: 'normal',
+                            // Nudge up so the checkbox centers on the select
+                            // input rather than aligning to its bottom edge.
+                            marginBottom: 8,
+                            whiteSpace: 'nowrap',
+                            cursor: 'pointer',
+                            color: '#333',
+                        }}
+                        title="Restrict the chart and table to OncoKB cancer genes"
+                    >
+                        <input
+                            type="checkbox"
+                            checked={this.plotsStore.oncoGenesOnly}
+                            onChange={e =>
+                                this.plotsStore.setOncoGenesOnly(
+                                    e.target.checked
+                                )
+                            }
+                            style={{ marginRight: 6 }}
+                        />
+                        OncoKB cancer genes only
+                    </label>
                 </div>
                 {this.renderCohortSummaryBar()}
                 {this.isMrnaDataPending ? (
@@ -1893,7 +2024,11 @@ export default class MrnaTabContent extends React.Component<
         return (
             this.plotsStore.patientSamplesExpression.isPending ||
             this.plotsStore.mrnaExpressionDataForGenes.isPending ||
-            this.plotsStore.mrnaTabGenes.isPending
+            this.plotsStore.mrnaTabGenes.isPending ||
+            // When the OncoKB filter is on, wait for the curated-gene list so
+            // we don't briefly render the unfiltered set, then filter it.
+            (this.plotsStore.oncoGenesOnly &&
+                this.plotsStore.oncokbCuratedGenes.isPending)
         );
     }
 
@@ -2046,17 +2181,24 @@ export default class MrnaTabContent extends React.Component<
         const categoryDomain: [number, number] = [0, n + 0.5];
         const categoryTickValues = this.genes.map((g, i) => i + 1);
         const categoryTickFormat = this.genes.map(g => g.symbol);
+        // GeneTickLabel renders the gene symbol and, when OncoKB curates the
+        // gene, shows its summary/background on hover.
+        const oncokbGeneBySymbol = this.plotsStore.oncokbGeneBySymbol;
         const categoryTickLabel = (
-            <VictoryLabel style={{ fontSize: 12, fill: '#333' } as any} />
+            <GeneTickLabel
+                style={{ fontSize: 12, fill: '#333' } as any}
+                oncokbGeneBySymbol={oncokbGeneBySymbol}
+            />
         );
         // Swapped layout: the gene labels are the angled -45° x-axis labels.
         // Nudge them left (dx) so the end of each label lines up with its tick
         // — the rotated-baseline padding otherwise drifts the label's end to
         // the right of the tick.
         const categoryTickLabelSwap = (
-            <VictoryLabel
+            <GeneTickLabel
                 style={{ fontSize: 12, fill: '#333' } as any}
                 dx={-8}
+                oncokbGeneBySymbol={oncokbGeneBySymbol}
             />
         );
         // Abbreviate thousands so 4+ digit ticks stay compact: 2000 -> "2k",
