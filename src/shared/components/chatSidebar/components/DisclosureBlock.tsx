@@ -18,7 +18,10 @@ export default class DisclosureBlock extends React.Component<
             <details className={styles.block}>
                 <summary className={styles.summary}>
                     <span className={`${iconClassName} ${styles.icon}`} />
-                    {title}
+                    <span className={styles.title}>{title}</span>
+                    <span
+                        className={`fa-solid fa-chevron-down ${styles.chevron}`}
+                    />
                 </summary>
                 <div className={styles.content}>{children}</div>
             </details>

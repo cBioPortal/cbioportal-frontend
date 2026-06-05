@@ -8,7 +8,7 @@
 }
 
 .summary {
-    display: flex;
+    display: flex !important;
     align-items: center;
     padding: 8px 12px;
     cursor: pointer;
@@ -28,13 +28,14 @@
         color: #888;
     }
 
-    // Custom chevron that rotates when the block is expanded.
-    &::after {
-        content: '›';
-        margin-left: 6px;
-        font-size: 14px;
-        line-height: 1;
-        transition: transform 0.15s ease;
+    .title {
+        flex: 1;
+    }
+
+    .chevron {
+        font-size: 10px;
+        color: #888;
+        transition: transform 0.25s ease-out;
     }
 
     &:hover {
@@ -42,8 +43,8 @@
     }
 }
 
-.block[open] .summary::after {
-    transform: rotate(90deg);
+.block[open] .summary .chevron {
+    transform: rotate(180deg);
 }
 
 .content {
