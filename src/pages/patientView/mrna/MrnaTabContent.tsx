@@ -194,10 +194,6 @@ const ViolinShape: React.FunctionComponent<any> = props => {
     return <path d={d} style={pathStyle} />;
 };
 
-// The compact OncoKB icon (the square oncogenic marker used across the app),
-// not the wide OncoKB wordmark logo which overflows the narrow Gene column.
-const ONCOKB_ICON = require('oncokb-styles/images/oncogenic.svg');
-
 // Tooltip overlay with a gene's OncoKB summary and background. `curated` is an
 // OncoKB CuratedGene with summary/background strings.
 function geneBackgroundOverlay(symbol: string, curated: any): JSX.Element {
@@ -1262,14 +1258,13 @@ export default class MrnaTabContent extends React.Component<
                 mouseEnterDelay={0.2}
                 overlay={geneBackgroundOverlay(symbol, curated)}
             >
-                <img
-                    src={ONCOKB_ICON}
-                    alt="OncoKB"
+                <i
+                    className="fa fa-info-circle"
                     style={{
-                        maxHeight: 12,
                         marginLeft: 5,
+                        color: '#888',
                         cursor: 'pointer',
-                        verticalAlign: 'text-bottom',
+                        fontWeight: 'normal',
                     }}
                 />
             </DefaultTooltip>

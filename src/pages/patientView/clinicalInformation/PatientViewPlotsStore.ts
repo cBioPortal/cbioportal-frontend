@@ -222,7 +222,14 @@ export class PatientViewPlotsStore {
         this._pendingCohortMode = stored.referenceCohortMode;
 
         reaction(
-            () => this.parentStore.clinicalDataForSamples.isComplete,
+            // Short-circuit on _pendingCohortMode so that merely constructing
+            // this store doesn't observe the remoteData (which would eagerly
+            // kick off the patient-data fetch chain) when there is nothing
+            // to apply.
+            () =>
+                this._pendingCohortMode
+                    ? this.parentStore.clinicalDataForSamples.isComplete
+                    : false,
             isComplete => {
                 if (isComplete && this._pendingCohortMode) {
                     if (this._pendingCohortMode !== this.referenceCohortMode) {
