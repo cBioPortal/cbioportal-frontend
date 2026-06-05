@@ -12,6 +12,9 @@ interface ISampleInlineProps {
     sample: ClinicalDataBySampleId;
     tooltipEnabled?: boolean;
     extraTooltipText?: string;
+    // Additional line(s) rendered in normal body text just under the sample
+    // id heading. Use this for non-heading details (e.g. an expression value).
+    extraTooltipBody?: React.ReactNode;
     additionalContent?: JSX.Element | null;
     hideClinicalTable?: boolean;
     onSelectGenePanel?: (name: string) => void;
@@ -38,7 +41,7 @@ export default class SampleInline extends React.Component<
     }
 
     public tooltipContent() {
-        const { sample, extraTooltipText } = this.props;
+        const { sample, extraTooltipText, extraTooltipBody } = this.props;
 
         return (
             <div style={{ maxHeight: 400, maxWidth: 600, overflow: 'auto' }}>
@@ -49,6 +52,11 @@ export default class SampleInline extends React.Component<
                     {sample.id}
                 </h5>
                 {extraTooltipText && <h5>{extraTooltipText}</h5>}
+                {extraTooltipBody && (
+                    <div style={{ fontSize: 13, color: '#333', margin: '2px 0 4px' }}>
+                        {extraTooltipBody}
+                    </div>
+                )}
                 {!this.props.hideClinicalTable && (
                     <ClinicalInformationPatientTable
                         showFilter={false}

@@ -22,6 +22,7 @@ import {
     GenericAssayMetaFilter,
 } from 'cbioportal-ts-api-client';
 import { getClient } from '../../../shared/api/cbioportalClientInstance';
+import { PatientViewPlotsStore } from './PatientViewPlotsStore';
 import internalClient from '../../../shared/api/cbioportalInternalClientInstance';
 import oncokbClient from '../../../shared/api/oncokbClientInstance';
 import { computed, observable, action, makeObservable } from 'mobx';
@@ -340,9 +341,14 @@ export class PatientViewPageStore {
         this._sampleId = sampleId;
 
         this.studyId = studyId;
+
+        this.plotsStore = new PatientViewPlotsStore(this);
     }
 
     public internalClient: CBioPortalAPIInternal;
+
+    // Sub-store for the patient view plots (e.g. the mRNA tab).
+    public readonly plotsStore: PatientViewPlotsStore;
 
     @observable public activeLocus: string | undefined;
     @observable public activeTabId = '';
