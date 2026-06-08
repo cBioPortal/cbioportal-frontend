@@ -4,6 +4,8 @@ import { getBrowserWindow } from 'cbioportal-frontend-commons';
 // be executed server-side (e.g. MCP tools) and its result arrives over the
 // stream rather than being produced here.
 export const CLIENT_TOOL_NAMES = new Set<string>([
+    'get_current_page',
+    'navigate_to_url',
     'navigate_to_study',
     'query_available_charts',
     'apply_study_filter',
@@ -19,6 +21,10 @@ export async function executeToolCall(
     args: Record<string, unknown>
 ): Promise<unknown> {
     switch (toolName) {
+        case 'get_current_page':
+            return getCurrentPage();
+        case 'navigate_to_url':
+            return navigateToUrl(args);
         case 'navigate_to_study':
             return navigateToStudy(args);
         case 'query_available_charts':
@@ -29,6 +35,53 @@ export async function executeToolCall(
             return clearStudyFilter(args);
         default:
             return { error: `Unknown tool: ${toolName}` };
+    }
+}
+
+function getCurrentPage(): unknown {
+    try {
+        const routingStore = getBrowserWindow().routingStore;
+        const location = routingStore?.location;
+        if (!location) {
+            return { error: 'Routing store not available' };
+        }
+        return {
+            pathname: location.pathname,
+            search: location.search || '',
+            hash: location.hash || '',
+            href: window.location.href,
+        };
+    } catch (e) {
+        return { error: e instanceof Error ? e.message : String(e) };
+    }
+}
+
+function navigateToUrl(args: Record<string, unknown>): unknown {
+    const url = args.url as string;
+    if (!url) return { error: 'url is required' };
+    try {
+        // Parse the URL to extract the pathname + search + hash.
+        // Supports both full URLs (https://cbioportal.org/study?id=x) and
+        // relative paths (/study?id=x).
+        let pathname: string;
+        let search: string;
+        let hash: string;
+        if (url.startsWith('http://') || url.startsWith('https://')) {
+            const parsed = new URL(url);
+            pathname = parsed.pathname;
+            search = parsed.search;
+            hash = parsed.hash;
+        } else {
+            // Relative URL — use URL with a dummy base to parse
+            const parsed = new URL(url, 'http://localhost');
+            pathname = parsed.pathname;
+            search = parsed.search;
+            hash = parsed.hash;
+        }
+        getBrowserWindow().routingStore.push(`${pathname}${search}${hash}`);
+        return { success: true, navigatedTo: `${pathname}${search}${hash}` };
+    } catch (e) {
+        return { error: e instanceof Error ? e.message : String(e) };
     }
 }
 
