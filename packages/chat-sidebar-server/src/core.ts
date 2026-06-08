@@ -29,16 +29,59 @@ export const MODEL = SUGGEST_MODEL;
 
 // Per-process paper cache. Persistent on the Express server; per-warm-Lambda
 // on Vercel (each warm function reuses; cold starts fetch fresh from PMC).
-const paperCache = new Map<string, PaperContext>();
+//
+// Two subtleties this structure handles, both of which caused
+// coadread_tcga_pub (and any cold study) to get frozen as "abstract only":
+//   1. In-flight coalescing. The sidebar fires /paper-status, /highlights, and
+//      /suggest for the same study at mount. Without dedup, all three race into
+//      fetchPaperForStudy at once — a self-inflicted burst of NCBI elink calls
+//      that trips NCBI's 3-req/s/IP limit, so elink 429s and the PMC hop is
+//      lost. Sharing one Promise per study collapses the burst to a single
+//      fetch.
+//   2. Don't freeze degraded results. A 'pmc' result is the real full text and
+//      is cached for good. An 'abstract'/'none' result is usually a transient
+//      upstream miss, so we keep it only briefly and let the next call retry,
+//      instead of pinning the study to degraded grounding for the life of the
+//      warm Lambda.
+interface PaperCacheEntry {
+    ctx: PaperContext;
+    // 0 = never expires (successful full text); otherwise epoch ms.
+    expiresAt: number;
+}
+const paperCache = new Map<string, PaperCacheEntry>();
+const inFlightPaper = new Map<string, Promise<PaperContext>>();
+
+// How long to hold a degraded (abstract/none) result before retrying. Long
+// enough to absorb a render's worth of concurrent calls, short enough that a
+// transient NCBI failure self-heals within a few minutes.
+const DEGRADED_TTL_MS = 5 * 60_000;
 
 export async function getPaperContext(
     studyId: string
 ): Promise<PaperContext> {
-    const cached = paperCache.get(studyId);
-    if (cached) return cached;
-    const ctx = await fetchPaperForStudy(studyId);
-    paperCache.set(studyId, ctx);
-    return ctx;
+    const entry = paperCache.get(studyId);
+    if (entry && (entry.expiresAt === 0 || entry.expiresAt > Date.now())) {
+        return entry.ctx;
+    }
+
+    const pending = inFlightPaper.get(studyId);
+    if (pending) return pending;
+
+    const p = (async () => {
+        try {
+            const ctx = await fetchPaperForStudy(studyId);
+            paperCache.set(studyId, {
+                ctx,
+                expiresAt:
+                    ctx.source === 'pmc' ? 0 : Date.now() + DEGRADED_TTL_MS,
+            });
+            return ctx;
+        } finally {
+            inFlightPaper.delete(studyId);
+        }
+    })();
+    inFlightPaper.set(studyId, p);
+    return p;
 }
 
 function buildSuggestSystemPrompt(paper: PaperContext): string {

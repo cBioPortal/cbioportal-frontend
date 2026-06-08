@@ -25,27 +25,70 @@ const BIOC_BASE =
 
 const MAX_PAPER_CHARS = 200_000;
 
+// NCBI asks every automated client to identify itself with tool + email, and
+// gives api_key holders a 10-req/s/IP limit instead of the anonymous 3/s. On
+// Vercel's shared datacenter egress that lower limit is exactly what was
+// dropping the elink (PMID -> PMCID) call. Set NCBI_API_KEY in the Vercel env
+// to lift it; tool/email work without a key.
+const NCBI_API_KEY = process.env.NCBI_API_KEY || '';
+const NCBI_TOOL = 'cbioportal-chat-sidebar';
+const NCBI_EMAIL = process.env.NCBI_EMAIL || 'cbioportal-dev@cbioportal.org';
+
+// Append NCBI's identification + rate-limit params to a eutils URL.
+function withNcbiParams(url: string): string {
+    const u = new URL(url);
+    u.searchParams.set('tool', NCBI_TOOL);
+    u.searchParams.set('email', NCBI_EMAIL);
+    if (NCBI_API_KEY) u.searchParams.set('api_key', NCBI_API_KEY);
+    return u.toString();
+}
+
+function sleep(ms: number): Promise<void> {
+    return new Promise(r => setTimeout(r, ms));
+}
+
+// fetch with a per-attempt timeout and small backoff retries on transient
+// failures (network error, timeout, 429, or 5xx). A single dropped request to
+// NCBI used to lose the whole PMC hop; retrying recovers from the throttling
+// that hits cloud egress IPs. The timeout matters because a stuck NCBI socket
+// would otherwise hang for the whole serverless budget (paper-status has 30s).
+async function fetchWithRetry(
+    url: string,
+    retries = 2,
+    backoffMs = 400,
+    timeoutMs = 8000
+): Promise<Response | null> {
+    for (let attempt = 0; attempt <= retries; attempt++) {
+        try {
+            const r = await fetch(url, {
+                signal: AbortSignal.timeout(timeoutMs),
+            });
+            if (r.ok) return r;
+            // 4xx other than 429 won't change on retry — give up immediately.
+            if (r.status !== 429 && r.status < 500) return r;
+        } catch {
+            /* network error or timeout — fall through to retry */
+        }
+        if (attempt < retries) await sleep(backoffMs * (attempt + 1));
+    }
+    return null;
+}
+
 export async function fetchStudy(studyId: string): Promise<Study> {
     const r = await fetch(
         `${CBIO_API}/api/studies/${encodeURIComponent(studyId)}`
     );
-    if (!r.ok)
-        throw new Error(`cBioPortal study ${studyId}: HTTP ${r.status}`);
+    if (!r.ok) throw new Error(`cBioPortal study ${studyId}: HTTP ${r.status}`);
     return (await r.json()) as Study;
 }
 
 // NCBI sometimes returns malformed JSON or HTML error pages; never let a single
 // flaky upstream call crash the whole paper-context fetch.
 async function safeJson(url: string): Promise<any | null> {
+    const r = await fetchWithRetry(url);
+    if (!r || !r.ok) return null;
     try {
-        const r = await fetch(url);
-        if (!r.ok) return null;
-        const text = await r.text();
-        try {
-            return JSON.parse(text);
-        } catch {
-            return null;
-        }
+        return JSON.parse(await r.text());
     } catch {
         return null;
     }
@@ -53,7 +96,9 @@ async function safeJson(url: string): Promise<any | null> {
 
 async function pmidToPmcid(pmid: string): Promise<string | null> {
     const data = await safeJson(
-        `${NCBI_EUTILS}/elink.fcgi?dbfrom=pubmed&db=pmc&id=${pmid}&retmode=json`
+        withNcbiParams(
+            `${NCBI_EUTILS}/elink.fcgi?dbfrom=pubmed&db=pmc&id=${pmid}&retmode=json`
+        )
     );
     if (!data) return null;
     for (const ls of data?.linksets ?? []) {
@@ -88,16 +133,14 @@ async function fetchPmcFullText(pmcid: string): Promise<string | null> {
 }
 
 async function fetchPubmedAbstract(pmid: string): Promise<string | null> {
-    try {
-        const r = await fetch(
+    const r = await fetchWithRetry(
+        withNcbiParams(
             `${NCBI_EUTILS}/efetch.fcgi?db=pubmed&id=${pmid}&rettype=abstract&retmode=text`
-        );
-        if (!r.ok) return null;
-        const text = await r.text();
-        return text.trim() || null;
-    } catch {
-        return null;
-    }
+        )
+    );
+    if (!r || !r.ok) return null;
+    const text = await r.text();
+    return text.trim() || null;
 }
 
 export async function fetchPaperForStudy(
