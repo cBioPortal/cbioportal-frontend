@@ -1,0 +1,151 @@
+{
+    "protocolVersion": "2025-06-18",
+    "serverInfo": {
+        "name": "cbioportal-portal",
+        "version": "0.1.0"
+    },
+    "capabilities": {
+        "resources": {},
+        "tools": {}
+    },
+    "transport": {
+        "kind": "postMessage",
+        "framing": "jsonrpc-2.0",
+        "envelope": "mcp",
+        "requestShape": "{ \"envelope\": \"mcp\", \"request\": <jsonrpc-2.0 request> }",
+        "responseShape": "{ \"envelope\": \"mcp\", \"response\": <jsonrpc-2.0 response> }"
+    },
+    "methods": [
+        "initialize",
+        "resources/list",
+        "resources/read",
+        "tools/list",
+        "tools/call"
+    ],
+    "resources": [
+        {
+            "uri": "cbioportal://current-view",
+            "name": "Current view",
+            "description": "Open study, queried genes, and active results-view tab.",
+            "mimeType": "application/json"
+        },
+        {
+            "uri": "cbioportal://location",
+            "name": "URL / location",
+            "description": "Current results-view URL: href, path, parsed query params, and active tab. The portal is fully URL-driven, so this IS the page state.",
+            "mimeType": "application/json"
+        },
+        {
+            "uri": "cbioportal://page-inventory",
+            "name": "Page inventory",
+            "description": "Alteration buckets, gene tracks, and tabs actually rendered right now.",
+            "mimeType": "application/json"
+        }
+    ],
+    "tools": [
+        {
+            "name": "capture_viewport",
+            "description": "Screenshot the current cBioPortal viewport (PNG), excluding the chat sidebar. Waits for network idle first.",
+            "scope": "read",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "waitForIdle": {
+                        "type": "boolean",
+                        "default": true
+                    }
+                }
+            }
+        },
+        {
+            "name": "annotate_elements",
+            "description": "Place paper-grounded beacons on oncoprint legend labels, gene tracks, or tabs.",
+            "scope": "act",
+            "inputSchema": {
+                "type": "object",
+                "required": [
+                    "annotations"
+                ],
+                "properties": {
+                    "annotations": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "required": [
+                                "target",
+                                "note"
+                            ],
+                            "properties": {
+                                "target": {
+                                    "type": "object"
+                                },
+                                "note": {
+                                    "type": "string"
+                                },
+                                "quote": {
+                                    "type": "string"
+                                },
+                                "importance": {
+                                    "enum": [
+                                        "high",
+                                        "medium",
+                                        "low"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "name": "clear_annotations",
+            "description": "Remove beacons previously placed on the page.",
+            "scope": "act",
+            "inputSchema": {
+                "type": "object",
+                "properties": {}
+            }
+        },
+        {
+            "name": "navigate",
+            "description": "URL-driven navigation (soft, no reload). Set the path and/or query params: switch tab (path \"results/survival\"), change genes ({gene_list:\"TP53 KRAS\"}), thresholds, plot selections — anything URL-encoded. Read cbioportal://location first to see the current state.",
+            "scope": "act",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "path": {
+                        "type": "string",
+                        "description": "e.g. \"results/mutations\". Omit to keep current tab."
+                    },
+                    "params": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        "description": "Query params to merge. null clears a param."
+                    },
+                    "clear": {
+                        "type": "boolean",
+                        "default": false
+                    },
+                    "replace": {
+                        "type": "boolean",
+                        "default": false
+                    }
+                }
+            }
+        }
+    ],
+    "security": {
+        "originAllowlist": true,
+        "scopes": [
+            "read",
+            "act"
+        ],
+        "notes": "Exact-origin allowlist; per-origin scope read|act. tools/list hides 'act' tools from read-only peers and tools/call re-enforces. 'navigate' is further constrained by the server's writableParams allowlist."
+    }
+}
