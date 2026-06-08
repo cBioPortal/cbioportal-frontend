@@ -895,6 +895,7 @@ export default class ResultsViewPage extends React.Component<
                         studyIds={studyIds}
                         genes={this.resultsViewPageStore.hugoGeneSymbols}
                         tab={this.resultsViewPageStore.tabId}
+                        urlWrapper={this.resultsViewPageStore.urlWrapper}
                     />
                 </>
             );

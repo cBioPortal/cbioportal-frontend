@@ -6,6 +6,7 @@ import {
     action,
     runInAction,
     computed,
+    reaction,
 } from 'mobx';
 import { getLoadConfig } from 'config/config';
 import AlterationBeacons from './AlterationBeacons';
@@ -15,12 +16,30 @@ import {
     waitForNetworkIdle,
     waitForViewReady,
 } from './screenshot';
+import { HostPortalContext, ViewSource } from './PortalContext';
+import { PortalMcpServer } from './portalMcpServer';
+import ResultsViewURLWrapper from 'pages/resultsView/ResultsViewURLWrapper';
 import './ChatSidebar.scss';
 
 interface IChatSidebarProps {
     studyIds: string[] | undefined;
     genes?: string[];
     tab?: string;
+    // When present (results view), the sidebar also stands up a postMessage MCP
+    // server over the page so any allowlisted in-browser agent can read the
+    // view/inventory, screenshot, annotate, and URL-navigate. Opt-in via
+    // localStorage 'chat-sidebar:mcp' = '1' so prod behavior is unchanged.
+    urlWrapper?: ResultsViewURLWrapper;
+}
+
+// Gate the MCP server so it adds no observers/listeners unless explicitly
+// enabled. Nothing consumes it yet; this keeps it off the hot path by default.
+function portalMcpEnabled(): boolean {
+    try {
+        return localStorage.getItem('chat-sidebar:mcp') === '1';
+    } catch {
+        return false;
+    }
 }
 
 type DisabledReason = 'multi-study' | 'no-full-text';
@@ -47,7 +66,10 @@ function readStoredOpen(): boolean {
 }
 
 @observer
-export default class ChatSidebar extends React.Component<IChatSidebarProps, {}> {
+export default class ChatSidebar extends React.Component<
+    IChatSidebarProps,
+    {}
+> {
     @observable open = readStoredOpen();
     // Mirrors the iframe's model dropdown selection. The iframe is the
     // source of truth (it owns localStorage); we just listen for its
@@ -66,6 +88,8 @@ export default class ChatSidebar extends React.Component<IChatSidebarProps, {}> 
     }
 
     private iframeRef = React.createRef<HTMLIFrameElement>();
+    private portalContext?: HostPortalContext;
+    private mcpServer?: PortalMcpServer;
 
     @action.bound
     toggle() {
@@ -108,7 +132,9 @@ export default class ChatSidebar extends React.Component<IChatSidebarProps, {}> 
         });
         try {
             const r = await fetch(
-                `${getChatServerBase()}/api/chat/paper-status?studyId=${encodeURIComponent(studyId)}`
+                `${getChatServerBase()}/api/chat/paper-status?studyId=${encodeURIComponent(
+                    studyId
+                )}`
             );
             if (!r.ok) throw new Error(`HTTP ${r.status}`);
             const data: PaperStatus = await r.json();
@@ -141,6 +167,76 @@ export default class ChatSidebar extends React.Component<IChatSidebarProps, {}> 
         window.addEventListener('message', this.onMessage);
         this.syncBodyClass();
         if (this.singleStudyId) this.fetchPaperStatus(this.singleStudyId);
+        this.startPortalMcp();
+    }
+
+    // Build a ViewSource over the results-view urlWrapper and stand up the
+    // postMessage MCP server. The ViewSource uses getters so every read is live
+    // against the current props / urlWrapper observables.
+    private startPortalMcp() {
+        const urlWrapper = this.props.urlWrapper;
+        if (!urlWrapper || this.mcpServer || !portalMcpEnabled()) return;
+
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
+        const self = this;
+        const viewSource: ViewSource = {
+            get studyIds() {
+                return self.props.studyIds;
+            },
+            get genes() {
+                return self.props.genes;
+            },
+            get tab() {
+                return self.props.tab;
+            },
+            get href() {
+                return window.location.href;
+            },
+            get path() {
+                return urlWrapper.pathName;
+            },
+            get query() {
+                return (urlWrapper.query as unknown) as Record<string, string>;
+            },
+            get tabId() {
+                return urlWrapper.tabId ?? null;
+            },
+            updateURL(params, path, clear, replace) {
+                urlWrapper.updateURL(params as any, path, clear, replace);
+            },
+            subscribe(cb) {
+                return reaction(
+                    () => [
+                        urlWrapper.tabId,
+                        (self.props.genes ?? []).join(','),
+                        (self.props.studyIds ?? []).join(','),
+                    ],
+                    () => cb()
+                );
+            },
+        };
+
+        let serverOrigin = '';
+        try {
+            serverOrigin = new URL(getChatServerBase()).origin;
+        } catch {
+            /* leave empty — no origin will be allowlisted */
+        }
+
+        this.portalContext = new HostPortalContext(viewSource);
+        this.mcpServer = new PortalMcpServer(this.portalContext, {
+            allowedOrigins: serverOrigin ? [serverOrigin] : [],
+            // The sidebar iframe (served from serverOrigin) is trusted to act;
+            // any other allowlisted peer is read-only until opted in.
+            scopeFor: origin => (origin === serverOrigin ? 'act' : 'read'),
+            // Let agents drive tab + plot selection; cohort/study swaps stay manual.
+            writableParams: [
+                'gene_list',
+                'plots_horz_selection',
+                'plots_vert_selection',
+            ],
+        });
+        this.mcpServer.start();
     }
 
     componentDidUpdate(prev: IChatSidebarProps) {
@@ -161,6 +257,8 @@ export default class ChatSidebar extends React.Component<IChatSidebarProps, {}> 
     componentWillUnmount() {
         window.removeEventListener('message', this.onMessage);
         document.body.classList.remove('chat-sidebar-closed');
+        this.mcpServer?.stop();
+        this.portalContext?.dispose();
     }
 
     onMessage = async (e: MessageEvent) => {
