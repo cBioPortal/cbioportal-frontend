@@ -25,6 +25,16 @@ if ! command -v docker >/dev/null 2>&1; then
     exit 1
 fi
 
+# Resolve CBIOPORTAL_URL on the HOST before launching the container.
+# The same with-env.sh wrapper is used everywhere — pass `true` as the
+# command so it exits cleanly after resolution. We re-export resulting
+# vars so the `docker run -e` lines below pick them up.
+if [[ -z "${CBIOPORTAL_URL:-}" ]]; then
+    if [[ -n "${CIRCLECI:-}" || -n "${NETLIFY:-}" || -n "${BRANCH_ENV:-}" ]]; then
+        eval "$(bash ../scripts/env_vars.sh)"
+    fi
+fi
+
 # Pin the image to the @playwright/test version declared in package.json.
 # Any drift between the image and the library produces flaky comparisons,
 # so this MUST stay in lockstep. The custom CI image is tagged with the
@@ -33,7 +43,7 @@ PLAYWRIGHT_VERSION=$(node -p "require('./package.json').devDependencies['@playwr
 IMAGE="ghcr.io/cbioportal/cbioportal-frontend-playwright-ci:v${PLAYWRIGHT_VERSION}-jammy"
 
 echo "Playwright Docker image: ${IMAGE}"
-echo "Target: ${CBIOPORTAL_URL:-https://www.cbioportal.org}"
+echo "Target: ${CBIOPORTAL_URL:-https://www.cbioportal.org (playwright.config.ts default)}"
 
 # --ipc=host       avoids Chromium crashes from the default 64 MB shm
 # --user           writes files as the host user so snapshots aren't root-owned
@@ -56,16 +66,23 @@ if [[ "${LOCALDEV}" != "0" ]]; then
     LOCALDEV_ARGS+=(--add-host=host.docker.internal:host-gateway)
 fi
 
+# The CI image is built for linux/amd64 only; on Apple Silicon we need
+# Rosetta emulation. Passing --platform on amd64 hosts is harmless.
+PLATFORM_ARGS=(--platform linux/amd64)
+
 exec docker run --rm -i \
+    "${PLATFORM_ARGS[@]}" \
     --ipc=host \
     --user "$(id -u):$(id -g)" \
     -v "$(pwd):/work" \
     -w /work \
     -e PW_DOCKER=1 \
+    -e PW_REMAP_LOCALHOST=1 \
     -e HOME=/tmp \
-    -e CBIOPORTAL_URL="${CBIOPORTAL_URL:-https://www.cbioportal.org}" \
+    -e CBIOPORTAL_URL="${CBIOPORTAL_URL:-}" \
     -e CI="${CI:-}" \
     -e LOCALDEV="${LOCALDEV}" \
+    -e PW_LOCAL="${PW_LOCAL:-}" \
     ${LOCALDEV_ARGS[@]+"${LOCALDEV_ARGS[@]}"} \
     "${IMAGE}" \
     pnpm exec playwright test "$@"

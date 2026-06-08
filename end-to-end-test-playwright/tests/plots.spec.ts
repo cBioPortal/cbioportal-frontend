@@ -89,7 +89,8 @@ test.describe('plots tab', () => {
             timeout: 20000,
         });
         await expect(page.locator(METHYLATION_OPTION_SELECTION_BOX)).toHaveText(
-            "TP53;WRAP53 (cg06587969): TSS1500;5'UTR;1stExon"
+            "TP53;WRAP53 (cg06587969): TSS1500;5'UTR;1stExon",
+            { timeout: 20000 }
         );
     });
 });

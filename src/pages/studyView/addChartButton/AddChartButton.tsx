@@ -55,6 +55,8 @@ import ReactSelect from 'react-select';
 import { GenericAssayMeta } from 'cbioportal-ts-api-client';
 import { DataTypeConstants } from 'shared/constants';
 import { Else, If, Then } from 'react-if';
+import SaveChartSettingsButton from './SaveChartSettingsButton';
+import { ServerConfigHelpers } from 'config/config';
 
 export interface IAddChartTabsProps {
     store: StudyViewPageStore;
@@ -836,6 +838,21 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                 }}
                 ref={this.tabsDivRef}
             >
+                {ServerConfigHelpers.sessionServiceIsEnabled() && (
+                    <div
+                        style={{
+                            display: 'flex',
+                            justifyContent: 'flex-end',
+                            marginBottom: 5,
+                        }}
+                    >
+                        <SaveChartSettingsButton
+                            store={this.props.store}
+                            isLoggedIn={this.props.store.isLoggedIn}
+                            isDirty={this.props.store.isChartSettingsDirty}
+                        />
+                    </div>
+                )}
                 <MSKTabs
                     unmountOnHide={false}
                     activeTabId={this.activeId}

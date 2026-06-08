@@ -1604,8 +1604,14 @@ export class QueryStore {
             this.publicVirtualStudies,
         ],
         invoke: () => {
+            const studyIds = this.cancerStudies.result.map(
+                study => study.studyId
+            );
+            if (studyIds.length === 0) {
+                return Promise.resolve([]);
+            }
             return getInternalClient().fetchResourceDefinitionsUsingPOST({
-                studyIds: this.cancerStudies.result.map(study => study.studyId),
+                studyIds,
             });
         },
         default: [],

@@ -21,6 +21,8 @@ import { getDigitalSlideArchiveIFrameUrl } from 'shared/api/urls';
 import TrialMatchTable from 'pages/patientView/trialMatch/TrialMatchTable';
 import _ from 'lodash';
 import MutationalSignaturesContainer from 'pages/patientView/mutationalSignatures/MutationalSignaturesContainer';
+import MrnaTabContent from 'pages/patientView/mrna/MrnaTabContent';
+import { FeatureFlagEnum } from 'shared/featureFlags';
 import { buildCustomTabs } from 'shared/lib/customTabs/customTabHelpers';
 import * as React from 'react';
 import SampleManager from 'pages/patientView/SampleManager';
@@ -49,6 +51,7 @@ export enum PatientViewPageTabs {
     TrialMatchTab = 'trialMatchTab',
     MutationalSignatures = 'mutationalSignatures',
     PathwayMapper = 'pathways',
+    MRNA = 'mrna',
 }
 
 export const PatientViewResourceTabPrefix = 'openResource_';
@@ -704,6 +707,41 @@ export function tabs(
                 />
             </MSKTab>
         );
+
+    // The mRNA tab is shown only for the MSKCC portal, or when the
+    // "patientMRNATab" feature flag is on (?featureFlags=patientMRNATab) — and
+    // only when the study actually has an mRNA expression profile, so studies
+    // without one don't get an empty tab. The enablement check is evaluated
+    // first so non-enabled portals don't trigger the profile lookup.
+    const mrnaProfilePromise =
+        pageComponent.patientViewPageStore.plotsStore
+            .mrnaExpressionMolecularProfile;
+    if (
+        (getServerConfig().app_name === 'mskcc-portal' ||
+            pageComponent.props.appStore.featureFlagStore.has(
+                FeatureFlagEnum.PATIENT_MRNA_TAB
+            )) &&
+        mrnaProfilePromise.isComplete &&
+        !!mrnaProfilePromise.result
+    ) {
+        tabs.push(
+            <MSKTab
+                key={9}
+                id={PatientViewPageTabs.MRNA}
+                linkText={
+                    <span>
+                        mRNA{' '}
+                        <strong className={'beta-text'}>Beta!</strong>
+                    </span>
+                }
+            >
+                <MrnaTabContent
+                    store={pageComponent.patientViewPageStore}
+                    sampleManager={sampleManager}
+                />
+            </MSKTab>
+        );
+    }
 
     pageComponent.resourceTabs.component &&
         /* @ts-ignore */

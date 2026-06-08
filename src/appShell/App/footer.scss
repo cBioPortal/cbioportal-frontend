@@ -27,4 +27,29 @@
             padding-left: 0;
         }
     }
+
+    .clickhouse-badge {
+        display: inline-block;
+
+        &:hover {
+            text-decoration: none;
+            opacity: 0.75;
+        }
+
+        .clickhouse-badge-logo {
+            display: block;
+            height: 36px;
+            width: auto;
+        }
+    }
+
+    @media (max-width: 767px) {
+        padding: 0 15px;
+
+        .footer-layout {
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+        }
+    }
 }

@@ -58,6 +58,7 @@ export type IFixedHeaderTableProps<T> = {
     removeAll?: (data: T[]) => void;
     showSelectableNumber?: boolean;
     isSelectedRow?: (data: T) => boolean;
+    onRowClick?: (data: T) => void;
     headerClassName?: string;
     highlightedRowClassName?: (data: T) => string;
     autoFocusSearchAfterRendering?: boolean;
@@ -499,6 +500,12 @@ export default class FixedHeaderTable<T> extends React.Component<
                             }
                             rowGetter={this.rowGetter}
                             rowClassName={this.rowClassName}
+                            onRowClick={
+                                this.props.onRowClick
+                                    ? (info: any) =>
+                                          this.props.onRowClick!(info.rowData)
+                                    : undefined
+                            }
                             headerClassName={classNames(
                                 styles.headerColumn,
                                 this.props.headerClassName

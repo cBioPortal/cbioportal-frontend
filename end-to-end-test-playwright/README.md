@@ -26,6 +26,9 @@ runs are for fast dev iteration; they don't count as references.
 - pnpm (the rest of the repo uses pnpm; `corepack enable` will pick up the
   version pinned in the root `package.json`'s `packageManager` field)
 - Docker (only for the canonical/Docker lane)
+  - **Apple Silicon (M1/M2/M3)**: the CI image is amd64-only and runs via
+    Rosetta emulation automatically — Docker Desktop must have "Use Rosetta
+    for x86_64/amd64 emulation on Apple Silicon" enabled in settings
 
 ```bash
 # --ignore-workspace is required because this suite lives below the
@@ -44,6 +47,15 @@ pnpm exec playwright install chromium   # only needed for host-mode runs
 pnpm run test:docker                    # verify against tracked baselines
 pnpm run test:docker:update             # regenerate tracked baselines
 
+# Local-DB lane (Docker against a localhost backend, runs tests/local only)
+pnpm run test:docker:localdb            # verify against tracked baselines
+pnpm run test:docker:localdb:update     # regenerate tracked baselines
+
+# Local-DB lane (host-mode, scratch snapshots) — for fast local iteration
+pnpm run test:localdb                   # verify against local scratch snapshots
+pnpm run test:localdb:update            # regenerate local scratch snapshots
+pnpm run test:localdb:ui                # interactive runner + trace viewer
+
 # Host-mode (fast, scratch snapshots) — for local iteration
 pnpm test                               # verify against local scratch
 pnpm run test:update                    # regenerate local scratch
@@ -55,9 +67,45 @@ pnpm run report                         # open the last HTML report
 CBIOPORTAL_URL=https://rc.cbioportal.org pnpm run test:docker
 ```
 
+The `test:docker:localdb` scripts set `PW_LOCAL=1` and point
+`CBIOPORTAL_URL` at `http://localhost:8080`, then forward `tests/local`
+to the wrapper. They assume a local cBioPortal backend is already
+listening on port 8080; the wrapper's `host.docker.internal` remap
+makes that reachable from inside the Playwright container.
+
+The `test:localdb` and `test:localdb:update` commands run the same
+`tests/local` suite directly on the host (no Docker) against a backend
+already listening on `http://localhost:8080`. They write scratch
+snapshots to `tests/**/__local_snapshots__/` (gitignored) so they never
+overwrite the tracked Docker references. `LOCALDEV=0` is set explicitly
+because the backend serves the full app directly — no separate frontend
+dev server is involved. These commands are the fastest way to iterate on
+localdb tests without waiting for a Docker pull.
+
 `./scripts/docker-test.sh` is a thin wrapper — anything after the
 script name is forwarded to `playwright test`, so flags like
 `--debug`, `--headed`, `--grep`, `--trace on` all work.
+
+## Pointing at a different backend (CBIOPORTAL_URL)
+
+All test entry points route through `scripts/with-env.sh`, which resolves
+`CBIOPORTAL_URL` in this order — first match wins:
+
+1. **`CBIOPORTAL_URL` already set in your shell** — used as-is. The simple
+   one-off override:
+   ```bash
+   CBIOPORTAL_URL=https://rc.cbioportal.org pnpm test
+   ```
+2. **`BRANCH_ENV` set (local) or `CIRCLECI`/`NETLIFY` set (CI)** — delegate
+   to `../scripts/env_vars.sh`, which picks `../env/${BRANCH}.sh` based on
+   `$BRANCH_ENV` locally, or the PR's target branch in CI. `../env/custom.sh`
+   layers on top for personal overrides.
+3. **Nothing set** — `playwright.config.ts`'s hardcoded default
+   (`https://www.cbioportal.org`) kicks in.
+
+In CI, this means a PR targeting `rc` automatically runs against
+`rc.cbioportal.org`; a PR targeting `master` runs against
+`www.cbioportal.org`; etc. — matching the legacy WebdriverIO behavior.
 
 ## Updating references when a real visual change lands
 
