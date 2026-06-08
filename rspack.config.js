@@ -99,7 +99,12 @@ var sassResourcesLoader = {
 
 var config = {
     stats: 'detailed',
-    devtool: isDev || isTest ? (process.env.DISABLE_SOURCEMAP ? false : 'source-map') : false,
+    devtool:
+        isDev || isTest
+            ? process.env.DISABLE_SOURCEMAP
+                ? false
+                : 'source-map'
+            : false,
     entry: [`babel-polyfill`, `${path.join(src, 'appBootstrapper.tsx')}`],
     output: {
         path: path.resolve(__dirname, 'dist'),
@@ -232,6 +237,15 @@ var config = {
                     from: './packages/chat-sidebar/dist',
                     to: 'chat-sidebar',
                     noErrorOnMissing: true,
+                },
+                // Static, discoverable catalog of the in-page MCP surface,
+                // served at /.well-known/mcp.json on the portal's own origin
+                // (where the postMessage MCP server actually runs). Source of
+                // truth is this committed file, kept in sync with
+                // getServerSpec() by portalMcpServer.spec.ts.
+                {
+                    from: './src/shared/components/chatSidebar/mcp.json',
+                    to: '.well-known/mcp.json',
                 },
             ],
         }), // destination is relative to dist directory
