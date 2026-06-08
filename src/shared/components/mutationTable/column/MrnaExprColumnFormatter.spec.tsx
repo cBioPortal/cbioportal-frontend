@@ -54,5 +54,7 @@ describe('MrnaExprColumnFormatter', () => {
         const wrapper = shallow(<div>{tooltip}</div>);
         assert.include(wrapper.text(), 'Loading expression distribution...');
         assert.notInclude(wrapper.text(), 'mean');
+        assert.notInclude(wrapper.text(), 'Distribution of expression across all samples in this study for this gene:');
+        assert.notInclude(wrapper.text(), 'mRNA z-score');
     });
 });

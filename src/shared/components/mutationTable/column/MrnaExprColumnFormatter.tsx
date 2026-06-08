@@ -434,17 +434,19 @@ export default class MrnaExprColumnFormatter {
                     );
             }
 
-            return (
-                <div>
-                    <span>
-                        Distribution of expression across all samples in this
-                        study for this gene:
-                    </span>
-                    <br />
-                    {rawDistributionLoading ? (
+            if (rawDistributionLoading) {
+                return (
+                    <div
+                        style={{
+                            minWidth: 280,
+                            minHeight: 110,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }}
+                    >
                         <div
                             style={{
-                                margin: '5px 0',
                                 display: 'inline-flex',
                                 alignItems: 'center',
                                 gap: 6,
@@ -455,9 +457,18 @@ export default class MrnaExprColumnFormatter {
                                 Loading expression distribution...
                             </span>
                         </div>
-                    ) : (
-                        distributionChart
-                    )}
+                    </div>
+                );
+            }
+
+            return (
+                <div>
+                    <span>
+                        Distribution of expression across all samples in this
+                        study for this gene:
+                    </span>
+                    <br />
+                    {distributionChart}
                     {rawExprValue !== undefined && (
                         <>
                             <span>
