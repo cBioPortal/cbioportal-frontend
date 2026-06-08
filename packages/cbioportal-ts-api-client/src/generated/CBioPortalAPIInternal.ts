@@ -611,6 +611,21 @@ export type GenericAssayDataFilter = {
         'values': Array < DataFilterValue >
 
 };
+export type GenericAssaySelectionValue = {
+    'stableId': string
+
+        'value': string
+
+};
+export type GenericAssaySelectionFilter = {
+    'patientLevel': boolean
+
+        'profileType': string
+
+        'values': Array < Array < GenericAssaySelectionValue >
+        >
+
+};
 export type GenericAssayEnrichment = {
     'genericEntityMetaProperties': {}
 
@@ -1554,6 +1569,8 @@ export type StudyViewFilter = {
         'geneFilters': Array < GeneFilter >
 
         'genericAssayDataFilters': Array < GenericAssayDataFilter >
+
+        'genericAssaySelectionFilters': Array < GenericAssaySelectionFilter >
 
         'genomicDataFilters': Array < GenomicDataFilter >
 

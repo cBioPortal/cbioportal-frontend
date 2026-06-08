@@ -12,6 +12,7 @@ import {
     chartMetaComparator,
     ChartMetaDataTypeEnum,
     buildGenericAssayFrequencyTableDataFilters,
+    buildGenericAssaySelectionFilter,
     clinicalDataCountComparator,
     customBinsAreValid,
     DataBin,
@@ -24,6 +25,7 @@ import {
     formatFrequency,
     formatNumericalTickValues,
     formatRange,
+    GenericAssayFrequencyTableSelectionFilter,
     ensureBackwardCompatibilityOfFilters,
     GENE_FILTER_QUERY_DEFAULTS,
     geneFilterQueryFromOql,
@@ -44,6 +46,7 @@ import {
     getFilteredStudiesWithSamples,
     getFrequencyStr,
     getGenericAssayFrequencyTableDownloadData,
+    getGenericAssayFrequencyTableSelectedRowKeyGroups,
     getGenericAssayFrequencyTableSelectedRowKeys,
     getGroupedClinicalDataByBins,
     getNonZeroUniqueBins,
@@ -60,6 +63,7 @@ import {
     isDataBinSelected,
     isEveryBinDistinct,
     isFocusedChartShrunk,
+    isFiltered,
     isLogScaleByDataBins,
     isLogScaleByValues,
     isOccupied,
@@ -4218,6 +4222,92 @@ describe('StudyViewUtils', () => {
                         values: [{ value: 'Subtype C' } as DataFilterValue],
                     },
                 ]);
+            });
+
+            it('builds generic assay selection filters for row groups', () => {
+                const filter = buildGenericAssaySelectionFilter(
+                    'profile_type',
+                    true,
+                    [
+                        [
+                            'entityA::Subtype A::profile_type',
+                            'entityB::Subtype B::profile_type',
+                        ],
+                        ['entityC::NA::profile_type'],
+                    ]
+                );
+
+                assert.deepEqual(filter, {
+                    profileType: 'profile_type',
+                    patientLevel: true,
+                    values: [
+                        [
+                            { stableId: 'entityA', value: 'Subtype A' },
+                            { stableId: 'entityB', value: 'Subtype B' },
+                        ],
+                        [{ stableId: 'entityC', value: 'NA' }],
+                    ],
+                });
+            });
+
+            it('restores grouped row keys from generic assay selection filters', () => {
+                const selectedRowKeyGroups =
+                    getGenericAssayFrequencyTableSelectedRowKeyGroups(
+                        [
+                            {
+                                profileType: 'profile_type',
+                                patientLevel: false,
+                                values: [
+                                    [
+                                        {
+                                            stableId: 'entityA',
+                                            value: 'Subtype A',
+                                        },
+                                        {
+                                            stableId: 'entityB',
+                                            value: 'Subtype B',
+                                        },
+                                    ],
+                                    [
+                                        {
+                                            stableId: 'entityC',
+                                            value: 'NA',
+                                        },
+                                    ],
+                                ],
+                            } as GenericAssayFrequencyTableSelectionFilter,
+                        ],
+                        'profile_type'
+                    );
+
+                assert.deepEqual(selectedRowKeyGroups, [
+                    [
+                        'entityA::Subtype A::profile_type',
+                        'entityB::Subtype B::profile_type',
+                    ],
+                    ['entityC::NA::profile_type'],
+                ]);
+            });
+
+            it('treats generic assay selection filters as active filters', () => {
+                assert.isTrue(
+                    isFiltered({
+                        genericAssaySelectionFilters: [
+                            {
+                                profileType: 'profile_type',
+                                patientLevel: false,
+                                values: [
+                                    [
+                                        {
+                                            stableId: 'entityA',
+                                            value: 'Subtype A',
+                                        },
+                                    ],
+                                ],
+                            },
+                        ],
+                    })
+                );
             });
 
             it('splits generic assay frequency table row keys safely from the right', () => {

@@ -233,6 +233,21 @@ export type StudyViewFilterWithSampleIdentifierFilters = StudyViewFilter & {
     sampleIdentifiersSet: { [id: string]: SampleIdentifier[] };
 };
 
+export type GenericAssayFrequencyTableSelectionValue = {
+    stableId: string;
+    value: string;
+};
+
+export type GenericAssayFrequencyTableSelectionFilter = {
+    profileType: string;
+    patientLevel: boolean;
+    values: GenericAssayFrequencyTableSelectionValue[][];
+};
+
+export type StudyViewFilterWithGenericAssaySelectionFilters = StudyViewFilter & {
+    genericAssaySelectionFilters?: GenericAssayFrequencyTableSelectionFilter[];
+};
+
 export type GenomicDataCountWithSampleUniqueKeys = GenomicDataCount & {
     sampleUniqueKeys: string[];
 };
@@ -1177,7 +1192,10 @@ export function getVirtualStudyDescription(
 }
 
 export function isFiltered(
-    filter: Partial<StudyViewFilterWithSampleIdentifierFilters>
+    filter: Partial<
+        StudyViewFilterWithSampleIdentifierFilters &
+            StudyViewFilterWithGenericAssaySelectionFilters
+    >
 ) {
     const flag = !(
         _.isEmpty(filter) ||
@@ -1189,6 +1207,7 @@ export function isFiltered(
             _.isEmpty(filter.mutationDataFilters) &&
             _.isEmpty(filter.namespaceDataFilters) &&
             _.isEmpty(filter.genericAssayDataFilters) &&
+            _.isEmpty(filter.genericAssaySelectionFilters) &&
             _.isEmpty(filter.caseLists) &&
             _.isEmpty(filter.customDataFilters) &&
             (!filter.patientTreatmentFilters ||
@@ -4527,6 +4546,55 @@ export function buildGenericAssayFrequencyTableDataFilters(
             ),
         }))
         .value();
+}
+
+export function buildGenericAssaySelectionFilter(
+    profileType: string,
+    patientLevel: boolean,
+    selectedRowKeyGroups: string[][]
+): GenericAssayFrequencyTableSelectionFilter | undefined {
+    const values = selectedRowKeyGroups
+        .map(group =>
+            _.uniq(group).map(rowKey => {
+                const { stableId, value } =
+                    splitGenericAssayFrequencyTableRowUniqueKey(rowKey);
+                return {
+                    stableId,
+                    value,
+                } as GenericAssayFrequencyTableSelectionValue;
+            })
+        )
+        .filter(group => group.length > 0);
+
+    if (_.isEmpty(values)) {
+        return undefined;
+    }
+
+    return {
+        profileType,
+        patientLevel,
+        values,
+    };
+}
+
+export function getGenericAssayFrequencyTableSelectedRowKeyGroups(
+    genericAssaySelectionFilters: GenericAssayFrequencyTableSelectionFilter[],
+    profileType: string
+): string[][] {
+    return (
+        genericAssaySelectionFilters.find(
+            genericAssaySelectionFilter =>
+                genericAssaySelectionFilter.profileType === profileType
+        )?.values || []
+    ).map(group =>
+        group.map(selectionValue =>
+            getGenericAssayFrequencyTableRowUniqueKey(
+                selectionValue.stableId,
+                selectionValue.value,
+                profileType
+            )
+        )
+    );
 }
 
 export async function invokeGenericAssayDataCount(

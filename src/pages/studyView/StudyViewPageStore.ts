@@ -141,9 +141,12 @@ import {
     getGenericAssayChartUniqueKey,
     getGenericAssayChartDisplayName,
     getGenericAssayEntityLabel,
+    buildGenericAssaySelectionFilter,
     flattenGenericAssayFrequencyTableRows,
     GENERIC_ASSAY_FREQUENCY_TABLE_ENTITY_ID,
+    GenericAssayFrequencyTableSelectionFilter,
     GenericAssayFrequencyTableRow,
+    getGenericAssayFrequencyTableSelectedRowKeyGroups,
     getGenericAssayFrequencyTableUniqueKey,
     splitGenericAssayFrequencyTableRowUniqueKey,
     getGenericAssayDataAsClinicalData,
@@ -2411,7 +2414,11 @@ export class StudyViewPageStore
     }
     // < / comparison groups code>
 
-    @observable private initialFiltersQuery: Partial<StudyViewFilter> = {};
+    @observable private initialFiltersQuery: Partial<
+        StudyViewFilter & {
+            genericAssaySelectionFilters?: GenericAssayFrequencyTableSelectionFilter[];
+        }
+    > = {};
 
     @observable studyIds: string[] = [];
 
@@ -2536,7 +2543,13 @@ export class StudyViewPageStore
     }
 
     @action
-    updateStoreByFilters(filters: Partial<StudyViewFilter>): void {
+    updateStoreByFilters(
+        filters: Partial<
+            StudyViewFilter & {
+                genericAssaySelectionFilters?: GenericAssayFrequencyTableSelectionFilter[];
+            }
+        >
+    ): void {
         // fixes filters in place to ensure backward compatiblity
         // as filter specification changes
         ensureBackwardCompatibilityOfFilters(filters);
@@ -2715,7 +2728,9 @@ export class StudyViewPageStore
     }
 
     @computed
-    get initialFilters(): StudyViewFilter {
+    get initialFilters(): StudyViewFilter & {
+        genericAssaySelectionFilters?: GenericAssayFrequencyTableSelectionFilter[];
+    } {
         let initialFilter = {} as StudyViewFilter;
         if (_.isEmpty(this.queriedSampleIdentifiers.result)) {
             initialFilter.studyIds = this.queriedPhysicalStudyIds.result;
@@ -2723,7 +2738,9 @@ export class StudyViewPageStore
             initialFilter.sampleIdentifiers = this.queriedSampleIdentifiers.result;
         }
 
-        const studyViewFilter: StudyViewFilter = Object.assign(
+        const studyViewFilter: StudyViewFilter & {
+            genericAssaySelectionFilters?: GenericAssayFrequencyTableSelectionFilter[];
+        } = Object.assign(
             {},
             toJS(this.initialFiltersQuery),
             initialFilter
@@ -3760,46 +3777,6 @@ export class StudyViewPageStore
         );
     }
 
-    private getFiltersExcludingChartSampleIdentifierFilter(
-        chartKey: string
-    ): StudyViewFilter {
-        const filters = _.cloneDeep(this.filters);
-        const sampleIdentifiersFilterSets = Array.from(
-            this._chartSampleIdentifiersFilterSet.entries()
-        )
-            .filter(([key]) => key !== chartKey)
-            .map(([, sampleIdentifiers]) => sampleIdentifiers);
-
-        if (!_.isEmpty(sampleIdentifiersFilterSets)) {
-            filters.sampleIdentifiers = intersect<SampleIdentifier>(
-                sampleIdentifiersFilterSets,
-                (sampleIdentifier: any) => {
-                    return (
-                        (sampleIdentifier as SampleIdentifier).sampleId +
-                        (sampleIdentifier as SampleIdentifier).studyId
-                    );
-                }
-            );
-        } else if (_.isEmpty(this.queriedSampleIdentifiers.result)) {
-            filters.studyIds = this.queriedPhysicalStudyIds.result;
-            filters.sampleIdentifiers = [];
-        } else {
-            filters.sampleIdentifiers = this.queriedSampleIdentifiers.result;
-            filters.studyIds = [];
-        }
-
-        return filters;
-    }
-
-    private async getFilteredSamplesExcludingChartSelection(
-        chartKey: string
-    ): Promise<Sample[]> {
-        return this.internalClient.fetchFilteredSamplesUsingPOST({
-            studyViewFilter:
-                this.getFiltersExcludingChartSampleIdentifierFilter(chartKey),
-        });
-    }
-
     private getGenericAssayFrequencyTableProfileMap(
         chart: GenericAssayChart
     ): { [studyId: string]: MolecularProfile } {
@@ -3833,97 +3810,13 @@ export class StudyViewPageStore
               )
             : normalizedGroups;
 
-        if (_.isEmpty(nextGroups)) {
-            runInAction(() => {
-                this._genericAssayFrequencyTableFilterSet.delete(uniqueKey);
-                this._chartSampleIdentifiersFilterSet.delete(uniqueKey);
-            });
-            return;
-        }
-
-        const profileByStudyId =
-            this.getGenericAssayFrequencyTableProfileMap(chart);
-        const baseSamples = await this.getFilteredSamplesExcludingChartSelection(
-            uniqueKey
-        );
-        const filteredSamples = baseSamples.filter(
-            sample => profileByStudyId[sample.studyId] !== undefined
-        );
-
-        if (_.isEmpty(filteredSamples)) {
-            runInAction(() => {
-                this._genericAssayFrequencyTableFilterSet.delete(uniqueKey);
-                this._chartSampleIdentifiersFilterSet.delete(uniqueKey);
-            });
-            return;
-        }
-
-        const stableIds = _.uniq(
-            _.flatMap(nextGroups, group =>
-                group.map(
-                    rowKey =>
-                        splitGenericAssayFrequencyTableRowUniqueKey(rowKey)
-                            .stableId
-                )
-            )
-        );
-        const sampleMolecularIdentifiers = filteredSamples.map(sample => ({
-            sampleId: sample.sampleId,
-            molecularProfileId: profileByStudyId[sample.studyId]
-                .molecularProfileId,
-        }));
-        const data = await getClient().fetchGenericAssayDataInMultipleMolecularProfilesUsingPOST(
-            {
-                projection: 'DETAILED',
-                genericAssayDataMultipleStudyFilter: {
-                    genericAssayStableIds: stableIds,
-                    sampleMolecularIdentifiers,
-                } as GenericAssayDataMultipleStudyFilter,
-            } as any
-        );
-
-        const dataByStableIdAndCaseKey = _.groupBy(
-            data,
-            datum =>
-                `${datum.stableId}::${
-                    chart.patientLevel ? datum.uniquePatientKey : datum.uniqueSampleKey
-                }`
-        );
-        const groupedCases = nextGroups.map(group => {
-            const groupCases = filteredSamples.filter(sample =>
-                group.some(rowKey => {
-                    const { stableId, value } =
-                        splitGenericAssayFrequencyTableRowUniqueKey(rowKey);
-                    const caseKey = chart.patientLevel
-                        ? sample.uniquePatientKey
-                        : sample.uniqueSampleKey;
-                    return (
-                        dataByStableIdAndCaseKey[`${stableId}::${caseKey}`]?.some(
-                            datum => datum.value === value
-                        ) || false
-                    );
-                })
-            );
-            return getFilteredSampleIdentifiers(groupCases);
-        });
-        const selectedCases = intersect<SampleIdentifier>(
-            groupedCases,
-            (sampleIdentifier: any) => {
-                return (
-                    (sampleIdentifier as SampleIdentifier).sampleId +
-                    (sampleIdentifier as SampleIdentifier).studyId
-                );
-            }
-        );
-
         runInAction(() => {
-            this._genericAssayFrequencyTableFilterSet.set(uniqueKey, nextGroups);
-            if (_.isEmpty(selectedCases)) {
-                this._chartSampleIdentifiersFilterSet.delete(uniqueKey);
+            if (_.isEmpty(nextGroups)) {
+                this._genericAssayFrequencyTableFilterSet.delete(uniqueKey);
             } else {
-                this._chartSampleIdentifiersFilterSet.set(
+                this._genericAssayFrequencyTableFilterSet.set(
                     uniqueKey,
-                    selectedCases
+                    nextGroups
                 );
             }
         });
@@ -3932,7 +3825,6 @@ export class StudyViewPageStore
     @action.bound
     resetGenericAssayFrequencyTableFilters(uniqueKey: string): void {
         this._genericAssayFrequencyTableFilterSet.delete(uniqueKey);
-        this._chartSampleIdentifiersFilterSet.delete(uniqueKey);
     }
 
     @action.bound
@@ -4847,14 +4739,45 @@ export class StudyViewPageStore
         return Array.from(this._genericAssayDataFilterSet.values());
     }
 
-    @observable filters!: StudyViewFilter;
+    @computed
+    get genericAssaySelectionFilters(): GenericAssayFrequencyTableSelectionFilter[] {
+        return Array.from(this._genericAssayFrequencyTableFilterSet.entries())
+            .map(([uniqueKey, selectedRowKeyGroups]) => {
+                const chart = this._genericAssayChartMap.get(uniqueKey);
+                if (chart?.chartKind !== 'PROFILE_FREQUENCY_TABLE') {
+                    return undefined;
+                }
+
+                return buildGenericAssaySelectionFilter(
+                    chart.profileType,
+                    !!chart.patientLevel,
+                    selectedRowKeyGroups
+                );
+            })
+            .filter(
+                (
+                    genericAssaySelectionFilter
+                ): genericAssaySelectionFilter is GenericAssayFrequencyTableSelectionFilter =>
+                    genericAssaySelectionFilter !== undefined
+            );
+    }
+
+    @observable filters: StudyViewFilter & {
+        genericAssaySelectionFilters?: GenericAssayFrequencyTableSelectionFilter[];
+    };
 
     /**
      * Filters that are queued and not yet submitted
      */
     @computed
-    get filtersProxy(): StudyViewFilter {
-        const filters: Partial<StudyViewFilter> = {};
+    get filtersProxy(): StudyViewFilter & {
+        genericAssaySelectionFilters?: GenericAssayFrequencyTableSelectionFilter[];
+    } {
+        const filters: Partial<
+            StudyViewFilter & {
+                genericAssaySelectionFilters?: GenericAssayFrequencyTableSelectionFilter[];
+            }
+        > = {};
 
         if (this.genomicDataFilters.length > 0) {
             filters.genomicDataFilters = this.genomicDataFilters;
@@ -4879,6 +4802,11 @@ export class StudyViewPageStore
 
         if (this.genericAssayDataFilters.length > 0) {
             filters.genericAssayDataFilters = this.genericAssayDataFilters;
+        }
+
+        if (this.genericAssaySelectionFilters.length > 0) {
+            filters.genericAssaySelectionFilters =
+                this.genericAssaySelectionFilters;
         }
 
         if (this.clinicalDataFilters.length > 0) {
@@ -7910,7 +7838,10 @@ export class StudyViewPageStore
         if (!_.isEmpty(this.initialFilters.mutationDataFilters)) {
             pending = pending || this.molecularProfileOptions.isPending;
         }
-        if (!_.isEmpty(this.initialFilters.genericAssayDataFilters)) {
+        if (
+            !_.isEmpty(this.initialFilters.genericAssayDataFilters) ||
+            !_.isEmpty(this.initialFilters.genericAssaySelectionFilters)
+        ) {
             pending =
                 pending || this.genericAssayProfileOptionsByType.isPending;
         }
@@ -9081,6 +9012,28 @@ export class StudyViewPageStore
     @action
     initializeGenericAssayCharts(): void {
         this.registerGenericAssayFrequencyTableCharts();
+        if (!_.isEmpty(this.initialFilters.genericAssaySelectionFilters)) {
+            _.each(
+                this.initialFilters.genericAssaySelectionFilters,
+                genericAssaySelectionFilter => {
+                    const uniqueKey = getGenericAssayFrequencyTableUniqueKey(
+                        genericAssaySelectionFilter.profileType
+                    );
+                    const chart = this._genericAssayChartMap.get(uniqueKey);
+                    if (chart?.chartKind === 'PROFILE_FREQUENCY_TABLE') {
+                        this._genericAssayFrequencyTableFilterSet.set(
+                            uniqueKey,
+                            getGenericAssayFrequencyTableSelectedRowKeyGroups(
+                                this.initialFilters
+                                    .genericAssaySelectionFilters!,
+                                genericAssaySelectionFilter.profileType
+                            )
+                        );
+                        this.changeChartVisibility(uniqueKey, true);
+                    }
+                }
+            );
+        }
         // initialize generic assay continuous data chart
         if (!_.isEmpty(this.initialFilters.genericAssayDataFilters)) {
             _.map(
