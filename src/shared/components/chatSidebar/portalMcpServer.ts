@@ -11,10 +11,15 @@
 // This is a SHIM over PortalContext — it owns no portal logic, only protocol
 // framing, an origin allowlist, and capability scoping.
 
+// PortalContext + Annotation are used only in type positions below, so TS
+// elides this import at runtime — the spec/getServerSpec() carry no dependency
+// on the browser module graph. (Kept as a plain import, not `import type`,
+// because the repo's pinned Prettier can't parse `import type {}`.)
 import { PortalContext, Annotation } from './PortalContext';
 
 const PROTOCOL_VERSION = '2025-06-18';
 const ENVELOPE = 'mcp'; // postMessage discriminator
+const SERVER_INFO = { name: 'cbioportal-portal', version: '0.1.0' } as const;
 
 type Scope = 'read' | 'act';
 
@@ -120,6 +125,84 @@ const TOOLS = [
     },
 ] as const;
 
+// --- static, machine-readable spec ------------------------------------------
+// The same catalogs above, surfaced as a pure value so the surface can be read
+// without a live postMessage connection: committed to mcp.json (kept in sync by
+// portalMcpServer.spec.ts), importable by docs/tests, and dumpable to stdout.
+// Runtime discovery (initialize -> resources/list -> tools/list) returns the
+// same data; tools/list additionally hides 'act' tools from read-only peers,
+// whereas this static spec lists every tool with its required scope.
+
+export interface SpecResource {
+    uri: string;
+    name: string;
+    description: string;
+    mimeType: string;
+}
+
+export interface SpecTool {
+    name: string;
+    description: string;
+    scope: Scope;
+    inputSchema: Record<string, unknown>;
+}
+
+export interface ServerSpec {
+    protocolVersion: string;
+    serverInfo: { name: string; version: string };
+    capabilities: Record<string, unknown>;
+    transport: {
+        kind: 'postMessage';
+        framing: 'jsonrpc-2.0';
+        envelope: string;
+        requestShape: string;
+        responseShape: string;
+    };
+    methods: string[];
+    resources: SpecResource[];
+    tools: SpecTool[];
+    security: {
+        originAllowlist: true;
+        scopes: Scope[];
+        notes: string;
+    };
+}
+
+export function getServerSpec(): ServerSpec {
+    return {
+        protocolVersion: PROTOCOL_VERSION,
+        serverInfo: { ...SERVER_INFO },
+        capabilities: { resources: {}, tools: {} },
+        transport: {
+            kind: 'postMessage',
+            framing: 'jsonrpc-2.0',
+            envelope: ENVELOPE,
+            requestShape: `{ "envelope": "${ENVELOPE}", "request": <jsonrpc-2.0 request> }`,
+            responseShape: `{ "envelope": "${ENVELOPE}", "response": <jsonrpc-2.0 response> }`,
+        },
+        methods: [
+            'initialize',
+            'resources/list',
+            'resources/read',
+            'tools/list',
+            'tools/call',
+        ],
+        resources: RESOURCES.map(r => ({ ...r })),
+        tools: TOOLS.map(t => ({
+            name: t.name,
+            description: t.description,
+            scope: t.scope,
+            inputSchema: t.inputSchema as Record<string, unknown>,
+        })),
+        security: {
+            originAllowlist: true,
+            scopes: ['read', 'act'],
+            notes:
+                "Exact-origin allowlist; per-origin scope read|act. tools/list hides 'act' tools from read-only peers and tools/call re-enforces. 'navigate' is further constrained by the server's writableParams allowlist.",
+        },
+    };
+}
+
 // --- JSON-RPC plumbing ------------------------------------------------------
 
 interface RpcRequest {
@@ -184,7 +267,7 @@ export class PortalMcpServer {
             case 'initialize':
                 return ok(req.id, {
                     protocolVersion: PROTOCOL_VERSION,
-                    serverInfo: { name: 'cbioportal-portal', version: '0.1.0' },
+                    serverInfo: { ...SERVER_INFO },
                     capabilities: { resources: {}, tools: {} },
                 });
 
