@@ -22,6 +22,13 @@ const CBIO_API = 'https://www.cbioportal.org';
 const NCBI_EUTILS = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils';
 const BIOC_BASE =
     'https://www.ncbi.nlm.nih.gov/research/bionlp/RESTful/pmcoa.cgi/BioC_json';
+// NCBI ID Converter — maps PMID -> PMCID. We use this instead of eutils
+// elink.fcgi for the PMID->PMCID hop because NCBI tarpits elink from cloud
+// egress IPs (verified on Vercel: elink hangs ~8s and times out, while efetch
+// on the same host and idconv here both respond in <200ms). Lives on the same
+// host family as the BioC full-text service.
+const IDCONV =
+    'https://pmc.ncbi.nlm.nih.gov/tools/idconv/api/v1/articles/';
 
 const MAX_PAPER_CHARS = 200_000;
 
@@ -96,16 +103,13 @@ async function safeJson(url: string): Promise<any | null> {
 
 async function pmidToPmcid(pmid: string): Promise<string | null> {
     const data = await safeJson(
-        withNcbiParams(
-            `${NCBI_EUTILS}/elink.fcgi?dbfrom=pubmed&db=pmc&id=${pmid}&retmode=json`
-        )
+        withNcbiParams(`${IDCONV}?ids=${pmid}&format=json`)
     );
-    if (!data) return null;
-    for (const ls of data?.linksets ?? []) {
-        for (const db of ls?.linksetdbs ?? []) {
-            if (db?.linkname === 'pubmed_pmc' && db?.links?.length) {
-                return String(db.links[0]);
-            }
+    if (!data || data.status !== 'ok') return null;
+    for (const rec of data.records ?? []) {
+        if (rec?.pmcid) {
+            // idconv returns "PMC3401966"; downstream wants the bare number.
+            return String(rec.pmcid).replace(/^PMC/i, '');
         }
     }
     return null;
