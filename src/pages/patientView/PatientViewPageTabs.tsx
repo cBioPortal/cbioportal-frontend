@@ -494,7 +494,7 @@ export function tabs(
         );
 
     tabs.push(
-        <MSKTab key={9} id={PatientViewPageTabs.Plots} linkText="Plots">
+        <MSKTab key={10} id={PatientViewPageTabs.Plots} linkText="Plots">
             {pageComponent.patientViewPageStore.samplesInCohort.isComplete &&
             pageComponent.patientViewPageStore.highlightedCancerTypes
                 .isComplete &&
