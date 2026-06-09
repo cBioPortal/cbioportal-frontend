@@ -9,6 +9,23 @@ current view/URL/inventory, screenshot the page, place beacons, and URL-navigate
 See `portalMcpServer.ts` (server), `PortalContext.ts` (capability surface), and
 `5-wiring` in the design gist for how it's wired into `ChatSidebar`.
 
+## Two ways the surface is exposed
+
+The same `PortalContext` capability surface is published over two transports,
+both from the same catalog (`getServerSpec()`):
+
+1. **`portalMcpServer.ts`** — a bespoke `postMessage` + JSON-RPC server. Used by
+   the chat sidebar iframe today; origin-allowlisted.
+2. **`portalWebMcp.ts`** — registers the tools as native **WebMCP** tools via the
+   browser's `document.modelContext` API (W3C draft). This is what standard
+   in-browser agents consume: the **MCP-B bridge extension** and the
+   **model-context tool inspector** can call them today in Chrome Canary
+   (`enable-webmcp-testing` flag); Gemini-in-Chrome / Edge Copilot when their
+   consumption ships. No-op in browsers without the API. Registered on the host
+   document, so no `allow="tools"` iframe plumbing is needed.
+
+`navigate` is constrained by the same `writableParams` allowlist on both.
+
 ## Obtaining the specification
 
 **Statically** — read [`mcp.json`](./mcp.json). It is generated from
