@@ -18,6 +18,7 @@ import {
 } from './screenshot';
 import { HostPortalContext, ViewSource } from './PortalContext';
 import { PortalMcpServer } from './portalMcpServer';
+import { PortalWebMcp } from './portalWebMcp';
 import ResultsViewURLWrapper from 'pages/resultsView/ResultsViewURLWrapper';
 import './ChatSidebar.scss';
 
@@ -90,6 +91,7 @@ export default class ChatSidebar extends React.Component<
     private iframeRef = React.createRef<HTMLIFrameElement>();
     private portalContext?: HostPortalContext;
     private mcpServer?: PortalMcpServer;
+    private webMcp?: PortalWebMcp;
 
     @action.bound
     toggle() {
@@ -223,20 +225,30 @@ export default class ChatSidebar extends React.Component<
             /* leave empty — no origin will be allowlisted */
         }
 
+        // Query params an external agent may set via navigate — tab + plot
+        // selection; cohort/study swaps stay manual. Shared by both surfaces.
+        const writableParams = [
+            'gene_list',
+            'plots_horz_selection',
+            'plots_vert_selection',
+        ];
+
         this.portalContext = new HostPortalContext(viewSource);
         this.mcpServer = new PortalMcpServer(this.portalContext, {
             allowedOrigins: serverOrigin ? [serverOrigin] : [],
             // The sidebar iframe (served from serverOrigin) is trusted to act;
             // any other allowlisted peer is read-only until opted in.
             scopeFor: origin => (origin === serverOrigin ? 'act' : 'read'),
-            // Let agents drive tab + plot selection; cohort/study swaps stay manual.
-            writableParams: [
-                'gene_list',
-                'plots_horz_selection',
-                'plots_vert_selection',
-            ],
+            writableParams,
         });
         this.mcpServer.start();
+
+        // Also expose the same surface as native WebMCP tools when the browser
+        // supports the API (Chrome Canary flag, Edge, etc.), so standard
+        // in-browser agents / the MCP-B bridge can discover and call them
+        // without our postMessage transport. No-op where the API is absent.
+        this.webMcp = new PortalWebMcp(this.portalContext, { writableParams });
+        this.webMcp.start();
     }
 
     componentDidUpdate(prev: IChatSidebarProps) {
@@ -258,6 +270,7 @@ export default class ChatSidebar extends React.Component<
         window.removeEventListener('message', this.onMessage);
         document.body.classList.remove('chat-sidebar-closed');
         this.mcpServer?.stop();
+        this.webMcp?.stop();
         this.portalContext?.dispose();
     }
 
