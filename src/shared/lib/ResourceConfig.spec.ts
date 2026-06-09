@@ -47,11 +47,6 @@ describe('getResourceConfig', () => {
             const config = getResourceConfig(
                 makeDefinition({ resourceId: 'MSK_HNE' })
             );
-            assert.equal(
-                config.customizedDisplayName,
-                'Samples with H&E Slides'
-            );
-            assert.isTrue(config.hidePerPatientColumn);
             assert.isTrue(config.hideUrlColumn);
             assert.isTrue(config.openInNewTab);
             assert.equal(
@@ -67,7 +62,7 @@ describe('getResourceConfig', () => {
             const config = getResourceConfig(
                 makeDefinition({ resourceId: 'MSK_HNE' })
             );
-            config.customizedDisplayName = 'mutated';
+            config.iframeErrorMessage = 'mutated';
             assert.deepEqual(
                 RESOURCE_CUSTOM_CONFIGS['MSK_HNE'],
                 original,
@@ -75,18 +70,19 @@ describe('getResourceConfig', () => {
             );
         });
 
-        it('customMetaData overrides customizedDisplayName while preserving other fields', () => {
+        it('customMetaData overrides columnNameMapping while preserving other fields', () => {
             const config = getResourceConfig(
                 makeDefinition({
                     resourceId: 'MSK_HNE',
                     customMetaData: JSON.stringify({
-                        customizedDisplayName: 'Override Name',
+                        columnNameMapping: { 'Type Of Resource': 'Open' },
                     }),
                 })
             );
-            assert.equal(config.customizedDisplayName, 'Override Name');
-            // Other MSK_HNE fields should still be present
-            assert.isTrue(config.hidePerPatientColumn);
+            assert.equal(
+                config.columnNameMapping?.['Type Of Resource'],
+                'Open'
+            );
             assert.isTrue(config.hideUrlColumn);
             assert.isTrue(config.openInNewTab);
         });
@@ -119,12 +115,12 @@ describe('getResourceConfig', () => {
             makeDefinition({
                 resourceId: 'UNKNOWN',
                 customMetaData: JSON.stringify({
-                    customizedDisplayName: 'From MetaData',
-                    hidePerPatientColumn: true,
+                    openInNewTab: true,
+                    columnNameMapping: { 'Type Of Resource': 'Launch' },
                 }),
             })
         );
-        assert.equal(config.customizedDisplayName, 'From MetaData');
-        assert.isTrue(config.hidePerPatientColumn);
+        assert.isTrue(config.openInNewTab);
+        assert.equal(config.columnNameMapping?.['Type Of Resource'], 'Launch');
     });
 });

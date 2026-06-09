@@ -88,6 +88,7 @@ import {
     SampleTreatmentReport,
     PatientTreatmentReport,
 } from 'cbioportal-ts-api-client';
+import resourceTableInternalClient from 'shared/api/cbioportalInternalClientInstance';
 import {
     evaluatePutativeDriverInfo,
     evaluatePutativeDriverInfoWithHotspots,
@@ -397,11 +398,7 @@ type ResourceId = string;
 type ComparisonGroupId = string;
 type AttributeId = string;
 
-export type StudyViewPageTabKey =
-    | StudyViewPageTabKeyEnum.CLINICAL_DATA
-    | StudyViewPageTabKeyEnum.SUMMARY
-    | StudyViewPageTabKeyEnum.HEATMAPS
-    | StudyViewPageTabKeyEnum.CN_SEGMENTS;
+export type StudyViewPageTabKey = string;
 
 export enum StudyViewPageTabDescriptions {
     SUMMARY = 'Summary',
@@ -6205,6 +6202,41 @@ export class StudyViewPageStore
                 _.groupBy(this.studyResourceData.result!, d => d.resourceId)
             );
         },
+    });
+
+    readonly resourceTableData = remoteData<ResourceData[]>({
+        await: () => [this.selectedSamples],
+        invoke: async () => {
+            if (this.selectedSamples.result.length === 0) {
+                return [];
+            }
+
+            const selectedIds = new Set([
+                ...this.selectedSamples.result.map(item => item.sampleId),
+                ...this.selectedSamples.result.map(item => item.patientId),
+            ]);
+
+            const selectedStudyIds = [
+                ...new Set(this.selectedSamples.result.map(item => item.studyId)),
+            ];
+            const allResources = await Promise.all(
+                selectedStudyIds.map(studyId =>
+                    resourceTableInternalClient.getAllStudyResourceDataInStudyPatientSampleUsingGET({
+                        studyId,
+                        projection: 'DETAILED',
+                    })
+                )
+            );
+
+            return _(allResources)
+                .flatMap()
+                .filter(resource =>
+                    selectedIds.has(resource.sampleId || resource.patientId)
+                )
+                .value();
+        },
+        default: [],
+        onError: () => {},
     });
 
     readonly chartClinicalAttributes = remoteData({

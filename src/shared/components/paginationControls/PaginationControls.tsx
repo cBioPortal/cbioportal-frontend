@@ -211,7 +211,7 @@ export class PaginationControls extends React.Component<
         }
 
         let buttons: any = [
-            <If condition={!!this.props.showFirstPage}>
+            <If key="firstPageIf" condition={!!this.props.showFirstPage}>
                 <Button
                     key="firstPageBtn"
                     bsSize="sm"
@@ -276,7 +276,7 @@ export class PaginationControls extends React.Component<
             >
                 {this.props.nextButtonContent}
             </Button>,
-            <If condition={!!this.props.showLastPage}>
+            <If key="lastPageIf" condition={!!this.props.showLastPage}>
                 <Button
                     key="lastPageBtn"
                     bsSize="sm"
@@ -298,7 +298,7 @@ export class PaginationControls extends React.Component<
                     {this.props.lastButtonContent}
                 </Button>
             </If>,
-            <If condition={!!this.props.showMoreButton}>
+            <If key="showMoreIf" condition={!!this.props.showMoreButton}>
                 <Button
                     id="resetItemsPerPageButton"
                     bsStyle="link"
@@ -339,9 +339,11 @@ export class PaginationControls extends React.Component<
                 )}
                 style={this.props.style}
             >
-                <span style={{ fontSize: 12, marginRight: 10 }}>
-                    {this.props.textBeforeButtons}
-                </span>
+                {!!this.props.textBeforeButtons && (
+                    <span style={{ fontSize: 12, marginRight: 10 }}>
+                        {this.props.textBeforeButtons}
+                    </span>
+                )}
                 {buttons}
                 <If
                     condition={

@@ -105,6 +105,7 @@ import {
 import {
     StudyViewPageTabKeyEnum,
     StudyViewResourceTabPrefix,
+    StudyViewResourceTableTabPrefix,
 } from 'pages/studyView/StudyViewPageTabs';
 import {
     PatientViewPageTabs,
@@ -254,17 +255,21 @@ function comparisonTabParamValidator() {
  * Validates results page and patient page custom tabs
  * @param location
  */
-function customTabParamValidator(location: Location) {
+export function customTabParamValidator(location: Location) {
     const patientViewResourceTabRegex = new RegExp(
         `patient\/${PatientViewResourceTabPrefix}.+`
     );
     const studyViewResourceTabRegex = new RegExp(
         `study\/${StudyViewResourceTabPrefix}.+`
     );
+    const studyViewResourceTableTabRegex = new RegExp(
+        `study\/${StudyViewResourceTableTabPrefix}.+`
+    );
     const customTabRegex = /.+\/customTab\d/;
     return (
         patientViewResourceTabRegex.test(location.pathname) ||
         studyViewResourceTabRegex.test(location.pathname) ||
+        studyViewResourceTableTabRegex.test(location.pathname) ||
         customTabRegex.test(location.pathname)
     );
 }

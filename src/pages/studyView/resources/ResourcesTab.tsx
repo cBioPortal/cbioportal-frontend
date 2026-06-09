@@ -12,6 +12,7 @@ import { FilesAndLinks } from './FilesAndLinks';
 export interface IResourcesTabProps {
     store: StudyViewPageStore;
     openResource: (resource: ResourceData) => void;
+    selectedResourceId?: string;
 }
 
 export const RESOURCES_TAB_NAME = 'Files & Links';
@@ -66,7 +67,10 @@ export default class ResourcesTab extends React.Component<
                 </div>
                 <div className="resourcesTab">
                     <div className="resourcesSection">
-                        <FilesAndLinks store={this.props.store}></FilesAndLinks>
+                        <FilesAndLinks
+                            store={this.props.store}
+                            selectedResourceId={this.props.selectedResourceId}
+                        ></FilesAndLinks>
                     </div>
                 </div>
             </div>

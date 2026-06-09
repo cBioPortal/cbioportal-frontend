@@ -792,6 +792,9 @@ export class LazyMobXTableStore<T> {
 
     @action setProps(props: LazyMobXTableProps<T>) {
         this.columns = props.columns;
+        this.headerRefs = props.columns.map(
+            (_column, index) => this.headerRefs[index] || React.createRef()
+        );
         this._itemsLabel = props.itemsLabel;
         this._itemsLabelPlural = props.itemsLabelPlural;
         this._columnVisibility = props.columnVisibility;
@@ -897,7 +900,6 @@ export default class LazyMobXTable<T> extends React.Component<
     private filterInput: HTMLInputElement;
     private filterInputReaction: IReactionDisposer;
     private pageToHighlightReaction: IReactionDisposer;
-    private isChildTable: boolean;
 
     public static defaultProps = {
         showFilter: true,
@@ -1037,71 +1039,7 @@ export default class LazyMobXTable<T> extends React.Component<
         );
     }
 
-    componentDidMount() {
-        if (document.onmousemove === null) {
-            document.onmousemove = (mouse: any) => {
-                const headerInfo: {
-                    left: number;
-                    filterIcon?: any;
-                    filterMenu?: any;
-                }[] = [];
-                for (let i = 0; i < this.store.headerRefs.length; i++) {
-                    const elem = this.store.headerRefs[i].current;
-                    if (!!elem) {
-                        headerInfo[i] = {
-                            left: elem.getBoundingClientRect().left,
-                            filterIcon: (elem.firstChild as Element)
-                                ?.children[1]?.children[0],
-                            filterMenu: (elem.firstChild as Element)
-                                ?.children[1]?.children[1],
-                        };
-                    }
-                }
-
-                let i = -1;
-                // determine column under current mouse position
-                while (
-                    i + 1 < headerInfo.length &&
-                    mouse.clientX >= headerInfo[i + 1].left
-                ) {
-                    i += 1;
-                }
-                // show filter icon for current column (if exists)
-                if (i !== -1) {
-                    const filterIcon = headerInfo[i].filterIcon;
-                    if (
-                        filterIcon &&
-                        filterIcon.style &&
-                        filterIcon.innerHTML &&
-                        filterIcon.innerHTML.includes('fa-filter')
-                    ) {
-                        filterIcon.style.visibility = 'visible';
-                    }
-                }
-                // hide all other filter icons (if not active)
-                for (let j = 0; j < headerInfo.length; j++) {
-                    if (j !== i) {
-                        const filterIcon = headerInfo[j].filterIcon;
-                        const filterMenu = headerInfo[j].filterMenu;
-                        if (
-                            filterIcon?.innerHTML?.includes('fa-filter') &&
-                            filterIcon?.style?.color !== 'rgb(0, 0, 255)' &&
-                            filterMenu?.style?.visibility === 'hidden'
-                        ) {
-                            filterIcon.style.visibility = 'hidden';
-                        }
-                    }
-                }
-            };
-        } else {
-            this.isChildTable = true;
-        }
-    }
-
     componentWillUnmount() {
-        if (!this.isChildTable) {
-            document.onmousemove = null;
-        }
         this.filterInputReaction();
         this.pageToHighlightReaction();
         if (this.props.storeColumnVisibility) {

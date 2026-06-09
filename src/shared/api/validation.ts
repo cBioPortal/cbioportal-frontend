@@ -463,7 +463,7 @@ export async function validate(
             elapsedTime: null,
         };
     } else {
-        let legacyUrl = url.replace(/column-store\//, '');
+        let legacyUrl = url;
 
         if (treatmentLegacyUrl[label]) {
             legacyUrl = treatmentLegacyUrl[label](legacyUrl);
@@ -648,11 +648,6 @@ export async function runSpecs(
         .forEach((suite: any) => {
             suite.forEach((col: any) =>
                 col.tests.filter(filterFunc).forEach((test: any) => {
-                    test.url = test.url.replace(
-                        /column-store\/api/,
-                        'column-store'
-                    );
-
                     if (!onlyDetected || test.only) {
                         invokers.push(
                             // @ts-ignore

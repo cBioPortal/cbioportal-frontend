@@ -147,6 +147,7 @@ export default class CategoricalFilterMenu extends React.Component<
     @computed get selectionCheckboxes() {
         return this.sortedSelections.map(selection => (
             <Checkbox
+                key={selection}
                 data-id={selection}
                 onChange={this.onChangeSelection}
                 checked={this.props.currSelections.has(selection)}

@@ -1,15 +1,13 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import FeatureTitle from '../../../shared/components/featureTitle/FeatureTitle';
-import SampleResourcesTable from '../../../shared/components/resources/SampleResourcesTable';
 import SampleManager from '../SampleManager';
 import { PatientViewPageStore } from '../clinicalInformation/PatientViewPageStore';
 import { remoteData } from 'cbioportal-frontend-commons';
-import { ResourcesTableRowData } from '../../../shared/components/resources/ResourcesTableUtils';
 import { MakeMobxView } from '../../../shared/components/MobxView';
 import _ from 'lodash';
 import { ResourceData } from 'cbioportal-ts-api-client';
-import ResourceTable from 'shared/components/resources/ResourceTable';
+import ResourceDataTable from 'shared/components/resources/ResourceDataTable';
 
 export interface IResourcesTabProps {
     sampleManager: SampleManager | null;
@@ -24,127 +22,46 @@ export default class ResourcesTab extends React.Component<
     IResourcesTabProps,
     {}
 > {
-    readonly sampleRows = remoteData<ResourcesTableRowData[]>({
+    readonly allResources = remoteData<ResourceData[]>({
         await: () => [
-            this.props.store.samples,
+            this.props.store.patientResourceData,
             this.props.store.sampleResourceData,
+            this.props.store.studyResourceData,
         ],
         invoke: () => {
-            const data = this.props.store.sampleResourceData.result!;
-            const rows = [];
-            for (const sample of this.props.store.samples.result!) {
-                const resources = data[sample.sampleId];
-                if (resources && resources.length) {
-                    rows.push({ sample, resources });
-                }
-            }
-            return Promise.resolve(rows);
+            return Promise.resolve(
+                _.flatMap(
+                    this.props.store.sampleResourceData.result!,
+                    data => data
+                )
+                    .concat(this.props.store.patientResourceData.result!)
+                    .concat(this.props.store.studyResourceData.result!)
+            );
         },
     });
 
-    readonly sampleResources = MakeMobxView({
-        await: () => [this.sampleRows],
+    readonly resourcesTable = MakeMobxView({
+        await: () => [this.allResources],
         render: () => {
-            if (
-                this.props.sampleManager &&
-                this.sampleRows.result!.length > 0
-            ) {
-                return (
-                    <div className="resourcesSection">
-                        <h4 className="blackHeader">Sample Resources</h4>
-                        <SampleResourcesTable
-                            data={this.sampleRows.result!}
-                            sampleManager={this.props.sampleManager!}
-                            openResource={this.props.openResource}
-                        />
-                    </div>
-                );
-            } else {
-                return null;
-            }
-        },
-    });
-
-    readonly patientResources = MakeMobxView({
-        await: () => [this.props.store.patientResourceData],
-        render: () => {
-            if (this.props.store.patientResourceData.result!.length > 0) {
-                return (
-                    <div className="resourcesSection">
-                        <h4 className="blackHeader">
-                            Patient Resources for {this.props.store.patientId}
-                        </h4>
-                        <ResourceTable
-                            resources={
-                                this.props.store.patientResourceData.result!
-                            }
-                            openResource={this.props.openResource}
-                        />
-                    </div>
-                );
-            } else {
-                return null;
-            }
-        },
-    });
-
-    readonly studyResources = MakeMobxView({
-        await: () => [
-            this.props.store.studyResourceData,
-            this.props.store.studies,
-        ],
-        render: () => {
-            if (this.props.store.studyResourceData.result!.length > 0) {
-                return (
-                    <div className="resourcesSection">
-                        <h4 className="blackHeader">
-                            Study Resources for{' '}
-                            {this.props.store.studies.result![0].name}
-                        </h4>
-                        <ResourceTable
-                            resources={
-                                this.props.store.studyResourceData.result!
-                            }
-                            openResource={this.props.openResource}
-                        />
-                    </div>
-                );
-            } else {
-                return null;
-            }
-        },
-    });
-
-    readonly showNoResource = MakeMobxView({
-        await: () => [this.props.store.resourceIdToResourceData],
-        render: () => {
-            const shouldShowNoResource = () => {
-                if (this.props.store.resourceIdToResourceData.isComplete) {
-                    return !_.some(
-                        this.props.store.resourceIdToResourceData.result,
-                        data => data.length > 0
-                    );
-                }
-                return true;
-            };
-
-            if (shouldShowNoResource()) {
-                return (
-                    <div className="resourcesSection">
-                        <h4 className="blackHeader">
-                            Resources for {this.props.store.patientId}
-                        </h4>
-                        <ResourceTable
-                            resources={
-                                this.props.store.studyResourceData.result!
-                            }
-                            openResource={this.props.openResource}
-                        />
-                    </div>
-                );
-            } else {
-                return null;
-            }
+            return (
+                <div className="resourcesSection">
+                    <h4 className="blackHeader">
+                        Resources for {this.props.store.patientId}
+                    </h4>
+                    <ResourceDataTable
+                        patientIdFallback={this.props.store.patientId}
+                        resources={this.allResources.result!}
+                        getResourceAction={row => ({
+                            label: row.resourceType,
+                            onClick: () => this.props.openResource(row.resource),
+                        })}
+                        getPrimaryAction={row => ({
+                            label: 'Open in portal',
+                            onClick: () => this.props.openResource(row.resource),
+                        })}
+                    />
+                </div>
+            );
         },
     });
 
@@ -154,20 +71,14 @@ export default class ResourcesTab extends React.Component<
                 <FeatureTitle
                     title={RESOURCES_TAB_NAME}
                     isLoading={
-                        this.sampleResources.isPending ||
-                        this.patientResources.isPending ||
-                        this.studyResources.isPending
+                        this.allResources.isPending ||
+                        this.resourcesTable.isPending
                     }
                     className={'pull-left'}
                 />
                 <br />
                 <br />
-                <div>
-                    {this.patientResources.component}
-                    {this.sampleResources.component}
-                    {this.studyResources.component}
-                    {this.showNoResource.component}
-                </div>
+                <div>{this.resourcesTable.component}</div>
             </div>
         );
     }

@@ -5,18 +5,6 @@ import { ResourceDefinition } from 'cbioportal-ts-api-client';
  */
 export interface ResourceCustomConfig {
     /**
-     * Custom display name for the resource (e.g., "Samples with H&E Slides")
-     * Used in: Study View (tab name and count header)
-     */
-    customizedDisplayName?: string;
-
-    /**
-     * Whether to hide the "Resources per Patient" column
-     * Used in: Study View (Files & Links tab)
-     */
-    hidePerPatientColumn?: boolean;
-
-    /**
      * Mapping to rename column headers (e.g., { 'Type Of Resource': 'View' })
      * Used in: Study View (Files & Links tab)
      */
@@ -43,8 +31,6 @@ export interface ResourceCustomConfig {
 
 export const RESOURCE_CUSTOM_CONFIGS: Record<string, ResourceCustomConfig> = {
     MSK_HNE: {
-        customizedDisplayName: 'Samples with H&E Slides',
-        hidePerPatientColumn: true,
         columnNameMapping: { 'Type Of Resource': 'View' },
         hideUrlColumn: true,
         openInNewTab: true,

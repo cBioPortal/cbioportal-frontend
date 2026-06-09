@@ -8,13 +8,29 @@ export enum StudyViewPageTabKeyEnum {
 }
 
 export const StudyViewResourceTabPrefix = 'openResource_';
+export const StudyViewResourceTableTabPrefix = 'resourceTable_';
 
 export function getStudyViewResourceTabId(resourceId: string) {
     return `${StudyViewResourceTabPrefix}${resourceId}`;
 }
 
+export function getStudyViewResourceTableTabId(resourceId: string) {
+    return `${StudyViewResourceTableTabPrefix}${resourceId}`;
+}
+
 export function extractResourceIdFromTabId(tabId: string) {
     const match = new RegExp(`${StudyViewResourceTabPrefix}(.*)`).exec(tabId);
+    if (match) {
+        return match[1];
+    } else {
+        return undefined;
+    }
+}
+
+export function extractResourceTableIdFromTabId(tabId: string) {
+    const match = new RegExp(`${StudyViewResourceTableTabPrefix}(.*)`).exec(
+        tabId
+    );
     if (match) {
         return match[1];
     } else {

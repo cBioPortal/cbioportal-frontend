@@ -1,3 +1,10 @@
+.paginationControls {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
 .default-cursor {
     cursor: default !important;
     height: 30px;
@@ -5,7 +12,7 @@
 
 .form-select {
     display: inline-block;
-    margin-left: 5px;
+    margin-bottom: 0 !important;
 }
 
 .page-number-input {
