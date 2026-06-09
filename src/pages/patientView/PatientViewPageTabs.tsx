@@ -9,6 +9,7 @@ import StructuralVariantTableWrapper from 'pages/patientView/structuralVariant/S
 import CopyNumberTableWrapper from 'pages/patientView/copyNumberAlterations/CopyNumberTableWrapper';
 import PatientViewMutationsTab from 'pages/patientView/mutation/PatientViewMutationsTab';
 import PatientViewPathwayMapper from 'pages/patientView/pathwayMapper/PatientViewPathwayMapper';
+import ExpressionTabController from 'pages/patientView/expression/ExpressionTabController';
 import ClinicalInformationPatientTable from 'pages/patientView/clinicalInformation/ClinicalInformationPatientTable';
 import ClinicalInformationSamples from 'pages/patientView/clinicalInformation/ClinicalInformationSamplesTable';
 import ClinicalEventsTables from 'pages/patientView/timeline/ClinicalEventsTables';
@@ -52,6 +53,7 @@ export enum PatientViewPageTabs {
     MutationalSignatures = 'mutationalSignatures',
     PathwayMapper = 'pathways',
     MRNA = 'mrna',
+    Expression = 'expression',
 }
 
 export const PatientViewResourceTabPrefix = 'openResource_';
@@ -487,6 +489,22 @@ export function tabs(
                         getServerConfig()
                             .oncoprint_custom_driver_annotation_tiers_menu_description!
                     }
+                />
+            </MSKTab>
+        );
+
+    pageComponent.patientViewPageStore.mrnaRankMolecularProfileId.isComplete &&
+        pageComponent.patientViewPageStore.mrnaRankMolecularProfileId
+            .result &&
+        tabs.push(
+            <MSKTab
+                key={9}
+                id={PatientViewPageTabs.Expression}
+                linkText="Expression"
+            >
+                <ExpressionTabController
+                    store={pageComponent.patientViewPageStore}
+                    sampleManager={sampleManager}
                 />
             </MSKTab>
         );
