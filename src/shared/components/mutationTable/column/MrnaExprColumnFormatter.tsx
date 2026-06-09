@@ -73,6 +73,21 @@ export default class MrnaExprColumnFormatter {
             if (abs < TINY_THRESHOLD) return v.toExponential(0);
             return v.toFixed(abs < 1 ? 2 : 0);
         };
+        const sortedValues = values.slice().sort((a, b) => a - b);
+        const getQuantile = (q: number) => {
+            const index = (sortedValues.length - 1) * q;
+            const lower = Math.floor(index);
+            const upper = Math.ceil(index);
+            if (lower === upper) {
+                return sortedValues[lower];
+            }
+            const fraction = index - lower;
+            return (
+                sortedValues[lower] * (1 - fraction) +
+                sortedValues[upper] * fraction
+            );
+        };
+        const medianVal = getQuantile(0.5);
 
         const currentSample = allData.find(
             d => d.sampleId === currentSampleId
@@ -146,6 +161,18 @@ export default class MrnaExprColumnFormatter {
                             </>
                         )}
                     </svg>
+                    <div
+                        style={{
+                            marginTop: 2,
+                            fontSize: 8,
+                            color: '#666',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                        }}
+                    >
+                        <span>n={values.length}</span>
+                        <span>median {formatAxisVal(medianVal)}</span>
+                    </div>
                 </div>
             );
         }
@@ -171,6 +198,13 @@ export default class MrnaExprColumnFormatter {
             currentValue !== undefined && isFinite(currentValue)
                 ? toSvgX(Math.max(minVal, Math.min(maxVal, currentValue)))
                 : null;
+        const medianX = toSvgX(medianVal);
+        const medianLabelAnchor =
+            medianX < padLeft + 14
+                ? 'start'
+                : medianX > svgWidth - padRight - 14
+                ? 'end'
+                : 'middle';
 
         return (
             <div style={{ margin: '5px 0' }}>
@@ -204,6 +238,25 @@ export default class MrnaExprColumnFormatter {
                         stroke="#999"
                         strokeWidth={1}
                     />
+                    {/* Median marker and label */}
+                    <line
+                        x1={medianX}
+                        y1={padTop}
+                        x2={medianX}
+                        y2={axisY}
+                        stroke="#666"
+                        strokeWidth={1}
+                        strokeDasharray="2,2"
+                    />
+                    <text
+                        x={medianX}
+                        y={padTop + 8}
+                        textAnchor={medianLabelAnchor}
+                        fontSize={7}
+                        fill="#666"
+                    >
+                        median
+                    </text>
                     {/* Min/max axis labels */}
                     <text
                         x={padLeft}
@@ -236,6 +289,18 @@ export default class MrnaExprColumnFormatter {
                         />
                     )}
                 </svg>
+                <div
+                    style={{
+                        marginTop: 2,
+                        fontSize: 8,
+                        color: '#666',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                    }}
+                >
+                    <span>n={values.length}</span>
+                    <span>median {formatAxisVal(medianVal)}</span>
+                </div>
             </div>
         );
     }

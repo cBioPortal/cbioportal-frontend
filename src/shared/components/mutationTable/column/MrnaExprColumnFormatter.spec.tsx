@@ -19,6 +19,21 @@ describe('MrnaExprColumnFormatter', () => {
         assert.isTrue(wrapper.find('rect').exists());
     });
 
+    it('adds count and median context to raw histogram output', () => {
+        const histogram = (MrnaExprColumnFormatter as any).getExpressionHistogram(
+            [
+                { sampleId: 'S1', value: 1 },
+                { sampleId: 'S2', value: 2 },
+                { sampleId: 'S3', value: 3 },
+            ],
+            'S2'
+        );
+
+        const wrapper = shallow(<div>{histogram}</div>);
+        assert.include(wrapper.text(), 'n=3');
+        assert.include(wrapper.text(), 'median 2');
+    });
+
     it('does not prefetch source expression data during render', () => {
         const rankCache = { get: sinon.stub().returns(null) } as any;
         const sourceCache = {
