@@ -735,4 +735,83 @@ describe('oncoprint', function() {
             );
         });
     });
+
+    describe('Open in Oncoprinter button', () => {
+        // Regression for a bug where the click handler was coupled to MobxPromise
+        // readiness for data it did not need. Some of those promises could stay
+        // in a non-complete state indefinitely (`mutationsByGene`, `heatmapTracks`),
+        // so `window.open` was never called and the button did nothing.
+        it('calls window.open with the Oncoprinter URL and posts genetic data', async () => {
+            await goToUrlAndSetLocalStorage(
+                `${CBIOPORTAL_URL}/results?cancer_study_list=coadread_tcga_pub&cancer_study_id=coadread_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&Z_SCORE_THRESHOLD=2.0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS%20NRAS%20BRAF&gene_set_choice=user-defined-list`
+            );
+            await waitForOncoprint();
+
+            // Stub window.open so we capture the call without actually opening
+            // a new tab, and so we can observe the clientPostedData assignment.
+            await browser.execute(() => {
+                window.__openedOncoprinterUrls = [];
+                window.__openedOncoprinterPostedData = null;
+                window.open = function(url) {
+                    window.__openedOncoprinterUrls.push(url);
+                    const fake = {};
+                    Object.defineProperty(fake, 'clientPostedData', {
+                        set(v) {
+                            window.__openedOncoprinterPostedData = v;
+                        },
+                        get() {
+                            return window.__openedOncoprinterPostedData;
+                        },
+                    });
+                    return fake;
+                };
+            });
+
+            // Open the Download dropdown, then click "Open in Oncoprinter".
+            // The button is identified by the EVENT_KEY value (`29.1`).
+            await clickElement('#downloadDropdownButton');
+            await clickElement('button[name="29.1"]');
+
+            // Wait for both window.open AND the clientPostedData assignment
+            // that follows it. Polling both avoids a race where we sample
+            // __openedOncoprinterPostedData between the two statements. If
+            // the handler is broken and never reaches window.open at all,
+            // the waitUntil times out — the regression the test guards.
+            await browser.waitUntil(
+                async () => {
+                    const state = await browser.execute(() => ({
+                        urls: window.__openedOncoprinterUrls,
+                        posted: window.__openedOncoprinterPostedData,
+                    }));
+                    return (
+                        state.urls &&
+                        state.urls.length > 0 &&
+                        state.posted &&
+                        typeof state.posted.genetic === 'string' &&
+                        state.posted.genetic.length > 0
+                    );
+                },
+                {
+                    timeout: 15000,
+                    timeoutMsg:
+                        '"Open in Oncoprinter" did not call window.open with a non-empty posted genetic payload',
+                }
+            );
+
+            const state = await browser.execute(() => ({
+                url: window.__openedOncoprinterUrls[0],
+                posted: window.__openedOncoprinterPostedData,
+            }));
+            assert.match(
+                state.url,
+                /\/oncoprinter(\?|#|$)/,
+                `expected opened URL to target /oncoprinter, got: ${state.url}`
+            );
+            assert(
+                typeof state.posted.genetic === 'string' &&
+                    state.posted.genetic.length > 0,
+                'posted genetic input should be non-empty'
+            );
+        });
+    });
 });

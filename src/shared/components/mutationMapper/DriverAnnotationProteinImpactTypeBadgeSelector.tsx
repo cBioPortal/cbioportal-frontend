@@ -290,6 +290,7 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
                     styles.driverAnnotationSettingsButton,
                     'btn btn-primary'
                 )}
+                aria-label="Driver annotation settings"
                 onClick={this.onSettingMenuClick}
             >
                 <i
@@ -297,6 +298,7 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
                         styles.driverAnnotationSettingsIcon,
                         'fa fa-sliders'
                     )}
+                    aria-hidden="true"
                 />
             </button>
         );

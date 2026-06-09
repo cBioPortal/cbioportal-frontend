@@ -725,13 +725,14 @@ export class StudyViewPageStore
                                     toJS(this.userGroupColors!),
                                     this.userSettings.result!.groupColors
                                 ));
-                        // for group color update immediately, for the rest wait 3 sec
+                        // for group color update immediately, for the rest do not auto-save
+                        // chart settings (user must click "Save settings" button)
                         if (
                             groupColorSettingsChanged ||
                             groupColorSettingsFirstTime
                         ) {
                             this.updateUserSettings();
-                        } else this.updateUserSettingsDebounce();
+                        }
                     }
                 }
             )
@@ -2647,6 +2648,14 @@ export class StudyViewPageStore
     @observable.ref private currentGridLayout: ReactGridLayout.Layout[] = [];
     //@observable private currentGridLayoutUpdated = false;
     @observable private previousSettings: {
+        [id: string]: ChartUserSetting;
+    } = {};
+
+    /**
+     * Tracks the last chart settings that were explicitly saved to session service.
+     * Used to determine whether the "Save settings" button should be enabled.
+     */
+    @observable.ref private _lastSavedChartSettings: {
         [id: string]: ChartUserSetting;
     } = {};
 
@@ -6390,7 +6399,11 @@ export class StudyViewPageStore
         await: () => [this.oncokbGenes],
         invoke: async () => {
             return this.oncokbGenes.result
-                .filter(gene => gene.oncogene)
+                .filter(
+                    gene =>
+                        gene.geneType === 'ONCOGENE' ||
+                        gene.geneType === 'ONCOGENE_AND_TSG'
+                )
                 .map(gene => gene.entrezGeneId);
         },
         default: [],
@@ -6400,7 +6413,11 @@ export class StudyViewPageStore
         await: () => [this.oncokbGenes],
         invoke: async () => {
             return this.oncokbGenes.result
-                .filter(gene => gene.tsg)
+                .filter(
+                    gene =>
+                        gene.geneType === 'TSG' ||
+                        gene.geneType === 'ONCOGENE_AND_TSG'
+                )
                 .map(gene => gene.entrezGeneId);
         },
         default: [],
@@ -7231,31 +7248,48 @@ export class StudyViewPageStore
     }
 
     public updateUserSettings() {
+        // When auto-saving group colors, use the last explicitly saved chart settings
+        // to avoid persisting unsaved chart layout changes as a side effect.
         sessionServiceClient.updateUserSettings({
             page: PageType.STUDY_VIEW,
             origin: toJS(this.studyIds),
-            chartSettings: _.values(this.currentChartSettingsMap),
+            chartSettings: _.values(this._lastSavedChartSettings),
             groupColors: toJS(this.userGroupColors),
         });
     }
 
-    public updateUserSettingsDebounce = _.debounce(() => {
-        const chartSettingsChanged = !_.isEqual(
-            this.previousSettings,
-            this.currentChartSettingsMap
+    /**
+     * Saves current chart settings to session service and marks them as saved.
+     * This is triggered by user action (e.g. clicking "Save settings" button).
+     * Only updates _lastSavedChartSettings on successful server response.
+     */
+    @action.bound
+    public async saveChartSettings() {
+        const settingsToSave = _.cloneDeep(this.currentChartSettingsMap);
+        await sessionServiceClient.updateUserSettings({
+            page: PageType.STUDY_VIEW,
+            origin: toJS(this.studyIds),
+            chartSettings: _.values(settingsToSave),
+            groupColors: toJS(this.userGroupColors),
+        });
+        this._lastSavedChartSettings = settingsToSave;
+    }
+
+    /**
+     * Whether the current chart settings differ from the last saved chart settings.
+     * Used to enable/disable the "Save settings" button.
+     */
+    @computed
+    get isChartSettingsDirty(): boolean {
+        return (
+            this.isSavingUserPreferencePossible &&
+            this.userSettings.isComplete &&
+            !_.isEqual(
+                this.currentChartSettingsMap,
+                this._lastSavedChartSettings
+            )
         );
-        if (chartSettingsChanged) {
-            this.previousSettings = this.currentChartSettingsMap;
-            if (!_.isEmpty(this.currentChartSettingsMap)) {
-                sessionServiceClient.updateUserSettings({
-                    page: PageType.STUDY_VIEW,
-                    origin: toJS(this.studyIds),
-                    chartSettings: _.values(this.currentChartSettingsMap),
-                    groupColors: toJS(this.userGroupColors),
-                });
-            }
-        }
-    }, 3000);
+    }
 
     // return contains settings for all visible charts each chart setting
     @computed private get currentChartSettingsMap(): {
@@ -7349,6 +7383,11 @@ export class StudyViewPageStore
                     chartSetting => chartSetting.id
                 );
             }
+            // always track what is loaded from session as the last saved state
+            this._lastSavedChartSettings = _.keyBy(
+                this.userSettings.result!.chartSettings,
+                chartSetting => chartSetting.id
+            );
         }
     }
 
@@ -7450,6 +7489,10 @@ export class StudyViewPageStore
     public resetToDefaultChartSettings(): void {
         this.clearPageChartSettings();
         this.loadChartSettings(_.values(this.defaultChartSettingsMap));
+        // Persist the reset to session-service so it survives page reload.
+        if (this.isSavingUserPreferencePossible) {
+            this.saveChartSettings();
+        }
     }
 
     @computed get showResetToDefaultButton(): boolean {

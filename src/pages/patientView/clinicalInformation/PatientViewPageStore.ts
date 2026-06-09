@@ -22,6 +22,7 @@ import {
     GenericAssayMetaFilter,
 } from 'cbioportal-ts-api-client';
 import { getClient } from '../../../shared/api/cbioportalClientInstance';
+import { PatientViewPlotsStore } from './PatientViewPlotsStore';
 import internalClient from '../../../shared/api/cbioportalInternalClientInstance';
 import oncokbClient from '../../../shared/api/oncokbClientInstance';
 import { computed, observable, action, makeObservable } from 'mobx';
@@ -98,6 +99,7 @@ import {
     makeStudyToCancerTypeMap,
     mapSampleIdToClinicalData,
     mergeDiscreteCNAData,
+    OTHER_BIOMARKERS_CONFIG,
     mergeMutations,
     mergeMutationsIncludingUncalled,
     ONCOKB_DEFAULT,
@@ -169,7 +171,6 @@ import {
     CLINICAL_ATTRIBUTE_ID_ENUM,
     MIS_TYPE_VALUE,
     GENOME_NEXUS_ARG_FIELD_ENUM,
-    TMB_H_THRESHOLD,
     AlterationTypeConstants,
     DataTypeConstants,
 } from 'shared/constants';
@@ -340,9 +341,14 @@ export class PatientViewPageStore {
         this._sampleId = sampleId;
 
         this.studyId = studyId;
+
+        this.plotsStore = new PatientViewPlotsStore(this);
     }
 
     public internalClient: CBioPortalAPIInternal;
+
+    // Sub-store for the patient view plots (e.g. the mRNA tab).
+    public readonly plotsStore: PatientViewPlotsStore;
 
     @observable public activeLocus: string | undefined;
     @observable public activeTabId = '';
@@ -2752,10 +2758,13 @@ export class PatientViewPageStore {
     }
 
     @computed get sampleTmbHInfo() {
+        const { attributeIds, threshold } = OTHER_BIOMARKERS_CONFIG[
+            OtherBiomarkersQueryType.TMBH
+        ];
         return getSampleClinicalDataMapByThreshold(
             this.clinicalDataForSamples.result,
-            CLINICAL_ATTRIBUTE_ID_ENUM.TMB_SCORE,
-            TMB_H_THRESHOLD
+            attributeIds,
+            threshold
         );
     }
 

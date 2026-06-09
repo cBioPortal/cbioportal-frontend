@@ -1,9 +1,9 @@
 {
-  "npmClient": "yarn",
+  "$schema": "node_modules/lerna/schemas/lerna-schema.json",
+  "npmClient": "pnpm",
   "packages": [
-    ".",
     "packages/*"
   ],
   "version": "independent",
-  "useWorkspaces": true
+  "useNx": false
 }

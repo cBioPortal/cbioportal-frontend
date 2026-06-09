@@ -14,6 +14,7 @@ interface ITranscriptSummaryTableProps {
 
 export interface ITranscript {
     transcript: string | undefined;
+    transcriptVersioned: string | undefined;
     hugoGeneSymbol: string | undefined;
     hgvsShort: string | undefined;
     refSeq: string | undefined;
@@ -54,6 +55,9 @@ class TranscriptSummaryTable extends React.Component<
 
         const canonicalTranscript = {
             transcript: transcriptConsequenceSummary.transcriptId,
+            transcriptVersioned: transcriptConsequenceSummary.transcriptIdVersion
+                ? `${transcriptConsequenceSummary.transcriptId}.${transcriptConsequenceSummary.transcriptIdVersion}`
+                : transcriptConsequenceSummary.transcriptId,
             hugoGeneSymbol: transcriptConsequenceSummary.hugoGeneSymbol,
             hgvsShort: transcriptConsequenceSummary.hgvspShort,
             refSeq: transcriptConsequenceSummary.refSeq,
@@ -82,6 +86,9 @@ class TranscriptSummaryTable extends React.Component<
                 if (transcript.transcriptId !== canonicalTranscriptId) {
                     otherTranscript.push({
                         transcript: transcript.transcriptId,
+                        transcriptVersioned: transcript.transcriptIdVersion
+                            ? `${transcript.transcriptId}.${transcript.transcriptIdVersion}`
+                            : transcript.transcriptId,
                         hugoGeneSymbol: transcript.hugoGeneSymbol,
                         hgvsShort: transcript.hgvspShort,
                         refSeq: transcript.refSeq,

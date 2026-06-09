@@ -290,6 +290,7 @@ export class StudySummaryTab extends React.Component<
             [ChartTypeEnum.BAR_CHART]: () => ({
                 commonProps: {
                     onToggleNAValue: this.handlers.onToggleNAValue,
+                    onToggleLogScale: this.handlers.onToggleLogScale,
                     logScaleChecked: this.store.isLogScaleChecked(
                         chartMeta.uniqueKey
                     ),

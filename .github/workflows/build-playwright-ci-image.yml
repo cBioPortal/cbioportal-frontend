@@ -1,0 +1,71 @@
+# Build and publish the custom Playwright CI Docker image to GHCR.
+#
+# The image pre-bakes jq, pnpm (via corepack prepare --activate), and
+# http-server@0.11.1 so the playwright_e2e_shards CircleCI jobs and the
+# end-to-end-test-playwright/scripts/docker-test.sh wrapper don't need
+# apt-get or package-manager downloads at runtime.
+#
+# Image: ghcr.io/cbioportal/cbioportal-frontend-playwright-ci:v1.59.1-jammy
+#
+# Triggers:
+#   • Push to any branch that touches the Dockerfile (guarded to main repo only)
+#   • Manual workflow_dispatch (for rebuilds without a Dockerfile change)
+#
+# Tagging strategy:
+#   • master branch → shared stable tag  :v1.59.1-jammy  (used by CircleCI jobs)
+#   • other branches → branch-specific   :v1.59.1-jammy-<sanitised-branch-name>
+#     so feature-branch Dockerfile edits never overwrite the tag that CI relies on.
+
+name: Build Playwright CI image
+
+on:
+  push:
+    paths:
+      - .circleci/images/playwright/Dockerfile
+  workflow_dispatch:
+
+jobs:
+  build-and-push:
+    # Only run on the main repo (not forks) to keep GHCR credentials safe.
+    if: github.repository == 'cBioPortal/cbioportal-frontend'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Compute image tags
+        id: tags
+        run: |
+          BASE="ghcr.io/cbioportal/cbioportal-frontend-playwright-ci:v1.59.1-jammy"
+          if [ "${{ github.ref_name }}" = "master" ]; then
+            echo "tags=${BASE}" >> "$GITHUB_OUTPUT"
+          else
+            # Sanitise branch name: replace any character that isn't alphanumeric,
+            # dot, or hyphen with a hyphen, then strip leading/trailing hyphens.
+            BRANCH=$(echo "${{ github.ref_name }}" \
+              | tr -cs 'A-Za-z0-9.-' '-' \
+              | sed 's/^-//;s/-$//')
+            echo "tags=${BASE}-${BRANCH}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .circleci/images/playwright
+          push: true
+          tags: ${{ steps.tags.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

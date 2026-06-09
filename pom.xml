@@ -40,19 +40,19 @@
             <plugin>
                 <groupId>com.github.eirslett</groupId>
                 <artifactId>frontend-maven-plugin</artifactId>
-                <version>1.10.0</version>
+                <version>2.0.0</version>
 
                 <executions>
                     <execution>
                         <!-- optional: you don't really need execution ids, but it looks nice in your build log. -->
-                        <id>install node and yarn</id>
+                        <id>install node and corepack</id>
                         <goals>
-                            <goal>install-node-and-yarn</goal>
+                            <goal>install-node-and-corepack</goal>
                         </goals>
 
                         <configuration>
                             <nodeVersion>v22.18.0</nodeVersion>
-                            <yarnVersion>v1.22.22</yarnVersion>
+                            <corepackVersion>0.25.2</corepackVersion>
                         </configuration>
 
                         <!-- optional: default phase is "generate-resources" -->
@@ -60,23 +60,33 @@
                     </execution>
 
                     <execution>
-                        <id>yarn install</id>
+                        <id>enable pnpm shim</id>
                         <goals>
-                            <goal>yarn</goal>
+                            <goal>corepack</goal>
                         </goals>
                         <configuration>
-                            <arguments>--production=true --frozen-lockfile</arguments>
+                            <arguments>enable --install-directory ./node pnpm</arguments>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <id>pnpm install</id>
+                        <goals>
+                            <goal>corepack</goal>
+                        </goals>
+                        <configuration>
+                            <arguments>pnpm install --frozen-lockfile</arguments>
                         </configuration>
 
                     </execution>
 
                     <execution>
-                        <id>yarn run buildAll</id>
+                        <id>pnpm run buildAll</id>
                         <goals>
-                            <goal>yarn</goal>
+                            <goal>corepack</goal>
                         </goals>
                         <configuration>
-                            <arguments>run buildAll</arguments>
+                            <arguments>pnpm run buildAll</arguments>
                         </configuration>
                     </execution>
                 </executions>

@@ -34,7 +34,7 @@ This repository contains the frontend code for cBioPortal, a comprehensive cance
   - Tab width: 4 spaces
   - Single quotes
   - Trailing commas (ES5)
-- Run `yarn run prettierFixLocal` if CircleCI prettier check fails
+- Run `pnpm run prettierFixLocal` if CircleCI prettier check fails
 
 ### File Organization
 - Source code lives in `src/` directory
@@ -46,27 +46,26 @@ This repository contains the frontend code for cBioPortal, a comprehensive cance
 ## Development Workflow
 
 ### Setup
-1. Install dependencies: `yarn install --frozen-lockfile`
-2. Build DLLs: `yarn run buildDLL:dev`
-3. Build packages: `yarn run buildModules`
-4. Start dev server: `yarn run start`
+1. Install dependencies: `pnpm install --frozen-lockfile`
+2. Build packages: `pnpm run buildModules`
+3. Start dev server: `pnpm run start`
 
 ### Environment Variables
 - Set `BRANCH_ENV` to `master` or `rc` based on the branch you're working from
 - Custom API URLs can be configured in `env/custom.sh`
 
 ### Testing
-- Run main project tests: `yarn run testMain`
-- Run package tests: `yarn run testPackages`
-- Run tests in watch mode: `yarn run test:watch`
+- Run main project tests: `pnpm run testMain`
+- Run package tests: `pnpm run testPackages`
+- Run tests in watch mode: `pnpm run test:watch`
 - Use `GREP=filename.spec.js` to run specific test files
 - Test files should be named `*.spec.ts` or `*.spec.tsx`
 - Setup tests configuration is in `src/setupTests.ts`
 
 ### End-to-End Testing
 - E2E tests can run against public instances (`remote`) or local dockerized backend (`local`)
-- Run remote e2e tests: `yarn run e2e:remote --grep=some.spec*`
-- Run local e2e tests: `yarn run e2e:local` (requires Docker, jq, and Maven)
+- Run remote e2e tests: `pnpm run e2e:remote --grep=some.spec*`
+- Run local e2e tests: `pnpm run e2e:local` (requires Docker, jq, and Maven)
 
 ### Screenshot Testing
 - Screenshot tests are in files ending with `*.screenshot.spec.js`
@@ -81,6 +80,22 @@ This repository contains the frontend code for cBioPortal, a comprehensive cance
 - **Important**: Reference screenshots created on host system differ from dockerized setup (e.g., CircleCI) and cannot be used as references
 - Failed test screenshots are in `screenshots/diff` and `screenshots/error` folders for debugging
 
+#### Updating stale reference screenshots after an upstream data change
+
+When an upstream data source (Genome Nexus, OncoKB, cBioPortal backend) changes and the e2e reference screenshots go stale, CircleCI will fail on screenshot comparison. The fastest way to refresh the references is to **pull the "actual" screenshot from the failing CircleCI job's artifacts** — that image already shows the new correct data, rendered in the same dockerized environment the reference must match.
+
+```bash
+curl -L 'https://output.circle-artifacts.com/output/job/<job-uuid>/artifacts/0/./screenshots/screen/<screenshot-name>.png' \
+  > 'end-to-end-test/remote/screenshots/reference/<screenshot-name>.png'
+git add 'end-to-end-test/remote/screenshots/reference/<screenshot-name>.png'
+```
+
+Get the `<job-uuid>` from the failing CircleCI check on the PR (click through to the job → Artifacts tab → copy a screenshot URL and extract the UUID).
+
+Don't regenerate screenshots locally unless CircleCI can't produce them — per the note above, host-rendered images won't match the dockerized reference.
+
+Only update the screenshots affected by the upstream change. Don't bundle unrelated screenshot updates. One upstream fix, one PR. PR #5514 (CCDS ID fix) is a reference example.
+
 ### Code Quality
 - Pre-commit hooks automatically format code with Prettier
 - CircleCI runs prettier checks on pull requests
@@ -91,7 +106,7 @@ This repository contains the frontend code for cBioPortal, a comprehensive cance
 ### API Integration
 - API clients are auto-generated from Swagger/OpenAPI specs
 - Main API client: `packages/cbioportal-ts-api-client/`
-- Update API: `yarn run updateAPI`
+- Update API: `pnpm run updateAPI`
 - Change API root in development: Edit `my-index.ejs`
 
 ### Branch Strategy
@@ -106,7 +121,7 @@ This repository contains the frontend code for cBioPortal, a comprehensive cance
 
 ### Testing Against Live Instances
 - Use `localStorage.setItem("localdev", true)` in browser console at cbioportal.org to test local changes
-- **Important**: When testing against HTTPS backends (e.g., cbioportal.org, rc.cbioportal.org), use `yarn run startSSL` instead of `yarn run start` to serve frontend over SSL
+- **Important**: When testing against HTTPS backends (e.g., cbioportal.org, rc.cbioportal.org), use `pnpm run startSSL` instead of `pnpm run start` to serve frontend over SSL
 - Clear with `localStorage.clear()` when done
 
 ## Common Patterns

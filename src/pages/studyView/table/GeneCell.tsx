@@ -62,8 +62,19 @@ export class GeneCell extends React.Component<IGeneCellProps, {}> {
                     <div
                         data-test="geneNameCell"
                         className={classnames(styles.displayFlex)}
+                        role="button"
+                        tabIndex={0}
+                        aria-label={`Select gene ${this.props.hugoGeneSymbol}`}
                         onClick={() => {
                             this.props.onGeneSelect(this.props.hugoGeneSymbol);
+                        }}
+                        onKeyDown={(e: React.KeyboardEvent) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                this.props.onGeneSelect(
+                                    this.props.hugoGeneSymbol
+                                );
+                            }
                         }}
                     >
                         <EllipsisTextTooltip

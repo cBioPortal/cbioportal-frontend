@@ -853,11 +853,12 @@ export default class OncoprintControls extends React.Component<
                                 padding: '1px 5px 1px 5px',
                             }}
                             className="btn btn-primary"
+                            aria-label="Toggle settings menu"
                             onClick={() => {
                                 store.isSettingsMenuVisible = !store.isSettingsMenuVisible;
                             }}
                         >
-                            <i className="fa fa-sliders" />
+                            <i className="fa fa-sliders" aria-hidden="true" />
                         </button>
                         menu.
                     </div>
@@ -1253,11 +1254,12 @@ export default class OncoprintControls extends React.Component<
                     <Button
                         active={this.showMinimap}
                         onClick={this.toggleShowMinimap}
+                        aria-label="Toggle minimap"
                     >
                         <img
                             data-test="ShowMinimapButton"
                             src={require('./toggle-minimap.svg')}
-                            alt="icon"
+                            alt="Toggle minimap"
                             style={{ width: 15, height: 15 }}
                         />
                     </Button>

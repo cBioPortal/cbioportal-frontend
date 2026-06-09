@@ -58,6 +58,7 @@ export type IFixedHeaderTableProps<T> = {
     removeAll?: (data: T[]) => void;
     showSelectableNumber?: boolean;
     isSelectedRow?: (data: T) => boolean;
+    onRowClick?: (data: T) => void;
     headerClassName?: string;
     highlightedRowClassName?: (data: T) => string;
     autoFocusSearchAfterRendering?: boolean;
@@ -406,6 +407,7 @@ export default class FixedHeaderTable<T> extends React.Component<
                         placeholder={'Search...'}
                         type="text"
                         onInput={this.onFilterTextChange()}
+                        aria-label="Search table"
                         className={classnames(
                             'form-control',
                             styles.tableSearchInput
@@ -469,6 +471,7 @@ export default class FixedHeaderTable<T> extends React.Component<
                         onInput={this.onFilterTextChange()}
                         ref={this.setInputRef}
                         data-test="fixed-header-table-search-input"
+                        aria-label="Search table"
                         className={classnames(
                             'form-control',
                             styles.tableSearchInput
@@ -499,6 +502,12 @@ export default class FixedHeaderTable<T> extends React.Component<
                             }
                             rowGetter={this.rowGetter}
                             rowClassName={this.rowClassName}
+                            onRowClick={
+                                this.props.onRowClick
+                                    ? (info: any) =>
+                                          this.props.onRowClick!(info.rowData)
+                                    : undefined
+                            }
                             headerClassName={classNames(
                                 styles.headerColumn,
                                 this.props.headerClassName

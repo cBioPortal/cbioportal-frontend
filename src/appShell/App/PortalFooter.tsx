@@ -29,7 +29,7 @@ export default class PortalFooter extends React.Component<
             !_.isEmpty(getServerConfig().skin_footer)
         ) {
             return (
-                <div
+                <footer
                     id="footer"
                     dangerouslySetInnerHTML={{
                         __html:
@@ -43,12 +43,12 @@ export default class PortalFooter extends React.Component<
                                 getServerConfig().skin_email_contact
                             }">${getServerConfig().skin_email_contact}</a>`,
                     }}
-                ></div>
+                ></footer>
             );
         } else {
             return (
-                <div id="footer">
-                    <div className="footer-layout">
+                <footer id="footer">
+                    <nav className="footer-layout" aria-label="Footer">
                         <div className="footer-elem">
                             <img
                                 src={require('../../globalStyles/images/cbioportal_logo.png')}
@@ -91,6 +91,7 @@ export default class PortalFooter extends React.Component<
                                         <li>
                                             <a
                                                 target="_blank"
+                                                rel="noopener noreferrer"
                                                 href="https://docs.cbioportal.org/user-guide/overview/"
                                             >
                                                 Tutorials
@@ -104,7 +105,8 @@ export default class PortalFooter extends React.Component<
                                     >
                                         <li>
                                             <a
-                                                target={'_blank'}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
                                                 href="https://docs.cbioportal.org/user-guide/faq/"
                                             >
                                                 FAQ
@@ -114,6 +116,7 @@ export default class PortalFooter extends React.Component<
                                     <li>
                                         <a
                                             target="_blank"
+                                            rel="noopener noreferrer"
                                             href="https://groups.google.com/forum/#!forum/cbioportal"
                                         >
                                             User Group
@@ -139,6 +142,7 @@ export default class PortalFooter extends React.Component<
                                         <li>
                                             <a
                                                 target="_blank"
+                                                rel="noopener noreferrer"
                                                 href="https://docs.cbioportal.org/news/"
                                             >
                                                 News
@@ -153,7 +157,8 @@ export default class PortalFooter extends React.Component<
                                     >
                                         <li>
                                             <a
-                                                target={'_blank'}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
                                                 href="https://about.cbioportal.org/"
                                             >
                                                 About
@@ -168,7 +173,8 @@ export default class PortalFooter extends React.Component<
                                     >
                                         <li>
                                             <a
-                                                target={'_blank'}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
                                                 href="https://about.cbioportal.org/roadmap"
                                             >
                                                 Roadmap
@@ -202,6 +208,7 @@ export default class PortalFooter extends React.Component<
                                         <li>
                                             <a
                                                 target="_blank"
+                                                rel="noopener noreferrer"
                                                 href="https://www.twitter.com/cbioportal"
                                             >
                                                 Twitter
@@ -221,6 +228,7 @@ export default class PortalFooter extends React.Component<
                                     <li>
                                         <a
                                             target="_blank"
+                                            rel="noopener noreferrer"
                                             href="https://github.com/cBioPortal/"
                                         >
                                             GitHub
@@ -229,6 +237,7 @@ export default class PortalFooter extends React.Component<
                                     <li>
                                         <a
                                             target="_blank"
+                                            rel="noopener noreferrer"
                                             href="https://slack.cbioportal.org"
                                         >
                                             Slack
@@ -261,8 +270,26 @@ export default class PortalFooter extends React.Component<
                                 </li>
                             </ul>
                         </div>
-                    </div>
-                </div>
+                        <If condition={this.props.appStore.isMskManagedPortal}>
+                            <div className="footer-elem clickhouse-elem">
+                                <h3>Powered by</h3>
+                                <a
+                                    href="https://clickhouse.com"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="clickhouse-badge"
+                                    aria-label="ClickHouse"
+                                >
+                                    <img
+                                        className="clickhouse-badge-logo"
+                                        src={require('../../globalStyles/images/clickhouse-logo.svg')}
+                                        alt="ClickHouse"
+                                    />
+                                </a>
+                            </div>
+                        </If>
+                    </nav>
+                </footer>
             );
         }
     }

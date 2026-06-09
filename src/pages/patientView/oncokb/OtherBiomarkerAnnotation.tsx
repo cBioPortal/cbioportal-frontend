@@ -15,12 +15,14 @@ export const OtherBiomarkerAnnotation: React.FunctionComponent<{
     annotation: IndicatorQueryResp;
 }> = props => {
     return (
-        <span className="clinical-spans">
+        <span
+            className="clinical-spans"
+            style={{ display: 'inline-flex' }}
+        >
             {OTHER_BIOMARKER_NAME[props.type]}
             <span
                 style={{
                     marginLeft: 2,
-                    display: 'flex',
                 }}
             >
                 <OncoKB

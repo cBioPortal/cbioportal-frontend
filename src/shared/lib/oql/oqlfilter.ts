@@ -1232,6 +1232,145 @@ export const structVarOQLSpecialValues = [
     STRUCTVARNullGeneStr,
 ];
 
+/**
+ * Removes the entry at the given index from an OQL gene list string and
+ * returns the resulting string. The list is parsed without any default OQL
+ * expansion so that plain genes keep their original form (no profile-default
+ * alteration qualifiers are added). Falls back to returning the original
+ * string unchanged if parsing fails or the index is out of range.
+ *
+ * This is the correct primitive for "Remove track" in the Oncoprint: the
+ * track key `GENETICTRACK_N` corresponds to index N in the parsed gene list
+ * (after DATATYPES statements have been consumed).
+ *
+ * Handles all input formats accepted by the OQL parser:
+ * - Newline-separated: `KRAS\nNRAS\nBRAF`
+ * - Space-separated (e.g. homepage URLs): `KRAS NRAS BRAF`
+ * - OQL-qualified genes: `BRAF:V600E`
+ * - Merged tracks: `[KRAS NRAS]` or `["label" KRAS NRAS]`
+ * - DATATYPES statements (preserved in output, skipped in index count)
+ */
+export function removeIndexFromGeneList(
+    geneList: string,
+    indexToRemove: number
+): string {
+    if (indexToRemove < 0) {
+        console.warn(
+            `removeIndexFromGeneList: index ${indexToRemove} is out of range`
+        );
+        return geneList;
+    }
+
+    let rawParsed: (SingleGeneQuery | MergedGeneQuery)[];
+    try {
+        const parseResult = oql_parser.parse(geneList);
+        rawParsed = (parseResult || []) as (SingleGeneQuery | MergedGeneQuery)[];
+        if (!parseResult) {
+            // Empty or null result means empty gene list — nothing to remove
+            return geneList;
+        }
+    } catch (e) {
+        console.warn(
+            'removeIndexFromGeneList: failed to parse gene list:',
+            e
+        );
+        return geneList;
+    }
+
+    // Build a mapping from track index to raw-parsed-array index, skipping
+    // DATATYPES statements.  The oncoprint track index (GENETICTRACK_N) is
+    // based on the gene list after DATATYPES statements have been consumed by
+    // the OQL processor, so we must skip them when counting.
+    const trackIndices: number[] = [];
+    for (let i = 0; i < rawParsed.length; i++) {
+        const entry = rawParsed[i];
+        if (
+            !isMergedGeneQuery(entry) &&
+            'gene' in entry &&
+            (entry as SingleGeneQuery).gene.toUpperCase() === 'DATATYPES'
+        ) {
+            continue;
+        }
+        trackIndices.push(i);
+    }
+
+    if (indexToRemove >= trackIndices.length) {
+        console.warn(
+            `removeIndexFromGeneList: index ${indexToRemove} is out of range ` +
+                `for gene list with ${trackIndices.length} entries`
+        );
+        return geneList;
+    }
+
+    const rawIndexToRemove = trackIndices[indexToRemove];
+    return rawParsed
+        .filter((_, i) => i !== rawIndexToRemove)
+        .map(entry => {
+            if (isMergedGeneQuery(entry)) {
+                // Merged track: use the OQL parser's label syntax, which is a
+                // quoted label as the first token inside brackets:
+                //   ["My label" GENE1 GENE2]
+                // (no colon after the label — a colon would produce invalid OQL)
+                const label = entry.label ? `"${entry.label}" ` : '';
+                return `[${label}${entry.list
+                    .map(unparseOQLQueryLine)
+                    .join(' ')}]`;
+            }
+            // At this point entry is a SingleGeneQuery (not a MergedGeneQuery)
+            return unparseOQLQueryLine(entry as SingleGeneQuery);
+        })
+        .join('\n');
+}
+
+/**
+ * Returns the Hugo gene symbols for the OQL entry at the given track index
+ * (after skipping DATATYPES statements). For a simple gene returns a
+ * single-element array; for a merged track returns all gene symbols in the
+ * group.  Returns an empty array if the index is out of range or parsing
+ * fails.
+ */
+export function getGeneSymbolsAtIndex(
+    geneList: string,
+    trackIndex: number
+): string[] {
+    if (trackIndex < 0) {
+        return [];
+    }
+
+    let rawParsed: (SingleGeneQuery | MergedGeneQuery)[];
+    try {
+        const parseResult = oql_parser.parse(geneList);
+        if (!parseResult) {
+            return [];
+        }
+        rawParsed = parseResult as (SingleGeneQuery | MergedGeneQuery)[];
+    } catch (e) {
+        return [];
+    }
+
+    // Skip DATATYPES entries when counting track indices (same logic as
+    // removeIndexFromGeneList)
+    let currentTrackIndex = 0;
+    for (const entry of rawParsed) {
+        if (
+            !isMergedGeneQuery(entry) &&
+            'gene' in entry &&
+            (entry as SingleGeneQuery).gene.toUpperCase() === 'DATATYPES'
+        ) {
+            continue;
+        }
+        if (currentTrackIndex === trackIndex) {
+            if (isMergedGeneQuery(entry)) {
+                return entry.list.map(g => g.gene.toUpperCase());
+            }
+            return [(entry as SingleGeneQuery).gene.toUpperCase()];
+        }
+        currentTrackIndex++;
+    }
+
+    return [];
+}
+
 export function uniqueGenesInOQLQuery(oql_query: string): string[] {
     const parse_result: SingleGeneQuery[] = parseOQLQuery(oql_query);
     const genes = parse_result
