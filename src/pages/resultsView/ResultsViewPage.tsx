@@ -25,6 +25,7 @@ import QuerySummary from './querySummary/QuerySummary';
 import PlotsTab from 'shared/components/plots/PlotsTab';
 import { MSKTab, MSKTabs } from '../../shared/components/MSKTabs/MSKTabs';
 import { PageLayout } from '../../shared/components/PageLayout/PageLayout';
+import ChatSidebar from 'shared/components/chatSidebar/ChatSidebar';
 import autobind from 'autobind-decorator';
 import { ITabConfiguration } from '../../shared/model/ITabConfiguration';
 import {
@@ -880,14 +881,23 @@ export default class ResultsViewPage extends React.Component<
             });
             return null;
         } else {
+            const studyIds = this.resultsViewPageStore.studyIds.result;
             return (
-                <PageLayout
-                    noMargin={true}
-                    hideFooter={true}
-                    className={'subhead-dark'}
-                >
-                    {this.pageContent}
-                </PageLayout>
+                <>
+                    <PageLayout
+                        noMargin={true}
+                        hideFooter={true}
+                        className={'subhead-dark'}
+                    >
+                        {this.pageContent}
+                    </PageLayout>
+                    <ChatSidebar
+                        studyIds={studyIds}
+                        genes={this.resultsViewPageStore.hugoGeneSymbols}
+                        tab={this.resultsViewPageStore.tabId}
+                        urlWrapper={this.resultsViewPageStore.urlWrapper}
+                    />
+                </>
             );
         }
     }
