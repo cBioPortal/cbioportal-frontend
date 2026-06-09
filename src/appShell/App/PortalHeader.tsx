@@ -106,8 +106,7 @@ export default class PortalHeader extends React.Component<
                 id: 'chat',
                 text: (
                     <>
-                        Chat{' '}
-                        <strong className={'beta-text'}>Beta!</strong>
+                        Chat <strong className={'beta-text'}>Beta!</strong>
                     </>
                 ),
                 address:
@@ -177,7 +176,7 @@ export default class PortalHeader extends React.Component<
                             alt="cBioPortal Logo"
                         />
                     </Link>
-                    <nav id="main-nav">
+                    <nav id="main-nav" aria-label="Main navigation">
                         <ul>{this.getTabs()}</ul>
                     </nav>
                 </div>
