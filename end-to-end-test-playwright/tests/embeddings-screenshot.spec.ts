@@ -16,7 +16,7 @@ import { expectElementScreenshot } from './helpers/common';
  * seed. The EMBEDDINGS feature flag is opt-in via the URL.
  */
 
-const STUDY = 'msk_chord_2024';
+const STUDY = 'msk_impact_50k_2026';
 const VIZ = '[data-test="embeddings-visualization"]';
 const LEGEND = '[data-test="embeddings-legend"]';
 const EMBEDDINGS_TAB = '#studyViewTabs a.tabAnchor_embeddings';
@@ -30,7 +30,7 @@ function filterParam(values: string[]): string {
     return encodeURIComponent(
         JSON.stringify({
             clinicalDataEqualityFilters: [
-                { attributeId: 'CANCER_TYPE_DETAILED', values },
+                { attributeId: 'CANCER_TYPE', values },
             ],
         })
     );
@@ -119,11 +119,14 @@ test.describe('embeddings tab screenshots', () => {
     });
 
     test.describe('clinical attribute coloring', () => {
-        const clinicalColoring = (attributeId: string) =>
+        const clinicalColoring = (
+            attributeId: string,
+            patientAttribute: boolean
+        ) =>
             coloringParam({
                 selectedOption: `undefined_${JSON.stringify({
                     clinicalAttributeId: attributeId,
-                    patientAttribute: true,
+                    patientAttribute,
                     studyId: STUDY,
                 })}`,
                 colorByMutationType: 'false',
@@ -131,15 +134,16 @@ test.describe('embeddings tab screenshots', () => {
                 colorBySv: 'false',
             });
 
-        test('colors embedding by categorical clinical attribute (ADRENAL_GLANDS)', async ({
+        test('colors embedding by categorical clinical attribute (SEX)', async ({
             page,
         }) => {
             await page.goto(
                 `/study/embeddings?id=${STUDY}&embeddings_coloring_selection=${clinicalColoring(
-                    'ADRENAL_GLANDS'
+                    'SEX',
+                    true
                 )}&featureFlags=EMBEDDINGS`
             );
-            await snapViz(page, 'embeddings-clinical-adrenal-glands.png');
+            await snapViz(page, 'embeddings-clinical-sex.png');
         });
 
         test('shows legend with clinical attribute values', async ({
@@ -147,21 +151,23 @@ test.describe('embeddings tab screenshots', () => {
         }) => {
             await page.goto(
                 `/study/embeddings?id=${STUDY}&embeddings_coloring_selection=${clinicalColoring(
-                    'ADRENAL_GLANDS'
+                    'SEX',
+                    true
                 )}&featureFlags=EMBEDDINGS`
             );
-            await snapLegend(page, 'embeddings-legend-adrenal-glands.png');
+            await snapLegend(page, 'embeddings-legend-sex.png');
         });
 
-        test('colors embedding by numeric clinical attribute with gradient (CURRENT_AGE)', async ({
+        test('colors embedding by numeric clinical attribute with gradient (FRACTION_GENOME_ALTERED)', async ({
             page,
         }) => {
             await page.goto(
                 `/study/embeddings?id=${STUDY}&embeddings_coloring_selection=${clinicalColoring(
-                    'CURRENT_AGE'
+                    'FRACTION_GENOME_ALTERED',
+                    false
                 )}&featureFlags=EMBEDDINGS`
             );
-            await snapViz(page, 'embeddings-clinical-current-age.png');
+            await snapViz(page, 'embeddings-clinical-fga.png');
         });
 
         test('shows gradient legend for numeric clinical attribute', async ({
@@ -169,10 +175,11 @@ test.describe('embeddings tab screenshots', () => {
         }) => {
             await page.goto(
                 `/study/embeddings?id=${STUDY}&embeddings_coloring_selection=${clinicalColoring(
-                    'CURRENT_AGE'
+                    'FRACTION_GENOME_ALTERED',
+                    false
                 )}&featureFlags=EMBEDDINGS`
             );
-            await snapLegend(page, 'embeddings-legend-current-age.png');
+            await snapLegend(page, 'embeddings-legend-fga.png');
         });
     });
 
