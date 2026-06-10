@@ -155,6 +155,8 @@ export interface IServerConfig {
     sessionServiceEnabled: boolean;
     session_url_length_threshold: string;
     mskWholeSlideViewerToken: string;
+    /** Base URL of the MSK WSI tile server, e.g. https://tiles.cbioportal.org */
+    msk_wsi_tile_server_url: string;
     query_product_limit: number;
     clinical_attribute_product_limit: number;
     dat_method: string;

@@ -28,6 +28,7 @@ import * as React from 'react';
 import SampleManager from 'pages/patientView/SampleManager';
 import PatientViewPage from 'pages/patientView/PatientViewPage';
 import PatientViewUrlWrapper from 'pages/patientView/PatientViewUrlWrapper';
+import WSIViewer from 'shared/components/wsiViewer/WSIViewer';
 import { CompactVAFPlot } from 'pages/patientView/genomicOverview/CompactVAFPlot';
 import {
     computeMutationFrequencyBySample,
@@ -49,6 +50,7 @@ export enum PatientViewPageTabs {
     PathologyReport = 'pathologyReport',
     TissueImage = 'tissueImage',
     MSKTissueImage = 'MSKTissueImage',
+    WSIHESlides = 'wsiHESlides',
     TrialMatchTab = 'trialMatchTab',
     MutationalSignatures = 'mutationalSignatures',
     PathwayMapper = 'pathways',
@@ -658,6 +660,24 @@ export function tabs(
                         url={pageComponent.wholeSlideViewerUrl.result!}
                     />
                 </div>
+            </MSKTab>
+        );
+
+    // Native OpenSeadragon WSI viewer tab — shown when msk_wsi_tile_server_url
+    // is configured. Fetches patient hierarchy directly from tile server;
+    // no study data files or resource entries required.
+    getServerConfig().msk_wsi_tile_server_url &&
+        tabs.push(
+            <MSKTab
+                key={6.5}
+                id={PatientViewPageTabs.WSIHESlides}
+                linkText="H&E Slides"
+                unmountOnHide={false}
+            >
+                <WSIViewer
+                    url={`${getServerConfig().msk_wsi_tile_server_url}/patient/${pageComponent.patientViewPageStore.patientId}`}
+                    height={WindowStore.size.height - 220}
+                />
             </MSKTab>
         );
 
