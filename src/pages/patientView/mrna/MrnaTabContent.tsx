@@ -63,6 +63,9 @@ type ExpressionTableRow = {
 const EXPR_GENE_COL_W = 110;
 const EXPR_LABELS_COL_W = 150;
 const EXPR_ADD_COL_W = 30;
+// Shared size for the add/remove +/✓ icons wherever they appear (table row,
+// the "Add gene sets" button, and the gene-sets popover) so they stay uniform.
+const ADD_ICON_FONT_SIZE = 10;
 const EXPR_SAMPLE_COL_W = 80;
 
 // Hard cap on how many genes the chart will draw at once. Selecting more than
@@ -1267,11 +1270,9 @@ export default class MrnaTabContent extends React.Component<
                 };
             })
             // Restrict to OncoKB cancer genes when the filter is on (and loaded).
-            .filter(r => !oncoFilter || oncoSet.has(r.symbol.toUpperCase()))
-            // Only genes that belong to at least one labeled gene group appear
-            // in the table (the Labels column is the way you interact with the
-            // chart, so an unlabeled gene has nothing to show or click).
-            .filter(r => r.labelIds.length > 0);
+            .filter(r => !oncoFilter || oncoSet.has(r.symbol.toUpperCase()));
+        // Every gene with mRNA data for the patient is listed — set membership
+        // is shown via the Labels chips but is not required.
         // Sort by the first sample column that actually has data — a sample
         // with no values for any gene is skipped as a sort key.
         const sortSample = this.expressionTableSampleIds.find(id =>
@@ -1517,7 +1518,7 @@ export default class MrnaTabContent extends React.Component<
                             className={
                                 onChart ? 'fa fa-check' : 'fa fa-plus'
                             }
-                            style={{ fontSize: 10 }}
+                            style={{ fontSize: ADD_ICON_FONT_SIZE }}
                         />
                     </button>
                 );
@@ -2334,9 +2335,6 @@ export default class MrnaTabContent extends React.Component<
                                 padding: '2px 4px',
                                 borderRadius: 3,
                                 cursor: 'pointer',
-                                backgroundColor: onChart
-                                    ? '#eaf5ea'
-                                    : 'transparent',
                             }}
                         >
                             <span
@@ -2361,10 +2359,7 @@ export default class MrnaTabContent extends React.Component<
                                 className={
                                     onChart ? 'fa fa-check' : 'fa fa-plus'
                                 }
-                                style={{
-                                    fontSize: 11,
-                                    color: onChart ? '#5aa454' : '#2986cc',
-                                }}
+                                style={{ fontSize: ADD_ICON_FONT_SIZE }}
                             />
                         </div>
                     );
@@ -2388,7 +2383,13 @@ export default class MrnaTabContent extends React.Component<
                         boxSizing: 'border-box',
                     }}
                 >
-                    <i className="fa fa-plus" style={{ marginRight: 4 }} />
+                    <i
+                        className="fa fa-plus"
+                        style={{
+                            marginRight: 4,
+                            fontSize: ADD_ICON_FONT_SIZE,
+                        }}
+                    />
                     Add gene sets to plot
                 </button>
             </DefaultTooltip>
