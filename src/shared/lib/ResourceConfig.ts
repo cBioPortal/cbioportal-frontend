@@ -39,6 +39,14 @@ export interface ResourceCustomConfig {
      * Used in: Patient View (resource iframe)
      */
     iframeErrorMessage?: string;
+
+    /**
+     * Use a native viewer component instead of IFrameLoader.
+     * 'wsi' renders WSIViewer (OpenSeadragon whole-slide image viewer)
+     * and expects resource URL to be https://tile-server/patient/{patient_id}
+     * Used in: Patient View (resource tab)
+     */
+    nativeViewer?: 'wsi';
 }
 
 export const RESOURCE_CUSTOM_CONFIGS: Record<string, ResourceCustomConfig> = {
@@ -50,6 +58,12 @@ export const RESOURCE_CUSTOM_CONFIGS: Record<string, ResourceCustomConfig> = {
         openInNewTab: true,
         iframeErrorMessage:
             'This resource requires VPN access. Please connect to VPN and refresh the page.',
+    },
+    // Native OpenSeadragon WSI viewer — resource URL must be
+    // https://<tile-server>/patient/{patient_id}
+    HE: {
+        customizedDisplayName: 'H&E Slides',
+        nativeViewer: 'wsi',
     },
 };
 
