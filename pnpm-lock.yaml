@@ -120,6 +120,9 @@ importers:
       '@types/numeral':
         specifier: 0.0.22
         version: 0.0.22
+      '@types/openseadragon':
+        specifier: 6.0.0
+        version: 6.0.0
       '@types/pako':
         specifier: 1.0.1
         version: 1.0.1
@@ -423,6 +426,9 @@ importers:
       oncoprintjs:
         specifier: workspace:*
         version: link:packages/oncoprintjs
+      openseadragon:
+        specifier: 6.0.2
+        version: 6.0.2
       pako:
         specifier: 2.0.2
         version: 2.0.2
@@ -3295,6 +3301,10 @@ packages:
 
   '@types/numeral@0.0.22':
     resolution: {integrity: sha512-zUS7L52zNNVIKDf2/YiWUeFLiJPPZ03h9wVLDa04u4j5bTFc9OeACCg6piZBTwhPyWv3P7nKe4OWzQwU/FGHgQ==}
+
+  '@types/openseadragon@6.0.0':
+    resolution: {integrity: sha512-tmwZFanLT8NNyiDiQhkVCPdTFhSvMcDVOFLYdzyZAEnjxGgeTMu8pvV2CFRXddAAUKLo16Q45AW58IpLur8kpQ==}
+    deprecated: This is a stub types definition. openseadragon provides its own type definitions, so you do not need this installed.
 
   '@types/pako@1.0.1':
     resolution: {integrity: sha512-GdZbRSJ3Cv5fiwT6I0SQ3ckeN2PWNqxd26W9Z2fCK1tGrrasGy4puvNFtnddqH9UJFMQYXxEuuB7B8UK+LLwSg==}
@@ -8920,6 +8930,9 @@ packages:
   opener@1.5.2:
     resolution: {integrity: sha512-ur5UIdyw5Y7yEj9wLzhqXiy6GZ3Mwx0yGI+5sMn2r0N0v3cKJvUmFH5yPP+WXh9e0xfyzyJX95D8l088DNFj7A==}
     hasBin: true
+
+  openseadragon@6.0.2:
+    resolution: {integrity: sha512-WNPPQWp9sHunyzkV9J2yhfxnSfDF9CfBsE6unmkdxh1uTWzFcueMvBPhmuZdY7M1v/ffJ3NdaF3Qq3jogphIbA==}
 
   optimist@0.6.1:
     resolution: {integrity: sha512-snN4O4TkigujZphWLN0E//nQmm7790RYaE53DdL7ZYwee2D8DDo9/EyYiKUfN3rneWUjhJnueija3G9I2i0h3g==}
@@ -15538,6 +15551,10 @@ snapshots:
   '@types/normalize-package-data@2.4.4': {}
 
   '@types/numeral@0.0.22': {}
+
+  '@types/openseadragon@6.0.0':
+    dependencies:
+      openseadragon: 6.0.2
 
   '@types/pako@1.0.1': {}
 
@@ -22782,6 +22799,8 @@ snapshots:
   opener@1.4.3: {}
 
   opener@1.5.2: {}
+
+  openseadragon@6.0.2: {}
 
   optimist@0.6.1:
     dependencies:
