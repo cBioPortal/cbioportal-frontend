@@ -35,6 +35,8 @@ interface Props {
     /** URL of the form https://tile-server/patient/{patient_id} */
     url: string;
     height: number;
+    /** cBioPortal study ID — used to build sample links in the sidebar */
+    studyId?: string;
 }
 
 @observer
@@ -284,6 +286,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
                     sample={selectedSample}
                     meta={selectedMeta}
                     tileServerBase={this.tileServerBase}
+                    studyId={this.props.studyId}
                 />
             </div>
         );
@@ -448,9 +451,15 @@ function SampleNode({ sample, selectedSlide, stainFilter, onSelectSlide }: Sampl
                             </span>
                         )}
                         {sample.oncotree_code && (
-                            <span style={{ display: 'inline-block', background: '#f0f0f0', border: `1px solid ${C.border}`, borderRadius: 3, fontSize: 9, fontWeight: 700, padding: '0 4px', color: C.text, marginRight: 4 }}>
+                            <a
+                                href={`https://oncotree.mskcc.org/#/home?version=oncotree_latest_stable&search_term=${encodeURIComponent(sample.oncotree_code)}`}
+                                target="_blank" rel="noopener noreferrer"
+                                title={`${sample.oncotree_code} — view on oncotree.mskcc.org`}
+                                onClick={e => e.stopPropagation()}
+                                style={{ display: 'inline-block', background: '#f0f0f0', border: `1px solid ${C.border}`, borderRadius: 3, fontSize: 9, fontWeight: 700, padding: '0 4px', color: C.text, marginRight: 4, textDecoration: 'none' }}
+                            >
                                 {sample.oncotree_code}
-                            </span>
+                            </a>
                         )}
                         {sample.cancer_type_detailed || sample.cancer_type || ''}
                     </div>
@@ -458,7 +467,7 @@ function SampleNode({ sample, selectedSlide, stainFilter, onSelectSlide }: Sampl
                         <div style={{ fontSize: 10, color: '#aaa' }}>{sample.primary_site}</div>
                     )}
                 </div>
-                <div style={{ fontSize: 9, color: '#bbb', flexShrink: 0, textAlign: 'right', lineHeight: 1.4 }}>
+                <div title="Tile-servable slides / total slides" style={{ fontSize: 9, color: '#bbb', flexShrink: 0, textAlign: 'right', lineHeight: 1.4, cursor: 'help' }}>
                     <span style={{ color: C.blue, fontWeight: 600 }}>{servableSlides}</span>/{totSlides}
                 </div>
             </div>
@@ -533,7 +542,9 @@ function SlideItem({ slide, sample, blockBadge, selected, onSelectSlide }: Slide
                     )}
                 </div>
                 <div style={{ fontSize: 9, color: C.muted, whiteSpace: 'nowrap' }}>
-                    {mag ? `${mag} · ` : ''}{sz}{slide.can_serve_tiles ? '' : ' · no tiles'}
+                    {mag && <span title="Objective lens magnification">{mag} · </span>}
+                    <span title="File size on disk">{sz}</span>
+                    {slide.can_serve_tiles ? '' : ' · no tiles'}
                 </div>
             </div>
         </div>
@@ -547,9 +558,10 @@ interface MetaSidebarProps {
     sample: Sample | null;
     meta: TileMetadata | null;
     tileServerBase: string;
+    studyId?: string;
 }
 
-function MetaSidebar({ slide, sample, meta, tileServerBase }: MetaSidebarProps) {
+function MetaSidebar({ slide, sample, meta, tileServerBase, studyId }: MetaSidebarProps) {
     const thumbSrc = slide ? `${tileServerBase}/tiles/${slide.image_id}/thumbnail` : null;
 
     return (
@@ -591,7 +603,7 @@ function MetaSidebar({ slide, sample, meta, tileServerBase }: MetaSidebarProps) 
             {/* Pathology */}
             <SbSection title="Pathology">
                 {slide && sample ? (
-                    <MetaTable rows={buildPathRows(slide, sample)} />
+                    <MetaTable rows={buildPathRows(slide, sample, studyId)} />
                 ) : (
                     <span style={{ color: '#bbb', fontSize: 11 }}>—</span>
                 )}
@@ -611,14 +623,31 @@ function SbSection({ title, children }: { title: string; children: React.ReactNo
     );
 }
 
-function MetaTable({ rows }: { rows: Array<[string, string]> }) {
+function MetaTable({ rows }: { rows: MetaRow[] }) {
     return (
         <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 6 }}>
             <tbody>
-                {rows.map(([k, v]) => (
-                    <tr key={k}>
-                        <td style={{ fontSize: 11, color: C.muted, width: '50%', paddingRight: 5, paddingTop: 2, paddingBottom: 2, verticalAlign: 'top', lineHeight: 1.5 }}>{k}</td>
-                        <td style={{ fontSize: 11, color: C.text, fontWeight: 500, wordBreak: 'break-word', verticalAlign: 'top', lineHeight: 1.5 }}>{v || '—'}</td>
+                {rows.map(row => (
+                    <tr key={row.label}>
+                        <td title={row.labelTip} style={{
+                            fontSize: 11, color: C.muted, width: '50%', paddingRight: 5, paddingTop: 2,
+                            paddingBottom: 2, verticalAlign: 'top', lineHeight: 1.5,
+                            cursor: row.labelTip ? 'help' : undefined,
+                            borderBottom: row.labelTip ? `1px dotted ${C.border}` : undefined,
+                        }}>
+                            {row.label}
+                        </td>
+                        <td style={{ fontSize: 11, color: C.text, fontWeight: 500, wordBreak: 'break-word', verticalAlign: 'top', lineHeight: 1.5 }}>
+                            {row.href ? (
+                                <a href={row.href} target="_blank" rel="noopener noreferrer" style={{ color: C.blue, textDecoration: 'none' }}
+                                   onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.textDecoration = 'underline'; }}
+                                   onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.textDecoration = 'none'; }}>
+                                    {row.value || '—'}
+                                </a>
+                            ) : (
+                                row.value || '—'
+                            )}
+                        </td>
                     </tr>
                 ))}
             </tbody>
@@ -626,34 +655,47 @@ function MetaTable({ rows }: { rows: Array<[string, string]> }) {
     );
 }
 
-function buildWsiRows(slide: Slide | null, meta: TileMetadata): Array<[string, string]> {
+interface MetaRow {
+    label: string;
+    labelTip?: string;
+    value: React.ReactNode;
+    href?: string;
+}
+
+function buildWsiRows(slide: Slide | null, meta: TileMetadata): MetaRow[] {
     const w = meta.dimensions.width, h = meta.dimensions.height;
     const mppX = meta.mpp?.x || 0, mppY = meta.mpp?.y || 0;
     const mpp = (mppX && mppY) ? (mppX + mppY) / 2 : 0;
     const objNum = meta.objective_power || (mpp ? Math.round(10 / mpp) : 0);
-    const rows: Array<[string, string]> = [
-        ['Dimensions', `${w.toLocaleString()} × ${h.toLocaleString()} px`],
+    const rows: MetaRow[] = [
+        { label: 'Dimensions', labelTip: 'Width × height in pixels at full resolution', value: `${w.toLocaleString()} × ${h.toLocaleString()} px` },
     ];
-    if (mpp) rows.push(['MPP', `${mpp.toFixed(4)} µm/px`]);
-    if (objNum) rows.push(['Objective', `${objNum}×`]);
-    rows.push(['Zoom levels', String(meta.max_zoom + 1)]);
-    rows.push(['Tile size', `${meta.tile_size} px`]);
-    if (slide?.file_size_bytes) rows.push(['File size', fmtMB(slide.file_size_bytes)]);
+    if (mpp) rows.push({ label: 'MPP', labelTip: 'Microns per pixel — physical size of one pixel at full resolution', value: `${mpp.toFixed(4)} µm/px` });
+    if (objNum) rows.push({ label: 'Objective', labelTip: 'Objective lens magnification used to capture the slide', value: `${objNum}×` });
+    rows.push({ label: 'Zoom levels', labelTip: 'Number of resolution tiers in the pyramidal image', value: String(meta.max_zoom + 1) });
+    rows.push({ label: 'Tile size', labelTip: 'Tile dimensions (px) streamed to the viewer', value: `${meta.tile_size} px` });
+    if (slide?.file_size_bytes) rows.push({ label: 'File size', value: fmtMB(slide.file_size_bytes) });
     return rows;
 }
 
-function buildPathRows(slide: Slide, sample: Sample): Array<[string, string]> {
+function buildPathRows(slide: Slide, sample: Sample, studyId?: string): MetaRow[] {
     const stainBadge = slide.is_hne ? 'H&E' : (slide.is_ihc ? 'IHC' : '');
-    const rows: Array<[string, string]> = [
-        ['Stain', stainBadge ? `${stainBadge} — ${cleanStain(slide.stain_name)}` : cleanStain(slide.stain_name)],
-        ['Sample', sample.sample_id || '—'],
+    const oncotreeUrl = sample.oncotree_code
+        ? `https://oncotree.mskcc.org/#/home?version=oncotree_latest_stable&search_term=${encodeURIComponent(sample.oncotree_code)}`
+        : undefined;
+    const sampleUrl = (studyId && sample.sample_id)
+        ? `/patient?studyId=${encodeURIComponent(studyId)}&caseId=${encodeURIComponent(sample.sample_id.replace(/-T\d+.*$/i, ''))}&sampleId=${encodeURIComponent(sample.sample_id)}`
+        : undefined;
+    const rows: MetaRow[] = [
+        { label: 'Stain', labelTip: 'Staining protocol used for this slide', value: stainBadge ? `${stainBadge} — ${cleanStain(slide.stain_name)}` : cleanStain(slide.stain_name) },
+        { label: 'Sample', labelTip: 'Tumor sample identifier', value: sample.sample_id || '—', href: sampleUrl },
     ];
-    if (sample.cancer_type_detailed || sample.cancer_type) rows.push(['Cancer type', sample.cancer_type_detailed || sample.cancer_type || '']);
-    if (sample.oncotree_code) rows.push(['OncoTree', sample.oncotree_code]);
-    if (sample.primary_site) rows.push(['Primary site', sample.primary_site]);
-    if (slide.magnification) rows.push(['Magnification', slide.magnification]);
+    if (sample.cancer_type_detailed || sample.cancer_type) rows.push({ label: 'Cancer type', value: sample.cancer_type_detailed || sample.cancer_type || '' });
+    if (sample.oncotree_code) rows.push({ label: 'OncoTree', labelTip: 'OncoTree cancer classification code — click to view on oncotree.mskcc.org', value: sample.oncotree_code, href: oncotreeUrl });
+    if (sample.primary_site) rows.push({ label: 'Primary site', value: sample.primary_site });
+    if (slide.magnification) rows.push({ label: 'Magnification', labelTip: 'Objective lens magnification', value: slide.magnification });
     const blockLbl = (slide.block_label || '').trim() || (slide.block_number ? String(slide.block_number) : '');
-    if (blockLbl) rows.push(['Block', blockLbl]);
+    if (blockLbl) rows.push({ label: 'Block', labelTip: BLOCK_LABEL_TIP, value: blockLbl });
     return rows;
 }
 
