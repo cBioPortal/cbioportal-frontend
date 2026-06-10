@@ -41,10 +41,8 @@ import {
 } from 'pages/studyView/StudyViewUtils';
 import {
     findGroupByValue,
-    groupValue,
     isGroupValue,
     GENE_GROUP_VALUE_PREFIX,
-    MRNA_TAB_GENE_GROUPS,
     PATIENT_MUTATIONS_GROUP_ID,
     PATIENT_SV_GROUP_ID,
     PATIENT_CNA_GROUP_ID,
@@ -54,12 +52,8 @@ import {
 import { PatientViewPageStore } from './PatientViewPageStore';
 
 // Initial picker selection when the user first lands on the mRNA tab.
-// Defaults to the FDA-approved ADC targets group token; falls back to a small
-// set of well-known genes if that group has been removed.
-const FDA_ADC_GROUP = MRNA_TAB_GENE_GROUPS.find(g => g.id === 'fda-adc');
-export const MRNA_TAB_DEFAULT_SELECTIONS: string[] = FDA_ADC_GROUP
-    ? [groupValue(FDA_ADC_GROUP)]
-    : ['TP53', 'EGFR', 'KRAS'];
+// Nothing is selected by default — the user adds genes/sets from the tab.
+export const MRNA_TAB_DEFAULT_SELECTIONS: string[] = [];
 
 export interface MutatedGenePick {
     hugoGeneSymbol: string;
