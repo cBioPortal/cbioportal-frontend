@@ -5,9 +5,26 @@ import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicato
 import * as OpenSeadragonLib from 'openseadragon';
 import {
     Slide,
+    Sample,
     PatientHierarchy,
     TileMetadata,
 } from './wsiViewerTypes';
+
+// ---- design tokens (matches iframe viewer) ----
+const C = {
+    blue: '#2986e2',
+    blueDark: '#1a6cc4',
+    blueLight: '#e8f1fb',
+    orange: '#f5a623',
+    text: '#333',
+    muted: '#737373',
+    border: '#ddd',
+    navBg: '#fafafa',
+    sidebarBg: '#f5f5f5',
+} as const;
+
+const NAV_W = 252;
+const SIDEBAR_W = 220;
 
 // OpenSeadragon is a CommonJS module; handle both CJS and ESM bundle shapes.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -24,9 +41,12 @@ interface Props {
 export default class WSIViewer extends React.Component<Props, {}> {
     @observable private hierarchy: PatientHierarchy | null = null;
     @observable private selectedSlide: Slide | null = null;
+    @observable private selectedSample: Sample | null = null;
+    @observable private selectedMeta: TileMetadata | null = null;
     @observable private loading = true;
     @observable private error: string | null = null;
     @observable private viewerReady = false;
+    @observable private stainFilter: 'all' | 'hne' | 'ihc' = 'all';
 
     private viewerContainerRef = React.createRef<HTMLDivElement>();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -60,6 +80,8 @@ export default class WSIViewer extends React.Component<Props, {}> {
         this.error = null;
         this.hierarchy = null;
         this.selectedSlide = null;
+        this.selectedSample = null;
+        this.selectedMeta = null;
         this.viewerReady = false;
 
         try {
@@ -76,9 +98,11 @@ export default class WSIViewer extends React.Component<Props, {}> {
                 this.loading = false;
             })();
 
-            const first = this.servableSlides[0];
+            // Auto-select first servable H&E slide, else first servable slide
+            const allSlides = this.servableSlides;
+            const first = allSlides.find(s => s.slide.is_hne) ?? allSlides[0];
             if (first) {
-                await this.selectSlide(first);
+                await this.selectSlide(first.slide, first.sample);
             }
         } catch (e: unknown) {
             const msg = e instanceof Error ? e.message : String(e);
@@ -89,11 +113,19 @@ export default class WSIViewer extends React.Component<Props, {}> {
         }
     }
 
-    @computed get servableSlides(): Slide[] {
+    @computed get servableSlides(): Array<{ slide: Slide; sample: Sample }> {
         if (!this.hierarchy) return [];
-        return this.hierarchy.samples.flatMap(s =>
-            s.parts.flatMap(p => p.blocks.flatMap(b => b.slides))
-        ).filter(s => s.can_serve_tiles);
+        const result: Array<{ slide: Slide; sample: Sample }> = [];
+        for (const sample of this.hierarchy.samples) {
+            for (const part of sample.parts) {
+                for (const block of part.blocks) {
+                    for (const slide of block.slides) {
+                        if (slide.can_serve_tiles) result.push({ slide, sample });
+                    }
+                }
+            }
+        }
+        return result;
     }
 
     @computed get tileServerBase(): string {
@@ -103,8 +135,10 @@ export default class WSIViewer extends React.Component<Props, {}> {
     // ---- slide selection ----
 
     @action.bound
-    async selectSlide(slide: Slide) {
+    async selectSlide(slide: Slide, sample: Sample) {
         this.selectedSlide = slide;
+        this.selectedSample = sample;
+        this.selectedMeta = null;
         this.viewerReady = false;
         await this.mountOSD(slide);
     }
@@ -125,6 +159,8 @@ export default class WSIViewer extends React.Component<Props, {}> {
     private async mountOSD(slide: Slide) {
         const metaUrl = `${this.tileServerBase}/tiles/${slide.image_id}/metadata`;
         const meta: TileMetadata = await fetch(metaUrl).then(r => r.json());
+
+        action(() => { this.selectedMeta = meta; })();
 
         // Two animation frames: first lets MobX/React commit loading=false,
         // second confirms layout dimensions are set on the container.
@@ -198,7 +234,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
 
     render() {
         const { height } = this.props;
-        const { loading, error, hierarchy, selectedSlide } = this;
+        const { loading, error, hierarchy, selectedSlide, selectedSample, selectedMeta, stainFilter } = this;
 
         if (loading) {
             return (
@@ -217,18 +253,19 @@ export default class WSIViewer extends React.Component<Props, {}> {
         }
 
         return (
-            <div style={{ display: 'flex', height, overflow: 'hidden' }}>
-                <SlideSidebar
+            <div style={{ display: 'flex', height, overflow: 'hidden', fontFamily: '"Helvetica Neue",Helvetica,Arial,sans-serif', fontSize: 13, color: C.text }}>
+                {/* Left nav panel */}
+                <NavPanel
                     hierarchy={hierarchy}
                     selectedSlide={selectedSlide}
-                    onSelectSlide={this.selectSlide}
+                    stainFilter={stainFilter}
+                    onFilterChange={action((f: 'all'|'hne'|'ihc') => { this.stainFilter = f; })}
+                    onSelectSlide={(slide, sample) => this.selectSlide(slide, sample)}
                 />
-                <div style={{ flex: 1, position: 'relative', background: '#1a1a1a' }}>
-                    {/* OSD mounts into this div */}
-                    <div
-                        ref={this.viewerContainerRef}
-                        style={{ width: '100%', height: '100%' }}
-                    />
+
+                {/* OSD viewer */}
+                <div style={{ flex: 1, position: 'relative', background: '#e8e8e8' }}>
+                    <div ref={this.viewerContainerRef} style={{ width: '100%', height: '100%' }} />
                     {!this.viewerReady && selectedSlide && (
                         <div style={overlayStyle}>
                             <LoadingIndicator isLoading={true} center={true} size="big" />
@@ -236,102 +273,387 @@ export default class WSIViewer extends React.Component<Props, {}> {
                     )}
                     {!selectedSlide && (
                         <div style={overlayStyle}>
-                            <span style={{ color: '#888' }}>No servable slides for this patient</span>
+                            <span style={{ color: C.muted, fontSize: 13 }}>No servable slides for this patient</span>
                         </div>
                     )}
                 </div>
+
+                {/* Right metadata sidebar */}
+                <MetaSidebar
+                    slide={selectedSlide}
+                    sample={selectedSample}
+                    meta={selectedMeta}
+                    tileServerBase={this.tileServerBase}
+                />
             </div>
         );
     }
 }
 
-// ---- sub-components ----
+// ---- helpers ----
 
 const overlayStyle: React.CSSProperties = {
-    position: 'absolute',
-    inset: 0,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    pointerEvents: 'none',
+    position: 'absolute', inset: 0, display: 'flex',
+    alignItems: 'center', justifyContent: 'center', pointerEvents: 'none',
 };
 
-interface SidebarProps {
+function cleanStain(name: string): string {
+    return (name || '').replace(/^DM\s+/i, '') || '—';
+}
+
+function fmtMB(bytes: string | number | null | undefined): string {
+    const n = Number(bytes);
+    if (!n) return '—';
+    return n >= 1e9 ? (n / 1e9).toFixed(1) + ' GB' : (n / 1e6).toFixed(0) + ' MB';
+}
+
+const BLOCK_LABEL_TIP =
+    'Block label: number = block within case; T\u202f=\u202ftumor, N\u202f=\u202funinvolved, L\u202f=\u202flymph node';
+
+const STAIN_RANK: Record<string, number> = { 'h&e (initial)': 0, 'h&e (other)': 1, ihc: 2 };
+
+// ---- NavPanel ----
+
+interface NavPanelProps {
     hierarchy: PatientHierarchy;
     selectedSlide: Slide | null;
-    onSelectSlide: (slide: Slide) => void;
+    stainFilter: 'all' | 'hne' | 'ihc';
+    onFilterChange: (f: 'all' | 'hne' | 'ihc') => void;
+    onSelectSlide: (slide: Slide, sample: Sample) => void;
 }
 
-function SlideSidebar({ hierarchy, selectedSlide, onSelectSlide }: SidebarProps) {
+function NavPanel({ hierarchy, selectedSlide, stainFilter, onFilterChange, onSelectSlide }: NavPanelProps) {
+    const chips: Array<{ key: 'all' | 'hne' | 'ihc'; label: string; color?: string }> = [
+        { key: 'all', label: 'All' },
+        { key: 'hne', label: '● H&E', color: C.blue },
+        { key: 'ihc', label: '● IHC', color: C.orange },
+    ];
+
     return (
-        <div
-            style={{
-                width: 230,
-                minWidth: 230,
-                overflowY: 'auto',
-                borderRight: '1px solid #ddd',
-                background: '#fafafa',
-                padding: '8px 6px',
-                fontSize: 12,
-            }}
-        >
-            <div style={{ fontWeight: 700, marginBottom: 8, fontSize: 13, color: '#333' }}>
-                {hierarchy.patient_id}
+        <div style={{
+            width: NAV_W, minWidth: NAV_W, display: 'flex', flexDirection: 'column',
+            background: C.navBg, borderRight: `1px solid ${C.border}`, overflow: 'hidden',
+        }}>
+            {/* Header */}
+            <div style={{ padding: '9px 12px 7px', borderBottom: `1px solid ${C.border}`, flexShrink: 0 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '.8px' }}>
+                    Slides
+                </div>
+                <div style={{ display: 'flex', gap: 5, marginTop: 7, flexWrap: 'wrap' }}>
+                    {chips.map(chip => (
+                        <span
+                            key={chip.key}
+                            onClick={() => onFilterChange(chip.key)}
+                            style={{
+                                fontSize: 11, padding: '2px 8px', borderRadius: 10,
+                                border: `1px solid ${stainFilter === chip.key ? '#c2d9f5' : C.border}`,
+                                background: stainFilter === chip.key ? C.blueLight : '#fff',
+                                color: stainFilter === chip.key ? C.blue : (chip.color || C.muted),
+                                fontWeight: stainFilter === chip.key ? 600 : 400,
+                                cursor: 'pointer', userSelect: 'none',
+                            }}
+                            dangerouslySetInnerHTML={{ __html: chip.label }}
+                        />
+                    ))}
+                </div>
             </div>
-            {hierarchy.samples.map(sample => (
-                <div key={sample.sample_id} style={{ marginBottom: 10 }}>
-                    <div style={{ color: '#666', fontSize: 11, marginBottom: 4, borderBottom: '1px solid #e8e8e8', paddingBottom: 3 }}>
-                        {sample.sample_id}
-                        {sample.cancer_type && ` · ${sample.cancer_type}`}
+            {/* Tree */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '6px 0' }}>
+                {hierarchy.samples.map(sample => (
+                    <SampleNode
+                        key={sample.sample_id}
+                        sample={sample}
+                        selectedSlide={selectedSlide}
+                        stainFilter={stainFilter}
+                        onSelectSlide={onSelectSlide}
+                    />
+                ))}
+            </div>
+        </div>
+    );
+}
+
+// ---- SampleNode ----
+
+interface SampleNodeProps {
+    sample: Sample;
+    selectedSlide: Slide | null;
+    stainFilter: 'all' | 'hne' | 'ihc';
+    onSelectSlide: (slide: Slide, sample: Sample) => void;
+}
+
+function SampleNode({ sample, selectedSlide, stainFilter, onSelectSlide }: SampleNodeProps) {
+    const [open, setOpen] = React.useState(true);
+
+    const allSlides = sample.parts.flatMap(p => p.blocks.flatMap(b => b.slides));
+    const totSlides = allSlides.length;
+    const servableSlides = allSlides.filter(s => s.can_serve_tiles).length;
+
+    const stLower = (sample.sample_type || '').toLowerCase();
+    const stClass = stLower === 'primary' ? C.blue
+        : (stLower.includes('metastas') || stLower === 'local recurrence') ? '#c05000'
+        : C.muted;
+    const stBg = stLower === 'primary' ? C.blueLight
+        : (stLower.includes('metastas') || stLower === 'local recurrence') ? '#fef0e8'
+        : '#f0f0f0';
+
+    // Determine block badge visibility
+    const DUMMY = new Set(['0', '']);
+    const blockId = (b: { block_label: string; block_number: string }) =>
+        (b.block_label || '').trim() || String(b.block_number ?? '');
+    const allLabels = new Set(
+        sample.parts.flatMap(p => p.blocks.map(b => {
+            const l = blockId(b); return DUMMY.has(l) ? null : l;
+        }).filter(Boolean))
+    );
+    const showBlock = allLabels.size > 1;
+
+    // Flatten + sort slides
+    const sortedSlides: Array<{ slide: Slide; badge: string | null }> = [];
+    for (const part of sample.parts) {
+        for (const b of part.blocks) {
+            const lbl = blockId(b);
+            const badge = (showBlock && !DUMMY.has(lbl)) ? lbl : null;
+            for (const sl of b.slides) sortedSlides.push({ slide: sl, badge });
+        }
+    }
+    sortedSlides.sort((a, b) => {
+        const ra = STAIN_RANK[(a.slide.stain_group || '').toLowerCase()] ?? 3;
+        const rb = STAIN_RANK[(b.slide.stain_group || '').toLowerCase()] ?? 3;
+        if (ra !== rb) return ra - rb;
+        return (a.slide.stain_name || '').localeCompare(b.slide.stain_name || '');
+    });
+
+    return (
+        <div style={{ borderBottom: `1px solid ${C.border}` }}>
+            {/* Sample header */}
+            <div
+                onClick={() => setOpen(o => !o)}
+                style={{
+                    display: 'flex', alignItems: 'flex-start', gap: 6,
+                    padding: '8px 12px 7px', cursor: 'pointer', userSelect: 'none',
+                }}
+            >
+                <span style={{ fontSize: 10, color: C.muted, marginTop: 2, flexShrink: 0, width: 10 }}>
+                    {open ? '▾' : '▸'}
+                </span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: C.blue, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {sample.sample_id || '—'}
                     </div>
-                    {sample.parts.map(part =>
-                        part.blocks.map(block =>
-                            block.slides.map(slide => (
-                                <SlideItem
-                                    key={slide.image_id}
-                                    slide={slide}
-                                    selected={selectedSlide?.image_id === slide.image_id}
-                                    onClick={() => slide.can_serve_tiles && onSelectSlide(slide)}
-                                />
-                            ))
-                        )
+                    <div style={{ fontSize: 10, color: C.muted, marginTop: 1 }}>
+                        {sample.sample_type && (
+                            <span style={{ display: 'inline-block', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.4px', padding: '1px 5px', borderRadius: 3, background: stBg, color: stClass, marginRight: 4 }}>
+                                {sample.sample_type}
+                            </span>
+                        )}
+                        {sample.oncotree_code && (
+                            <span style={{ display: 'inline-block', background: '#f0f0f0', border: `1px solid ${C.border}`, borderRadius: 3, fontSize: 9, fontWeight: 700, padding: '0 4px', color: C.text, marginRight: 4 }}>
+                                {sample.oncotree_code}
+                            </span>
+                        )}
+                        {sample.cancer_type_detailed || sample.cancer_type || ''}
+                    </div>
+                    {sample.primary_site && (
+                        <div style={{ fontSize: 10, color: '#aaa' }}>{sample.primary_site}</div>
                     )}
                 </div>
-            ))}
+                <div style={{ fontSize: 9, color: '#bbb', flexShrink: 0, textAlign: 'right', lineHeight: 1.4 }}>
+                    <span style={{ color: C.blue, fontWeight: 600 }}>{servableSlides}</span>/{totSlides}
+                </div>
+            </div>
+
+            {/* Slide list */}
+            {open && (
+                <div style={{ paddingBottom: 4 }}>
+                    {sortedSlides.map(({ slide, badge }) => {
+                        const dc = slide.is_hne ? 'hne' : (slide.is_ihc ? 'ihc' : 'other');
+                        const visible = stainFilter === 'all' || dc === stainFilter;
+                        if (!visible) return null;
+                        return (
+                            <SlideItem
+                                key={slide.image_id}
+                                slide={slide}
+                                sample={sample}
+                                blockBadge={badge}
+                                selected={selectedSlide?.image_id === slide.image_id}
+                                onSelectSlide={onSelectSlide}
+                            />
+                        );
+                    })}
+                </div>
+            )}
         </div>
     );
 }
 
-function SlideItem({
-    slide,
-    selected,
-    onClick,
-}: {
+// ---- SlideItem ----
+
+interface SlideItemProps {
     slide: Slide;
+    sample: Sample;
+    blockBadge: string | null;
     selected: boolean;
-    onClick: () => void;
-}) {
+    onSelectSlide: (slide: Slide, sample: Sample) => void;
+}
+
+function SlideItem({ slide, sample, blockBadge, selected, onSelectSlide }: SlideItemProps) {
+    const [hovered, setHovered] = React.useState(false);
+    const dc = slide.is_hne ? 'hne' : (slide.is_ihc ? 'ihc' : 'other');
+    const dotColor = dc === 'hne' ? C.blue : (dc === 'ihc' ? C.orange : '#aaa');
+    const mag = slide.magnification || '';
+    const sz = fmtMB(slide.file_size_bytes);
+
+    const bg = selected ? C.blueLight : hovered ? C.blueLight : 'transparent';
+    const borderLeft = selected ? `2px solid ${C.blue}` : '2px solid transparent';
+
     return (
         <div
-            onClick={onClick}
-            title={slide.can_serve_tiles ? undefined : 'Tiles not available'}
+            onClick={() => slide.can_serve_tiles && onSelectSlide(slide, sample)}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+            title={slide.can_serve_tiles ? undefined : 'Tiles not yet available'}
             style={{
-                padding: '4px 8px',
-                marginBottom: 2,
-                borderRadius: 3,
-                cursor: slide.can_serve_tiles ? 'pointer' : 'default',
-                background: selected ? '#0d6efd' : 'transparent',
-                color: selected ? '#fff' : '#333',
-                opacity: slide.can_serve_tiles ? 1 : 0.45,
-                transition: 'background 0.1s',
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '4px 10px 4px 8px', margin: '1px 4px',
+                borderRadius: 3, borderLeft,
+                background: bg,
+                cursor: slide.can_serve_tiles ? 'pointer' : 'help',
+                opacity: slide.can_serve_tiles ? 1 : 0.55,
             }}
         >
-            <div style={{ fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {slide.stain_name}
-            </div>
-            <div style={{ fontSize: 10, opacity: 0.75 }}>
-                {slide.magnification && `${slide.magnification} · `}#{slide.image_id}
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: dotColor, flexShrink: 0, display: 'inline-block' }} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 10, fontWeight: 600, color: C.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {cleanStain(slide.stain_name)}
+                    {blockBadge && (
+                        <span title={BLOCK_LABEL_TIP} style={{ fontSize: 9, color: C.muted, background: '#f0f0f0', borderRadius: 3, padding: '0 4px', marginLeft: 4 }}>
+                            {blockBadge}
+                        </span>
+                    )}
+                </div>
+                <div style={{ fontSize: 9, color: C.muted, whiteSpace: 'nowrap' }}>
+                    {mag ? `${mag} · ` : ''}{sz}{slide.can_serve_tiles ? '' : ' · no tiles'}
+                </div>
             </div>
         </div>
     );
 }
+
+// ---- MetaSidebar ----
+
+interface MetaSidebarProps {
+    slide: Slide | null;
+    sample: Sample | null;
+    meta: TileMetadata | null;
+    tileServerBase: string;
+}
+
+function MetaSidebar({ slide, sample, meta, tileServerBase }: MetaSidebarProps) {
+    const thumbSrc = slide ? `${tileServerBase}/tiles/${slide.image_id}/thumbnail` : null;
+
+    return (
+        <div style={{
+            width: SIDEBAR_W, minWidth: SIDEBAR_W, background: C.sidebarBg,
+            borderLeft: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column',
+            overflowY: 'auto', flexShrink: 0,
+        }}>
+            {/* Thumbnail */}
+            <SbSection title="Thumbnail">
+                <div style={{
+                    background: '#fff', border: `1px solid ${C.border}`, borderRadius: 3,
+                    overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    minHeight: 90, marginTop: 8,
+                }}>
+                    {thumbSrc ? (
+                        <img
+                            key={thumbSrc}
+                            src={thumbSrc}
+                            alt="slide thumbnail"
+                            style={{ maxWidth: '100%', maxHeight: 160, display: 'block' }}
+                            onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                        />
+                    ) : (
+                        <span style={{ color: '#bbb', fontSize: 11, padding: 20, textAlign: 'center' }}>No slide selected</span>
+                    )}
+                </div>
+            </SbSection>
+
+            {/* Image Properties */}
+            <SbSection title="Image Properties">
+                {meta ? (
+                    <MetaTable rows={buildWsiRows(slide, meta)} />
+                ) : (
+                    <span style={{ color: '#bbb', fontSize: 11 }}>—</span>
+                )}
+            </SbSection>
+
+            {/* Pathology */}
+            <SbSection title="Pathology">
+                {slide && sample ? (
+                    <MetaTable rows={buildPathRows(slide, sample)} />
+                ) : (
+                    <span style={{ color: '#bbb', fontSize: 11 }}>—</span>
+                )}
+            </SbSection>
+        </div>
+    );
+}
+
+function SbSection({ title, children }: { title: string; children: React.ReactNode }) {
+    return (
+        <div style={{ padding: '10px 12px', borderBottom: `1px solid ${C.border}` }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '.8px' }}>
+                {title}
+            </div>
+            {children}
+        </div>
+    );
+}
+
+function MetaTable({ rows }: { rows: Array<[string, string]> }) {
+    return (
+        <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 6 }}>
+            <tbody>
+                {rows.map(([k, v]) => (
+                    <tr key={k}>
+                        <td style={{ fontSize: 11, color: C.muted, width: '50%', paddingRight: 5, paddingTop: 2, paddingBottom: 2, verticalAlign: 'top', lineHeight: 1.5 }}>{k}</td>
+                        <td style={{ fontSize: 11, color: C.text, fontWeight: 500, wordBreak: 'break-word', verticalAlign: 'top', lineHeight: 1.5 }}>{v || '—'}</td>
+                    </tr>
+                ))}
+            </tbody>
+        </table>
+    );
+}
+
+function buildWsiRows(slide: Slide | null, meta: TileMetadata): Array<[string, string]> {
+    const w = meta.dimensions.width, h = meta.dimensions.height;
+    const mppX = meta.mpp?.x || 0, mppY = meta.mpp?.y || 0;
+    const mpp = (mppX && mppY) ? (mppX + mppY) / 2 : 0;
+    const objNum = meta.objective_power || (mpp ? Math.round(10 / mpp) : 0);
+    const rows: Array<[string, string]> = [
+        ['Dimensions', `${w.toLocaleString()} × ${h.toLocaleString()} px`],
+    ];
+    if (mpp) rows.push(['MPP', `${mpp.toFixed(4)} µm/px`]);
+    if (objNum) rows.push(['Objective', `${objNum}×`]);
+    rows.push(['Zoom levels', String(meta.max_zoom + 1)]);
+    rows.push(['Tile size', `${meta.tile_size} px`]);
+    if (slide?.file_size_bytes) rows.push(['File size', fmtMB(slide.file_size_bytes)]);
+    return rows;
+}
+
+function buildPathRows(slide: Slide, sample: Sample): Array<[string, string]> {
+    const stainBadge = slide.is_hne ? 'H&E' : (slide.is_ihc ? 'IHC' : '');
+    const rows: Array<[string, string]> = [
+        ['Stain', stainBadge ? `${stainBadge} — ${cleanStain(slide.stain_name)}` : cleanStain(slide.stain_name)],
+        ['Sample', sample.sample_id || '—'],
+    ];
+    if (sample.cancer_type_detailed || sample.cancer_type) rows.push(['Cancer type', sample.cancer_type_detailed || sample.cancer_type || '']);
+    if (sample.oncotree_code) rows.push(['OncoTree', sample.oncotree_code]);
+    if (sample.primary_site) rows.push(['Primary site', sample.primary_site]);
+    if (slide.magnification) rows.push(['Magnification', slide.magnification]);
+    const blockLbl = (slide.block_label || '').trim() || (slide.block_number ? String(slide.block_number) : '');
+    if (blockLbl) rows.push(['Block', blockLbl]);
+    return rows;
+}
+
