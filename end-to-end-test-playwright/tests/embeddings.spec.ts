@@ -26,14 +26,20 @@ function coloringParam(selection: Record<string, string>): string {
     return encodeURIComponent(JSON.stringify(selection));
 }
 
-function filterParam(values: string[]): string {
-    return encodeURIComponent(
+// Study-view filters are applied via the `#filterJson=` URL hash using the
+// clinicalDataFilters schema (each value is an object); see
+// tests/studyview.spec.ts for the canonical encoding.
+function filterHash(values: string[]): string {
+    return `#filterJson=${encodeURIComponent(
         JSON.stringify({
-            clinicalDataEqualityFilters: [
-                { attributeId: 'CANCER_TYPE', values },
+            clinicalDataFilters: [
+                {
+                    attributeId: 'CANCER_TYPE',
+                    values: values.map(value => ({ value })),
+                },
             ],
         })
-    );
+    )}`;
 }
 
 async function gotoEmbeddings(page: Page, query = '') {
@@ -94,15 +100,18 @@ test.describe('embeddings tab interactions', () => {
     });
 
     test.describe('selection and filtering', () => {
+        // Navigate straight to the embeddings route with the filter in the
+        // URL: clicking the tab from a freshly-loaded summary view is not
+        // actionable within the action timeout while the 50k-sample study
+        // view renders.
         test('shows an Unselected category when a study-view filter is applied', async ({
             page,
         }) => {
             await page.goto(
-                `/study?id=${STUDY}&filterJson=${filterParam([
-                    'Colorectal Cancer',
-                ])}&featureFlags=EMBEDDINGS`
+                `/study/embeddings?id=${STUDY}&featureFlags=EMBEDDINGS${filterHash(
+                    ['Colorectal Cancer']
+                )}`
             );
-            await page.locator(EMBEDDINGS_TAB).click();
             await expect(page.locator(LEGEND)).toContainText('Unselected');
         });
 
@@ -110,13 +119,14 @@ test.describe('embeddings tab interactions', () => {
             page,
         }) => {
             await page.goto(
-                `/study?id=${STUDY}&filterJson=${filterParam([
-                    'Melanoma',
-                ])}&featureFlags=EMBEDDINGS`
+                `/study/embeddings?id=${STUDY}&featureFlags=EMBEDDINGS${filterHash(
+                    ['Melanoma']
+                )}`
             );
-            await page.locator(EMBEDDINGS_TAB).click();
             await expect(page.locator(LEGEND)).toContainText('Unselected');
 
+            // Round-trip through the summary tab to confirm the filter (and
+            // thus the Unselected category) survives an in-app tab switch.
             await page.locator(SUMMARY_TAB).click();
             await page.locator(EMBEDDINGS_TAB).click();
             await expect(page.locator(LEGEND)).toContainText('Unselected');
@@ -127,8 +137,9 @@ test.describe('embeddings tab interactions', () => {
         test('initializes gene mutation coloring from the URL', async ({
             page,
         }) => {
+            // Gene coloring is keyed by `<entrezGeneId>_<...>`; EGFR = 1956.
             const param = coloringParam({
-                selectedOption: 'EGFR',
+                selectedOption: '1956_undefined',
                 colorByMutationType: 'true',
                 colorByCopyNumber: 'true',
                 colorBySv: 'true',
