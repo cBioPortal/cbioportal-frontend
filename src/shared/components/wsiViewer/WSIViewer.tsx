@@ -452,9 +452,9 @@ function SampleNode({ sample, selectedSlide, stainFilter, onSelectSlide }: Sampl
                         )}
                         {sample.oncotree_code && (
                             <a
-                                href={`https://oncotree.mskcc.org/#/home?version=oncotree_latest_stable&search_term=${encodeURIComponent(sample.oncotree_code)}`}
+                                href="https://oncotree.mskcc.org/"
                                 target="_blank" rel="noopener noreferrer"
-                                title={`${sample.oncotree_code} — view on oncotree.mskcc.org`}
+                                title={`${sample.oncotree_code}${sample.cancer_type_detailed ? ` — ${sample.cancer_type_detailed}` : ''}\nView OncoTree`}
                                 onClick={e => e.stopPropagation()}
                                 style={{ display: 'inline-block', background: '#f0f0f0', border: `1px solid ${C.border}`, borderRadius: 3, fontSize: 9, fontWeight: 700, padding: '0 4px', color: C.text, marginRight: 4, textDecoration: 'none' }}
                             >
@@ -680,9 +680,7 @@ function buildWsiRows(slide: Slide | null, meta: TileMetadata): MetaRow[] {
 
 function buildPathRows(slide: Slide, sample: Sample, studyId?: string): MetaRow[] {
     const stainBadge = slide.is_hne ? 'H&E' : (slide.is_ihc ? 'IHC' : '');
-    const oncotreeUrl = sample.oncotree_code
-        ? `https://oncotree.mskcc.org/#/home?version=oncotree_latest_stable&search_term=${encodeURIComponent(sample.oncotree_code)}`
-        : undefined;
+    const oncotreeUrl = sample.oncotree_code ? 'https://oncotree.mskcc.org/' : undefined;
     const sampleUrl = (studyId && sample.sample_id)
         ? `/patient?studyId=${encodeURIComponent(studyId)}&caseId=${encodeURIComponent(sample.sample_id.replace(/-T\d+.*$/i, ''))}&sampleId=${encodeURIComponent(sample.sample_id)}`
         : undefined;
