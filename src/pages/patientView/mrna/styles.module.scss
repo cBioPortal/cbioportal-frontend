@@ -1,10 +1,5 @@
-// The expression-table rows are clickable (click a gene to add it to the
-// chart), so show a pointer cursor over them. Scoped to the wrapper so it only
-// affects the react-virtualized rows of this table.
-.clickableRows {
-    :global(.ReactVirtualized__Table__row) {
-        cursor: pointer;
-    }
+// Layout tweaks for the expression table wrapper.
+.expressionTable {
     // Make the search box flush with the left edge of the table: drop the left
     // padding on the controls bar and the left margin on the search input (the
     // library sets padding 0 5px on the bar and margin-left 10px on the input).

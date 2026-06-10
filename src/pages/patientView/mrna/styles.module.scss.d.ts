@@ -1,5 +1,5 @@
 declare const styles: {
-  readonly "clickableRows": string;
+  readonly "expressionTable": string;
 };
 export = styles;
 
