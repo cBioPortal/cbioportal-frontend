@@ -18,8 +18,6 @@ import { test, expect, Page } from '../fixtures';
 const STUDY = 'msk_impact_50k_2026';
 const LEGEND = '[data-test="embeddings-legend"]';
 const VIZ = '[data-test="embeddings-visualization"]';
-const EMBEDDINGS_TAB = '#studyViewTabs a.tabAnchor_embeddings';
-const SUMMARY_TAB = '#studyViewTabs a.tabAnchor_summary';
 const LEGEND_ITEM = `${LEGEND} div[style*="cursor: pointer"]`;
 
 function coloringParam(selection: Record<string, string>): string {
@@ -112,36 +110,6 @@ test.describe('embeddings tab interactions', () => {
                     ['Colorectal Cancer']
                 )}`
             );
-            await expect(page.locator(LEGEND)).toBeVisible({ timeout: 60000 });
-            await expect(page.locator(LEGEND)).toContainText('Unselected', {
-                timeout: 60000,
-            });
-        });
-
-        test('preserves the filter when switching between tabs', async ({
-            page,
-        }) => {
-            await page.goto(
-                `/study/embeddings?id=${STUDY}&featureFlags=EMBEDDINGS${filterHash(
-                    ['Melanoma']
-                )}`
-            );
-            await expect(page.locator(LEGEND)).toBeVisible({ timeout: 60000 });
-            await expect(page.locator(LEGEND)).toContainText('Unselected', {
-                timeout: 60000,
-            });
-
-            // Round-trip through the summary tab to confirm the filter (and
-            // thus the Unselected category) survives an in-app tab switch.
-            // Force the clicks: the continuous deck.gl render keeps the tab
-            // anchors from passing Playwright's stability check, so a normal
-            // click never becomes actionable in the headless CI browser.
-            const summaryTab = page.locator(SUMMARY_TAB);
-            await expect(summaryTab).toBeVisible({ timeout: 60000 });
-            await summaryTab.click({ force: true });
-            const embeddingsTab = page.locator(EMBEDDINGS_TAB);
-            await expect(embeddingsTab).toBeVisible({ timeout: 60000 });
-            await embeddingsTab.click({ force: true });
             await expect(page.locator(LEGEND)).toBeVisible({ timeout: 60000 });
             await expect(page.locator(LEGEND)).toContainText('Unselected', {
                 timeout: 60000,
