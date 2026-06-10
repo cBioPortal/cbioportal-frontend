@@ -683,15 +683,16 @@ describe('GeneTrack — cue C: upstream promoter tint', () => {
         assert.equal(wrapper.find('[data-testid="promoter-tint"]').length, 0);
     });
 
-    it('no tint rect when activeTranscriptId is not set', () => {
-        // tint requires an active transcript to anchor to
+    it('renders the promoter tint regardless of activeTranscriptId (per-row, not active-anchored)', () => {
+        // The tint is now drawn per transcript row, so it no longer requires an
+        // active transcript — the FORTE row still gets one.
         const wrapper = mountGeneTrack({
             strand: '+',
             is5Prime: true,
             showPromoter: true,
             activeTranscriptId: undefined,
         });
-        assert.equal(wrapper.find('[data-testid="promoter-tint"]').length, 0);
+        assert.equal(wrapper.find('[data-testid="promoter-tint"]').length, 1);
     });
 
     it('+ strand: tint right edge (x + width) aligns with the active TSS pixel position', () => {
@@ -756,6 +757,7 @@ describe('GeneTrack — cue C: upstream promoter tint', () => {
             drawX + ((g - gMin) / (gMax - gMin)) * drawWidth;
         const expectedTssX = toSvg(txStart);
 
+        // The promoter box butts directly against the TSS (no gap).
         assert.approximately(tintRight, expectedTssX, 1);
     });
 
@@ -890,9 +892,9 @@ describe('GeneTrack — cue C: upstream promoter tint', () => {
         assert.approximately(tintW, expectedTintW, 2);
     });
 
-    it('tint re-anchors on active-transcript change: tint right edge shifts by the TSS delta', () => {
-        // Two transcripts with different txStart — the tint should move by the
-        // pixel-space difference in TSS positions when the active transcript changes.
+    it('renders one promoter block per transcript row, each anchored to its own TSS', () => {
+        // Two transcripts with different TSS — each row gets its own block,
+        // anchored to that transcript's TSS (alternative promoters shown at once).
         const exonsA = [{ number: 1, start: 1000, end: 2000 }];
         const exonsB = [{ number: 1, start: 1200, end: 2000 }]; // TSS 200bp downstream
 
@@ -915,8 +917,7 @@ describe('GeneTrack — cue C: upstream promoter tint', () => {
             utrs: [],
         });
 
-        // Render with FORTE active
-        const wrapperA = mount(
+        const wrapper = mount(
             <svg>
                 <GeneTrack
                     symbol="GENE_A"
@@ -937,42 +938,19 @@ describe('GeneTrack — cue C: upstream promoter tint', () => {
             </svg>
         );
 
-        const tintA = wrapperA.find('[data-testid="promoter-tint"]');
-        assert.equal(tintA.length, 1);
-        const rightA = Number(tintA.prop('x')) + Number(tintA.prop('width'));
+        const tints = wrapper.find('[data-testid="promoter-tint"]');
+        assert.equal(tints.length, 2, 'one promoter block per transcript row');
 
-        // Re-render with USER transcript active
-        const wrapperB = mount(
-            <svg>
-                <GeneTrack
-                    symbol="GENE_A"
-                    chromosome="1"
-                    position={1500}
-                    strand="+"
-                    siteDescription=""
-                    forteTranscript={forteTranscript}
-                    userTranscripts={[userTranscript]}
-                    color={GENE_COLOR}
-                    x={0}
-                    y={0}
-                    width={400}
-                    is5Prime={true}
-                    showPromoter={true}
-                    activeTranscriptId="ENST_USER"
-                />
-            </svg>
-        );
-
-        const tintB = wrapperB.find('[data-testid="promoter-tint"]');
-        assert.equal(tintB.length, 1);
-        const rightB = Number(tintB.prop('x')) + Number(tintB.prop('width'));
-
-        // USER TSS (1200) is upstream-right of FORTE TSS (1000) on + strand,
-        // so tintRight for USER should be greater than for FORTE.
+        // Each block's right edge aligns with its own transcript's TSS, so the
+        // two blocks sit at distinct x-positions (USER TSS 1200 is further right
+        // than FORTE TSS 1000 on + strand).
+        const rights = tints
+            .map(t => Number(t.prop('x')) + Number(t.prop('width')))
+            .sort((a, b) => a - b);
         assert.isAbove(
-            rightB,
-            rightA,
-            'tint right edge should shift rightward when TSS moves right'
+            rights[1],
+            rights[0],
+            'blocks anchor at distinct TSS positions'
         );
     });
 });
