@@ -29,7 +29,10 @@ import {
 } from 'shared/components/plots/PlotsTabUtils';
 import { Modal, Button } from 'react-bootstrap';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
-import { Column } from 'shared/components/lazyMobXTable/LazyMobXTable';
+import {
+    Column,
+    SortDirection,
+} from 'shared/components/lazyMobXTable/LazyMobXTable';
 import FixedHeaderTable from 'pages/studyView/table/FixedHeaderTable';
 import ChartContainer from 'shared/components/ChartContainer/ChartContainer';
 import { SampleLabelHTML } from 'shared/components/sampleLabel/SampleLabel';
@@ -1066,9 +1069,8 @@ export default class MrnaTabContent extends React.Component<
         }
     }
 
-    // A single GitHub-style label chip. Solid (white text) when the group is on
-    // the chart, outlined otherwise. Clicking toggles the group on the chart
-    // (stopPropagation so it doesn't also fire the row's gene toggle).
+    // A single GitHub-style label chip — informational only: it shows which
+    // gene set(s) a gene belongs to (full name on hover). Not clickable.
     private renderLabelChip(id: string): JSX.Element | null {
         const meta = getGeneGroupLabelMeta(id);
         if (!meta) return null;
@@ -1077,13 +1079,9 @@ export default class MrnaTabContent extends React.Component<
                 key={id}
                 placement="top"
                 mouseEnterDelay={0.2}
-                overlay={<span>{meta.label} — click to add/remove on chart</span>}
+                overlay={<span>{meta.label}</span>}
             >
                 <span
-                    onClick={e => {
-                        e.stopPropagation();
-                        this.toggleGroupOnChart(id);
-                    }}
                     style={{
                         display: 'inline-block',
                         padding: '0 5px',
@@ -1093,7 +1091,6 @@ export default class MrnaTabContent extends React.Component<
                         fontWeight: 'bold',
                         lineHeight: '14px',
                         letterSpacing: 0.3,
-                        cursor: 'pointer',
                         border: `1px solid ${meta.color}`,
                         backgroundColor: meta.color,
                         color: '#fff',
@@ -1289,6 +1286,84 @@ export default class MrnaTabContent extends React.Component<
             },
             'desc'
         );
+    }
+
+    // Lifted table sort + search state. The table is fed only the first
+    // MAX_TABLE_ROWS genes, so we filter and sort the *full* list here (not
+    // inside FixedHeaderTable, which would only act on the visible slice) and
+    // then take the top rows. Undefined sort column means "use the first sample
+    // column" (the initial sort).
+    @observable tableSortBy: string | undefined = undefined;
+    @observable tableSortDirection: SortDirection = 'desc';
+    @observable tableSearchQuery: string = '';
+
+    @action.bound
+    onTableSort(sortBy: string, sortDirection: SortDirection) {
+        this.tableSortBy = sortBy;
+        this.tableSortDirection = sortDirection;
+    }
+
+    @action.bound
+    onTableFilter(filterString: string) {
+        this.tableSearchQuery = filterString;
+    }
+
+    // The full gene list narrowed by the search box (matches gene symbol,
+    // case-insensitive substring) — across every available gene, not just the
+    // visible ones.
+    @computed get filteredTableRows(): ExpressionTableRow[] {
+        const q = this.tableSearchQuery.trim().toUpperCase();
+        if (!q) {
+            return this.expressionTableRows;
+        }
+        return this.expressionTableRows.filter(
+            r => r.symbol.toUpperCase().indexOf(q) > -1
+        );
+    }
+
+    // The sample column the table sorts by initially (first sample with data).
+    @computed get firstSampleColName(): string {
+        const withData = this.expressionTableSamplesWithData;
+        return withData.length > 0
+            ? this.sampleColumnLabel(withData[0])
+            : 'Gene';
+    }
+
+    @computed get effectiveTableSortBy(): string {
+        return this.tableSortBy !== undefined
+            ? this.tableSortBy
+            : this.firstSampleColName;
+    }
+
+    // The (search-filtered) gene list sorted by the active column — across every
+    // available gene, not just the ones currently visible.
+    // renderExpressionTable slices the top MAX_TABLE_ROWS of this for display.
+    @computed get sortedTableRows(): ExpressionTableRow[] {
+        const col = this.expressionTableColumns.find(
+            c => c.name === this.effectiveTableSortBy
+        );
+        const metric = col && col.sortBy;
+        if (!metric) {
+            return this.filteredTableRows;
+        }
+        const asc = this.tableSortDirection === 'asc';
+        // Rows with no value for the sort column always sort to the bottom.
+        const withVal: { r: ExpressionTableRow; v: number | string }[] = [];
+        const without: ExpressionTableRow[] = [];
+        this.filteredTableRows.forEach(r => {
+            const v = (metric as (d: ExpressionTableRow) => any)(r);
+            if (v === null || v === undefined) {
+                without.push(r);
+            } else {
+                withVal.push({ r, v });
+            }
+        });
+        const sorted = _.orderBy(
+            withVal,
+            x => x.v,
+            asc ? 'asc' : 'desc'
+        ).map(x => x.r);
+        return [...sorted, ...without];
     }
 
     // TEMP DEBUG: stage-by-stage counts for why the expression table may come
@@ -2154,7 +2229,7 @@ export default class MrnaTabContent extends React.Component<
         const MAX_TABLE_ROWS = 50;
         const ROW_H = 25;
         const HEADER_H = 25;
-        const visibleRows = allRows.slice(0, MAX_TABLE_ROWS);
+        const visibleRows = this.sortedTableRows.slice(0, MAX_TABLE_ROWS);
         const tableHeight = HEADER_H + visibleRows.length * ROW_H;
         const samplesWithData = this.expressionTableSamplesWithData;
         const tableWidth =
@@ -2178,11 +2253,6 @@ export default class MrnaTabContent extends React.Component<
                   } ${
                       noDataLabels.length === 1 ? 'has' : 'have'
                   } no expression data.`;
-        // Initial sort: the first sample column, highest expression first.
-        const firstSampleCol =
-            samplesWithData.length > 0
-                ? this.sampleColumnLabel(samplesWithData[0])
-                : 'Gene';
         return (
             <div
                 className={styles.expressionTable}
@@ -2199,8 +2269,10 @@ export default class MrnaTabContent extends React.Component<
                     height={tableHeight}
                     rowHeight={ROW_H}
                     headerHeight={HEADER_H}
-                    sortBy={firstSampleCol}
-                    sortDirection="desc"
+                    sortBy={this.effectiveTableSortBy}
+                    sortDirection={this.tableSortDirection}
+                    afterSorting={this.onTableSort}
+                    afterFiltering={this.onTableFilter}
                     numberOfSelectedRows={0}
                     showControlsAtTop={true}
                     extraFooterElements={[
@@ -2210,9 +2282,9 @@ export default class MrnaTabContent extends React.Component<
                     ]}
                 />
                 <div style={{ fontSize: 11, color: '#888', marginTop: 6 }}>
-                    Showing {visibleRows.length} genes of {allRows.length} with
-                    mRNA data.
-                    {allRows.length > visibleRows.length &&
+                    Showing {visibleRows.length} genes of{' '}
+                    {this.filteredTableRows.length} with mRNA data.
+                    {this.filteredTableRows.length > visibleRows.length &&
                         ' Filter/sort to explore.'}
                 </div>
                 {noDataMessage && (
