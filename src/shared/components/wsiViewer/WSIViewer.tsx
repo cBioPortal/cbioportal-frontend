@@ -2,11 +2,17 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import { observable, action, computed, makeObservable } from 'mobx';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
+import * as OpenSeadragonLib from 'openseadragon';
 import {
     Slide,
     PatientHierarchy,
     TileMetadata,
 } from './wsiViewerTypes';
+
+// OpenSeadragon is a CommonJS module; handle both CJS and ESM bundle shapes.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const OpenSeadragon: typeof import('openseadragon') =
+    (OpenSeadragonLib as any).default ?? (OpenSeadragonLib as any);
 
 interface Props {
     /** URL of the form https://tile-server/patient/{patient_id} */
@@ -62,18 +68,24 @@ export default class WSIViewer extends React.Component<Props, {}> {
                 throw new Error(`Server returned ${resp.status}`);
             }
             const data: PatientHierarchy = await resp.json();
-            this.hierarchy = data;
 
-            // Auto-select first servable slide
+            // Set loading=false BEFORE selectSlide so the viewer container div
+            // is rendered into the DOM before mountOSD runs.
+            action(() => {
+                this.hierarchy = data;
+                this.loading = false;
+            })();
+
             const first = this.servableSlides[0];
             if (first) {
                 await this.selectSlide(first);
             }
         } catch (e: unknown) {
             const msg = e instanceof Error ? e.message : String(e);
-            this.error = msg;
-        } finally {
-            this.loading = false;
+            action(() => {
+                this.error = msg;
+                this.loading = false;
+            })();
         }
     }
 
@@ -111,21 +123,15 @@ export default class WSIViewer extends React.Component<Props, {}> {
     }
 
     private async mountOSD(slide: Slide) {
-        const meta: TileMetadata = await fetch(
-            `${this.tileServerBase}/tiles/${slide.image_id}/metadata`
-        ).then(r => r.json());
+        const metaUrl = `${this.tileServerBase}/tiles/${slide.image_id}/metadata`;
+        const meta: TileMetadata = await fetch(metaUrl).then(r => r.json());
 
-        // Lazy-import so OSD (large library) is only bundled when needed.
-        // Dynamic require() is handled by rspack at build time; the ES6
-        // tsconfig target doesn't support import() syntax so we cast.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const OpenSeadragon = ((await new Promise<any>(resolve =>
-            // @ts-ignore
-            require.ensure([], (require: any) => resolve(require('openseadragon')), 'openseadragon')
-        ))) as typeof import('openseadragon');
+        // Two animation frames: first lets MobX/React commit loading=false,
+        // second confirms layout dimensions are set on the container.
+        await new Promise<void>(r => requestAnimationFrame(() => requestAnimationFrame(() => r())));
 
-        // Container might have unmounted while we were awaiting
-        if (!this.viewerContainerRef.current) return;
+        const containerEl = this.viewerContainerRef.current;
+        if (!containerEl) return;
 
         this.destroyViewer();
 
@@ -134,34 +140,58 @@ export default class WSIViewer extends React.Component<Props, {}> {
         const maxZoom = meta.max_zoom;
         const tileSize = meta.tile_size;
 
-        this.osdViewer = OpenSeadragon({
-            element: this.viewerContainerRef.current,
-            showNavigationControl: true,
-            showNavigator: true,
-            navigatorPosition: 'BOTTOM_RIGHT',
-            crossOriginPolicy: 'Anonymous',
-            prefixUrl: '', // prevents OSD looking for button images
-            showFullPageControl: false,
-            gestureSettingsMouse: { clickToZoom: false },
-            tileSources: {
-                // OSD level 0 = most zoomed out (1 tile)
-                // OSD level maxZoom = full resolution
-                // Our /zxy/{z}/{x}/{y} uses the same XYZ convention
-                width: meta.dimensions.width,
-                height: meta.dimensions.height,
-                tileWidth: tileSize,
-                tileHeight: tileSize,
-                maxLevel: maxZoom,
-                minLevel: 0,
-                getTileUrl(level: number, x: number, y: number): string {
-                    return `${baseUrl}/tiles/${imageId}/zxy/${level}/${x}/${y}`;
+        try {
+            this.osdViewer = OpenSeadragon({
+                element: containerEl,
+                showNavigationControl: true,
+                showNavigator: true,
+                navigatorPosition: 'BOTTOM_RIGHT',
+                crossOriginPolicy: 'Anonymous',
+                prefixUrl: '/reactapp/osd-images/',
+                showFullPageControl: false,
+                gestureSettingsMouse: { clickToZoom: false },
+                tileSources: {
+                    // OSD level 0 = most zoomed out (1 tile)
+                    // OSD level maxZoom = full resolution
+                    // Our /zxy/{z}/{x}/{y} uses the same XYZ convention
+                    width: meta.dimensions.width,
+                    height: meta.dimensions.height,
+                    tileWidth: tileSize,
+                    tileHeight: tileSize,
+                    maxLevel: maxZoom,
+                    minLevel: 0,
+                    getTileUrl(level: number, x: number, y: number): string {
+                        return `${baseUrl}/tiles/${imageId}/zxy/${level}/${x}/${y}`;
+                    },
                 },
-            },
-        });
+            });
+        } catch (err) {
+            // eslint-disable-next-line no-console
+            console.error('[WSIViewer] OSD init error:', err);
+            action(() => {
+                this.error = `OSD init error: ${err}`;
+            })();
+            return;
+        }
 
-        action(() => {
-            this.viewerReady = true;
-        })();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        this.osdViewer.addOnceHandler('open', () => {
+            action(() => {
+                this.viewerReady = true;
+            })();
+        });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        this.osdViewer.addOnceHandler('open-failed', (e: any) => {
+            // eslint-disable-next-line no-console
+            console.error('[WSIViewer] OSD open-failed', e);
+            action(() => {
+                this.error = `OSD open failed: ${e?.message ?? JSON.stringify(e)}`;
+            })();
+        });
+        this.osdViewer.addHandler('tile-load-failed', (e: any) => {
+            // eslint-disable-next-line no-console
+            console.warn('[WSIViewer] tile-load-failed', e?.tile?.url);
+        });
     }
 
     // ---- render ----
