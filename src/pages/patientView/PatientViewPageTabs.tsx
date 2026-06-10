@@ -510,30 +510,6 @@ export function tabs(
         mrnaProfilePromise.isComplete &&
         !!mrnaProfilePromise.result;
 
-    if (showExpressionTabs) {
-        tabs.push(
-            <MSKTab key={10} id={PatientViewPageTabs.Plots} linkText="Plots">
-                {pageComponent.patientViewPageStore.samplesInCohort
-                    .isComplete &&
-                pageComponent.patientViewPageStore.highlightedCancerTypes
-                    .isComplete &&
-                pageComponent.patientViewPageStore.highlightedDetailedCancerTypes
-                    .isComplete ? (
-                    <PatientViewPlotsTabWrapper
-                        store={pageComponent.patientViewPageStore}
-                        urlWrapper={urlWrapper}
-                    />
-                ) : (
-                    <LoadingIndicator
-                        isLoading={true}
-                        size={'big'}
-                        center={true}
-                    />
-                )}
-            </MSKTab>
-        );
-    }
-
     tabs.push(
         <MSKTab
             key={8}
@@ -751,7 +727,8 @@ export function tabs(
             </MSKTab>
         );
 
-    // The mRNA tab shares the Plots tab's gating (see showExpressionTabs above).
+    // The mRNA and Plots tabs share the same gating (see showExpressionTabs
+    // above) and are kept adjacent in the tab bar.
     if (showExpressionTabs) {
         tabs.push(
             <MSKTab
@@ -768,6 +745,36 @@ export function tabs(
                     store={pageComponent.patientViewPageStore}
                     sampleManager={sampleManager}
                 />
+            </MSKTab>
+        );
+        tabs.push(
+            <MSKTab
+                key={10}
+                id={PatientViewPageTabs.Plots}
+                linkText={
+                    <span>
+                        Plots{' '}
+                        <strong className={'beta-text'}>Beta!</strong>
+                    </span>
+                }
+            >
+                {pageComponent.patientViewPageStore.samplesInCohort
+                    .isComplete &&
+                pageComponent.patientViewPageStore.highlightedCancerTypes
+                    .isComplete &&
+                pageComponent.patientViewPageStore.highlightedDetailedCancerTypes
+                    .isComplete ? (
+                    <PatientViewPlotsTabWrapper
+                        store={pageComponent.patientViewPageStore}
+                        urlWrapper={urlWrapper}
+                    />
+                ) : (
+                    <LoadingIndicator
+                        isLoading={true}
+                        size={'big'}
+                        center={true}
+                    />
+                )}
             </MSKTab>
         );
     }
