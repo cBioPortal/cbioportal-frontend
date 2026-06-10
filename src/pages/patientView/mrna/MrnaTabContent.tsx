@@ -2006,7 +2006,7 @@ export default class MrnaTabContent extends React.Component<
                     {this.chartTitle}
                 </h3>
                 {this.renderCohortSummaryBar()}
-                {this.isMrnaDataPending ? (
+                {this.isTableDataPending ? (
                     <div style={{ marginTop: 16 }}>
                         <LoadingIndicator isLoading={true} size="big" center />
                     </div>
@@ -2176,15 +2176,15 @@ export default class MrnaTabContent extends React.Component<
         );
     }
 
-    // All data the chart and the table need. We await all of it before
-    // rendering either, so we never show a placeholder sized from a guessed
-    // column count (the table's columns depend on which samples have data,
-    // which isn't known until the expression results arrive).
-    @computed get isMrnaDataPending(): boolean {
+    // Data the *table* needs. Deliberately excludes the chart's gene-selection
+    // data (mrnaExpressionDataForGenes / mrnaTabGenes): those go pending on
+    // every selection change, and gating the table on them would reload the
+    // whole table whenever a gene/set is added. The table only depends on the
+    // patient's own expression (stable across selection); the chart shows its
+    // own loader (see renderChart) while its data refetches.
+    @computed get isTableDataPending(): boolean {
         return (
             this.plotsStore.patientSamplesExpression.isPending ||
-            this.plotsStore.mrnaExpressionDataForGenes.isPending ||
-            this.plotsStore.mrnaTabGenes.isPending ||
             // When the OncoKB filter is on, wait for the curated-gene list so
             // we don't briefly render the unfiltered set, then filter it.
             (this.plotsStore.oncoGenesOnly &&
