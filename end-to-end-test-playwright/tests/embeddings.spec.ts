@@ -15,7 +15,7 @@ import { test, expect, Page } from '../fixtures';
  * anything — it is intentionally not ported.
  */
 
-const STUDY = 'msk_chord_2024';
+const STUDY = 'msk_impact_50k_2026';
 const LEGEND = '[data-test="embeddings-legend"]';
 const VIZ = '[data-test="embeddings-visualization"]';
 const EMBEDDINGS_TAB = '#studyViewTabs a.tabAnchor_embeddings';
@@ -30,7 +30,7 @@ function filterParam(values: string[]): string {
     return encodeURIComponent(
         JSON.stringify({
             clinicalDataEqualityFilters: [
-                { attributeId: 'CANCER_TYPE_DETAILED', values },
+                { attributeId: 'CANCER_TYPE', values },
             ],
         })
     );
@@ -147,7 +147,7 @@ test.describe('embeddings tab interactions', () => {
         }) => {
             const param = coloringParam({
                 selectedOption: `undefined_${JSON.stringify({
-                    clinicalAttributeId: 'ADRENAL_GLANDS',
+                    clinicalAttributeId: 'SEX',
                     patientAttribute: true,
                     studyId: STUDY,
                 })}`,
@@ -159,7 +159,7 @@ test.describe('embeddings tab interactions', () => {
                 page,
                 `&embeddings_coloring_selection=${param}`
             );
-            await expect(page.locator(LEGEND)).toContainText(/Yes|No|NA/);
+            await expect(page.locator(LEGEND)).toContainText(/Male|Female/);
         });
     });
 });
