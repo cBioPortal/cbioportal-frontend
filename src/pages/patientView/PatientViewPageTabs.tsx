@@ -664,9 +664,11 @@ export function tabs(
         );
 
     // Native OpenSeadragon WSI viewer tab — shown when msk_wsi_tile_server_url
-    // is configured. Fetches patient hierarchy directly from tile server;
+    // is configured (non-null). Empty string = use dev-server proxy at /patient.
+    // Fetches patient hierarchy directly from tile server;
     // no study data files or resource entries required.
-    getServerConfig().msk_wsi_tile_server_url &&
+    getServerConfig().msk_wsi_tile_server_url !== null &&
+    getServerConfig().msk_wsi_tile_server_url !== undefined &&
         tabs.push(
             <MSKTab
                 key={6.5}
