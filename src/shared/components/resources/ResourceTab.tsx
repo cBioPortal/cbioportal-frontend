@@ -18,6 +18,7 @@ import IFrameLoader from 'shared/components/iframeLoader/IFrameLoader';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { CUSTOM_URL_TRANSFORMERS } from 'shared/components/resources/customResourceHelpers';
 import { getResourceConfig } from 'shared/lib/ResourceConfig';
+import WSIViewer from 'shared/components/wsiViewer/WSIViewer';
 
 export interface IResourceTabProps {
     resourceDisplayName: string;
@@ -200,6 +201,14 @@ export default class ResourceTab extends React.Component<
         return undefined;
     }
 
+    @computed get nativeViewer(): 'wsi' | undefined {
+        const resourceDef = this.currentResourceDatum?.resourceDefinition;
+        if (resourceDef) {
+            return getResourceConfig(resourceDef).nativeViewer;
+        }
+        return undefined;
+    }
+
     @computed get shouldShowWarning() {
         return (
             !!this.iframeErrorMessage &&
@@ -214,6 +223,26 @@ export default class ResourceTab extends React.Component<
 
     render() {
         const multipleData = this.props.resourceData.length > 1;
+
+        // Native WSI viewer — replaces iframe entirely
+        if (this.nativeViewer === 'wsi') {
+            return (
+                <div>
+                    <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+                        <FeatureTitle
+                            title={this.props.resourceDisplayName}
+                            isLoading={false}
+                            className="pull-left"
+                            style={{ marginBottom: 10 }}
+                        />
+                    </div>
+                    <WSIViewer
+                        url={this.currentResourceDatum.url}
+                        height={this.iframeHeight}
+                    />
+                </div>
+            );
+        }
 
         return (
             <div>
