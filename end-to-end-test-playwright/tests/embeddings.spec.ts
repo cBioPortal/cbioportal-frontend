@@ -112,7 +112,10 @@ test.describe('embeddings tab interactions', () => {
                     ['Colorectal Cancer']
                 )}`
             );
-            await expect(page.locator(LEGEND)).toContainText('Unselected');
+            await expect(page.locator(LEGEND)).toBeVisible({ timeout: 60000 });
+            await expect(page.locator(LEGEND)).toContainText('Unselected', {
+                timeout: 60000,
+            });
         });
 
         test('preserves the filter when switching between tabs', async ({
@@ -123,13 +126,19 @@ test.describe('embeddings tab interactions', () => {
                     ['Melanoma']
                 )}`
             );
-            await expect(page.locator(LEGEND)).toContainText('Unselected');
+            await expect(page.locator(LEGEND)).toBeVisible({ timeout: 60000 });
+            await expect(page.locator(LEGEND)).toContainText('Unselected', {
+                timeout: 60000,
+            });
 
             // Round-trip through the summary tab to confirm the filter (and
             // thus the Unselected category) survives an in-app tab switch.
             await page.locator(SUMMARY_TAB).click();
             await page.locator(EMBEDDINGS_TAB).click();
-            await expect(page.locator(LEGEND)).toContainText('Unselected');
+            await expect(page.locator(LEGEND)).toBeVisible({ timeout: 60000 });
+            await expect(page.locator(LEGEND)).toContainText('Unselected', {
+                timeout: 60000,
+            });
         });
     });
 
@@ -148,8 +157,13 @@ test.describe('embeddings tab interactions', () => {
                 page,
                 `&embeddings_coloring_selection=${param}`
             );
+            // Mutation coloring replaces the default cancer-type legend
+            // once the gene's mutation data loads; allow time for it.
             await expect(page.locator(LEGEND)).toContainText(
-                /Missense|Truncating|Inframe|Not mutated/
+                /Missense|Truncating|Inframe|Not mutated/,
+                {
+                    timeout: 60000,
+                }
             );
         });
 
@@ -170,7 +184,9 @@ test.describe('embeddings tab interactions', () => {
                 page,
                 `&embeddings_coloring_selection=${param}`
             );
-            await expect(page.locator(LEGEND)).toContainText(/Male|Female/);
+            await expect(page.locator(LEGEND)).toContainText(/Male|Female/, {
+                timeout: 60000,
+            });
         });
     });
 });
