@@ -6,8 +6,8 @@ import { test, expect, Page } from '../fixtures';
  * Functional (non-screenshot) coverage of the Similarity Maps tab: legend
  * toggling, sample counts, toolbar controls, selection/filtering, and URL
  * parameter handling. Lives in the remote lane for the same reason as
- * embeddings-screenshot.spec.ts: the embedding data and `msk_chord_2024`
- * study only exist against the public backend.
+ * embeddings-screenshot.spec.ts: the embedding data and the
+ * `msk_impact_50k_2026` cohort only exist against the public backend.
  *
  * The original wdio `coloring menu interactions` test targeted a
  * `[data-test="embeddings-coloring-menu"]` selector that does not exist in
