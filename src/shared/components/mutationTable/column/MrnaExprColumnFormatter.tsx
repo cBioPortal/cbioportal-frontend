@@ -73,7 +73,7 @@ export default class MrnaExprColumnFormatter {
             if (abs < TINY_THRESHOLD) return v.toExponential(0);
             return v.toFixed(abs < 1 ? 2 : 0);
         };
-        const sortedValues = values.slice().sort((a, b) => a - b);
+        const sortedValues = [...values].sort((a, b) => a - b);
         const getQuantile = (q: number) => {
             const index = (sortedValues.length - 1) * q;
             const lower = Math.floor(index);

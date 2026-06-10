@@ -3,6 +3,7 @@ import React from 'react';
 import { assert } from 'chai';
 import { shallow } from 'enzyme';
 import sinon from 'sinon';
+import Immutable from 'seamless-immutable';
 
 describe('MrnaExprColumnFormatter', () => {
     it('renders a histogram when all raw values are identical', () => {
@@ -32,6 +33,21 @@ describe('MrnaExprColumnFormatter', () => {
         const wrapper = shallow(<div>{histogram}</div>);
         assert.include(wrapper.text(), 'n=3');
         assert.include(wrapper.text(), 'median 2');
+    });
+
+    it('renders histogram from immutable raw values without throwing', () => {
+        const histogram = (MrnaExprColumnFormatter as any).getExpressionHistogram(
+            Immutable.from([
+                { sampleId: 'S1', value: 1 },
+                { sampleId: 'S2', value: 2 },
+                { sampleId: 'S3', value: 3 },
+            ]) as any,
+            'S2'
+        );
+
+        assert.isNotNull(histogram);
+        const wrapper = shallow(<div>{histogram}</div>);
+        assert.include(wrapper.text(), 'n=3');
     });
 
     it('does not prefetch source expression data during render', () => {
