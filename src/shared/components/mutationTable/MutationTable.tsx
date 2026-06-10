@@ -133,6 +133,10 @@ export interface IMutationTableProps {
     mrnaExprRankMolecularProfileId?: string;
     /** Molecular profile ID for the raw (non-z-score) mRNA expression profile, for histogram data */
     mrnaExprSourceMolecularProfileId?: string;
+    /** Maps from uniqueSampleKey to CANCER_TYPE for all study samples (for distribution filtering) */
+    studyCancerTypeMap?: { [uniqueSampleKey: string]: string };
+    /** Maps from uniqueSampleKey to CANCER_TYPE_DETAILED for all study samples (for distribution filtering) */
+    studyCancerTypeDetailedMap?: { [uniqueSampleKey: string]: string };
     discreteCNAMolecularProfileId?: string;
     columns?: ExtendedMutationTableColumnType[];
     namespaceColumns?: NamespaceColumnConfig;
@@ -530,16 +534,17 @@ export default class MutationTable<
                         d,
                         this.props.mrnaExprRankCache as MrnaExprRankCache,
                         this.props.mrnaExprSourceCache,
-                        this.props.mrnaExprSourceMolecularProfileId
+                        this.props.mrnaExprSourceMolecularProfileId,
+                        this.props.studyCancerTypeMap,
+                        this.props.studyCancerTypeDetailedMap
                     )
                 ) : (
                     <span></span>
                 ),
             tooltip: (
                 <span>
-                    Total mRNA expression level of the gene in the tumor
-                    sample, shown as a percentile rank among all samples in the
-                    study
+                    Total mRNA expression level of the gene in the tumor sample,
+                    shown as a percentile rank among all samples in the study
                 </span>
             ),
         };

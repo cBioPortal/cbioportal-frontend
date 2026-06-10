@@ -1488,6 +1488,54 @@ export class PatientViewPageStore {
         });
     }
 
+    readonly studySampleCancerTypeMap = remoteData<{
+        [uniqueSampleKey: string]: string;
+    }>(
+        {
+            invoke: async () => {
+                const data = await getClient().getAllClinicalDataInStudyUsingGET(
+                    {
+                        studyId: this.studyId,
+                        attributeId: 'CANCER_TYPE',
+                        clinicalDataType: 'SAMPLE',
+                        projection: 'SUMMARY',
+                        pageSize: 100000,
+                    }
+                );
+                const map: { [key: string]: string } = {};
+                for (const d of data) {
+                    map[d.uniqueSampleKey] = d.value;
+                }
+                return map;
+            },
+        },
+        {}
+    );
+
+    readonly studySampleCancerTypeDetailedMap = remoteData<{
+        [uniqueSampleKey: string]: string;
+    }>(
+        {
+            invoke: async () => {
+                const data = await getClient().getAllClinicalDataInStudyUsingGET(
+                    {
+                        studyId: this.studyId,
+                        attributeId: 'CANCER_TYPE_DETAILED',
+                        clinicalDataType: 'SAMPLE',
+                        projection: 'SUMMARY',
+                        pageSize: 100000,
+                    }
+                );
+                const map: { [key: string]: string } = {};
+                for (const d of data) {
+                    map[d.uniqueSampleKey] = d.value;
+                }
+                return map;
+            },
+        },
+        {}
+    );
+
     readonly discreteCNAData = remoteData<DiscreteCopyNumberData[]>(
         {
             await: () => [this.molecularProfileIdDiscrete, this.samples],

@@ -89,9 +89,7 @@ export default class MrnaExprColumnFormatter {
         };
         const medianVal = getQuantile(0.5);
 
-        const currentSample = allData.find(
-            d => d.sampleId === currentSampleId
-        );
+        const currentSample = allData.find(d => d.sampleId === currentSampleId);
         const currentValue = currentSample?.value;
         const markerXForDegenerate =
             currentValue !== undefined && isFinite(currentValue)
@@ -213,9 +211,7 @@ export default class MrnaExprColumnFormatter {
                     {bins.map((count, i) => {
                         const x = padLeft + i * svgBarWidth;
                         const barH =
-                            maxCount > 0
-                                ? (count / maxCount) * plotHeight
-                                : 0;
+                            maxCount > 0 ? (count / maxCount) * plotHeight : 0;
                         return (
                             <rect
                                 key={i}
@@ -447,17 +443,19 @@ export default class MrnaExprColumnFormatter {
         sampleId?: string,
         entrezGeneId?: number,
         mrnaExprSourceCache?: GeneMolecularDataCache,
-        mrnaExprSourceMolecularProfileId?: string
+        mrnaExprSourceMolecularProfileId?: string,
+        studyCancerTypeMap?: { [uniqueSampleKey: string]: string },
+        studyCancerTypeDetailedMap?: { [uniqueSampleKey: string]: string }
     ) {
         if (
             cacheDatum &&
             cacheDatum.status === 'complete' &&
             cacheDatum.data !== null
         ) {
-            // Try to get the actual expression distribution from the raw data cache
-            let distributionChart: JSX.Element | null = null;
             let rawExprValue: number | undefined;
             let rawDistributionLoading = false;
+            let allData: NumericGeneMolecularData[] | undefined;
+            let currentUniqueKey: string | undefined;
             const hasRawExprSource =
                 mrnaExprSourceCache &&
                 mrnaExprSourceMolecularProfileId &&
@@ -473,30 +471,19 @@ export default class MrnaExprColumnFormatter {
                     sourceDatum.status === 'complete' &&
                     sourceDatum.data
                 ) {
-                    const currentSample = sourceDatum.data.find(
+                    allData = sourceDatum.data;
+                    const currentSample = allData.find(
                         d => d.sampleId === sampleId
                     );
-                    if (currentSample && isFinite(currentSample.value)) {
-                        rawExprValue = currentSample.value;
-                    }
-                    const histogram =
-                        MrnaExprColumnFormatter.getExpressionHistogram(
-                            sourceDatum.data,
-                            sampleId
-                        );
-                    if (histogram) {
-                        distributionChart = histogram;
+                    if (currentSample) {
+                        currentUniqueKey = currentSample.uniqueSampleKey;
+                        if (isFinite(currentSample.value)) {
+                            rawExprValue = currentSample.value;
+                        }
                     }
                 } else if (!sourceDatum) {
                     rawDistributionLoading = true;
                 }
-            }
-            // Fall back to Gaussian bell curve only when no raw profile is available.
-            if (!distributionChart && !rawDistributionLoading) {
-                distributionChart =
-                    MrnaExprColumnFormatter.getDistributionChart(
-                        cacheDatum.data.zScore
-                    );
             }
 
             if (rawDistributionLoading) {
@@ -526,14 +513,118 @@ export default class MrnaExprColumnFormatter {
                 );
             }
 
+            // Build distribution sections
+            const distributionSections: JSX.Element[] = [];
+
+            if (allData && currentUniqueKey) {
+                // Determine current sample's cancer type and cancer type detailed
+                const currentCancerType = studyCancerTypeMap
+                    ? studyCancerTypeMap[currentUniqueKey]
+                    : undefined;
+                const currentCancerTypeDetailed = studyCancerTypeDetailedMap
+                    ? studyCancerTypeDetailedMap[currentUniqueKey]
+                    : undefined;
+
+                // 1. Cancer type distribution
+                if (currentCancerType && studyCancerTypeMap) {
+                    const filtered = allData.filter(
+                        d =>
+                            studyCancerTypeMap[d.uniqueSampleKey] ===
+                            currentCancerType
+                    );
+                    const histogram = MrnaExprColumnFormatter.getExpressionHistogram(
+                        filtered,
+                        sampleId!
+                    );
+                    if (histogram) {
+                        distributionSections.push(
+                            <div key="cancer-type">
+                                <span
+                                    style={{
+                                        fontSize: '0.85em',
+                                        fontWeight: 'bold',
+                                    }}
+                                >
+                                    {currentCancerType}:
+                                </span>
+                                {histogram}
+                            </div>
+                        );
+                    }
+                }
+
+                // 2. Cancer type detailed distribution
+                if (
+                    currentCancerTypeDetailed &&
+                    studyCancerTypeDetailedMap &&
+                    currentCancerTypeDetailed !== currentCancerType
+                ) {
+                    const filtered = allData.filter(
+                        d =>
+                            studyCancerTypeDetailedMap[d.uniqueSampleKey] ===
+                            currentCancerTypeDetailed
+                    );
+                    const histogram = MrnaExprColumnFormatter.getExpressionHistogram(
+                        filtered,
+                        sampleId!
+                    );
+                    if (histogram) {
+                        distributionSections.push(
+                            <div key="cancer-type-detailed">
+                                <span
+                                    style={{
+                                        fontSize: '0.85em',
+                                        fontWeight: 'bold',
+                                    }}
+                                >
+                                    {currentCancerTypeDetailed}:
+                                </span>
+                                {histogram}
+                            </div>
+                        );
+                    }
+                }
+
+                // 3. All samples distribution
+                const allHistogram = MrnaExprColumnFormatter.getExpressionHistogram(
+                    allData,
+                    sampleId!
+                );
+                if (allHistogram) {
+                    distributionSections.push(
+                        <div key="all-samples">
+                            <span
+                                style={{
+                                    fontSize: '0.85em',
+                                    fontWeight: 'bold',
+                                }}
+                            >
+                                All samples:
+                            </span>
+                            {allHistogram}
+                        </div>
+                    );
+                }
+            }
+
+            // Fall back to Gaussian bell curve when no raw profile is available
+            if (distributionSections.length === 0) {
+                const gaussianChart = MrnaExprColumnFormatter.getDistributionChart(
+                    cacheDatum.data.zScore
+                );
+                distributionSections.push(
+                    <div key="gaussian">{gaussianChart}</div>
+                );
+            }
+
             return (
                 <div>
                     <span>
-                        Distribution of expression across all samples in this
-                        study for this gene:
+                        Distribution of expression across samples in this study
+                        for this gene:
                     </span>
                     <br />
-                    {distributionChart}
+                    {distributionSections}
                     {rawExprValue !== undefined && (
                         <>
                             <span>
@@ -683,7 +774,9 @@ export default class MrnaExprColumnFormatter {
         sampleId?: string,
         entrezGeneId?: number,
         mrnaExprSourceCache?: GeneMolecularDataCache,
-        mrnaExprSourceMolecularProfileId?: string
+        mrnaExprSourceMolecularProfileId?: string,
+        studyCancerTypeMap?: { [uniqueSampleKey: string]: string },
+        studyCancerTypeDetailedMap?: { [uniqueSampleKey: string]: string }
     ) {
         const maybeLoadExpressionSourceData = (visible: boolean) => {
             if (
@@ -706,7 +799,9 @@ export default class MrnaExprColumnFormatter {
                     sampleId,
                     entrezGeneId,
                     mrnaExprSourceCache,
-                    mrnaExprSourceMolecularProfileId
+                    mrnaExprSourceMolecularProfileId,
+                    studyCancerTypeMap,
+                    studyCancerTypeDetailedMap
                 )}
                 arrowContent={<div className="rc-tooltip-arrow-inner" />}
                 onVisibleChange={maybeLoadExpressionSourceData}
@@ -720,18 +815,21 @@ export default class MrnaExprColumnFormatter {
         data: Mutation[],
         cache: MrnaExprRankCache,
         mrnaExprSourceCache?: GeneMolecularDataCache,
-        mrnaExprSourceMolecularProfileId?: string
+        mrnaExprSourceMolecularProfileId?: string,
+        studyCancerTypeMap?: { [uniqueSampleKey: string]: string },
+        studyCancerTypeDetailedMap?: { [uniqueSampleKey: string]: string }
     ) {
         const cacheDatum = MrnaExprColumnFormatter.getData(data, cache);
         const sampleId = data.length > 0 ? data[0].sampleId : undefined;
-        const entrezGeneId =
-            data.length > 0 ? data[0].entrezGeneId : undefined;
+        const entrezGeneId = data.length > 0 ? data[0].entrezGeneId : undefined;
         return MrnaExprColumnFormatter.renderFromCacheDatum(
             cacheDatum,
             sampleId,
             entrezGeneId,
             mrnaExprSourceCache,
-            mrnaExprSourceMolecularProfileId
+            mrnaExprSourceMolecularProfileId,
+            studyCancerTypeMap,
+            studyCancerTypeDetailedMap
         );
     }
 

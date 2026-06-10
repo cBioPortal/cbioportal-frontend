@@ -133,6 +133,8 @@ export default class MutationTableWrapper extends React.Component<
             this.pageStore.molecularProfileIdToMolecularProfile,
             this.pageStore.mrnaRankMolecularProfileId,
             this.pageStore.mrnaExprSourceMolecularProfileId,
+            this.pageStore.studySampleCancerTypeMap,
+            this.pageStore.studySampleCancerTypeDetailedMap,
             this.pageStore.molecularProfileIdDiscrete,
             this.pageStore.mutSigData,
             this.pageStore.mutationTableShowGeneFilterMenu,
@@ -230,6 +232,14 @@ export default class MutationTableWrapper extends React.Component<
                                     this.pageStore
                                         .mrnaExprSourceMolecularProfileId
                                         .result || undefined
+                                }
+                                studyCancerTypeMap={
+                                    this.pageStore.studySampleCancerTypeMap
+                                        .result
+                                }
+                                studyCancerTypeDetailedMap={
+                                    this.pageStore
+                                        .studySampleCancerTypeDetailedMap.result
                                 }
                                 discreteCNAMolecularProfileId={
                                     this.pageStore.molecularProfileIdDiscrete

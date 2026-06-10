@@ -90,8 +90,96 @@ describe('MrnaExprColumnFormatter', () => {
         assert.notInclude(wrapper.text(), 'mean');
         assert.notInclude(
             wrapper.text(),
-            'Distribution of expression across all samples in this study for this gene:'
+            'Distribution of expression across samples in this study for this gene:'
         );
         assert.notInclude(wrapper.text(), 'mRNA z-score');
+    });
+
+    it('renders 3 distribution sections when cancer type maps are provided', () => {
+        const allData = [
+            { sampleId: 'S1', uniqueSampleKey: 'UK1', value: 1 },
+            { sampleId: 'S2', uniqueSampleKey: 'UK2', value: 2 },
+            { sampleId: 'S3', uniqueSampleKey: 'UK3', value: 3 },
+            { sampleId: 'S4', uniqueSampleKey: 'UK4', value: 4 },
+        ];
+        const sourceCache = {
+            peek: sinon.stub().returns({
+                status: 'complete',
+                data: allData,
+            }),
+        } as any;
+        const cancerTypeMap: { [key: string]: string } = {
+            UK1: 'Breast Cancer',
+            UK2: 'Breast Cancer',
+            UK3: 'Lung Cancer',
+            UK4: 'Breast Cancer',
+        };
+        const cancerTypeDetailedMap: { [key: string]: string } = {
+            UK1: 'Invasive Breast Carcinoma',
+            UK2: 'Breast Cancer NOS',
+            UK3: 'Lung Adenocarcinoma',
+            UK4: 'Invasive Breast Carcinoma',
+        };
+
+        const tooltip = (MrnaExprColumnFormatter as any).getTooltipContents(
+            {
+                status: 'complete',
+                data: { zScore: -0.5, percentile: 25 },
+            },
+            'S1',
+            1017,
+            sourceCache,
+            'study_mrna',
+            cancerTypeMap,
+            cancerTypeDetailedMap
+        );
+
+        const wrapper = shallow(<div>{tooltip}</div>);
+        const text = wrapper.text();
+        assert.include(text, 'Breast Cancer:');
+        assert.include(text, 'Invasive Breast Carcinoma:');
+        assert.include(text, 'All samples:');
+    });
+
+    it('skips cancer type detailed when it matches cancer type', () => {
+        const allData = [
+            { sampleId: 'S1', uniqueSampleKey: 'UK1', value: 1 },
+            { sampleId: 'S2', uniqueSampleKey: 'UK2', value: 2 },
+        ];
+        const sourceCache = {
+            peek: sinon.stub().returns({
+                status: 'complete',
+                data: allData,
+            }),
+        } as any;
+        const cancerTypeMap: { [key: string]: string } = {
+            UK1: 'Breast Cancer',
+            UK2: 'Breast Cancer',
+        };
+        const cancerTypeDetailedMap: { [key: string]: string } = {
+            UK1: 'Breast Cancer',
+            UK2: 'Breast Cancer',
+        };
+
+        const tooltip = (MrnaExprColumnFormatter as any).getTooltipContents(
+            {
+                status: 'complete',
+                data: { zScore: 0, percentile: 50 },
+            },
+            'S1',
+            1017,
+            sourceCache,
+            'study_mrna',
+            cancerTypeMap,
+            cancerTypeDetailedMap
+        );
+
+        const wrapper = shallow(<div>{tooltip}</div>);
+        const text = wrapper.text();
+        assert.include(text, 'Breast Cancer:');
+        assert.include(text, 'All samples:');
+        // cancer type detailed section should be skipped since it matches cancer type
+        const matches = text.match(/Breast Cancer:/g);
+        assert.equal(matches?.length, 1);
     });
 });
