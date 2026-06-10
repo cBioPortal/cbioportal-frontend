@@ -133,11 +133,15 @@ test.describe('embeddings tab interactions', () => {
 
             // Round-trip through the summary tab to confirm the filter (and
             // thus the Unselected category) survives an in-app tab switch.
-            // The tab anchors need a generous click timeout: while the
-            // 50k-sample view renders they are slow to become actionable in
-            // the headless CI browser.
-            await page.locator(SUMMARY_TAB).click({ timeout: 60000 });
-            await page.locator(EMBEDDINGS_TAB).click({ timeout: 60000 });
+            // Force the clicks: the continuous deck.gl render keeps the tab
+            // anchors from passing Playwright's stability check, so a normal
+            // click never becomes actionable in the headless CI browser.
+            const summaryTab = page.locator(SUMMARY_TAB);
+            await expect(summaryTab).toBeVisible({ timeout: 60000 });
+            await summaryTab.click({ force: true });
+            const embeddingsTab = page.locator(EMBEDDINGS_TAB);
+            await expect(embeddingsTab).toBeVisible({ timeout: 60000 });
+            await embeddingsTab.click({ force: true });
             await expect(page.locator(LEGEND)).toBeVisible({ timeout: 60000 });
             await expect(page.locator(LEGEND)).toContainText('Unselected', {
                 timeout: 60000,
