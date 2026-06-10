@@ -175,7 +175,10 @@ const ACTIVE_OUTLINE_DASH = '5 3';
 const ACTIVE_OUTLINE_STROKE_WIDTH = 2;
 const ACTIVE_OUTLINE_RX = 3;
 const ACTIVE_OUTLINE_X_PAD = 3;
-const ACTIVE_OUTLINE_Y_PAD = 4;
+// Top padding above yPos. The outline's bottom is fixed at
+// ACTIVE_OUTLINE_CONTENT_BELOW (height = Y_PAD + CONTENT_BELOW, y = −Y_PAD), so
+// increasing this only raises the top border for extra headroom above the row.
+const ACTIVE_OUTLINE_Y_PAD = 8;
 // Active outline extends this far below yPos — covers exons + exon-number
 // labels plus a small margin. Deliberately smaller than rowHeight so the
 // stacked row below (whose transcript-name label sits at yPos_next - 3)
@@ -379,6 +382,27 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
         const intronY = yPos + INTRON_Y_OFFSET;
         const elements: React.ReactNode[] = [];
 
+        const isActive = transcript.transcriptId === activeTranscriptId;
+        // This transcript's TSS: 5′ edge of the first exon (strand-aware).
+        const tssGenomic =
+            exons.length > 0
+                ? strand === '+'
+                    ? exons[0].start
+                    : exons[exons.length - 1].end
+                : 0;
+        // Is a genomic point on the retained side of the breakpoint? Same rule
+        // the exons/chevrons use, factored out so the cues can't desync.
+        const isRetainedAtGenomic = (coord: number): boolean =>
+            retainedExonNumbers === undefined
+                ? true
+                : is5Prime
+                ? strand === '+'
+                    ? coord <= position
+                    : coord >= position
+                : strand === '+'
+                ? coord >= position
+                : coord <= position;
+
         for (let i = 0; i < exons.length - 1; i++) {
             const x1 = toSvg(exons[i].end);
             const x2 = toSvg(exons[i + 1].start);
@@ -401,37 +425,99 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
         //      alternative TSSes (CDKN2A p14ARF vs p16INK4a etc.) are all
         //      visible simultaneously. Gated by showPromoter. ----
         if (showPromoter && exons.length > 0) {
-            // + strand: TSS is the start of the first (leftmost) exon.
-            // − strand: TSS is the end of the last (rightmost) exon.
-            // Exons arrive sorted ascending, so first = lowest genomic coord.
-            const tssGenomic =
-                strand === '+' ? exons[0].start : exons[exons.length - 1].end;
             const tssX = toSvg(tssGenomic);
 
+            // IGV/UCSC-style TSS bent-arrow pinned to exon 1's 5′ edge: the
+            // riser rises from the exon's *top edge* (not through its body, so
+            // it never reads as "inside exon 1"), and the barb points in the
+            // transcription direction above the exon. The TSS is the exon
+            // boundary by definition; promoter/regulatory DNA is upstream.
+            const exonTop = yPos;
+            const barbY = yPos - 9;
+            const barbDX = strand === '+' ? 9 : -9;
+            const notchDX = strand === '+' ? 5 : -5;
             const arrowPoints =
-                strand === '+'
-                    ? `${tssX},${yPos + INTRON_Y_OFFSET} ${tssX},${yPos -
-                          12} ${tssX + 10},${yPos - 12} ${tssX + 6},${yPos -
-                          14} ${tssX + 10},${yPos - 12} ${tssX + 6},${yPos -
-                          10}`
-                    : `${tssX},${yPos + INTRON_Y_OFFSET} ${tssX},${yPos -
-                          12} ${tssX - 10},${yPos - 12} ${tssX - 6},${yPos -
-                          14} ${tssX - 10},${yPos - 12} ${tssX - 6},${yPos -
-                          10}`;
+                `${tssX},${exonTop} ${tssX},${barbY} ` +
+                `${tssX + barbDX},${barbY} ${tssX + notchDX},${barbY - 2} ` +
+                `${tssX + barbDX},${barbY} ${tssX + notchDX},${barbY + 2}`;
+
+            // Grey the arrow when its TSS is on the non-retained side. On the
+            // 3′ partner the native TSS is discarded — its promoter is replaced
+            // by the 5′ partner's — so its arrow greys out.
+            const arrowColor = isRetainedAtGenomic(tssGenomic) ? color : '#ddd';
 
             elements.push(
                 <polyline
                     key={`tss-arrow-${transcript.transcriptId}`}
                     data-testid={`tss-arrow-${transcript.transcriptId}`}
                     points={arrowPoints}
-                    stroke={color}
-                    strokeWidth={1.5}
+                    stroke={arrowColor}
+                    strokeWidth={isActive ? 2 : 1.5}
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     fill="none"
                     pointerEvents="none"
                 />
             );
+        }
+
+        // ---- Upstream promoter block (cue C) — 5′ track only. One per
+        //      transcript row (like the TSS arrow) so alternative promoters
+        //      are all visible at once. Drawn upstream of this transcript's
+        //      TSS, inset by PROMOTER_GAP, at full exon height with a dashed
+        //      "P" box. Fades with the row's opacity to match its exons. ----
+        // Rendered x-extent of this row's promoter block, so the chevrons
+        // below can skip ticks that would otherwise show through the box.
+        let promoterRange: { lo: number; hi: number } | null = null;
+        if (is5Prime && showPromoter && exons.length > 0) {
+            const tintGStart =
+                strand === '+' ? tssGenomic - upstreamWindow : tssGenomic;
+            const tintGEnd =
+                strand === '+' ? tssGenomic : tssGenomic + upstreamWindow;
+            // The promoter is biologically contiguous with the TSS, so the box
+            // butts directly against the start site (where the TSS hook sits)
+            // and extends upstream from there — no gap.
+            const tintX = Math.min(toSvg(tintGStart), toSvg(tintGEnd));
+            const tintW = Math.abs(toSvg(tintGEnd) - toSvg(tintGStart));
+            // Grey the promoter when its TSS is on the non-retained side — a
+            // promoter on the discarded side isn't part of the fusion product.
+            const promoterRetained = isRetainedAtGenomic(tssGenomic);
+            const promoterColor = promoterRetained ? color : '#ddd';
+            if (tintW > 0) {
+                promoterRange = { lo: tintX, hi: tintX + tintW };
+                elements.push(
+                    <g
+                        key={`promoter-${transcript.transcriptId}`}
+                        opacity={promoterRetained ? opacity : 1}
+                        style={{ pointerEvents: 'none' }}
+                    >
+                        <rect
+                            data-testid="promoter-tint"
+                            x={tintX}
+                            y={yPos}
+                            width={tintW}
+                            height={EXON_HEIGHT}
+                            fill={promoterColor}
+                            fillOpacity={0.18}
+                            stroke={promoterColor}
+                            strokeWidth={1}
+                            strokeDasharray="2 2"
+                            rx={1}
+                        />
+                        <text
+                            x={tintX + tintW / 2}
+                            y={yPos + EXON_HEIGHT / 2}
+                            textAnchor="middle"
+                            dominantBaseline="central"
+                            fontSize={9}
+                            fontWeight={700}
+                            fill={promoterColor}
+                        >
+                            P
+                        </text>
+                    </g>
+                );
+            }
         }
 
         // ---- Direction chevrons on the intron line (cue B) ----
@@ -457,7 +543,13 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
             const insideExon = exonRanges.some(
                 r => tickMid >= r.lo && tickMid <= r.hi
             );
-            if (insideExon) continue;
+            // Skip ticks that fall within the promoter box so its direction
+            // chevron doesn't show through the "P" block.
+            const insidePromoter =
+                promoterRange !== null &&
+                tickMid >= promoterRange.lo - 2 &&
+                tickMid <= promoterRange.hi + 2;
+            if (insideExon || insidePromoter) continue;
             const chevronRetained =
                 retainedExonNumbers === undefined
                     ? true
@@ -571,8 +663,6 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
                 );
             }
         });
-
-        const isActive = transcript.transcriptId === activeTranscriptId;
 
         // Inactive rows: the regular gray label above the exons.
         // Active rows show a red+white transcript-name pill instead (below).
@@ -730,53 +820,6 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
                     style={{ pointerEvents: 'none' }}
                 />
             )}
-
-            {/* Upstream promoter tint — 5′ track only, gated by showPromoter */}
-            {is5Prime &&
-                showPromoter &&
-                activeTranscript &&
-                (() => {
-                    const activeTSS =
-                        activeTranscript.strand === '+'
-                            ? activeTranscript.txStart
-                            : activeTranscript.txEnd;
-                    const tintGStart =
-                        activeTranscript.strand === '+'
-                            ? activeTSS - upstreamWindow
-                            : activeTSS;
-                    const tintGEnd =
-                        activeTranscript.strand === '+'
-                            ? activeTSS
-                            : activeTSS + upstreamWindow;
-                    const tintX = Math.min(toSvg(tintGStart), toSvg(tintGEnd));
-                    const tintW = Math.abs(toSvg(tintGEnd) - toSvg(tintGStart));
-                    if (tintW <= 0) return null;
-                    const tintY = forteY + INTRON_Y_OFFSET - EXON_HEIGHT / 4;
-                    return (
-                        <g style={{ pointerEvents: 'none' }}>
-                            <rect
-                                data-testid="promoter-tint"
-                                x={tintX}
-                                y={tintY}
-                                width={tintW}
-                                height={EXON_HEIGHT / 2}
-                                fill={color}
-                                fillOpacity={0.2}
-                            />
-                            <text
-                                x={tintX + tintW / 2}
-                                y={tintY + EXON_HEIGHT / 4}
-                                textAnchor="middle"
-                                dominantBaseline="central"
-                                fontSize={10}
-                                fontWeight={700}
-                                fill={color}
-                            >
-                                P
-                            </text>
-                        </g>
-                    );
-                })()}
 
             {/* FORTE transcript */}
             {renderTranscript(
