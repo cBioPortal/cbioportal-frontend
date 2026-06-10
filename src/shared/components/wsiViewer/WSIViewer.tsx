@@ -310,7 +310,6 @@ function fmtMB(bytes: string | number | null | undefined): string {
 const BLOCK_LABEL_TIP =
     'Block label: number = block within case; T\u202f=\u202ftumor, N\u202f=\u202funinvolved, L\u202f=\u202flymph node';
 
-const STAIN_RANK: Record<string, number> = { 'h&e (initial)': 0, 'h&e (other)': 1, ihc: 2 };
 
 // ---- NavPanel ----
 
@@ -417,10 +416,11 @@ function SampleNode({ sample, selectedSlide, stainFilter, onSelectSlide }: Sampl
             for (const sl of b.slides) sortedSlides.push({ slide: sl, badge });
         }
     }
+    // Sort purely chronologically by block_number
     sortedSlides.sort((a, b) => {
-        const ra = STAIN_RANK[(a.slide.stain_group || '').toLowerCase()] ?? 3;
-        const rb = STAIN_RANK[(b.slide.stain_group || '').toLowerCase()] ?? 3;
-        if (ra !== rb) return ra - rb;
+        const na = Number(a.slide.block_number) || 0;
+        const nb = Number(b.slide.block_number) || 0;
+        if (na !== nb) return na - nb;
         return (a.slide.stain_name || '').localeCompare(b.slide.stain_name || '');
     });
 
