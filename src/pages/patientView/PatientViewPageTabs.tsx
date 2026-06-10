@@ -679,6 +679,7 @@ export function tabs(
                 <WSIViewer
                     url={`${getServerConfig().msk_wsi_tile_server_url}/patient/${pageComponent.patientViewPageStore.patientId}`}
                     height={WindowStore.size.height - 220}
+                    studyId={pageComponent.patientViewPageStore.studyId}
                 />
             </MSKTab>
         );
