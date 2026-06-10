@@ -133,8 +133,11 @@ test.describe('embeddings tab interactions', () => {
 
             // Round-trip through the summary tab to confirm the filter (and
             // thus the Unselected category) survives an in-app tab switch.
-            await page.locator(SUMMARY_TAB).click();
-            await page.locator(EMBEDDINGS_TAB).click();
+            // The tab anchors need a generous click timeout: while the
+            // 50k-sample view renders they are slow to become actionable in
+            // the headless CI browser.
+            await page.locator(SUMMARY_TAB).click({ timeout: 60000 });
+            await page.locator(EMBEDDINGS_TAB).click({ timeout: 60000 });
             await expect(page.locator(LEGEND)).toBeVisible({ timeout: 60000 });
             await expect(page.locator(LEGEND)).toContainText('Unselected', {
                 timeout: 60000,
