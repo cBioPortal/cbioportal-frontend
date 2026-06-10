@@ -433,7 +433,7 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
             // transcription direction above the exon. The TSS is the exon
             // boundary by definition; promoter/regulatory DNA is upstream.
             const exonTop = yPos;
-            const barbY = yPos - 9;
+            const barbY = yPos - 4;
             const barbDX = strand === '+' ? 9 : -9;
             const notchDX = strand === '+' ? 5 : -5;
             const arrowPoints =
