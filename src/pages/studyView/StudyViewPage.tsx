@@ -27,6 +27,11 @@ import IFrameLoader from '../../shared/components/iframeLoader/IFrameLoader';
 import { StudySummaryTab } from 'pages/studyView/tabs/SummaryTab';
 import StudyPageHeader from './studyPageHeader/StudyPageHeader';
 import CNSegments from './tabs/CNSegments';
+import {
+    CellExplorerTab,
+    getCellExplorerConfig,
+    hasCellExplorerDataset,
+} from './tabs/CellExplorerTab';
 import { getInternalClient } from 'shared/api/cbioportalInternalClientInstance';
 import AddChartButton from './addChartButton/AddChartButton';
 import { sleep } from '../../shared/lib/TimeUtils';
@@ -60,8 +65,14 @@ import { MakeMobxView } from '../../shared/components/MobxView';
 import ResourceTab from '../../shared/components/resources/ResourceTab';
 import StudyViewURLWrapper from './StudyViewURLWrapper';
 import ResourcesTab, { RESOURCES_TAB_NAME } from './resources/ResourcesTab';
-import { ResourceData } from 'cbioportal-ts-api-client';
+import {
+    ClinicalAttribute,
+    ClinicalDataFilter,
+    ResourceData,
+} from 'cbioportal-ts-api-client';
 import { getResourceConfig } from 'shared/lib/ResourceConfig';
+import { getClient } from 'shared/api/cbioportalClientInstance';
+import { MappedColumnSpec } from 'cbioportal-cell-explorer-highperformer';
 import $ from 'jquery';
 import { StudyViewComparisonGroup } from 'pages/groupComparison/GroupComparisonUtils';
 import { parse } from 'query-string';
@@ -122,6 +133,9 @@ export default class StudyViewPage extends React.Component<
         StudyViewPageTabKeyEnum.SUMMARY,
         StudyViewPageTabKeyEnum.CLINICAL_DATA,
         StudyViewPageTabKeyEnum.CN_SEGMENTS,
+        StudyViewPageTabKeyEnum.FILES_AND_LINKS,
+        StudyViewPageTabKeyEnum.PLOTS,
+        StudyViewPageTabKeyEnum.CELL_EXPLORER,
     ];
     private enableAddChartInTabs = [
         StudyViewPageTabKeyEnum.SUMMARY,
@@ -569,6 +583,185 @@ export default class StudyViewPage extends React.Component<
         },
     });
 
+    // ---- Cell Explorer: host-injected clinical-attribute coloring ----
+    //
+    // Ports PR #5535's "Color by clinical attributes" into this branch's
+    // in-process Cell Explorer (option 3a). Driven by the per-study config in
+    // CellExplorerTab.tsx: the config declares the zarr ↔ clinical identifier
+    // (e.g. PATIENT_DISPLAY_NAME → donor_id) and which clinical attributes
+    // should surface as Color By options. To add another attribute, edit the
+    // config array — no changes here.
+
+    @computed private get cceStudyId(): string | undefined {
+        return this.store.queriedPhysicalStudyIds.result?.[0];
+    }
+
+    @computed private get cceConfig() {
+        return getCellExplorerConfig(this.cceStudyId);
+    }
+
+    readonly selectedPatientDisplayNames = remoteData<string[]>({
+        await: () => [
+            this.store.queriedPhysicalStudyIds,
+            this.store.selectedSamples,
+        ],
+        invoke: async () => {
+            const config = this.cceConfig;
+            if (!config) return [];
+            const result = await this.store.internalClient.fetchClinicalDataCountsUsingPOST(
+                {
+                    clinicalDataCountFilter: {
+                        attributes: [
+                            {
+                                attributeId:
+                                    config.patientIdentifier
+                                        .clinicalAttributeId,
+                            } as ClinicalDataFilter,
+                        ],
+                        studyViewFilter: this.store.filters,
+                    },
+                }
+            );
+            const item = _.find(result, {
+                attributeId: config.patientIdentifier.clinicalAttributeId,
+            });
+            return item
+                ? item.counts.map((c: { value: string }) => c.value)
+                : [];
+        },
+        default: [],
+    });
+
+    readonly cellExplorerPatientAttributeData = remoteData<{
+        attributes: ClinicalAttribute[];
+        byAttr: Record<string, Record<string, string>>;
+    }>({
+        await: () => [
+            this.store.queriedPhysicalStudyIds,
+            this.store.selectedSamples,
+            this.store.clinicalAttributes,
+        ],
+        invoke: async () => {
+            const config = this.cceConfig;
+            const studyId = this.cceStudyId;
+            if (!config || !studyId) return { attributes: [], byAttr: {} };
+
+            const identifierAttr = config.patientIdentifier.clinicalAttributeId;
+            const patientAttrs = this.store.clinicalAttributes.result!.filter(
+                a =>
+                    a.patientAttribute &&
+                    a.clinicalAttributeId !== identifierAttr
+            );
+            if (patientAttrs.length === 0) {
+                return { attributes: [], byAttr: {} };
+            }
+
+            const samples = this.store.selectedSamples.result!;
+            const patientIds = _.uniq(samples.map(s => s.patientId));
+            if (patientIds.length === 0) {
+                return { attributes: patientAttrs, byAttr: {} };
+            }
+
+            const attributeIds = [
+                identifierAttr,
+                ...patientAttrs.map(a => a.clinicalAttributeId),
+            ];
+
+            const clinicalData = await getClient().fetchClinicalDataUsingPOST({
+                clinicalDataType: 'PATIENT',
+                clinicalDataMultiStudyFilter: {
+                    attributeIds,
+                    identifiers: patientIds.map(pid => ({
+                        entityId: pid,
+                        studyId,
+                    })),
+                },
+            });
+
+            // Pivot to { attributeId: { patientId: value } }
+            const byAttr: Record<string, Record<string, string>> = {};
+            for (const d of clinicalData) {
+                if (!byAttr[d.clinicalAttributeId]) {
+                    byAttr[d.clinicalAttributeId] = {};
+                }
+                byAttr[d.clinicalAttributeId][d.patientId] = d.value;
+            }
+            return { attributes: patientAttrs, byAttr };
+        },
+        default: { attributes: [], byAttr: {} },
+    });
+
+    @autobind
+    handleCellExplorerLassoSelection(displayNames: string[]): void {
+        // Cell explorer gives us values from the cells' `sourceColumn`
+        // (e.g. donor_id), which correspond to a clinical-attribute display
+        // name. Reverse-map to cBioPortal patientIds, then expand to samples,
+        // and drop into the Study View's CUSTOM_SELECT filter so the existing
+        // "Selected: N patients | M samples" counter updates.
+        const config = this.cceConfig;
+        const data = this.cellExplorerPatientAttributeData.result;
+        const samples = this.store.samples.result;
+        if (!config || !data || !samples || displayNames.length === 0) return;
+        const identifierAttr = config.patientIdentifier.clinicalAttributeId;
+        const displayNameByPatient = data.byAttr[identifierAttr] || {};
+        const displayNameSet = new Set(displayNames);
+        const matchedPatientIds = new Set(
+            Object.keys(displayNameByPatient).filter(pid =>
+                displayNameSet.has(displayNameByPatient[pid])
+            )
+        );
+        if (matchedPatientIds.size === 0) return;
+        const matchedSamples = samples.filter(s =>
+            matchedPatientIds.has(s.patientId)
+        );
+        if (matchedSamples.length === 0) return;
+        this.store.updateCustomSelect({
+            origin: ['Cell Explorer'],
+            displayName: 'Cell Explorer Selection',
+            description: 'Samples selected from the Cell Explorer viewer',
+            datatype: 'STRING',
+            patientAttribute: true,
+            priority: 1,
+            data: matchedSamples.map(s => ({
+                studyId: s.studyId,
+                patientId: s.patientId,
+                sampleId: s.sampleId,
+                value: 'Selected',
+            })),
+        });
+    }
+
+    @computed get cellExplorerMappedColumns(): MappedColumnSpec[] {
+        const config = this.cceConfig;
+        const data = this.cellExplorerPatientAttributeData.result;
+        if (!config || !data) return [];
+
+        const identifierAttr = config.patientIdentifier.clinicalAttributeId;
+        const sourceColumn = config.patientIdentifier.sourceColumn;
+        const identifierByPatient = data.byAttr[identifierAttr] || {};
+        if (Object.keys(identifierByPatient).length === 0) return [];
+
+        const specs: MappedColumnSpec[] = [];
+        for (const attr of data.attributes) {
+            const valueByPatient = data.byAttr[attr.clinicalAttributeId];
+            if (!valueByPatient) continue;
+            const mapping: Record<string, string> = {};
+            for (const patientId of Object.keys(valueByPatient)) {
+                const identifier = identifierByPatient[patientId];
+                const value = valueByPatient[patientId];
+                if (identifier && value) mapping[identifier] = value;
+            }
+            if (Object.keys(mapping).length > 0) {
+                specs.push({
+                    label: attr.displayName || attr.clinicalAttributeId,
+                    sourceColumn,
+                    mapping,
+                });
+            }
+        }
+        return specs;
+    }
+
     @computed get customTabs() {
         return buildCustomTabs(this.customTabsConfigs);
     }
@@ -772,6 +965,39 @@ export default class StudyViewPage extends React.Component<
                                         <PlotsTabWrapper
                                             store={this.store}
                                             urlWrapper={this.urlWrapper}
+                                        />
+                                    </MSKTab>
+
+                                    <MSKTab
+                                        key={6}
+                                        id={
+                                            StudyViewPageTabKeyEnum.CELL_EXPLORER
+                                        }
+                                        linkText={
+                                            StudyViewPageTabDescriptions.CELL_EXPLORER
+                                        }
+                                        hide={
+                                            !hasCellExplorerDataset(
+                                                this.store.studyIds[0]
+                                            )
+                                        }
+                                    >
+                                        <CellExplorerTab
+                                            studyId={this.store.studyIds[0]}
+                                            mappedColumns={
+                                                this.cellExplorerMappedColumns
+                                            }
+                                            selectedDisplayNames={
+                                                this.store.chartsAreFiltered
+                                                    ? this
+                                                          .selectedPatientDisplayNames
+                                                          .result
+                                                    : undefined
+                                            }
+                                            onLassoSelectionChange={
+                                                this
+                                                    .handleCellExplorerLassoSelection
+                                            }
                                         />
                                     </MSKTab>
 

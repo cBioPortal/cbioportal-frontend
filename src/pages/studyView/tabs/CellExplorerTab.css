@@ -1,0 +1,8 @@
+/* cBioPortal's prefixed-bootstrap.min.css applies `display: block` to every
+ * `section` and `main` under `.cbioportal-frontend`, which wins on specificity
+ * over antd 4's `.ant-layout { display: flex }`. That collapses the Cell
+ * Explorer's nested Layouts so the Content <main> ends up 0×0. Restore flex
+ * semantics with an equally-scoped selector. */
+.cbioportal-frontend section.ant-layout {
+    display: flex;
+}

@@ -1,0 +1,12 @@
+{
+  "extends": "../config/tsconfig.json",
+  "compilerOptions": {
+    "target": "es2017",
+    "lib": ["es2020", "dom"],
+    "jsx": "react"
+  },
+  "include": [
+    "src",
+    "../typings/**/*"
+  ]
+}

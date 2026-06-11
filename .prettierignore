@@ -24,6 +24,9 @@
 **/generated/**
 src/shared/lib/oql/oql-parser.js
 packages/**/dist/**
+packages/cbioportal-cell-explorer-zarrstore/**
+packages/cbioportal-cell-explorer-profiler/**
+packages/cbioportal-cell-explorer-highperformer/**
 pnpm-lock.yaml
 *.mjs
 .npmrc
