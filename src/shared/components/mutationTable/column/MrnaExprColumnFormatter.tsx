@@ -41,7 +41,8 @@ export default class MrnaExprColumnFormatter {
     // with the current sample's value marked by a red dashed line.
     private static getExpressionHistogram(
         allData: NumericGeneMolecularData[],
-        currentSampleId: string
+        currentSampleId: string,
+        sharedScale?: { minVal: number; maxVal: number; maxCount: number }
     ) {
         const values = allData.map(d => d.value).filter(v => isFinite(v));
         if (values.length === 0) return null;
@@ -56,8 +57,14 @@ export default class MrnaExprColumnFormatter {
         const plotHeight = svgHeight - padTop - padBottom;
         const axisY = padTop + plotHeight;
 
-        const minVal = Math.min(...values);
-        const maxVal = Math.max(...values);
+        const minVal =
+            sharedScale !== undefined
+                ? sharedScale.minVal
+                : Math.min(...values);
+        const maxVal =
+            sharedScale !== undefined
+                ? sharedScale.maxVal
+                : Math.max(...values);
 
         // Thresholds for compact axis label formatting
         const KILO_THRESHOLD = 10000; // values >= 10000 shown as "Xk"
@@ -186,7 +193,10 @@ export default class MrnaExprColumnFormatter {
             );
             bins[idx]++;
         }
-        const maxCount = Math.max(...bins);
+        const maxCount =
+            sharedScale !== undefined
+                ? Math.max(sharedScale.maxCount, 1)
+                : Math.max(...bins);
 
         const toSvgX = (v: number) =>
             padLeft + ((v - minVal) / valRange) * plotWidth;
@@ -456,6 +466,9 @@ export default class MrnaExprColumnFormatter {
             let rawDistributionLoading = false;
             let allData: NumericGeneMolecularData[] | undefined;
             let currentUniqueKey: string | undefined;
+            let sharedScale:
+                | { minVal: number; maxVal: number; maxCount: number }
+                | undefined;
             const hasRawExprSource =
                 mrnaExprSourceCache &&
                 mrnaExprSourceMolecularProfileId &&
@@ -472,6 +485,30 @@ export default class MrnaExprColumnFormatter {
                     sourceDatum.data
                 ) {
                     allData = sourceDatum.data;
+                    const allValues = allData
+                        .map(d => d.value)
+                        .filter(v => isFinite(v));
+                    if (allValues.length > 0) {
+                        const minVal = Math.min(...allValues);
+                        const maxVal = Math.max(...allValues);
+                        if (minVal !== maxVal) {
+                            const numBins = 20;
+                            const binWidth = (maxVal - minVal) / numBins;
+                            const bins = new Array(numBins).fill(0);
+                            for (const v of allValues) {
+                                const idx = Math.min(
+                                    Math.floor((v - minVal) / binWidth),
+                                    numBins - 1
+                                );
+                                bins[idx]++;
+                            }
+                            sharedScale = {
+                                minVal,
+                                maxVal,
+                                maxCount: Math.max(...bins),
+                            };
+                        }
+                    }
                     const currentSample = allData.find(
                         d => d.sampleId === sampleId
                     );
@@ -534,7 +571,8 @@ export default class MrnaExprColumnFormatter {
                     );
                     const histogram = MrnaExprColumnFormatter.getExpressionHistogram(
                         filtered,
-                        sampleId!
+                        sampleId!,
+                        sharedScale
                     );
                     if (histogram) {
                         distributionSections.push(
@@ -566,7 +604,8 @@ export default class MrnaExprColumnFormatter {
                     );
                     const histogram = MrnaExprColumnFormatter.getExpressionHistogram(
                         filtered,
-                        sampleId!
+                        sampleId!,
+                        sharedScale
                     );
                     if (histogram) {
                         distributionSections.push(
@@ -588,7 +627,8 @@ export default class MrnaExprColumnFormatter {
                 // 3. All samples distribution
                 const allHistogram = MrnaExprColumnFormatter.getExpressionHistogram(
                     allData,
-                    sampleId!
+                    sampleId!,
+                    sharedScale
                 );
                 if (allHistogram) {
                     distributionSections.push(

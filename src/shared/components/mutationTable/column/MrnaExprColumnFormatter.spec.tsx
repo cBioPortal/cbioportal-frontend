@@ -182,4 +182,66 @@ describe('MrnaExprColumnFormatter', () => {
         const matches = text.match(/Breast Cancer:/g);
         assert.equal(matches?.length, 1);
     });
+
+    it('uses shared x and y scales across raw tooltip histograms for a gene', () => {
+        const allData = [
+            { sampleId: 'S1', uniqueSampleKey: 'UK1', value: 1 },
+            { sampleId: 'S2', uniqueSampleKey: 'UK2', value: 2 },
+            { sampleId: 'S3', uniqueSampleKey: 'UK3', value: 3 },
+            { sampleId: 'S4', uniqueSampleKey: 'UK4', value: 8 },
+            { sampleId: 'S5', uniqueSampleKey: 'UK5', value: 8 },
+            { sampleId: 'S6', uniqueSampleKey: 'UK6', value: 8 },
+        ];
+        const sourceCache = {
+            peek: sinon.stub().returns({
+                status: 'complete',
+                data: allData,
+            }),
+        } as any;
+        const cancerTypeMap: { [key: string]: string } = {
+            UK1: 'Breast Cancer',
+            UK2: 'Breast Cancer',
+            UK3: 'Breast Cancer',
+            UK4: 'Lung Cancer',
+            UK5: 'Lung Cancer',
+            UK6: 'Lung Cancer',
+        };
+        const cancerTypeDetailedMap: { [key: string]: string } = {
+            UK1: 'Breast Cancer',
+            UK2: 'Breast Cancer',
+            UK3: 'Breast Cancer',
+            UK4: 'Lung Cancer',
+            UK5: 'Lung Cancer',
+            UK6: 'Lung Cancer',
+        };
+
+        const tooltip = (MrnaExprColumnFormatter as any).getTooltipContents(
+            {
+                status: 'complete',
+                data: { zScore: -0.5, percentile: 25 },
+            },
+            'S1',
+            1017,
+            sourceCache,
+            'study_mrna',
+            cancerTypeMap,
+            cancerTypeDetailedMap
+        );
+
+        const wrapper = shallow(<div>{tooltip}</div>);
+        const svgs = wrapper.find('svg');
+        assert.isAtLeast(svgs.length, 2);
+
+        const breastText = svgs.at(0).text();
+        assert.include(breastText, '8');
+
+        const getMaxRectHeight = (svgIndex: number) =>
+            Math.max(
+                ...svgs
+                    .at(svgIndex)
+                    .find('rect')
+                    .map(r => Number(r.prop('height') || 0))
+            );
+        assert.isBelow(getMaxRectHeight(0), getMaxRectHeight(1));
+    });
 });
