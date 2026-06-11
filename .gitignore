@@ -69,3 +69,9 @@ api-e2e/validation.js
 .vs/
 .nx
 .turbo
+
+# Storybook local (host-rendered) visual snapshots — not canonical references
+storybook-visual-tests/tests/__local_snapshots__/
+storybook-static/
+playwright-report/
+test-results/
