@@ -1,5 +1,4 @@
 import { observable, action, makeObservable } from 'mobx';
-import Immutable from 'seamless-immutable';
 import _ from 'lodash';
 import accumulatingDebounce from '../../../shared/lib/accumulatingDebounce';
 
@@ -32,8 +31,7 @@ type SampleToEntrezSet = { [sampleId: string]: { [entrez: string]: true } };
 export default class SampleGeneCache<
     T extends { sampleId: string; entrezGeneId: number }
 > {
-    @observable.ref private _cache: Cache<T> &
-        Immutable.ImmutableObject<Cache<T>>;
+    @observable.ref private _cache: Cache<T>;
     private _pending: PendingCache;
     private dependencies: any[];
 
@@ -158,7 +156,7 @@ export default class SampleGeneCache<
                 geneData: {},
             };
         }
-        this._cache = Immutable.from<Cache<T>>(_cache);
+        this._cache = _cache;
     }
 
     private markError(sampleToEntrezList: SampleToEntrezListOrNull) {
@@ -288,11 +286,24 @@ export default class SampleGeneCache<
     }
 
     @action private updateCache(toMerge: CacheMerge<T>) {
-        if (Object.keys(toMerge).length > 0) {
-            this._cache = this._cache.merge(toMerge, { deep: true }) as Cache<
-                T
-            > &
-                Immutable.ImmutableObject<Cache<T>>;
+        if (Object.keys(toMerge).length === 0) {
+            return;
         }
+        const merged: Cache<T> = { ...this._cache };
+        for (const sampleId of Object.keys(toMerge)) {
+            const existing = merged[sampleId] || {
+                fetchedWithoutGeneArgument: false as const,
+                geneData: {},
+            };
+            const update = toMerge[sampleId];
+            merged[sampleId] = {
+                fetchedWithoutGeneArgument:
+                    update.fetchedWithoutGeneArgument !== undefined
+                        ? update.fetchedWithoutGeneArgument
+                        : existing.fetchedWithoutGeneArgument,
+                geneData: { ...existing.geneData, ...(update.geneData || {}) },
+            };
+        }
+        this._cache = merged;
     }
 }
