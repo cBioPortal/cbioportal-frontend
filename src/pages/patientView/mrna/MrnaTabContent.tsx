@@ -1967,10 +1967,7 @@ export default class MrnaTabContent extends React.Component<
                         <LoadingIndicator isLoading={true} size="big" center />
                     </div>
                 ) : !this.hasAnyPatientMrnaData ? (
-                    <div
-                        className="alert alert-info"
-                        style={{ marginTop: 16, maxWidth: 600 }}
-                    >
+                    <div className="alert alert-info">
                         No mRNA expression data is available for this patient's
                         sample(s).
                     </div>
@@ -2179,17 +2176,7 @@ export default class MrnaTabContent extends React.Component<
         const allRows = this.expressionTableRows;
         if (sampleIds.length === 0 || allRows.length === 0) {
             return (
-                <div
-                    style={{
-                        flexShrink: 0,
-                        fontSize: 12,
-                        color: '#888',
-                        border: '1px dashed #ccc',
-                        borderRadius: 4,
-                        padding: 12,
-                        maxWidth: 360,
-                    }}
-                >
+                <div className="alert alert-info">
                     No mRNA expression data to show for this patient's
                     sample(s).
                 </div>
