@@ -29,6 +29,7 @@ import {
 } from './components/ProteinDomainTrack';
 import { ConnectingArcs } from './components/ConnectingArcs';
 import { PromoterSwapTooltip } from './components/ExonTooltip';
+import { classifyFrameStatus } from './data/frameStatus';
 
 // ---------------------------------------------------------------------------
 // Layout constants
@@ -427,6 +428,7 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
                     x={fusionProductX}
                     y={fusionProductY}
                     width={fusionProductWidth}
+                    frameStatus={classifyFrameStatus(fusion.frameCallMethod)}
                 />
 
                 {/* Protein domain track */}

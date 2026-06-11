@@ -7,6 +7,7 @@ import {
     COLOR_5PRIME,
     COLOR_3PRIME,
 } from '../data/types';
+import { FrameStatus, FrameStatusDisplay } from '../data/frameStatus';
 import {
     PRODUCT_HEIGHT,
     computeFusionExonLayout,
@@ -38,6 +39,11 @@ export interface FusionProductProps {
     x: number;
     y: number;
     width: number;
+    /**
+     * Resolved frame status for the fusion junction glyph.
+     * When omitted or Unknown the neutral colour is used.
+     */
+    frameStatus?: FrameStatusDisplay;
 }
 
 interface ExonSlot {
@@ -180,6 +186,110 @@ function computeLayout(
 }
 
 // ---------------------------------------------------------------------------
+// Junction glyph
+// ---------------------------------------------------------------------------
+
+/** Half-size of the junction mark — must stay within the JUNCTION_GAP reserve. */
+const GLYPH_R = 3;
+
+/**
+ * Render a small SVG mark at the fusion junction.
+ *
+ * - InFrame: filled green circle — the two reading frames merge cleanly.
+ * - OutOfFrame: two short diagonal "break" strokes in out-of-frame red,
+ *   plus a short vertical stop tick immediately to the 3′ side.
+ * - Unknown / absent: neutral filled diamond (original appearance).
+ *
+ * All glyphs are sized within ±GLYPH_R px of junctionX so exon layout
+ * math (computeLayout) is unaffected.
+ */
+function renderJunctionGlyph(
+    junctionX: number,
+    junctionY: number,
+    frame: FrameStatusDisplay | undefined
+): React.ReactElement {
+    const status = frame?.status ?? FrameStatus.Unknown;
+
+    if (status === FrameStatus.InFrame) {
+        return (
+            <circle
+                cx={junctionX}
+                cy={junctionY}
+                r={GLYPH_R}
+                fill={frame!.color}
+            >
+                <title>{`Effect on frame: ${frame!.label}`}</title>
+            </circle>
+        );
+    }
+
+    if (status === FrameStatus.OutOfFrame) {
+        const color = frame!.color;
+        const r = GLYPH_R;
+        // Two diagonal break strokes centred at junctionX.
+        // Stroke 1: top-left to mid (/) ; Stroke 2: mid to bottom-right (/).
+        const x1 = junctionX - r;
+        const x2 = junctionX;
+        const x3 = junctionX + r;
+        const yTop = junctionY - r;
+        const yMid = junctionY;
+        const yBot = junctionY + r;
+        // Stop tick: short vertical bar just to the 3′ side of the break.
+        const tickX = junctionX + r + 2;
+        return (
+            <g>
+                <title>{`Effect on frame: ${frame!.label}`}</title>
+                {/* Break mark: two parallel "/" strokes */}
+                <line
+                    x1={x1}
+                    y1={yBot}
+                    x2={x2}
+                    y2={yTop}
+                    stroke={color}
+                    strokeWidth={1.5}
+                />
+                <line
+                    x1={x2}
+                    y1={yBot}
+                    x2={x3}
+                    y2={yTop}
+                    stroke={color}
+                    strokeWidth={1.5}
+                />
+                {/* Stop tick */}
+                <line
+                    x1={tickX}
+                    y1={yMid - r}
+                    x2={tickX}
+                    y2={yMid + r}
+                    stroke={color}
+                    strokeWidth={2}
+                />
+            </g>
+        );
+    }
+
+    // Unknown / default: neutral diamond.
+    const r = GLYPH_R;
+    const neutralColor = '#FF6B6B';
+    const pts = [
+        `${junctionX},${junctionY - r}`,
+        `${junctionX + r},${junctionY}`,
+        `${junctionX},${junctionY + r}`,
+        `${junctionX - r},${junctionY}`,
+    ].join(' ');
+    return (
+        <polygon points={pts} fill={neutralColor}>
+            <title>
+                {frame
+                    ? `Effect on frame: ${frame.label}`
+                    : 'Frame status unknown'}
+            </title>
+        </polygon>
+    );
+}
+
+// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 export const FusionProduct: React.FC<FusionProductProps> = ({
@@ -191,6 +301,7 @@ export const FusionProduct: React.FC<FusionProductProps> = ({
     x,
     y,
     width,
+    frameStatus,
 }) => {
     const rectRefs = useRef<Map<string, SVGRectElement>>(new Map());
     const labelRefs = useRef<Map<string, SVGTextElement>>(new Map());
@@ -303,7 +414,7 @@ export const FusionProduct: React.FC<FusionProductProps> = ({
         );
     }
 
-    const { topY, startX, trailingX } = layout;
+    const { topY, startX, trailingX, junctionX, junctionY } = layout;
     const noteText =
         note && note !== 'NA'
             ? note.replace(/^Note:\s*/i, '').substring(0, 120)
@@ -362,6 +473,8 @@ export const FusionProduct: React.FC<FusionProductProps> = ({
             >
                 3&apos;
             </text>
+
+            {renderJunctionGlyph(junctionX, junctionY, frameStatus)}
 
             {noteText && (
                 <text

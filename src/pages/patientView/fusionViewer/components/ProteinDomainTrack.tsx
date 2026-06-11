@@ -1,7 +1,12 @@
 import * as React from 'react';
 import { useLayoutEffect, useRef } from 'react';
 import { gsap } from 'gsap';
-import { ProteinDomain, TranscriptData } from '../data/types';
+import {
+    ProteinDomain,
+    TranscriptData,
+    RetainedDomain,
+    COLOR_BREAKPOINT,
+} from '../data/types';
 import { DomainTooltip } from './ExonTooltip';
 import {
     select5PrimeDomains,
@@ -9,6 +14,7 @@ import {
     retainedExonsInOrder,
     computeFusionExonLayout,
     genomicToExonX,
+    ghostStubRect,
 } from './fusionProductHelpers';
 import {
     generatePfamDomainColorMap,
@@ -29,6 +35,9 @@ const TWEEN_EASE = 'power2.out';
 // Skip tween if the domain barely moved — prevents "wobble" on tiny
 // protein-length differences between transcripts.
 const POS_EPSILON = 3;
+// Minimum ghost width in px below which the ghost rect is suppressed.
+// The badge + tooltip still show so truncation is not silently lost.
+const MIN_GHOST_W = 2;
 
 export function getProteinDomainTrackHeight(): number {
     return PADDING_TOP + LABEL_HEIGHT + DOMAIN_HEIGHT + DOMAIN_GAP + 8;
@@ -57,8 +66,16 @@ export interface ProteinDomainTrackProps {
 interface DomainSlot {
     key: string; // stable per side + index, e.g. "5p-0"
     side: '5p' | '3p';
+    /** Left edge and width of the retained (solid) portion. */
     x: number;
     width: number;
+    /** Left edge and width of the lost (ghost/hatched) portion. */
+    ghostX: number;
+    ghostWidth: number;
+    isTruncated: boolean;
+    retainedFraction: number;
+    retainedStartAA: number;
+    retainedEndAA: number;
     label: string;
     fill: string;
     stroke: string;
@@ -79,6 +96,7 @@ export const ProteinDomainTrack: React.FC<ProteinDomainTrackProps> = ({
     width,
 }) => {
     const rectRefs = useRef<Map<string, SVGRectElement>>(new Map());
+    const ghostRectRefs = useRef<Map<string, SVGRectElement>>(new Map());
     const labelRefs = useRef<Map<string, SVGTextElement>>(new Map());
     const boundaryRef = useRef<SVGLineElement | null>(null);
     const prevSlotsRef = useRef<Map<string, DomainSlot>>(new Map());
@@ -87,12 +105,12 @@ export const ProteinDomainTrack: React.FC<ProteinDomainTrackProps> = ({
     // Clip domains to the retained portion so the track matches the exon
     // track — otherwise both sides of a same-transcript intragenic fusion
     // (e.g. EGFRvIII) show the full-length domain set verbatim.
-    const domains5p = select5PrimeDomains(
+    const domains5p: RetainedDomain[] = select5PrimeDomains(
         forteTranscript5p.domains || [],
         breakpoint5p,
         forteTranscript5p.strand
     );
-    const domains3p =
+    const domains3p: RetainedDomain[] =
         forteTranscript3p && breakpoint3p !== undefined
             ? select3PrimeDomains(
                   forteTranscript3p.domains || [],
@@ -104,7 +122,7 @@ export const ProteinDomainTrack: React.FC<ProteinDomainTrackProps> = ({
     // ---- Align with the exon track ----
     // Build the SAME to-scale exon layout the fusion product uses, then place
     // each domain by its genomic coordinates so it sits directly under the
-    // exons that encode it. The 5′/3′ boundary is the exon junction.
+    // exons that encode it. The 5'/3' boundary is the exon junction.
     const retained5p = retainedExonsInOrder(
         forteTranscript5p,
         breakpoint5p,
@@ -122,7 +140,7 @@ export const ProteinDomainTrack: React.FC<ProteinDomainTrackProps> = ({
     const trackY = y + PADDING_TOP + LABEL_HEIGHT;
     const MIN_DOMAIN_W = 4;
 
-    // ---- Build slot list (identity-based keys → same pfam domain
+    // ---- Build slot list (identity-based keys -> same pfam domain
     // keeps its key across transcripts so tween targets the same rect
     // rather than shuffling positions by slot index) ----
     // Color domains by Pfam id using the cBioPortal palette, computed per gene
@@ -138,7 +156,7 @@ export const ProteinDomainTrack: React.FC<ProteinDomainTrackProps> = ({
     const slots: DomainSlot[] = [];
     if (retained5p.length > 0 || retained3p.length > 0) {
         const pushSlots = (
-            domains: ProteinDomain[],
+            retainedDomains: RetainedDomain[],
             side: '5p' | '3p',
             colorMap: { [pfamId: string]: string },
             exons: typeof retained5p,
@@ -148,7 +166,8 @@ export const ProteinDomainTrack: React.FC<ProteinDomainTrackProps> = ({
         ) => {
             if (exons.length === 0) return;
             const occurrence = new Map<string, number>();
-            domains.forEach(domain => {
+            retainedDomains.forEach(rd => {
+                const domain = rd.domain;
                 // Position by genomic coordinates on the exon layout. Skip
                 // domains lacking finite genomic coords (some Genome Nexus
                 // Pfam ranges do) — they'd otherwise produce NaN x/width.
@@ -175,14 +194,60 @@ export const ProteinDomainTrack: React.FC<ProteinDomainTrackProps> = ({
                 if (!Number.isFinite(xA) || !Number.isFinite(xB)) {
                     return;
                 }
-                const dx = Math.min(xA, xB);
-                const dWidth = Math.max(MIN_DOMAIN_W, Math.abs(xB - xA));
+
+                // Solid portion: map retained AA interval back to SVG x via
+                // the proportion of the full domain span. For truncated domains
+                // we split the total SVG width by the retained/lost AA fractions.
+                let solidX: number;
+                let solidWidth: number;
+                let ghostX: number;
+                let ghostWidth: number;
+
+                if (rd.isTruncated) {
+                    const fullLen = domain.endAA - domain.startAA + 1;
+                    const retainedLen =
+                        rd.retainedEndAA - rd.retainedStartAA + 1;
+                    const lostLen = rd.lostEndAA - rd.lostStartAA;
+                    const totalSvgWidth = Math.abs(xB - xA);
+                    const solidSvgWidth = Math.max(
+                        MIN_DOMAIN_W,
+                        (retainedLen / fullLen) * totalSvgWidth
+                    );
+                    const lostSvgWidth = Math.max(
+                        0,
+                        (lostLen / fullLen) * totalSvgWidth
+                    );
+
+                    const domainLeft = Math.min(xA, xB);
+                    const domainRight = Math.max(xA, xB);
+                    // Retained solid sits on the partner's "kept" side; the ghost
+                    // stub is capped to the domain footprint so it can't overrun
+                    // the junction at very low retention (see ghostStubRect).
+                    solidX =
+                        side === '5p'
+                            ? domainLeft
+                            : domainRight - solidSvgWidth;
+                    solidWidth = solidSvgWidth;
+                    ({ ghostX, ghostWidth } = ghostStubRect(
+                        side,
+                        solidX,
+                        solidWidth,
+                        lostSvgWidth,
+                        domainLeft,
+                        domainRight
+                    ));
+                } else {
+                    solidX = Math.min(xA, xB);
+                    solidWidth = Math.max(MIN_DOMAIN_W, Math.abs(xB - xA));
+                    ghostX = solidX;
+                    ghostWidth = 0;
+                }
 
                 const domainName = domain.name || domain.pfamId || '';
-                const maxChars = Math.floor(dWidth / 6);
+                const maxChars = Math.floor(solidWidth / 6);
                 const label =
                     domainName.length > maxChars && maxChars > 3
-                        ? domainName.substring(0, maxChars - 1) + '\u2026'
+                        ? domainName.substring(0, maxChars - 1) + '…'
                         : maxChars <= 3
                         ? ''
                         : domainName;
@@ -197,8 +262,14 @@ export const ProteinDomainTrack: React.FC<ProteinDomainTrackProps> = ({
                 slots.push({
                     key: `${side}-${identity}-${occ}`,
                     side,
-                    x: dx,
-                    width: dWidth,
+                    x: solidX,
+                    width: solidWidth,
+                    ghostX,
+                    ghostWidth,
+                    isTruncated: rd.isTruncated,
+                    retainedFraction: rd.retainedFraction,
+                    retainedStartAA: rd.retainedStartAA,
+                    retainedEndAA: rd.retainedEndAA,
                     label,
                     fill,
                     stroke: fill,
@@ -229,7 +300,7 @@ export const ProteinDomainTrack: React.FC<ProteinDomainTrackProps> = ({
         }
     }
 
-    // 5′/3′ boundary now coincides with the exon-track junction.
+    // 5'/3' boundary now coincides with the exon-track junction.
     const boundaryX =
         retained5p.length > 0 && retained3p.length > 0
             ? layout.junctionX
@@ -253,6 +324,7 @@ export const ProteinDomainTrack: React.FC<ProteinDomainTrackProps> = ({
         slots.forEach(slot => {
             const rect = rectRefs.current.get(slot.key);
             const label = labelRefs.current.get(slot.key);
+            const ghostRect = ghostRectRefs.current.get(slot.key);
             const prev = prevSlots.get(slot.key);
 
             // Always force opacity back to 1 first. GSAP mutates the DOM
@@ -267,6 +339,10 @@ export const ProteinDomainTrack: React.FC<ProteinDomainTrackProps> = ({
             if (label) {
                 gsap.killTweensOf(label);
                 gsap.set(label, { opacity: 1 });
+            }
+            if (ghostRect) {
+                gsap.killTweensOf(ghostRect);
+                gsap.set(ghostRect, { opacity: 1 });
             }
 
             // Newly appeared (no previous position) — already visible, no slide.
@@ -301,6 +377,17 @@ export const ProteinDomainTrack: React.FC<ProteinDomainTrackProps> = ({
                     }
                 );
             }
+            if (ghostRect) {
+                gsap.fromTo(
+                    ghostRect,
+                    { attr: { x: prev.ghostX, width: prev.ghostWidth } },
+                    {
+                        attr: { x: slot.ghostX, width: slot.ghostWidth },
+                        duration: TWEEN_DURATION,
+                        ease: TWEEN_EASE,
+                    }
+                );
+            }
         });
 
         const boundary = boundaryRef.current;
@@ -330,8 +417,52 @@ export const ProteinDomainTrack: React.FC<ProteinDomainTrackProps> = ({
     // ---- Edge cases (after hooks, per Rules of Hooks) ----
     if (slots.length === 0) return null;
 
+    // Hatch pattern ids per color side.
+    const hatchId5p = 'domain-hatch-5p';
+    const hatchId3p = 'domain-hatch-3p';
+
     return (
         <g>
+            {/* Hatch pattern defs for ghost (truncated) domain stubs */}
+            <defs>
+                <pattern
+                    id={hatchId5p}
+                    patternUnits="userSpaceOnUse"
+                    width="4"
+                    height="4"
+                    patternTransform="rotate(45)"
+                >
+                    <rect width="4" height="4" fill="none" />
+                    <line
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="4"
+                        stroke="#5A73B3"
+                        strokeWidth={1}
+                        opacity={0.5}
+                    />
+                </pattern>
+                <pattern
+                    id={hatchId3p}
+                    patternUnits="userSpaceOnUse"
+                    width="4"
+                    height="4"
+                    patternTransform="rotate(45)"
+                >
+                    <rect width="4" height="4" fill="none" />
+                    <line
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="4"
+                        stroke="#60187D"
+                        strokeWidth={1}
+                        opacity={0.5}
+                    />
+                </pattern>
+            </defs>
+
             {/* Section label */}
             <text
                 x={drawX}
@@ -368,43 +499,116 @@ export const ProteinDomainTrack: React.FC<ProteinDomainTrackProps> = ({
             )}
 
             {/* Domains (tweened on transcript change) */}
-            {slots.map(slot => (
-                <DomainTooltip key={slot.key} domain={slot.domain}>
-                    <g>
-                        <rect
-                            ref={(el: SVGRectElement | null) => {
-                                if (el) rectRefs.current.set(slot.key, el);
-                                else rectRefs.current.delete(slot.key);
-                            }}
-                            x={slot.x}
-                            y={trackY}
-                            width={slot.width}
-                            height={DOMAIN_HEIGHT}
-                            fill={slot.fill}
-                            stroke={slot.stroke}
-                            strokeWidth={1}
-                            rx={4}
-                            ry={4}
-                        />
-                        {slot.label && (
-                            <text
-                                ref={(el: SVGTextElement | null) => {
-                                    if (el) labelRefs.current.set(slot.key, el);
-                                    else labelRefs.current.delete(slot.key);
+            {slots.map(slot => {
+                const showGhost = slot.ghostWidth >= MIN_GHOST_W;
+                const hatchUrl = `url(#${
+                    slot.side === '5p' ? hatchId5p : hatchId3p
+                })`;
+                // Badge position: top-right corner of solid rect for 5p,
+                // top-left for 3p (always toward the junction cut edge).
+                const badgeX =
+                    slot.side === '5p' ? slot.x + slot.width : slot.x;
+                const badgeCy = trackY - 3;
+                return (
+                    <DomainTooltip
+                        key={slot.key}
+                        domain={slot.domain}
+                        isTruncated={slot.isTruncated}
+                        retainedStartAA={slot.retainedStartAA}
+                        retainedEndAA={slot.retainedEndAA}
+                        retainedFraction={slot.retainedFraction}
+                    >
+                        <g>
+                            {/* Ghost / hatched stub for the lost portion */}
+                            {showGhost && (
+                                <rect
+                                    ref={(el: SVGRectElement | null) => {
+                                        if (el)
+                                            ghostRectRefs.current.set(
+                                                slot.key,
+                                                el
+                                            );
+                                        else
+                                            ghostRectRefs.current.delete(
+                                                slot.key
+                                            );
+                                    }}
+                                    x={slot.ghostX}
+                                    y={trackY}
+                                    width={slot.ghostWidth}
+                                    height={DOMAIN_HEIGHT}
+                                    fill={hatchUrl}
+                                    stroke={slot.stroke}
+                                    strokeWidth={1}
+                                    strokeDasharray="2 2"
+                                    opacity={0.45}
+                                    rx={2}
+                                    ry={2}
+                                    pointerEvents="none"
+                                />
+                            )}
+
+                            {/* Solid retained portion */}
+                            <rect
+                                ref={(el: SVGRectElement | null) => {
+                                    if (el) rectRefs.current.set(slot.key, el);
+                                    else rectRefs.current.delete(slot.key);
                                 }}
-                                x={slot.x + slot.width / 2}
-                                y={trackY + DOMAIN_HEIGHT / 2 + 3}
-                                textAnchor="middle"
-                                fontSize={8}
-                                fill={slot.textFill}
-                                pointerEvents="none"
-                            >
-                                {slot.label}
-                            </text>
-                        )}
-                    </g>
-                </DomainTooltip>
-            ))}
+                                x={slot.x}
+                                y={trackY}
+                                width={slot.width}
+                                height={DOMAIN_HEIGHT}
+                                fill={slot.fill}
+                                stroke={slot.stroke}
+                                strokeWidth={1}
+                                rx={4}
+                                ry={4}
+                            />
+
+                            {/* Text label (inside solid portion) */}
+                            {slot.label && (
+                                <text
+                                    ref={(el: SVGTextElement | null) => {
+                                        if (el)
+                                            labelRefs.current.set(slot.key, el);
+                                        else labelRefs.current.delete(slot.key);
+                                    }}
+                                    x={slot.x + slot.width / 2}
+                                    y={trackY + DOMAIN_HEIGHT / 2 + 3}
+                                    textAnchor="middle"
+                                    fontSize={8}
+                                    fill={slot.textFill}
+                                    pointerEvents="none"
+                                >
+                                    {slot.label}
+                                </text>
+                            )}
+
+                            {/* Truncation badge: red circle with "!" at the cut edge */}
+                            {slot.isTruncated && (
+                                <g pointerEvents="none">
+                                    <circle
+                                        cx={badgeX}
+                                        cy={badgeCy}
+                                        r={5}
+                                        fill={COLOR_BREAKPOINT}
+                                    />
+                                    <text
+                                        x={badgeX}
+                                        y={badgeCy + 3.5}
+                                        textAnchor="middle"
+                                        fontSize={7}
+                                        fontWeight="bold"
+                                        fill="white"
+                                    >
+                                        !
+                                    </text>
+                                </g>
+                            )}
+                        </g>
+                    </DomainTooltip>
+                );
+            })}
         </g>
     );
 };
