@@ -5,9 +5,13 @@ import {
     select5PrimeDomains,
     select3PrimeDomains,
     computeJunctionX,
+    computeFusionExonLayout,
+    retainedExonsInOrder,
+    genomicToExonX,
+    fivePrimeContributesNoCoding,
     PRODUCT_HEIGHT,
     EXON_GAP,
-    DIAMOND_SIZE,
+    JUNCTION_GAP,
 } from './fusionProductHelpers';
 import {
     Exon,
@@ -393,14 +397,14 @@ describe('fusionProductHelpers', () => {
 
             // 5p exons retained: start <= 250 → exons 1 (100) and 2 (200) → 2 exons
             // 3p exons retained: end >= 350 → exons 1 (400) and 2 (500) → 2 exons
-            // totalExons = 4
-            const diamondWidth = DIAMOND_SIZE * 2 + 4;
+            // totalExons = 4; all exons are 100 bp so each gets an equal
+            // to-scale width.
             const availableWidth =
-                width - diamondWidth - EXON_GAP * (4 - 1) - 20;
-            const exonWidth = Math.max(8, availableWidth / 4);
+                width - JUNCTION_GAP - EXON_GAP * (4 - 1) - 20;
+            const w = (100 / 400) * availableWidth; // 100bp of 400bp total
             const startX = x + 10;
-            const after5p = startX + 2 * (exonWidth + EXON_GAP);
-            const expected = after5p + diamondWidth / 2;
+            const after5p = startX + 2 * w + EXON_GAP * 2;
+            const expected = after5p + JUNCTION_GAP / 2;
 
             assert.closeTo(jx, expected, 0.001);
         });
@@ -422,7 +426,177 @@ describe('fusionProductHelpers', () => {
         it('exported constants have expected values', () => {
             assert.equal(PRODUCT_HEIGHT, 20);
             assert.equal(EXON_GAP, 2);
-            assert.equal(DIAMOND_SIZE, 8);
+            assert.equal(JUNCTION_GAP, 8);
+        });
+    });
+
+    // -------------------------------------------------------------------
+    // computeFusionExonLayout — exons drawn to scale (∝ bp length)
+    // -------------------------------------------------------------------
+    describe('computeFusionExonLayout', () => {
+        const ex = (start: number, end: number) => ({ number: 1, start, end });
+
+        it('sizes exon widths proportional to genomic length', () => {
+            // 5′: one 100bp exon; 3′: one 300bp exon → 3:1 width ratio.
+            const layout = computeFusionExonLayout(
+                [ex(0, 100)],
+                [ex(0, 300)],
+                0,
+                500
+            );
+            assert.equal(layout.widths5p.length, 1);
+            assert.equal(layout.widths3p.length, 1);
+            assert.closeTo(
+                layout.widths3p[0] / layout.widths5p[0],
+                3,
+                0.001,
+                '300bp exon is 3× the width of the 100bp exon'
+            );
+        });
+
+        it('applies a minimum width floor to very short exons', () => {
+            // One huge exon and one 1bp exon — the tiny one clamps to the floor.
+            const layout = computeFusionExonLayout(
+                [ex(0, 100000)],
+                [ex(0, 1)],
+                0,
+                500
+            );
+            assert.equal(layout.widths3p[0], 4); // MIN_EXON_W
+        });
+
+        it('junctionX sits after the 5′ block plus half the junction gap', () => {
+            const layout = computeFusionExonLayout(
+                [ex(0, 100)],
+                [ex(0, 100)],
+                0,
+                500
+            );
+            const expected =
+                layout.startX +
+                layout.widths5p[0] +
+                EXON_GAP * 1 +
+                JUNCTION_GAP / 2;
+            assert.closeTo(layout.junctionX, expected, 0.001);
+        });
+    });
+
+    // -------------------------------------------------------------------
+    // retainedExonsInOrder — transcription-order retained exons
+    // -------------------------------------------------------------------
+    describe('retainedExonsInOrder', () => {
+        it('+ strand 5′: ascending order, keeps exons starting at/before bp', () => {
+            const t = makeTranscript(
+                makeExons([
+                    [1, 100, 200],
+                    [2, 300, 400],
+                ]),
+                '+'
+            );
+            const r = retainedExonsInOrder(t, 250, true);
+            assert.deepEqual(
+                r.map(e => e.number),
+                [1]
+            );
+        });
+
+        it('− strand 5′: descending order, keeps exons ending at/after bp', () => {
+            const t = makeTranscript(
+                makeExons([
+                    [1, 100, 200],
+                    [2, 300, 400],
+                ]),
+                '-'
+            );
+            const r = retainedExonsInOrder(t, 250, true);
+            // − strand transcription order is high→low start; exon 2 (end 400)
+            // is the retained 5′ exon and comes first.
+            assert.deepEqual(
+                r.map(e => e.number),
+                [2]
+            );
+        });
+    });
+
+    // -------------------------------------------------------------------
+    // genomicToExonX — map a genomic coord onto the exon blocks
+    // -------------------------------------------------------------------
+    describe('genomicToExonX', () => {
+        const exonsPlus = makeExons([
+            [1, 0, 100],
+            [2, 200, 300],
+        ]);
+        const xs = [10, 120];
+        const widths = [100, 100];
+
+        it('+ strand: exon start → block left edge, end → right edge', () => {
+            assert.equal(genomicToExonX(0, exonsPlus, xs, widths, '+'), 10);
+            assert.equal(genomicToExonX(100, exonsPlus, xs, widths, '+'), 110);
+            assert.equal(genomicToExonX(50, exonsPlus, xs, widths, '+'), 60);
+            assert.equal(genomicToExonX(200, exonsPlus, xs, widths, '+'), 120);
+            assert.equal(genomicToExonX(300, exonsPlus, xs, widths, '+'), 220);
+        });
+
+        it('+ strand: intron clamps to the preceding block right edge', () => {
+            assert.equal(genomicToExonX(150, exonsPlus, xs, widths, '+'), 110);
+        });
+
+        it('+ strand: outside the retained set clamps to nearest edge', () => {
+            assert.equal(genomicToExonX(-50, exonsPlus, xs, widths, '+'), 10);
+            assert.equal(genomicToExonX(999, exonsPlus, xs, widths, '+'), 220);
+        });
+
+        it('− strand: higher genomic coord maps further left', () => {
+            // Transcription order (descending start): exon[300-end] then exon[0-100]
+            const exonsMinus = makeExons([
+                [1, 200, 300],
+                [2, 0, 100],
+            ]);
+            // 5′ end (highest coord, 300) → leftmost edge.
+            assert.equal(genomicToExonX(300, exonsMinus, xs, widths, '-'), 10);
+            assert.equal(genomicToExonX(200, exonsMinus, xs, widths, '-'), 110);
+            // 3′ end (lowest coord, 0) → rightmost edge.
+            assert.equal(genomicToExonX(0, exonsMinus, xs, widths, '-'), 220);
+        });
+    });
+
+    // -------------------------------------------------------------------
+    // fivePrimeContributesNoCoding — promoter-swap detection
+    // -------------------------------------------------------------------
+    describe('fivePrimeContributesNoCoding', () => {
+        const withUtr = (
+            strand: '+' | '-',
+            utr: { start: number; end: number }
+        ): TranscriptData => ({
+            ...makeTranscript(makeExons([[1, 100, 400]]), strand),
+            utrs: [{ ...utr, type: 'five_prime' }],
+        });
+
+        it('+ strand: true when breakpoint is within/upstream of the 5′UTR', () => {
+            const t = withUtr('+', { start: 100, end: 200 }); // CDS starts >200
+            assert.isTrue(fivePrimeContributesNoCoding(t, 150));
+            assert.isTrue(fivePrimeContributesNoCoding(t, 200));
+        });
+
+        it('+ strand: false when breakpoint is past the 5′UTR (into CDS)', () => {
+            const t = withUtr('+', { start: 100, end: 200 });
+            assert.isFalse(fivePrimeContributesNoCoding(t, 250));
+        });
+
+        it('− strand: true when breakpoint is within/upstream of the 5′UTR', () => {
+            const t = withUtr('-', { start: 300, end: 400 }); // CDS starts <300
+            assert.isTrue(fivePrimeContributesNoCoding(t, 350));
+            assert.isTrue(fivePrimeContributesNoCoding(t, 300));
+        });
+
+        it('− strand: false when breakpoint is past the 5′UTR (into CDS)', () => {
+            const t = withUtr('-', { start: 300, end: 400 });
+            assert.isFalse(fivePrimeContributesNoCoding(t, 250));
+        });
+
+        it('returns false when no 5′UTR annotation is present', () => {
+            const t = makeTranscript(makeExons([[1, 100, 400]]), '+');
+            assert.isFalse(fivePrimeContributesNoCoding(t, 150));
         });
     });
 });
