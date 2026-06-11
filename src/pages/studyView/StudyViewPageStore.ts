@@ -7866,13 +7866,6 @@ export class StudyViewPageStore
         if (!_.isEmpty(this.initialFilters.mutationDataFilters)) {
             pending = pending || this.molecularProfileOptions.isPending;
         }
-        if (
-            !this.genericAssayProfiles.isPending &&
-            !_.isEmpty(this.genericAssayProfiles.result)
-        ) {
-            pending =
-                pending || this.genericAssayProfileOptionsByType.isPending;
-        }
         if (!_.isEmpty(this.initialFilters.caseLists)) {
             pending = pending || this.caseListSampleCounts.isPending;
         }
