@@ -197,10 +197,16 @@ function mapTranscript(
             cdsSegments,
             strand
         ),
+        // Genome Nexus reports UTR type as "five_prime_UTR" / "three_prime_UTR";
+        // normalize to the 'five_prime' | 'three_prime' enum the renderers use
+        // (a bare cast left the raw string, silently breaking every
+        // u.type === 'five_prime' check).
         utrs: (gn.utrs || []).map(u => ({
             start: u.start,
             end: u.end,
-            type: u.type as 'five_prime' | 'three_prime',
+            type: /^five/i.test(u.type)
+                ? ('five_prime' as const)
+                : ('three_prime' as const),
         })),
     };
 }
