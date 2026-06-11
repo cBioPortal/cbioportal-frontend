@@ -1,7 +1,6 @@
 import * as React from 'react';
 import _ from 'lodash';
 import { Dropdown, Checkbox } from 'react-bootstrap';
-import { DropdownToggleProps } from 'react-bootstrap/lib/DropdownToggle';
 import { DropdownMenuProps } from 'react-bootstrap/lib/DropdownMenu';
 import { action, computed } from 'mobx';
 
@@ -112,8 +111,10 @@ export class ColumnVisibilityControls extends React.Component<
         return (
             <Dropdown className={this.props.className} id="dropdown-custom-1">
                 <Dropdown.Toggle
-                    {...({ rootCloseEvent: 'click' } as DropdownToggleProps)}
                     className="btn-sm"
+                    {...({
+                        onClick: (e: React.MouseEvent) => e.stopPropagation(),
+                    } as any)}
                 >
                     {this.props.buttonText}
                 </Dropdown.Toggle>
