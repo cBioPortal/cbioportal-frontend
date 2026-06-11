@@ -21,12 +21,15 @@ import {
 import {
     select5PrimeExons,
     select3PrimeExons,
+    fivePrimeContributesNoCoding,
 } from './components/fusionProductHelpers';
 import {
     ProteinDomainTrack,
     getProteinDomainTrackHeight,
 } from './components/ProteinDomainTrack';
 import { ConnectingArcs } from './components/ConnectingArcs';
+import { PromoterSwapTooltip } from './components/ExonTooltip';
+import { classifyFrameStatus } from './data/frameStatus';
 
 // ---------------------------------------------------------------------------
 // Layout constants
@@ -158,8 +161,21 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
             ? getProteinDomainTrackHeight()
             : 0;
 
+        // ---- Promoter-swap detection ----
+        // True when the 5′ partner contributes promoter/5′UTR only (no coding),
+        // so the product's ORF is the 3′ gene's, driven by the 5′ promoter.
+        // Reserve a top band to draw the annotation arc into.
+        const isPromoterSwap =
+            !!gene2 &&
+            !!forteTranscript3p &&
+            showPromoter !== false &&
+            fivePrimeContributesNoCoding(activeTranscript5p, gene1.position);
+        const SWAP_BAND_H = 30;
+        const swapBand = isPromoterSwap ? SWAP_BAND_H : 0;
+
         const totalHeight =
             TOP_MARGIN +
+            swapBand +
             geneTrackHeight +
             arcGap +
             fusionProductHeight +
@@ -167,7 +183,7 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
             10;
 
         // ---- Layout positions ----
-        const geneTrackY = TOP_MARGIN;
+        const geneTrackY = TOP_MARGIN + swapBand;
         const gene5pX = SVG_WIDTH / 2 - GENE_TRACK_GAP / 2 - GENE_TRACK_WIDTH;
         const gene3pX = SVG_WIDTH / 2 + GENE_TRACK_GAP / 2;
 
@@ -205,12 +221,16 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
                 allExons
             );
             const padding = 10;
+            // Pass strand so the breakpoint mirrors in lockstep with GeneTrack's
+            // toSvg — otherwise the arc origin would diverge from the dashed
+            // breakpoint line on minus-strand genes.
             return genomicToSvgX(
                 breakpointPos,
                 gMin,
                 gMax,
                 trackX + padding,
-                trackWidth - padding * 2
+                trackWidth - padding * 2,
+                strand
             );
         };
 
@@ -326,6 +346,67 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
                     </g>
                 )}
 
+                {/* Promoter-swap annotation: arc from the 5′ promoter to the
+                    3′ gene, indicating the 3′ ORF is driven by the 5′ promoter. */}
+                {isPromoterSwap &&
+                    (() => {
+                        const promoterX = gene5pX + 24;
+                        const targetX = gene3pX + 24;
+                        const baseY = geneTrackY;
+                        const apexY = TOP_MARGIN + 6;
+                        const midX = (promoterX + targetX) / 2;
+                        const C = '#b45309';
+                        const arc = `M ${promoterX} ${baseY} C ${promoterX} ${apexY}, ${targetX} ${apexY}, ${targetX} ${baseY}`;
+                        return (
+                            <g>
+                                <path
+                                    d={arc}
+                                    fill="none"
+                                    stroke={C}
+                                    strokeWidth={1.5}
+                                    strokeDasharray="4 3"
+                                    pointerEvents="none"
+                                />
+                                <polygon
+                                    points={`${targetX - 4},${baseY -
+                                        7} ${targetX + 4},${baseY -
+                                        7} ${targetX},${baseY}`}
+                                    fill={C}
+                                    pointerEvents="none"
+                                />
+                                <PromoterSwapTooltip
+                                    gene5p={gene1.symbol}
+                                    gene3p={gene2 ? gene2.symbol : ''}
+                                    chromosome={gene1.chromosome}
+                                    position={gene1.position}
+                                >
+                                    <g style={{ cursor: 'help' }}>
+                                        <rect
+                                            x={midX - 60}
+                                            y={apexY - 8}
+                                            width={120}
+                                            height={15}
+                                            rx={7}
+                                            fill="#fff7ed"
+                                            stroke={C}
+                                            strokeWidth={1}
+                                        />
+                                        <text
+                                            x={midX}
+                                            y={apexY + 3}
+                                            textAnchor="middle"
+                                            fontSize={9}
+                                            fontWeight={700}
+                                            fill={C}
+                                        >
+                                            PROMOTER SWAP ▶
+                                        </text>
+                                    </g>
+                                </PromoterSwapTooltip>
+                            </g>
+                        );
+                    })()}
+
                 {/* Connecting arcs */}
                 {gene2 && forteTranscript3p && (
                     <ConnectingArcs
@@ -347,6 +428,7 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
                     x={fusionProductX}
                     y={fusionProductY}
                     width={fusionProductWidth}
+                    frameStatus={classifyFrameStatus(fusion.frameCallMethod)}
                 />
 
                 {/* Protein domain track */}

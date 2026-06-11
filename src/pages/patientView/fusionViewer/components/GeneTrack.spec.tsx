@@ -11,73 +11,47 @@ import {
 import { TranscriptData } from '../data/types';
 
 describe('computeRetainedShadeX', () => {
-    // 5′ gene + strand → shade LEFT (start <= bp)
-    describe('5-prime gene, + strand (shade left)', () => {
+    // After the 5′→3′ mirror, every gene reads 5′-on-left, so the retained
+    // (kept-in-fusion) side depends ONLY on whether this is the 5′ or 3′
+    // partner — strand no longer enters into it:
+    //   5′ partner → retains LEFT  (5′ end … breakpoint)
+    //   3′ partner → retains RIGHT (breakpoint … 3′ end)
+    describe('5-prime partner (shade left)', () => {
         it('returns x=drawX and width=bpX-drawX', () => {
-            const result = computeRetainedShadeX('+', true, 180, 20, 300);
+            const result = computeRetainedShadeX(true, 180, 20, 300);
             assert.equal(result.x, 20);
             assert.equal(result.width, 160);
         });
 
         it('clamps to 0 when breakpoint is left of drawX', () => {
-            const result = computeRetainedShadeX('+', true, 10, 20, 300);
+            const result = computeRetainedShadeX(true, 10, 20, 300);
             assert.equal(result.x, 20);
             assert.equal(result.width, 0);
         });
 
         it('caps at drawWidth when breakpoint is right of track end', () => {
-            const result = computeRetainedShadeX('+', true, 400, 20, 300);
+            const result = computeRetainedShadeX(true, 400, 20, 300);
             assert.equal(result.x, 20);
             assert.equal(result.width, 300);
         });
     });
 
-    // 5′ gene − strand → shade RIGHT (end >= bp)
-    describe('5-prime gene, - strand (shade right)', () => {
+    describe('3-prime partner (shade right)', () => {
         it('returns x=bpX and width from bpX to track end', () => {
-            const result = computeRetainedShadeX('-', true, 180, 20, 300);
+            const result = computeRetainedShadeX(false, 180, 20, 300);
             assert.equal(result.x, 180);
             assert.equal(result.width, 140); // (20 + 300) - 180
         });
 
         it('clamps to 0 when breakpoint is right of track end', () => {
-            const result = computeRetainedShadeX('-', true, 400, 20, 300);
+            const result = computeRetainedShadeX(false, 400, 20, 300);
             assert.equal(result.width, 0);
         });
 
         it('returns full width when breakpoint is left of drawX', () => {
-            const result = computeRetainedShadeX('-', true, 10, 20, 300);
+            const result = computeRetainedShadeX(false, 10, 20, 300);
             assert.equal(result.x, 20); // clamped to drawX
             assert.equal(result.width, 300); // (20 + 300) - 20
-        });
-    });
-
-    // 3′ gene + strand → shade RIGHT (end >= bp) — opposite of 5′/+ strand
-    describe('3-prime gene, + strand (shade right)', () => {
-        it('returns x=bpX and width from bpX to track end', () => {
-            const result = computeRetainedShadeX('+', false, 180, 20, 300);
-            assert.equal(result.x, 180);
-            assert.equal(result.width, 140);
-        });
-
-        it('clamps to 0 when breakpoint is right of track end', () => {
-            const result = computeRetainedShadeX('+', false, 400, 20, 300);
-            assert.equal(result.width, 0);
-        });
-    });
-
-    // 3′ gene − strand → shade LEFT (start <= bp) — opposite of 5′/− strand
-    describe('3-prime gene, - strand (shade left)', () => {
-        it('returns x=drawX and width=bpX-drawX', () => {
-            const result = computeRetainedShadeX('-', false, 180, 20, 300);
-            assert.equal(result.x, 20);
-            assert.equal(result.width, 160);
-        });
-
-        it('clamps to 0 when breakpoint is left of drawX', () => {
-            const result = computeRetainedShadeX('-', false, 10, 20, 300);
-            assert.equal(result.x, 20);
-            assert.equal(result.width, 0);
         });
     });
 });
@@ -167,10 +141,12 @@ describe('GeneTrack — direction cue D: TRANSCRIBED pill', () => {
         assert.match(text, /TRANSCRIBED\s*▶/);
     });
 
-    it('minus strand renders "◀ TRANSCRIBED"', () => {
+    it('minus strand also renders "TRANSCRIBED ▶" (mirrored: reads left→right)', () => {
+        // After the 5′→3′ mirror the minus-strand gene is drawn left→right too,
+        // so transcription points right for BOTH strands.
         const wrapper = renderGeneTrack('-');
         const text = wrapper.text();
-        assert.match(text, /◀\s*TRANSCRIBED/);
+        assert.match(text, /TRANSCRIBED\s*▶/);
     });
 
     it('pill stroke matches the gene color prop', () => {
@@ -204,7 +180,8 @@ describe('GeneTrack — direction cue C: 5′ / 3′ end caps', () => {
         );
     });
 
-    it('minus strand puts "5′" on the right (larger x) than "3′"', () => {
+    it('minus strand ALSO puts "5′" on the left (mirrored 5′→3′)', () => {
+        // Core invariant of the mirror: both strands now read 5′ on the left.
         const wrapper = renderGeneTrack('-');
         const texts = wrapper.findWhere(
             n => n.type() === 'text' && (n.text() === '5′' || n.text() === '3′')
@@ -213,7 +190,7 @@ describe('GeneTrack — direction cue C: 5′ / 3′ end caps', () => {
         const threePrime = texts.findWhere(n => n.text() === '3′').first();
         assert.isAtLeast(fivePrime.length, 1);
         assert.isAtLeast(threePrime.length, 1);
-        assert.isAbove(
+        assert.isBelow(
             Number(fivePrime.prop('x')),
             Number(threePrime.prop('x'))
         );
@@ -245,15 +222,16 @@ describe('GeneTrack — direction cue A: TSS arrow', () => {
         assert.isAbove(pts[2], pts[0]);
     });
 
-    it('minus strand: arrow points to the left (horizontal segment goes left)', () => {
+    it('minus strand: arrow ALSO points right (mirrored: transcription reads left→right)', () => {
         const wrapper = renderGeneTrack('-');
         const arrow = wrapper.find('[data-testid="tss-arrow-ENST_FORTE"]');
         const pts = String(arrow.prop('points'))
             .trim()
             .split(/\s+/)
             .map(t => Number(t.split(',')[0]));
-        // On - strand the horizontal tip X must be less than the TSS X.
-        assert.isBelow(pts[2], pts[0]);
+        // After the mirror the gene reads left→right, so the TSS barb points
+        // right (into the gene body) for the minus strand too.
+        assert.isAbove(pts[2], pts[0]);
     });
 
     it('showPromoter=false: no tss-arrow polyline rendered', () => {
@@ -358,12 +336,13 @@ describe('GeneTrack — direction cue B: intron-line chevrons', () => {
         });
     });
 
-    it('minus strand: every chevron tip X is less than its base X', () => {
+    it('minus strand: every chevron tip X is ALSO greater than its base X (mirrored)', () => {
         const wrapper = renderGeneTrack('-');
         const chevs = chevronPoints(wrapper);
         assert.isAtLeast(chevs.length, 1);
         chevs.forEach(c => {
-            assert.isBelow(c.tipX, c.baseX);
+            // Mirrored gene reads left→right, so chevrons point right too.
+            assert.isAbove(c.tipX, c.baseX);
             assert.equal(c.baseX, c.tailX);
         });
     });
@@ -409,6 +388,102 @@ describe('GeneTrack — direction cue B: intron-line chevrons', () => {
                 );
             });
         });
+    });
+});
+
+// ---------------------------------------------------------------------------
+// 5′→3′ orientation (mirror) invariants — both strands must read 5′-on-left.
+// ---------------------------------------------------------------------------
+describe('GeneTrack — 5′→3′ orientation (mirror)', () => {
+    function mountWithRetention(strand: '+' | '-') {
+        const forte = makeTranscript({
+            transcriptId: 'ENST_FORTE',
+            isForteSelected: true,
+            strand,
+            // E1 = exon[0] on +, E1 = exon[1] on − (numbering inverts on −)
+            exons: [
+                { number: 1, start: 100, end: 200 },
+                { number: 2, start: 300, end: 400 },
+            ],
+        });
+        return mount(
+            <svg>
+                <GeneTrack
+                    symbol="GENE_A"
+                    chromosome="1"
+                    position={250}
+                    strand={strand}
+                    siteDescription=""
+                    forteTranscript={forte}
+                    color={GENE_COLOR}
+                    x={0}
+                    y={0}
+                    width={400}
+                    is5Prime={true}
+                    showPromoter={true}
+                    retainedExonNumbers={new Set([1, 2])}
+                />
+            </svg>
+        );
+    }
+
+    function exonLabelX(
+        wrapper: ReturnType<typeof mountWithRetention>,
+        label: string
+    ): number {
+        const t = wrapper
+            .findWhere(n => n.type() === 'text' && n.text() === label)
+            .first();
+        assert.isAtLeast(t.length, 1, `expected an "${label}" label`);
+        return Number(t.prop('x'));
+    }
+
+    it('+ strand: E1 is left of E2', () => {
+        const wrapper = mountWithRetention('+');
+        assert.isBelow(exonLabelX(wrapper, 'E1'), exonLabelX(wrapper, 'E2'));
+    });
+
+    it('− strand: E1 is ALSO left of E2 (mirrored so 5′ exon is leftmost)', () => {
+        const wrapper = mountWithRetention('-');
+        assert.isBelow(exonLabelX(wrapper, 'E1'), exonLabelX(wrapper, 'E2'));
+    });
+
+    it('− strand: upstream promoter block sits left of the leftmost exon', () => {
+        const wrapper = mountWithRetention('-');
+        const tint = wrapper.find('[data-testid="promoter-tint"]').first();
+        assert.isAtLeast(tint.length, 1);
+        const tintX = Number(tint.prop('x'));
+        const exonXs = wrapper
+            .find('[data-testid="exon-cds-rect"]')
+            .map(r => Number(r.prop('x')));
+        const leftmostExonX = Math.min(...exonXs);
+        // Promoter is upstream of the TSS, which after mirroring is the
+        // leftmost exon edge — so the tint must start left of all exons.
+        assert.isBelow(tintX, leftmostExonX);
+    });
+
+    it('5′ end cap is anchored left of the upstream promoter block (no overlap)', () => {
+        const wrapper = mountWithRetention('-');
+        const promoterXs = wrapper
+            .find('[data-testid="promoter-tint"]')
+            .map(t => Number(t.prop('x')));
+        assert.isAtLeast(promoterXs.length, 1);
+        const leftmostPromoterX = Math.min(...promoterXs);
+        const cap = wrapper
+            .findWhere(n => n.type() === 'text' && n.text() === '5′')
+            .first();
+        // End-anchored cap whose x sits at/left of the promoter's left edge.
+        assert.isAtMost(Number(cap.prop('x')), leftmostPromoterX);
+    });
+
+    it('− strand renders the "genomic position increases ◄" coordinate-direction note', () => {
+        const wrapper = renderGeneTrack('-');
+        assert.include(wrapper.text(), 'position increases');
+    });
+
+    it('+ strand does NOT render the coordinate-direction note (coords already L→R)', () => {
+        const wrapper = renderGeneTrack('+');
+        assert.notInclude(wrapper.text(), 'position increases');
     });
 });
 
