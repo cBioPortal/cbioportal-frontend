@@ -55,6 +55,9 @@ export default class WSIViewer extends React.Component<Props, {}> {
     private osdViewer: any = null;
     /** In-memory cache of prefetched slide metadata keyed by image_id */
     private metaCache = new Map<string, TileMetadata>();
+    /** Monotonically-increasing counter; each mountOSD call captures its value
+     *  and bails if a newer call has started by the time an async step resumes. */
+    private mountSeq = 0;
 
     constructor(props: Props) {
         super(props);
@@ -88,6 +91,8 @@ export default class WSIViewer extends React.Component<Props, {}> {
         this.selectedMeta = null;
         this.viewerReady = false;
         this.metaCache.clear();
+        // Invalidate any in-flight mountOSD from a previous patient.
+        this.mountSeq++;
 
         try {
             const resp = await fetch(this.props.url);
@@ -173,7 +178,10 @@ export default class WSIViewer extends React.Component<Props, {}> {
         this.selectedSample = sample;
         this.selectedMeta = null;
         this.viewerReady = false;
-        await this.mountOSD(slide);
+        this.error = null;
+        // Bump the sequence so any in-flight mountOSD call can detect it's stale.
+        const seq = ++this.mountSeq;
+        await this.mountOSD(slide, seq);
     }
 
     // ---- OpenSeadragon ----
@@ -189,20 +197,35 @@ export default class WSIViewer extends React.Component<Props, {}> {
         }
     }
 
-    private async mountOSD(slide: Slide) {
+    private async mountOSD(slide: Slide, seq: number) {
         // Use prefetched metadata if available, otherwise fetch now
         let meta = this.metaCache.get(slide.image_id);
         if (!meta) {
             const metaUrl = `${this.tileServerBase}/tiles/${slide.image_id}/metadata`;
-            meta = await fetch(metaUrl).then(r => r.json()) as TileMetadata;
-            this.metaCache.set(slide.image_id, meta);
+            try {
+                const resp = await fetch(metaUrl);
+                if (!resp.ok) throw new Error(`${resp.status} ${resp.statusText}`);
+                meta = await resp.json() as TileMetadata;
+                this.metaCache.set(slide.image_id, meta);
+            } catch (err) {
+                if (seq !== this.mountSeq) return; // superseded
+                // eslint-disable-next-line no-console
+                console.error('[WSIViewer] metadata fetch failed', err);
+                action(() => { this.error = `Failed to load slide metadata: ${err}`; })();
+                return;
+            }
         }
+
+        // Bail if a newer selectSlide call has started while we were fetching.
+        if (seq !== this.mountSeq) return;
 
         action(() => { this.selectedMeta = meta!; })();
 
-        // Two animation frames: first lets MobX/React commit loading=false,
-        // second confirms layout dimensions are set on the container.
+        // Two animation frames: first lets MobX/React commit, second
+        // confirms layout dimensions are set on the container div.
         await new Promise<void>(r => requestAnimationFrame(() => requestAnimationFrame(() => r())));
+
+        if (seq !== this.mountSeq) return;
 
         const containerEl = this.viewerContainerRef.current;
         if (!containerEl) return;
@@ -224,14 +247,16 @@ export default class WSIViewer extends React.Component<Props, {}> {
                 prefixUrl: '/reactapp/osd-images/',
                 showFullPageControl: false,
                 gestureSettingsMouse: { clickToZoom: false },
+                timeout: 90000,
+                imageLoaderLimit: 6,
                 tileSources: {
-                    // OSD level 0 = most zoomed out (1 tile)
+                    // OSD level 0 = most zoomed out (1 tile covers whole image)
                     // OSD level maxZoom = full resolution
-                    // Our /zxy/{z}/{x}/{y} uses the same XYZ convention
+                    // Server /zxy/{z}/{x}/{y} uses the same convention
                     width: meta.dimensions.width,
                     height: meta.dimensions.height,
-                    tileWidth: tileSize,
-                    tileHeight: tileSize,
+                    tileSize,
+                    tileOverlap: 0,
                     maxLevel: maxZoom,
                     minLevel: 0,
                     getTileUrl(level: number, x: number, y: number): string {
@@ -240,26 +265,31 @@ export default class WSIViewer extends React.Component<Props, {}> {
                 },
             });
         } catch (err) {
+            if (seq !== this.mountSeq) return;
             // eslint-disable-next-line no-console
             console.error('[WSIViewer] OSD init error:', err);
-            action(() => {
-                this.error = `OSD init error: ${err}`;
-            })();
+            action(() => { this.error = `OSD init error: ${err}`; })();
+            return;
+        }
+
+        if (seq !== this.mountSeq) {
+            this.destroyViewer();
             return;
         }
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.osdViewer.addOnceHandler('open', () => {
-            action(() => {
-                this.viewerReady = true;
-            })();
+            if (seq !== this.mountSeq) return;
+            action(() => { this.viewerReady = true; })();
         });
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.osdViewer.addOnceHandler('open-failed', (e: any) => {
+            if (seq !== this.mountSeq) return;
             // eslint-disable-next-line no-console
             console.error('[WSIViewer] OSD open-failed', e);
             action(() => {
                 this.error = `OSD open failed: ${e?.message ?? JSON.stringify(e)}`;
+                this.viewerReady = false;
             })();
         });
         this.osdViewer.addHandler('tile-load-failed', (e: any) => {
