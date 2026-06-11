@@ -25,6 +25,11 @@ type SharedHistogramScale = {
     axisLabelMax?: string;
 };
 
+type HistogramScaleReference =
+    | 'all-samples'
+    | 'cancer-type'
+    | 'cancer-type-detailed';
+
 export default class MrnaExprColumnFormatter {
     private static readonly KILO_THRESHOLD = 10000;
     private static readonly KILO_DECIMAL_THRESHOLD = 1000;
@@ -480,7 +485,11 @@ export default class MrnaExprColumnFormatter {
         mrnaExprSourceCache?: GeneMolecularDataCache,
         mrnaExprSourceMolecularProfileId?: string,
         studyCancerTypeMap?: { [uniqueSampleKey: string]: string },
-        studyCancerTypeDetailedMap?: { [uniqueSampleKey: string]: string }
+        studyCancerTypeDetailedMap?: { [uniqueSampleKey: string]: string },
+        histogramScaleReference: HistogramScaleReference = 'all-samples',
+        onHistogramScaleReferenceChange?: (
+            reference: HistogramScaleReference
+        ) => void
     ) {
         if (
             cacheDatum &&
@@ -492,6 +501,14 @@ export default class MrnaExprColumnFormatter {
             let allData: NumericGeneMolecularData[] | undefined;
             let currentUniqueKey: string | undefined;
             let sharedScale: SharedHistogramScale | undefined;
+            let currentCancerType: string | undefined;
+            let currentCancerTypeDetailed: string | undefined;
+            let cancerTypeData: NumericGeneMolecularData[] | undefined;
+            let cancerTypeDetailedData: NumericGeneMolecularData[] | undefined;
+            const scaleReferenceOptions: Array<{
+                value: HistogramScaleReference;
+                label: string;
+            }> = [{ value: 'all-samples', label: 'All samples' }];
             const hasRawExprSource =
                 mrnaExprSourceCache &&
                 mrnaExprSourceMolecularProfileId &&
@@ -508,17 +525,77 @@ export default class MrnaExprColumnFormatter {
                     sourceDatum.data
                 ) {
                     allData = sourceDatum.data;
-                    const allValues = allData
+                    const currentSample = allData.find(
+                        d => d.sampleId === sampleId
+                    );
+                    if (currentSample) {
+                        currentUniqueKey = currentSample.uniqueSampleKey;
+                        if (isFinite(currentSample.value)) {
+                            rawExprValue = currentSample.value;
+                        }
+                    }
+
+                    currentCancerType = currentUniqueKey
+                        ? studyCancerTypeMap?.[currentUniqueKey]
+                        : undefined;
+                    currentCancerTypeDetailed = currentUniqueKey
+                        ? studyCancerTypeDetailedMap?.[currentUniqueKey]
+                        : undefined;
+                    cancerTypeData = currentCancerType
+                        ? allData.filter(
+                              d =>
+                                  studyCancerTypeMap?.[d.uniqueSampleKey] ===
+                                  currentCancerType
+                          )
+                        : undefined;
+                    cancerTypeDetailedData = currentCancerTypeDetailed
+                        ? allData.filter(
+                              d =>
+                                  studyCancerTypeDetailedMap?.[
+                                      d.uniqueSampleKey
+                                  ] === currentCancerTypeDetailed
+                          )
+                        : undefined;
+
+                    if ((cancerTypeData?.length || 0) > 0) {
+                        scaleReferenceOptions.push({
+                            value: 'cancer-type',
+                            label: currentCancerType!,
+                        });
+                    }
+                    if (
+                        (cancerTypeDetailedData?.length || 0) > 0 &&
+                        currentCancerTypeDetailed !== currentCancerType
+                    ) {
+                        scaleReferenceOptions.push({
+                            value: 'cancer-type-detailed',
+                            label: currentCancerTypeDetailed!,
+                        });
+                    }
+
+                    const selectedScaleReference = scaleReferenceOptions.some(
+                        option => option.value === histogramScaleReference
+                    )
+                        ? histogramScaleReference
+                        : 'all-samples';
+                    const scaleSourceData =
+                        selectedScaleReference === 'cancer-type'
+                            ? cancerTypeData
+                            : selectedScaleReference === 'cancer-type-detailed'
+                            ? cancerTypeDetailedData
+                            : allData;
+                    const scaleValues = (scaleSourceData || [])
                         .map(d => d.value)
                         .filter(v => isFinite(v));
-                    if (allValues.length > 0) {
-                        const minVal = Math.min(...allValues);
-                        const maxVal = Math.max(...allValues);
+
+                    if (scaleValues.length > 0) {
+                        const minVal = Math.min(...scaleValues);
+                        const maxVal = Math.max(...scaleValues);
                         if (minVal !== maxVal) {
                             const numBins = 20;
                             const binWidth = (maxVal - minVal) / numBins;
                             const bins = new Array(numBins).fill(0);
-                            for (const v of allValues) {
+                            for (const v of scaleValues) {
                                 const idx = Math.min(
                                     Math.floor((v - minVal) / binWidth),
                                     numBins - 1
@@ -538,15 +615,6 @@ export default class MrnaExprColumnFormatter {
                                         maxVal
                                     ),
                             };
-                        }
-                    }
-                    const currentSample = allData.find(
-                        d => d.sampleId === sampleId
-                    );
-                    if (currentSample) {
-                        currentUniqueKey = currentSample.uniqueSampleKey;
-                        if (isFinite(currentSample.value)) {
-                            rawExprValue = currentSample.value;
                         }
                     }
                 } else if (!sourceDatum) {
@@ -585,23 +653,10 @@ export default class MrnaExprColumnFormatter {
             const distributionSections: JSX.Element[] = [];
 
             if (allData && currentUniqueKey) {
-                // Determine current sample's cancer type and cancer type detailed
-                const currentCancerType = studyCancerTypeMap
-                    ? studyCancerTypeMap[currentUniqueKey]
-                    : undefined;
-                const currentCancerTypeDetailed = studyCancerTypeDetailedMap
-                    ? studyCancerTypeDetailedMap[currentUniqueKey]
-                    : undefined;
-
                 // 1. Cancer type distribution
-                if (currentCancerType && studyCancerTypeMap) {
-                    const filtered = allData.filter(
-                        d =>
-                            studyCancerTypeMap[d.uniqueSampleKey] ===
-                            currentCancerType
-                    );
+                if (currentCancerType && cancerTypeData) {
                     const histogram = MrnaExprColumnFormatter.getExpressionHistogram(
-                        filtered,
+                        cancerTypeData,
                         sampleId!,
                         sharedScale
                     );
@@ -625,16 +680,11 @@ export default class MrnaExprColumnFormatter {
                 // 2. Cancer type detailed distribution
                 if (
                     currentCancerTypeDetailed &&
-                    studyCancerTypeDetailedMap &&
+                    cancerTypeDetailedData &&
                     currentCancerTypeDetailed !== currentCancerType
                 ) {
-                    const filtered = allData.filter(
-                        d =>
-                            studyCancerTypeDetailedMap[d.uniqueSampleKey] ===
-                            currentCancerTypeDetailed
-                    );
                     const histogram = MrnaExprColumnFormatter.getExpressionHistogram(
-                        filtered,
+                        cancerTypeDetailedData,
                         sampleId!,
                         sharedScale
                     );
@@ -691,9 +741,40 @@ export default class MrnaExprColumnFormatter {
             return (
                 <div>
                     <span>
-                        Distribution of expression across samples in this study
-                        for this gene:
+                        Distribution of expression across all samples in this
+                        study for this gene:
                     </span>
+                    {scaleReferenceOptions.length > 1 && (
+                        <div style={{ marginTop: 4, marginBottom: 2 }}>
+                            <label
+                                style={{
+                                    fontSize: '0.85em',
+                                    marginRight: 4,
+                                }}
+                            >
+                                Scale:
+                            </label>
+                            <select
+                                style={{ fontSize: '0.85em' }}
+                                value={histogramScaleReference}
+                                onChange={event =>
+                                    onHistogramScaleReferenceChange?.(
+                                        event.target
+                                            .value as HistogramScaleReference
+                                    )
+                                }
+                            >
+                                {scaleReferenceOptions.map(option => (
+                                    <option
+                                        key={option.value}
+                                        value={option.value}
+                                    >
+                                        {option.label}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
                     <br />
                     {distributionSections}
                     {rawExprValue !== undefined && (
@@ -722,7 +803,8 @@ export default class MrnaExprColumnFormatter {
                             fontStyle: 'italic',
                         }}
                     >
-                        Expression values are not adjusted for purity
+                        Expression values are not adjusted for purity and are
+                        not mutant-specific
                     </span>
                 </div>
             );
@@ -862,18 +944,25 @@ export default class MrnaExprColumnFormatter {
                 });
             }
         };
+        const TooltipOverlay = () => {
+            const [histogramScaleReference, setHistogramScaleReference] =
+                React.useState<HistogramScaleReference>('all-samples');
+            return MrnaExprColumnFormatter.getTooltipContents(
+                cacheDatum,
+                sampleId,
+                entrezGeneId,
+                mrnaExprSourceCache,
+                mrnaExprSourceMolecularProfileId,
+                studyCancerTypeMap,
+                studyCancerTypeDetailedMap,
+                histogramScaleReference,
+                setHistogramScaleReference
+            );
+        };
         return (
             <DefaultTooltip
                 placement="left"
-                overlay={MrnaExprColumnFormatter.getTooltipContents(
-                    cacheDatum,
-                    sampleId,
-                    entrezGeneId,
-                    mrnaExprSourceCache,
-                    mrnaExprSourceMolecularProfileId,
-                    studyCancerTypeMap,
-                    studyCancerTypeDetailedMap
-                )}
+                overlay={<TooltipOverlay />}
                 arrowContent={<div className="rc-tooltip-arrow-inner" />}
                 onVisibleChange={maybeLoadExpressionSourceData}
             >
@@ -906,9 +995,23 @@ export default class MrnaExprColumnFormatter {
 
     public static cnaRenderFunction(
         data: DiscreteCopyNumberData[],
-        cache: MrnaExprRankCache
+        cache: MrnaExprRankCache,
+        mrnaExprSourceCache?: GeneMolecularDataCache,
+        mrnaExprSourceMolecularProfileId?: string,
+        studyCancerTypeMap?: { [uniqueSampleKey: string]: string },
+        studyCancerTypeDetailedMap?: { [uniqueSampleKey: string]: string }
     ) {
         const cacheDatum = MrnaExprColumnFormatter.getDataFromCNA(data, cache);
-        return MrnaExprColumnFormatter.renderFromCacheDatum(cacheDatum);
+        const sampleId = data.length > 0 ? data[0].sampleId : undefined;
+        const entrezGeneId = data.length > 0 ? data[0].entrezGeneId : undefined;
+        return MrnaExprColumnFormatter.renderFromCacheDatum(
+            cacheDatum,
+            sampleId,
+            entrezGeneId,
+            mrnaExprSourceCache,
+            mrnaExprSourceMolecularProfileId,
+            studyCancerTypeMap,
+            studyCancerTypeDetailedMap
+        );
     }
 }

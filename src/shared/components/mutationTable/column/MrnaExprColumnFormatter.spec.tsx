@@ -260,4 +260,50 @@ describe('MrnaExprColumnFormatter', () => {
         assert.equal(bounds0.min, bounds1.min);
         assert.equal(bounds0.max, bounds1.max);
     });
+
+    it('allows selecting cancer-type reference for shared histogram scaling', () => {
+        const allData = [
+            { sampleId: 'S1', uniqueSampleKey: 'UK1', value: 1 },
+            { sampleId: 'S2', uniqueSampleKey: 'UK2', value: 2 },
+            { sampleId: 'S3', uniqueSampleKey: 'UK3', value: 3 },
+            { sampleId: 'S4', uniqueSampleKey: 'UK4', value: 100 },
+        ];
+        const sourceCache = {
+            peek: sinon.stub().returns({
+                status: 'complete',
+                data: allData,
+            }),
+        } as any;
+        const cancerTypeMap: { [key: string]: string } = {
+            UK1: 'Breast Cancer',
+            UK2: 'Breast Cancer',
+            UK3: 'Breast Cancer',
+            UK4: 'Lung Cancer',
+        };
+        const cancerTypeDetailedMap: { [key: string]: string } = {
+            UK1: 'Breast Cancer',
+            UK2: 'Breast Cancer',
+            UK3: 'Breast Cancer',
+            UK4: 'Lung Cancer',
+        };
+
+        const tooltip = (MrnaExprColumnFormatter as any).getTooltipContents(
+            {
+                status: 'complete',
+                data: { zScore: -0.5, percentile: 25 },
+            },
+            'S1',
+            1017,
+            sourceCache,
+            'study_mrna',
+            cancerTypeMap,
+            cancerTypeDetailedMap,
+            'cancer-type'
+        );
+
+        const wrapper = shallow(<div>{tooltip}</div>);
+        const firstHistogramText = wrapper.find('svg').at(0).text();
+        assert.include(firstHistogramText, '3');
+        assert.notInclude(firstHistogramText, '100');
+    });
 });
