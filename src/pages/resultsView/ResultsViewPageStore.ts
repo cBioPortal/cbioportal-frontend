@@ -502,41 +502,6 @@ export class ResultsViewPageStore extends AnalysisStore
             );
         }
 
-        this.plotsTabStore = new PlotsTabStore({
-            molecularProfiles: this.molecularProfilesInStudies,
-            plotsSelectedGenes: this.genes,
-            entrezGeneIdToGene: this.entrezGeneIdToGene,
-            studyToDataQueryFilter: this.studyToDataQueryFilter,
-            patientsForCoverage: this.patients,
-            samplesForSVQueries: this.samples,
-            samplesForPatientKeyGrouping: this.filteredSamples,
-            studies: this.studies,
-            driverAnnotationSettings: this.driverAnnotationSettings,
-            oncoKbAnnotatedGenes: this.oncoKbAnnotatedGenes,
-            internalClient: internalClient,
-            get genomeNexusInternalClient() {
-                return store.genomeNexusInternalClient;
-            },
-            genes: this.genes,
-            filteredSamples: this.filteredSamples,
-            patients: this.patients,
-            get clinicalDataCache() {
-                return store.clinicalDataCache;
-            },
-            clinicalAttributes: this.plotClinicalAttributes,
-            customAttributes: this.customAttributes,
-            genesets: this.genesets,
-            genericAssayEntitiesGroupByMolecularProfileId: this
-                .genericAssayEntitiesGroupByMolecularProfileId,
-            get selectedGenericAssayEntitiesGroupByMolecularProfileId() {
-                return store.selectedGenericAssayEntitiesGroupByMolecularProfileId;
-            },
-            molecularProfilesWithData: this.molecularProfilesWithData,
-            hasNoQueriedGenes: false,
-            filteredSampleKeyToSample: this.filteredSampleKeyToSample,
-            sampleKeyToSample: this.sampleKeyToSample,
-            studyIdToStudy: this.studyIdToStudy,
-        });
     }
 
     destroy() {
@@ -549,7 +514,54 @@ export class ResultsViewPageStore extends AnalysisStore
         [hugoGeneSymbolWithDriver: string]: ResultsViewMutationMapperStore;
     } = {};
 
-    public readonly plotsTabStore: PlotsTabStore;
+    // Built lazily on first access (the Plots tab) rather than in the
+    // constructor. Eager construction read a batch of this store's computeds at
+    // build time, which — because ResultsViewPathwayMapper constructs a second
+    // ResultsViewPageStore inside a @computed — pulled enough reactive surface
+    // into that derivation to make its render reaction fail to converge
+    // ("cycle in the reactive function"), stalling the pathways tab.
+    private _plotsTabStore: PlotsTabStore | undefined;
+    public get plotsTabStore(): PlotsTabStore {
+        const store = this;
+        if (!this._plotsTabStore) {
+            this._plotsTabStore = new PlotsTabStore({
+                molecularProfiles: this.molecularProfilesInStudies,
+                plotsSelectedGenes: this.genes,
+                entrezGeneIdToGene: this.entrezGeneIdToGene,
+                studyToDataQueryFilter: this.studyToDataQueryFilter,
+                patientsForCoverage: this.patients,
+                samplesForSVQueries: this.samples,
+                samplesForPatientKeyGrouping: this.filteredSamples,
+                studies: this.studies,
+                driverAnnotationSettings: this.driverAnnotationSettings,
+                oncoKbAnnotatedGenes: this.oncoKbAnnotatedGenes,
+                internalClient: internalClient,
+                get genomeNexusInternalClient() {
+                    return store.genomeNexusInternalClient;
+                },
+                genes: this.genes,
+                filteredSamples: this.filteredSamples,
+                patients: this.patients,
+                get clinicalDataCache() {
+                    return store.clinicalDataCache;
+                },
+                clinicalAttributes: this.plotClinicalAttributes,
+                customAttributes: this.customAttributes,
+                genesets: this.genesets,
+                genericAssayEntitiesGroupByMolecularProfileId: this
+                    .genericAssayEntitiesGroupByMolecularProfileId,
+                get selectedGenericAssayEntitiesGroupByMolecularProfileId() {
+                    return store.selectedGenericAssayEntitiesGroupByMolecularProfileId;
+                },
+                molecularProfilesWithData: this.molecularProfilesWithData,
+                hasNoQueriedGenes: false,
+                filteredSampleKeyToSample: this.filteredSampleKeyToSample,
+                sampleKeyToSample: this.sampleKeyToSample,
+                studyIdToStudy: this.studyIdToStudy,
+            });
+        }
+        return this._plotsTabStore;
+    }
 
     @computed get oqlText() {
         return this.urlWrapper.query.gene_list;
