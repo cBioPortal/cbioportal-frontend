@@ -1,0 +1,104 @@
+# Storybook Visual Regression Tests
+#
+# Builds Storybook and runs Playwright screenshot tests against the static
+# output. Each story is rendered in isolation (no backend, no auth), making
+# these tests fast and reliable compared to full E2E screenshot tests.
+#
+# Snapshot strategy (mirrors end-to-end-test-playwright):
+#   PW_DOCKER=1 → baselines read/written to __snapshots__/ (committed)
+#   host runs   → __local_snapshots__/ (gitignored, never overwrite refs)
+#
+# First-time baseline setup:
+#   When __snapshots__/ is empty (new stories added), PW_UPDATE_SNAPSHOTS
+#   defaults to 'missing' — tests pass and new baselines are written.
+#   The "Upload new/updated snapshots" step uploads them as an artifact.
+#   Download the artifact, copy the PNGs into
+#   storybook-visual-tests/tests/__snapshots__/ and commit them.
+#
+# Updating baselines after an intentional visual change:
+#   Re-run this workflow with the input  update_snapshots: all
+#   (via workflow_dispatch), download the artifact, and commit the new PNGs.
+
+name: Storybook Visual Tests
+
+on:
+  push:
+    branches: [master, rc]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      update_snapshots:
+        description: >
+          Snapshot update mode.
+          'missing' writes only new baselines (default CI behaviour).
+          'all' regenerates every baseline — use after intentional UI changes.
+        type: choice
+        options: [missing, all, none]
+        default: missing
+
+env:
+  NODE_VERSION: '22.18.0'
+  # Treat the GitHub Actions runner as the canonical Docker environment for
+  # snapshot purposes (same flag the CircleCI playwright jobs use).
+  PW_DOCKER: '1'
+
+jobs:
+  storybook-visual:
+    name: Visual regression (Storybook + Playwright)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Enable corepack and activate pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.33.0 --activate
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/pnpm/store
+          key: pnpm-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: pnpm-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright Chromium browser
+        run: pnpm exec playwright install chromium --with-deps
+
+      - name: Build Storybook
+        run: pnpm build-storybook
+
+      - name: Run visual tests
+        env:
+          # workflow_dispatch lets the caller override; push/PR runs use the
+          # default (undefined → Playwright falls back to 'missing').
+          PW_UPDATE_SNAPSHOTS: ${{ inputs.update_snapshots }}
+        run: node scripts/serve-and-test-storybook.js
+
+      # Upload the canonical baselines whenever they were written or updated
+      # so developers can download, review, and commit them.
+      - name: Upload new/updated snapshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: storybook-snapshots
+          path: storybook-visual-tests/tests/__snapshots__/
+          if-no-files-found: ignore
+
+      # Upload pixel diffs for any failing tests so reviewers can see exactly
+      # what changed without having to reproduce locally.
+      - name: Upload diff screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: storybook-visual-diffs
+          path: test-results/
+          if-no-files-found: ignore
