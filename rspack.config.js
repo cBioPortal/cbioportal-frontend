@@ -198,9 +198,6 @@ var config = {
                       cleanAndValidateUrl(process.env.GENOME_NEXUS_URL)
                   )
                 : '"replace_me_env_genome_nexus_url"',
-            ENV_WSI_TILE_SERVER: process.env.WSI_TILE_SERVER !== undefined
-                ? JSON.stringify(process.env.WSI_TILE_SERVER)
-                : 'null',
         }),
         new rspack.HtmlRspackPlugin({ template: 'my-index.ejs' }),
         new ProgressBarPlugin(),
