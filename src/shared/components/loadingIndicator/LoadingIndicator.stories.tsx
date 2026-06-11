@@ -1,3 +1,4 @@
+import * as React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import LoadingIndicator from './LoadingIndicator';
 
@@ -40,10 +41,12 @@ export const Big: Story = {
 
 /** A message can be shown below the spinner to explain what is loading. */
 export const WithMessage: Story = {
+    render: args => (
+        <LoadingIndicator {...args}>Loading study data…</LoadingIndicator>
+    ),
     args: {
         isLoading: true,
         size: 'big',
-        children: 'Loading study data…',
     },
 };
 
