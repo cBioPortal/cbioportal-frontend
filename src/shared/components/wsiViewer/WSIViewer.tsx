@@ -128,27 +128,33 @@ export default class WSIViewer extends React.Component<Props, {}> {
     }
 
     /**
-     * Background prefetch: fetch metadata for all servable slides except the
-     * currently selected one (which is already loaded). Throttled to
-     * CONCURRENCY=4 parallel requests so we don't overwhelm the tile server.
-     * Results are stored in metaCache so mountOSD skips the fetch on click.
+     * Background prefetch: for each servable slide (except the already-loaded
+     * first one), fetch metadata + thumbnail concurrently. Both endpoints cache
+     * results in Redis so every subsequent user click is served instantly.
+     *
+     * Runs serially (one slide at a time) so that 3 gunicorn workers remain free
+     * for user-initiated requests. The two concurrent fetches per slide exploit
+     * the server-side SlideCache lock: the first request opens the SVS file from
+     * S3 while the second waits, then both complete from the already-open handle.
      */
     private async prefetchSlideMetadata(skipImageId?: string) {
-        const CONCURRENCY = 4;
         const slides = this.servableSlides
             .map(s => s.slide)
             .filter(sl => sl.image_id !== skipImageId && !this.metaCache.has(sl.image_id));
 
-        for (let i = 0; i < slides.length; i += CONCURRENCY) {
-            // Stop if component unmounted or patient changed
+        for (const sl of slides) {
             if (!this.hierarchy) return;
-            const batch = slides.slice(i, i + CONCURRENCY);
-            await Promise.allSettled(batch.map(sl =>
-                fetch(`${this.tileServerBase}/tiles/${sl.image_id}/metadata`)
+            const base = this.tileServerBase;
+            await Promise.allSettled([
+                fetch(`${base}/tiles/${sl.image_id}/metadata`)
                     .then(r => r.ok ? r.json() : Promise.reject(r.status))
-                    .then((meta: TileMetadata) => { this.metaCache.set(sl.image_id, meta); })
-                    .catch(() => { /* ignore — slide simply stays cold */ })
-            ));
+                    .then((meta: TileMetadata) => { this.metaCache.set(sl.image_id, meta); }),
+                // Thumbnail fetch warms the Redis cache so the sidebar img is
+                // served from Redis (no SVS open) on the first user click.
+                fetch(`${base}/tiles/${sl.image_id}/thumbnail`),
+            ]);
+            // Brief pause between slides to avoid S3 connection pile-up.
+            await new Promise(r => setTimeout(r, 200));
         }
     }
 
