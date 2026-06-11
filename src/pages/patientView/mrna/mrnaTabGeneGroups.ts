@@ -7,6 +7,11 @@
 export interface GeneGroup {
     id: string;
     label: string;
+    // Short label shown as a GitHub-style chip in the expression table's
+    // "Labels" column (the full `label` is the chip's tooltip).
+    abbrev: string;
+    // Chip background color (solid; chip text is white).
+    color: string;
     genes: string[];
 }
 
@@ -14,6 +19,8 @@ export const MRNA_TAB_GENE_GROUPS: GeneGroup[] = [
     {
         id: 'fda-adc',
         label: 'FDA-approved ADC targets',
+        abbrev: 'FDA',
+        color: '#3f72af',
         // adcs_approved
         genes: [
             'CCR4',
@@ -47,6 +54,8 @@ export const MRNA_TAB_GENE_GROUPS: GeneGroup[] = [
     {
         id: 'msk-trial',
         label: 'ADC targets in trial at MSK',
+        abbrev: 'MSK',
+        color: '#e08a1e',
         // adcs_at_msk (DAM9 corrected to ADAM9)
         genes: [
             'CSF1R',
@@ -114,6 +123,8 @@ export const MRNA_TAB_GENE_GROUPS: GeneGroup[] = [
     {
         id: 'other-trial',
         label: 'ADC targets in trial other places',
+        abbrev: 'TRIAL',
+        color: '#5aa454',
         // adcs_investigational (ALPGvALPP split into ALPG + ALPP)
         genes: [
             'ACVRL1',
@@ -329,19 +340,68 @@ export const PATIENT_CNA_GROUP_ID = 'patient-cna';
 export interface DynamicGeneGroup {
     id: string;
     label: string;
+    abbrev: string;
+    color: string;
 }
 
 export const MRNA_TAB_PATIENT_GENE_GROUPS: DynamicGeneGroup[] = [
     {
         id: PATIENT_MUTATIONS_GROUP_ID,
         label: 'Genes with mutations in this patient',
+        abbrev: 'MUT',
+        color: '#c0392b',
     },
     {
         id: PATIENT_SV_GROUP_ID,
         label: 'Genes with structural variants in this patient',
+        abbrev: 'SV',
+        color: '#8e44ad',
     },
     {
         id: PATIENT_CNA_GROUP_ID,
         label: 'Genes with CNA in this patient',
+        abbrev: 'CNA',
+        color: '#16a085',
     },
 ];
+
+// Unified label metadata for every gene group (static presets + patient-derived
+// dynamic groups), in the order they should appear as chips / filter options.
+// `id` matches the token used in PlotsStore.mrnaTabSelections (`group:<id>`).
+export interface GeneGroupLabelMeta {
+    id: string;
+    label: string;
+    abbrev: string;
+    color: string;
+}
+
+export const ALL_GENE_GROUP_LABEL_META: GeneGroupLabelMeta[] = [
+    ...MRNA_TAB_GENE_GROUPS.map(g => ({
+        id: g.id,
+        label: g.label,
+        abbrev: g.abbrev,
+        color: g.color,
+    })),
+    ...MRNA_TAB_PATIENT_GENE_GROUPS.map(g => ({
+        id: g.id,
+        label: g.label,
+        abbrev: g.abbrev,
+        color: g.color,
+    })),
+];
+
+const GENE_GROUP_LABEL_META_BY_ID: {
+    [id: string]: GeneGroupLabelMeta;
+} = ALL_GENE_GROUP_LABEL_META.reduce(
+    (acc, m) => {
+        acc[m.id] = m;
+        return acc;
+    },
+    {} as { [id: string]: GeneGroupLabelMeta }
+);
+
+export function getGeneGroupLabelMeta(
+    id: string
+): GeneGroupLabelMeta | undefined {
+    return GENE_GROUP_LABEL_META_BY_ID[id];
+}

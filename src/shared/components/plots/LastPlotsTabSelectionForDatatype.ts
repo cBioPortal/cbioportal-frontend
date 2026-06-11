@@ -2,7 +2,7 @@ import {
     AxisMenuSelection,
     PlotsTabGeneOption,
     PlotsTabOption,
-} from './PlotsTab';
+} from './PlotsTabTypes';
 import autobind from 'autobind-decorator';
 
 type Selection = {

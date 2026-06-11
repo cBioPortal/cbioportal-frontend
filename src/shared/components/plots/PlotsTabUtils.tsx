@@ -10,7 +10,7 @@ import {
     StructuralVariantCountBy,
     PlotsTabOption,
     SelectedColoringTypes,
-} from './PlotsTab';
+} from './PlotsTabTypes';
 import {
     CancerStudy,
     ClinicalAttribute,
@@ -2803,7 +2803,7 @@ export function makeBoxScatterPlotData(
     },
     copyNumberAlterations?: {
         molecularProfileIds: string[];
-        data: CustomDriverNumericGeneMolecularData[];
+        data: AnnotatedNumericGeneMolecularData[];
     },
     structuralVariants?: {
         molecularProfileIds: string[];
@@ -2855,7 +2855,7 @@ export function makeScatterPlotData(
     },
     copyNumberAlterations?: {
         molecularProfileIds: string[];
-        data: CustomDriverNumericGeneMolecularData[];
+        data: AnnotatedNumericGeneMolecularData[];
     },
     structuralVariants?: {
         molecularProfileIds: string[];
@@ -2879,7 +2879,7 @@ export function makeScatterPlotData(
     },
     copyNumberAlterations?: {
         molecularProfileIds: string[];
-        data: CustomDriverNumericGeneMolecularData[];
+        data: AnnotatedNumericGeneMolecularData[];
     },
     structuralVariants?: {
         molecularProfileIds: string[];
@@ -3384,7 +3384,9 @@ export function getCacheQueries(utilitiesSelection: ColoringMenuSelection) {
 
 export function showWaterfallPlot(
     horzSelection: AxisMenuSelection,
-    vertSelection: AxisMenuSelection
+    vertSelection: AxisMenuSelection,
+    horzAxisData?: IAxisData,
+    vertAxisData?: IAxisData
 ): boolean {
     return (
         (vertSelection.dataType !== undefined &&
@@ -3396,7 +3398,13 @@ export function showWaterfallPlot(
             isGenericAssaySelected(horzSelection) &&
             horzSelection.genericAssayDataType ===
                 DataTypeConstants.LIMITVALUE &&
-            vertSelection.dataType === NONE_SELECTED_OPTION_STRING_VALUE)
+            vertSelection.dataType === NONE_SELECTED_OPTION_STRING_VALUE) ||
+        (horzAxisData !== undefined &&
+            isNumberData(horzAxisData) &&
+            vertSelection.dataType === NONE_SELECTED_OPTION_STRING_VALUE) ||
+        (vertAxisData !== undefined &&
+            isNumberData(vertAxisData) &&
+            horzSelection.dataType === NONE_SELECTED_OPTION_STRING_VALUE)
     );
 }
 

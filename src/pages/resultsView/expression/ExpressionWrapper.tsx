@@ -53,7 +53,7 @@ import {
     ColoringType,
     PlotType,
     SelectedColoringTypes,
-} from '../../../shared/components/plots/PlotsTab';
+} from '../../../shared/components/plots/PlotsTabTypes';
 import AlterationFilterWarning from '../../../shared/components/banners/AlterationFilterWarning';
 import CaseFilterWarning from '../../../shared/components/banners/CaseFilterWarning';
 import { getBoxWidth } from 'shared/lib/boxPlotUtils';

@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import { PlotsTabOption, PlotsTabDataSource } from './PlotsTab';
+import { PlotsTabOption, PlotsTabDataSource } from './PlotsTabTypes';
 import { generateQuickPlots, ButtonInfo, TypeSourcePair } from './QuickPlots';
 import { GenericAssayTypeConstants } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
 

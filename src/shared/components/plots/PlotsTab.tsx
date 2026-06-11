@@ -12,6 +12,7 @@ import './styles.scss';
 import { AlterationTypeConstants, DataTypeConstants } from 'shared/constants';
 import { Button, FormControl } from 'react-bootstrap';
 import ReactSelect from 'react-select1';
+import 'react-select1/dist/react-select.css';
 import AsyncSelect from 'react-select/async';
 import Select from 'react-select';
 import _ from 'lodash';
@@ -118,7 +119,6 @@ import Pluralize from 'pluralize';
 import LastPlotsTabSelectionForDatatype from './LastPlotsTabSelectionForDatatype';
 import { generateQuickPlots } from './QuickPlots';
 import ResultsViewURLWrapper, {
-    PlotsSelectionParam,
     ResultsViewURLQuery,
 } from 'pages/resultsView/ResultsViewURLWrapper';
 import ClinicalDataCache, {
@@ -145,7 +145,6 @@ import { GENERIC_ASSAY_CONFIG } from 'shared/lib/GenericAssayUtils/GenericAssayC
 import { getServerConfig } from 'config/config';
 import { ExtendedClinicalAttribute } from 'pages/resultsView/ResultsViewPageStoreUtils';
 import MobxPromiseCache from 'shared/lib/MobxPromiseCache';
-import { CustomDriverNumericGeneMolecularData } from 'shared/model/CustomDriverNumericGeneMolecularData';
 import {
     AnnotatedMutation,
     AnnotatedStructuralVariant,
@@ -169,6 +168,31 @@ import { AnnotatedNumericGeneMolecularData } from 'shared/model/AnnotatedNumeric
 import { ExtendedAlteration } from 'shared/model/ExtendedAlteration';
 import CaseFilterWarning from '../banners/CaseFilterWarning';
 import { SelectedDataAlert } from './SelectedDataAlert';
+import PatientViewUrlWrapper, {
+    PatientViewUrlQuery,
+} from 'pages/patientView/PatientViewUrlWrapper';
+import { PlotsSelectionParam } from './PlotsTabUrlParameters';
+import {
+    AxisMenuSelection,
+    ColoringMenuOmnibarGroup,
+    ColoringMenuOmnibarOption,
+    ColoringMenuSelection,
+    ColoringType,
+    DiscreteVsDiscretePlotType,
+    MutationCountBy,
+    PlotType,
+    PlotsTabOption,
+    PotentialColoringType,
+    SampleIdsForPatientIds,
+    SelectedColoringTypes,
+    SortByOptions,
+    StructuralVariantCountBy,
+    NONE_SELECTED_OPTION_STRING_VALUE,
+    NONE_SELECTED_OPTION_NUMERICAL_VALUE,
+    NONE_SELECTED_OPTION_LABEL,
+    SAME_SELECTED_OPTION_STRING_VALUE,
+    SAME_SELECTED_OPTION_NUMERICAL_VALUE,
+} from './PlotsTabTypes';
 
 enum EventKey {
     horz_logScale,
@@ -180,98 +204,10 @@ enum EventKey {
     sortByMedian,
 }
 
-export enum ColoringType {
-    ClinicalData,
-    MutationType,
-    CopyNumber,
-    LimitVal,
-    StructuralVariant,
-    None,
-}
-
-export enum PotentialColoringType {
-    GenomicData,
-    None,
-    LimitValGenomicData,
-    LimitVal,
-}
-
-export type SelectedColoringTypes = Partial<{ [c in ColoringType]: any }>;
-
-export enum PlotType {
-    ScatterPlot,
-    WaterfallPlot,
-    BoxPlot,
-    DiscreteVsDiscrete,
-}
-
-export enum DiscreteVsDiscretePlotType {
-    Bar = 'Bar',
-    StackedBar = 'StackedBar',
-    PercentageStackedBar = 'PercentageStackedBar',
-    Table = 'Table',
-}
-
-export enum SortByOptions {
-    Alphabetically = 'alphabetically',
-    SortByTotalSum = 'SortByTotalSum',
-}
-
-export enum MutationCountBy {
-    MutationType = 'MutationType',
-    MutatedVsWildType = 'MutatedVsWildType',
-    DriverVsVUS = 'DriverVsVUS',
-    VariantAlleleFrequency = 'VariantAlleleFrequency',
-    CancerCellFraction = 'CancerCellFraction',
-    Clonality = 'Clonality',
-}
-
-export enum StructuralVariantCountBy {
-    VariantType = 'VariantType',
-    MutatedVsWildType = 'MutatedVsWildType',
-}
-
-export type AxisMenuSelection = {
-    entrezGeneId?: number;
-    genesetId?: string;
-    genericAssayEntityId?: string;
-    selectedGeneOption?: PlotsTabGeneOption;
-    selectedDataSourceOption?: PlotsTabOption;
-    selectedGenesetOption?: PlotsTabOption;
-    selectedGenericAssayOption?: PlotsTabOption;
-    genericAssayDataType?: string; // LIMIT-VALUE, CATEGORICAL, BINARY
-    selectedCategories: any[];
-    dataType?: string; // Generic Assay saves genericAssayType as dataType
-    dataSourceId?: string;
-    mutationCountBy: MutationCountBy;
-    structuralVariantCountBy: StructuralVariantCountBy;
-    logScale: boolean;
-};
-
-export type ColoringMenuOmnibarOption = {
-    label: string;
-    value: string;
-    info: {
-        entrezGeneId?: number;
-        clinicalAttribute?: ClinicalAttribute;
-    };
-};
-
-export type ColoringMenuOmnibarGroup = {
-    label: string;
-    options: ColoringMenuOmnibarOption[];
-};
-
-export type ColoringMenuSelection = {
-    selectedOption: ColoringMenuOmnibarOption | undefined;
-    logScale?: boolean;
-    readonly colorByMutationType: boolean;
-    readonly colorByCopyNumber: boolean;
-    readonly colorByStructuralVariant: boolean;
-    default: {
-        entrezGeneId?: number;
-    };
-};
+export type PlotsTabURLQuery =
+    | ResultsViewURLQuery
+    | StudyViewURLQuery
+    | PatientViewUrlQuery;
 
 export interface IPlotsTabProps {
     filteredSamplesByDetailedCancerType: MobxPromise<{
@@ -302,7 +238,7 @@ export interface IPlotsTabProps {
         {
             entrezGeneId: number;
         },
-        CustomDriverNumericGeneMolecularData[]
+        AnnotatedNumericGeneMolecularData[]
     >;
     annotatedMutationCache: MobxPromiseCache<
         {
@@ -347,7 +283,10 @@ export interface IPlotsTabProps {
     molecularProfileIdToMolecularProfile: MobxPromiseUnionTypeWithDefault<{
         [molecularProfileId: string]: MolecularProfile;
     }>;
-    urlWrapper: ResultsViewURLWrapper | StudyViewURLWrapper;
+    urlWrapper:
+        | ResultsViewURLWrapper
+        | StudyViewURLWrapper
+        | PatientViewUrlWrapper;
     hasNoQueriedGenes?: boolean;
     genePanelDataForAllProfiles?: GenePanelData[];
     queryContainsOql?: boolean;
@@ -378,27 +317,13 @@ export interface IPlotsTabProps {
     patients: MobxPromise<Patient[]>;
     filteredPatients?: MobxPromise<Patient[]>;
     hideUnprofiledSamples?: false | 'any' | 'totally';
+    highlightedSamples?: string[];
+    additionalControls?: () => JSX.Element;
+    customSamplePointComponent?: (
+        sampleId: string,
+        mouseEvents: any
+    ) => JSX.Element;
 }
-
-export type PlotsTabDataSource = {
-    [dataType: string]: { value: string; label: string }[];
-};
-
-export type PlotsTabOption = {
-    value: string;
-    label: string;
-    plotAxisLabel?: string;
-    genericAssayDataType?: string;
-};
-
-export type PlotsTabGeneOption = {
-    value: number; // entrez id
-    label: string; // hugo symbol
-};
-
-export type SampleIdsForPatientIds = {
-    [patientId: string]: string[];
-};
 
 const searchInputTimeoutMs = 600;
 
@@ -408,12 +333,6 @@ class PlotsTabWaterfallPlot extends WaterfallPlot<IWaterfallPlotData> {}
 
 const SVG_ID = 'plots-tab-plot-svg';
 
-export const NONE_SELECTED_OPTION_STRING_VALUE = 'none';
-export const NONE_SELECTED_OPTION_NUMERICAL_VALUE = -10000;
-export const NONE_SELECTED_OPTION_LABEL = 'Ordered samples';
-export const ALL_SELECTED_OPTION_NUMERICAL_VALUE = -30000;
-export const SAME_SELECTED_OPTION_STRING_VALUE = 'same';
-export const SAME_SELECTED_OPTION_NUMERICAL_VALUE = -20000;
 const LEGEND_TO_BOTTOM_WIDTH_THRESHOLD = 550; // when plot is wider than this value, the legend moves from right to bottom of screen
 const DISCRETE_CATEGORY_LIMIT = 150; // when a discrete variable has more categories, the discrete plot will not be rendered.
 
@@ -456,8 +375,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     private selectionHistory = new LastPlotsTabSelectionForDatatype();
     private coloringMenuSelection: ColoringMenuSelection;
 
-    private scrollPane: HTMLDivElement;
-    private dummyScrollPane: HTMLDivElement;
+    private scrollPane!: HTMLDivElement;
+    private dummyScrollPane!: HTMLDivElement;
     private scrollingDummyPane = false;
     @observable plotElementWidth = 0;
     @observable sortByDropDownOptions: { value: string; label: string }[] = [];
@@ -735,7 +654,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     }
 
     @computed get showPlot(): boolean {
-        return this.plotDataExistsForTwoAxes || this.waterfallPlotIsShown;
+        return this.plotDataExistsForTwoAxes || this.shouldShowWaterfallPlot;
     }
 
     @computed get dataAvailability(): JSX.Element[] {
@@ -994,7 +913,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         }
 
         components = [
-            <div className="alert alert-info dataAvailabilityAlert">
+            <div
+                className="alert alert-info dataAvailabilityAlert"
+                style={{ width: '100%' }}
+            >
                 {mainMessage}
                 <div data-test="dataAvailabilityAlertInfoIcon">
                     <InfoIcon tooltip={<div>{components}</div>} />
@@ -1158,8 +1080,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     (this._dataType === undefined && dataTypeOptions.length) ||
                     selectedDataTypeDoesNotExist
                 ) {
-                    // if no queried genes, default is undefined
-                    if (self.props.hasNoQueriedGenes) {
+                    // if no queried genes and no highlighted samples (study view plots), default is undefined
+                    if (
+                        self.props.hasNoQueriedGenes &&
+                        !self.props.highlightedSamples
+                    ) {
                         return undefined;
                     }
                     // return computed default if _dataType is undefined and if there are options to select a default value from
@@ -1437,7 +1362,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                         ? self.props.urlWrapper.query.plots_vert_selection
                         : self.props.urlWrapper.query.plots_horz_selection) ||
                     {};
-                const param = urlSelection.selectedGeneOption;
+                const localSelection = vertical
+                    ? localStorage.getItem('plotsVertGeneSelection')
+                    : localStorage.getItem('plotsHorzGeneSelection');
+                const param = urlSelection.selectedGeneOption || localSelection;
 
                 if (!param) {
                     return undefined;
@@ -1452,10 +1380,19 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 }
             },
             set _selectedGeneOption(o: any) {
+                if (vertical) {
+                    localStorage.setItem(
+                        'plotsVertGeneSelection',
+                        o && o.value
+                    );
+                } else {
+                    localStorage.setItem(
+                        'plotsHorzGeneSelection',
+                        o && o.value
+                    );
+                }
                 self.props.urlWrapper.updateURL(
-                    (
-                        currentParams: ResultsViewURLQuery | StudyViewURLQuery
-                    ) => {
+                    (currentParams: PlotsTabURLQuery) => {
                         if (vertical) {
                             currentParams.plots_vert_selection!.selectedGeneOption =
                                 o && o.value;
@@ -1489,9 +1426,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             },
             set _selectedGenesetOption(o: any) {
                 self.props.urlWrapper.updateURL(
-                    (
-                        currentParams: ResultsViewURLQuery | StudyViewURLQuery
-                    ) => {
+                    (currentParams: PlotsTabURLQuery) => {
                         if (vertical) {
                             currentParams.plots_vert_selection!.selectedGenesetOption =
                                 o && o.value;
@@ -1525,9 +1460,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             },
             set _selectedGenericAssayOption(o: any) {
                 self.props.urlWrapper.updateURL(
-                    (
-                        currentParams: ResultsViewURLQuery | StudyViewURLQuery
-                    ) => {
+                    (currentParams: PlotsTabURLQuery) => {
                         if (vertical) {
                             currentParams.plots_vert_selection!.selectedGenericAssayOption =
                                 o && o.value;
@@ -1570,9 +1503,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             },
             set _selectedDataSourceOption(o: any) {
                 self.props.urlWrapper.updateURL(
-                    (
-                        currentParams: ResultsViewURLQuery | StudyViewURLQuery
-                    ) => {
+                    (currentParams: PlotsTabURLQuery) => {
                         if (vertical) {
                             currentParams.plots_vert_selection!.selectedDataSourceOption =
                                 o && o.value;
@@ -1595,9 +1526,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             },
             set _dataType(d: string | undefined) {
                 self.props.urlWrapper.updateURL(
-                    (
-                        currentParams: ResultsViewURLQuery | StudyViewURLQuery
-                    ) => {
+                    (currentParams: PlotsTabURLQuery) => {
                         if (vertical) {
                             (currentParams.plots_vert_selection as Partial<
                                 PlotsSelectionParam
@@ -1622,9 +1551,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             },
             set _mutationCountBy(c: MutationCountBy) {
                 self.props.urlWrapper.updateURL(
-                    (
-                        currentParams: ResultsViewURLQuery | StudyViewURLQuery
-                    ) => {
+                    (currentParams: PlotsTabURLQuery) => {
                         if (vertical) {
                             currentParams.plots_vert_selection!.mutationCountBy = c;
                         } else {
@@ -1645,9 +1572,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             },
             set _structuralVariantCountBy(c: StructuralVariantCountBy) {
                 self.props.urlWrapper.updateURL(
-                    (
-                        currentParams: ResultsViewURLQuery | StudyViewURLQuery
-                    ) => {
+                    (currentParams: PlotsTabURLQuery) => {
                         if (vertical) {
                             currentParams.plots_vert_selection!.structuralVariantCountBy = c;
                         } else {
@@ -1669,9 +1594,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             },
             set _logScale(l: boolean) {
                 self.props.urlWrapper.updateURL(
-                    (
-                        currentParams: ResultsViewURLQuery | StudyViewURLQuery
-                    ) => {
+                    (currentParams: PlotsTabURLQuery) => {
                         if (vertical) {
                             currentParams.plots_vert_selection!.logScale = l.toString();
                         } else {
@@ -1777,11 +1700,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             set _selectedOptionValue(v: string | undefined) {
                 runInAction(() => {
                     self.props.urlWrapper.updateURL(
-                        (
-                            currentQuery:
-                                | ResultsViewURLQuery
-                                | StudyViewURLQuery
-                        ) => {
+                        (currentQuery: PlotsTabURLQuery) => {
                             currentQuery.plots_coloring_selection!.selectedOption = v;
                             return currentQuery;
                         }
@@ -1799,7 +1718,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             },
             set logScale(s: boolean) {
                 self.props.urlWrapper.updateURL(
-                    (currentQuery: ResultsViewURLQuery | StudyViewURLQuery) => {
+                    (currentQuery: PlotsTabURLQuery) => {
                         currentQuery.plots_coloring_selection!.logScale = s.toString();
                         return currentQuery;
                     }
@@ -1857,34 +1776,28 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
 
     @action
     setColorByMutationType(s: boolean) {
-        this.props.urlWrapper.updateURL(
-            (currentQuery: ResultsViewURLQuery | StudyViewURLQuery) => {
-                currentQuery.plots_coloring_selection!.colorByMutationType = s.toString();
-                return currentQuery;
-            }
-        );
+        this.props.urlWrapper.updateURL((currentQuery: PlotsTabURLQuery) => {
+            currentQuery.plots_coloring_selection!.colorByMutationType = s.toString();
+            return currentQuery;
+        });
         // reset highlights
         this.highlightedLegendItems.clear();
     }
     @action
     setColorByCopyNumber(s: boolean) {
-        this.props.urlWrapper.updateURL(
-            (currentQuery: ResultsViewURLQuery | StudyViewURLQuery) => {
-                currentQuery.plots_coloring_selection!.colorByCopyNumber = s.toString();
-                return currentQuery;
-            }
-        );
+        this.props.urlWrapper.updateURL((currentQuery: PlotsTabURLQuery) => {
+            currentQuery.plots_coloring_selection!.colorByCopyNumber = s.toString();
+            return currentQuery;
+        });
         // reset highlights
         this.highlightedLegendItems.clear();
     }
     @action
     setColorByStructuralVariant(s: boolean) {
-        this.props.urlWrapper.updateURL(
-            (currentQuery: ResultsViewURLQuery | StudyViewURLQuery) => {
-                currentQuery.plots_coloring_selection!.colorBySv = s.toString();
-                return currentQuery;
-            }
-        );
+        this.props.urlWrapper.updateURL((currentQuery: PlotsTabURLQuery) => {
+            currentQuery.plots_coloring_selection!.colorBySv = s.toString();
+            return currentQuery;
+        });
         // reset highlights
         this.highlightedLegendItems.clear();
     }
@@ -2166,9 +2079,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             // listen to updates of `dataTypeOptions` and on the selected data type for the vertical axis
             if (
                 this.dataTypeOptions.result &&
-                isGenericAssaySelected(this.vertSelection) &&
-                this.vertSelection.genericAssayDataType ===
-                    DataTypeConstants.LIMITVALUE
+                ((isGenericAssaySelected(this.vertSelection) &&
+                    this.vertSelection.genericAssayDataType ===
+                        DataTypeConstants.LIMITVALUE) ||
+                    (this.vertSelection.dataType &&
+                        this.vertSelection.dataType ===
+                            AlterationTypeConstants.MRNA_EXPRESSION))
             ) {
                 noneDatatypeOption = [
                     {
@@ -2191,9 +2107,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             // listen to updates of `dataTypeOptions` and on the selected data type for the horzontal axis
             if (
                 this.dataTypeOptions.result &&
-                isGenericAssaySelected(this.horzSelection) &&
-                this.horzSelection.genericAssayDataType ===
-                    DataTypeConstants.LIMITVALUE
+                ((isGenericAssaySelected(this.horzSelection) &&
+                    this.horzSelection.genericAssayDataType ===
+                        DataTypeConstants.LIMITVALUE) ||
+                    (this.horzSelection.dataType &&
+                        this.horzSelection.dataType ===
+                            AlterationTypeConstants.MRNA_EXPRESSION))
             ) {
                 noneDatatypeOption = [
                     {
@@ -2266,6 +2185,31 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             );
         },
     });
+
+    // adds option to use same gene as the one in horizontal axis selection
+    private makeSameGeneOption(
+        vertical: boolean,
+        selection: AxisMenuSelection
+    ) {
+        if (
+            vertical &&
+            selection.dataType &&
+            this.showGeneSelectBox(
+                selection.dataType,
+                isGenericAssaySelected(selection)
+            ) &&
+            selection.selectedGeneOption &&
+            selection.selectedGeneOption.value !==
+                NONE_SELECTED_OPTION_NUMERICAL_VALUE
+        ) {
+            return [
+                {
+                    value: SAME_SELECTED_OPTION_NUMERICAL_VALUE,
+                    label: `Same gene (${selection.selectedGeneOption.label})`,
+                },
+            ];
+        }
+    }
 
     readonly clinicalAndCustomAttributes = remoteData<
         ExtendedClinicalAttribute[]
@@ -2470,8 +2414,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                 ].forEach(meta => {
                                     acc[meta.stableId] = { meta, profile };
                                 });
-                                return acc;
                             }
+                            return acc;
                         }, {} as { [stableId: string]: { meta: GenericAssayMeta; profile: MolecularProfile } })
                         .map(metaProfilePair =>
                             makeGenericAssayPlotsTabOption(
@@ -2529,8 +2473,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                 ].forEach(meta => {
                                     acc[meta.stableId] = { meta, profile };
                                 });
-                                return acc;
                             }
+                            return acc;
                         }, {} as { [stableId: string]: { meta: GenericAssayMeta; profile: MolecularProfile } })
                         .map(metaProfilePair =>
                             makeGenericAssayPlotsTabOption(
@@ -2596,10 +2540,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     });
 
     private showGeneSelectBox(
-        dataType: string,
+        dataType: string | undefined,
         isGenericAssaySelected: boolean
     ): boolean {
         return (
+            !!dataType &&
             dataType !== NONE_SELECTED_OPTION_STRING_VALUE &&
             dataType !== GENESET_DATA_TYPE &&
             dataType !== CLIN_ATTR_DATA_TYPE &&
@@ -2608,7 +2553,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         );
     }
 
-    private showGenesetSelectBox(dataType: string): boolean {
+    private showGenesetSelectBox(dataType: string | undefined): boolean {
+        if (!dataType) return false;
         return (
             dataType !== NONE_SELECTED_OPTION_STRING_VALUE &&
             dataType === GENESET_DATA_TYPE
@@ -2616,10 +2562,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     }
 
     private showGenericAssaySelectBox(
-        dataType: string,
+        dataType: string | undefined,
         isGenericAssaySelected: boolean
     ): boolean {
         return (
+            !!dataType &&
             dataType !== NONE_SELECTED_OPTION_STRING_VALUE &&
             isGenericAssaySelected
         );
@@ -2630,7 +2577,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     }
 
     private showSortOrderButton(onVerticalAxis: boolean): boolean {
-        if (this.waterfallPlotIsShown) {
+        if (this.shouldShowWaterfallPlot) {
             if (onVerticalAxis) {
                 return !this.isHorizontalWaterfallPlot;
             } else {
@@ -2640,7 +2587,18 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         return false;
     }
 
-    @computed get waterfallPlotIsShown(): boolean {
+    @computed get shouldShowWaterfallPlot(): boolean {
+        if (
+            this.horzAxisDataPromise.isComplete &&
+            this.vertAxisDataPromise.isComplete
+        ) {
+            return showWaterfallPlot(
+                this.horzSelection,
+                this.vertSelection,
+                this.horzAxisDataPromise.result,
+                this.vertAxisDataPromise.result
+            );
+        }
         return showWaterfallPlot(this.horzSelection, this.vertSelection);
     }
 
@@ -3741,7 +3699,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         let showMessage = false;
         if (
             this.searchMutationWords.length > 0 &&
-            this.waterfallPlotIsShown &&
+            this.shouldShowWaterfallPlot &&
             this.waterfallPlotData.isComplete
         ) {
             showMessage = true;
@@ -4333,6 +4291,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                                     this.horzGeneOptions
                                                         .isPending
                                                 }
+                                                defaultOptions={this.makeSameGeneOption(
+                                                    vertical,
+                                                    this.horzSelection
+                                                )}
                                                 noOptionsMessage={() =>
                                                     'Search for gene'
                                                 }
@@ -5500,6 +5462,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         return (
             this.dataTypeOptions.isComplete &&
             this.dataTypeToDataSourceOptions.isComplete &&
+            this.props.coverageInformation.isComplete &&
             (!this.horzSelection.dataType || !this.vertSelection.dataType)
         );
     }
@@ -5508,6 +5471,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         return (
             this.dataTypeOptions.isComplete &&
             this.dataTypeToDataSourceOptions.isComplete &&
+            this.horzGeneOptions.isComplete &&
+            this.vertGeneOptions.isComplete &&
             ((this.horzSelection.dataType &&
                 this.showGeneSelectBox(
                     this.horzSelection.dataType,
@@ -5527,7 +5492,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         return (
             this.plotType.isComplete &&
             this.plotType.result !== PlotType.DiscreteVsDiscrete &&
-            (this.plotDataExistsForTwoAxes || this.waterfallPlotIsShown)
+            (this.plotDataExistsForTwoAxes || this.shouldShowWaterfallPlot)
         );
     }
 
@@ -5610,6 +5575,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.genericEntitiesGroupByEntityId,
             this.horzGenericAssayOptions,
             this.props.studies,
+            this.dataTypeOptions,
+            this.dataTypeToDataSourceOptions,
         ];
         if (this.coloringClinicalDataPromise) {
             promises.push(this.coloringClinicalDataPromise);
@@ -5622,33 +5589,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             isPercentage ||
             this.discreteVsDiscretePlotType ===
                 DiscreteVsDiscretePlotType.StackedBar;
-
-        if (this.showNoGenericAssaySelectedWarning) {
-            return (
-                <div>
-                    <i className="fa fa-exclamation-triangle text-danger" />
-                    &nbsp;
-                    <span>
-                        To visualize selected generic assay data, you must
-                        ensure you have already imported related data and select
-                        an entity.
-                    </span>
-                </div>
-            );
-        }
-
-        if (this.shouldShowNoDataTypesSelectedWarning) {
-            return (
-                <div className={'alert alert-info'}>
-                    Please select datatype(s).
-                </div>
-            );
-        }
-        if (this.shouldShowNoGenesSelectedWarning) {
-            return (
-                <div className={'alert alert-info'}>Please select gene(s).</div>
-            );
-        }
 
         // options for coloring ***
         const defaultOptions = this.coloringMenuOmnibarOptions.result
@@ -5697,6 +5637,48 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
 
         switch (groupStatus) {
             case 'pending':
+                if (this.shouldShowNoDataTypesSelectedWarning) {
+                    return (
+                        <div
+                            className="borderedChart posRelative"
+                            style={{ backgroundColor: '#eee' }}
+                        >
+                            <div
+                                style={{
+                                    width: PLOT_SIDELENGTH,
+                                    height: PLOT_SIDELENGTH,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '32px',
+                                }}
+                            >
+                                ← Please select datatype(s).
+                            </div>
+                        </div>
+                    );
+                }
+                if (this.shouldShowNoGenesSelectedWarning) {
+                    return (
+                        <div
+                            className="borderedChart posRelative"
+                            style={{ backgroundColor: '#eee' }}
+                        >
+                            <div
+                                style={{
+                                    width: PLOT_SIDELENGTH,
+                                    height: PLOT_SIDELENGTH,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '20px',
+                                }}
+                            >
+                                ← Please select gene(s).
+                            </div>
+                        </div>
+                    );
+                }
                 return (
                     <LoadingIndicator
                         isLoading={true}
@@ -5707,6 +5689,19 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             case 'error':
                 return <span>Error loading plot data.</span>;
             default:
+                if (this.showNoGenericAssaySelectedWarning) {
+                    return (
+                        <div>
+                            <i className="fa fa-exclamation-triangle text-danger" />
+                            &nbsp;
+                            <span>
+                                To visualize selected generic assay data, you
+                                must ensure you have already imported related
+                                data and select an entity.
+                            </span>
+                        </div>
+                    );
+                }
                 if (!this.showPlot) {
                     return (
                         <div
@@ -5870,6 +5865,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                     )}
                                     legendTitle={this.legendTitle}
                                     onDataSelection={this.onDataSelection}
+                                    highlightedSamples={
+                                        this.props.highlightedSamples
+                                    }
+                                    customSamplePointComponent={
+                                        this.props.customSamplePointComponent
+                                    }
                                 />
                             );
                             break;
@@ -6016,6 +6017,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                     renderLinePlot={this.connectSamples}
                                     samplesForPatients={
                                         this.samplesForEachPatient
+                                    }
+                                    highlightedSamples={
+                                        this.props.highlightedSamples
+                                    }
+                                    customSamplePointComponent={
+                                        this.props.customSamplePointComponent
                                     }
                                 />
                             );
@@ -6192,7 +6199,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                                     }
                                                     inputProps={{
                                                         type: this
-                                                            .waterfallPlotIsShown
+                                                            .shouldShowWaterfallPlot
                                                             ? 'radio'
                                                             : 'checkbox',
                                                         style: { marginTop: 4 },
@@ -6217,7 +6224,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                                     }
                                                     inputProps={{
                                                         type: this
-                                                            .waterfallPlotIsShown
+                                                            .shouldShowWaterfallPlot
                                                             ? 'radio'
                                                             : 'checkbox',
                                                         style: { marginTop: 4 },
@@ -6242,7 +6249,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                                     }
                                                     inputProps={{
                                                         type: this
-                                                            .waterfallPlotIsShown
+                                                            .shouldShowWaterfallPlot
                                                             ? 'radio'
                                                             : 'checkbox',
                                                         style: { marginTop: 4 },
@@ -6254,7 +6261,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                                 </LabeledCheckbox>
                                             )}
                                         {this.coloringByGene &&
-                                        this.waterfallPlotIsShown && // Show a "None" radio button only on waterfall plots
+                                        this.shouldShowWaterfallPlot && // Show a "None" radio button only on waterfall plots
                                             (this.canColorByMutationData ||
                                                 this.canColorByCnaData) && (
                                                 <LabeledCheckbox
@@ -6503,6 +6510,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                         <strong className="quickPlotsTitle">Examples: </strong>
                         {this.quickPlotButtons}
                     </div>
+                    {this.props.additionalControls &&
+                        this.props.additionalControls()}
                     <div style={{ display: 'flex' }}>
                         <div className="leftColumn">
                             {this.dataTypeOptions.isComplete &&

@@ -1,13 +1,42 @@
 import * as React from 'react';
-import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
-import StudyViewURLWrapper from 'pages/studyView/StudyViewURLWrapper';
+import { PatientViewPageStore } from './clinicalInformation/PatientViewPageStore';
+import PatientViewUrlWrapper from './PatientViewUrlWrapper';
 import { observer } from 'mobx-react';
 import PlotsTab from 'shared/components/plots/PlotsTab';
+import CohortSelector from 'shared/components/plots/CohortSelector';
+import { SamplePointLabel } from 'shared/components/sampleLabel/SampleLabel';
 
-export const PlotsTabWrapper: React.FunctionComponent<{
-    store: StudyViewPageStore;
-    urlWrapper: StudyViewURLWrapper;
+export enum CohortOptions {
+    WholeStudy = 'WholeStudy',
+    CancerType = 'CancerType',
+    CancerTypeDetailed = 'CancerTypeDetailed',
+}
+
+export const PatientViewPlotsTabWrapper: React.FunctionComponent<{
+    store: PatientViewPageStore;
+    urlWrapper: PatientViewUrlWrapper;
 }> = observer(function({ store, urlWrapper }) {
+    const cohortSelector = () => (
+        <CohortSelector
+            includeNavCohortOption={store.patientIdsInCohort.length > 0}
+            samplesInCohort={store.samplesInCohort.result}
+            study={store.studies.result![0].name}
+            cancerTypes={store.highlightedCancerTypes.result}
+            cancerTypesDetailed={store.highlightedDetailedCancerTypes.result}
+            cohortSelection={store.cohortSelection}
+            handleCohortChange={store.handleCohortChange}
+        />
+    );
+
+    const customSamplePointComponent = (sampleId: string, mouseEvents: any) => (
+        <SamplePointLabel
+            label={(
+                store.sampleManager.result!.sampleIndex[sampleId] + 1
+            ).toString()}
+            events={mouseEvents}
+        />
+    );
+
     return (
         <PlotsTab
             filteredSamplesByDetailedCancerType={
@@ -81,6 +110,9 @@ export const PlotsTabWrapper: React.FunctionComponent<{
                 store.plotsTabStore.genePanelDataForAllProfiles.result
             }
             patients={store.plotsTabStore.patients}
+            highlightedSamples={store.sampleIds}
+            additionalControls={cohortSelector}
+            customSamplePointComponent={customSamplePointComponent}
         />
     );
 });

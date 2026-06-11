@@ -83,35 +83,30 @@ export function renderTooltipForBoxPlot(
     boxData: ClinicalViolinPlotBoxData,
     logScale: boolean
 ) {
-    const properties: Partial<
-        { [prop in keyof ClinicalViolinPlotBoxData]: string }
-    > = {
-        median: 'Median',
-        q1: 'Quartile 1',
-        q3: 'Quartile 3',
-    };
+    const properties: Array<[keyof ClinicalViolinPlotBoxData, string]> = [
+        ['median', 'Median'],
+        ['q1', 'Quartile 1'],
+        ['q3', 'Quartile 3'],
+    ];
     return (
         <>
             {joinJsx(
-                _.map(
-                    properties,
-                    (label: string, prop: keyof ClinicalViolinPlotBoxData) => {
-                        return (
-                            <>
-                                <b>{label}:</b>
-                                {` `}
-                                <span>
-                                    {toFixedWithoutTrailingZeros(
-                                        logScale
-                                            ? Math.exp(boxData[prop]) - 1
-                                            : boxData[prop],
-                                        2
-                                    )}
-                                </span>
-                            </>
-                        );
-                    }
-                ),
+                properties.map(([prop, label]) => {
+                    return (
+                        <>
+                            <b>{label}:</b>
+                            {` `}
+                            <span>
+                                {toFixedWithoutTrailingZeros(
+                                    logScale
+                                        ? Math.exp(boxData[prop]) - 1
+                                        : boxData[prop],
+                                    2
+                                )}
+                            </span>
+                        </>
+                    );
+                }),
                 <br />
             )}
         </>

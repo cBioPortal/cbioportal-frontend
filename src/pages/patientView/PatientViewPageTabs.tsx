@@ -39,6 +39,7 @@ import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
 import MutationTableWrapper from './mutation/MutationTableWrapper';
 import { PatientViewPageInner } from 'pages/patientView/PatientViewPage';
 import { Else, If } from 'react-if';
+import { PatientViewPlotsTabWrapper } from './PatientViewPlotsTabWrapper';
 
 export enum PatientViewPageTabs {
     Summary = 'summary',
@@ -52,6 +53,7 @@ export enum PatientViewPageTabs {
     MutationalSignatures = 'mutationalSignatures',
     PathwayMapper = 'pathways',
     MRNA = 'mrna',
+    Plots = 'plots',
 }
 
 export const PatientViewResourceTabPrefix = 'openResource_';
@@ -491,6 +493,23 @@ export function tabs(
             </MSKTab>
         );
 
+    // The mRNA and Plots tabs share the same gating: shown only for the MSKCC
+    // portal, or when the "patientMRNATab" feature flag is on
+    // (?featureFlags=patientMRNATab) — and only when the study actually has an
+    // mRNA expression profile, so studies without one don't get empty tabs. The
+    // enablement check is evaluated first so non-enabled portals don't trigger
+    // the profile lookup.
+    const mrnaProfilePromise =
+        pageComponent.patientViewPageStore.plotsStore
+            .mrnaExpressionMolecularProfile;
+    const showExpressionTabs =
+        (getServerConfig().app_name === 'mskcc-portal' ||
+            pageComponent.props.appStore.featureFlagStore.has(
+                FeatureFlagEnum.PATIENT_MRNA_TAB
+            )) &&
+        mrnaProfilePromise.isComplete &&
+        !!mrnaProfilePromise.result;
+
     tabs.push(
         <MSKTab
             key={8}
@@ -708,22 +727,9 @@ export function tabs(
             </MSKTab>
         );
 
-    // The mRNA tab is shown only for the MSKCC portal, or when the
-    // "patientMRNATab" feature flag is on (?featureFlags=patientMRNATab) — and
-    // only when the study actually has an mRNA expression profile, so studies
-    // without one don't get an empty tab. The enablement check is evaluated
-    // first so non-enabled portals don't trigger the profile lookup.
-    const mrnaProfilePromise =
-        pageComponent.patientViewPageStore.plotsStore
-            .mrnaExpressionMolecularProfile;
-    if (
-        (getServerConfig().app_name === 'mskcc-portal' ||
-            pageComponent.props.appStore.featureFlagStore.has(
-                FeatureFlagEnum.PATIENT_MRNA_TAB
-            )) &&
-        mrnaProfilePromise.isComplete &&
-        !!mrnaProfilePromise.result
-    ) {
+    // The mRNA and Plots tabs share the same gating (see showExpressionTabs
+    // above) and are kept adjacent in the tab bar.
+    if (showExpressionTabs) {
         tabs.push(
             <MSKTab
                 key={9}
@@ -739,6 +745,36 @@ export function tabs(
                     store={pageComponent.patientViewPageStore}
                     sampleManager={sampleManager}
                 />
+            </MSKTab>
+        );
+        tabs.push(
+            <MSKTab
+                key={10}
+                id={PatientViewPageTabs.Plots}
+                linkText={
+                    <span>
+                        Plots{' '}
+                        <strong className={'beta-text'}>Beta!</strong>
+                    </span>
+                }
+            >
+                {pageComponent.patientViewPageStore.samplesInCohort
+                    .isComplete &&
+                pageComponent.patientViewPageStore.highlightedCancerTypes
+                    .isComplete &&
+                pageComponent.patientViewPageStore.highlightedDetailedCancerTypes
+                    .isComplete ? (
+                    <PatientViewPlotsTabWrapper
+                        store={pageComponent.patientViewPageStore}
+                        urlWrapper={urlWrapper}
+                    />
+                ) : (
+                    <LoadingIndicator
+                        isLoading={true}
+                        size={'big'}
+                        center={true}
+                    />
+                )}
             </MSKTab>
         );
     }
