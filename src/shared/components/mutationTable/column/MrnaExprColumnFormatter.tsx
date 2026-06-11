@@ -4,6 +4,7 @@ import {
     TableCellStatusIndicator,
     TableCellStatus,
 } from 'cbioportal-frontend-commons';
+import { observer } from 'mobx-react';
 import 'rc-tooltip/assets/bootstrap_white.css';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import {
@@ -489,7 +490,8 @@ export default class MrnaExprColumnFormatter {
         histogramScaleReference: HistogramScaleReference = 'all-samples',
         onHistogramScaleReferenceChange?: (
             reference: HistogramScaleReference
-        ) => void
+        ) => void,
+        sourceCacheDatum?: ReturnType<GeneMolecularDataCache['get']>
     ) {
         if (
             cacheDatum &&
@@ -515,17 +517,19 @@ export default class MrnaExprColumnFormatter {
                 sampleId !== undefined &&
                 entrezGeneId !== undefined;
             if (hasRawExprSource) {
-                const sourceDatum = mrnaExprSourceCache.peek({
-                    entrezGeneId,
-                    molecularProfileId: mrnaExprSourceMolecularProfileId,
-                });
+                const sourceDatum =
+                    sourceCacheDatum ||
+                    mrnaExprSourceCache.peek({
+                        entrezGeneId,
+                        molecularProfileId: mrnaExprSourceMolecularProfileId,
+                    });
                 if (
                     sourceDatum &&
                     sourceDatum.status === 'complete' &&
                     sourceDatum.data
                 ) {
                     allData = sourceDatum.data;
-                    const currentSample = allData.find(
+                    const currentSample = allData!.find(
                         d => d.sampleId === sampleId
                     );
                     if (currentSample) {
@@ -542,14 +546,14 @@ export default class MrnaExprColumnFormatter {
                         ? studyCancerTypeDetailedMap?.[currentUniqueKey]
                         : undefined;
                     cancerTypeData = currentCancerType
-                        ? allData.filter(
+                        ? allData!.filter(
                               d =>
                                   studyCancerTypeMap?.[d.uniqueSampleKey] ===
                                   currentCancerType
                           )
                         : undefined;
                     cancerTypeDetailedData = currentCancerTypeDetailed
-                        ? allData.filter(
+                        ? allData!.filter(
                               d =>
                                   studyCancerTypeDetailedMap?.[
                                       d.uniqueSampleKey
@@ -931,44 +935,44 @@ export default class MrnaExprColumnFormatter {
         studyCancerTypeMap?: { [uniqueSampleKey: string]: string },
         studyCancerTypeDetailedMap?: { [uniqueSampleKey: string]: string }
     ) {
-        const maybeLoadExpressionSourceData = (visible: boolean) => {
-            if (
-                visible &&
+        const TooltipCell = observer(() => {
+            const [tooltipVisible, setTooltipVisible] = React.useState(false);
+            const [histogramScaleReference, setHistogramScaleReference] =
+                React.useState<HistogramScaleReference>('all-samples');
+            const sourceCacheDatum =
+                tooltipVisible &&
                 mrnaExprSourceCache &&
                 mrnaExprSourceMolecularProfileId &&
                 entrezGeneId !== undefined
-            ) {
-                mrnaExprSourceCache.get({
-                    entrezGeneId,
-                    molecularProfileId: mrnaExprSourceMolecularProfileId,
-                });
-            }
-        };
-        const TooltipOverlay = () => {
-            const [histogramScaleReference, setHistogramScaleReference] =
-                React.useState<HistogramScaleReference>('all-samples');
-            return MrnaExprColumnFormatter.getTooltipContents(
-                cacheDatum,
-                sampleId,
-                entrezGeneId,
-                mrnaExprSourceCache,
-                mrnaExprSourceMolecularProfileId,
-                studyCancerTypeMap,
-                studyCancerTypeDetailedMap,
-                histogramScaleReference,
-                setHistogramScaleReference
+                    ? mrnaExprSourceCache.get({
+                          entrezGeneId,
+                          molecularProfileId: mrnaExprSourceMolecularProfileId,
+                      })
+                    : undefined;
+
+            return (
+                <DefaultTooltip
+                    placement="left"
+                    overlay={MrnaExprColumnFormatter.getTooltipContents(
+                        cacheDatum,
+                        sampleId,
+                        entrezGeneId,
+                        mrnaExprSourceCache,
+                        mrnaExprSourceMolecularProfileId,
+                        studyCancerTypeMap,
+                        studyCancerTypeDetailedMap,
+                        histogramScaleReference,
+                        setHistogramScaleReference,
+                        sourceCacheDatum
+                    )}
+                    arrowContent={<div className="rc-tooltip-arrow-inner" />}
+                    onVisibleChange={setTooltipVisible}
+                >
+                    {MrnaExprColumnFormatter.getTdContents(cacheDatum)}
+                </DefaultTooltip>
             );
-        };
-        return (
-            <DefaultTooltip
-                placement="left"
-                overlay={<TooltipOverlay />}
-                arrowContent={<div className="rc-tooltip-arrow-inner" />}
-                onVisibleChange={maybeLoadExpressionSourceData}
-            >
-                {MrnaExprColumnFormatter.getTdContents(cacheDatum)}
-            </DefaultTooltip>
-        );
+        });
+        return <TooltipCell />;
     }
 
     public static renderFunction(
