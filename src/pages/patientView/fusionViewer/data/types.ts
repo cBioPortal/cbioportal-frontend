@@ -63,3 +63,28 @@ export interface FusionEvent {
 export const COLOR_5PRIME = '#5A73B3';
 export const COLOR_3PRIME = '#60187D';
 export const COLOR_BREAKPOINT = '#FF6B6B';
+
+/**
+ * A domain projected onto one side of a fusion product, with clipping
+ * applied when the breakpoint falls inside the domain's genomic footprint.
+ * Produced by selectRetained5PrimeDomains / selectRetained3PrimeDomains.
+ */
+export interface RetainedDomain {
+    domain: ProteinDomain;
+    side: '5p' | '3p';
+    /** Clipped lower bound in protein AA space (first retained residue). */
+    retainedStartAA: number;
+    /** Clipped upper bound in protein AA space (last retained residue). */
+    retainedEndAA: number;
+    /** True when the breakpoint genomic coordinate falls inside the domain. */
+    isTruncated: boolean;
+    /**
+     * Fraction of the full domain retained: (retainedEndAA - retainedStartAA + 1)
+     * / (domain.endAA - domain.startAA + 1). Clamped to [0, 1].
+     */
+    retainedFraction: number;
+    /** Start of the cut-away span in AA space (for the ghost stub). */
+    lostStartAA: number;
+    /** End of the cut-away span in AA space. */
+    lostEndAA: number;
+}

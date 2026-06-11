@@ -9,6 +9,9 @@ import {
     retainedExonsInOrder,
     genomicToExonX,
     fivePrimeContributesNoCoding,
+    breakpointToDomainAA,
+    ghostStubRect,
+    DOMAIN_TRUNCATION_THRESHOLD,
     PRODUCT_HEIGHT,
     EXON_GAP,
     JUNCTION_GAP,
@@ -257,7 +260,7 @@ describe('fusionProductHelpers', () => {
                 // Breakpoint mid-Furin → Furin has upstream portion, is retained
                 const result = select5PrimeDomains(domains, 55220000, '+');
                 assert.deepEqual(
-                    result.map(d => d.name),
+                    result.map(d => d.domain.name),
                     ['RecepL_1', 'Furin']
                 );
             });
@@ -266,7 +269,7 @@ describe('fusionProductHelpers', () => {
                 // EGFRvIII-like 3p breakpoint drops L1 and most of Furin
                 const result = select3PrimeDomains(domains, 55223152, '+');
                 assert.deepEqual(
-                    result.map(d => d.name),
+                    result.map(d => d.domain.name),
                     ['RecepL_2', 'Pkinase']
                 );
             });
@@ -274,7 +277,7 @@ describe('fusionProductHelpers', () => {
             it('3p includes partial-overlap domain (end downstream)', () => {
                 const result = select3PrimeDomains(domains, 55220000, '+');
                 assert.deepEqual(
-                    result.map(d => d.name),
+                    result.map(d => d.domain.name),
                     ['Furin', 'RecepL_2', 'Pkinase']
                 );
             });
@@ -294,7 +297,7 @@ describe('fusionProductHelpers', () => {
                 // Pkinase (overlaps) and MAM (upstream); drops KinaseC_term.
                 const result = select5PrimeDomains(minusDomains, 29446700, '-');
                 assert.deepEqual(
-                    result.map(d => d.name),
+                    result.map(d => d.domain.name),
                     ['Pkinase', 'MAM']
                 );
             });
@@ -304,7 +307,7 @@ describe('fusionProductHelpers', () => {
                 // tx direction = lower coords.
                 const result = select3PrimeDomains(minusDomains, 29446700, '-');
                 assert.deepEqual(
-                    result.map(d => d.name),
+                    result.map(d => d.domain.name),
                     ['KinaseC_terminal', 'Pkinase']
                 );
             });
@@ -312,13 +315,20 @@ describe('fusionProductHelpers', () => {
 
         it('5p/3p symmetry matches exon selector rule', () => {
             // Same rule as exon selector: 5p(+) ≡ 3p(-), 5p(-) ≡ 3p(+).
+            // Compare domain names since RetainedDomain differs by .side field.
             const f5p = select5PrimeDomains(domains, 55220000, '+');
             const f3m = select3PrimeDomains(domains, 55220000, '-');
-            assert.deepEqual(f5p, f3m);
+            assert.deepEqual(
+                f5p.map(d => d.domain.name),
+                f3m.map(d => d.domain.name)
+            );
 
             const f5m = select5PrimeDomains(domains, 55220000, '-');
             const f3p = select3PrimeDomains(domains, 55220000, '+');
-            assert.deepEqual(f5m, f3p);
+            assert.deepEqual(
+                f5m.map(d => d.domain.name),
+                f3p.map(d => d.domain.name)
+            );
         });
     });
 
@@ -597,6 +607,241 @@ describe('fusionProductHelpers', () => {
         it('returns false when no 5′UTR annotation is present', () => {
             const t = makeTranscript(makeExons([[1, 100, 400]]), '+');
             assert.isFalse(fivePrimeContributesNoCoding(t, 150));
+        });
+    });
+
+    // -------------------------------------------------------------------
+    // breakpointToDomainAA — genomic-to-AA interpolation within a domain
+    // -------------------------------------------------------------------
+    describe('breakpointToDomainAA', () => {
+        // Domain: genomic 1000-2000, AA 10-110 (100 AA span, 1000 bp span).
+        const domain = makeDomain('Test', 1000, 2000, 10, 110);
+
+        it('+ strand: breakpoint at domain start -> startAA', () => {
+            assert.closeTo(breakpointToDomainAA(domain, 1000, '+'), 10, 0.01);
+        });
+
+        it('+ strand: breakpoint at domain end -> endAA', () => {
+            assert.closeTo(breakpointToDomainAA(domain, 2000, '+'), 110, 0.01);
+        });
+
+        it('+ strand: breakpoint at midpoint -> mid-AA', () => {
+            // Mid genomic = 1500, expected AA = 10 + 0.5 * 100 = 60
+            assert.closeTo(breakpointToDomainAA(domain, 1500, '+'), 60, 0.01);
+        });
+
+        it('+ strand: breakpoint at 25% -> 25% AA', () => {
+            // 1250 genomic -> 10 + 0.25 * 100 = 35 AA
+            assert.closeTo(breakpointToDomainAA(domain, 1250, '+'), 35, 0.01);
+        });
+
+        it('- strand: breakpoint at domain start (low coord) -> endAA', () => {
+            // On minus strand, low genomic = 3' end of protein -> endAA
+            assert.closeTo(breakpointToDomainAA(domain, 1000, '-'), 110, 0.01);
+        });
+
+        it('- strand: breakpoint at domain end (high coord) -> startAA', () => {
+            assert.closeTo(breakpointToDomainAA(domain, 2000, '-'), 10, 0.01);
+        });
+
+        it('- strand: breakpoint at midpoint -> mid-AA (same as + strand midpoint)', () => {
+            // 1 - 0.5 frac on - strand = 0.5 -> same mid AA = 60
+            assert.closeTo(breakpointToDomainAA(domain, 1500, '-'), 60, 0.01);
+        });
+
+        it('degenerate: gSpan == 0 returns startAA', () => {
+            const pointDomain = makeDomain('Point', 500, 500, 42, 42);
+            assert.equal(breakpointToDomainAA(pointDomain, 500, '+'), 42);
+        });
+    });
+
+    // -------------------------------------------------------------------
+    // select5PrimeDomains / select3PrimeDomains — RetainedDomain output
+    // -------------------------------------------------------------------
+    describe('select5PrimeDomains / select3PrimeDomains — truncation output', () => {
+        // Domain: genomic 1000-3000 (2000 bp), AA 1-200.
+        // Breakpoint at 2000 (midpoint) -> half retained on 5p, half on 3p.
+        const domain = makeDomain('Kinase', 1000, 3000, 1, 200);
+
+        describe('fully retained domains', () => {
+            it('5p +strand: domain entirely before breakpoint is fully retained', () => {
+                // Domain ends at 3000, breakpoint at 3001 -> no straddle
+                const [rd] = select5PrimeDomains([domain], 3001, '+');
+                assert.isFalse(rd.isTruncated);
+                assert.equal(rd.retainedFraction, 1);
+                assert.equal(rd.retainedStartAA, 1);
+                assert.equal(rd.retainedEndAA, 200);
+            });
+
+            it('3p +strand: domain entirely after breakpoint is fully retained', () => {
+                // Domain starts at 1000, breakpoint at 999 -> no straddle
+                const [rd] = select3PrimeDomains([domain], 999, '+');
+                assert.isFalse(rd.isTruncated);
+                assert.equal(rd.retainedFraction, 1);
+            });
+        });
+
+        describe('straddling domain — + strand', () => {
+            it('5p side: retains the left half, loses right half', () => {
+                // Breakpoint at midpoint (2000): retains AA 1..100, loses 100..200
+                const [rd] = select5PrimeDomains([domain], 2000, '+');
+                assert.isTrue(rd.isTruncated);
+                assert.equal(rd.retainedStartAA, 1);
+                assert.closeTo(rd.retainedEndAA, 100, 0.5);
+                assert.closeTo(rd.retainedFraction, 0.5, 0.01);
+                assert.equal(rd.lostStartAA, rd.retainedEndAA);
+                assert.equal(rd.lostEndAA, 200);
+            });
+
+            it('3p side: retains the right half, loses left half', () => {
+                // Breakpoint at midpoint (2000): retains AA 100..200
+                const [rd] = select3PrimeDomains([domain], 2000, '+');
+                assert.isTrue(rd.isTruncated);
+                assert.closeTo(rd.retainedStartAA, 100, 0.5);
+                assert.equal(rd.retainedEndAA, 200);
+                assert.closeTo(rd.retainedFraction, 0.5, 0.01);
+            });
+
+            it('5p side: exact AA values for 25% breakpoint', () => {
+                // Breakpoint at 1500 (25% into domain): retains 25% of AA
+                // AA retained end = 1 + 0.25 * 199 = ~50.75
+                const [rd] = select5PrimeDomains([domain], 1500, '+');
+                assert.isTrue(rd.isTruncated);
+                assert.closeTo(rd.retainedFraction, 0.25, 0.01);
+            });
+        });
+
+        describe('straddling domain — - strand', () => {
+            it('5p - strand retains same fraction as + strand for mirror breakpoint', () => {
+                // On - strand, 5p retains high-coord side.
+                // Domain 1000-3000, breakpoint at 2000 (mid).
+                // frac = 1 - 0.5 = 0.5 -> bpAA = 1 + 0.5*199 = 100.5
+                // 5p retains [bpAA=~100, endAA=200] -> ~100/200 = 0.5
+                const [rd] = select5PrimeDomains([domain], 2000, '-');
+                assert.isTrue(rd.isTruncated);
+                assert.closeTo(rd.retainedFraction, 0.5, 0.02);
+            });
+
+            it('3p - strand retains same fraction as + strand for mirror breakpoint', () => {
+                const [rd] = select3PrimeDomains([domain], 2000, '-');
+                assert.isTrue(rd.isTruncated);
+                assert.closeTo(rd.retainedFraction, 0.5, 0.02);
+            });
+        });
+
+        describe('DOMAIN_TRUNCATION_THRESHOLD', () => {
+            it('domain retaining >= 90% is not truncated (isTruncated=false)', () => {
+                // Breakpoint at 2820 = 91% into domain (genomic fraction)
+                // retained fraction ~ 0.91 >= threshold
+                const bp = 1000 + Math.round(0.91 * 2000); // 2820
+                const [rd] = select5PrimeDomains([domain], bp, '+');
+                assert.isFalse(rd.isTruncated);
+                assert.isAtLeast(
+                    rd.retainedFraction,
+                    DOMAIN_TRUNCATION_THRESHOLD
+                );
+            });
+
+            it('domain retaining < 90% is truncated (isTruncated=true)', () => {
+                // Breakpoint at 2600 = 80% into domain
+                const bp = 1000 + Math.round(0.8 * 2000); // 2600
+                const [rd] = select5PrimeDomains([domain], bp, '+');
+                assert.isTrue(rd.isTruncated);
+                assert.isBelow(
+                    rd.retainedFraction,
+                    DOMAIN_TRUNCATION_THRESHOLD
+                );
+            });
+        });
+
+        describe('domains fully outside retained set are excluded', () => {
+            it('5p: domain starting after breakpoint is excluded', () => {
+                // On + strand 5p filter: startGenomic <= breakpoint
+                // domain starts at 1000, breakpoint at 999 -> excluded
+                const result = select5PrimeDomains([domain], 999, '+');
+                assert.equal(result.length, 0);
+            });
+
+            it('3p: domain ending before breakpoint is excluded', () => {
+                // On + strand 3p filter: endGenomic >= breakpoint
+                // domain ends at 3000, breakpoint at 3001 -> excluded
+                const result = select3PrimeDomains([domain], 3001, '+');
+                assert.equal(result.length, 0);
+            });
+        });
+
+        describe('breakpoint exactly on domain boundary', () => {
+            it('5p: breakpoint == endGenomic -> not straddling, full domain retained', () => {
+                const [rd] = select5PrimeDomains([domain], 3000, '+');
+                // startGenomic(1000) <= 3000 AND NOT (3000 < endGenomic(3000))
+                assert.isFalse(rd.isTruncated);
+                assert.equal(rd.retainedFraction, 1);
+            });
+
+            it('3p: breakpoint == startGenomic -> not straddling, full domain retained', () => {
+                const [rd] = select3PrimeDomains([domain], 1000, '+');
+                // endGenomic(3000) >= 1000 AND NOT (1000 < endGenomic... wait, straddle check:
+                // straddlesFwd = startGenomic(1000) < bp(1000) = false -> not straddling
+                assert.isFalse(rd.isTruncated);
+                assert.equal(rd.retainedFraction, 1);
+            });
+        });
+    });
+
+    describe('ghostStubRect', () => {
+        // Domain footprint spans x ∈ [100, 200]; the far edge (200 for 5′,
+        // 100 for 3′) sits at the fusion junction.
+        it('5′ ghost fits between the solid and the junction in the normal case', () => {
+            // 60% retained: solid 100..160, ghost should fill 160..200.
+            const { ghostX, ghostWidth } = ghostStubRect(
+                '5p',
+                100,
+                60,
+                40,
+                100,
+                200
+            );
+            assert.equal(ghostX, 160);
+            assert.equal(ghostWidth, 40);
+            assert.isAtMost(ghostX + ghostWidth, 200); // never past the junction
+        });
+
+        it('5′ ghost is capped at the junction when the MIN_DOMAIN_W floor inflates the solid (low retention)', () => {
+            // Very low retention: solid floored to 4px at x=100, lost wants the
+            // full ~100px footprint. Uncapped, ghost would reach 204 (past 200).
+            const { ghostX, ghostWidth } = ghostStubRect(
+                '5p',
+                100,
+                4,
+                100,
+                100,
+                200
+            );
+            assert.equal(ghostX, 104);
+            assert.equal(ghostWidth, 96); // capped to domainRight - ghostX
+            assert.isAtMost(ghostX + ghostWidth, 200);
+        });
+
+        it('3′ ghost fills left to the solid edge, never crossing the domain left edge', () => {
+            // Solid retained on the right at x=160 (width 40 → 160..200); ghost
+            // fills 100..160. Oversized lostSvgWidth must clamp to 60.
+            const { ghostX, ghostWidth } = ghostStubRect(
+                '3p',
+                160,
+                40,
+                999,
+                100,
+                200
+            );
+            assert.equal(ghostX, 100);
+            assert.equal(ghostWidth, 60);
+            assert.isAtLeast(ghostX, 100); // never past the domain left edge
+        });
+
+        it('caps the ghost to 0 (suppressible) when no room remains', () => {
+            // Solid floor already reaches the junction → no space for a ghost.
+            const { ghostWidth } = ghostStubRect('5p', 100, 100, 50, 100, 200);
+            assert.equal(ghostWidth, 0);
         });
     });
 });
