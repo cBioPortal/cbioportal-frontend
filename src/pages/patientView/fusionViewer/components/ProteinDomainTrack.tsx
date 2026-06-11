@@ -14,7 +14,6 @@ import {
     retainedExonsInOrder,
     computeFusionExonLayout,
     genomicToExonX,
-    ghostStubRect,
 } from './fusionProductHelpers';
 import {
     generatePfamDomainColorMap,
@@ -138,7 +137,10 @@ export const ProteinDomainTrack: React.FC<ProteinDomainTrackProps> = ({
     const drawX = x + drawPadding;
     const drawWidth = width - drawPadding * 2;
     const trackY = y + PADDING_TOP + LABEL_HEIGHT;
-    const MIN_DOMAIN_W = 4;
+    // Minimum drawn width so a domain rect stays visible. Kept small so a
+    // heavily-truncated domain (e.g. ~1 AA retained) reads as a thin sliver
+    // rather than overstating its size next to large intact domains.
+    const MIN_DOMAIN_W = 1.5;
 
     // ---- Build slot list (identity-based keys -> same pfam domain
     // keeps its key across transcripts so tween targets the same rect
@@ -198,50 +200,16 @@ export const ProteinDomainTrack: React.FC<ProteinDomainTrackProps> = ({
                 // Solid portion: map retained AA interval back to SVG x via
                 // the proportion of the full domain span. For truncated domains
                 // we split the total SVG width by the retained/lost AA fractions.
-                let solidX: number;
-                let solidWidth: number;
-                let ghostX: number;
-                let ghostWidth: number;
-
-                if (rd.isTruncated) {
-                    const fullLen = domain.endAA - domain.startAA + 1;
-                    const retainedLen =
-                        rd.retainedEndAA - rd.retainedStartAA + 1;
-                    const lostLen = rd.lostEndAA - rd.lostStartAA;
-                    const totalSvgWidth = Math.abs(xB - xA);
-                    const solidSvgWidth = Math.max(
-                        MIN_DOMAIN_W,
-                        (retainedLen / fullLen) * totalSvgWidth
-                    );
-                    const lostSvgWidth = Math.max(
-                        0,
-                        (lostLen / fullLen) * totalSvgWidth
-                    );
-
-                    const domainLeft = Math.min(xA, xB);
-                    const domainRight = Math.max(xA, xB);
-                    // Retained solid sits on the partner's "kept" side; the ghost
-                    // stub is capped to the domain footprint so it can't overrun
-                    // the junction at very low retention (see ghostStubRect).
-                    solidX =
-                        side === '5p'
-                            ? domainLeft
-                            : domainRight - solidSvgWidth;
-                    solidWidth = solidSvgWidth;
-                    ({ ghostX, ghostWidth } = ghostStubRect(
-                        side,
-                        solidX,
-                        solidWidth,
-                        lostSvgWidth,
-                        domainLeft,
-                        domainRight
-                    ));
-                } else {
-                    solidX = Math.min(xA, xB);
-                    solidWidth = Math.max(MIN_DOMAIN_W, Math.abs(xB - xA));
-                    ghostX = solidX;
-                    ghostWidth = 0;
-                }
+                // A truncated domain is drawn up to the fusion junction and cut
+                // off there. Its lost AA lie beyond the breakpoint, whose genomic
+                // coords clamp to the junction edge, so [xA, xB] already spans
+                // ONLY the retained region — no ghost stub is needed (and adding
+                // one double-counts the lost AA). Truncation is conveyed by the
+                // badge and tooltip instead.
+                const solidX = Math.min(xA, xB);
+                const solidWidth = Math.max(MIN_DOMAIN_W, Math.abs(xB - xA));
+                const ghostX = solidX;
+                const ghostWidth = 0;
 
                 const domainName = domain.name || domain.pfamId || '';
                 const maxChars = Math.floor(solidWidth / 6);
