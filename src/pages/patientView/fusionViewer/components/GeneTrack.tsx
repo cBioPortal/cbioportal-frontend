@@ -8,17 +8,29 @@ import { ExonTooltip, BreakpointTooltip } from './ExonTooltip';
 // Public helpers
 // ---------------------------------------------------------------------------
 
+/**
+ * Map a genomic coordinate to an SVG x position.
+ *
+ * Genes are always drawn 5′→3′ left-to-right. For a minus-strand gene
+ * (`strand === '-'`) transcription runs from high genomic coordinate (5′) to
+ * low (3′), so we MIRROR the axis within [genomeMin, genomeMax]: the highest
+ * coordinate lands on the left, the lowest on the right. Strandedness is then
+ * conveyed by annotation (strand label, TRANSCRIBED pill, and the
+ * "coordinates run right→left" note), not by the physical orientation of the
+ * gene body. Plus-strand genes (the default) are unchanged.
+ */
 export function genomicToSvgX(
     genomicPos: number,
     genomeMin: number,
     genomeMax: number,
     svgX: number,
-    svgWidth: number
+    svgWidth: number,
+    strand: '+' | '-' = '+'
 ): number {
     if (genomeMax === genomeMin) return svgX + svgWidth / 2;
-    return (
-        svgX + ((genomicPos - genomeMin) / (genomeMax - genomeMin)) * svgWidth
-    );
+    const frac = (genomicPos - genomeMin) / (genomeMax - genomeMin);
+    const t = strand === '-' ? 1 - frac : frac;
+    return svgX + t * svgWidth;
 }
 
 /**
@@ -78,21 +90,20 @@ export function applyUpstreamExtension(
 /**
  * Compute the x position and width of the retained-exon shade rect.
  *
- * The retained side depends on both strand and whether this is the 5′ or 3′ gene:
- *   5′ gene + strand → shade LEFT  (start <= bp)
- *   5′ gene − strand → shade RIGHT (end   >= bp)
- *   3′ gene + strand → shade RIGHT (end   >= bp)
- *   3′ gene − strand → shade LEFT  (start <= bp)
+ * Genes are mirrored so they always read 5′→3′ left-to-right, so the retained
+ * (kept-in-fusion) side depends ONLY on which partner this is — strand no
+ * longer matters:
+ *   5′ partner → shade LEFT  (5′ end … breakpoint)
+ *   3′ partner → shade RIGHT (breakpoint … 3′ end)
  */
 export function computeRetainedShadeX(
-    strand: '+' | '-',
     is5Prime: boolean,
     bpX: number,
     drawX: number,
     drawWidth: number
 ): { x: number; width: number } {
     const trackEnd = drawX + drawWidth;
-    const shadeLeft = is5Prime ? strand === '+' : strand === '-';
+    const shadeLeft = is5Prime;
     if (shadeLeft) {
         return {
             x: drawX,
@@ -306,8 +317,10 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
     const drawX = x + TRACK_PADDING;
     const drawWidth = width - TRACK_PADDING * 2;
 
+    // Mirror minus-strand genes so transcription always reads left→right.
     const toSvg = (gPos: number) =>
-        genomicToSvgX(gPos, gMin, gMax, drawX, drawWidth);
+        genomicToSvgX(gPos, gMin, gMax, drawX, drawWidth, strand);
+    const mirror = strand === '-';
 
     const sortedForte = [...forteTranscript.exons].sort(
         (a, b) => a.start - b.start
@@ -317,18 +330,50 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
     const labelY = y;
     const forteY = y + LABEL_HEIGHT;
 
-    const pointsRight = strand === '+';
+    // After mirroring, every gene is drawn 5\u2032\u21923\u2032 left-to-right, so all
+    // direction cues (TSS barb, chevrons, TRANSCRIBED pill, 5\u2032/3\u2032 caps) point
+    // right / put 5\u2032 on the left regardless of strand.
+    const pointsRight = true;
     const strandLabel = ` (${strand})`;
-    const pillText = pointsRight ? 'TRANSCRIBED \u25B6' : '\u25C0 TRANSCRIBED';
+    const pillText = 'TRANSCRIBED \u25B6';
     const bpX = toSvg(position);
 
     // ---- Outermost exon X-coords across all rendered transcripts ----
     // Used for the 5\u2032/3\u2032 end caps so they remain anchored to the overall
-    // gene extent rather than re-anchoring per active transcript.
-    const allRenderedExonStarts = allExons.map(e => toSvg(e.start));
-    const allRenderedExonEnds = allExons.map(e => toSvg(e.end));
-    const outerLeft = Math.min(...allRenderedExonStarts);
-    const outerRight = Math.max(...allRenderedExonEnds);
+    // gene extent rather than re-anchoring per active transcript. A single
+    // exon's start/end can map to either screen side (start is on the right for
+    // mirrored genes), so consider both endpoints of every exon.
+    const allRenderedExonX = allExons.flatMap(e => [
+        toSvg(e.start),
+        toSvg(e.end),
+    ]);
+    const outerLeft = Math.min(...allRenderedExonX);
+    const outerRight = Math.max(...allRenderedExonX);
+
+    // When the upstream promoter block is shown (5′ gene), it sits just left of
+    // the leftmost exon — exactly where the left ("5′") end cap is anchored.
+    // Anchor that cap to the left of the leftmost promoter block instead so the
+    // "P" box and the "5′" label don't overlap. Strand-agnostic: toSvg already
+    // mirrors, so this is computed in screen space.
+    let cap5pLeftX = outerLeft;
+    if (is5Prime && showPromoter) {
+        const txWithExons = [forteTranscript, ...userTranscripts].filter(
+            t => t.exons.length > 0
+        );
+        const promoterLefts = txWithExons.map(t => {
+            const sorted = [...t.exons].sort((a, b) => a.start - b.start);
+            const tss =
+                strand === '+'
+                    ? sorted[0].start
+                    : sorted[sorted.length - 1].end;
+            const gA = strand === '+' ? tss - upstreamWindow : tss;
+            const gB = strand === '+' ? tss : tss + upstreamWindow;
+            return Math.min(toSvg(gA), toSvg(gB));
+        });
+        if (promoterLefts.length > 0) {
+            cap5pLeftX = Math.min(outerLeft, ...promoterLefts);
+        }
+    }
 
     // ---- Active transcript row geometry (for GSAP-animated chrome) ----
     const rowList: { transcript: TranscriptData; yPos: number }[] = [
@@ -434,8 +479,10 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
             // boundary by definition; promoter/regulatory DNA is upstream.
             const exonTop = yPos;
             const barbY = yPos - 4;
-            const barbDX = strand === '+' ? 9 : -9;
-            const notchDX = strand === '+' ? 5 : -5;
+            // Mirrored gene reads left→right, so the barb always points right
+            // (into the gene body, in the transcription direction).
+            const barbDX = 9;
+            const notchDX = 5;
             const arrowPoints =
                 `${tssX},${exonTop} ${tssX},${barbY} ` +
                 `${tssX + barbDX},${barbY} ${tssX + notchDX},${barbY - 2} ` +
@@ -530,14 +577,17 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
         const mid = intronY;
         const chevronStart = drawX + 15;
         const chevronEnd = drawX + drawWidth - 15;
-        const exonRanges = exons.map(e => ({
-            lo: toSvg(e.start) - 2,
-            hi: toSvg(e.end) + 2,
-        }));
+        const exonRanges = exons.map(e => {
+            const a = toSvg(e.start);
+            const b = toSvg(e.end);
+            return { lo: Math.min(a, b) - 2, hi: Math.max(a, b) + 2 };
+        });
         // Chevrons in the non-retained portion of the gene render gray to match
         // the gray non-retained exons — those nucleotides aren't transcribed in
         // the fusion product, so the direction cue shouldn't claim they are.
-        const shadeLeft = is5Prime ? strand === '+' : strand === '-';
+        // After mirroring the retained side is left for the 5′ partner, right
+        // for the 3′ partner — strand-independent.
+        const shadeLeft = is5Prime;
         for (let cx = chevronStart; cx <= chevronEnd; cx += CHEVRON_SPACING) {
             const tickMid = cx + CHEVRON_WIDTH / 2;
             const insideExon = exonRanges.some(
@@ -581,9 +631,13 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
         // transcription order, so we invert the index for numbering.
         const totalExons = exons.length;
         exons.forEach((exon, idx) => {
-            const ex = toSvg(exon.start);
+            // start maps right of end on mirrored (minus-strand) genes, so take
+            // the left edge / width orientation-agnostically.
+            const exStart = toSvg(exon.start);
+            const exEnd = toSvg(exon.end);
+            const ex = Math.min(exStart, exEnd);
             // Full exon width — used for the exon-number label center.
-            const ewFull = Math.max(5, toSvg(exon.end) - ex);
+            const ewFull = Math.max(5, Math.abs(exEnd - exStart));
             const displayNumber = strand === '-' ? totalExons - idx : idx + 1;
             // Use genomic position to determine retention — exon.number is not
             // consistent across alternative transcripts, so we match the same
@@ -613,8 +667,10 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
                 >
                     <g>
                         {segments.map((seg, si) => {
-                            const sx = toSvg(seg.start);
-                            const sw = Math.max(5, toSvg(seg.end) - sx);
+                            const segStart = toSvg(seg.start);
+                            const segEnd = toSvg(seg.end);
+                            const sx = Math.min(segStart, segEnd);
+                            const sw = Math.max(5, Math.abs(segEnd - segStart));
                             const sh = seg.isUtr
                                 ? EXON_HEIGHT / 2
                                 : EXON_HEIGHT;
@@ -725,7 +781,6 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
 
     // ---- Shade rect bounds (strand-aware) ----
     const { x: shadeX, width: shadeW } = computeRetainedShadeX(
-        strand,
         is5Prime,
         bpX,
         drawX,
@@ -753,6 +808,24 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
                     {strandLabel}
                 </tspan>
             </text>
+
+            {/* Coordinate-direction note — mirrored (minus-strand) genes only.
+                Because we mirror minus-strand genes to read 5′→3′ left-to-right,
+                their genomic coordinates now DECREASE left-to-right. State that
+                explicitly so the breakpoint coordinate below isn't misread as a
+                left-to-right axis. Right-aligned so it clears the symbol+pill. */}
+            {mirror && (
+                <text
+                    x={drawX + drawWidth}
+                    y={labelY + LABEL_FONT_SIZE}
+                    textAnchor="end"
+                    fontSize={9}
+                    fontStyle="italic"
+                    fill="#999"
+                >
+                    chr{chromosome} position increases ◄
+                </text>
+            )}
 
             {/* "TRANSCRIBED" pill — direction cue D part 2.
                 Sits in the existing LABEL_HEIGHT band, no layout growth.
@@ -966,7 +1039,7 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
                 transcripts so they don't reflow when the active transcript
                 changes. Vertically centered on the FORTE row's intron line. */}
             <text
-                x={outerLeft - 4}
+                x={cap5pLeftX - 4}
                 y={forteY + INTRON_Y_OFFSET + 3}
                 textAnchor="end"
                 fontSize={10}

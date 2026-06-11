@@ -86,6 +86,49 @@ export const BreakpointTooltip: React.FC<BreakpointTooltipProps> = ({
 };
 
 // ---------------------------------------------------------------------------
+// PromoterSwapTooltip — explains why the promoter-swap badge fired
+// ---------------------------------------------------------------------------
+export interface PromoterSwapTooltipProps {
+    gene5p: string;
+    gene3p: string;
+    chromosome: string;
+    position: number;
+    children: React.ReactElement;
+}
+
+export const PromoterSwapTooltip: React.FC<PromoterSwapTooltipProps> = ({
+    gene5p,
+    gene3p,
+    chromosome,
+    position,
+    children,
+}) => {
+    const overlay = (
+        <div style={{ padding: 4, maxWidth: 300 }}>
+            <strong>Promoter swap</strong>
+            <br />
+            <span style={{ fontSize: 11, color: '#666' }}>
+                {gene5p}&apos;s promoter / 5&prime;UTR is retained but
+                contributes no coding sequence — the 5&prime; breakpoint (chr
+                {chromosome}:{position.toLocaleString()}) lies within the
+                5&prime;UTR (at/upstream of the CDS start).
+            </span>
+            <br />
+            <span style={{ fontSize: 11, color: '#666' }}>
+                So {gene3p}&apos;s ORF is expressed from {gene5p}&apos;s
+                promoter rather than its own.
+            </span>
+        </div>
+    );
+
+    return (
+        <DefaultTooltip placement="top" overlay={overlay}>
+            {children}
+        </DefaultTooltip>
+    );
+};
+
+// ---------------------------------------------------------------------------
 // DomainTooltip
 // ---------------------------------------------------------------------------
 export interface DomainTooltipProps {
