@@ -708,6 +708,33 @@ export class StudyViewPageStore
 
         this.reactionDisposers.push(
             reaction(
+                () => [
+                    this.genericAssayProfiles.isComplete,
+                    this.genericAssayProfiles.result.length,
+                    this.genericAssayProfileOptionsByType.isComplete,
+                    _.keys(this.genericAssayProfileOptionsByType.result || {}).sort(),
+                ],
+                ([
+                    genericAssayProfilesReady,
+                    genericAssayProfileCount,
+                    genericAssayProfileOptionsReady,
+                ]) => {
+                    if (
+                        genericAssayProfilesReady &&
+                        genericAssayProfileCount > 0 &&
+                        genericAssayProfileOptionsReady
+                    ) {
+                        this.registerGenericAssayFrequencyTableCharts();
+                    }
+                },
+                {
+                    equals: comparer.structural,
+                }
+            )
+        );
+
+        this.reactionDisposers.push(
+            reaction(
                 () => [this.filtersProxy, this.hesitateUpdate],
                 () => {
                     if (!this.hesitateUpdate || this.filters === undefined) {
@@ -7807,6 +7834,7 @@ export class StudyViewPageStore
             this.defaultVisibleAttributes.isPending ||
             this.chartClinicalAttributes.isPending ||
             this.clinicalAttributes.isPending ||
+            this.genericAssayProfiles.isPending ||
             this.mutationProfiles.isPending ||
             this.cnaProfiles.isPending ||
             this.structuralVariantProfiles.isPending ||
@@ -7839,8 +7867,8 @@ export class StudyViewPageStore
             pending = pending || this.molecularProfileOptions.isPending;
         }
         if (
-            !_.isEmpty(this.initialFilters.genericAssayDataFilters) ||
-            !_.isEmpty(this.initialFilters.genericAssaySelectionFilters)
+            !this.genericAssayProfiles.isPending &&
+            !_.isEmpty(this.genericAssayProfiles.result)
         ) {
             pending =
                 pending || this.genericAssayProfileOptionsByType.isPending;
