@@ -53,6 +53,8 @@ export default class WSIViewer extends React.Component<Props, {}> {
     private viewerContainerRef = React.createRef<HTMLDivElement>();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private osdViewer: any = null;
+    /** In-memory cache of prefetched slide metadata keyed by image_id */
+    private metaCache = new Map<string, TileMetadata>();
 
     constructor(props: Props) {
         super(props);
@@ -85,6 +87,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
         this.selectedSample = null;
         this.selectedMeta = null;
         this.viewerReady = false;
+        this.metaCache.clear();
 
         try {
             const resp = await fetch(this.props.url);
@@ -106,6 +109,10 @@ export default class WSIViewer extends React.Component<Props, {}> {
             if (first) {
                 await this.selectSlide(first.slide, first.sample);
             }
+
+            // Prefetch metadata for remaining slides in the background so
+            // subsequent slide selections don't pay the S3 cold-open cost (~4s).
+            void this.prefetchSlideMetadata(first?.slide.image_id);
         } catch (e: unknown) {
             const msg = e instanceof Error ? e.message : String(e);
             action(() => {
@@ -115,8 +122,32 @@ export default class WSIViewer extends React.Component<Props, {}> {
         }
     }
 
-    @computed get servableSlides(): Array<{ slide: Slide; sample: Sample }> {
-        if (!this.hierarchy) return [];
+    /**
+     * Background prefetch: fetch metadata for all servable slides except the
+     * currently selected one (which is already loaded). Throttled to
+     * CONCURRENCY=4 parallel requests so we don't overwhelm the tile server.
+     * Results are stored in metaCache so mountOSD skips the fetch on click.
+     */
+    private async prefetchSlideMetadata(skipImageId?: string) {
+        const CONCURRENCY = 4;
+        const slides = this.servableSlides
+            .map(s => s.slide)
+            .filter(sl => sl.image_id !== skipImageId && !this.metaCache.has(sl.image_id));
+
+        for (let i = 0; i < slides.length; i += CONCURRENCY) {
+            // Stop if component unmounted or patient changed
+            if (!this.hierarchy) return;
+            const batch = slides.slice(i, i + CONCURRENCY);
+            await Promise.allSettled(batch.map(sl =>
+                fetch(`${this.tileServerBase}/tiles/${sl.image_id}/metadata`)
+                    .then(r => r.ok ? r.json() : Promise.reject(r.status))
+                    .then((meta: TileMetadata) => { this.metaCache.set(sl.image_id, meta); })
+                    .catch(() => { /* ignore — slide simply stays cold */ })
+            ));
+        }
+    }
+
+    @computed get servableSlides(): Array<{ slide: Slide; sample: Sample }> {        if (!this.hierarchy) return [];
         const result: Array<{ slide: Slide; sample: Sample }> = [];
         for (const sample of this.hierarchy.samples) {
             for (const part of sample.parts) {
@@ -159,10 +190,15 @@ export default class WSIViewer extends React.Component<Props, {}> {
     }
 
     private async mountOSD(slide: Slide) {
-        const metaUrl = `${this.tileServerBase}/tiles/${slide.image_id}/metadata`;
-        const meta: TileMetadata = await fetch(metaUrl).then(r => r.json());
+        // Use prefetched metadata if available, otherwise fetch now
+        let meta = this.metaCache.get(slide.image_id);
+        if (!meta) {
+            const metaUrl = `${this.tileServerBase}/tiles/${slide.image_id}/metadata`;
+            meta = await fetch(metaUrl).then(r => r.json()) as TileMetadata;
+            this.metaCache.set(slide.image_id, meta);
+        }
 
-        action(() => { this.selectedMeta = meta; })();
+        action(() => { this.selectedMeta = meta!; })();
 
         // Two animation frames: first lets MobX/React commit loading=false,
         // second confirms layout dimensions are set on the container.
