@@ -95,6 +95,38 @@ describe('MrnaExprColumnFormatter', () => {
         assert.notInclude(wrapper.text(), 'mRNA z-score');
     });
 
+    it('uses provided source cache datum when available', () => {
+        const allData = [
+            { sampleId: 'S1', uniqueSampleKey: 'UK1', value: 1 },
+            { sampleId: 'S2', uniqueSampleKey: 'UK2', value: 2 },
+        ];
+        const tooltip = (MrnaExprColumnFormatter as any).getTooltipContents(
+            {
+                status: 'complete',
+                data: {
+                    zScore: -0.8672,
+                    percentile: 30.5,
+                },
+            },
+            'S1',
+            1017,
+            { peek: sinon.stub().returns(null) } as any,
+            'study_mrna',
+            undefined,
+            undefined,
+            'all-samples',
+            undefined,
+            {
+                status: 'complete',
+                data: allData,
+            }
+        );
+
+        const wrapper = shallow(<div>{tooltip}</div>);
+        assert.include(wrapper.text(), 'All samples:');
+        assert.notInclude(wrapper.text(), 'Loading expression distribution...');
+    });
+
     it('renders 3 distribution sections when cancer type maps are provided', () => {
         const allData = [
             { sampleId: 'S1', uniqueSampleKey: 'UK1', value: 1 },
