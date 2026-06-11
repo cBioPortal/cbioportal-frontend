@@ -2111,7 +2111,7 @@ export default class CBioPortalAPI {
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/api/generic_assay_meta/fetch';
+        let path = '/api/generic-assay-meta/fetch';
         if (parameters['projection'] !== undefined) {
             queryParameters['projection'] = parameters['projection'];
         }
@@ -2142,7 +2142,7 @@ export default class CBioPortalAPI {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
         const request = this.request;
-        let path = '/api/generic_assay_meta/fetch';
+        let path = '/api/generic-assay-meta/fetch';
         let body: any;
         let queryParameters: any = {};
         let headers: any = {};
