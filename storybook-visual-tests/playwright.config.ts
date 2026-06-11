@@ -28,15 +28,13 @@ const SNAPSHOT_DIR = inDocker ? '__snapshots__' : '__local_snapshots__';
 //   'none'          → never update; any missing baseline is a hard failure
 //   'missing'       → write missing baselines, leave existing ones unchanged
 //   'all'           → overwrite every baseline (use when intentionally restyling)
-const updateSnapshots = process.env.PW_UPDATE_SNAPSHOTS as
-    | 'all'
-    | 'changed'
-    | 'missing'
-    | 'none'
-    | undefined;
 
 export default defineConfig({
-    updateSnapshots,
+    // Only set updateSnapshots when the env var is explicitly provided —
+    // passing undefined causes a Playwright validation error.
+    ...(process.env.PW_UPDATE_SNAPSHOTS
+        ? { updateSnapshots: process.env.PW_UPDATE_SNAPSHOTS as 'all' | 'changed' | 'missing' | 'none' }
+        : {}),
     testDir: './tests',
     fullyParallel: true,
     retries: 0,
