@@ -269,24 +269,10 @@ function renderJunctionGlyph(
         );
     }
 
-    // Unknown / default: neutral diamond.
-    const r = GLYPH_R;
-    const neutralColor = '#FF6B6B';
-    const pts = [
-        `${junctionX},${junctionY - r}`,
-        `${junctionX + r},${junctionY}`,
-        `${junctionX},${junctionY + r}`,
-        `${junctionX - r},${junctionY}`,
-    ].join(' ');
-    return (
-        <polygon points={pts} fill={neutralColor}>
-            <title>
-                {frame
-                    ? `Effect on frame: ${frame.label}`
-                    : 'Frame status unknown'}
-            </title>
-        </polygon>
-    );
+    // Unknown / absent frame: render no junction glyph. The breakpoint is
+    // already conveyed by the exon gap and the breakpoint annotation, so a
+    // neutral diamond here only adds noise.
+    return <g />;
 }
 
 // ---------------------------------------------------------------------------
