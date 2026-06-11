@@ -1367,49 +1367,6 @@ export default class MrnaTabContent extends React.Component<
         return [...sorted, ...without];
     }
 
-    // TEMP DEBUG: stage-by-stage counts for why the expression table may come
-    // up empty on a given study. Surfaced in renderExpressionTable's empty
-    // branch. Remove once the empty-table cause is understood.
-    @computed get expressionTableDiagnostics(): { [k: string]: any } {
-        const sampleIdSet = new Set(this.expressionTableSampleIds);
-        const raw = this.plotsStore.patientSamplesExpression.result;
-        const byGene: { [id: number]: boolean } = {};
-        let inSampleValues = 0;
-        raw.forEach(d => {
-            if (sampleIdSet.has(d.sampleId) && !isNaN(d.value)) {
-                byGene[d.entrezGeneId] = true;
-                inSampleValues++;
-            }
-        });
-        const labelsBySymbol = this.labelIdsBySymbolUpper;
-        let resolvedSymbols = 0;
-        let labeledGenes = 0;
-        Object.keys(byGene).forEach(k => {
-            const gene = this.plotsStore.allGenesByEntrezId[Number(k)];
-            const symbol = (gene && gene.hugoGeneSymbol) || `${k}`;
-            if (gene && gene.hugoGeneSymbol) resolvedSymbols++;
-            if ((labelsBySymbol[symbol.toUpperCase()] || []).length > 0)
-                labeledGenes++;
-        });
-        const profile = this.plotsStore.mrnaExpressionMolecularProfile.result;
-        return {
-            patientSampleIds: this.expressionTableSampleIds.length,
-            patientSamplesExpression_isPending: this.plotsStore
-                .patientSamplesExpression.isPending,
-            rawExpressionValues: raw.length,
-            inSampleValues,
-            genesWithData: Object.keys(byGene).length,
-            allGenesLoaded: Object.keys(this.plotsStore.allGenesByEntrezId)
-                .length,
-            resolvedSymbols,
-            labelMapSize: Object.keys(labelsBySymbol).length,
-            labeledGenes,
-            finalRows: this.expressionTableRows.length,
-            oncoFilterOn: this.plotsStore.applyOncoGeneFilter,
-            profileId: profile && profile.molecularProfileId,
-            profileDatatype: profile && profile.datatype,
-        };
-    }
 
     // Patient samples that have at least one expression value — the only ones
     // worth a column (the rest are listed in a footnote). Derived from the full
@@ -2005,13 +1962,21 @@ export default class MrnaTabContent extends React.Component<
                 <h3 style={{ marginTop: 0, marginBottom: 16 }}>
                     {this.chartTitle}
                 </h3>
-                {this.renderCohortSummaryBar()}
                 {this.isTableDataPending ? (
                     <div style={{ marginTop: 16 }}>
                         <LoadingIndicator isLoading={true} size="big" center />
                     </div>
+                ) : !this.hasAnyPatientMrnaData ? (
+                    <div
+                        className="alert alert-info"
+                        style={{ marginTop: 16, maxWidth: 600 }}
+                    >
+                        No mRNA expression data is available for this patient's
+                        sample(s).
+                    </div>
                 ) : (
                     <>
+                        {this.renderCohortSummaryBar()}
                         <div
                             style={{
                                 display: 'flex',
@@ -2192,6 +2157,17 @@ export default class MrnaTabContent extends React.Component<
         );
     }
 
+    // The study has an mRNA profile (else this tab wouldn't render), but the
+    // current patient's sample(s) may not have been profiled — in which case
+    // there's nothing to show. Detected from the patient's own expression data,
+    // independent of gene labels / the OncoKB filter.
+    @computed get hasAnyPatientMrnaData(): boolean {
+        const sampleIds = new Set(this.expressionTableSampleIds);
+        return this.plotsStore.patientSamplesExpression.result.some(
+            d => sampleIds.has(d.sampleId) && !isNaN(d.value)
+        );
+    }
+
     // A table of every gene with expression data, one column per patient
     // sample, sorted by |value| in the first sample column.
     private renderExpressionTable() {
@@ -2202,26 +2178,20 @@ export default class MrnaTabContent extends React.Component<
         const SCROLLBAR_W = 16;
         const allRows = this.expressionTableRows;
         if (sampleIds.length === 0 || allRows.length === 0) {
-            // TEMP DEBUG: instead of silently rendering nothing, show why the
-            // table is empty so we can diagnose study-specific failures.
             return (
                 <div
                     style={{
                         flexShrink: 0,
-                        fontSize: 11,
-                        color: '#a00',
-                        border: '1px dashed #a00',
-                        padding: 8,
+                        fontSize: 12,
+                        color: '#888',
+                        border: '1px dashed #ccc',
+                        borderRadius: 4,
+                        padding: 12,
                         maxWidth: 360,
-                        whiteSpace: 'pre-wrap',
                     }}
                 >
-                    {'Expression table empty — debug:\n' +
-                        JSON.stringify(
-                            this.expressionTableDiagnostics,
-                            null,
-                            2
-                        )}
+                    No mRNA expression data to show for this patient's
+                    sample(s).
                 </div>
             );
         }
