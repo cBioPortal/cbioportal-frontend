@@ -76,6 +76,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
     }
 
     componentWillUnmount() {
+        this.hierarchy = null; // stops the prefetchSlideMetadata loop
         this.destroyViewer();
     }
 
@@ -173,7 +174,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
     }
 
     @computed get tileServerBase(): string {
-        return this.props.url.replace(/\/patient\/[^/]+$/, '');
+        return this.props.url.replace(/\/patient\/[^/]+\/?$/, '');
     }
 
     // ---- slide selection ----
