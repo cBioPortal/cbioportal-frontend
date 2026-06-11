@@ -128,13 +128,19 @@ export default class PortalHeader extends React.Component<
                         ? 'https://chat.cbioportal.aws.mskcc.org'
                         : 'https://chat.cbioportal.org',
                 internal: false,
-                hide: () =>
-                    !this.props.appStore.featureFlagStore.has(
-                        FeatureFlagEnum.CHAT
-                    ) ||
-                    !['public-portal', 'mskcc-portal'].includes(
-                        getServerConfig().app_name!
-                    ),
+                hide: () => {
+                    const appName = getServerConfig().app_name;
+                    // Always show on the MSK portal; gate every other
+                    // instance behind the CHAT feature flag.
+                    if (appName === 'mskcc-portal') {
+                        return false;
+                    }
+                    return (
+                        !this.props.appStore.featureFlagStore.has(
+                            FeatureFlagEnum.CHAT
+                        ) || appName !== 'public-portal'
+                    );
+                },
             },
 
             {
