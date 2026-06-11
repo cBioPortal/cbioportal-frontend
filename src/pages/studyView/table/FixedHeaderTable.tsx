@@ -64,6 +64,7 @@ export type IFixedHeaderTableProps<T> = {
     autoFocusSearchAfterRendering?: boolean;
     afterSorting?: (sortBy: string, sortDirection: SortDirection) => void;
     afterFiltering?: (filterString: string) => void;
+    searchPlaceholder?: string;
 };
 
 const RVSDTtoStrType = {
@@ -408,7 +409,7 @@ export default class FixedHeaderTable<T> extends React.Component<
             >
                 {!this.props.showControlsAtTop && (
                     <input
-                        placeholder={'Search...'}
+                        placeholder={this.props.searchPlaceholder || 'Search...'}
                         type="text"
                         onInput={this.onFilterTextChange()}
                         aria-label="Search table"
@@ -470,7 +471,7 @@ export default class FixedHeaderTable<T> extends React.Component<
                     ))}
                 {this.props.showControlsAtTop && (
                     <input
-                        placeholder={'Search...'}
+                        placeholder={this.props.searchPlaceholder || 'Search...'}
                         type="text"
                         onInput={this.onFilterTextChange()}
                         ref={this.setInputRef}

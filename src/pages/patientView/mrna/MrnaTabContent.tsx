@@ -2274,6 +2274,7 @@ export default class MrnaTabContent extends React.Component<
                     sortDirection={this.tableSortDirection}
                     afterSorting={this.onTableSort}
                     afterFiltering={this.onTableFilter}
+                    searchPlaceholder="Search genes"
                     numberOfSelectedRows={0}
                     showControlsAtTop={true}
                     extraFooterElements={[
@@ -2470,7 +2471,15 @@ export default class MrnaTabContent extends React.Component<
         // axis length in the swapped layout.
         const VALUE_AXIS_SIZE = 520;
         const PER_GENE = 30;
-        const chartWidth = swap ? 170 + n * PER_GENE : 720;
+        // The plot's intrinsic drawing width (this drives box-plot scaling).
+        const plotWidth = swap ? 170 + n * PER_GENE : 720;
+        // The toolbar (log/swap/violin + download) needs a minimum canvas width.
+        // When the plot is narrower than that — e.g. a single gene in swapped
+        // mode — widen the SVG canvas and put the extra into right padding, so
+        // the plotting area (and therefore the box-plot scaling) is unchanged.
+        const MIN_CANVAS_WIDTH = 360;
+        const extraRightPad = Math.max(0, MIN_CANVAS_WIDTH - plotWidth);
+        const chartWidth = plotWidth + extraRightPad;
         const chartHeight = swap ? VALUE_AXIS_SIZE : 140 + n * PER_GENE;
         // .borderedChart (ChartContainer) adds 10px padding + 1px dashed border
         // on each side. The wrapper below must include this chrome, otherwise
@@ -2490,8 +2499,8 @@ export default class MrnaTabContent extends React.Component<
         );
         const geneAxisPad = Math.min(140, Math.max(50, maxGeneLabelLen * 7 + 16));
         const padding = swap
-            ? { top: 30, bottom: 110, left: 90, right: 25 }
-            : { top: 20, bottom: 80, left: geneAxisPad, right: 25 };
+            ? { top: 30, bottom: 110, left: 90, right: 25 + extraRightPad }
+            : { top: 20, bottom: 80, left: geneAxisPad, right: 25 + extraRightPad };
         const valueLabel = profile.name;
         const valueScale = this.useLog ? 'log' : 'linear';
         const categoryDomain: [number, number] = [0, n + 0.5];
