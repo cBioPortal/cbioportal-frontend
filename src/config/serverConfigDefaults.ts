@@ -254,7 +254,7 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
     uptime_robot_api_key: null,
 
     skin_hide_clinical_data_tab_study_view: false,
-    msk_wsi_tile_server_url: ENV_WSI_TILE_SERVER,
+    msk_wsi_tile_server_url: null,
 };
 
 export default ServerConfigDefaults;

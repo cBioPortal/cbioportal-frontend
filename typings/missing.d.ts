@@ -11,7 +11,6 @@ declare var COMMIT: string;
 declare var IS_DEV_MODE: boolean;
 declare var ENV_CBIOPORTAL_URL: string;
 declare var ENV_GENOME_NEXUS_URL: string;
-declare var ENV_WSI_TILE_SERVER: string | null;
 
 // these packages are missing typings
 declare module 'fmin';
