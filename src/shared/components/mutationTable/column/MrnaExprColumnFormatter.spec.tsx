@@ -243,5 +243,21 @@ describe('MrnaExprColumnFormatter', () => {
                     .map(r => Number(r.prop('height') || 0))
             );
         assert.isBelow(getMaxRectHeight(0), getMaxRectHeight(1));
+
+        const extractAxisBounds = (svgIndex: number) => {
+            const labels = svgs
+                .at(svgIndex)
+                .find('text')
+                .map(node => node.text())
+                .filter(label => label !== 'median');
+            return {
+                min: labels[0],
+                max: labels[labels.length - 1],
+            };
+        };
+        const bounds0 = extractAxisBounds(0);
+        const bounds1 = extractAxisBounds(1);
+        assert.equal(bounds0.min, bounds1.min);
+        assert.equal(bounds0.max, bounds1.max);
     });
 });

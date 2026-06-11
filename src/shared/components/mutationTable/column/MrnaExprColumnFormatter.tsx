@@ -17,7 +17,34 @@ import {
 } from 'cbioportal-ts-api-client';
 import GeneMolecularDataCache from 'shared/cache/GeneMolecularDataCache';
 
+type SharedHistogramScale = {
+    minVal: number;
+    maxVal: number;
+    maxCount: number;
+    axisLabelMin?: string;
+    axisLabelMax?: string;
+};
+
 export default class MrnaExprColumnFormatter {
+    private static readonly KILO_THRESHOLD = 10000;
+    private static readonly KILO_DECIMAL_THRESHOLD = 1000;
+    private static readonly TINY_THRESHOLD = 0.01;
+
+    private static formatAxisVal(v: number) {
+        if (v === 0) return '0';
+        const abs = Math.abs(v);
+        if (abs >= MrnaExprColumnFormatter.KILO_THRESHOLD) {
+            return `${(v / 1000).toFixed(0)}k`;
+        }
+        if (abs >= MrnaExprColumnFormatter.KILO_DECIMAL_THRESHOLD) {
+            return `${(v / 1000).toFixed(1)}k`;
+        }
+        if (abs < MrnaExprColumnFormatter.TINY_THRESHOLD) {
+            return v.toExponential(0);
+        }
+        return v.toFixed(abs < 1 ? 2 : 0);
+    }
+
     protected static getCircleX(
         percentile: number,
         circleLeft: number,
@@ -42,7 +69,7 @@ export default class MrnaExprColumnFormatter {
     private static getExpressionHistogram(
         allData: NumericGeneMolecularData[],
         currentSampleId: string,
-        sharedScale?: { minVal: number; maxVal: number; maxCount: number }
+        sharedScale?: SharedHistogramScale
     ) {
         const values = allData.map(d => d.value).filter(v => isFinite(v));
         if (values.length === 0) return null;
@@ -66,20 +93,12 @@ export default class MrnaExprColumnFormatter {
                 ? sharedScale.maxVal
                 : Math.max(...values);
 
-        // Thresholds for compact axis label formatting
-        const KILO_THRESHOLD = 10000; // values >= 10000 shown as "Xk"
-        const KILO_DECIMAL_THRESHOLD = 1000; // values >= 1000 shown as "X.Xk"
-        const TINY_THRESHOLD = 0.01; // values < 0.01 shown in scientific notation
-
-        const formatAxisVal = (v: number) => {
-            if (v === 0) return '0';
-            const abs = Math.abs(v);
-            if (abs >= KILO_THRESHOLD) return `${(v / 1000).toFixed(0)}k`;
-            if (abs >= KILO_DECIMAL_THRESHOLD)
-                return `${(v / 1000).toFixed(1)}k`;
-            if (abs < TINY_THRESHOLD) return v.toExponential(0);
-            return v.toFixed(abs < 1 ? 2 : 0);
-        };
+        const axisLabelMin =
+            sharedScale?.axisLabelMin ??
+            MrnaExprColumnFormatter.formatAxisVal(minVal);
+        const axisLabelMax =
+            sharedScale?.axisLabelMax ??
+            MrnaExprColumnFormatter.formatAxisVal(maxVal);
         const sortedValues = [...values].sort((a, b) => a - b);
         const getQuantile = (q: number) => {
             const index = (sortedValues.length - 1) * q;
@@ -133,7 +152,7 @@ export default class MrnaExprColumnFormatter {
                             fontSize={8}
                             fill="#666"
                         >
-                            {formatAxisVal(minVal)}
+                            {axisLabelMin}
                         </text>
                         <text
                             x={padLeft + plotWidth}
@@ -142,7 +161,7 @@ export default class MrnaExprColumnFormatter {
                             fontSize={8}
                             fill="#666"
                         >
-                            {formatAxisVal(maxVal)}
+                            {axisLabelMax}
                         </text>
                         {markerXForDegenerate !== null && (
                             <>
@@ -176,7 +195,10 @@ export default class MrnaExprColumnFormatter {
                         }}
                     >
                         <span>n={values.length}</span>
-                        <span>median {formatAxisVal(medianVal)}</span>
+                        <span>
+                            median{' '}
+                            {MrnaExprColumnFormatter.formatAxisVal(medianVal)}
+                        </span>
                     </div>
                 </div>
             );
@@ -271,7 +293,7 @@ export default class MrnaExprColumnFormatter {
                         fontSize={7}
                         fill="#666"
                     >
-                        {formatAxisVal(minVal)}
+                        {axisLabelMin}
                     </text>
                     <text
                         x={svgWidth - padRight}
@@ -280,7 +302,7 @@ export default class MrnaExprColumnFormatter {
                         fontSize={7}
                         fill="#666"
                     >
-                        {formatAxisVal(maxVal)}
+                        {axisLabelMax}
                     </text>
                     {/* Marker line for current sample */}
                     {markerX !== null && (
@@ -305,7 +327,10 @@ export default class MrnaExprColumnFormatter {
                     }}
                 >
                     <span>n={values.length}</span>
-                    <span>median {formatAxisVal(medianVal)}</span>
+                    <span>
+                        median{' '}
+                        {MrnaExprColumnFormatter.formatAxisVal(medianVal)}
+                    </span>
                 </div>
             </div>
         );
@@ -466,9 +491,7 @@ export default class MrnaExprColumnFormatter {
             let rawDistributionLoading = false;
             let allData: NumericGeneMolecularData[] | undefined;
             let currentUniqueKey: string | undefined;
-            let sharedScale:
-                | { minVal: number; maxVal: number; maxCount: number }
-                | undefined;
+            let sharedScale: SharedHistogramScale | undefined;
             const hasRawExprSource =
                 mrnaExprSourceCache &&
                 mrnaExprSourceMolecularProfileId &&
@@ -506,6 +529,14 @@ export default class MrnaExprColumnFormatter {
                                 minVal,
                                 maxVal,
                                 maxCount: Math.max(...bins),
+                                axisLabelMin:
+                                    MrnaExprColumnFormatter.formatAxisVal(
+                                        minVal
+                                    ),
+                                axisLabelMax:
+                                    MrnaExprColumnFormatter.formatAxisVal(
+                                        maxVal
+                                    ),
                             };
                         }
                     }
