@@ -30,7 +30,9 @@ import {
     ChartMetaDataTypeEnum,
     ChartType,
     ChartDataCountSet,
+    GENERIC_ASSAY_FREQUENCY_TABLE_ENTITY_ID,
     getOptionsByChartMetaDataType,
+    getGenericAssayFrequencyTableUniqueKey,
     getGenomicChartUniqueKey,
     ChartMeta,
 } from '../StudyViewUtils';
@@ -302,26 +304,6 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
         }
     }
 
-    @computed
-    get genericAssayChartOptionsByGenericAssayType(): {
-        [genericAssayType: string]: ChartOption[];
-    } {
-        const groupedChartMetaByGenericAssayType = _.groupBy(
-            this.groupedChartMetaByDataType[
-                ChartMetaDataTypeEnum.GENERIC_ASSAY
-            ] || [],
-            chartMeta => chartMeta.genericAssayType
-        );
-
-        return _.mapValues(groupedChartMetaByGenericAssayType, chartMeta => {
-            return getOptionsByChartMetaDataType(
-                chartMeta,
-                this.selectedAttrs,
-                _.fromPairs(this.props.store.chartsType.toJSON())
-            );
-        });
-    }
-
     // provide chartMetaSet for current tab to disable appropriate options
     // if summary tab, disable survival attributes
     // if clinical data tab, disable survival plot attributes
@@ -430,6 +412,36 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
             genericAssayType,
             profileId
         );
+    }
+
+    @action.bound
+    private onAddGenericAssayFrequencyTable(
+        genericAssayType: string,
+        option: {
+            value: string;
+            label: string;
+            description: string;
+            dataType: string;
+            patientLevel?: boolean;
+        }
+    ) {
+        this.props.store.addGenericAssayFrequencyTableCharts(
+            [
+                {
+                    name: `${option.label} Frequency Table`,
+                    description: option.description,
+                    profileType: option.value,
+                    genericAssayType,
+                    genericAssayEntityId:
+                        GENERIC_ASSAY_FREQUENCY_TABLE_ENTITY_ID,
+                    dataType: option.dataType,
+                    patientLevel: option.patientLevel,
+                    chartKind: 'PROFILE_FREQUENCY_TABLE',
+                },
+            ],
+            true
+        );
+        this.updateInfoMessage(`${option.label} frequency table added`);
     }
 
     @action.bound
@@ -590,11 +602,6 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                     entityMap,
                     makeGenericAssayOption
                 );
-
-                const shouldShowChartOptionTable =
-                    this.genericAssayChartOptionsByGenericAssayType[type] &&
-                    this.genericAssayChartOptionsByGenericAssayType[type]
-                        .length > 0;
                 const molecularProfileOptions = options.map(option => {
                     return {
                         ...option,
@@ -604,6 +611,24 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                         profileName: option.label,
                     };
                 });
+                const selectedProfileOption = molecularProfileOptions.find(
+                    option => option.value === molecularProfileIdSuffix
+                );
+                const selectedProfileSupportsFrequencyTable =
+                    selectedProfileOption !== undefined &&
+                    (selectedProfileOption.dataType ===
+                        DataTypeConstants.BINARY ||
+                        selectedProfileOption.dataType ===
+                            DataTypeConstants.CATEGORICAL);
+                const selectedProfileFrequencyTableVisible =
+                    selectedProfileSupportsFrequencyTable &&
+                    this.props.store.visibleAttributesForSummary.some(
+                        chartMeta =>
+                            chartMeta.uniqueKey ===
+                            getGenericAssayFrequencyTableUniqueKey(
+                                molecularProfileIdSuffix
+                            )
+                    );
 
                 return (
                     <MSKTab
@@ -611,6 +636,43 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                         id={type}
                         linkText={deriveDisplayTextFromGenericAssayType(type)}
                     >
+                        {selectedProfileSupportsFrequencyTable &&
+                            selectedProfileOption && (
+                                <div
+                                    style={{
+                                        marginBottom: 10,
+                                    }}
+                                >
+                                    <div
+                                        style={{
+                                            fontSize: 12,
+                                            color: '#666',
+                                            marginBottom:
+                                                selectedProfileFrequencyTableVisible
+                                                    ? 0
+                                                    : 8,
+                                        }}
+                                    >
+                                        The frequency table is the profile-level
+                                        overview for this assay and is shown by
+                                        default. Use the selector below to add
+                                        entity-level charts.
+                                    </div>
+                                    {!selectedProfileFrequencyTableVisible && (
+                                        <button
+                                            className="btn btn-default btn-sm"
+                                            onClick={() =>
+                                                this.onAddGenericAssayFrequencyTable(
+                                                    type,
+                                                    selectedProfileOption
+                                                )
+                                            }
+                                        >
+                                            Re-add frequency table
+                                        </button>
+                                    )}
+                                </div>
+                            )}
                         <GenericAssaySelection
                             containerWidth={this.getTabsWidth}
                             molecularProfileOptions={molecularProfileOptions}
@@ -628,27 +690,6 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                                 )
                             }
                         />
-                        {shouldShowChartOptionTable && (
-                            <div style={{ marginTop: 10 }}>
-                                <AddChartByType
-                                    width={this.getTabsWidth}
-                                    options={
-                                        this
-                                            .genericAssayChartOptionsByGenericAssayType[
-                                            type
-                                        ]
-                                    }
-                                    freqPromise={this.dataCount}
-                                    onAddAll={this.onAddAll}
-                                    onClearAll={this.onClearAll}
-                                    onToggleOption={this.onToggleOption}
-                                    hideControls={true}
-                                    firstColumnHeaderName={`${deriveDisplayTextFromGenericAssayType(
-                                        type
-                                    )} Chart`}
-                                />
-                            </div>
-                        )}
                     </MSKTab>
                 );
             }

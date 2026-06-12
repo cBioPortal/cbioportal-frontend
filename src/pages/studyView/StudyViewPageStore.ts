@@ -7606,6 +7606,39 @@ export class StudyViewPageStore
 
     @action.bound
     registerGenericAssayFrequencyTableCharts(): void {
+        const frequencyTableCharts = _.flatMap(
+            _.toPairs(this.genericAssayProfileOptionsByType.result),
+            ([genericAssayType, options]) =>
+                options
+                    .filter(
+                        option =>
+                            option.dataType === DataTypeConstants.BINARY ||
+                            option.dataType === DataTypeConstants.CATEGORICAL
+                    )
+                    .map(option => ({
+                        name: `${option.label} Frequency Table`,
+                        description: option.description,
+                        profileType: option.value,
+                        genericAssayType,
+                        genericAssayEntityId:
+                            GENERIC_ASSAY_FREQUENCY_TABLE_ENTITY_ID,
+                        dataType: option.dataType,
+                        patientLevel: option.patientLevel,
+                        chartKind: 'PROFILE_FREQUENCY_TABLE' as const,
+                    }))
+        );
+
+        if (!_.isEmpty(frequencyTableCharts)) {
+            this.addGenericAssayFrequencyTableCharts(
+                frequencyTableCharts,
+                false,
+                true
+            );
+        }
+    }
+
+    @action.bound
+    showDefaultGenericAssayFrequencyTableCharts(): void {
         _.forEach(
             this.genericAssayProfileOptionsByType.result,
             (options, genericAssayType) => {
@@ -7630,7 +7663,7 @@ export class StudyViewPageStore
                 if (!_.isEmpty(frequencyTableCharts)) {
                     this.addGenericAssayFrequencyTableCharts(
                         frequencyTableCharts,
-                        false,
+                        true,
                         true
                     );
                 }
@@ -7865,6 +7898,14 @@ export class StudyViewPageStore
         }
         if (!_.isEmpty(this.initialFilters.mutationDataFilters)) {
             pending = pending || this.molecularProfileOptions.isPending;
+        }
+        if (
+            this.isInitiallLoad &&
+            !this.genericAssayProfiles.isPending &&
+            !_.isEmpty(this.genericAssayProfiles.result)
+        ) {
+            pending =
+                pending || this.genericAssayProfileOptionsByType.isPending;
         }
         if (!_.isEmpty(this.initialFilters.caseLists)) {
             pending = pending || this.caseListSampleCounts.isPending;
@@ -9033,6 +9074,7 @@ export class StudyViewPageStore
     @action
     initializeGenericAssayCharts(): void {
         this.registerGenericAssayFrequencyTableCharts();
+        this.showDefaultGenericAssayFrequencyTableCharts();
         if (!_.isEmpty(this.initialFilters.genericAssaySelectionFilters)) {
             _.each(
                 this.initialFilters.genericAssaySelectionFilters,
