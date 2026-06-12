@@ -667,6 +667,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                 ? 'Add Filters '
                                 : 'Select Samples '
                         }
+                        genericAssayType={this.props.chartMeta.genericAssayType}
                         showCategoryColumn={
                             this.props.store.getMolecularChartDataType(
                                 this.props.chartMeta.uniqueKey

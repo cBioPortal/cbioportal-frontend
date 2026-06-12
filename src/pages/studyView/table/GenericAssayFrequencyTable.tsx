@@ -29,6 +29,7 @@ import {
     SelectionOperatorEnum,
 } from 'pages/studyView/TableUtils';
 import ifNotDefined from 'shared/lib/ifNotDefined';
+import { getFrequencyTableCategoryPriority } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
 
 export enum GenericAssayFrequencyTableColumnKey {
     ENTITY = 'Entity',
@@ -41,6 +42,7 @@ export interface IGenericAssayFrequencyTableProps {
     promise: MobxPromise<GenericAssayFrequencyTableRow[]>;
     width: number;
     height: number;
+    genericAssayType?: string;
     filters: string[][];
     selectedRowsKeys: string[];
     onChangeSelectedRows: (selectedRowsKeys: string[]) => void;
@@ -59,19 +61,88 @@ const DEFAULT_COLUMN_WIDTH_RATIO = {
 
 class GenericAssayFrequencyTableComponent extends FixedHeaderTable<GenericAssayFrequencyTableRow> {}
 
+function normalizeCategoryValue(value: string): string {
+    return value.trim().toLowerCase();
+}
+
+function hasCuratedCategorySorting(
+    showCategoryColumn: boolean,
+    genericAssayType?: string
+): boolean {
+    return (
+        showCategoryColumn &&
+        !!getFrequencyTableCategoryPriority(genericAssayType)?.length
+    );
+}
+
+export function getGenericAssayFrequencyTableDefaultSortBy(
+    showCategoryColumn: boolean,
+    genericAssayType?: string
+): GenericAssayFrequencyTableColumnKey {
+    return hasCuratedCategorySorting(showCategoryColumn, genericAssayType)
+        ? GenericAssayFrequencyTableColumnKey.CATEGORY
+        : GenericAssayFrequencyTableColumnKey.FREQ;
+}
+
+export function getGenericAssayFrequencyTableDefaultSortDirection(
+    showCategoryColumn: boolean,
+    genericAssayType?: string
+): SortDirection {
+    return hasCuratedCategorySorting(showCategoryColumn, genericAssayType)
+        ? 'asc'
+        : 'desc';
+}
+
+export function getGenericAssayFrequency(row: GenericAssayFrequencyTableRow): number {
+    return row.totalCount > 0 ? (row.count / row.totalCount) * 100 : -1;
+}
+
+export function getGenericAssayFrequencyTableCategorySortValue(
+    row: GenericAssayFrequencyTableRow,
+    genericAssayType?: string
+): string {
+    const categoryPriority = getFrequencyTableCategoryPriority(genericAssayType);
+    if (!categoryPriority?.length) {
+        return row.category;
+    }
+
+    const normalizedCategory = normalizeCategoryValue(row.category);
+    const priorityIndex = categoryPriority.findIndex(priorityGroup =>
+        priorityGroup.includes(normalizedCategory)
+    );
+
+    const priorityKey = `${priorityIndex === -1 ? 99 : priorityIndex}`.padStart(
+        2,
+        '0'
+    );
+    const countKey = `${Math.max(0, row.totalCount - row.count)}`.padStart(
+        12,
+        '0'
+    );
+
+    return `${priorityKey}::${countKey}::${row.entityLabel.toUpperCase()}::${normalizedCategory}`;
+}
+
 @observer
 export default class GenericAssayFrequencyTable extends React.Component<
     IGenericAssayFrequencyTableProps,
     {}
 > {
     @observable protected sortBy: GenericAssayFrequencyTableColumnKey;
-    @observable protected sortDirection: SortDirection = 'desc';
+    @observable protected sortDirection: SortDirection;
     @observable private _selectionType: SelectionOperatorEnum;
 
     constructor(props: IGenericAssayFrequencyTableProps) {
         super(props);
         makeObservable(this);
-        this.sortBy = GenericAssayFrequencyTableColumnKey.FREQ;
+        this.sortBy = getGenericAssayFrequencyTableDefaultSortBy(
+            this.props.showCategoryColumn,
+            this.props.genericAssayType
+        );
+        this.sortDirection = getGenericAssayFrequencyTableDefaultSortDirection(
+            this.props.showCategoryColumn,
+            this.props.genericAssayType
+        );
     }
 
     @computed
@@ -190,7 +261,7 @@ export default class GenericAssayFrequencyTable extends React.Component<
     }
 
     private getFrequency(row: GenericAssayFrequencyTableRow): number {
-        return row.totalCount > 0 ? (row.count / row.totalCount) * 100 : -1;
+        return getGenericAssayFrequency(row);
     }
 
     getDefaultColumnDefinition(
@@ -227,7 +298,11 @@ export default class GenericAssayFrequencyTable extends React.Component<
                     />
                 ),
                 render: row => <div>{row.category}</div>,
-                sortBy: row => row.category,
+                sortBy: row =>
+                    getGenericAssayFrequencyTableCategorySortValue(
+                        row,
+                        this.props.genericAssayType
+                    ),
                 defaultSortDirection: 'asc',
                 filter: (row, filter) =>
                     row.category.toUpperCase().includes(filter.toUpperCase()),
