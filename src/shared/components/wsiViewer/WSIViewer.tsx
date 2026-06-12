@@ -283,6 +283,38 @@ export default class WSIViewer extends React.Component<Props, {}> {
         this.osdViewer.viewport.panTo(vpPoint, false);
     }
 
+    /** Download the current viewport as a JPEG image. */
+    downloadView() {
+        // OSD renders into drawer.canvas (CanvasDrawer) or a WebGL canvas.
+        const canvas: HTMLCanvasElement | null =
+            this.osdViewer?.drawer?.canvas ??
+            this.osdViewer?.canvas ??
+            null;
+        if (!canvas) return;
+
+        try {
+            const vp = this.osdViewer.viewport;
+            const center = vp.viewportToImageCoordinates(vp.getCenter());
+            const x = Math.round(center.x);
+            const y = Math.round(center.y);
+            const patientId = this.hierarchy?.patient_id ?? 'patient';
+            const slideId = this.selectedSlide?.image_id ?? 'slide';
+            const filename = `wsi-${patientId}-${slideId}-x${x}-y${y}.jpg`;
+
+            canvas.toBlob(blob => {
+                if (!blob) return;
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 'image/jpeg', 0.92);
+        } catch (_) { /* canvas tainted or not ready */ }
+    }
+
     /** Write current view to URL hash then copy the full URL to clipboard. */
     async copyViewLink() {
         this.writeHashState();
@@ -520,6 +552,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
                             onChangeY={action((v: string) => { this.coordInputY = v; })}
                             onGo={this.goToCoordinates}
                             onCopyLink={() => this.copyViewLink()}
+                            onDownload={() => this.downloadView()}
                         />
                     )}
                 </div>
@@ -555,9 +588,10 @@ interface CoordBarProps {
     onChangeY: (v: string) => void;
     onGo: () => void;
     onCopyLink: () => void;
+    onDownload: () => void;
 }
 
-function CoordBar({ inputX, inputY, cursorPos, mpp, onChangeX, onChangeY, onGo, onCopyLink }: CoordBarProps) {
+function CoordBar({ inputX, inputY, cursorPos, mpp, onChangeX, onChangeY, onGo, onCopyLink, onDownload }: CoordBarProps) {
     const handleKey = (e: React.KeyboardEvent) => { if (e.key === 'Enter') onGo(); };
     const [copied, setCopied] = React.useState(false);
 
@@ -634,6 +668,18 @@ function CoordBar({ inputX, inputY, cursorPos, mpp, onChangeX, onChangeY, onGo, 
                 }}
             >
                 {copied ? '✓ Copied' : '🔗 Share view'}
+            </button>
+            <button
+                onClick={onDownload}
+                title="Download the current viewport as a JPEG image"
+                style={{
+                    ...btnStyle,
+                    border: `1px solid ${C.border}`,
+                    background: '#fff',
+                    color: C.muted,
+                }}
+            >
+                ⬇ Download
             </button>
             {cursorPos && (
                 <span style={{ marginLeft: 'auto', color: C.muted, fontFamily: 'monospace', fontSize: 11 }}>

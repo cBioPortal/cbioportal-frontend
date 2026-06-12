@@ -157,6 +157,37 @@ test.describe('WSI viewer — share view and centering', () => {
         expect(Number(params.get('y'))).toBe(3000);
     });
 
+    test('download button triggers a JPEG download named by patient/slide/position', async ({
+        page,
+    }) => {
+        await page.goto(viewerUrl());
+        await expect(page.locator('button:has-text("Download")')).toBeVisible({
+            timeout: 30_000,
+        });
+
+        // Intercept document.createElement('a') to capture the download filename
+        // without needing a real file-system download.
+        await page.evaluate(() => {
+            const origCreate = document.createElement.bind(document);
+            (document as any).createElement = (tag: string) => {
+                const el = origCreate(tag);
+                if (tag === 'a') {
+                    el.click = () => { (window as any)._downloadName = (el as HTMLAnchorElement).download; };
+                }
+                return el;
+            };
+        });
+
+        await page.locator('button:has-text("Download")').click();
+        await page.waitForTimeout(500); // toBlob is async
+
+        const filename: string = await page.evaluate(() => (window as any)._downloadName ?? '');
+        // Filename pattern: wsi-<patientId>-<slideId>-x<n>-y<n>.jpg
+        expect(filename).toMatch(/^wsi-.+-\d+-x\d+-y\d+\.jpg$/);
+        expect(filename).toContain('P-0000678');
+        expect(filename).toContain('.jpg');
+    });
+
     test('opening a share link with a different slide ID restores that slide', async ({
         page,
     }) => {
