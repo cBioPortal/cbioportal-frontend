@@ -24,7 +24,6 @@ import './patient.scss';
 import {
     buildCBioPortalPageUrl,
     getPatientViewUrl,
-    getWholeSlideViewerUrl,
 } from '../../shared/api/urls';
 import { PageLayout } from '../../shared/components/PageLayout/PageLayout';
 import Helmet from 'react-helmet';
@@ -244,15 +243,6 @@ export class PatientViewPageInner extends React.Component<
         saveOncoKbIconStyleToLocalStorage({ mergeIcons });
     }
 
-    @computed get showWholeSlideViewerTab() {
-        return (
-            this.pageStore.clinicalDataForSamples.isComplete &&
-            _.some(this.pageStore.clinicalDataForSamples.result, s => {
-                return s.clinicalAttributeId === 'MSK_SLIDE_ID';
-            })
-        );
-    }
-
     @action.bound
     onCnaTableColumnVisibilityToggled(
         columnId: string,
@@ -325,27 +315,6 @@ export class PatientViewPageInner extends React.Component<
     customTabMountCallback(div: HTMLDivElement, tab: any) {
         showCustomTab(div, tab, this.props.routing.location, this.pageStore);
     }
-
-    wholeSlideViewerUrl = remoteData<string | undefined>({
-        await: () => [this.pageStore.getWholeSlideViewerIds],
-        invoke: async () => {
-            if (!_.isEmpty(this.pageStore.getWholeSlideViewerIds.result)) {
-                const url = getWholeSlideViewerUrl(
-                    this.pageStore.getWholeSlideViewerIds.result!,
-                    this.props.appStore.userName!
-                );
-                //if request succeeds then we return the url because we know request works.
-                try {
-                    await request.get(url);
-                    return url;
-                } catch (er) {
-                    //but if request fails, we will return undefined.
-                    return undefined;
-                }
-            }
-            return undefined;
-        },
-    });
 
     @autobind
     onFilterGenesMutationTable(option: GeneFilterOption): void {

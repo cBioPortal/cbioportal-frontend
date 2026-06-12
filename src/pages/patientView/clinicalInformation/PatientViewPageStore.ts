@@ -2082,30 +2082,6 @@ export class PatientViewPageStore {
         {}
     );
 
-    readonly getWholeSlideViewerIds = remoteData({
-        await: () => [this.clinicalDataGroupedBySample],
-        invoke: () => {
-            const clinicalData = this.clinicalDataGroupedBySample.result!;
-            const clinicalAttributeId = 'MSK_SLIDE_ID';
-            if (clinicalData) {
-                const ids = _.chain(clinicalData)
-                    .map(data => data.clinicalData)
-                    .flatten()
-                    .filter(attribute => {
-                        return (
-                            attribute.clinicalAttributeId ===
-                            clinicalAttributeId
-                        );
-                    })
-                    .map(attribute => attribute.value)
-                    .value();
-
-                return Promise.resolve(ids);
-            }
-            return Promise.resolve([]);
-        },
-    });
-
     readonly studyMetaData = remoteData({
         invoke: async () =>
             getClient().getStudyUsingGET({ studyId: this.studyId }),
