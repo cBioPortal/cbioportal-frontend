@@ -427,8 +427,9 @@ function NavPanel({ hierarchy, selectedSlide, stainFilter, onFilterChange, onSel
                                 fontWeight: stainFilter === chip.key ? 600 : 400,
                                 cursor: 'pointer', userSelect: 'none',
                             }}
-                            dangerouslySetInnerHTML={{ __html: chip.label }}
-                        />
+                        >
+                            {chip.label}
+                        </span>
                     ))}
                 </div>
             </div>
