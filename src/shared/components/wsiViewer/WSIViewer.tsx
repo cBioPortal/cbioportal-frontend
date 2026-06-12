@@ -74,6 +74,47 @@ export default class WSIViewer extends React.Component<Props, {}> {
         makeObservable(this);
     }
 
+    // ---- URL state helpers ----
+
+    /**
+     * Encode current viewer state into the URL hash so the view can be shared.
+     * Hash format: #wsi:slide=<imageId>&x=<px>&y=<py>&z=<zoom>
+     * Does not clobber unrelated hash fragments since we namespace with "wsi:".
+     */
+    private writeHashState() {
+        if (!this.osdViewer?.viewport || !this.selectedSlide) return;
+        try {
+            const vp = this.osdViewer.viewport;
+            const center = vp.viewportToImageCoordinates(vp.getCenter());
+            const zoom = vp.getZoom();
+            const params = new URLSearchParams({
+                slide: this.selectedSlide.image_id,
+                x: Math.round(center.x).toString(),
+                y: Math.round(center.y).toString(),
+                z: zoom.toFixed(6),
+            });
+            window.location.hash = `wsi:${params.toString()}`;
+        } catch (_) { /* viewport not ready */ }
+    }
+
+    /** Parse the #wsi:... hash; returns null if not present or malformed. */
+    private static readHashState(): { slideId: string; x: number; y: number; z: number } | null {
+        const hash = window.location.hash;
+        const prefix = '#wsi:';
+        if (!hash.startsWith(prefix)) return null;
+        try {
+            const params = new URLSearchParams(hash.slice(prefix.length));
+            const slideId = params.get('slide') ?? '';
+            const x = parseFloat(params.get('x') ?? 'NaN');
+            const y = parseFloat(params.get('y') ?? 'NaN');
+            const z = parseFloat(params.get('z') ?? 'NaN');
+            if (!slideId || !isFinite(x) || !isFinite(y) || !isFinite(z)) return null;
+            return { slideId, x, y, z };
+        } catch (_) {
+            return null;
+        }
+    }
+
     componentDidMount() {
         void this.loadHierarchy();
     }
@@ -127,9 +168,14 @@ export default class WSIViewer extends React.Component<Props, {}> {
                 this.loading = false;
             })();
 
-            // Auto-select first servable H&E slide, else first servable slide
+            // Auto-select first servable H&E slide, else first servable slide.
+            // If the URL hash encodes a prior view, honour that slide instead.
             const allSlides = this.servableSlides;
-            const first = allSlides.find(s => s.slide.is_hne) ?? allSlides[0];
+            const hashState = WSIViewer.readHashState();
+            const fromHash = hashState
+                ? allSlides.find(s => s.slide.image_id === hashState.slideId)
+                : undefined;
+            const first = fromHash ?? allSlides.find(s => s.slide.is_hne) ?? allSlides[0];
             if (first) {
                 await this.selectSlide(first.slide, first.sample);
             }
@@ -210,6 +256,10 @@ export default class WSIViewer extends React.Component<Props, {}> {
         // Bump the sequence so any in-flight mountOSD call can detect it's stale.
         const seq = ++this.mountSeq;
         await this.mountOSD(slide, seq);
+        // Write hash immediately on slide change (viewport will also be written
+        // by animation-finish after any pan/zoom, but this covers the case where
+        // the user selects a slide and doesn't move).
+        this.writeHashState();
     }
 
     // ---- OpenSeadragon ----
@@ -224,6 +274,22 @@ export default class WSIViewer extends React.Component<Props, {}> {
         const imgPoint = new (OpenSeadragon as any).Point(x, y);
         const vpPoint = this.osdViewer.viewport.imageToViewportCoordinates(imgPoint);
         this.osdViewer.viewport.panTo(vpPoint, false);
+    }
+
+    /** Write current view to URL hash then copy the full URL to clipboard. */
+    copyViewLink() {
+        this.writeHashState();
+        try {
+            navigator.clipboard.writeText(window.location.href);
+        } catch (_) {
+            // Fallback for non-secure contexts
+            const ta = document.createElement('textarea');
+            ta.value = window.location.href;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+        }
     }
 
     private destroyViewer() {
@@ -326,6 +392,18 @@ export default class WSIViewer extends React.Component<Props, {}> {
         this.osdViewer.addOnceHandler('open', () => {
             if (seq !== this.mountSeq) return;
             action(() => { this.viewerReady = true; })();
+
+            // Restore viewport position from URL hash if present for this slide.
+            const hashState = WSIViewer.readHashState();
+            if (hashState && hashState.slideId === slide.image_id) {
+                try {
+                    const vp = this.osdViewer.viewport;
+                    const imgPt = new (OpenSeadragon as any).Point(hashState.x, hashState.y);
+                    const vpPt = vp.imageToViewportCoordinates(imgPt);
+                    vp.panTo(vpPt, true);   // immediately (no animation)
+                    vp.zoomTo(hashState.z, undefined, true);
+                } catch (_) { /* ignore — viewport not ready */ }
+            }
         });
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.osdViewer.addOnceHandler('open-failed', (e: any) => {
@@ -340,6 +418,12 @@ export default class WSIViewer extends React.Component<Props, {}> {
         this.osdViewer.addHandler('tile-load-failed', (e: any) => {
             // eslint-disable-next-line no-console
             console.warn('[WSIViewer] tile-load-failed', e?.tile?.url);
+        });
+
+        // Update URL hash after each pan/zoom animation completes so the view
+        // can be bookmarked and shared.
+        this.osdViewer.addHandler('animation-finish', () => {
+            this.writeHashState();
         });
 
         // Track cursor position and convert to image coordinates for the coord bar.
@@ -413,6 +497,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
                             onChangeX={action((v: string) => { this.coordInputX = v; })}
                             onChangeY={action((v: string) => { this.coordInputY = v; })}
                             onGo={this.goToCoordinates}
+                            onCopyLink={() => this.copyViewLink()}
                         />
                     )}
                 </div>
@@ -447,10 +532,18 @@ interface CoordBarProps {
     onChangeX: (v: string) => void;
     onChangeY: (v: string) => void;
     onGo: () => void;
+    onCopyLink: () => void;
 }
 
-function CoordBar({ inputX, inputY, cursorPos, mpp, onChangeX, onChangeY, onGo }: CoordBarProps) {
+function CoordBar({ inputX, inputY, cursorPos, mpp, onChangeX, onChangeY, onGo, onCopyLink }: CoordBarProps) {
     const handleKey = (e: React.KeyboardEvent) => { if (e.key === 'Enter') onGo(); };
+    const [copied, setCopied] = React.useState(false);
+
+    const handleCopy = () => {
+        onCopyLink();
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
 
     let cursorLabel = '';
     if (cursorPos) {
@@ -465,6 +558,11 @@ function CoordBar({ inputX, inputY, cursorPos, mpp, onChangeX, onChangeY, onGo }
     const inputStyle: React.CSSProperties = {
         width: 72, padding: '2px 5px', fontSize: 11, border: `1px solid ${C.border}`,
         borderRadius: 3, background: '#fff', color: C.text, outline: 'none',
+    };
+
+    const btnStyle: React.CSSProperties = {
+        padding: '2px 9px', fontSize: 11, cursor: 'pointer',
+        borderRadius: 3, lineHeight: '18px',
     };
 
     return (
@@ -499,13 +597,21 @@ function CoordBar({ inputX, inputY, cursorPos, mpp, onChangeX, onChangeY, onGo }
             />
             <button
                 onClick={onGo}
-                style={{
-                    padding: '2px 9px', fontSize: 11, cursor: 'pointer',
-                    border: `1px solid ${C.blue}`, borderRadius: 3,
-                    background: C.blue, color: '#fff',
-                }}
+                style={{ ...btnStyle, border: `1px solid ${C.blue}`, background: C.blue, color: '#fff' }}
             >
                 Go
+            </button>
+            <button
+                onClick={handleCopy}
+                title="Copy a link to this exact view (slide, position, zoom)"
+                style={{
+                    ...btnStyle,
+                    border: `1px solid ${copied ? '#3a8a3a' : C.border}`,
+                    background: copied ? '#edfaed' : '#fff',
+                    color: copied ? '#3a8a3a' : C.muted,
+                }}
+            >
+                {copied ? '✓ Copied' : '🔗 Share view'}
             </button>
             {cursorPos && (
                 <span style={{ marginLeft: 'auto', color: C.muted, fontFamily: 'monospace', fontSize: 11 }}>

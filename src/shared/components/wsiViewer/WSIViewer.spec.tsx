@@ -377,3 +377,41 @@ describe('WSIViewer — goToCoordinates', () => {
         expect(mockViewport.panTo).not.toHaveBeenCalled();
     });
 });
+
+describe('WSIViewer — URL hash state', () => {
+    const origHash = window.location.hash;
+
+    afterEach(() => {
+        window.location.hash = origHash;
+    });
+
+    it('readHashState returns null when hash is empty', () => {
+        window.location.hash = '';
+        expect((WSIViewer as any).readHashState()).toBeNull();
+    });
+
+    it('readHashState returns null for unrelated hash', () => {
+        window.location.hash = '#someOtherThing=123';
+        expect((WSIViewer as any).readHashState()).toBeNull();
+    });
+
+    it('readHashState parses a valid wsi hash', () => {
+        window.location.hash = '#wsi:slide=12345&x=500&y=750&z=1.234560';
+        const state = (WSIViewer as any).readHashState();
+        expect(state).not.toBeNull();
+        expect(state.slideId).toBe('12345');
+        expect(state.x).toBe(500);
+        expect(state.y).toBe(750);
+        expect(state.z).toBeCloseTo(1.23456);
+    });
+
+    it('readHashState returns null when required fields are missing', () => {
+        window.location.hash = '#wsi:slide=12345&x=500';  // missing y, z
+        expect((WSIViewer as any).readHashState()).toBeNull();
+    });
+
+    it('readHashState returns null when x/y are non-numeric', () => {
+        window.location.hash = '#wsi:slide=12345&x=abc&y=750&z=1.0';
+        expect((WSIViewer as any).readHashState()).toBeNull();
+    });
+});
