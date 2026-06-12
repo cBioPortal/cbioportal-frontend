@@ -302,11 +302,16 @@ describe('WSIViewer — prefetchSlideMetadata cancellation', () => {
             return { ok: true, json: () => Promise.resolve({}) };
         });
 
-        // Run the loop — it should stop after first slide because hierarchy→null
+        // Run the loop — it should stop after first slide because hierarchy→null.
+        // Each slide triggers: metadata + thumbnail + nWorkers warmup calls.
         await (inst as any).prefetchSlideMetadata(undefined);
 
-        // Only the metadata + thumbnail for slide1 (2 fetches) before bail-out
-        assert.isAtMost(fetchCallCount, 2, 'should not continue after hierarchy cleared');
+        // Should not have started processing slide2 (which would need another
+        // metadata + thumbnail + warmup batch). The exact count is
+        // 2 (meta+thumb) + nWorkers (warmup) for slide1, all launched in parallel.
+        const maxForOneSlide = 2 + (inst.nWorkers ?? 4);
+        assert.isAtMost(fetchCallCount, maxForOneSlide,
+            'should not continue after hierarchy cleared');
     });
 });
 
