@@ -49,10 +49,17 @@ export default class WSIViewer extends React.Component<Props, {}> {
     @observable private error: string | null = null;
     @observable private viewerReady = false;
     @observable private stainFilter: 'all' | 'hne' | 'ihc' = 'all';
+    /** Coordinate bar — input field values */
+    @observable coordInputX = '';
+    @observable coordInputY = '';
+    /** Current cursor position in image pixels (null when viewer not ready or cursor outside) */
+    @observable cursorPos: { x: number; y: number } | null = null;
 
     private viewerContainerRef = React.createRef<HTMLDivElement>();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private osdViewer: any = null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private osdMouseTracker: any = null;
     /** In-memory cache of prefetched slide metadata keyed by image_id */
     private metaCache = new Map<string, TileMetadata>();
     /** Monotonically-increasing counter; each mountOSD call captures its value
@@ -193,7 +200,23 @@ export default class WSIViewer extends React.Component<Props, {}> {
 
     // ---- OpenSeadragon ----
 
+    /** Navigate to image-pixel coordinates entered in the coordinate bar. */
+    @action.bound
+    goToCoordinates() {
+        if (!this.osdViewer) return;
+        const x = parseInt(this.coordInputX, 10);
+        const y = parseInt(this.coordInputY, 10);
+        if (!isFinite(x) || !isFinite(y)) return;
+        const imgPoint = new (OpenSeadragon as any).Point(x, y);
+        const vpPoint = this.osdViewer.viewport.imageToViewportCoordinates(imgPoint);
+        this.osdViewer.viewport.panTo(vpPoint, false);
+    }
+
     private destroyViewer() {
+        if (this.osdMouseTracker) {
+            try { this.osdMouseTracker.destroy(); } catch (_) { /* ignore */ }
+            this.osdMouseTracker = null;
+        }
         if (this.osdViewer) {
             try {
                 this.osdViewer.destroy();
@@ -202,6 +225,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
             }
             this.osdViewer = null;
         }
+        action(() => { this.cursorPos = null; })();
     }
 
     private async mountOSD(slide: Slide, seq: number) {
@@ -303,6 +327,21 @@ export default class WSIViewer extends React.Component<Props, {}> {
             // eslint-disable-next-line no-console
             console.warn('[WSIViewer] tile-load-failed', e?.tile?.url);
         });
+
+        // Track cursor position and convert to image coordinates for the coord bar.
+        const viewer = this.osdViewer;
+        this.osdMouseTracker = new (OpenSeadragon as any).MouseTracker({
+            element: containerEl,
+            moveHandler: action((event: any) => {
+                if (!viewer.viewport) return;
+                try {
+                    const vpPoint = viewer.viewport.pointFromPixel(event.position);
+                    const imgPoint = viewer.viewport.viewportToImageCoordinates(vpPoint);
+                    this.cursorPos = { x: Math.round(imgPoint.x), y: Math.round(imgPoint.y) };
+                } catch (_) { /* ignore during init */ }
+            }),
+            exitHandler: action(() => { this.cursorPos = null; }),
+        });
     }
 
     // ---- render ----
@@ -351,6 +390,17 @@ export default class WSIViewer extends React.Component<Props, {}> {
                             <span style={{ color: C.muted, fontSize: 13 }}>No servable slides for this patient</span>
                         </div>
                     )}
+                    {this.viewerReady && (
+                        <CoordBar
+                            inputX={this.coordInputX}
+                            inputY={this.coordInputY}
+                            cursorPos={this.cursorPos}
+                            mpp={selectedMeta?.mpp}
+                            onChangeX={action((v: string) => { this.coordInputX = v; })}
+                            onChangeY={action((v: string) => { this.coordInputY = v; })}
+                            onGo={this.goToCoordinates}
+                        />
+                    )}
                 </div>
 
                 {/* Right metadata sidebar */}
@@ -372,6 +422,85 @@ const overlayStyle: React.CSSProperties = {
     position: 'absolute', inset: 0, display: 'flex',
     alignItems: 'center', justifyContent: 'center', pointerEvents: 'none',
 };
+
+// ---- CoordBar ----
+
+interface CoordBarProps {
+    inputX: string;
+    inputY: string;
+    cursorPos: { x: number; y: number } | null;
+    mpp?: { x: number; y: number };
+    onChangeX: (v: string) => void;
+    onChangeY: (v: string) => void;
+    onGo: () => void;
+}
+
+function CoordBar({ inputX, inputY, cursorPos, mpp, onChangeX, onChangeY, onGo }: CoordBarProps) {
+    const handleKey = (e: React.KeyboardEvent) => { if (e.key === 'Enter') onGo(); };
+
+    let cursorLabel = '';
+    if (cursorPos) {
+        cursorLabel = `${cursorPos.x.toLocaleString()} × ${cursorPos.y.toLocaleString()} px`;
+        if (mpp) {
+            const umX = (cursorPos.x * mpp.x).toFixed(1);
+            const umY = (cursorPos.y * mpp.y).toFixed(1);
+            cursorLabel += `  (${umX} × ${umY} μm)`;
+        }
+    }
+
+    const inputStyle: React.CSSProperties = {
+        width: 72, padding: '2px 5px', fontSize: 11, border: `1px solid ${C.border}`,
+        borderRadius: 3, background: '#fff', color: C.text, outline: 'none',
+    };
+
+    return (
+        <div style={{
+            position: 'absolute', bottom: 0, left: 0, right: 0,
+            display: 'flex', alignItems: 'center', gap: 6,
+            padding: '4px 10px',
+            background: 'rgba(250,250,250,0.92)',
+            borderTop: `1px solid ${C.border}`,
+            fontSize: 11, color: C.muted,
+            backdropFilter: 'blur(2px)',
+            zIndex: 10,
+        }}>
+            <span style={{ fontWeight: 600, color: C.text, marginRight: 2 }}>Go to:</span>
+            <span style={{ color: C.muted }}>X</span>
+            <input
+                type="number"
+                value={inputX}
+                placeholder="px"
+                style={inputStyle}
+                onChange={e => onChangeX(e.target.value)}
+                onKeyDown={handleKey}
+            />
+            <span style={{ color: C.muted }}>Y</span>
+            <input
+                type="number"
+                value={inputY}
+                placeholder="px"
+                style={inputStyle}
+                onChange={e => onChangeY(e.target.value)}
+                onKeyDown={handleKey}
+            />
+            <button
+                onClick={onGo}
+                style={{
+                    padding: '2px 9px', fontSize: 11, cursor: 'pointer',
+                    border: `1px solid ${C.blue}`, borderRadius: 3,
+                    background: C.blue, color: '#fff',
+                }}
+            >
+                Go
+            </button>
+            {cursorPos && (
+                <span style={{ marginLeft: 'auto', color: C.muted, fontFamily: 'monospace', fontSize: 11 }}>
+                    📍 {cursorLabel}
+                </span>
+            )}
+        </div>
+    );
+}
 
 function cleanStain(name: string): string {
     return (name || '').replace(/^DM\s+/i, '') || '—';
