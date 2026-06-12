@@ -82,7 +82,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
      * Does not clobber unrelated hash fragments since we namespace with "wsi:".
      */
     private writeHashState() {
-        if (!this.osdViewer?.viewport || !this.selectedSlide) return;
+        if (typeof window === 'undefined' || !this.osdViewer?.viewport || !this.selectedSlide) return;
         try {
             const vp = this.osdViewer.viewport;
             const center = vp.viewportToImageCoordinates(vp.getCenter());
@@ -93,12 +93,18 @@ export default class WSIViewer extends React.Component<Props, {}> {
                 y: Math.round(center.y).toString(),
                 z: zoom.toFixed(6),
             });
-            window.location.hash = `wsi:${params.toString()}`;
+            // Use replaceState so we don't fire a hashchange event (which could
+            // interfere with cBioPortal's own hash-based navigation) and don't
+            // pollute the browser history on every pan/zoom.
+            const url = new URL(window.location.href);
+            url.hash = `wsi:${params.toString()}`;
+            window.history.replaceState(null, '', url.toString());
         } catch (_) { /* viewport not ready */ }
     }
 
     /** Parse the #wsi:... hash; returns null if not present or malformed. */
     private static readHashState(): { slideId: string; x: number; y: number; z: number } | null {
+        if (typeof window === 'undefined') return null;
         const hash = window.location.hash;
         const prefix = '#wsi:';
         if (!hash.startsWith(prefix)) return null;
@@ -277,14 +283,15 @@ export default class WSIViewer extends React.Component<Props, {}> {
     }
 
     /** Write current view to URL hash then copy the full URL to clipboard. */
-    copyViewLink() {
+    async copyViewLink() {
         this.writeHashState();
+        const url = window.location.href;
         try {
-            navigator.clipboard.writeText(window.location.href);
+            await navigator.clipboard.writeText(url);
         } catch (_) {
-            // Fallback for non-secure contexts
+            // Fallback for non-secure contexts (http, old browsers)
             const ta = document.createElement('textarea');
-            ta.value = window.location.href;
+            ta.value = url;
             document.body.appendChild(ta);
             ta.select();
             document.execCommand('copy');

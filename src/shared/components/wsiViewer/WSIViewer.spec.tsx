@@ -1,3 +1,6 @@
+/**
+ * @jest-environment jsdom
+ */
 import { assert } from 'chai';
 import WSIViewer from './WSIViewer';
 import {
@@ -379,7 +382,11 @@ describe('WSIViewer — goToCoordinates', () => {
 });
 
 describe('WSIViewer — URL hash state', () => {
-    const origHash = window.location.hash;
+    let origHash: string;
+
+    beforeEach(() => {
+        origHash = window.location.hash;
+    });
 
     afterEach(() => {
         window.location.hash = origHash;
