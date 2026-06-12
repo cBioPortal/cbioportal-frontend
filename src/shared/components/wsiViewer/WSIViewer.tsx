@@ -262,10 +262,11 @@ export default class WSIViewer extends React.Component<Props, {}> {
         // Bump the sequence so any in-flight mountOSD call can detect it's stale.
         const seq = ++this.mountSeq;
         await this.mountOSD(slide, seq);
-        // Write hash immediately on slide change (viewport will also be written
-        // by animation-finish after any pan/zoom, but this covers the case where
-        // the user selects a slide and doesn't move).
-        this.writeHashState();
+        // NOTE: do NOT call writeHashState() here. mountOSD returns before the
+        // OSD 'open' event fires, so the viewport has no tile source yet and
+        // contentSize defaults to 1×1.  Writing at this point would clobber any
+        // incoming shared-link hash with garbage coordinates (x≈1, y≈1, z=1).
+        // The 'open' handler writes the hash once the viewport is fully ready.
     }
 
     // ---- OpenSeadragon ----
