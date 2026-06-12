@@ -24,6 +24,12 @@ jest.mock('openseadragon', () => {
     return OSD;
 });
 
+// Keep a reference to the original shared mockViewer so integration tests can
+// restore it after overriding OSD.mockReturnValue() for per-test fresh viewers.
+const OSD = jest.requireMock('openseadragon') as jest.MockedFunction<any>;
+const _origMockViewer = OSD();
+OSD.mockClear(); // don't count this bootstrap call in real test assertions
+
 // ---- test data factories ----
 
 function makeSlide(overrides: Partial<Slide> = {}): Slide {
@@ -420,5 +426,162 @@ describe('WSIViewer — URL hash state', () => {
     it('readHashState returns null when x/y are non-numeric', () => {
         window.location.hash = '#wsi:slide=12345&x=abc&y=750&z=1.0';
         expect((WSIViewer as any).readHashState()).toBeNull();
+    });
+});
+
+/**
+ * Integration tests: run the real mountOSD with a fake DOM container + fetch
+ * mock so we can capture the 'open' callback and exercise the full hash-restore
+ * and goHome logic.
+ */
+describe('WSIViewer — open handler (mountOSD integration)', () => {
+    let origFetch: typeof globalThis.fetch;
+    let origHash: string;
+    let origRaf: any;
+    let mockViewport: any;
+    let mockViewer: any;
+    let capturedOpenCb: (() => void) | null;
+
+    const metaMock = {
+        dimensions: { width: 40000, height: 30000 },
+        max_zoom: 8,
+        tile_size: 256,
+    };
+
+    beforeEach(() => {
+        origFetch = (global as any).fetch;
+        origHash = window.location.hash;
+        origRaf = (global as any).requestAnimationFrame;
+        capturedOpenCb = null;
+
+        // Synchronous rAF so mountOSD's two-frame wait resolves immediately
+        (global as any).requestAnimationFrame = (cb: FrameRequestCallback) => {
+            cb(0);
+            return 0;
+        };
+
+        // Tile metadata fetch mock
+        (global as any).fetch = jest.fn().mockResolvedValue({
+            ok: true,
+            json: () => Promise.resolve(metaMock),
+        });
+
+        // Fresh viewport mock — identity coordinate transforms for simplicity
+        mockViewport = {
+            getCenter: jest.fn().mockReturnValue({ x: 0.5, y: 0.5 }),
+            getZoom: jest.fn().mockReturnValue(1.0),
+            viewportToImageCoordinates: jest.fn((pt: any) => pt),
+            imageToViewportCoordinates: jest.fn((pt: any) => pt),
+            panTo: jest.fn(),
+            zoomTo: jest.fn(),
+            goHome: jest.fn(),
+        };
+
+        // Fresh viewer mock that captures the 'open' once-handler for each test
+        mockViewer = {
+            destroy: jest.fn(),
+            viewport: mockViewport,
+            addOnceHandler: jest.fn((event: string, cb: () => void) => {
+                if (event === 'open') capturedOpenCb = cb;
+            }),
+            addHandler: jest.fn(),
+        };
+        OSD.mockReturnValue(mockViewer);
+    });
+
+    afterEach(() => {
+        (global as any).fetch = origFetch;
+        (global as any).requestAnimationFrame = origRaf;
+        window.location.hash = origHash;
+        // Restore original shared mock viewer for tests outside this block
+        OSD.mockReturnValue(_origMockViewer);
+    });
+
+    /** Run mountOSD on a fresh instance and return the instance. */
+    async function runMount(slide: Slide): Promise<any> {
+        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        inst.selectedSlide = slide;
+        // Provide a real DOM container so the containerEl guard passes
+        const container = document.createElement('div');
+        (inst as any).viewerContainerRef = { current: container };
+        const seq = ++(inst as any).mountSeq;
+        await (inst as any).mountOSD(slide, seq);
+        return inst;
+    }
+
+    it('calls goHome(true) on fresh load with no wsi hash', async () => {
+        window.location.hash = '';
+        const slide = makeSlide({ image_id: '42' });
+        await runMount(slide);
+
+        expect(capturedOpenCb).not.toBeNull();
+        capturedOpenCb!();
+
+        expect(mockViewport.goHome).toHaveBeenCalledWith(true);
+        expect(mockViewport.panTo).not.toHaveBeenCalled();
+    });
+
+    it('calls goHome(true) when hash belongs to a different slide', async () => {
+        window.location.hash = '#wsi:slide=99&x=5000&y=3000&z=0.8';
+        const slide = makeSlide({ image_id: '42' }); // hash has slideId=99
+        await runMount(slide);
+        capturedOpenCb!();
+
+        expect(mockViewport.goHome).toHaveBeenCalledWith(true);
+        expect(mockViewport.panTo).not.toHaveBeenCalled();
+    });
+
+    it('calls panTo + zoomTo (not goHome) when hash slideId matches', async () => {
+        window.location.hash = '#wsi:slide=42&x=15000&y=10000&z=2.500000';
+        const slide = makeSlide({ image_id: '42' });
+        await runMount(slide);
+        capturedOpenCb!();
+
+        expect(mockViewport.goHome).not.toHaveBeenCalled();
+        expect(mockViewport.panTo).toHaveBeenCalledWith(expect.anything(), true);
+        expect(mockViewport.zoomTo).toHaveBeenCalledWith(2.5, undefined, true);
+
+        // imageToViewportCoordinates was called with the hash image-pixel coords
+        const imgArg = mockViewport.imageToViewportCoordinates.mock.calls[0][0];
+        expect(imgArg.x).toBe(15000);
+        expect(imgArg.y).toBe(10000);
+    });
+
+    it('does not clobber the share-link hash before the open handler fires (selectSlide regression)', async () => {
+        // The old bug: selectSlide called writeHashState() after mountOSD() returned
+        // but before the OSD 'open' event fired. The viewport existed but had no tile
+        // source, so image coordinates defaulted to ~(1,1), overwriting the hash.
+        window.location.hash = '#wsi:slide=42&x=15000&y=10000&z=2.5';
+        const slide = makeSlide({ image_id: '42' });
+
+        await runMount(slide); // mountOSD returns; 'open' has NOT fired yet
+
+        // Hash must still carry the original share-link coordinates
+        expect(window.location.hash).toBe('#wsi:slide=42&x=15000&y=10000&z=2.5');
+
+        // Firing the open handler must restore (panTo) not reset (goHome)
+        capturedOpenCb!();
+        expect(mockViewport.goHome).not.toHaveBeenCalled();
+        expect(mockViewport.panTo).toHaveBeenCalled();
+    });
+
+    it('registers animation-finish inside open callback, not before', async () => {
+        // animation-finish must only be registered AFTER hash is read and viewport
+        // is set, so OSD's own initial-animation-finish cannot clobber the hash.
+        window.location.hash = '';
+        const slide = makeSlide({ image_id: '42' });
+        await runMount(slide);
+
+        // Before 'open' fires: no animation-finish listener should exist
+        const beforeOpen = (mockViewer.addHandler.mock.calls as [string, unknown][])
+            .some(([ev]) => ev === 'animation-finish');
+        expect(beforeOpen).toBe(false);
+
+        capturedOpenCb!();
+
+        // After 'open' fires: animation-finish listener must be registered
+        const afterOpen = (mockViewer.addHandler.mock.calls as [string, unknown][])
+            .some(([ev]) => ev === 'animation-finish');
+        expect(afterOpen).toBe(true);
     });
 });
