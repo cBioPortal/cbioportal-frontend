@@ -66,6 +66,9 @@ export default class WSIViewer extends React.Component<Props, {}> {
      *  and bails if a newer call has started by the time an async step resumes. */
     private mountSeq = 0;
 
+    /** Number of gunicorn workers on the tile server (used to fire warmup N times) */
+    private nWorkers = 4;
+
     constructor(props: Props) {
         super(props);
         makeObservable(this);
@@ -103,6 +106,14 @@ export default class WSIViewer extends React.Component<Props, {}> {
         this.mountSeq++;
 
         try {
+            // Read n_workers from the health endpoint so warmup fires the right
+            // number of times to prime every gunicorn worker's SlideCache.
+            const base = this.tileServerBase;
+            fetch(`${base}/health`)
+                .then(r => r.ok ? r.json() : null)
+                .then((d: any) => { if (d?.n_workers) this.nWorkers = d.n_workers; })
+                .catch(() => { /* leave default of 4 */ });
+
             const resp = await fetch(this.props.url);
             if (!resp.ok) {
                 throw new Error(`Server returned ${resp.status}`);
@@ -140,10 +151,9 @@ export default class WSIViewer extends React.Component<Props, {}> {
      * first one), fetch metadata + thumbnail concurrently. Both endpoints cache
      * results in Redis so every subsequent user click is served instantly.
      *
-     * Runs serially (one slide at a time) so that 3 gunicorn workers remain free
-     * for user-initiated requests. The two concurrent fetches per slide exploit
-     * the server-side SlideCache lock: the first request opens the SVS file from
-     * S3 while the second waits, then both complete from the already-open handle.
+     * Also fires the /warmup endpoint nWorkers times per slide so every gunicorn
+     * worker's SlideCache gets primed (round-robin routing means N calls ≈ N workers).
+     * Runs serially (one slide at a time) to keep workers free for user requests.
      */
     private async prefetchSlideMetadata(skipImageId?: string) {
         const slides = this.servableSlides
@@ -153,6 +163,9 @@ export default class WSIViewer extends React.Component<Props, {}> {
         for (const sl of slides) {
             if (!this.hierarchy) return;
             const base = this.tileServerBase;
+            const warmupCalls = Array.from({ length: this.nWorkers }, () =>
+                fetch(`${base}/tiles/${sl.image_id}/warmup`).catch(() => {})
+            );
             await Promise.allSettled([
                 fetch(`${base}/tiles/${sl.image_id}/metadata`)
                     .then(r => r.ok ? r.json() : Promise.reject(r.status))
@@ -160,6 +173,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
                 // Thumbnail fetch warms the Redis cache so the sidebar img is
                 // served from Redis (no SVS open) on the first user click.
                 fetch(`${base}/tiles/${sl.image_id}/thumbnail`),
+                ...warmupCalls,
             ]);
             // Brief pause between slides to avoid S3 connection pile-up.
             await new Promise(r => setTimeout(r, 200));
