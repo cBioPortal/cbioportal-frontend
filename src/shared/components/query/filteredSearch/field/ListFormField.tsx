@@ -18,7 +18,7 @@ export const FilterList: FunctionComponent<FieldProps> = props => {
     const queryString = toQueryString(props.query);
     return (
         <div className="filter-list">
-            <h3>{props.filter.form.label}</h3>
+            <h5>{props.filter.form.label}</h5>
             {form.options.map(option => {
                 const update = props.parser.parseSearchQuery(option);
                 return (
