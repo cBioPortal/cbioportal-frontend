@@ -1,13 +1,23 @@
 export * from './model/ClinicalDataBySampleId';
 export * from './model/RequestStatus';
+export * from './model/BackwardCompatibilityAliases';
 
+// Import and re-export the backward-compatible API wrapper classes
+export { default as CBioPortalAPI } from './api/CBioPortalAPICompat';
+export { default as CBioPortalAPIInternal } from './api/CBioPortalAPIInternalCompat';
+
+// Also export the raw generated APIs for those who need them
+export { default as CBioPortalAPIRaw } from './generated/CBioPortalAPI';
+export { default as CBioPortalAPIInternalRaw } from './generated/CBioPortalAPIInternal';
+
+// Export all types from generated APIs - this includes the real Sample type
 export * from './generated/CBioPortalAPI';
-export { default as CBioPortalAPI } from './generated/CBioPortalAPI';
-
-// We need to do named exports here. We cannot simply do
-//  export * from './generated/CBioPortalAPIInternal';
-// because both CBioPortalAPI and CBioPortalAPIInternal include models with the same name
-// which causes TS errors
+// For backward compatibility, export SampleDTO as Sample since application code
+// expects Sample to have properties like sampleId and studyId (which are on SampleDTO)
+export { SampleDTO as Sample } from './generated/CBioPortalAPIInternal';
+// For CBioPortalAPIInternal, we need selective exports to avoid conflicts
+//
+// Export types that still have their original names in generated code
 export {
     AlterationCountByGene,
     AlterationCountByStructuralVariant,
@@ -27,7 +37,6 @@ export {
     ClinicalDataCount,
     ClinicalDataCountFilter,
     ClinicalDataCountItem,
-    ClinicalDataEnrichment,
     ClinicalDataFilter,
     ClinicalEvent,
     ClinicalEventAttributeRequest,
@@ -112,7 +121,6 @@ export {
     ReferenceGenomeGene,
     ResourceData,
     ResourceDefinition,
-    Sample,
     SampleClinicalDataCollection,
     SampleIdentifier,
     SampleMolecularIdentifier,
@@ -129,5 +137,4 @@ export {
     SurvivalRequest,
     VariantCount,
     VariantCountIdentifier,
-    default as CBioPortalAPIInternal,
 } from './generated/CBioPortalAPIInternal';
