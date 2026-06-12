@@ -387,6 +387,9 @@ export default abstract class AnalysisStore {
         entities: any[],
         attributeIds: string[]
     ): Promise<Array<ClinicalData>> {
+        if (entities.length === 0 || studies.length === 0) {
+            return Promise.resolve([] as ClinicalData[]);
+        }
         // single study query endpoint is optimal so we should use it
         // when there's only one study
         if (studies.length === 1) {

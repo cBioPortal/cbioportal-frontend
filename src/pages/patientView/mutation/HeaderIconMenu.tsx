@@ -8,6 +8,7 @@ export interface IHeaderIconMenuProps {
     name: string;
     showIcon?: boolean;
     suppressClickBubble?: boolean;
+    children?: React.ReactNode;
 }
 
 export default class HeaderIconMenu extends React.Component<

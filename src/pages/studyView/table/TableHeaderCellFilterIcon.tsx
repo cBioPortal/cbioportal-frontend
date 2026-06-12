@@ -12,6 +12,7 @@ export interface IFilterHeaderProps {
     className?: string;
     dataTest?: string;
     onClickCallback?: (event: any) => void;
+    children?: React.ReactNode;
 }
 
 export class TableHeaderCellFilterIcon extends React.Component<

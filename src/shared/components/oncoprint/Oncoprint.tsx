@@ -383,8 +383,31 @@ export default class Oncoprint extends React.Component<IOncoprintProps, {}> {
         );
     }
 
+    private totalTrackCount(props: Partial<IOncoprintProps> | undefined) {
+        if (!props) {
+            return 0;
+        }
+        return (
+            (props.clinicalTracks || []).length +
+            (props.geneticTracks || []).length +
+            (props.genesetHeatmapTracks || []).length +
+            (props.heatmapTracks || []).length +
+            (props.categoricalTracks || []).length
+        );
+    }
+
     private refreshOncoprint(props: IOncoprintProps) {
         const start = performance.now();
+        // Ignore a transient all-empty track set (track props can briefly be
+        // empty while recomputing). Applying it would drop every track from
+        // oncoprintjs and lose oncoprintjs-only state such as heatmap sort
+        // directions.
+        if (
+            this.totalTrackCount(props) === 0 &&
+            this.totalTrackCount(this.lastTransitionProps) > 0
+        ) {
+            return;
+        }
         if (!this.oncoprintJs) {
             // instantiate new one
             this.oncoprintJs = new OncoprintJS(

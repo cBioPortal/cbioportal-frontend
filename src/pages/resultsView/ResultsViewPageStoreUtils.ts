@@ -9,6 +9,7 @@ import {
     MolecularProfile,
     Mutation,
     NumericGeneMolecularData,
+    Patient,
     PatientFilter,
     PatientIdentifier,
     ReferenceGenomeGene,
@@ -816,6 +817,9 @@ function sortGenericAssayEnrichmentData(
 }
 
 export function fetchPatients(samples: Sample[]) {
+    if (samples.length === 0) {
+        return Promise.resolve([] as Patient[]);
+    }
     let patientKeyToPatientIdentifier: {
         [uniquePatientKey: string]: PatientIdentifier;
     } = {};

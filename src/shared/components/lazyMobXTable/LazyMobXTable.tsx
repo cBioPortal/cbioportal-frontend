@@ -7,6 +7,7 @@ import {
     IReactionDisposer,
     observable,
     reaction,
+    runInAction,
     makeObservable,
 } from 'mobx';
 import { observer, Observer } from 'mobx-react';
@@ -969,7 +970,6 @@ export default class LazyMobXTable<T> extends React.Component<
 
     constructor(props: LazyMobXTableProps<T>) {
         super(props);
-        makeObservable(this);
         this.store = new LazyMobXTableStore<T>(props);
 
         this.handlers = {
@@ -1109,8 +1109,10 @@ export default class LazyMobXTable<T> extends React.Component<
         }
     }
 
-    @action componentWillReceiveProps(nextProps: LazyMobXTableProps<T>) {
-        this.store.setProps(nextProps);
+    componentWillReceiveProps(nextProps: LazyMobXTableProps<T>) {
+        runInAction(() => {
+            this.store.setProps(nextProps);
+        });
     }
 
     private getPaginationControls() {

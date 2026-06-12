@@ -31,9 +31,9 @@
   },
   "peerDependencies": {
     "mobx": "^6.0.0",
-    "mobx-react": "^6.0.0",
-    "react": "^15.0.0 || ^16.0.0",
-    "react-dom": "^15.0.0 || ^16.0.0"
+    "mobx-react": "^6.0.0 || ^7.0.0",
+    "react": "^15.0.0 || ^16.0.0 || ^17.0.0 || ^18.0.0",
+    "react-dom": "^15.0.0 || ^16.0.0 || ^17.0.0 || ^18.0.0"
   },
   "dependencies": {
     "autobind-decorator": "^2.1.0",

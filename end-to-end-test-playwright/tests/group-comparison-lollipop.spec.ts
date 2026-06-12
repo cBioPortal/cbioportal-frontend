@@ -22,6 +22,20 @@ const MUTATIONS_AR_URL =
 
 const MUTATIONS_PLOT = '[data-test="ComparisonPageMutationsTabPlot"]';
 
+/**
+ * Click a lollipop to select it. The lollipop's click target is a shared
+ * hit-zone overlay that the plot repositions over the hovered lollipop via a
+ * MobX observable; under React 18 that re-render commits asynchronously, so we
+ * hover and let the overlay settle before clicking — otherwise the click lands
+ * before the overlay (and its onClick) is in place and the selection no-ops.
+ */
+async function selectLollipop(page: Page, selector: string) {
+    const lollipop = page.locator(selector).first();
+    await lollipop.hover({ force: true });
+    await page.waitForTimeout(500);
+    await lollipop.click({ force: true });
+}
+
 /** Convert any CSS color string to a lowercase `#rrggbb` hex. */
 function rgbToHex(color: string): string {
     if (!color) return '';
@@ -1084,11 +1098,7 @@ test.describe('group comparison mutations tab tests', () => {
                     ).textContent()
                 ).toBe('3 patients have more than one mutation in AR');
 
-                // select value
-                await page
-                    .locator('.lollipop-3')
-                    .first()
-                    .click({ force: true });
+                await selectLollipop(page, '.lollipop-3');
                 await expect(
                     byTestHandle(page, 'fisherTestLabel')
                 ).toHaveText(
@@ -1151,11 +1161,7 @@ test.describe('group comparison mutations tab tests', () => {
                         timeout: 15000,
                     });
 
-                    // select value
-                    await page
-                        .locator('.lollipop-1')
-                        .first()
-                        .click({ force: true });
+                    await selectLollipop(page, '.lollipop-1');
                     await expect(
                         byTestHandle(page, 'LazyMobXTable_CountHeader')
                     ).toHaveText('1 Mutation', { timeout: 15000 });
@@ -1242,10 +1248,7 @@ test.describe('group comparison mutations tab tests', () => {
 
         test('filters table with lollipop selection', async ({ page }) => {
             const numberBefore = await page.locator('tr').count();
-            await page
-                .locator('.lollipop-1')
-                .first()
-                .click({ force: true });
+            await selectLollipop(page, '.lollipop-1');
             await expect
                 .poll(async () => page.locator('tr').count(), {
                     timeout: 15000,

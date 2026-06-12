@@ -36,6 +36,11 @@ This repository contains the frontend code for cBioPortal, a comprehensive cance
   - Trailing commas (ES5)
 - Run `pnpm run prettierFixLocal` if CircleCI prettier check fails
 
+### Comments
+- Comments should explain the current code's intent — not narrate what changed or why it replaced a previous version (that's what git history is for).
+- Avoid change logs in code: don't write comments like "switched X to Y because…" or "under React 18 this used to…". State what the code does now and any non-obvious reason it must.
+- Keep them concise; delete comments that no longer match the code.
+
 ### File Organization
 - Source code lives in `src/` directory
 - Shared components: `src/shared/`

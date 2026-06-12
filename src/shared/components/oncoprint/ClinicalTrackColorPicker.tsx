@@ -4,7 +4,12 @@ import autobind from 'autobind-decorator';
 import { action, computed, makeObservable, observable } from 'mobx';
 import styles from '../styles.module.scss';
 import { CirclePicker, CirclePickerProps } from 'react-color';
-import { OverlayTrigger, Popover } from 'react-bootstrap';
+import {
+    OverlayTrigger as OverlayTriggerUntyped,
+    Popover,
+} from 'react-bootstrap';
+// @types/react-bootstrap 0.32 OverlayTriggerProps has no `children` under @types/react 18.
+const OverlayTrigger = OverlayTriggerUntyped as any;
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { ColorPickerIcon } from 'pages/groupComparison/comparisonGroupManager/ColorPickerIcon';
 import {

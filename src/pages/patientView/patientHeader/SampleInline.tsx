@@ -19,6 +19,7 @@ interface ISampleInlineProps {
     hideClinicalTable?: boolean;
     onSelectGenePanel?: (name: string) => void;
     disableTooltip?: boolean;
+    children?: React.ReactNode;
 }
 
 export default class SampleInline extends React.Component<

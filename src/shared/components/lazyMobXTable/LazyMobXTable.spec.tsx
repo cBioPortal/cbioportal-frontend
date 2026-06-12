@@ -1,4 +1,5 @@
 import React from 'react';
+import { act } from 'react-dom/test-utils';
 import { assert, default as chai } from 'chai';
 import chaiEnzyme from 'chai-enzyme';
 import { mount, ReactWrapper } from 'enzyme';
@@ -47,8 +48,9 @@ function getVisibleColumnHeaders(
 
 function simulateTableSearchInput(table: ReactWrapper<any, any>, str: string) {
     let input = table.find('input.tableSearchInput');
-    (input as any).instance().value = str;
-    input.simulate('input');
+    const inputEl = (input as any).instance() as HTMLInputElement;
+    inputEl.value = str;
+    input.simulate('input', { currentTarget: inputEl, target: inputEl });
 }
 
 function clickPrevPage(table: ReactWrapper<any, any>): boolean {
@@ -60,7 +62,10 @@ function clickPrevPage(table: ReactWrapper<any, any>): boolean {
     if (btn.length === 0 || btn.props().disabled) {
         return false;
     } else {
-        btn.simulate('click');
+        act(() => {
+            btn.simulate('click');
+        });
+        table.update();
         return true;
     }
 }
@@ -74,22 +79,20 @@ function clickNextPage(table: ReactWrapper<any, any>): boolean {
     if (btn.length === 0 || btn.props().disabled) {
         return false;
     } else {
-        btn.simulate('click');
+        act(() => {
+            btn.simulate('click');
+        });
+        table.update();
         return true;
     }
 }
 
 function selectItemsPerPage(table: ReactWrapper<any, any>, opt: number) {
-    /*let selector = table.find(PaginationControls).filterWhere(x=>x.hasClass("topPagination")).find(FormControl).filterWhere(x=>x.hasClass("itemsPerPageSelector")).find('select');
-    if (selector.length === 0) {
-        return false;
-    } else {
-        selector.simulate('change', {target: {value:opt+""}});
-        return true;
-    }*/
     let onChangeItemsPerPage = table.find(PaginationControls).props()
         .onChangeItemsPerPage;
-    onChangeItemsPerPage && onChangeItemsPerPage(opt);
+    act(() => {
+        onChangeItemsPerPage && onChangeItemsPerPage(opt);
+    });
     table.update();
 }
 
@@ -2189,7 +2192,9 @@ describe('LazyMobXTable', () => {
             let filterString = 'FILTER0';
             let table = mount(<Table columns={columns} data={data} />);
             simulateTableSearchInput(table, filterString);
-            clock.tick(1000);
+            act(() => {
+                clock.tick(1000);
+            });
             assert.equal(
                 table
                     .update()
@@ -2207,7 +2212,9 @@ describe('LazyMobXTable', () => {
             );
             let table = mount(<Table columns={[column]} data={data} />);
             simulateTableSearchInput(table, filterString);
-            clock.tick(1000);
+            act(() => {
+                clock.tick(1000);
+            });
             assert.equal(
                 table
                     .update()
@@ -2220,7 +2227,9 @@ describe('LazyMobXTable', () => {
             let filterString = 'asdfj';
             let table = mount(<Table columns={columns} data={data} />);
             simulateTableSearchInput(table, filterString);
-            clock.tick(1000);
+            act(() => {
+                clock.tick(1000);
+            });
             assert.equal(
                 table
                     .update()
@@ -2231,7 +2240,9 @@ describe('LazyMobXTable', () => {
 
             filterString = 'f';
             simulateTableSearchInput(table, filterString);
-            clock.tick(1000);
+            act(() => {
+                clock.tick(1000);
+            });
             assert.equal(
                 table
                     .update()
@@ -2242,7 +2253,9 @@ describe('LazyMobXTable', () => {
 
             filterString = '0';
             simulateTableSearchInput(table, filterString);
-            clock.tick(1000);
+            act(() => {
+                clock.tick(1000);
+            });
             assert.equal(
                 table
                     .update()
@@ -2253,7 +2266,9 @@ describe('LazyMobXTable', () => {
 
             filterString = '';
             simulateTableSearchInput(table, filterString);
-            clock.tick(1000);
+            act(() => {
+                clock.tick(1000);
+            });
             assert.equal(
                 table
                     .update()
@@ -2266,7 +2281,9 @@ describe('LazyMobXTable', () => {
             const filterString = 'asdfj';
             const table = mount(<Table columns={columns} data={data} />);
             simulateTableSearchInput(table, filterString);
-            clock.tick(1000);
+            act(() => {
+                clock.tick(1000);
+            });
             assert.equal(
                 table
                     .update()
