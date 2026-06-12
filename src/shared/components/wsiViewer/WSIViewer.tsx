@@ -715,6 +715,12 @@ interface NavPanelProps {
 }
 
 function NavPanel({ hierarchy, selectedSlide, stainFilter, onFilterChange, onSelectSlide }: NavPanelProps) {
+    const allSlides = hierarchy.samples.flatMap(s => s.blocks.flatMap(b => b.slides));
+    const counts = {
+        all: allSlides.length,
+        hne: allSlides.filter(s => s.is_hne).length,
+        ihc: allSlides.filter(s => s.is_ihc).length,
+    };
     const chips: Array<{ key: 'all' | 'hne' | 'ihc'; label: string; color?: string }> = [
         { key: 'all', label: 'All' },
         { key: 'hne', label: '● H&E', color: C.blue },
@@ -732,22 +738,29 @@ function NavPanel({ hierarchy, selectedSlide, stainFilter, onFilterChange, onSel
                     Slides
                 </div>
                 <div style={{ display: 'flex', gap: 5, marginTop: 7, flexWrap: 'wrap' }}>
-                    {chips.map(chip => (
-                        <span
-                            key={chip.key}
-                            onClick={() => onFilterChange(chip.key)}
-                            style={{
-                                fontSize: 11, padding: '2px 8px', borderRadius: 10,
-                                border: `1px solid ${stainFilter === chip.key ? '#c2d9f5' : C.border}`,
-                                background: stainFilter === chip.key ? C.blueLight : '#fff',
-                                color: stainFilter === chip.key ? C.blue : (chip.color || C.muted),
-                                fontWeight: stainFilter === chip.key ? 600 : 400,
-                                cursor: 'pointer', userSelect: 'none',
-                            }}
-                        >
-                            {chip.label}
-                        </span>
-                    ))}
+                    {chips.map(chip => {
+                        const count = counts[chip.key];
+                        const disabled = chip.key !== 'all' && count === 0;
+                        const active = stainFilter === chip.key;
+                        return (
+                            <span
+                                key={chip.key}
+                                onClick={() => !disabled && onFilterChange(chip.key)}
+                                style={{
+                                    fontSize: 11, padding: '2px 8px', borderRadius: 10,
+                                    border: `1px solid ${active ? '#c2d9f5' : C.border}`,
+                                    background: active ? C.blueLight : '#fff',
+                                    color: disabled ? C.border : (active ? C.blue : (chip.color || C.muted)),
+                                    fontWeight: active ? 600 : 400,
+                                    cursor: disabled ? 'default' : 'pointer',
+                                    userSelect: 'none',
+                                    opacity: disabled ? 0.5 : 1,
+                                }}
+                            >
+                                {chip.label}{chip.key !== 'all' && ` ${count}`}
+                            </span>
+                        );
+                    })}
                 </div>
             </div>
             {/* Tree */}
