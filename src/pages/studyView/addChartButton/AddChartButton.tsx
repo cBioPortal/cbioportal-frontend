@@ -643,21 +643,6 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                                         marginBottom: 10,
                                     }}
                                 >
-                                    <div
-                                        style={{
-                                            fontSize: 12,
-                                            color: '#666',
-                                            marginBottom:
-                                                selectedProfileFrequencyTableVisible
-                                                    ? 0
-                                                    : 8,
-                                        }}
-                                    >
-                                        The frequency table is the profile-level
-                                        overview for this assay and is shown by
-                                        default. Use the selector below to add
-                                        entity-level charts.
-                                    </div>
                                     {!selectedProfileFrequencyTableVisible && (
                                         <button
                                             className="btn btn-default btn-sm"
