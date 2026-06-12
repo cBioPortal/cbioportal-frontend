@@ -1160,7 +1160,16 @@ test.describe('group comparison mutations tab tests', () => {
                         timeout: 15000,
                     });
 
-                    // select value
+                    // select value — hover and let the shared hit-zone
+                    // overlay settle before clicking; under React 18 it is
+                    // repositioned in an async commit, so an immediate click
+                    // misses the overlay (and its onClick) and the selection
+                    // never applies.
+                    await page
+                        .locator('.lollipop-1')
+                        .first()
+                        .hover({ force: true });
+                    await page.waitForTimeout(500);
                     await page
                         .locator('.lollipop-1')
                         .first()
