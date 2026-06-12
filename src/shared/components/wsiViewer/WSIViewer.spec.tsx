@@ -15,7 +15,10 @@ jest.mock('openseadragon', () => {
         addOnceHandler: jest.fn(),
         addHandler: jest.fn(),
     };
-    return jest.fn(() => mockViewer);
+    const OSD = jest.fn(() => mockViewer) as any;
+    OSD.Point = function(x: number, y: number) { return { x, y }; };
+    OSD.MouseTracker = jest.fn().mockReturnValue({ destroy: jest.fn() });
+    return OSD;
 });
 
 // ---- test data factories ----
@@ -304,5 +307,68 @@ describe('WSIViewer — prefetchSlideMetadata cancellation', () => {
 
         // Only the metadata + thumbnail for slide1 (2 fetches) before bail-out
         assert.isAtMost(fetchCallCount, 2, 'should not continue after hierarchy cleared');
+    });
+});
+
+describe('WSIViewer — goToCoordinates', () => {
+    it('does nothing when osdViewer is null', () => {
+        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        inst.coordInputX = '100';
+        inst.coordInputY = '200';
+        // Should not throw
+        (inst as any).goToCoordinates();
+    });
+
+    it('calls viewport.imageToViewportCoordinates and panTo with parsed coords', () => {
+        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        inst.coordInputX = '500';
+        inst.coordInputY = '750';
+
+        const mockVpPoint = { x: 0.5, y: 0.75 };
+        const mockViewport = {
+            imageToViewportCoordinates: jest.fn().mockReturnValue(mockVpPoint),
+            panTo: jest.fn(),
+        };
+        inst.osdViewer = { viewport: mockViewport };
+
+        (inst as any).goToCoordinates();
+
+        expect(mockViewport.imageToViewportCoordinates).toHaveBeenCalledTimes(1);
+        const arg = mockViewport.imageToViewportCoordinates.mock.calls[0][0];
+        expect(arg.x).toBe(500);
+        expect(arg.y).toBe(750);
+        expect(mockViewport.panTo).toHaveBeenCalledWith(mockVpPoint, false);
+    });
+
+    it('does nothing when coord inputs are empty strings', () => {
+        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        inst.coordInputX = '';
+        inst.coordInputY = '';
+
+        const mockViewport = {
+            imageToViewportCoordinates: jest.fn(),
+            panTo: jest.fn(),
+        };
+        inst.osdViewer = { viewport: mockViewport };
+
+        (inst as any).goToCoordinates();
+
+        expect(mockViewport.panTo).not.toHaveBeenCalled();
+    });
+
+    it('does nothing when coord inputs are non-numeric', () => {
+        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        inst.coordInputX = 'abc';
+        inst.coordInputY = 'xyz';
+
+        const mockViewport = {
+            imageToViewportCoordinates: jest.fn(),
+            panTo: jest.fn(),
+        };
+        inst.osdViewer = { viewport: mockViewport };
+
+        (inst as any).goToCoordinates();
+
+        expect(mockViewport.panTo).not.toHaveBeenCalled();
     });
 });
