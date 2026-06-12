@@ -400,17 +400,22 @@ export default class WSIViewer extends React.Component<Props, {}> {
             if (seq !== this.mountSeq) return;
             action(() => { this.viewerReady = true; })();
 
-            // Restore viewport position from URL hash if present for this slide.
+            // Restore viewport position from URL hash if present for this slide,
+            // otherwise center on the middle of the image.
             const hashState = WSIViewer.readHashState();
-            if (hashState && hashState.slideId === slide.image_id) {
-                try {
-                    const vp = this.osdViewer.viewport;
+            try {
+                const vp = this.osdViewer.viewport;
+                if (hashState && hashState.slideId === slide.image_id) {
                     const imgPt = new (OpenSeadragon as any).Point(hashState.x, hashState.y);
                     const vpPt = vp.imageToViewportCoordinates(imgPt);
                     vp.panTo(vpPt, true);   // immediately (no animation)
                     vp.zoomTo(hashState.z, undefined, true);
-                } catch (_) { /* ignore — viewport not ready */ }
-            }
+                } else {
+                    // Pan to image center immediately so we don't start at (0,0).
+                    // goHome() snaps to zoom-to-fit centered — pass true for no animation.
+                    vp.goHome(true);
+                }
+            } catch (_) { /* ignore — viewport not ready */ }
         });
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.osdViewer.addOnceHandler('open-failed', (e: any) => {
