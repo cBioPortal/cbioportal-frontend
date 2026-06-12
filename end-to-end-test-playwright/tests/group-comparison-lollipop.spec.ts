@@ -1084,7 +1084,16 @@ test.describe('group comparison mutations tab tests', () => {
                     ).textContent()
                 ).toBe('3 patients have more than one mutation in AR');
 
-                // select value
+                // select value — hover and let the shared hit-zone overlay
+                // settle before clicking. Under React 18 the overlay (which
+                // carries the lollipop's onClick) is repositioned in an
+                // async commit, so an immediate click would miss it and the
+                // selection — and the "selected mutations" label — never apply.
+                await page
+                    .locator('.lollipop-3')
+                    .first()
+                    .hover({ force: true });
+                await page.waitForTimeout(500);
                 await page
                     .locator('.lollipop-3')
                     .first()
@@ -1242,6 +1251,17 @@ test.describe('group comparison mutations tab tests', () => {
 
         test('filters table with lollipop selection', async ({ page }) => {
             const numberBefore = await page.locator('tr').count();
+            // The lollipop's click target is a shared hit-zone overlay that
+            // the plot repositions over the hovered lollipop via a MobX
+            // observable. Under React 18 that re-render is committed
+            // asynchronously, so hover first and let the overlay settle
+            // before clicking — otherwise the click lands before the
+            // overlay (and its onClick) is in place and the selection is lost.
+            await page
+                .locator('.lollipop-1')
+                .first()
+                .hover({ force: true });
+            await page.waitForTimeout(500);
             await page
                 .locator('.lollipop-1')
                 .first()
