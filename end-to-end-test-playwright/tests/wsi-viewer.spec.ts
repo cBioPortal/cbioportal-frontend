@@ -1,0 +1,177 @@
+import { test, expect } from '../fixtures';
+
+/**
+ * End-to-end tests for the native WSI viewer (WSIViewer.tsx).
+ *
+ * These tests require a running tile server and a cBioPortal frontend
+ * build that includes the WSI viewer feature (PR #5608).  They are
+ * gated on the WSI_VIEWER_BASE_URL environment variable so that they
+ * are skipped in CI runs against the public portal (which does not yet
+ * have the feature).
+ *
+ * To run locally:
+ *   WSI_VIEWER_BASE_URL=http://pllimsksparky3:3000 \
+ *   TILE_SERVER_URL=http://pllimsksparky3:8081 \
+ *   CBIO_URL=http://pllimsksparky3:8090 \
+ *   npx playwright test end-to-end-test-playwright/tests/wsi-viewer.spec.ts
+ *
+ * The viewer URL pattern is:
+ *   <baseUrl>/patient/wsiHESlides?studyId=<study>&caseId=<patient>
+ *                                &resourceUrl=<tileServer>/?patient=<patient>&studyId=<study>&cbioUrl=<cbio>
+ */
+
+const BASE_URL = process.env.WSI_VIEWER_BASE_URL ?? '';
+const TILE_SERVER = process.env.TILE_SERVER_URL ?? 'http://pllimsksparky3:8081';
+const CBIO_URL = process.env.CBIO_URL ?? 'http://pllimsksparky3:8090';
+
+// Patient that exists in both the local study and the tile server.
+const STUDY_ID = 'coad_msk_2025';
+const PATIENT_ID = 'P-0000678';
+
+function viewerUrl(hash = ''): string {
+    const resourceUrl = encodeURIComponent(
+        `${TILE_SERVER}/?patient=${PATIENT_ID}&studyId=${STUDY_ID}&cbioUrl=${CBIO_URL}`
+    );
+    const base = `${BASE_URL}/patient/wsiHESlides?studyId=${STUDY_ID}&caseId=${PATIENT_ID}&resourceUrl=${resourceUrl}`;
+    return hash ? `${base}${hash}` : base;
+}
+
+// Skip all tests when the env var is not set (public CI / public portal).
+test.describe('WSI viewer — share view and centering', () => {
+    test.beforeEach(async () => {
+        test.skip(!BASE_URL, 'WSI_VIEWER_BASE_URL not set — skipping WSI viewer e2e tests');
+    });
+
+    test('loads slide at home position, not at (1,1)', async ({ page }) => {
+        await page.goto(viewerUrl());
+        await expect(page.locator('button:has-text("Share view")')).toBeVisible({
+            timeout: 30_000,
+        });
+
+        // After open handler fires, hash is written with real slide coordinates.
+        // The bug would produce x=1&y=1; the fix produces the actual image center.
+        const hash = await page.evaluate(() => window.location.hash);
+        expect(hash).toMatch(/^#wsi:slide=/);
+
+        const params = new URLSearchParams(hash.replace(/^#wsi:/, ''));
+        const x = Number(params.get('x'));
+        const y = Number(params.get('y'));
+
+        // Home position is the center of a ~65k×45k pixel slide.
+        // It must be >> 1 to confirm the (1,1) regression is absent.
+        expect(x).toBeGreaterThan(100);
+        expect(y).toBeGreaterThan(100);
+    });
+
+    test('share view URL preserves position on reload', async ({ page }) => {
+        // 1. Open the viewer fresh (no hash).
+        await page.goto(viewerUrl());
+        await expect(page.locator('button:has-text("Share view")')).toBeVisible({
+            timeout: 30_000,
+        });
+
+        // 2. Navigate to a known position via the coord bar.
+        await page.locator('input[placeholder="px"]').nth(0).fill('15000');
+        await page.locator('input[placeholder="px"]').nth(1).fill('10000');
+        await page.locator('button:has-text("Go")').click();
+
+        // Wait for hash to reflect the new position.
+        await expect
+            .poll(() => page.evaluate(() => window.location.hash), { timeout: 5_000 })
+            .toMatch(/x=15000/);
+
+        // 3. Capture share URL (intercept clipboard).
+        await page.evaluate(() => {
+            Object.defineProperty(navigator, 'clipboard', {
+                value: { writeText: async (t: string) => { (window as any)._copiedUrl = t; } },
+                configurable: true,
+                writable: true,
+            });
+        });
+        await page.locator('button:has-text("Share view")').click();
+        await expect(page.locator('button:has-text("✓ Copied")')).toBeVisible({
+            timeout: 3_000,
+        });
+
+        const copiedUrl: string = await page.evaluate(() => (window as any)._copiedUrl);
+        expect(copiedUrl).toContain('x=15000');
+        expect(copiedUrl).toContain('y=10000');
+
+        // 4. Open the share URL in a new tab and verify position is restored.
+        const newPage = await page.context().newPage();
+        await newPage.goto(copiedUrl);
+        await expect(newPage.locator('button:has-text("Share view")')).toBeVisible({
+            timeout: 30_000,
+        });
+
+        const restoredHash = await newPage.evaluate(() => window.location.hash);
+        const restoredParams = new URLSearchParams(restoredHash.replace(/^#wsi:/, ''));
+
+        // Position must be preserved — not reset to (1,1) or home.
+        expect(Number(restoredParams.get('x'))).toBe(15000);
+        expect(Number(restoredParams.get('y'))).toBe(10000);
+
+        await newPage.close();
+    });
+
+    test('share view button shows "✓ Copied" feedback', async ({ page }) => {
+        await page.goto(viewerUrl());
+        await expect(page.locator('button:has-text("Share view")')).toBeVisible({
+            timeout: 30_000,
+        });
+
+        // Intercept clipboard so the button can complete without a secure context.
+        await page.evaluate(() => {
+            Object.defineProperty(navigator, 'clipboard', {
+                value: { writeText: async () => {} },
+                configurable: true,
+                writable: true,
+            });
+        });
+
+        await page.locator('button:has-text("Share view")').click();
+        await expect(page.locator('button:has-text("✓ Copied")')).toBeVisible();
+        // Button reverts after 2 s.
+        await expect(page.locator('button:has-text("Share view")')).toBeVisible({
+            timeout: 4_000,
+        });
+    });
+
+    test('coord nav jumps to entered pixel coordinates', async ({ page }) => {
+        await page.goto(viewerUrl());
+        await expect(page.locator('button:has-text("Share view")')).toBeVisible({
+            timeout: 30_000,
+        });
+
+        await page.locator('input[placeholder="px"]').nth(0).fill('5000');
+        await page.locator('input[placeholder="px"]').nth(1).fill('3000');
+        await page.locator('button:has-text("Go")').click();
+
+        await expect
+            .poll(() => page.evaluate(() => window.location.hash), { timeout: 5_000 })
+            .toMatch(/x=5000/);
+
+        const hash = await page.evaluate(() => window.location.hash);
+        const params = new URLSearchParams(hash.replace(/^#wsi:/, ''));
+        expect(Number(params.get('x'))).toBe(5000);
+        expect(Number(params.get('y'))).toBe(3000);
+    });
+
+    test('opening a share link with a different slide ID restores that slide', async ({
+        page,
+    }) => {
+        // Navigate with a hash specifying the first slide.
+        const hashWithSlide = '#wsi:slide=1492807&x=20000&y=15000&z=1.2';
+        await page.goto(viewerUrl(hashWithSlide));
+        await expect(page.locator('button:has-text("Share view")')).toBeVisible({
+            timeout: 30_000,
+        });
+
+        // Hash should be preserved (not overwritten with garbage from selectSlide).
+        const hash = await page.evaluate(() => window.location.hash);
+        const params = new URLSearchParams(hash.replace(/^#wsi:/, ''));
+        expect(params.get('slide')).toBe('1492807');
+        expect(Number(params.get('x'))).toBe(20000);
+        expect(Number(params.get('y'))).toBe(15000);
+    });
+});
