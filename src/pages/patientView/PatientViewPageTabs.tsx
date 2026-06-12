@@ -645,24 +645,6 @@ export function tabs(
         </MSKTab>
     );
 
-    pageComponent.showWholeSlideViewerTab &&
-        pageComponent.wholeSlideViewerUrl.result &&
-        tabs.push(
-            <MSKTab
-                key={6}
-                id={PatientViewPageTabs.MSKTissueImage}
-                linkText="Tissue Image"
-                unmountOnHide={false}
-            >
-                <div>
-                    <IFrameLoader
-                        height={WindowStore.size.height - 220}
-                        url={pageComponent.wholeSlideViewerUrl.result!}
-                    />
-                </div>
-            </MSKTab>
-        );
-
     // Native OpenSeadragon WSI viewer tab — shown when msk_wsi_tile_server_url
     // is configured (non-null). Empty string = use dev-server proxy at /patient.
     // Fetches patient hierarchy directly from tile server;
