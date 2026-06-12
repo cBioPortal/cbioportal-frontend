@@ -29,6 +29,7 @@ export interface IGenericAssaySelectionProps {
     };
     genericAssayType: string;
     submitButtonText: string;
+    profileAction?: React.ReactNode;
     containerWidth?: number;
     initialGenericAssayEntityIds?: string[];
     allowEmptySubmission?: boolean;
@@ -375,7 +376,13 @@ export default class GenericAssaySelection extends React.Component<
                         : 'auto',
                 }}
             >
-                <div data-test="GenericAssayProfileSelection">
+                <div
+                    data-test="GenericAssayProfileSelection"
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                    }}
+                >
                     {/* {this.isSelectedGenericAssayOptionsOverLimit && (
                         <div className="alert alert-warning">
                             <i
@@ -387,13 +394,20 @@ export default class GenericAssaySelection extends React.Component<
                             than 100 options.
                         </div>
                     )} */}
-                    <Select
-                        value={this.selectedProfileOption}
-                        onChange={this.handleProfileSelect}
-                        options={this.props.molecularProfileOptions}
-                        isClearable={false}
-                        isSearchable={false}
-                    />
+                    <div style={{ flex: 1 }}>
+                        <Select
+                            value={this.selectedProfileOption}
+                            onChange={this.handleProfileSelect}
+                            options={this.props.molecularProfileOptions}
+                            isClearable={false}
+                            isSearchable={false}
+                        />
+                    </div>
+                    {this.props.profileAction && (
+                        <div style={{ marginLeft: 10 }}>
+                            {this.props.profileAction}
+                        </div>
+                    )}
                 </div>
                 <div
                     style={{

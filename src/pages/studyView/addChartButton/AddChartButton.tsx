@@ -636,32 +636,27 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                         id={type}
                         linkText={deriveDisplayTextFromGenericAssayType(type)}
                     >
-                        {selectedProfileSupportsFrequencyTable &&
-                            selectedProfileOption && (
-                                <div
-                                    style={{
-                                        marginBottom: 10,
-                                    }}
-                                >
-                                    {!selectedProfileFrequencyTableVisible && (
-                                        <button
-                                            className="btn btn-default btn-sm"
-                                            onClick={() =>
-                                                this.onAddGenericAssayFrequencyTable(
-                                                    type,
-                                                    selectedProfileOption
-                                                )
-                                            }
-                                        >
-                                            Re-add frequency table
-                                        </button>
-                                    )}
-                                </div>
-                            )}
                         <GenericAssaySelection
                             containerWidth={this.getTabsWidth}
                             molecularProfileOptions={molecularProfileOptions}
                             submitButtonText={'Add Chart'}
+                            profileAction={
+                                selectedProfileSupportsFrequencyTable &&
+                                selectedProfileOption &&
+                                !selectedProfileFrequencyTableVisible ? (
+                                    <button
+                                        className="btn btn-primary btn-sm"
+                                        onClick={() =>
+                                            this.onAddGenericAssayFrequencyTable(
+                                                type,
+                                                selectedProfileOption
+                                            )
+                                        }
+                                    >
+                                        Re-add frequency table
+                                    </button>
+                                ) : undefined
+                            }
                             genericAssayType={type}
                             genericAssayEntityOptions={
                                 genericAssayEntityOptions
