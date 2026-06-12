@@ -1,5 +1,4 @@
 import React from 'react';
-import { flushSync } from 'react-dom';
 import { act } from 'react-dom/test-utils';
 import { assert, default as chai } from 'chai';
 import chaiEnzyme from 'chai-enzyme';

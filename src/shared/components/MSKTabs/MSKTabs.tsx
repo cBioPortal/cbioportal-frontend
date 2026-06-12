@@ -567,8 +567,13 @@ export class MSKTabs extends React.Component<IMSKTabsProps> {
 
             React.Children.forEach(
                 this.props.children,
-                (tab: any, index: number) => {
-                    if (!tab || !(tab.props.id in this.tabIdToNavTabWidth)) {
+                (tab: React.ReactNode, index: number) => {
+                    // children may include non-elements (strings, fragments,
+                    // null); only <MSKTab> elements carry a usable `id`.
+                    if (
+                        !React.isValidElement<{ id: string }>(tab) ||
+                        !(tab.props.id in this.tabIdToNavTabWidth)
+                    ) {
                         // skip a null child or a tab that hasnt been rendered yet
                         return;
                     }

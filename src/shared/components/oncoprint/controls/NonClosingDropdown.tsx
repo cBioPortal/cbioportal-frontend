@@ -10,7 +10,9 @@ type DropdownButtonProps = DropdownButtonPropsStrict & {
     onToggle?: (newOpen: boolean) => void;
     children?: React.ReactNode;
 };
-const DropdownButton = DropdownButtonUntyped as any;
+const DropdownButton = (DropdownButtonUntyped as unknown) as React.ComponentType<
+    DropdownButtonProps
+>;
 import { observer } from 'mobx-react';
 import { computed, makeObservable, observable } from 'mobx';
 

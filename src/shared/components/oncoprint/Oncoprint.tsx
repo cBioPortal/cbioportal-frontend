@@ -398,15 +398,11 @@ export default class Oncoprint extends React.Component<IOncoprintProps, {}> {
 
     private refreshOncoprint(props: IOncoprintProps) {
         const start = performance.now();
-        // The track-spec props are remoteData-backed and momentarily resolve
-        // to empty while their data recomputes (e.g. during a sample/patient
-        // column-mode switch). Under React 18 that transient empty render is
-        // committed on its own, and applying it would remove every track from
-        // oncoprintjs — discarding oncoprintjs-only state such as heatmap
-        // track sort directions — only to re-add the tracks fresh one tick
-        // later. An oncoprint always has at least one gene track, so an
-        // all-empty track set following a non-empty one is never a real
-        // state; skip it and wait for the data to settle.
+        // Ignore a transient all-empty track set (track props are
+        // remoteData-backed and briefly empty while recomputing): applying it
+        // would drop every track from oncoprintjs and lose oncoprintjs-only
+        // state such as heatmap sort directions. An oncoprint always has at
+        // least one gene track.
         if (
             this.totalTrackCount(props) === 0 &&
             this.totalTrackCount(this.lastTransitionProps) > 0

@@ -698,8 +698,8 @@ importers:
         specifier: ^0.22.23
         version: 0.22.35
       '@types/react-test-renderer':
-        specifier: ^17.0.1
-        version: 17.0.9
+        specifier: ^18.3.1
+        version: 18.3.1
       '@types/yargs':
         specifier: 17.0.35
         version: 17.0.35
@@ -764,8 +764,8 @@ importers:
         specifier: 24.40.0
         version: 24.40.0(typescript@4.9.5)
       react-test-renderer:
-        specifier: ^17.0.2
-        version: 17.0.2(react@18.3.1)
+        specifier: ^18.3.1
+        version: 18.3.1(react@18.3.1)
       request:
         specifier: ^2.88.0
         version: 2.88.2
@@ -3354,8 +3354,8 @@ packages:
   '@types/react-table@6.8.16':
     resolution: {integrity: sha512-R6qpqybJ9EZHrXczGSZRoODkbk5NiwUbdVdBKufDtntycikzOht3wWRs+J4mvr4qyjWVcxXfqKiZ1mIuoxSotw==}
 
-  '@types/react-test-renderer@17.0.9':
-    resolution: {integrity: sha512-bOfxcu5oZ+KxvACScbkTwZ4eGCtZFTz4VZCOVAIfGbThxqiXSIGipKVG8ubaYBXquUSQROzNIUzviWdSnnAlzg==}
+  '@types/react-test-renderer@18.3.1':
+    resolution: {integrity: sha512-vAhnk0tG2eGa37lkU9+s5SoroCsRI08xnsWFiAXOuPH2jqzMbcXvKExXViPi1P5fIklDeCvXqyrdmipFaSkZrA==}
 
   '@types/react-toastify@4.1.0':
     resolution: {integrity: sha512-u7Ie/7LHBsPVz/iJxi/WlRDS7Gh9csCJACTDXx+pSLuZCm94xpkwzhM3jV1L5ZxP/in0Gp2tFbJ91VrSGr1gyQ==}
@@ -10054,10 +10054,10 @@ packages:
       react: ^15.x.x || ^16.x.x
       react-dom: ^15.x.x || ^16.x.x
 
-  react-test-renderer@17.0.2:
-    resolution: {integrity: sha512-yaQ9cB89c17PUb0x6UfWRs7kQCorVdHlutU1boVPEsB8IDZH6n9tHxMacc3y0JoXOJUsZb/t/Mb8FUWMKaM7iQ==}
+  react-test-renderer@18.3.1:
+    resolution: {integrity: sha512-KkAgygexHUkQqtvvx/otwxtuFu5cVjfzTCtjXLH9boS19/Nbtg84zS7wIQn39G8IlrhThBpQsMKkq5ZHZIYFXA==}
     peerDependencies:
-      react: 17.0.2
+      react: ^18.3.1
 
   react-text-truncate@0.9.3:
     resolution: {integrity: sha512-vJHftoSjGETgTKE3sSakG6adr98X3MbveDiFB4Iy8XRvS6gRmyhatZek65+o36X1BgvMFiuqiHKecTbntdOlIA==}
@@ -10572,9 +10572,6 @@ packages:
 
   scheduler@0.19.1:
     resolution: {integrity: sha512-n/zwRWRYSUj0/3g/otKDRPMh6qv2SYMWNq85IEa8iZyAv8od9zDYpGSnpBEjNgcMNq6Scbu5KfIPxNF72R/2EA==}
-
-  scheduler@0.20.2:
-    resolution: {integrity: sha512-2eWfGgAqqWFGqtdMmcL5zCMK1U8KlXv8SQFGglL3CEtd0aDVDWgeF/YoCmvln55m5zSk3J/20hTaSBeSObsQDQ==}
 
   scheduler@0.23.2:
     resolution: {integrity: sha512-UOShsPwz7NrMUqhR6t0hWjFduvOzbtv7toDH1/hIrfRNIDBnnBWd0CwJTGvTpngVlmwGCdP9/Zl/tVrDqcuYzQ==}
@@ -15666,7 +15663,7 @@ snapshots:
     dependencies:
       '@types/react': 18.3.27
 
-  '@types/react-test-renderer@17.0.9':
+  '@types/react-test-renderer@18.3.1':
     dependencies:
       '@types/react': 18.3.27
 
@@ -24363,13 +24360,12 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  react-test-renderer@17.0.2(react@18.3.1):
+  react-test-renderer@18.3.1(react@18.3.1):
     dependencies:
-      object-assign: 4.1.1
       react: 18.3.1
       react-is: 18.3.1
       react-shallow-renderer: 16.15.0(react@18.3.1)
-      scheduler: 0.20.2
+      scheduler: 0.23.2
 
   react-text-truncate@0.9.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
@@ -24981,11 +24977,6 @@ snapshots:
       xmlchars: 2.2.0
 
   scheduler@0.19.1:
-    dependencies:
-      loose-envify: 1.4.0
-      object-assign: 4.1.1
-
-  scheduler@0.20.2:
     dependencies:
       loose-envify: 1.4.0
       object-assign: 4.1.1
