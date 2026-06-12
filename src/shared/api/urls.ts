@@ -366,26 +366,3 @@ export function getDocsUrl(sourceUrl: string, docsBaseUrl?: string): string {
     }
 }
 
-export function getWholeSlideViewerUrl(
-    ids: string[],
-    userName: string
-): string {
-    try {
-        const tokenInfo = JSON.parse(
-            getServerConfig().mskWholeSlideViewerToken
-        );
-        const token = `&token=${tokenInfo.token}`;
-        const time = `&t=${tokenInfo.time}`;
-        const filterTree = ids.length === 1 ? '&filetree=off' : '';
-        return ids.length >= 1
-            ? `https://slides.mskcc.org/cbioportal?ids=${_.map(
-                  ids,
-                  id => id + '.svs'
-              ).join(
-                  ';'
-              )}&user=${userName}${time}${token}&annotation=off${filterTree}`
-            : '';
-    } catch (ex) {
-        throw 'error parsing mskWholeSlideViewerToken';
-    }
-}
