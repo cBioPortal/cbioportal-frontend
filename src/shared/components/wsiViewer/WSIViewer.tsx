@@ -402,6 +402,10 @@ export default class WSIViewer extends React.Component<Props, {}> {
 
             // Restore viewport position from URL hash if present for this slide,
             // otherwise center on the middle of the image.
+            //
+            // IMPORTANT: read the hash BEFORE registering animation-finish, because
+            // OSD may fire animation-finish for its initial fit animation, which would
+            // overwrite the shared-link hash before we restore from it.
             const hashState = WSIViewer.readHashState();
             try {
                 const vp = this.osdViewer.viewport;
@@ -415,7 +419,18 @@ export default class WSIViewer extends React.Component<Props, {}> {
                     // goHome() snaps to zoom-to-fit centered — pass true for no animation.
                     vp.goHome(true);
                 }
+                // Write hash now so the URL reflects the opened slide and position
+                // (for fresh opens this writes the home position; for restores it
+                // writes the restored position).
+                this.writeHashState();
             } catch (_) { /* ignore — viewport not ready */ }
+
+            // Register ongoing hash write AFTER the initial viewport setup so that
+            // OSD's own initial-fit animation-finish event (if any) doesn't
+            // overwrite the shared-link coordinates before we restore them.
+            this.osdViewer.addHandler('animation-finish', () => {
+                this.writeHashState();
+            });
         });
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.osdViewer.addOnceHandler('open-failed', (e: any) => {
@@ -430,12 +445,6 @@ export default class WSIViewer extends React.Component<Props, {}> {
         this.osdViewer.addHandler('tile-load-failed', (e: any) => {
             // eslint-disable-next-line no-console
             console.warn('[WSIViewer] tile-load-failed', e?.tile?.url);
-        });
-
-        // Update URL hash after each pan/zoom animation completes so the view
-        // can be bookmarked and shared.
-        this.osdViewer.addHandler('animation-finish', () => {
-            this.writeHashState();
         });
 
         // Track cursor position and convert to image coordinates for the coord bar.
