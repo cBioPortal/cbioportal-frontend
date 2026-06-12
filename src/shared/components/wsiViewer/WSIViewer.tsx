@@ -3,6 +3,7 @@ import { observer } from 'mobx-react';
 import { observable, action, computed, makeObservable } from 'mobx';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import * as OpenSeadragonLib from 'openseadragon';
+import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import {
     Slide,
     Sample,
@@ -611,16 +612,6 @@ function CoordBar({ inputX, inputY, cursorPos, mpp, onChangeX, onChangeY, onGo, 
         }
     }
 
-    const inputStyle: React.CSSProperties = {
-        width: 72, padding: '2px 5px', fontSize: 11, border: `1px solid ${C.border}`,
-        borderRadius: 3, background: '#fff', color: C.text, outline: 'none',
-    };
-
-    const btnStyle: React.CSSProperties = {
-        padding: '2px 9px', fontSize: 11, cursor: 'pointer',
-        borderRadius: 3, lineHeight: '18px',
-    };
-
     return (
         <div style={{
             position: 'absolute', bottom: 0, left: 0, right: 0,
@@ -633,57 +624,58 @@ function CoordBar({ inputX, inputY, cursorPos, mpp, onChangeX, onChangeY, onGo, 
             zIndex: 10,
         }}>
             <span style={{ fontWeight: 600, color: C.text, marginRight: 2 }}>Go to:</span>
-            <span style={{ color: C.muted }}>X</span>
-            <input
-                type="number"
-                value={inputX}
-                placeholder="px"
-                style={inputStyle}
-                onChange={e => onChangeX(e.target.value)}
-                onKeyDown={handleKey}
-            />
-            <span style={{ color: C.muted }}>Y</span>
-            <input
-                type="number"
-                value={inputY}
-                placeholder="px"
-                style={inputStyle}
-                onChange={e => onChangeY(e.target.value)}
-                onKeyDown={handleKey}
-            />
-            <button
-                onClick={onGo}
-                style={{ ...btnStyle, border: `1px solid ${C.blue}`, background: C.blue, color: '#fff' }}
-            >
+            <div className="input-group input-group-sm" style={{ width: 'auto', display: 'flex', alignItems: 'center', gap: 4 }}>
+                <span style={{ color: C.muted }}>X</span>
+                <input
+                    type="number"
+                    value={inputX}
+                    placeholder="px"
+                    className="form-control input-sm"
+                    style={{ width: 72 }}
+                    onChange={e => onChangeX(e.target.value)}
+                    onKeyDown={handleKey}
+                />
+                <span style={{ color: C.muted }}>Y</span>
+                <input
+                    type="number"
+                    value={inputY}
+                    placeholder="px"
+                    className="form-control input-sm"
+                    style={{ width: 72 }}
+                    onChange={e => onChangeY(e.target.value)}
+                    onKeyDown={handleKey}
+                />
+            </div>
+            <button className="btn btn-primary btn-xs" onClick={onGo}>
                 Go
             </button>
-            <button
-                onClick={handleCopy}
-                title="Copy a link to this exact view (slide, position, zoom)"
-                style={{
-                    ...btnStyle,
-                    border: `1px solid ${copied ? '#3a8a3a' : C.border}`,
-                    background: copied ? '#edfaed' : '#fff',
-                    color: copied ? '#3a8a3a' : C.muted,
-                }}
+            <DefaultTooltip
+                trigger={['hover']}
+                placement="top"
+                overlay={<span>Copy a link to this exact view (slide, position, zoom)</span>}
             >
-                {copied ? '✓ Copied' : '🔗 Share view'}
-            </button>
-            <button
-                onClick={onDownload}
-                title="Download the current viewport as a JPEG image"
-                style={{
-                    ...btnStyle,
-                    border: `1px solid ${C.border}`,
-                    background: '#fff',
-                    color: C.muted,
-                }}
+                <button
+                    className={`btn btn-xs ${copied ? 'btn-success' : 'btn-default'}`}
+                    onClick={handleCopy}
+                >
+                    <i className={`fa ${copied ? 'fa-check' : 'fa-link'}`} />
+                    {' '}{copied ? 'Copied' : 'Share view'}
+                </button>
+            </DefaultTooltip>
+            <DefaultTooltip
+                trigger={['hover']}
+                placement="top"
+                overlay={<span>Download current viewport as JPEG</span>}
             >
-                ⬇ Download
-            </button>
+                <button className="btn btn-default btn-xs" onClick={onDownload}>
+                    <i className="fa fa-download" />
+                    {' '}Download
+                </button>
+            </DefaultTooltip>
             {cursorPos && (
                 <span style={{ marginLeft: 'auto', color: C.muted, fontFamily: 'monospace', fontSize: 11 }}>
-                    📍 {cursorLabel}
+                    <i className="fa fa-crosshairs" style={{ marginRight: 3 }} />
+                    {cursorLabel}
                 </span>
             )}
         </div>
@@ -715,7 +707,7 @@ interface NavPanelProps {
 }
 
 function NavPanel({ hierarchy, selectedSlide, stainFilter, onFilterChange, onSelectSlide }: NavPanelProps) {
-    const allSlides = hierarchy.samples.flatMap(s => s.blocks.flatMap(b => b.slides));
+    const allSlides = hierarchy.samples.flatMap(s => s.parts.flatMap(p => p.blocks.flatMap(b => b.slides)));
     const counts = {
         all: allSlides.length,
         hne: allSlides.filter(s => s.is_hne).length,
@@ -737,28 +729,24 @@ function NavPanel({ hierarchy, selectedSlide, stainFilter, onFilterChange, onSel
                 <div style={{ fontSize: 10, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '.8px' }}>
                     Slides
                 </div>
-                <div style={{ display: 'flex', gap: 5, marginTop: 7, flexWrap: 'wrap' }}>
+                <div className="btn-group btn-group-xs" style={{ marginTop: 7 }}>
                     {chips.map(chip => {
                         const count = counts[chip.key];
                         const disabled = chip.key !== 'all' && count === 0;
                         const active = stainFilter === chip.key;
                         return (
-                            <span
+                            <button
                                 key={chip.key}
-                                onClick={() => !disabled && onFilterChange(chip.key)}
-                                style={{
-                                    fontSize: 11, padding: '2px 8px', borderRadius: 10,
-                                    border: `1px solid ${active ? '#c2d9f5' : C.border}`,
-                                    background: active ? C.blueLight : '#fff',
-                                    color: disabled ? C.border : (active ? C.blue : (chip.color || C.muted)),
-                                    fontWeight: active ? 600 : 400,
-                                    cursor: disabled ? 'default' : 'pointer',
-                                    userSelect: 'none',
-                                    opacity: disabled ? 0.5 : 1,
-                                }}
+                                className={`btn btn-xs ${active ? 'btn-primary' : 'btn-default'}`}
+                                disabled={disabled}
+                                onClick={() => onFilterChange(chip.key)}
                             >
-                                {chip.label}{chip.key !== 'all' && ` ${count}`}
-                            </span>
+                                {chip.key !== 'all' && (
+                                    <i className="fa fa-circle" style={{ fontSize: 8, marginRight: 3, color: active ? undefined : chip.color, verticalAlign: 'middle' }} />
+                                )}
+                                {chip.key === 'hne' ? 'H&E' : chip.key === 'ihc' ? 'IHC' : 'All'}
+                                {chip.key !== 'all' && <span style={{ marginLeft: 4, opacity: 0.8 }}>{count}</span>}
+                            </button>
                         );
                     })}
                 </div>
