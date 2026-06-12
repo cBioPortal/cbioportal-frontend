@@ -398,11 +398,10 @@ export default class Oncoprint extends React.Component<IOncoprintProps, {}> {
 
     private refreshOncoprint(props: IOncoprintProps) {
         const start = performance.now();
-        // Ignore a transient all-empty track set (track props are
-        // remoteData-backed and briefly empty while recomputing): applying it
-        // would drop every track from oncoprintjs and lose oncoprintjs-only
-        // state such as heatmap sort directions. An oncoprint always has at
-        // least one gene track.
+        // Ignore a transient all-empty track set (track props can briefly be
+        // empty while recomputing). Applying it would drop every track from
+        // oncoprintjs and lose oncoprintjs-only state such as heatmap sort
+        // directions.
         if (
             this.totalTrackCount(props) === 0 &&
             this.totalTrackCount(this.lastTransitionProps) > 0
