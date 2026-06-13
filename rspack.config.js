@@ -36,6 +36,8 @@ function cleanAndValidateUrl(url) {
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
 const dotenv = require('dotenv');
+// Load .env early so process.env is populated before DefinePlugin reads it.
+dotenv.config();
 
 const rspack = require('@rspack/core');
 const webpack = rspack;
