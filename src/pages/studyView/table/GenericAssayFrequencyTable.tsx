@@ -29,7 +29,11 @@ import {
     SelectionOperatorEnum,
 } from 'pages/studyView/TableUtils';
 import ifNotDefined from 'shared/lib/ifNotDefined';
-import { getFrequencyTableCategoryPriority } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
+import {
+    getFrequencyTableCategoryPriority,
+    getFrequencyTableDefaultHiddenCategories,
+} from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
+import { TableHeaderCellFilterIcon } from 'pages/studyView/table/TableHeaderCellFilterIcon';
 
 export enum GenericAssayFrequencyTableColumnKey {
     ENTITY = 'Entity',
@@ -47,6 +51,7 @@ export interface IGenericAssayFrequencyTableProps {
     selectedRowsKeys: string[];
     onChangeSelectedRows: (selectedRowsKeys: string[]) => void;
     onSubmitSelection: (selectedRowsKeys: string[][]) => void;
+    onDownloadRowsChange?: (rows: GenericAssayFrequencyTableRow[]) => void;
     extraButtons?: IFixedHeaderTableProps<GenericAssayFrequencyTableRow>['extraButtons'];
     setOperationsButtonText: string;
     showCategoryColumn: boolean;
@@ -75,10 +80,36 @@ function hasCuratedCategorySorting(
     );
 }
 
+export function getGenericAssayFrequencyTableDefaultHiddenCategorySet(
+    genericAssayType?: string
+): { [value: string]: boolean } {
+    return stringListToSet(
+        (getFrequencyTableDefaultHiddenCategories(genericAssayType) || []).map(
+            normalizeCategoryValue
+        )
+    );
+}
+
+export function hasDefaultHiddenCategoryFilter(
+    showCategoryColumn: boolean,
+    genericAssayType?: string
+): boolean {
+    return (
+        showCategoryColumn &&
+        !_.isEmpty(
+            getFrequencyTableDefaultHiddenCategories(genericAssayType) || []
+        )
+    );
+}
+
 export function getGenericAssayFrequencyTableDefaultSortBy(
     showCategoryColumn: boolean,
     genericAssayType?: string
 ): GenericAssayFrequencyTableColumnKey {
+    if (hasDefaultHiddenCategoryFilter(showCategoryColumn, genericAssayType)) {
+        return GenericAssayFrequencyTableColumnKey.FREQ;
+    }
+
     return hasCuratedCategorySorting(showCategoryColumn, genericAssayType)
         ? GenericAssayFrequencyTableColumnKey.CATEGORY
         : GenericAssayFrequencyTableColumnKey.FREQ;
@@ -88,6 +119,10 @@ export function getGenericAssayFrequencyTableDefaultSortDirection(
     showCategoryColumn: boolean,
     genericAssayType?: string
 ): SortDirection {
+    if (hasDefaultHiddenCategoryFilter(showCategoryColumn, genericAssayType)) {
+        return 'desc';
+    }
+
     return hasCuratedCategorySorting(showCategoryColumn, genericAssayType)
         ? 'asc'
         : 'desc';
@@ -131,10 +166,15 @@ export default class GenericAssayFrequencyTable extends React.Component<
     @observable protected sortBy: GenericAssayFrequencyTableColumnKey;
     @observable protected sortDirection: SortDirection;
     @observable private _selectionType: SelectionOperatorEnum;
+    @observable private hideDefaultCategories: boolean;
 
     constructor(props: IGenericAssayFrequencyTableProps) {
         super(props);
         makeObservable(this);
+        this.hideDefaultCategories = hasDefaultHiddenCategoryFilter(
+            this.props.showCategoryColumn,
+            this.props.genericAssayType
+        );
         this.sortBy = getGenericAssayFrequencyTableDefaultSortBy(
             this.props.showCategoryColumn,
             this.props.genericAssayType
@@ -145,9 +185,43 @@ export default class GenericAssayFrequencyTable extends React.Component<
         );
     }
 
+    componentDidMount() {
+        this.emitDownloadRows();
+    }
+
+    componentDidUpdate() {
+        this.emitDownloadRows();
+    }
+
     @computed
     get tableData(): GenericAssayFrequencyTableRow[] {
         return this.props.promise.result || [];
+    }
+
+    @computed
+    get defaultHiddenCategorySet() {
+        return getGenericAssayFrequencyTableDefaultHiddenCategorySet(
+            this.props.genericAssayType
+        );
+    }
+
+    @computed
+    get shouldShowCategoryFilter() {
+        return hasDefaultHiddenCategoryFilter(
+            this.props.showCategoryColumn,
+            this.props.genericAssayType
+        );
+    }
+
+    @computed
+    get visibleTableData(): GenericAssayFrequencyTableRow[] {
+        if (!this.hideDefaultCategories) {
+            return this.tableData;
+        }
+
+        return this.tableData.filter(
+            row => !this.defaultHiddenCategorySet[normalizeCategoryValue(row.category)]
+        );
     }
 
     @computed
@@ -178,12 +252,20 @@ export default class GenericAssayFrequencyTable extends React.Component<
     @computed
     get selectableTableData(): GenericAssayFrequencyTableRow[] {
         if (this.flattenedFilters.length === 0) {
-            return this.tableData;
+            return this.visibleTableData;
         }
 
-        return this.tableData.filter(
+        return this.visibleTableData.filter(
             row => !this.flattenedFilters.includes(row.uniqueKey)
         );
+    }
+
+    @computed
+    get downloadRows(): GenericAssayFrequencyTableRow[] {
+        return [
+            ...this.preSelectedRows,
+            ...this.selectableTableData,
+        ];
     }
 
     @computed
@@ -291,12 +373,24 @@ export default class GenericAssayFrequencyTable extends React.Component<
             },
             [GenericAssayFrequencyTableColumnKey.CATEGORY]: {
                 name: columnKey,
-                headerRender: () => (
-                    <TreatmentGenericColumnHeader
-                        margin={cellMargin}
-                        headerName={columnKey}
-                    />
-                ),
+                headerRender: () =>
+                    this.shouldShowCategoryFilter ? (
+                        <TableHeaderCellFilterIcon
+                            cellMargin={cellMargin}
+                            dataTest="generic-assay-category-filter-header"
+                            showFilter={true}
+                            isFiltered={this.hideDefaultCategories}
+                            onClickCallback={this.toggleDefaultCategoryFilter}
+                            overlay={this.categoryFilterOverlay}
+                        >
+                            <span>{columnKey}</span>
+                        </TableHeaderCellFilterIcon>
+                    ) : (
+                        <TreatmentGenericColumnHeader
+                            margin={cellMargin}
+                            headerName={columnKey}
+                        />
+                    ),
                 render: row => <div>{row.category}</div>,
                 sortBy: row =>
                     getGenericAssayFrequencyTableCategorySortValue(
@@ -388,6 +482,24 @@ export default class GenericAssayFrequencyTable extends React.Component<
         this.sortDirection = sortDirection;
     }
 
+    @computed
+    get categoryFilterOverlay() {
+        if (!this.shouldShowCategoryFilter) {
+            return undefined;
+        }
+
+        return this.hideDefaultCategories ? (
+            <span>
+                Showing altered categories only. Click to include unchanged or
+                unknown rows.
+            </span>
+        ) : (
+            <span>
+                Showing all categories. Click to hide unchanged or unknown rows.
+            </span>
+        );
+    }
+
     @autobind
     isChecked(uniqueKey: string) {
         return !!this.allSelectedRowsKeysSet[uniqueKey];
@@ -416,6 +528,22 @@ export default class GenericAssayFrequencyTable extends React.Component<
             this.props.onChangeSelectedRows(
                 this.props.selectedRowsKeys.filter(key => key !== uniqueKey)
             );
+        }
+    }
+
+    @action.bound
+    toggleDefaultCategoryFilter(event: any) {
+        event.stopPropagation();
+        this.hideDefaultCategories = !this.hideDefaultCategories;
+
+        const visibleKeySet = stringListToSet(
+            this.visibleTableData.map(row => row.uniqueKey)
+        );
+        const nextSelectedRowsKeys = this.props.selectedRowsKeys.filter(
+            key => !!visibleKeySet[key]
+        );
+        if (nextSelectedRowsKeys.length !== this.props.selectedRowsKeys.length) {
+            this.props.onChangeSelectedRows(nextSelectedRowsKeys);
         }
     }
 
@@ -482,6 +610,10 @@ export default class GenericAssayFrequencyTable extends React.Component<
         return index % 2 === 0
             ? styles.highlightedEvenRow
             : styles.highlightedOddRow;
+    }
+
+    private emitDownloadRows() {
+        this.props.onDownloadRowsChange?.(this.downloadRows);
     }
 
     render() {

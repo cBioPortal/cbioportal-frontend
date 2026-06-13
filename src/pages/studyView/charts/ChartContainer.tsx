@@ -14,6 +14,7 @@ import {
 import { GenePanel, StudyViewFilter } from 'cbioportal-ts-api-client';
 import PieChart from 'pages/studyView/charts/pieChart/PieChart';
 import classnames from 'classnames';
+import autobind from 'autobind-decorator';
 import ClinicalTable from 'pages/studyView/table/ClinicalTable';
 import SurvivalChart, {
     LegendLocation,
@@ -25,6 +26,8 @@ import {
     ChartType,
     ClinicalDataCountSummary,
     DataBin,
+    formatGenericAssayFrequencyTableDownloadData,
+    GenericAssayFrequencyTableRow,
     getHeightByDimension,
     getRangeFromDataBins,
     getTableHeightByDimension,
@@ -203,6 +206,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
 
     @observable newlyAdded = false;
     @observable private selectedRowsKeys: string[] = [];
+    @observable.ref private genericAssayFrequencyTableDownloadRows: GenericAssayFrequencyTableRow[] = [];
 
     @observable alertContent: JSX.Element | string | null = null;
 
@@ -317,6 +321,38 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         };
 
         makeObservable(this);
+    }
+
+    @action.bound
+    private onGenericAssayFrequencyTableDownloadRowsChange(
+        rows: GenericAssayFrequencyTableRow[]
+    ) {
+        if (!_.isEqual(this.genericAssayFrequencyTableDownloadRows, rows)) {
+            this.genericAssayFrequencyTableDownloadRows = rows;
+        }
+    }
+
+    @autobind
+    private async getDownloadData(
+        dataType?: DataType
+    ): Promise<string | null> {
+        if (this.props.chartType === ChartTypeEnum.GENERIC_ASSAY_FREQUENCY_TABLE) {
+            return formatGenericAssayFrequencyTableDownloadData(
+                this.genericAssayFrequencyTableDownloadRows,
+                this.props.store.getMolecularChartDataType(
+                    this.props.chartMeta.uniqueKey
+                ) !== GenericAssayDataType.BINARY
+            );
+        }
+
+        const downloadData = this.props.getData?.(dataType);
+        if (downloadData === undefined || downloadData === null) {
+            return null;
+        }
+
+        return typeof downloadData === 'string'
+            ? downloadData
+            : await downloadData;
     }
 
     public toSVGDOMNode(): SVGElement {
@@ -657,6 +693,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             this.handlers.onChangeSelectedRows
                         }
                         onSubmitSelection={this.handlers.onValueSelection}
+                        onDownloadRowsChange={
+                            this.onGenericAssayFrequencyTableDownloadRowsChange
+                        }
                         extraButtons={
                             this.comparisonButtonForTables && [
                                 this.comparisonButtonForTables,
@@ -1658,7 +1697,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             this.toggleRenderPieChartForDownload
                         }
                         getSVG={() => Promise.resolve(this.toSVGDOMNode())}
-                        getData={this.props.getData}
+                        getData={this.getDownloadData}
                         downloadTypes={this.props.downloadTypes}
                         openComparisonPage={this.openComparisonPage}
                         placement={this.placement}

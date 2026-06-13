@@ -5093,11 +5093,11 @@ export async function getMutatedGenesDownloadData(
     } else return '';
 }
 
-export function getGenericAssayFrequencyTableDownloadData(
-    promise: MobxPromise<GenericAssayFrequencyTableRow[]>,
+export function formatGenericAssayFrequencyTableDownloadData(
+    rows: GenericAssayFrequencyTableRow[],
     showCategoryColumn: boolean
 ): string {
-    if (!promise.result) {
+    if (!rows) {
         return '';
     }
 
@@ -5106,7 +5106,7 @@ export function getGenericAssayFrequencyTableDownloadData(
         : ['Entity', '# Samples', 'Freq'];
     const data = [header.join('\t')];
 
-    _.each(promise.result, record => {
+    _.each(rows, record => {
         const rowData = showCategoryColumn
             ? [
                   record.entityLabel,
@@ -5123,6 +5123,20 @@ export function getGenericAssayFrequencyTableDownloadData(
     });
 
     return data.join('\n');
+}
+
+export function getGenericAssayFrequencyTableDownloadData(
+    promise: MobxPromise<GenericAssayFrequencyTableRow[]>,
+    showCategoryColumn: boolean
+): string {
+    if (!promise.result) {
+        return '';
+    }
+
+    return formatGenericAssayFrequencyTableDownloadData(
+        promise.result,
+        showCategoryColumn
+    );
 }
 
 export function getStructuralVariantGenesDownloadData(

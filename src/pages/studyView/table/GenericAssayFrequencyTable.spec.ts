@@ -1,9 +1,11 @@
 import { assert } from 'chai';
 import {
     GenericAssayFrequencyTableColumnKey,
+    getGenericAssayFrequencyTableDefaultHiddenCategorySet,
     getGenericAssayFrequencyTableCategorySortValue,
     getGenericAssayFrequencyTableDefaultSortBy,
 } from './GenericAssayFrequencyTable';
+import GenericAssayFrequencyTable from './GenericAssayFrequencyTable';
 import { GenericAssayTypeConstants } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
 import { GenericAssayFrequencyTableRow } from 'pages/studyView/StudyViewUtils';
 
@@ -23,23 +25,23 @@ describe('GenericAssayFrequencyTable', () => {
     });
 
     describe('default sorting', () => {
-        it('uses curated category sorting for arm-level CNA', () => {
+        it('uses frequency sorting for arm-level CNA when default hidden categories are active', () => {
             assert.equal(
                 getGenericAssayFrequencyTableDefaultSortBy(
                     true,
                     GenericAssayTypeConstants.ARMLEVEL_CNA
                 ),
-                GenericAssayFrequencyTableColumnKey.CATEGORY
+                GenericAssayFrequencyTableColumnKey.FREQ
             );
         });
 
-        it('uses curated category sorting for LOH_HLA', () => {
+        it('uses frequency sorting for LOH_HLA when default hidden categories are active', () => {
             assert.equal(
                 getGenericAssayFrequencyTableDefaultSortBy(
                     true,
                     GenericAssayTypeConstants.LOH_HLA
                 ),
-                GenericAssayFrequencyTableColumnKey.CATEGORY
+                GenericAssayFrequencyTableColumnKey.FREQ
             );
         });
 
@@ -50,6 +52,29 @@ describe('GenericAssayFrequencyTable', () => {
                     GenericAssayTypeConstants.MUTATIONAL_SIGNATURE
                 ),
                 GenericAssayFrequencyTableColumnKey.FREQ
+            );
+        });
+    });
+
+    describe('default hidden categories', () => {
+        it('configures unchanged and unknown as hidden by default for curated arm-level types', () => {
+            assert.deepEqual(
+                getGenericAssayFrequencyTableDefaultHiddenCategorySet(
+                    GenericAssayTypeConstants.ARMLEVEL_CNA
+                ),
+                {
+                    unchanged: true,
+                    unknown: true,
+                }
+            );
+            assert.deepEqual(
+                getGenericAssayFrequencyTableDefaultHiddenCategorySet(
+                    GenericAssayTypeConstants.LOH_HLA
+                ),
+                {
+                    unchanged: true,
+                    unknown: true,
+                }
             );
         });
     });
@@ -104,6 +129,84 @@ describe('GenericAssayFrequencyTable', () => {
                 ),
                 'Subtype B'
             );
+        });
+    });
+
+    describe('component filtering behavior', () => {
+        it('keeps applied hidden rows pinned while hiding them from the selectable table and download rows include visible UI rows', () => {
+            const rows = [
+                makeRow('Loss', 7, 'Entity A'),
+                makeRow('Unchanged', 9, 'Entity B'),
+                makeRow('Unknown', 3, 'Entity C'),
+            ];
+            const component = new GenericAssayFrequencyTable({
+                promise: {
+                    result: rows,
+                    isComplete: true,
+                } as any,
+                width: 600,
+                height: 300,
+                genericAssayType: GenericAssayTypeConstants.ARMLEVEL_CNA,
+                filters: [['Entity B::Unchanged::profile_type']],
+                selectedRowsKeys: [],
+                onChangeSelectedRows: () => {},
+                onSubmitSelection: () => {},
+                showCategoryColumn: true,
+                setOperationsButtonText: 'Apply',
+            });
+
+            assert.deepEqual(
+                component.preSelectedRows.map(row => row.uniqueKey),
+                ['Entity B::Unchanged::profile_type']
+            );
+            assert.deepEqual(
+                component.selectableTableData.map(row => row.uniqueKey),
+                ['Entity A::Loss::profile_type']
+            );
+            assert.deepEqual(
+                component.downloadRows.map(row => row.uniqueKey),
+                [
+                    'Entity B::Unchanged::profile_type',
+                    'Entity A::Loss::profile_type',
+                ]
+            );
+        });
+
+        it('drops staged selections that become hidden when the category filter is enabled', () => {
+            let selectedRowsKeys = [
+                'Entity A::Loss::profile_type',
+                'Entity B::Unchanged::profile_type',
+            ];
+            const component = new GenericAssayFrequencyTable({
+                promise: {
+                    result: [
+                        makeRow('Loss', 7, 'Entity A'),
+                        makeRow('Unchanged', 9, 'Entity B'),
+                    ],
+                    isComplete: true,
+                } as any,
+                width: 600,
+                height: 300,
+                genericAssayType: GenericAssayTypeConstants.ARMLEVEL_CNA,
+                filters: [],
+                selectedRowsKeys,
+                onChangeSelectedRows: nextSelectedRowsKeys => {
+                    selectedRowsKeys = nextSelectedRowsKeys;
+                    (component.props as any).selectedRowsKeys = nextSelectedRowsKeys;
+                },
+                onSubmitSelection: () => {},
+                showCategoryColumn: true,
+                setOperationsButtonText: 'Apply',
+            });
+
+            component.toggleDefaultCategoryFilter({
+                stopPropagation: () => {},
+            } as any);
+            component.toggleDefaultCategoryFilter({
+                stopPropagation: () => {},
+            } as any);
+
+            assert.deepEqual(selectedRowsKeys, ['Entity A::Loss::profile_type']);
         });
     });
 });

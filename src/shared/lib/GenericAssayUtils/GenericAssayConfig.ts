@@ -52,6 +52,7 @@ export type DownloadTabConfig = {
 
 export type FrequencyTableConfig = {
     categoryPriority?: string[][];
+    defaultHiddenCategories?: string[];
 };
 
 // We have some customizations for Gene related Generic Assay profiles (e.g. Methylation)
@@ -109,11 +110,13 @@ const DEFAULT_GENERIC_ASSAY_CONFIG: GenericAssayConfig = {
                     ['loss', 'deletion', 'gain', 'amp', 'amplification'],
                     ['unchanged', 'diploid', 'neutral'],
                 ],
+                defaultHiddenCategories: ['unchanged', 'unknown'],
             },
         },
         [GenericAssayTypeConstants.LOH_HLA]: {
             frequencyTableConfig: {
                 categoryPriority: [['loss'], ['unchanged']],
+                defaultHiddenCategories: ['unchanged', 'unknown'],
             },
         },
         [GenericAssayTypeConstants.METHYLATION]: {
@@ -149,5 +152,14 @@ export function getFrequencyTableCategoryPriority(
     return genericAssayType
         ? GENERIC_ASSAY_CONFIG.genericAssayConfigByType[genericAssayType]
               ?.frequencyTableConfig?.categoryPriority
+        : undefined;
+}
+
+export function getFrequencyTableDefaultHiddenCategories(
+    genericAssayType?: string
+): string[] | undefined {
+    return genericAssayType
+        ? GENERIC_ASSAY_CONFIG.genericAssayConfigByType[genericAssayType]
+              ?.frequencyTableConfig?.defaultHiddenCategories
         : undefined;
 }
