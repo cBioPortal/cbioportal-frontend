@@ -55,7 +55,7 @@ describe('GenericAssayFrequencyTable', () => {
     });
 
     describe('curated category sort values', () => {
-        it('prioritizes altered arm-level CNA categories ahead of unchanged', () => {
+        it('sorts altered arm-level CNA categories by frequency before unchanged', () => {
             const loss = getGenericAssayFrequencyTableCategorySortValue(
                 makeRow('Loss', 2),
                 GenericAssayTypeConstants.ARMLEVEL_CNA
@@ -70,11 +70,13 @@ describe('GenericAssayFrequencyTable', () => {
             );
 
             assert.equal(loss, '00::000000000008::ENTITY A::loss');
-            assert.equal(gain, '01::000000000007::ENTITY A::gain');
+            assert.equal(gain, '00::000000000007::ENTITY A::gain');
             assert.equal(
                 unchanged,
-                '02::000000000001::ENTITY A::unchanged'
+                '01::000000000001::ENTITY A::unchanged'
             );
+            assert.isTrue(gain < loss);
+            assert.isTrue(loss < unchanged);
         });
 
         it('keeps higher-frequency rows first within the same curated category bucket', () => {

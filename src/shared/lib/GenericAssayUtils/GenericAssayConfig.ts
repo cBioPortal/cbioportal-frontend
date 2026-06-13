@@ -106,8 +106,7 @@ const DEFAULT_GENERIC_ASSAY_CONFIG: GenericAssayConfig = {
         [GenericAssayTypeConstants.ARMLEVEL_CNA]: {
             frequencyTableConfig: {
                 categoryPriority: [
-                    ['loss', 'deletion'],
-                    ['gain', 'amp', 'amplification'],
+                    ['loss', 'deletion', 'gain', 'amp', 'amplification'],
                     ['unchanged', 'diploid', 'neutral'],
                 ],
             },
