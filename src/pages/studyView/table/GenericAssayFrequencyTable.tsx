@@ -51,7 +51,6 @@ export interface IGenericAssayFrequencyTableProps {
     selectedRowsKeys: string[];
     onChangeSelectedRows: (selectedRowsKeys: string[]) => void;
     onSubmitSelection: (selectedRowsKeys: string[][]) => void;
-    onDownloadRowsChange?: (rows: GenericAssayFrequencyTableRow[]) => void;
     extraButtons?: IFixedHeaderTableProps<GenericAssayFrequencyTableRow>['extraButtons'];
     setOperationsButtonText: string;
     showCategoryColumn: boolean;
@@ -185,14 +184,6 @@ export default class GenericAssayFrequencyTable extends React.Component<
         );
     }
 
-    componentDidMount() {
-        this.emitDownloadRows();
-    }
-
-    componentDidUpdate() {
-        this.emitDownloadRows();
-    }
-
     @computed
     get tableData(): GenericAssayFrequencyTableRow[] {
         return this.props.promise.result || [];
@@ -266,6 +257,10 @@ export default class GenericAssayFrequencyTable extends React.Component<
             ...this.preSelectedRows,
             ...this.selectableTableData,
         ];
+    }
+
+    public getDownloadRowsData(): GenericAssayFrequencyTableRow[] {
+        return this.downloadRows;
     }
 
     @computed
@@ -610,10 +605,6 @@ export default class GenericAssayFrequencyTable extends React.Component<
         return index % 2 === 0
             ? styles.highlightedEvenRow
             : styles.highlightedOddRow;
-    }
-
-    private emitDownloadRows() {
-        this.props.onDownloadRowsChange?.(this.downloadRows);
     }
 
     render() {

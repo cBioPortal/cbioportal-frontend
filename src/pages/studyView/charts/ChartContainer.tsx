@@ -27,7 +27,6 @@ import {
     ClinicalDataCountSummary,
     DataBin,
     formatGenericAssayFrequencyTableDownloadData,
-    GenericAssayFrequencyTableRow,
     getHeightByDimension,
     getRangeFromDataBins,
     getTableHeightByDimension,
@@ -197,6 +196,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
 
     private handlers: any;
     private plot: AbstractChart;
+    private genericAssayFrequencyTableRef: GenericAssayFrequencyTable | null = null;
 
     private mouseLeaveTimeout: any;
 
@@ -206,7 +206,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
 
     @observable newlyAdded = false;
     @observable private selectedRowsKeys: string[] = [];
-    @observable.ref private genericAssayFrequencyTableDownloadRows: GenericAssayFrequencyTableRow[] = [];
 
     @observable alertContent: JSX.Element | string | null = null;
 
@@ -323,22 +322,13 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         makeObservable(this);
     }
 
-    @action.bound
-    private onGenericAssayFrequencyTableDownloadRowsChange(
-        rows: GenericAssayFrequencyTableRow[]
-    ) {
-        if (!_.isEqual(this.genericAssayFrequencyTableDownloadRows, rows)) {
-            this.genericAssayFrequencyTableDownloadRows = rows;
-        }
-    }
-
     @autobind
     private async getDownloadData(
         dataType?: DataType
     ): Promise<string | null> {
         if (this.props.chartType === ChartTypeEnum.GENERIC_ASSAY_FREQUENCY_TABLE) {
             return formatGenericAssayFrequencyTableDownloadData(
-                this.genericAssayFrequencyTableDownloadRows,
+                this.genericAssayFrequencyTableRef?.getDownloadRowsData() || [],
                 this.props.store.getMolecularChartDataType(
                     this.props.chartMeta.uniqueKey
                 ) !== GenericAssayDataType.BINARY
@@ -678,6 +668,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             case ChartTypeEnum.GENERIC_ASSAY_FREQUENCY_TABLE: {
                 return () => (
                     <GenericAssayFrequencyTable
+                        ref={ref => {
+                            this.genericAssayFrequencyTableRef = ref;
+                        }}
                         promise={this.props.promise}
                         width={getWidthByDimension(
                             this.props.dimension,
@@ -686,16 +679,13 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         height={getTableHeightByDimension(
                             this.props.dimension,
                             this.chartHeaderHeight
-                        )}
+                        )                        }
                         filters={this.props.filters}
                         selectedRowsKeys={this.selectedRowsKeys}
                         onChangeSelectedRows={
                             this.handlers.onChangeSelectedRows
                         }
                         onSubmitSelection={this.handlers.onValueSelection}
-                        onDownloadRowsChange={
-                            this.onGenericAssayFrequencyTableDownloadRowsChange
-                        }
                         extraButtons={
                             this.comparisonButtonForTables && [
                                 this.comparisonButtonForTables,
