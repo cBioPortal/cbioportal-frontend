@@ -646,7 +646,7 @@ function CoordBar({ inputX, inputY, cursorPos, mpp, onChangeX, onChangeY, onGo, 
                     onKeyDown={handleKey}
                 />
             </div>
-            <button className="btn btn-primary btn-xs" onClick={onGo}>
+            <button className="btn btn-primary btn-sm" onClick={onGo}>
                 Go
             </button>
             <DefaultTooltip
@@ -655,11 +655,11 @@ function CoordBar({ inputX, inputY, cursorPos, mpp, onChangeX, onChangeY, onGo, 
                 overlay={<span>Copy a link to this exact view (slide, position, zoom)</span>}
             >
                 <button
-                    className={`btn btn-xs ${copied ? 'btn-success' : 'btn-default'}`}
+                    className={`btn ${copied ? 'btn-success' : 'btn-default'} btn-sm`}
                     onClick={handleCopy}
                 >
                     <i className={`fa ${copied ? 'fa-check' : 'fa-link'}`} />
-                    {' '}{copied ? 'Copied' : 'Share view'}
+                    {' '}{copied ? 'Copied!' : 'Share view'}
                 </button>
             </DefaultTooltip>
             <DefaultTooltip
@@ -667,8 +667,8 @@ function CoordBar({ inputX, inputY, cursorPos, mpp, onChangeX, onChangeY, onGo, 
                 placement="top"
                 overlay={<span>Download current viewport as JPEG</span>}
             >
-                <button className="btn btn-default btn-xs" onClick={onDownload}>
-                    <i className="fa fa-download" />
+                <button className="btn btn-default btn-sm" onClick={onDownload}>
+                    <i className="fa fa-cloud-download" />
                     {' '}Download
                 </button>
             </DefaultTooltip>
