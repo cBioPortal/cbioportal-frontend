@@ -771,6 +771,22 @@ function barcodeSection(barcode: string | null | undefined): string | null {
     return parts.length >= 2 ? (parts[1].trim() || null) : null;
 }
 
+/**
+ * Abbreviate a part_description to fit in the narrow sidebar label.
+ * Truncates at the first "(", ";", comma-followed-by-whitespace, or at
+ * MAX_LEN characters, whichever comes first.
+ */
+function abbreviatePartDesc(desc: string | null | undefined): string | null {
+    if (!desc) return null;
+    const MAX_LEN = 28;
+    // Strip everything from the first parenthesis (e.g. "(fs)", "(MSK:...)")
+    let s = desc.replace(/\s*[(\[;].*$/, '').trim();
+    if (s.length <= MAX_LEN) return s || null;
+    // Hard-truncate at a word boundary
+    const cut = s.lastIndexOf(' ', MAX_LEN);
+    return (cut > 10 ? s.slice(0, cut) : s.slice(0, MAX_LEN)).trim() + '…';
+}
+
 function fmtMB(bytes: string | number | null | undefined): string {
     const n = Number(bytes);
     if (!n) return '—';
@@ -876,24 +892,25 @@ function SampleNode({ sample, selectedSlide, stainFilter, onSelectSlide }: Sampl
         : (stLower.includes('metastas') || stLower === 'local recurrence') ? '#fef0e8'
         : '#f0f0f0';
 
-    // Determine block badge visibility
     const DUMMY = new Set(['0', '']);
     const blockId = (b: { block_label: string; block_number: string }) =>
         (b.block_label || '').trim() || String(b.block_number ?? '');
-    const allLabels = new Set(
-        sample.parts.flatMap(p => p.blocks.map(b => {
-            const l = blockId(b); return DUMMY.has(l) ? null : l;
-        }).filter(Boolean))
-    );
-    const showBlock = allLabels.size > 1;
 
-    // Flatten + sort slides
-    const sortedSlides: Array<{ slide: Slide; badge: string | null }> = [];
+    // Detect multi-part patient (part_description varies → show anatomical site per slide)
+    const allPartDescs = new Set(
+        sample.parts.flatMap(p => p.blocks.flatMap(b =>
+            b.slides.map(sl => sl.part_description || '')
+        )).filter(Boolean)
+    );
+    const multiPart = allPartDescs.size > 1;
+
+    // Flatten + sort slides — block label is now the primary label for H&E, not a badge
+    const sortedSlides: Array<{ slide: Slide; blockLabel: string | null }> = [];
     for (const part of sample.parts) {
         for (const b of part.blocks) {
             const lbl = blockId(b);
-            const badge = (showBlock && !DUMMY.has(lbl)) ? lbl : null;
-            for (const sl of b.slides) sortedSlides.push({ slide: sl, badge });
+            const blockLabel = DUMMY.has(lbl) ? null : lbl;
+            for (const sl of b.slides) sortedSlides.push({ slide: sl, blockLabel });
         }
     }
     // Sort purely chronologically by block_number
@@ -952,7 +969,7 @@ function SampleNode({ sample, selectedSlide, stainFilter, onSelectSlide }: Sampl
             {/* Slide list */}
             {open && (
                 <div style={{ paddingBottom: 4 }}>
-                    {sortedSlides.map(({ slide, badge }) => {
+                    {sortedSlides.map(({ slide, blockLabel }) => {
                         const dc = slide.is_hne ? 'hne' : (slide.is_ihc ? 'ihc' : 'other');
                         const visible = stainFilter === 'all' || dc === stainFilter;
                         if (!visible) return null;
@@ -961,7 +978,8 @@ function SampleNode({ sample, selectedSlide, stainFilter, onSelectSlide }: Sampl
                                 key={slide.image_id}
                                 slide={slide}
                                 sample={sample}
-                                blockBadge={badge}
+                                blockLabel={blockLabel}
+                                multiPart={multiPart}
                                 selected={selectedSlide?.image_id === slide.image_id}
                                 onSelectSlide={onSelectSlide}
                             />
@@ -978,18 +996,57 @@ function SampleNode({ sample, selectedSlide, stainFilter, onSelectSlide }: Sampl
 interface SlideItemProps {
     slide: Slide;
     sample: Sample;
-    blockBadge: string | null;
+    blockLabel: string | null;
+    multiPart: boolean;
     selected: boolean;
     onSelectSlide: (slide: Slide, sample: Sample) => void;
 }
 
-function SlideItem({ slide, sample, blockBadge, selected, onSelectSlide }: SlideItemProps) {
+/**
+ * Short stain label for the sub-line of H&E slides.
+ * Always returns something so the stain type is always visible.
+ */
+function stainQualifier(group: string | null | undefined): string {
+    const g = (group || '').toLowerCase();
+    if (g.includes('frozen')) return 'frozen';
+    if (g.includes('initial')) return 'H&E';
+    return 'H&E recut';
+}
+
+function SlideItem({ slide, sample, blockLabel, multiPart, selected, onSelectSlide }: SlideItemProps) {
     const [hovered, setHovered] = React.useState(false);
-    const dc = slide.is_hne ? 'hne' : (slide.is_ihc ? 'ihc' : 'other');
-    const dotColor = dc === 'hne' ? C.blue : (dc === 'ihc' ? C.orange : '#aaa');
+    const isHE = slide.is_hne || (slide.stain_group || '').toLowerCase().startsWith('h&e');
+    const dotColor = slide.is_hne ? C.blue : (slide.is_ihc ? C.orange : '#aaa');
     const mag = slide.magnification || '';
     const sz = fmtMB(slide.file_size_bytes);
     const section = barcodeSection(slide.barcode);
+    const partDesc = multiPart ? abbreviatePartDesc(slide.part_description) : null;
+
+    // Primary label: block region for H&E, stain name for IHC/special stains.
+    const primaryLabel = isHE
+        ? (blockLabel || section || cleanStain(slide.stain_name))
+        : cleanStain(slide.stain_name);
+
+    // Sub-label: section + stain qualifier for H&E; block + section for IHC.
+    const subTokens: string[] = [];
+    if (section) subTokens.push(section);
+    if (isHE) {
+        subTokens.push(stainQualifier(slide.stain_group));
+    } else {
+        if (blockLabel) subTokens.push(blockLabel);
+    }
+
+    // Tooltip: full metadata for pathologist context.
+    const tooltipLines: string[] = [];
+    if (!slide.can_serve_tiles) tooltipLines.push('⚠ Tiles not yet available');
+    if (slide.barcode)          tooltipLines.push(`Barcode: ${slide.barcode}`);
+    if (slide.stain_name)       tooltipLines.push(`Stain: ${slide.stain_name}`);
+    if (blockLabel)             tooltipLines.push(`Block: ${blockLabel}`);
+    if (slide.part_description) tooltipLines.push(`Part: ${slide.part_description}`);
+    if (section)                tooltipLines.push(`Section: ${section}`);
+    if (mag)                    tooltipLines.push(`Magnification: ${mag}`);
+    if (sz !== '—')             tooltipLines.push(`Size: ${sz}`);
+                                tooltipLines.push(`Image ID: ${slide.image_id}`);
 
     const bg = selected ? C.blueLight : hovered ? C.blueLight : 'transparent';
     const borderLeft = selected ? `2px solid ${C.blue}` : '2px solid transparent';
@@ -1000,10 +1057,10 @@ function SlideItem({ slide, sample, blockBadge, selected, onSelectSlide }: Slide
             onClick={() => slide.can_serve_tiles && onSelectSlide(slide, sample)}
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
-            title={slide.can_serve_tiles ? (slide.barcode || undefined) : 'Tiles not yet available'}
+            title={tooltipLines.join('\n')}
             style={{
                 display: 'flex', alignItems: 'center', gap: 6,
-                padding: '4px 10px 4px 8px', margin: '1px 4px',
+                padding: '4px 8px 4px 8px', margin: '1px 4px',
                 borderRadius: 3, borderLeft,
                 background: bg,
                 cursor: slide.can_serve_tiles ? 'pointer' : 'help',
@@ -1011,21 +1068,26 @@ function SlideItem({ slide, sample, blockBadge, selected, onSelectSlide }: Slide
             }}
         >
             <span style={{ width: 8, height: 8, borderRadius: '50%', background: dotColor, flexShrink: 0, display: 'inline-block' }} />
+            {/* LHS: primary label + sub-label */}
             <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 10, fontWeight: 600, color: C.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {cleanStain(slide.stain_name)}
-                    {blockBadge && (
-                        <span title={BLOCK_LABEL_TIP} style={{ fontSize: 9, color: C.muted, background: '#f0f0f0', borderRadius: 3, padding: '0 4px', marginLeft: 4 }}>
-                            {blockBadge}
-                        </span>
-                    )}
+                    {primaryLabel}
                 </div>
-                <div style={{ fontSize: 9, color: C.muted, whiteSpace: 'nowrap' }}>
-                    {section && <span title={`Slide section (from barcode: ${slide.barcode})`}>{section} · </span>}
-                    {mag && <span title="Objective lens magnification">{mag} · </span>}
-                    <span title="File size on disk">{sz}</span>
-                    {slide.can_serve_tiles ? '' : ' · no tiles'}
-                </div>
+                {partDesc && (
+                    <div style={{ fontSize: 9, color: C.blue, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontStyle: 'italic' }}>
+                        {partDesc}
+                    </div>
+                )}
+                {subTokens.length > 0 && (
+                    <div style={{ fontSize: 9, color: C.muted, whiteSpace: 'nowrap' }}>
+                        {subTokens.join(' · ')}
+                    </div>
+                )}
+            </div>
+            {/* RHS: magnification + size */}
+            <div style={{ flexShrink: 0, textAlign: 'right', lineHeight: 1.3 }}>
+                {mag && <div style={{ fontSize: 9, color: C.muted }}>{mag}</div>}
+                <div style={{ fontSize: 9, color: C.muted }}>{sz}</div>
             </div>
         </div>
     );
@@ -1235,4 +1297,5 @@ function buildPathRows(slide: Slide, sample: Sample, studyId?: string): MetaRow[
     if (blockLbl) rows.push({ label: 'Block', labelTip: BLOCK_LABEL_TIP, value: blockLbl });
     return rows;
 }
+
 
