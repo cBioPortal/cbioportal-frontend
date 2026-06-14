@@ -1027,14 +1027,14 @@ function SlideItem({ slide, sample, blockLabel, multiPart, selected, onSelectSli
         ? (blockLabel || section || cleanStain(slide.stain_name))
         : cleanStain(slide.stain_name);
 
-    // Sub-label: section + stain qualifier for H&E; block + section for IHC.
+    // LHS sub-label: section only for H&E (stain moves to RHS); block·section for IHC.
     const subTokens: string[] = [];
+    if (!isHE && blockLabel) subTokens.push(blockLabel);
     if (section) subTokens.push(section);
-    if (isHE) {
-        subTokens.push(stainQualifier(slide.stain_group));
-    } else {
-        if (blockLabel) subTokens.push(blockLabel);
-    }
+
+    // RHS: stain qualifier (H&E slides only) / mag / size — gives the stain type back
+    // without it dominating the primary label.
+    const rhsStain = isHE ? stainQualifier(slide.stain_group) : null;
 
     // Tooltip: full metadata for pathologist context.
     const tooltipLines: string[] = [];
@@ -1068,7 +1068,7 @@ function SlideItem({ slide, sample, blockLabel, multiPart, selected, onSelectSli
             }}
         >
             <span style={{ width: 8, height: 8, borderRadius: '50%', background: dotColor, flexShrink: 0, display: 'inline-block' }} />
-            {/* LHS: primary label + sub-label */}
+            {/* LHS: primary label + sub-label (section / block for IHC) */}
             <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 10, fontWeight: 600, color: C.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {primaryLabel}
@@ -1084,8 +1084,9 @@ function SlideItem({ slide, sample, blockLabel, multiPart, selected, onSelectSli
                     </div>
                 )}
             </div>
-            {/* RHS: magnification + size */}
-            <div style={{ flexShrink: 0, textAlign: 'right', lineHeight: 1.3 }}>
+            {/* RHS: stain type (H&E slides) / mag / size */}
+            <div style={{ flexShrink: 0, textAlign: 'right', lineHeight: 1.4 }}>
+                {rhsStain && <div style={{ fontSize: 9, fontWeight: 600, color: dotColor }}>{rhsStain}</div>}
                 {mag && <div style={{ fontSize: 9, color: C.muted }}>{mag}</div>}
                 <div style={{ fontSize: 9, color: C.muted }}>{sz}</div>
             </div>
