@@ -44,7 +44,7 @@ test.describe('WSI viewer — share view and centering', () => {
 
     test('loads slide at home position, not at (1,1)', async ({ page }) => {
         await page.goto(viewerUrl());
-        await expect(page.locator('button:has-text("Share view")')).toBeVisible({
+        await expect(page.locator('[data-testid="wsi-share-button"]')).toBeVisible({
             timeout: 30_000,
         });
 
@@ -66,7 +66,7 @@ test.describe('WSI viewer — share view and centering', () => {
     test('share view URL preserves position on reload', async ({ page }) => {
         // 1. Open the viewer fresh (no hash).
         await page.goto(viewerUrl());
-        await expect(page.locator('button:has-text("Share view")')).toBeVisible({
+        await expect(page.locator('[data-testid="wsi-share-button"]')).toBeVisible({
             timeout: 30_000,
         });
 
@@ -88,8 +88,8 @@ test.describe('WSI viewer — share view and centering', () => {
                 writable: true,
             });
         });
-        await page.locator('button:has-text("Share view")').click();
-        await expect(page.locator('button:has-text("✓ Copied")')).toBeVisible({
+        await page.locator('[data-testid="wsi-share-button"]').click();
+        await expect(page.locator('[data-testid="wsi-share-button"] .fa-check')).toBeVisible({
             timeout: 3_000,
         });
 
@@ -100,7 +100,7 @@ test.describe('WSI viewer — share view and centering', () => {
         // 4. Open the share URL in a new tab and verify position is restored.
         const newPage = await page.context().newPage();
         await newPage.goto(copiedUrl);
-        await expect(newPage.locator('button:has-text("Share view")')).toBeVisible({
+        await expect(newPage.locator('[data-testid="wsi-share-button"]')).toBeVisible({
             timeout: 30_000,
         });
 
@@ -116,7 +116,7 @@ test.describe('WSI viewer — share view and centering', () => {
 
     test('share view button shows "✓ Copied" feedback', async ({ page }) => {
         await page.goto(viewerUrl());
-        await expect(page.locator('button:has-text("Share view")')).toBeVisible({
+        await expect(page.locator('[data-testid="wsi-share-button"]')).toBeVisible({
             timeout: 30_000,
         });
 
@@ -129,17 +129,18 @@ test.describe('WSI viewer — share view and centering', () => {
             });
         });
 
-        await page.locator('button:has-text("Share view")').click();
-        await expect(page.locator('button:has-text("✓ Copied")')).toBeVisible();
+        await page.locator('[data-testid="wsi-share-button"]').click();
+        // After copying, the button icon switches to fa-check then back to fa-clipboard.
+        await expect(page.locator('[data-testid="wsi-share-button"] .fa-check')).toBeVisible();
         // Button reverts after 2 s.
-        await expect(page.locator('button:has-text("Share view")')).toBeVisible({
+        await expect(page.locator('[data-testid="wsi-share-button"]')).toBeVisible({
             timeout: 4_000,
         });
     });
 
     test('coord nav jumps to entered pixel coordinates', async ({ page }) => {
         await page.goto(viewerUrl());
-        await expect(page.locator('button:has-text("Share view")')).toBeVisible({
+        await expect(page.locator('[data-testid="wsi-share-button"]')).toBeVisible({
             timeout: 30_000,
         });
 
@@ -161,7 +162,7 @@ test.describe('WSI viewer — share view and centering', () => {
         page,
     }) => {
         await page.goto(viewerUrl());
-        await expect(page.locator('button:has-text("Download")')).toBeVisible({
+        await expect(page.locator('[data-testid="wsi-download-button"]')).toBeVisible({
             timeout: 30_000,
         });
 
@@ -178,7 +179,7 @@ test.describe('WSI viewer — share view and centering', () => {
             };
         });
 
-        await page.locator('button:has-text("Download")').click();
+        await page.locator('[data-testid="wsi-download-button"]').click();
         await page.waitForTimeout(500); // toBlob is async
 
         const filename: string = await page.evaluate(() => (window as any)._downloadName ?? '');
@@ -194,7 +195,7 @@ test.describe('WSI viewer — share view and centering', () => {
         // Navigate with a hash specifying the first slide.
         const hashWithSlide = '#wsi:slide=1492807&x=20000&y=15000&z=1.2';
         await page.goto(viewerUrl(hashWithSlide));
-        await expect(page.locator('button:has-text("Share view")')).toBeVisible({
+        await expect(page.locator('[data-testid="wsi-share-button"]')).toBeVisible({
             timeout: 30_000,
         });
 
