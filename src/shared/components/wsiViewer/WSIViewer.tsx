@@ -67,9 +67,6 @@ export default class WSIViewer extends React.Component<Props, {}> {
      *  and bails if a newer call has started by the time an async step resumes. */
     private mountSeq = 0;
 
-    /** Number of gunicorn workers on the tile server (used to fire warmup N times) */
-    private nWorkers = 4;
-
     /** Stable per-instance ID prefix for OSD custom nav button elements */
     private navId = `wsi-nav-${Math.random().toString(36).slice(2, 9)}`;
 
@@ -157,14 +154,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
         this.mountSeq++;
 
         try {
-            // Read n_workers from the health endpoint so warmup fires the right
-            // number of times to prime every gunicorn worker's SlideCache.
             const base = this.tileServerBase;
-            fetch(`${base}/health`)
-                .then(r => r.ok ? r.json() : null)
-                .then((d: any) => { if (d?.n_workers) this.nWorkers = d.n_workers; })
-                .catch(() => { /* leave default of 4 */ });
-
             const resp = await fetch(this.props.url);
             if (!resp.ok) {
                 throw new Error(`Server returned ${resp.status}`);
@@ -204,35 +194,38 @@ export default class WSIViewer extends React.Component<Props, {}> {
 
     /**
      * Background prefetch: for each servable slide (except the already-loaded
-     * first one), fetch metadata + thumbnail concurrently. Both endpoints cache
-     * results in Redis so every subsequent user click is served instantly.
+     * first one), fetch metadata + thumbnail. Both endpoints cache results in
+     * Redis so every subsequent user click is served instantly.
      *
-     * Also fires the /warmup endpoint nWorkers times per slide so every gunicorn
-     * worker's SlideCache gets primed (round-robin routing means N calls ≈ N workers).
-     * Runs serially (one slide at a time) to keep workers free for user requests.
+     * Thumbnails are fired all at once (the server queues them across its workers)
+     * so the Redis cache is populated as fast as possible. Metadata is fetched
+     * serially to avoid overwhelming the S3/SVS pipeline. Warmup calls are
+     * intentionally omitted — they load each SVS into every worker's in-process
+     * cache simultaneously which causes OOM kills under the default 4 GiB limit.
      */
     private async prefetchSlideMetadata(skipImageId?: string) {
         const slides = this.servableSlides
             .map(s => s.slide)
             .filter(sl => sl.image_id !== skipImageId && !this.metaCache.has(sl.image_id));
 
+        if (slides.length === 0) return;
+        const base = this.tileServerBase;
+
+        // Fire ALL thumbnail fetches simultaneously so Redis is populated quickly.
+        // The server's worker pool naturally limits concurrency.
+        for (const sl of slides) {
+            fetch(`${base}/tiles/${sl.image_id}/thumbnail`).catch(() => {});
+        }
+
+        // Fetch metadata serially to keep the SVS pipeline pressure manageable.
         for (const sl of slides) {
             if (!this.hierarchy) return;
-            const base = this.tileServerBase;
-            const warmupCalls = Array.from({ length: this.nWorkers }, () =>
-                fetch(`${base}/tiles/${sl.image_id}/warmup`).catch(() => {})
-            );
-            await Promise.allSettled([
-                fetch(`${base}/tiles/${sl.image_id}/metadata`)
-                    .then(r => r.ok ? r.json() : Promise.reject(r.status))
-                    .then((meta: TileMetadata) => { this.metaCache.set(sl.image_id, meta); }),
-                // Thumbnail fetch warms the Redis cache so the sidebar img is
-                // served from Redis (no SVS open) on the first user click.
-                fetch(`${base}/tiles/${sl.image_id}/thumbnail`),
-                ...warmupCalls,
-            ]);
-            // Brief pause between slides to avoid S3 connection pile-up.
-            await new Promise(r => setTimeout(r, 200));
+            await fetch(`${base}/tiles/${sl.image_id}/metadata`)
+                .then(r => r.ok ? r.json() : Promise.reject(r.status))
+                .then((meta: TileMetadata) => { this.metaCache.set(sl.image_id, meta); })
+                .catch(() => {});
+            // Brief pause to avoid S3 connection pile-up.
+            await new Promise(r => setTimeout(r, 150));
         }
     }
 
@@ -996,8 +989,12 @@ function SlideItem({ slide, sample, blockBadge, selected, onSelectSlide }: Slide
 
 // ---- SlideThumbnail ----
 
+const THUMBNAIL_TIMEOUT_MS = 30_000;
+
 function SlideThumbnail({ src }: { src: string | null }) {
     const [status, setStatus] = React.useState<'loading' | 'loaded' | 'error'>('loading');
+    // retryKey forces a fresh <img> mount (new network request) on retry.
+    const [retryKey, setRetryKey] = React.useState(0);
     const imgRef = React.useRef<HTMLImageElement>(null);
 
     // useLayoutEffect runs synchronously after DOM mutations, before the browser
@@ -1006,14 +1003,22 @@ function SlideThumbnail({ src }: { src: string | null }) {
     // onLoad never fires. By the time useLayoutEffect runs the img.complete flag
     // is already true, so we can transition immediately without waiting for the
     // event. The component is keyed by src in MetaSidebar so this effect only
-    // needs to run once on mount.
+    // needs to run once on mount (and again on retry).
     React.useLayoutEffect(() => {
         const img = imgRef.current;
         if (!img) return;
         if (img.complete) {
             setStatus(img.naturalWidth > 0 ? 'loaded' : 'error');
+            return;
         }
-    }, []);
+        // If the tile server is busy or a worker was restarted, the request may
+        // hang indefinitely. Surface an error after THUMBNAIL_TIMEOUT_MS so the
+        // user can retry rather than watching an endless spinner.
+        const timer = window.setTimeout(() => {
+            setStatus('error');
+        }, THUMBNAIL_TIMEOUT_MS);
+        return () => window.clearTimeout(timer);
+    }, [retryKey]);
 
     if (!src) {
         return <span style={{ color: '#bbb', fontSize: 11, padding: 20, textAlign: 'center' }}>No slide selected</span>;
@@ -1027,6 +1032,7 @@ function SlideThumbnail({ src }: { src: string | null }) {
                 </span>
             )}
             <img
+                key={retryKey}
                 ref={imgRef}
                 src={src}
                 alt="slide thumbnail"
@@ -1035,7 +1041,16 @@ function SlideThumbnail({ src }: { src: string | null }) {
                 onError={() => setStatus('error')}
             />
             {status === 'error' && (
-                <span style={{ color: '#bbb', fontSize: 11 }}>Thumbnail unavailable</span>
+                <span style={{ color: '#bbb', fontSize: 11 }}>
+                    Thumbnail unavailable{' '}
+                    <button
+                        className="btn btn-link btn-sm"
+                        style={{ padding: 0, fontSize: 11, verticalAlign: 'baseline' }}
+                        onClick={() => { setStatus('loading'); setRetryKey(k => k + 1); }}
+                    >
+                        Retry
+                    </button>
+                </span>
             )}
         </>
     );
