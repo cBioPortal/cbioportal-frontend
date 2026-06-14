@@ -357,6 +357,10 @@ export default class WSIViewer extends React.Component<Props, {}> {
         let meta = this.metaCache.get(slide.image_id);
         if (!meta) {
             const metaUrl = `${this.tileServerBase}/tiles/${slide.image_id}/metadata`;
+            // Fire thumbnail fetch in parallel so the tile server generates it
+            // while we're waiting for metadata — by the time the sidebar img renders
+            // the response will be in-flight or already cached by the browser.
+            fetch(`${this.tileServerBase}/tiles/${slide.image_id}/thumbnail`).catch(() => {});
             try {
                 const resp = await fetch(metaUrl);
                 if (!resp.ok) throw new Error(`${resp.status} ${resp.statusText}`);
@@ -990,6 +994,39 @@ function SlideItem({ slide, sample, blockBadge, selected, onSelectSlide }: Slide
     );
 }
 
+// ---- SlideThumbnail ----
+
+function SlideThumbnail({ src }: { src: string | null }) {
+    const [status, setStatus] = React.useState<'loading' | 'loaded' | 'error'>('loading');
+
+    React.useEffect(() => { setStatus('loading'); }, [src]);
+
+    if (!src) {
+        return <span style={{ color: '#bbb', fontSize: 11, padding: 20, textAlign: 'center' }}>No slide selected</span>;
+    }
+    return (
+        <>
+            {status === 'loading' && (
+                <span style={{ color: '#888', fontSize: 12 }}>
+                    <i className="fa fa-spinner fa-spin" style={{ marginRight: 4 }} />
+                    Loading…
+                </span>
+            )}
+            <img
+                key={src}
+                src={src}
+                alt="slide thumbnail"
+                style={{ maxWidth: '100%', maxHeight: 160, display: status === 'loaded' ? 'block' : 'none' }}
+                onLoad={() => setStatus('loaded')}
+                onError={() => setStatus('error')}
+            />
+            {status === 'error' && (
+                <span style={{ color: '#bbb', fontSize: 11 }}>Thumbnail unavailable</span>
+            )}
+        </>
+    );
+}
+
 // ---- MetaSidebar ----
 
 interface MetaSidebarProps {
@@ -1016,17 +1053,7 @@ function MetaSidebar({ slide, sample, meta, tileServerBase, studyId }: MetaSideb
                     overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
                     minHeight: 90, marginTop: 8,
                 }}>
-                    {thumbSrc ? (
-                        <img
-                            key={thumbSrc}
-                            src={thumbSrc}
-                            alt="slide thumbnail"
-                            style={{ maxWidth: '100%', maxHeight: 160, display: 'block' }}
-                            onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                        />
-                    ) : (
-                        <span style={{ color: '#bbb', fontSize: 11, padding: 20, textAlign: 'center' }}>No slide selected</span>
-                    )}
+                    <SlideThumbnail src={thumbSrc} />
                 </div>
             </SbSection>
 
