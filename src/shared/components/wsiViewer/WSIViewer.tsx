@@ -70,6 +70,9 @@ export default class WSIViewer extends React.Component<Props, {}> {
     /** Number of gunicorn workers on the tile server (used to fire warmup N times) */
     private nWorkers = 4;
 
+    /** Stable per-instance ID prefix for OSD custom nav button elements */
+    private navId = `wsi-nav-${Math.random().toString(36).slice(2, 9)}`;
+
     constructor(props: Props) {
         super(props);
         makeObservable(this);
@@ -393,6 +396,10 @@ export default class WSIViewer extends React.Component<Props, {}> {
             this.osdViewer = OpenSeadragon({
                 element: containerEl,
                 showNavigationControl: true,
+                // Use our custom Bootstrap-styled elements instead of OSD's default image buttons
+                zoomInButton: `${this.navId}-zoom-in`,
+                zoomOutButton: `${this.navId}-zoom-out`,
+                homeButton: `${this.navId}-home`,
                 showNavigator: true,
                 navigatorPosition: 'BOTTOM_RIGHT',
                 crossOriginPolicy: 'Anonymous',
@@ -533,6 +540,45 @@ export default class WSIViewer extends React.Component<Props, {}> {
                 {/* OSD viewer */}
                 <div style={{ flex: 1, position: 'relative', background: '#e8e8e8' }}>
                     <div ref={this.viewerContainerRef} style={{ width: '100%', height: '100%' }} />
+                    {/* Custom Bootstrap-styled OSD nav buttons — always in DOM so OSD can adopt them.
+                        OSD wires zoom-in/zoom-out/home handlers onto these elements via the
+                        zoomInButton/zoomOutButton/homeButton options in mountOSD. */}
+                    <div
+                        style={{
+                            position: 'absolute',
+                            top: 8,
+                            left: 8,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 2,
+                            zIndex: 100,
+                        }}
+                    >
+                        <button
+                            id={`${this.navId}-zoom-in`}
+                            className="btn btn-default btn-sm"
+                            title="Zoom in"
+                            style={{ width: 28, padding: '3px 0', lineHeight: 1 }}
+                        >
+                            <i className="fa fa-plus" />
+                        </button>
+                        <button
+                            id={`${this.navId}-zoom-out`}
+                            className="btn btn-default btn-sm"
+                            title="Zoom out"
+                            style={{ width: 28, padding: '3px 0', lineHeight: 1 }}
+                        >
+                            <i className="fa fa-minus" />
+                        </button>
+                        <button
+                            id={`${this.navId}-home`}
+                            className="btn btn-default btn-sm"
+                            title="Fit to view"
+                            style={{ width: 28, padding: '3px 0', lineHeight: 1 }}
+                        >
+                            <i className="fa fa-home" />
+                        </button>
+                    </div>
                     {!this.viewerReady && selectedSlide && (
                         <div style={overlayStyle}>
                             <LoadingIndicator isLoading={true} center={true} size="big" />
@@ -659,8 +705,8 @@ function CoordBar({ inputX, inputY, cursorPos, mpp, onChangeX, onChangeY, onGo, 
                     onClick={handleCopy}
                 >
                     {copied
-                        ? <><i className="fa fa-check" /> Copied!</>
-                        : <><i className="fa fa-clipboard" /> Copy link</>
+                        ? <i className="fa fa-check" />
+                        : <i className="fa fa-clipboard" />
                     }
                 </button>
             </DefaultTooltip>
@@ -671,7 +717,6 @@ function CoordBar({ inputX, inputY, cursorPos, mpp, onChangeX, onChangeY, onGo, 
             >
                 <button className="btn btn-default btn-sm" onClick={onDownload}>
                     <i className="fa fa-cloud-download" />
-                    {' '}Download
                 </button>
             </DefaultTooltip>
             {cursorPos && (
