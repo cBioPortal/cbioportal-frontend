@@ -655,11 +655,13 @@ function CoordBar({ inputX, inputY, cursorPos, mpp, onChangeX, onChangeY, onGo, 
                 overlay={<span>Copy a link to this exact view (slide, position, zoom)</span>}
             >
                 <button
-                    className={`btn ${copied ? 'btn-success' : 'btn-default'} btn-sm`}
+                    className={`btn btn-default btn-sm`}
                     onClick={handleCopy}
                 >
-                    <i className={`fa ${copied ? 'fa-check' : 'fa-link'}`} />
-                    {' '}{copied ? 'Copied!' : 'Share view'}
+                    {copied
+                        ? <><i className="fa fa-check" /> Copied!</>
+                        : <><i className="fa fa-clipboard" /> Copy link</>
+                    }
                 </button>
             </DefaultTooltip>
             <DefaultTooltip
