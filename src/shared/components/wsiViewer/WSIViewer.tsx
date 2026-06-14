@@ -1000,19 +1000,20 @@ function SlideThumbnail({ src }: { src: string | null }) {
     const [status, setStatus] = React.useState<'loading' | 'loaded' | 'error'>('loading');
     const imgRef = React.useRef<HTMLImageElement>(null);
 
-    React.useEffect(() => { setStatus('loading'); }, [src]);
-
-    // When the browser serves the image from cache, the 'load' event fires
-    // synchronously during DOM attachment before React can attach onLoad, so
-    // onLoad never fires and the spinner stays. Check img.complete after every
-    // render to catch the cached case.
-    React.useEffect(() => {
+    // useLayoutEffect runs synchronously after DOM mutations, before the browser
+    // paints. When the image is in the browser HTTP cache the load event fires
+    // synchronously DURING DOM insertion — before React attaches onLoad — so
+    // onLoad never fires. By the time useLayoutEffect runs the img.complete flag
+    // is already true, so we can transition immediately without waiting for the
+    // event. The component is keyed by src in MetaSidebar so this effect only
+    // needs to run once on mount.
+    React.useLayoutEffect(() => {
         const img = imgRef.current;
-        if (!img || status !== 'loading') return;
+        if (!img) return;
         if (img.complete) {
             setStatus(img.naturalWidth > 0 ? 'loaded' : 'error');
         }
-    });
+    }, []);
 
     if (!src) {
         return <span style={{ color: '#bbb', fontSize: 11, padding: 20, textAlign: 'center' }}>No slide selected</span>;
@@ -1027,7 +1028,6 @@ function SlideThumbnail({ src }: { src: string | null }) {
             )}
             <img
                 ref={imgRef}
-                key={src}
                 src={src}
                 alt="slide thumbnail"
                 style={{ maxWidth: '100%', maxHeight: 160, display: status === 'loaded' ? 'block' : 'none' }}
@@ -1067,7 +1067,7 @@ function MetaSidebar({ slide, sample, meta, tileServerBase, studyId }: MetaSideb
                     overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
                     minHeight: 90, marginTop: 8,
                 }}>
-                    <SlideThumbnail src={thumbSrc} />
+                    <SlideThumbnail key={thumbSrc ?? 'none'} src={thumbSrc} />
                 </div>
             </SbSection>
 
