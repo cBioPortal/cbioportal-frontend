@@ -37,6 +37,12 @@ export interface Sample {
     oncotree_code: string;
     primary_site: string;
     sample_type: string;
+    metastatic_site?: string;
+    tumor_purity?: string;
+    oncogenic_mutations?: string;
+    num_oncogenic_mutations?: string;
+    tmb_score?: string;
+    msi_type?: string;
     parts: Part[];
 }
 
