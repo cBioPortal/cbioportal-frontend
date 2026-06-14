@@ -577,8 +577,8 @@ export default class WSIViewer extends React.Component<Props, {}> {
                         </button>
                     </div>
                     {!this.viewerReady && selectedSlide && (
-                        <div style={overlayStyle}>
-                            <LoadingIndicator isLoading={true} center={true} size="big" />
+                        <div style={{ ...overlayStyle, background: 'rgba(232,232,232,0.75)' }}>
+                            <i className="fa fa-spinner fa-spin fa-3x" style={{ color: '#888' }} />
                         </div>
                     )}
                     {!selectedSlide && (
