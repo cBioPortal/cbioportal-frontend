@@ -10,6 +10,8 @@ export interface Slide {
     barcode: string;
     block_label: string;
     block_number: string;
+    /** Anatomical site / part description propagated from the parent Part (e.g. "Lung, left") */
+    part_description?: string;
 }
 
 export interface Block {
