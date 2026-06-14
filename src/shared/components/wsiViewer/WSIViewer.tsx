@@ -998,8 +998,21 @@ function SlideItem({ slide, sample, blockBadge, selected, onSelectSlide }: Slide
 
 function SlideThumbnail({ src }: { src: string | null }) {
     const [status, setStatus] = React.useState<'loading' | 'loaded' | 'error'>('loading');
+    const imgRef = React.useRef<HTMLImageElement>(null);
 
     React.useEffect(() => { setStatus('loading'); }, [src]);
+
+    // When the browser serves the image from cache, the 'load' event fires
+    // synchronously during DOM attachment before React can attach onLoad, so
+    // onLoad never fires and the spinner stays. Check img.complete after every
+    // render to catch the cached case.
+    React.useEffect(() => {
+        const img = imgRef.current;
+        if (!img || status !== 'loading') return;
+        if (img.complete) {
+            setStatus(img.naturalWidth > 0 ? 'loaded' : 'error');
+        }
+    });
 
     if (!src) {
         return <span style={{ color: '#bbb', fontSize: 11, padding: 20, textAlign: 'center' }}>No slide selected</span>;
@@ -1013,6 +1026,7 @@ function SlideThumbnail({ src }: { src: string | null }) {
                 </span>
             )}
             <img
+                ref={imgRef}
                 key={src}
                 src={src}
                 alt="slide thumbnail"
