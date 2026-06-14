@@ -49,6 +49,10 @@ export default class WSIViewer extends React.Component<Props, {}> {
     @observable private loading = true;
     @observable private error: string | null = null;
     @observable private viewerReady = false;
+    /** Separate flag that controls spinner visibility; set true on slide select,
+     *  set false after viewerReady AND at least MIN_SPINNER_MS have elapsed.
+     *  Decoupled from viewerReady so viewport setup isn't delayed. */
+    @observable private spinnerVisible = false;
     @observable private stainFilter: 'all' | 'hne' | 'ihc' = 'all';
     /** Coordinate bar — input field values */
     @observable coordInputX = '';
@@ -70,6 +74,8 @@ export default class WSIViewer extends React.Component<Props, {}> {
      *  Used to guarantee the loading spinner is visible for at least MIN_SPINNER_MS. */
     private loadingStart = 0;
     private static readonly MIN_SPINNER_MS = 250;
+    /** Timer handle for the minimum-spinner-duration callback */
+    private spinnerTimer: ReturnType<typeof setTimeout> | null = null;
 
     /** Stable per-instance ID prefix for OSD custom nav button elements */
     private navId = `wsi-nav-${Math.random().toString(36).slice(2, 9)}`;
@@ -153,6 +159,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
         this.selectedSample = null;
         this.selectedMeta = null;
         this.viewerReady = false;
+        this.spinnerVisible = false;
         this.metaCache.clear();
         // Invalidate any in-flight mountOSD from a previous patient.
         this.mountSeq++;
@@ -259,8 +266,14 @@ export default class WSIViewer extends React.Component<Props, {}> {
         this.selectedSample = sample;
         this.selectedMeta = null;
         this.viewerReady = false;
+        this.spinnerVisible = true;
         this.error = null;
         this.loadingStart = Date.now();
+        // Cancel any pending spinner-hide timer from the previous slide.
+        if (this.spinnerTimer !== null) {
+            clearTimeout(this.spinnerTimer);
+            this.spinnerTimer = null;
+        }
         // Bump the sequence so any in-flight mountOSD call can detect it's stale.
         const seq = ++this.mountSeq;
         await this.mountOSD(slide, seq);
@@ -441,54 +454,50 @@ export default class WSIViewer extends React.Component<Props, {}> {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.osdViewer.addOnceHandler('open', () => {
             if (seq !== this.mountSeq) return;
+            action(() => { this.viewerReady = true; })();
 
-            // Guarantee the loading spinner is visible for at least MIN_SPINNER_MS.
-            // With prefetched metadata OSD can fire 'open' in <50ms — before React
-            // has had a chance to paint the spinner at all.  Delaying viewerReady=true
-            // by the remaining time ensures the spinner is always perceptible.
+            // Restore viewport position from URL hash if present for this slide,
+            // otherwise center on the middle of the image.
+            //
+            // IMPORTANT: read the hash BEFORE registering animation-finish, because
+            // OSD may fire animation-finish for its initial fit animation, which would
+            // overwrite the shared-link hash before we restore from it.
+            const hashState = WSIViewer.readHashState();
+            try {
+                const vp = this.osdViewer.viewport;
+                if (hashState && hashState.slideId === slide.image_id) {
+                    const imgPt = new (OpenSeadragon as any).Point(hashState.x, hashState.y);
+                    const vpPt = vp.imageToViewportCoordinates(imgPt);
+                    vp.panTo(vpPt, true);   // immediately (no animation)
+                    vp.zoomTo(hashState.z, undefined, true);
+                } else {
+                    // Pan to image center immediately so we don't start at (0,0).
+                    // goHome() snaps to zoom-to-fit centered — pass true for no animation.
+                    vp.goHome(true);
+                }
+                // Write hash now so the URL reflects the opened slide and position
+                // (for fresh opens this writes the home position; for restores it
+                // writes the restored position).
+                this.writeHashState();
+            } catch (_) { /* ignore — viewport not ready */ }
+
+            // Register ongoing hash write AFTER the initial viewport setup so that
+            // OSD's own initial-fit animation-finish event (if any) doesn't
+            // overwrite the shared-link coordinates before we restore them.
+            this.osdViewer.addHandler('animation-finish', () => {
+                this.writeHashState();
+            });
+
+            // Hide the spinner after MIN_SPINNER_MS from when selectSlide was called.
+            // Viewport setup above is synchronous so there's no risk of a race here.
             const elapsed = Date.now() - this.loadingStart;
             const delay = Math.max(0, WSIViewer.MIN_SPINNER_MS - elapsed);
-            const setReady = action(() => {
+            if (this.spinnerTimer !== null) clearTimeout(this.spinnerTimer);
+            this.spinnerTimer = setTimeout(action(() => {
                 if (seq !== this.mountSeq) return;
-                this.viewerReady = true;
-
-                // Restore viewport position from URL hash if present for this slide,
-                // otherwise center on the middle of the image.
-                //
-                // IMPORTANT: read the hash BEFORE registering animation-finish, because
-                // OSD may fire animation-finish for its initial fit animation, which would
-                // overwrite the shared-link hash before we restore from it.
-                const hashState = WSIViewer.readHashState();
-                try {
-                    const vp = this.osdViewer.viewport;
-                    if (hashState && hashState.slideId === slide.image_id) {
-                        const imgPt = new (OpenSeadragon as any).Point(hashState.x, hashState.y);
-                        const vpPt = vp.imageToViewportCoordinates(imgPt);
-                        vp.panTo(vpPt, true);   // immediately (no animation)
-                        vp.zoomTo(hashState.z, undefined, true);
-                    } else {
-                        // Pan to image center immediately so we don't start at (0,0).
-                        // goHome() snaps to zoom-to-fit centered — pass true for no animation.
-                        vp.goHome(true);
-                    }
-                    // Write hash now so the URL reflects the opened slide and position
-                    // (for fresh opens this writes the home position; for restores it
-                    // writes the restored position).
-                    this.writeHashState();
-                } catch (_) { /* ignore — viewport not ready */ }
-
-                // Register ongoing hash write AFTER the initial viewport setup so that
-                // OSD's own initial-fit animation-finish event (if any) doesn't
-                // overwrite the shared-link coordinates before we restore them.
-                this.osdViewer.addHandler('animation-finish', () => {
-                    this.writeHashState();
-                });
-            });
-            if (delay > 0) {
-                setTimeout(setReady, delay);
-            } else {
-                setReady();
-            }
+                this.spinnerVisible = false;
+                this.spinnerTimer = null;
+            }), delay);
         });
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.osdViewer.addOnceHandler('open-failed', (e: any) => {
@@ -596,7 +605,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
                             <i className="fa fa-home" />
                         </button>
                     </div>
-                    {!this.viewerReady && selectedSlide && (
+                    {this.spinnerVisible && selectedSlide && (
                         <div style={{ ...overlayStyle, background: 'rgba(232,232,232,0.75)' }}>
                             <i className="fa fa-spinner fa-spin fa-3x" style={{ color: '#888' }} />
                         </div>
