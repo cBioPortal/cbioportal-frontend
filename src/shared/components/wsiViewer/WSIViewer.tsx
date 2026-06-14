@@ -760,6 +760,17 @@ function cleanStain(name: string): string {
     return (name || '').replace(/^DM\s+/i, '') || '—';
 }
 
+/**
+ * Parse the section identifier out of a pathology barcode.
+ * Barcode format: "<accession>;<section>;<lab>"  e.g. "S13-57848;S1;msk"
+ * Returns the section field (e.g. "S1") or null if not parseable.
+ */
+function barcodeSection(barcode: string | null | undefined): string | null {
+    if (!barcode) return null;
+    const parts = barcode.split(';');
+    return parts.length >= 2 ? (parts[1].trim() || null) : null;
+}
+
 function fmtMB(bytes: string | number | null | undefined): string {
     const n = Number(bytes);
     if (!n) return '—';
@@ -978,6 +989,7 @@ function SlideItem({ slide, sample, blockBadge, selected, onSelectSlide }: Slide
     const dotColor = dc === 'hne' ? C.blue : (dc === 'ihc' ? C.orange : '#aaa');
     const mag = slide.magnification || '';
     const sz = fmtMB(slide.file_size_bytes);
+    const section = barcodeSection(slide.barcode);
 
     const bg = selected ? C.blueLight : hovered ? C.blueLight : 'transparent';
     const borderLeft = selected ? `2px solid ${C.blue}` : '2px solid transparent';
@@ -988,7 +1000,7 @@ function SlideItem({ slide, sample, blockBadge, selected, onSelectSlide }: Slide
             onClick={() => slide.can_serve_tiles && onSelectSlide(slide, sample)}
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
-            title={slide.can_serve_tiles ? undefined : 'Tiles not yet available'}
+            title={slide.can_serve_tiles ? (slide.barcode || undefined) : 'Tiles not yet available'}
             style={{
                 display: 'flex', alignItems: 'center', gap: 6,
                 padding: '4px 10px 4px 8px', margin: '1px 4px',
@@ -1009,6 +1021,7 @@ function SlideItem({ slide, sample, blockBadge, selected, onSelectSlide }: Slide
                     )}
                 </div>
                 <div style={{ fontSize: 9, color: C.muted, whiteSpace: 'nowrap' }}>
+                    {section && <span title={`Slide section (from barcode: ${slide.barcode})`}>{section} · </span>}
                     {mag && <span title="Objective lens magnification">{mag} · </span>}
                     <span title="File size on disk">{sz}</span>
                     {slide.can_serve_tiles ? '' : ' · no tiles'}
