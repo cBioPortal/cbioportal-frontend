@@ -771,6 +771,13 @@ function barcodeSection(barcode: string | null | undefined): string | null {
     return parts.length >= 2 ? (parts[1].trim() || null) : null;
 }
 
+/** Extract the surgical accession number from a barcode (the part before the first ";"). */
+function barcodeAccession(barcode: string | null | undefined): string | null {
+    if (!barcode) return null;
+    const acc = barcode.split(';')[0].trim();
+    return acc || null;
+}
+
 /**
  * Abbreviate a part_description to fit in the narrow sidebar label.
  * Truncates at the first "(", ";", comma-followed-by-whitespace, or at
@@ -1020,6 +1027,7 @@ function SlideItem({ slide, sample, blockLabel, multiPart, selected, onSelectSli
     const mag = slide.magnification || '';
     const sz = fmtMB(slide.file_size_bytes);
     const section = barcodeSection(slide.barcode);
+    const accession = barcodeAccession(slide.barcode);
     const partDesc = multiPart ? abbreviatePartDesc(slide.part_description) : null;
 
     // Primary label: block region for H&E, stain name for IHC/special stains.
@@ -1068,7 +1076,7 @@ function SlideItem({ slide, sample, blockLabel, multiPart, selected, onSelectSli
             }}
         >
             <span style={{ width: 8, height: 8, borderRadius: '50%', background: dotColor, flexShrink: 0, display: 'inline-block' }} />
-            {/* LHS: primary label + sub-label (section / block for IHC) */}
+            {/* LHS: primary label + sub-label (section / block for IHC) + accession */}
             <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 10, fontWeight: 600, color: C.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {primaryLabel}
@@ -1081,6 +1089,11 @@ function SlideItem({ slide, sample, blockLabel, multiPart, selected, onSelectSli
                 {subTokens.length > 0 && (
                     <div style={{ fontSize: 9, color: C.muted, whiteSpace: 'nowrap' }}>
                         {subTokens.join(' · ')}
+                    </div>
+                )}
+                {accession && (
+                    <div style={{ fontSize: 9, color: C.muted, whiteSpace: 'nowrap', opacity: 0.7 }}>
+                        {accession}
                     </div>
                 )}
             </div>
@@ -1286,6 +1299,7 @@ function buildPathRows(slide: Slide, sample: Sample, studyId?: string): MetaRow[
     const sampleUrl = (studyId && sample.sample_id)
         ? `/patient?studyId=${encodeURIComponent(studyId)}&caseId=${encodeURIComponent(sample.sample_id.replace(/-T\d+.*$/i, ''))}&sampleId=${encodeURIComponent(sample.sample_id)}`
         : undefined;
+    const accession = barcodeAccession(slide.barcode);
     const rows: MetaRow[] = [
         { label: 'Stain', labelTip: 'Staining protocol used for this slide', value: stainBadge ? `${stainBadge} — ${cleanStain(slide.stain_name)}` : cleanStain(slide.stain_name) },
         { label: 'Sample', labelTip: 'Tumor sample identifier', value: sample.sample_id || '—', href: sampleUrl },
@@ -1293,9 +1307,17 @@ function buildPathRows(slide: Slide, sample: Sample, studyId?: string): MetaRow[
     if (sample.cancer_type_detailed || sample.cancer_type) rows.push({ label: 'Cancer type', value: sample.cancer_type_detailed || sample.cancer_type || '' });
     if (sample.oncotree_code) rows.push({ label: 'OncoTree', labelTip: 'OncoTree cancer classification code — click to view on oncotree.mskcc.org', value: sample.oncotree_code, href: oncotreeUrl });
     if (sample.primary_site) rows.push({ label: 'Primary site', value: sample.primary_site });
-    if (slide.magnification) rows.push({ label: 'Magnification', labelTip: 'Objective lens magnification', value: slide.magnification });
+    if (sample.sample_type) rows.push({ label: 'Sample type', value: sample.sample_type });
+    if (slide.part_description) rows.push({ label: 'Anatomical site', labelTip: 'Pathology part description — which anatomical specimen this slide was cut from', value: slide.part_description });
+    if (accession) rows.push({ label: 'Accession', labelTip: 'Surgical pathology accession number from the LIS', value: accession });
     const blockLbl = (slide.block_label || '').trim() || (slide.block_number ? String(slide.block_number) : '');
     if (blockLbl) rows.push({ label: 'Block', labelTip: BLOCK_LABEL_TIP, value: blockLbl });
+    if (slide.magnification) rows.push({ label: 'Magnification', labelTip: 'Objective lens magnification', value: slide.magnification });
+    // Molecular / clinical context
+    if (sample.tumor_purity) rows.push({ label: 'Tumor purity', labelTip: 'Estimated fraction of tumor cells in this sample', value: `${sample.tumor_purity}%` });
+    if (sample.tmb_score) rows.push({ label: 'TMB', labelTip: 'Tumor mutational burden (mutations per megabase)', value: `${sample.tmb_score} mut/Mb` });
+    if (sample.msi_type) rows.push({ label: 'MSI', labelTip: 'Microsatellite instability status', value: sample.msi_type });
+    if (sample.oncogenic_mutations) rows.push({ label: 'Mutations', labelTip: 'Oncogenic somatic mutations identified by MSK-IMPACT', value: sample.oncogenic_mutations });
     return rows;
 }
 
