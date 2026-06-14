@@ -699,6 +699,7 @@ function CoordBar({ inputX, inputY, cursorPos, mpp, onChangeX, onChangeY, onGo, 
             >
                 <button
                     className={`btn btn-default btn-sm`}
+                    data-testid="wsi-share-button"
                     onClick={handleCopy}
                 >
                     {copied
@@ -712,7 +713,7 @@ function CoordBar({ inputX, inputY, cursorPos, mpp, onChangeX, onChangeY, onGo, 
                 placement="top"
                 overlay={<span>Download current viewport as JPEG</span>}
             >
-                <button className="btn btn-default btn-sm" onClick={onDownload}>
+                <button className="btn btn-default btn-sm" data-testid="wsi-download-button" onClick={onDownload}>
                     <i className="fa fa-cloud-download" />
                 </button>
             </DefaultTooltip>
