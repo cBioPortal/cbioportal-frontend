@@ -49,6 +49,9 @@ export default class WSIViewer extends React.Component<Props, {}> {
     @observable private loading = true;
     @observable private error: string | null = null;
     @observable private viewerReady = false;
+    /** True once OSD has drawn the first tile; used to show/hide the thumbnail
+     *  underlay that covers the grey canvas while initial tiles are loading. */
+    @observable private tilesReady = false;
     /** Separate flag that controls spinner visibility; set true on slide select,
      *  set false after viewerReady AND at least MIN_SPINNER_MS have elapsed.
      *  Decoupled from viewerReady so viewport setup isn't delayed. */
@@ -286,6 +289,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
         this.selectedSample = sample;
         this.selectedMeta = null;
         this.viewerReady = false;
+        this.tilesReady = false;
         this.spinnerVisible = true;
         this.error = null;
         this.loadingStart = Date.now();
@@ -511,31 +515,23 @@ export default class WSIViewer extends React.Component<Props, {}> {
                 this.writeHashState();
             });
 
-            // Keep the spinner visible until the first tile is actually painted on
-            // the canvas — this covers the "grey screen" period while OSD fetches
-            // and decodes the first set of tiles (which includes the cold S3 open).
-            // tile-drawn fires once per drawn tile; we only need the first one.
-            // Fallback: hide spinner after 30s even if no tile ever draws (error
-            // state is handled separately by the open-failed / timeout handlers).
-            const hideSpinner = action(() => {
-                if (seq !== this.mountSeq) return;
-                if (this.spinnerTimer !== null) { clearTimeout(this.spinnerTimer); this.spinnerTimer = null; }
-                this.spinnerVisible = false;
-            });
-            const minRemaining = Math.max(0, WSIViewer.MIN_SPINNER_MS - (Date.now() - this.loadingStart));
+            // Hide the spinner as soon as OSD has its tile source set up — this is
+            // fast (just metadata + 2 rAF).  The grey canvas is covered by a
+            // thumbnail underlay (rendered below) until the first tile is drawn.
+            const elapsed = Date.now() - this.loadingStart;
+            const delay = Math.max(0, WSIViewer.MIN_SPINNER_MS - elapsed);
             if (this.spinnerTimer !== null) clearTimeout(this.spinnerTimer);
-            // Fallback timer in case tile-drawn never fires (e.g. blank slide, error)
-            this.spinnerTimer = setTimeout(hideSpinner, Math.max(minRemaining, 30_000));
-            this.osdViewer.addOnceHandler('tile-drawn', () => {
-                // Respect the minimum spinner duration even if tiles arrive instantly.
-                const remaining = Math.max(0, WSIViewer.MIN_SPINNER_MS - (Date.now() - this.loadingStart));
-                if (remaining > 0) {
-                    if (this.spinnerTimer !== null) clearTimeout(this.spinnerTimer);
-                    this.spinnerTimer = setTimeout(hideSpinner, remaining);
-                } else {
-                    hideSpinner();
-                }
-            });
+            this.spinnerTimer = setTimeout(action(() => {
+                if (seq !== this.mountSeq) return;
+                this.spinnerVisible = false;
+                this.spinnerTimer = null;
+            }), delay);
+
+            // Drop the thumbnail underlay once the first tile is actually on canvas.
+            this.osdViewer.addOnceHandler('tile-drawn', action(() => {
+                if (seq !== this.mountSeq) return;
+                this.tilesReady = true;
+            }));
         });
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.osdViewer.addOnceHandler('open-failed', (e: any) => {
@@ -604,6 +600,23 @@ export default class WSIViewer extends React.Component<Props, {}> {
                 {/* OSD viewer */}
                 <div style={{ flex: 1, position: 'relative', background: '#e8e8e8' }}>
                     <div ref={this.viewerContainerRef} style={{ width: '100%', height: '100%' }} />
+                    {/* Thumbnail underlay: covers the grey OSD canvas from the moment the
+                        tile source opens until the first real tile is painted. This prevents
+                        the "grey flash" after the spinner disappears on cold slides. */}
+                    {this.viewerReady && !this.tilesReady && selectedSlide && (
+                        <div style={{
+                            position: 'absolute', inset: 0, zIndex: 5,
+                            pointerEvents: 'none',
+                            background: '#e8e8e8',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        }}>
+                            <img
+                                src={`${this.tileServerBase}/tiles/${selectedSlide.image_id}/thumbnail`}
+                                alt=""
+                                style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', display: 'block' }}
+                            />
+                        </div>
+                    )}
                     {/* Custom Bootstrap-styled OSD nav buttons — always in DOM so OSD can adopt them.
                         OSD wires zoom-in/zoom-out/home handlers onto these elements via the
                         zoomInButton/zoomOutButton/homeButton options in mountOSD. */}
