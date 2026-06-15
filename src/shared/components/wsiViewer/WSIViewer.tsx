@@ -1637,7 +1637,7 @@ function buildPathRows(slide: Slide, sample: Sample, studyId?: string): MetaRow[
  * Each token "GENE Variant" maps to https://www.oncokb.org/gene/GENE/Variant.
  */
 function mutationLinks(mutStr: string): React.ReactNode {
-    const muts = mutStr.split(/,\s*/).map(s => s.trim()).filter(Boolean);
+    const muts = mutStr.split(/[,;]\s*/).map(s => s.trim()).filter(Boolean);
     return (
         <>
             {muts.map(mut => {
