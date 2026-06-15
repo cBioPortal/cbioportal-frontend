@@ -1481,6 +1481,7 @@ interface MetaSidebarProps {
 
 function MetaSidebar({ slide, sample, meta, tileServerBase, studyId }: MetaSidebarProps) {
     const thumbSrc = slide ? `${tileServerBase}/tiles/${slide.image_id}/thumbnail` : null;
+    const seqRows = (slide && sample) ? buildSeqRows(sample) : [];
 
     return (
         <div style={{
@@ -1516,6 +1517,13 @@ function MetaSidebar({ slide, sample, meta, tileServerBase, studyId }: MetaSideb
                     <span style={{ color: '#bbb', fontSize: 11 }}>—</span>
                 )}
             </SbSection>
+
+            {/* MSK-IMPACT Sequencing — only when data is available */}
+            {seqRows.length > 0 && (
+                <SbSection title="MSK-IMPACT">
+                    <MetaTable rows={seqRows} />
+                </SbSection>
+            )}
         </div>
     );
 }
@@ -1615,7 +1623,12 @@ function buildPathRows(slide: Slide, sample: Sample, studyId?: string): MetaRow[
     const blockLbl = (slide.block_label || '').trim() || (slide.block_number ? String(slide.block_number) : '');
     if (blockLbl) rows.push({ label: 'Block', labelTip: BLOCK_LABEL_TIP, value: blockLbl });
     if (slide.magnification) rows.push({ label: 'Magnification', labelTip: 'Objective lens magnification', value: slide.magnification });
-    // Molecular / clinical context
+    return rows;
+}
+
+/** Rows derived from MSK-IMPACT sequencing — shown in their own sidebar section. */
+function buildSeqRows(sample: Sample): MetaRow[] {
+    const rows: MetaRow[] = [];
     if (sample.tumor_purity) rows.push({ label: 'Tumor purity', labelTip: 'Estimated fraction of tumor cells in this sample', value: `${sample.tumor_purity}%` });
     if (sample.tmb_score) rows.push({ label: 'TMB', labelTip: 'Tumor mutational burden (mutations per megabase)', value: `${sample.tmb_score} mut/Mb` });
     if (sample.msi_type) rows.push({ label: 'MSI', labelTip: 'Microsatellite instability status', value: sample.msi_type });
