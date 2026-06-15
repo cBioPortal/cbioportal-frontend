@@ -261,4 +261,31 @@ test.describe('WSI viewer — share view and centering', () => {
         expect(Number(params.get('x'))).toBe(20000);
         expect(Number(params.get('y'))).toBe(15000);
     });
+
+    test('RHS sidebar shows correct per-mutation OncoKB links', async ({ page }) => {
+        await page.goto(viewerUrl());
+        // Wait for sidebar to load
+        await expect(page.locator('[data-testid="wsi-share-button"]')).toBeVisible({
+            timeout: 30_000,
+        });
+
+        // Wait for MSK-IMPACT section to appear
+        const seqSection = page.locator('text=MSK-IMPACT').first();
+        await expect(seqSection).toBeVisible({ timeout: 15_000 });
+
+        // Check that KRAS p.G13D mutation is listed
+        await expect(page.locator('text=KRAS').first()).toBeVisible();
+
+        // Check that multiple OncoKB links are rendered (one per mutation, not one big link)
+        const oncokbLinks = page.locator('a[href*="oncokb.org/gene/"]');
+        const count = await oncokbLinks.count();
+        expect(count).toBeGreaterThan(1);
+
+        // Each link should contain only one gene, not multiple gene/protein combos
+        const firstHref = await oncokbLinks.first().getAttribute('href');
+        // A valid single-mutation link looks like: https://www.oncokb.org/gene/KRAS/p.G13D
+        // It should NOT contain semicolons or multiple genes separated by semicolons
+        expect(firstHref).not.toContain('%3B'); // URL-encoded semicolon
+        expect(firstHref).toMatch(/oncokb\.org\/gene\/[A-Z0-9]+\/p\./);
+    });
 });
