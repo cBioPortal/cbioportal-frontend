@@ -10,6 +10,7 @@ import {
     PatientHierarchy,
     TileMetadata,
     MutationDetail,
+    CNADetail,
 } from './wsiViewerTypes';
 
 // ---- design tokens (matches iframe viewer) ----
@@ -327,6 +328,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
             // correct token list when building oncogenic_mutation_details.
             await this.fetchAndMergeClinicalData(base, studyId, sampleIdentifiers);
             await this.fetchAndMergeMutations(base, studyId, sampleIdentifiers);
+            await this.fetchAndMergeCNA(base, studyId, sampleIdentifiers);
         } catch {
             // Silently fall back to tile-server data
         }
@@ -506,6 +508,64 @@ export default class WSIViewer extends React.Component<Props, {}> {
                 }
             })();
         }
+    }
+
+    /**
+     * Fetch significant discrete copy-number alterations (value ≠ 0) from cBioPortal
+     * and merge them into each sample's `cna_alterations` field.
+     */
+    private async fetchAndMergeCNA(
+        base: string,
+        studyId: string,
+        sampleIdentifiers: Array<{ studyId: string; sampleId: string }>
+    ): Promise<void> {
+        // Find a COPY_NUMBER_ALTERATION profile
+        const profilesResp = await fetch(
+            `${base}/api/studies/${encodeURIComponent(studyId)}/molecular-profiles` +
+            `?molecularAlterationType=COPY_NUMBER_ALTERATION&projection=SUMMARY`
+        );
+        if (!profilesResp.ok) return;
+        const profiles: Array<{ molecularProfileId: string }> = await profilesResp.json();
+        if (!profiles.length) return;
+        const profileId = profiles[0].molecularProfileId;
+
+        const sampleIds = sampleIdentifiers.map(s => s.sampleId);
+        const dataResp = await fetch(
+            `${base}/api/molecular-profiles/${encodeURIComponent(profileId)}/molecular-data/fetch?projection=DETAILED`,
+            {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sampleIds }),
+            }
+        );
+        if (!dataResp.ok) return;
+
+        const data: Array<{
+            sampleId: string;
+            value: number;
+            gene?: { hugoGeneSymbol: string } | null;
+        }> = await dataResp.json();
+
+        // Group by sample; keep only significant events (value ≠ 0)
+        const bySample = new Map<string, CNADetail[]>();
+        for (const d of data) {
+            if (d.value === 0) continue;
+            const gene = d.gene?.hugoGeneSymbol;
+            if (!gene) continue;
+            if (!bySample.has(d.sampleId)) bySample.set(d.sampleId, []);
+            bySample.get(d.sampleId)!.push({ gene, cnaValue: d.value });
+        }
+        // Sort: deep events (|value| = 2) before shallow (|value| = 1); within tier by gene name
+        for (const cnList of bySample.values()) {
+            cnList.sort((a, b) => Math.abs(b.cnaValue) - Math.abs(a.cnaValue) || a.gene.localeCompare(b.gene));
+        }
+
+        action(() => {
+            for (const sample of this.hierarchy!.samples) {
+                const cnList = bySample.get(sample.sample_id);
+                if (cnList?.length) sample.cna_alterations = cnList;
+            }
+        })();
     }
 
     // ---- slide selection ----
@@ -1577,10 +1637,11 @@ function MetaSidebar({ slide, sample, meta, tileServerBase, studyId }: MetaSideb
             </SbSection>
 
             {/* MSK-IMPACT Sequencing — only when data is available */}
-            {(seqRows.length > 0 || (sample?.oncogenic_mutations && sample?.oncogenic_mutation_details !== undefined)) && (
+            {(seqRows.length > 0 || (sample?.oncogenic_mutations && sample?.oncogenic_mutation_details !== undefined) || sample?.cna_alterations?.length) && (
                 <SbSection title="MSK-IMPACT">
                     {seqRows.length > 0 && <MetaTable rows={seqRows} />}
                     {sample && <MutationTable sample={sample} />}
+                    {sample?.cna_alterations?.length ? <CnaTable sample={sample} /> : null}
                 </SbSection>
             )}
         </div>
@@ -1612,7 +1673,7 @@ function MetaTable({ rows }: { rows: MetaRow[] }) {
                         }}>
                             {row.label}
                         </td>
-                        <td style={{ fontSize: 11, color: C.text, fontWeight: 500, wordBreak: 'break-word', verticalAlign: 'top', lineHeight: 1.5 }}>
+                        <td title={row.valueTip} style={{ fontSize: 11, color: C.text, fontWeight: 500, wordBreak: 'break-word', verticalAlign: 'top', lineHeight: 1.5, cursor: row.valueTip ? 'help' : undefined }}>
                             {row.href ? (
                                 <a href={row.href} target="_blank" rel="noopener noreferrer" style={{ color: C.blue, textDecoration: 'none' }}
                                    onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.textDecoration = 'underline'; }}
@@ -1635,6 +1696,8 @@ interface MetaRow {
     labelTip?: string;
     value: React.ReactNode;
     href?: string;
+    /** Tooltip shown on the value cell (plain text). */
+    valueTip?: string;
 }
 
 function buildWsiRows(slide: Slide | null, meta: TileMetadata): MetaRow[] {
@@ -1642,13 +1705,23 @@ function buildWsiRows(slide: Slide | null, meta: TileMetadata): MetaRow[] {
     const mppX = meta.mpp?.x || 0, mppY = meta.mpp?.y || 0;
     const mpp = (mppX && mppY) ? (mppX + mppY) / 2 : 0;
     const objNum = meta.objective_power || (mpp ? Math.round(10 / mpp) : 0);
+
+    // Build a tooltip with technical scanner details for the Dimensions row.
+    const techParts: string[] = [];
+    if (mpp) techParts.push(`MPP: ${mpp.toFixed(4)} µm/px`);
+    if (objNum) techParts.push(`Objective: ${objNum}×`);
+    techParts.push(`Zoom levels: ${meta.max_zoom + 1}`);
+    techParts.push(`Tile size: ${meta.tile_size} px`);
+    const dimTip = techParts.join('\n');
+
     const rows: MetaRow[] = [
-        { label: 'Dimensions', labelTip: 'Width × height in pixels at full resolution', value: `${w.toLocaleString()} × ${h.toLocaleString()} px` },
+        {
+            label: 'Dimensions',
+            labelTip: 'Width × height at full resolution — hover for scanner details',
+            value: `${w.toLocaleString()} × ${h.toLocaleString()} px`,
+            valueTip: dimTip,
+        },
     ];
-    if (mpp) rows.push({ label: 'MPP', labelTip: 'Microns per pixel — physical size of one pixel at full resolution', value: `${mpp.toFixed(4)} µm/px` });
-    if (objNum) rows.push({ label: 'Objective', labelTip: 'Objective lens magnification used to capture the slide', value: `${objNum}×` });
-    rows.push({ label: 'Zoom levels', labelTip: 'Number of resolution tiers in the pyramidal image', value: String(meta.max_zoom + 1) });
-    rows.push({ label: 'Tile size', labelTip: 'Tile dimensions (px) streamed to the viewer', value: `${meta.tile_size} px` });
     if (slide?.file_size_bytes) rows.push({ label: 'File size', value: fmtMB(slide.file_size_bytes) });
     return rows;
 }
@@ -1656,34 +1729,45 @@ function buildWsiRows(slide: Slide | null, meta: TileMetadata): MetaRow[] {
 function buildPathRows(slide: Slide, sample: Sample, studyId?: string): MetaRow[] {
     const stainBadge = slide.is_hne ? 'H&E' : (slide.is_ihc ? 'IHC' : '');
     const oncotreeUrl = sample.oncotree_code ? 'https://oncotree.mskcc.org/' : undefined;
-    const sampleUrl = (studyId && sample.sample_id)
-        ? `/patient?studyId=${encodeURIComponent(studyId)}&caseId=${encodeURIComponent(sample.sample_id.replace(/-T\d+.*$/i, ''))}&sampleId=${encodeURIComponent(sample.sample_id)}`
+    const patientId = sample.sample_id ? sample.sample_id.replace(/-T\d+.*$/i, '') : '';
+    const patientUrl = (studyId && patientId)
+        ? `/patient?studyId=${encodeURIComponent(studyId)}&caseId=${encodeURIComponent(patientId)}`
         : undefined;
+    const sampleUrl = (studyId && sample.sample_id)
+        ? `${patientUrl}&sampleId=${encodeURIComponent(sample.sample_id)}`
+        : undefined;
+    const studyUrl = studyId ? `/study/summary?id=${encodeURIComponent(studyId)}` : undefined;
     const cancerTypeUrl = (studyId && (sample.cancer_type_detailed || sample.cancer_type))
         ? `/results?cancer_study_list=${encodeURIComponent(studyId)}&cancer_type=${encodeURIComponent((sample.cancer_type_detailed || sample.cancer_type || '').toLowerCase().replace(/\s+/g, '_'))}`
         : undefined;
     const accession = barcodeAccession(slide.barcode);
-    // path_dx_title is the formal pathological diagnosis title (may differ from part_description)
+    const blockLbl = (slide.block_label || '').trim() || (slide.block_number ? String(slide.block_number) : '');
+    // Build a tooltip for the sample value cell: accession + block if available
+    const sampleTipParts: string[] = [];
+    if (accession) sampleTipParts.push(`Accession: ${accession}`);
+    if (blockLbl) sampleTipParts.push(`Block: ${blockLbl}`);
+    if (sample.sample_type) sampleTipParts.push(`Type: ${sample.sample_type}`);
+    const sampleTip = sampleTipParts.length ? sampleTipParts.join('\n') : undefined;
+
     const pathDxTitle = slide.path_dx_title
         ? slide.path_dx_title.charAt(0).toUpperCase() + slide.path_dx_title.slice(1).toLowerCase()
         : null;
     const partDesc = slide.part_description || null;
+
     const rows: MetaRow[] = [
         { label: 'Stain', labelTip: 'Staining protocol used for this slide', value: stainBadge ? `${stainBadge} — ${cleanStain(slide.stain_name)}` : cleanStain(slide.stain_name) },
-        { label: 'Sample', labelTip: 'Tumor sample identifier', value: sample.sample_id || '—', href: sampleUrl },
+        { label: 'Patient', labelTip: 'Click to open cBioPortal patient page', value: patientId || '—', href: patientUrl },
+        { label: 'Sample', labelTip: sampleTip ? 'Click for cBioPortal sample view — hover for accession/block info' : 'Tumor sample identifier', value: sample.sample_id || '—', href: sampleUrl, valueTip: sampleTip },
     ];
+    if (studyId) rows.push({ label: 'Study', labelTip: 'Click to open cBioPortal study summary', value: studyId, href: studyUrl });
     if (sample.cancer_type_detailed || sample.cancer_type) rows.push({ label: 'Cancer type', value: sample.cancer_type_detailed || sample.cancer_type || '', href: cancerTypeUrl });
     if (sample.oncotree_code) rows.push({ label: 'OncoTree', labelTip: 'OncoTree cancer classification code — click to view on oncotree.mskcc.org', value: sample.oncotree_code, href: oncotreeUrl });
     if (sample.primary_site) rows.push({ label: 'Primary site', value: sample.primary_site });
-    if (sample.sample_type) rows.push({ label: 'Sample type', value: sample.sample_type });
     if (partDesc) rows.push({ label: 'Anatomical site', labelTip: 'Pathology part description — which anatomical specimen this slide was cut from', value: partDesc });
-    // Show path_dx_title (formal diagnosis) only when it adds new info beyond part_description
+    // Show path_dx_title only when it adds information beyond part_description
     if (pathDxTitle && pathDxTitle.toLowerCase() !== (partDesc || '').toLowerCase()) {
         rows.push({ label: 'Path Dx', labelTip: 'Pathological diagnosis title for this anatomical part', value: pathDxTitle });
     }
-    if (accession) rows.push({ label: 'Accession', labelTip: 'Surgical pathology accession number from the LIS', value: accession });
-    const blockLbl = (slide.block_label || '').trim() || (slide.block_number ? String(slide.block_number) : '');
-    if (blockLbl) rows.push({ label: 'Block', labelTip: BLOCK_LABEL_TIP, value: blockLbl });
     return rows;
 }
 
@@ -1727,6 +1811,31 @@ function shortMutationType(type: string | undefined): string {
  * Only rendered after `oncogenic_mutation_details` is populated so that
  * all cells have data on first paint.
  */
+/** OncoKB concentric-circles icon — matches cBioPortal's annotation column badge. */
+const OncoKbIcon = () => (
+    <svg width="13" height="13" viewBox="-8 -8 16 16" style={{ verticalAlign: 'middle', display: 'inline-block' }}>
+        <circle r="6" fill="none" strokeWidth="1.8" stroke="#0968C3" />
+        <circle r="3" fill="none" strokeWidth="1.8" stroke="#0968C3" />
+        <circle r="1.5" fill="#0968C3" />
+    </svg>
+);
+
+/** CIViC "C" badge icon — matches cBioPortal's annotation column CIViC badge. */
+const CivicIcon = () => (
+    <span style={{
+        display: 'inline-block', width: 13, height: 13, lineHeight: '13px',
+        fontSize: 9, fontWeight: 700, color: '#fff', background: '#2ecc71',
+        borderRadius: 2, textAlign: 'center', verticalAlign: 'middle',
+    }}>C</span>
+);
+
+/** Hotspot flame icon — shown when the mutation is a known recurrent hotspot. */
+const HotspotIcon = () => (
+    <svg width="11" height="13" viewBox="0 0 12 16" style={{ verticalAlign: 'middle', display: 'inline-block' }}>
+        <path fill="#ff9900" d="M6 0C3.8 2.4 3 4.5 3.5 6.5c.3 1.1-.2 2-.8 2.5C2 7.5 1.5 5.5 2 4 .5 5.5 0 7.5 0 9.5 0 13 2.7 16 6 16s6-3 6-6.5c0-2.5-1-5-3-7-.5 1.5-1.5 2.5-3 3z"/>
+    </svg>
+);
+
 function MutationTable({ sample }: { sample: Sample }): React.ReactElement | null {
     const muts = sample.oncogenic_mutations?.split(/[;,]\s*/).map(s => s.trim()).filter(Boolean) ?? [];
     const details = sample.oncogenic_mutation_details;
@@ -1743,15 +1852,17 @@ function MutationTable({ sample }: { sample: Sample }): React.ReactElement | nul
     return (
         <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 8, tableLayout: 'fixed' }}>
             <colgroup>
-                <col style={{ width: '30%' }} />
-                <col style={{ width: '32%' }} />
                 <col style={{ width: '22%' }} />
-                <col style={{ width: '16%' }} />
+                <col style={{ width: '28%' }} />
+                <col style={{ width: '18%' }} />
+                <col style={{ width: '18%' }} />
+                <col style={{ width: '14%' }} />
             </colgroup>
             <thead>
                 <tr>
                     <th style={thStyle}>Gene</th>
                     <th style={thStyle}>Variant</th>
+                    <th style={thStyle}>Annot</th>
                     <th style={thStyle}>Type</th>
                     <th style={{ ...thStyle, textAlign: 'right' }}>VAF</th>
                 </tr>
@@ -1761,21 +1872,38 @@ function MutationTable({ sample }: { sample: Sample }): React.ReactElement | nul
                     const spaceIdx = mut.indexOf(' ');
                     const gene = spaceIdx > 0 ? mut.slice(0, spaceIdx) : mut;
                     const variant = spaceIdx > 0 ? mut.slice(spaceIdx + 1) : '';
-                    const href = `https://www.oncokb.org/gene/${encodeURIComponent(gene)}${variant ? '/' + encodeURIComponent(variant) : ''}`;
+                    const oncoKbUrl = `https://www.oncokb.org/gene/${encodeURIComponent(gene)}${variant ? '/' + encodeURIComponent(variant) : ''}`;
+                    const civicUrl = `https://civicdb.org/genes/${encodeURIComponent(gene)}/summary`;
                     const d = details?.[i];
                     const shortType = shortMutationType(d?.type);
+                    const isHotspot = !!(d?.annotation?.toLowerCase().includes('hotspot'));
                     return (
                         <tr key={mut} style={{ borderTop: `1px solid ${C.border}` }}>
-                            <td style={{ ...tdBase, paddingRight: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                <a href={href} target="_blank" rel="noopener noreferrer"
-                                   style={{ color: C.blue, fontWeight: 600, textDecoration: 'none' }}
-                                   onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.textDecoration = 'underline'; }}
-                                   onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.textDecoration = 'none'; }}>
-                                    {gene}
-                                </a>
+                            <td style={{ ...tdBase, paddingRight: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600, color: C.text }}>
+                                {gene}
                             </td>
                             <td style={{ ...tdBase, paddingRight: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'monospace', fontSize: 10.5 }}>
                                 {variant || '—'}
+                            </td>
+                            <td style={{ ...tdBase, paddingRight: 2, whiteSpace: 'nowrap' }}>
+                                <a href={oncoKbUrl} target="_blank" rel="noopener noreferrer"
+                                   title={`OncoKB: ${gene}${variant ? ' ' + variant : ''}`}
+                                   style={{ marginRight: 3, textDecoration: 'none', display: 'inline-block' }}>
+                                    <OncoKbIcon />
+                                </a>
+                                <a href={civicUrl} target="_blank" rel="noopener noreferrer"
+                                   title={`CIViC: ${gene}`}
+                                   style={{ marginRight: isHotspot ? 3 : 0, textDecoration: 'none', display: 'inline-block' }}>
+                                    <CivicIcon />
+                                </a>
+                                {isHotspot && (
+                                    <a href={`https://www.cancerhotspots.org/#/gene/${encodeURIComponent(gene)}`}
+                                       target="_blank" rel="noopener noreferrer"
+                                       title="Recurrent hotspot"
+                                       style={{ textDecoration: 'none', display: 'inline-block' }}>
+                                        <HotspotIcon />
+                                    </a>
+                                )}
                             </td>
                             <td title={d?.type} style={{ ...tdBase, paddingRight: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: C.muted }}>
                                 {shortType}
@@ -1805,4 +1933,66 @@ function buildSeqRows(sample: Sample, sampleUrl?: string): MetaRow[] {
     return rows;
 }
 
+/** Labels for discrete CNA values (GISTIC encoding). */
+function cnaLabel(value: number): string {
+    if (value === -2) return 'Deep del';
+    if (value === -1) return 'Shallow del';
+    if (value === 1) return 'Gain';
+    if (value === 2) return 'Amplification';
+    return String(value);
+}
+
+/**
+ * Compact table of copy-number alterations — one row per gene with columns:
+ * Gene (OncoKB link) | CNA type.
+ */
+function CnaTable({ sample }: { sample: Sample }): React.ReactElement | null {
+    const cnas = sample.cna_alterations;
+    if (!cnas?.length) return null;
+
+    const thStyle: React.CSSProperties = {
+        fontSize: 10, color: C.muted, fontWeight: 600, textAlign: 'left',
+        paddingBottom: 4, userSelect: 'none',
+    };
+    const tdBase: React.CSSProperties = {
+        fontSize: 11, paddingTop: 3, paddingBottom: 3, verticalAlign: 'middle',
+    };
+
+    return (
+        <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 8, tableLayout: 'fixed' }}>
+            <colgroup>
+                <col style={{ width: '45%' }} />
+                <col style={{ width: '55%' }} />
+            </colgroup>
+            <thead>
+                <tr>
+                    <th style={thStyle}>Gene</th>
+                    <th style={thStyle}>CNA</th>
+                </tr>
+            </thead>
+            <tbody>
+                {cnas.map(cna => {
+                    const href = `https://www.oncokb.org/gene/${encodeURIComponent(cna.gene)}`;
+                    const label = cnaLabel(cna.cnaValue);
+                    const color = cna.cnaValue <= -2 ? '#b22222' : cna.cnaValue === -1 ? '#cc6600' : cna.cnaValue >= 2 ? '#1a5c1a' : C.muted;
+                    return (
+                        <tr key={cna.gene} style={{ borderTop: `1px solid ${C.border}` }}>
+                            <td style={{ ...tdBase, paddingRight: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                <a href={href} target="_blank" rel="noopener noreferrer"
+                                   style={{ color: C.blue, fontWeight: 600, textDecoration: 'none' }}
+                                   onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.textDecoration = 'underline'; }}
+                                   onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.textDecoration = 'none'; }}>
+                                    {cna.gene}
+                                </a>
+                            </td>
+                            <td style={{ ...tdBase, color, fontWeight: 500 }}>
+                                {label}
+                            </td>
+                        </tr>
+                    );
+                })}
+            </tbody>
+        </table>
+    );
+}
 
