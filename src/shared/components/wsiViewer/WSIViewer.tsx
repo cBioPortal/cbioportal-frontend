@@ -76,6 +76,8 @@ export default class WSIViewer extends React.Component<Props, {}> {
     private static readonly MIN_SPINNER_MS = 250;
     /** Timer handle for the minimum-spinner-duration callback */
     private spinnerTimer: ReturnType<typeof setTimeout> | null = null;
+    /** Debounce timer: delays mountOSD so rapid clicks only trigger one fetch */
+    private selectSlideDebounce: ReturnType<typeof setTimeout> | null = null;
 
     /** Stable per-instance ID prefix for OSD custom nav button elements */
     private navId = `wsi-nav-${Math.random().toString(36).slice(2, 9)}`;
@@ -145,6 +147,10 @@ export default class WSIViewer extends React.Component<Props, {}> {
 
     componentWillUnmount() {
         this.hierarchy = null; // stops the prefetchSlideMetadata loop
+        if (this.selectSlideDebounce !== null) {
+            clearTimeout(this.selectSlideDebounce);
+            this.selectSlideDebounce = null;
+        }
         this.destroyViewer();
     }
 
@@ -222,10 +228,19 @@ export default class WSIViewer extends React.Component<Props, {}> {
         if (slides.length === 0) return;
         const base = this.tileServerBase;
 
-        // Fire ALL thumbnail fetches simultaneously so Redis is populated quickly.
-        // The server's worker pool naturally limits concurrency.
-        for (const sl of slides) {
-            fetch(`${base}/tiles/${sl.image_id}/thumbnail`).catch(() => {});
+        // Fire thumbnail fetches in small batches to avoid overwhelming the tile server.
+        // Generates thumbnails in advance so the sidebar loads instantly on first click.
+        // Batch size matches n_workers (4) so every worker handles exactly one thumbnail
+        // at a time — enough to parallelize without creating a pile-up.
+        const THUMB_BATCH = 4;
+        for (let i = 0; i < slides.length; i += THUMB_BATCH) {
+            if (!this.hierarchy) return;
+            for (const sl of slides.slice(i, i + THUMB_BATCH)) {
+                fetch(`${base}/tiles/${sl.image_id}/thumbnail`).catch(() => {});
+            }
+            if (i + THUMB_BATCH < slides.length) {
+                await new Promise(r => setTimeout(r, 200));
+            }
         }
 
         // Fetch metadata serially to keep the SVS pipeline pressure manageable.
@@ -260,8 +275,13 @@ export default class WSIViewer extends React.Component<Props, {}> {
 
     // ---- slide selection ----
 
+    /** How long to wait after the last click before actually mounting OSD.
+     *  Prevents N concurrent metadata fetches when clicking through slides quickly. */
+    private static readonly SELECT_DEBOUNCE_MS = 150;
+
     @action.bound
-    async selectSlide(slide: Slide, sample: Sample) {
+    selectSlide(slide: Slide, sample: Sample) {
+        // Update UI state immediately for instant visual feedback.
         this.selectedSlide = slide;
         this.selectedSample = sample;
         this.selectedMeta = null;
@@ -276,12 +296,15 @@ export default class WSIViewer extends React.Component<Props, {}> {
         }
         // Bump the sequence so any in-flight mountOSD call can detect it's stale.
         const seq = ++this.mountSeq;
-        await this.mountOSD(slide, seq);
-        // NOTE: do NOT call writeHashState() here. mountOSD returns before the
-        // OSD 'open' event fires, so the viewport has no tile source yet and
-        // contentSize defaults to 1×1.  Writing at this point would clobber any
-        // incoming shared-link hash with garbage coordinates (x≈1, y≈1, z=1).
-        // The 'open' handler writes the hash once the viewport is fully ready.
+        // Debounce: if the user clicks another slide within SELECT_DEBOUNCE_MS,
+        // cancel this pending mount. Only the last-clicked slide triggers a fetch.
+        if (this.selectSlideDebounce !== null) {
+            clearTimeout(this.selectSlideDebounce);
+        }
+        this.selectSlideDebounce = setTimeout(() => {
+            this.selectSlideDebounce = null;
+            void this.mountOSD(slide, seq);
+        }, WSIViewer.SELECT_DEBOUNCE_MS);
     }
 
     // ---- OpenSeadragon ----
@@ -1165,12 +1188,15 @@ function SlideItem({ slide, sample, blockLabel, multiPart, selected, onSelectSli
 
 // ---- SlideThumbnail ----
 
+/** Initial timeout before first auto-retry. Subsequent failure shows manual retry UI. */
 const THUMBNAIL_TIMEOUT_MS = 30_000;
+const THUMBNAIL_MAX_AUTO_RETRIES = 1;
 
 function SlideThumbnail({ src }: { src: string | null }) {
     const [status, setStatus] = React.useState<'loading' | 'loaded' | 'error'>('loading');
     // retryKey forces a fresh <img> mount (new network request) on retry.
     const [retryKey, setRetryKey] = React.useState(0);
+    const autoRetriesRef = React.useRef(0);
     const imgRef = React.useRef<HTMLImageElement>(null);
 
     // useLayoutEffect runs synchronously after DOM mutations, before the browser
@@ -1181,6 +1207,7 @@ function SlideThumbnail({ src }: { src: string | null }) {
     // event. The component is keyed by src in MetaSidebar so this effect only
     // needs to run once on mount (and again on retry).
     React.useLayoutEffect(() => {
+        autoRetriesRef.current = 0;
         const img = imgRef.current;
         if (!img) return;
         if (img.complete) {
@@ -1188,10 +1215,16 @@ function SlideThumbnail({ src }: { src: string | null }) {
             return;
         }
         // If the tile server is busy or a worker was restarted, the request may
-        // hang indefinitely. Surface an error after THUMBNAIL_TIMEOUT_MS so the
-        // user can retry rather than watching an endless spinner.
+        // hang indefinitely. Auto-retry once before surfacing the error UI, since
+        // the first attempt may have hit a cold-start queue and Redis is now warm.
         const timer = window.setTimeout(() => {
-            setStatus('error');
+            if (autoRetriesRef.current < THUMBNAIL_MAX_AUTO_RETRIES) {
+                autoRetriesRef.current += 1;
+                setStatus('loading');
+                setRetryKey(k => k + 1);
+            } else {
+                setStatus('error');
+            }
         }, THUMBNAIL_TIMEOUT_MS);
         return () => window.clearTimeout(timer);
     }, [retryKey]);
