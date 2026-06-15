@@ -279,24 +279,37 @@ test.describe('WSI viewer — share view and centering', () => {
         const oncokbLinks = page.locator('a[href*="oncokb.org/gene/"]');
         await expect(oncokbLinks.first()).toBeVisible({ timeout: 15_000 });
 
-        // Check that KRAS p.G13D mutation is listed
-        await expect(page.locator('text=KRAS').first()).toBeVisible();
-
-        // Check that multiple OncoKB links are rendered (one per mutation, not one big link)
+        // The mutations API returns 11 mutations for P-0000678-T01-IM3; all should be shown.
+        // (Previously only 9 were shown because CVR_ONCOGENIC_MUTATIONS was used as the source.)
         const count = await oncokbLinks.count();
-        expect(count).toBeGreaterThan(1);
+        expect(count).toBe(11);
 
-        // Each link should contain only one gene, not multiple gene/protein combos
+        // KRAS p.G13D and the previously-missing ETV1 / SOX9 mutations should all be present.
+        await expect(page.locator('text=KRAS p.G13D').first()).toBeVisible();
+        await expect(page.locator('text=ETV1 p.Q54K').first()).toBeVisible();
+        await expect(page.locator('text=SOX9 p.S39C').first()).toBeVisible();
+
+        // Every link should be a single-gene OncoKB URL (no semicolons = no merged link).
+        const allHrefs = await oncokbLinks.evaluateAll(
+            (links: HTMLAnchorElement[]) => links.map(a => a.getAttribute('href') ?? '')
+        );
+        for (const href of allHrefs) {
+            expect(href).not.toContain('%3B');           // URL-encoded semicolon
+            expect(href).toMatch(/oncokb\.org\/gene\/[A-Z0-9]+\/p\./);
+        }
+
+        // Every link should have a tooltip with type and VAF — guaranteed because links
+        // only render after oncogenic_mutation_details is fully populated.
+        const allTitles = await oncokbLinks.evaluateAll(
+            (links: HTMLAnchorElement[]) => links.map(a => a.getAttribute('title') ?? '')
+        );
+        for (const title of allTitles) {
+            expect(title).toMatch(/Type:/);
+            expect(title).toMatch(/VAF: \d+%/);
+        }
+
+        // Mutations are sorted by VAF descending; TP53 p.V173L has the highest VAF (~63%).
         const firstHref = await oncokbLinks.first().getAttribute('href');
-        // A valid single-mutation link looks like: https://www.oncokb.org/gene/KRAS/p.G13D
-        // It should NOT contain semicolons or multiple genes separated by semicolons
-        expect(firstHref).not.toContain('%3B'); // URL-encoded semicolon
-        expect(firstHref).toMatch(/oncokb\.org\/gene\/[A-Z0-9]+\/p\./);
-
-        // Verify tooltips contain mutation type and VAF — since links only render after
-        // details are loaded, the title attribute is guaranteed to be populated.
-        const firstTitle = await oncokbLinks.first().getAttribute('title');
-        expect(firstTitle).toMatch(/Type:/);
-        expect(firstTitle).toMatch(/VAF: \d+%/);
+        expect(firstHref).toContain('/gene/TP53/p.V173L');
     });
 });
