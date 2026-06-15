@@ -12,6 +12,8 @@ export interface Slide {
     block_number: string;
     /** Anatomical site / part description propagated from the parent Part (e.g. "Lung, left") */
     part_description?: string;
+    /** Pathological diagnosis title from the part (may differ from part_description) */
+    path_dx_title?: string;
 }
 
 export interface Block {
