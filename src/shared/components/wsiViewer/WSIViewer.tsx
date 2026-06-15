@@ -511,16 +511,31 @@ export default class WSIViewer extends React.Component<Props, {}> {
                 this.writeHashState();
             });
 
-            // Hide the spinner after MIN_SPINNER_MS from when selectSlide was called.
-            // Viewport setup above is synchronous so there's no risk of a race here.
-            const elapsed = Date.now() - this.loadingStart;
-            const delay = Math.max(0, WSIViewer.MIN_SPINNER_MS - elapsed);
-            if (this.spinnerTimer !== null) clearTimeout(this.spinnerTimer);
-            this.spinnerTimer = setTimeout(action(() => {
+            // Keep the spinner visible until the first tile is actually painted on
+            // the canvas — this covers the "grey screen" period while OSD fetches
+            // and decodes the first set of tiles (which includes the cold S3 open).
+            // tile-drawn fires once per drawn tile; we only need the first one.
+            // Fallback: hide spinner after 30s even if no tile ever draws (error
+            // state is handled separately by the open-failed / timeout handlers).
+            const hideSpinner = action(() => {
                 if (seq !== this.mountSeq) return;
+                if (this.spinnerTimer !== null) { clearTimeout(this.spinnerTimer); this.spinnerTimer = null; }
                 this.spinnerVisible = false;
-                this.spinnerTimer = null;
-            }), delay);
+            });
+            const minRemaining = Math.max(0, WSIViewer.MIN_SPINNER_MS - (Date.now() - this.loadingStart));
+            if (this.spinnerTimer !== null) clearTimeout(this.spinnerTimer);
+            // Fallback timer in case tile-drawn never fires (e.g. blank slide, error)
+            this.spinnerTimer = setTimeout(hideSpinner, Math.max(minRemaining, 30_000));
+            this.osdViewer.addOnceHandler('tile-drawn', () => {
+                // Respect the minimum spinner duration even if tiles arrive instantly.
+                const remaining = Math.max(0, WSIViewer.MIN_SPINNER_MS - (Date.now() - this.loadingStart));
+                if (remaining > 0) {
+                    if (this.spinnerTimer !== null) clearTimeout(this.spinnerTimer);
+                    this.spinnerTimer = setTimeout(hideSpinner, remaining);
+                } else {
+                    hideSpinner();
+                }
+            });
         });
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.osdViewer.addOnceHandler('open-failed', (e: any) => {
