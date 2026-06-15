@@ -1646,11 +1646,9 @@ function mutationLinks(mutStr: string): React.ReactNode {
                 const variant = spaceIdx > 0 ? mut.slice(spaceIdx + 1) : '';
                 const href = `https://www.oncokb.org/gene/${encodeURIComponent(gene)}${variant ? '/' + encodeURIComponent(variant) : ''}`;
                 return (
-                    <div key={mut}>
+                    <div key={mut} style={{ marginBottom: 3 }}>
                         <a href={href} target="_blank" rel="noopener noreferrer"
-                           style={{ color: C.blue, textDecoration: 'none' }}
-                           onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.textDecoration = 'underline'; }}
-                           onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.textDecoration = 'none'; }}>
+                           style={{ color: C.blue, textDecoration: 'underline' }}>
                             {mut}
                         </a>
                     </div>
