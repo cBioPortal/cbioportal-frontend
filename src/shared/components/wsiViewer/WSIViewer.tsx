@@ -462,12 +462,20 @@ export default class WSIViewer extends React.Component<Props, {}> {
             // Store details for every mutation so tooltips work even when the
             // oncogenic list comes from the clinical attribute (driverFilter may be N/A).
             if (!detailsBySample.has(m.sampleId)) detailsBySample.set(m.sampleId, new Map());
-            detailsBySample.get(m.sampleId)!.set(token, {
+            const detail = {
                 token,
                 type: formatMutationType(m.mutationType ?? ''),
                 vaf: total > 0 ? Math.round(m.tumorAltCount! / total * 100) : undefined,
                 annotation: m.driverFilterAnnotation || undefined,
-            });
+            };
+            const sampleDetails = detailsBySample.get(m.sampleId)!;
+            sampleDetails.set(token, detail);
+            // CVR_ONCOGENIC_MUTATIONS uses "GENE p.Variant" while the mutations API
+            // returns proteinChange without the "p." prefix (e.g. "G13D" not "p.G13D").
+            // Index both forms so token lookup succeeds regardless of source.
+            if (!m.proteinChange.startsWith('p.')) {
+                sampleDetails.set(`${geneSymbol} p.${m.proteinChange}`, detail);
+            }
 
             // Also track driver-filtered oncogenic mutations as a fallback source
             // when CVR_ONCOGENIC_MUTATIONS clinical attribute is unavailable.
