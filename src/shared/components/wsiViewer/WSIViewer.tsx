@@ -494,9 +494,17 @@ export default class WSIViewer extends React.Component<Props, {}> {
     @action.bound
     goToCoordinates() {
         if (!this.osdViewer) return;
-        const x = parseInt(this.coordInputX, 10);
-        const y = parseInt(this.coordInputY, 10);
+        let x = parseInt(this.coordInputX, 10);
+        let y = parseInt(this.coordInputY, 10);
         if (!isFinite(x) || !isFinite(y)) return;
+        // Clamp to image boundaries so the view stays within the slide.
+        const dim = this.selectedMeta?.dimensions;
+        if (dim) {
+            x = Math.max(0, Math.min(x, dim.width  - 1));
+            y = Math.max(0, Math.min(y, dim.height - 1));
+            this.coordInputX = String(x);
+            this.coordInputY = String(y);
+        }
         const imgPoint = new (OpenSeadragon as any).Point(x, y);
         const vpPoint = this.osdViewer.viewport.imageToViewportCoordinates(imgPoint);
         this.osdViewer.viewport.panTo(vpPoint, false);
