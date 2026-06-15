@@ -410,6 +410,11 @@ export default class WSIViewer extends React.Component<Props, {}> {
         studyId: string,
         sampleIdentifiers: Array<{ studyId: string; sampleId: string }>
     ): Promise<void> {
+        // Declare detail maps here so the finally block can always set details,
+        // even when the function returns early due to an error or missing data.
+        const oncogenicBySample = new Map<string, string[]>();
+        const detailsBySample = new Map<string, Map<string, MutationDetail>>();
+        try {
         // Find the MUTATION_EXTENDED molecular profile for this study
         const profilesResp = await fetch(
             `${base}/api/studies/${encodeURIComponent(studyId)}/molecular-profiles` +
@@ -449,9 +454,6 @@ export default class WSIViewer extends React.Component<Props, {}> {
         // Build per-token detail maps for ALL mutations (VAF, type, annotation).
         // The authoritative oncogenic list comes from CVR_ONCOGENIC_MUTATIONS (clinical data);
         // driver-filter-based oncogenicBySample is only the fallback when that attribute is absent.
-        const oncogenicBySample = new Map<string, string[]>();
-        const detailsBySample = new Map<string, Map<string, MutationDetail>>();
-
         for (const m of mutations) {
             // DETAILED projection always includes gene object; guard defensively
             const geneSymbol = m.gene?.hugoGeneSymbol;
@@ -488,22 +490,27 @@ export default class WSIViewer extends React.Component<Props, {}> {
             }
         }
 
-        action(() => {
-            for (const sample of this.hierarchy!.samples) {
-                // Only set oncogenic_mutations if clinical-data didn't provide it
-                if (!sample.oncogenic_mutations) {
-                    const muts = oncogenicBySample.get(sample.sample_id);
-                    if (muts?.length) sample.oncogenic_mutations = muts.join(', ');
+        } catch (e) {
+            console.error('[WSIViewer] fetchAndMergeMutations failed:', e);
+        } finally {
+            // Always set oncogenic_mutation_details so buildSeqRows knows the fetch
+            // completed and can safely render links (with or without tooltip data).
+            action(() => {
+                for (const sample of this.hierarchy!.samples) {
+                    // Only set oncogenic_mutations if clinical-data didn't provide it
+                    if (!sample.oncogenic_mutations) {
+                        const muts = oncogenicBySample.get(sample.sample_id);
+                        if (muts?.length) sample.oncogenic_mutations = muts.join(', ');
+                    }
+                    if (sample.oncogenic_mutations) {
+                        const sampleDetails = detailsBySample.get(sample.sample_id);
+                        const tokens = sample.oncogenic_mutations.split(/[,;]\s*/).map(s => s.trim()).filter(Boolean);
+                        // Build detail list; fall back to token-only entry if API returned no data.
+                        sample.oncogenic_mutation_details = tokens.map(t => sampleDetails?.get(t) ?? { token: t });
+                    }
                 }
-                // Always populate details so tooltips work regardless of data source
-                if (sample.oncogenic_mutations) {
-                    const sampleDetails = detailsBySample.get(sample.sample_id);
-                    const tokens = sample.oncogenic_mutations.split(/[,;]\s*/).map(s => s.trim()).filter(Boolean);
-                    // Build detail list; fall back to token-only entry if API didn't return details.
-                    sample.oncogenic_mutation_details = tokens.map(t => sampleDetails?.get(t) ?? { token: t });
-                }
-            }
-        })();
+            })();
+        }
     }
 
     // ---- slide selection ----
@@ -1748,7 +1755,9 @@ function buildSeqRows(sample: Sample, sampleUrl?: string): MetaRow[] {
     if (sample.metastatic_site && sample.metastatic_site.toLowerCase() !== 'not applicable') {
         rows.push({ label: 'Metastatic site', value: sample.metastatic_site });
     }
-    if (sample.oncogenic_mutations) rows.push({
+    // Wait until oncogenic_mutation_details is populated (by fetchAndMergeMutations)
+    // before rendering links, so tooltips are immediately available on first hover.
+    if (sample.oncogenic_mutations && sample.oncogenic_mutation_details !== undefined) rows.push({
         label: 'Mutations',
         labelTip: 'Oncogenic somatic mutations identified by MSK-IMPACT — hover for details, click to view on OncoKB',
         value: mutationLinks(sample.oncogenic_mutations, sample.oncogenic_mutation_details),
