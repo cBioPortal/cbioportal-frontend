@@ -273,6 +273,9 @@ test.describe('WSI viewer — share view and centering', () => {
         const seqSection = page.locator('text=MSK-IMPACT').first();
         await expect(seqSection).toBeVisible({ timeout: 15_000 });
 
+        // Wait for network to settle so mutation details are fully loaded
+        await page.waitForLoadState('networkidle', { timeout: 10_000 }).catch(() => {});
+
         // Check that KRAS p.G13D mutation is listed
         await expect(page.locator('text=KRAS').first()).toBeVisible();
 
@@ -287,5 +290,10 @@ test.describe('WSI viewer — share view and centering', () => {
         // It should NOT contain semicolons or multiple genes separated by semicolons
         expect(firstHref).not.toContain('%3B'); // URL-encoded semicolon
         expect(firstHref).toMatch(/oncokb\.org\/gene\/[A-Z0-9]+\/p\./);
+
+        // Verify tooltips contain mutation type and VAF (hover text via title attribute)
+        const firstTitle = await oncokbLinks.first().getAttribute('title');
+        expect(firstTitle).toMatch(/Type:/);
+        expect(firstTitle).toMatch(/VAF: \d+%/);
     });
 });

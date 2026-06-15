@@ -322,10 +322,11 @@ export default class WSIViewer extends React.Component<Props, {}> {
         if (!sampleIdentifiers.length) return;
 
         try {
-            await Promise.all([
-                this.fetchAndMergeClinicalData(base, studyId, sampleIdentifiers),
-                this.fetchAndMergeMutations(base, studyId, sampleIdentifiers),
-            ]);
+            // Run sequentially: clinical data must populate oncogenic_mutations first
+            // so that fetchAndMergeMutations can attach type/VAF details to the
+            // correct token list when building oncogenic_mutation_details.
+            await this.fetchAndMergeClinicalData(base, studyId, sampleIdentifiers);
+            await this.fetchAndMergeMutations(base, studyId, sampleIdentifiers);
         } catch {
             // Silently fall back to tile-server data
         }
@@ -1710,15 +1711,15 @@ function formatMutationType(t: string): string {
  */
 function mutationLinks(mutStr: string, details?: MutationDetail[]): React.ReactNode {
     const muts = mutStr.split(/[,;]\s*/).map(s => s.trim()).filter(Boolean);
-    const detailMap = new Map((details ?? []).map(d => [d.token, d]));
     return (
         <>
-            {muts.map(mut => {
+            {muts.map((mut, i) => {
                 const spaceIdx = mut.indexOf(' ');
                 const gene = spaceIdx > 0 ? mut.slice(0, spaceIdx) : mut;
                 const variant = spaceIdx > 0 ? mut.slice(spaceIdx + 1) : '';
                 const href = `https://www.oncokb.org/gene/${encodeURIComponent(gene)}${variant ? '/' + encodeURIComponent(variant) : ''}`;
-                const d = detailMap.get(mut);
+                // details[i] corresponds to muts[i] (built from the same token split).
+                const d = details?.[i];
                 const tooltipLines = [
                     d?.type && `Type: ${d.type}`,
                     d?.vaf != null && `VAF: ${d.vaf}%`,
