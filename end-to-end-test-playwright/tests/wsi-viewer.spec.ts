@@ -273,14 +273,16 @@ test.describe('WSI viewer — share view and centering', () => {
         const seqSection = page.locator('text=MSK-IMPACT').first();
         await expect(seqSection).toBeVisible({ timeout: 15_000 });
 
-        // Wait for network to settle so mutation details are fully loaded
-        await page.waitForLoadState('networkidle', { timeout: 10_000 }).catch(() => {});
+        // Wait for OncoKB links to appear — they are NOT rendered until
+        // oncogenic_mutation_details is populated (after the mutations API call),
+        // so their presence guarantees tooltips are ready too.
+        const oncokbLinks = page.locator('a[href*="oncokb.org/gene/"]');
+        await expect(oncokbLinks.first()).toBeVisible({ timeout: 15_000 });
 
         // Check that KRAS p.G13D mutation is listed
         await expect(page.locator('text=KRAS').first()).toBeVisible();
 
         // Check that multiple OncoKB links are rendered (one per mutation, not one big link)
-        const oncokbLinks = page.locator('a[href*="oncokb.org/gene/"]');
         const count = await oncokbLinks.count();
         expect(count).toBeGreaterThan(1);
 
@@ -291,7 +293,8 @@ test.describe('WSI viewer — share view and centering', () => {
         expect(firstHref).not.toContain('%3B'); // URL-encoded semicolon
         expect(firstHref).toMatch(/oncokb\.org\/gene\/[A-Z0-9]+\/p\./);
 
-        // Verify tooltips contain mutation type and VAF (hover text via title attribute)
+        // Verify tooltips contain mutation type and VAF — since links only render after
+        // details are loaded, the title attribute is guaranteed to be populated.
         const firstTitle = await oncokbLinks.first().getAttribute('title');
         expect(firstTitle).toMatch(/Type:/);
         expect(firstTitle).toMatch(/VAF: \d+%/);
