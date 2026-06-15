@@ -188,6 +188,14 @@ export default class WSIViewer extends React.Component<Props, {}> {
                 this.loading = false;
             })();
 
+            // Enrich sample metadata from cBioPortal in the background.
+            // Overwrites Databricks-sourced clinical/sequencing fields (TMB, MSI,
+            // tumor purity, oncogenic mutations, …) with authoritative cBioPortal
+            // values.  Runs fire-and-forget; tile-server data is the fallback.
+            if (this.props.studyId) {
+                void this.enrichSamplesFromCbioportal();
+            }
+
             // Auto-select first servable H&E slide, else first servable slide.
             // If the URL hash encodes a prior view, honour that slide instead.
             const allSlides = this.servableSlides;
@@ -274,6 +282,175 @@ export default class WSIViewer extends React.Component<Props, {}> {
 
     @computed get tileServerBase(): string {
         return this.props.url.replace(/\/patient\/[^/]+\/?$/, '');
+    }
+
+    /**
+     * Base URL for cBioPortal API calls.
+     * When the viewer is embedded inside cBioPortal (PatientViewPageTabs), relative
+     * paths work natively.  When the resource URL carries a `cbioUrl` query param
+     * (ResourceTab / dev-test setup), we use that value instead.
+     */
+    @computed private get cbioApiBase(): string {
+        try {
+            const cbioUrl = new URL(this.props.url).searchParams.get('cbioUrl');
+            if (cbioUrl) return cbioUrl;
+        } catch {
+            // props.url may not be a full URL in some test setups
+        }
+        return '';
+    }
+
+    /**
+     * Enrich sample metadata (TMB, MSI, tumor purity, oncogenic mutations, …) from
+     * cBioPortal's REST API so the sidebar reflects the same data shown elsewhere in
+     * cBioPortal rather than a potentially-stale Databricks snapshot.
+     *
+     * Runs as a fire-and-forget background task after the tile-server hierarchy is
+     * loaded.  If cBioPortal is unavailable, the tile-server data remains as-is.
+     */
+    @action.bound
+    private async enrichSamplesFromCbioportal(): Promise<void> {
+        const { studyId } = this.props;
+        const hier = this.hierarchy;
+        if (!studyId || !hier?.samples.length) return;
+
+        const base = this.cbioApiBase;
+        const sampleIdentifiers = hier.samples
+            .filter(s => s.sample_id)
+            .map(s => ({ studyId, sampleId: s.sample_id }));
+        if (!sampleIdentifiers.length) return;
+
+        try {
+            await Promise.all([
+                this.fetchAndMergeClinicalData(base, studyId, sampleIdentifiers),
+                this.fetchAndMergeMutations(base, studyId, sampleIdentifiers),
+            ]);
+        } catch {
+            // Silently fall back to tile-server data
+        }
+    }
+
+    /**
+     * Fetch sample-level clinical attributes from cBioPortal and merge them into
+     * the in-memory hierarchy samples.  Only attributes present in the response
+     * are updated; missing attributes keep their tile-server values.
+     */
+    private async fetchAndMergeClinicalData(
+        base: string,
+        studyId: string,
+        sampleIdentifiers: Array<{ studyId: string; sampleId: string }>
+    ): Promise<void> {
+        const resp = await fetch(
+            `${base}/api/clinical-data/fetch?clinicalDataType=SAMPLE&projection=SUMMARY`,
+            {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sampleIdentifiers }),
+            }
+        );
+        if (!resp.ok) return;
+
+        const data: Array<{ sampleId: string; clinicalAttributeId: string; value: string }> =
+            await resp.json();
+
+        // Build lookup: sampleId → Map<attributeId, value>
+        const byId = new Map<string, Map<string, string>>();
+        for (const item of data) {
+            if (!byId.has(item.sampleId)) byId.set(item.sampleId, new Map());
+            byId.get(item.sampleId)!.set(item.clinicalAttributeId, item.value);
+        }
+
+        // Helper: try multiple attribute IDs and return first match
+        const get = (attrs: Map<string, string>, ids: string[]): string | undefined =>
+            ids.map(id => attrs.get(id)).find(v => v != null && v !== '');
+
+        action(() => {
+            for (const sample of this.hierarchy!.samples) {
+                const attrs = byId.get(sample.sample_id);
+                if (!attrs) continue;
+                const set = <K extends keyof Sample>(
+                    key: K,
+                    ids: string[]
+                ): void => {
+                    const v = get(attrs, ids);
+                    if (v !== undefined) (sample as Sample)[key] = v as Sample[K];
+                };
+                set('cancer_type',          ['CANCER_TYPE']);
+                set('cancer_type_detailed', ['CANCER_TYPE_DETAILED']);
+                set('oncotree_code',        ['ONCOTREE_CODE']);
+                set('primary_site',         ['PRIMARY_SITE']);
+                set('sample_type',          ['SAMPLE_TYPE']);
+                set('metastatic_site',      ['METASTATIC_SITE']);
+                set('tumor_purity',         ['TUMOR_PURITY', 'CVR_TUMOR_PURITY']);
+                set('tmb_score',            ['CVR_TMB_SCORE', 'TMB_NONSYNONYMOUS', 'TMB_SCORE']);
+                set('msi_type',             ['MSI_TYPE', 'MSI_SCORE', 'MSI_STATUS']);
+                set('oncogenic_mutations',  ['ONCOGENIC_MUTATIONS', 'CVR_ONCOGENIC_MUTATIONS']);
+                set('num_oncogenic_mutations', ['NUM_ONCOGENIC_MUTATIONS', 'CVR_NUM_ONCOGENIC_MUTATIONS']);
+            }
+        })();
+    }
+
+    /**
+     * Fetch oncogenic somatic mutations from cBioPortal mutations API.
+     * Only updates `oncogenic_mutations` on samples where the clinical-data
+     * fetch didn't provide it (i.e., no ONCOGENIC_MUTATIONS clinical attribute).
+     */
+    private async fetchAndMergeMutations(
+        base: string,
+        studyId: string,
+        sampleIdentifiers: Array<{ studyId: string; sampleId: string }>
+    ): Promise<void> {
+        // Find the MUTATION_EXTENDED molecular profile for this study
+        const profilesResp = await fetch(
+            `${base}/api/studies/${encodeURIComponent(studyId)}/molecular-profiles` +
+            `?molecularAlterationType=MUTATION_EXTENDED&projection=SUMMARY`
+        );
+        if (!profilesResp.ok) return;
+        const profiles: Array<{ molecularProfileId: string }> = await profilesResp.json();
+        if (!profiles.length) return;
+        const molecularProfileId = profiles[0].molecularProfileId;
+
+        const sampleMolecularIdentifiers = sampleIdentifiers.map(s => ({
+            molecularProfileId,
+            sampleId: s.sampleId,
+        }));
+
+        const mutResp = await fetch(
+            `${base}/api/mutations/fetch?projection=SUMMARY`,
+            {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sampleMolecularIdentifiers }),
+            }
+        );
+        if (!mutResp.ok) return;
+
+        const mutations: Array<{
+            sampleId: string;
+            gene: { hugoGeneSymbol: string };
+            proteinChange: string;
+            driverFilter?: string;
+        }> = await mutResp.json();
+
+        // Group oncogenic mutations per sample
+        const byId = new Map<string, string[]>();
+        for (const m of mutations) {
+            const filter = (m.driverFilter ?? '').toLowerCase();
+            const isOncogenic = filter === 'putative_driver' || filter === 'oncogenic' || filter === 'likely oncogenic';
+            if (!isOncogenic) continue;
+            if (!byId.has(m.sampleId)) byId.set(m.sampleId, []);
+            byId.get(m.sampleId)!.push(`${m.gene.hugoGeneSymbol} ${m.proteinChange}`);
+        }
+        if (!byId.size) return;
+
+        action(() => {
+            for (const sample of this.hierarchy!.samples) {
+                // Only update if clinical-data didn't provide oncogenic_mutations
+                if (sample.oncogenic_mutations) continue;
+                const muts = byId.get(sample.sample_id);
+                if (muts?.length) sample.oncogenic_mutations = muts.join(', ');
+            }
+        })();
     }
 
     // ---- slide selection ----
