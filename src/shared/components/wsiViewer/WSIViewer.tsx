@@ -800,8 +800,31 @@ function fmtMB(bytes: string | number | null | undefined): string {
     return n >= 1e9 ? (n / 1e9).toFixed(1) + ' GB' : (n / 1e6).toFixed(0) + ' MB';
 }
 
+/** Common pathology block letter codes → human-readable meaning. */
+const BLOCK_CODE_MAP: Record<string, string> = {
+    A:   'Apical', B:   'Basal', C:   'Central', D:   'Distal',
+    M:   'Margin', N:   'Normal', P:   'Proximal', R:   'Representative',
+    T:   'Tumor',
+    DL:  'Distal Level', ML:  'Mesenteric Level', PL:  'Proximal Level',
+    RS:  'Rep. Section', RM:  'Resection Margin', SM:  'Surgical Margin',
+    CLN: 'Central LN',  LLN: 'Left LN',  LN:  'Lymph Node',
+    MLN: 'Mesenteric LN', RLN: 'Right LN', SLN: 'Sentinel LN',
+    I:   'Inked Margin', INK: 'Inked Margin',
+};
+
+/**
+ * Decode the letter-code portion of a block label (e.g. "11 PL1" → "Proximal Level",
+ * "9 M" → "Margin", "16 RLN" → "Right LN"). Returns null when unknown.
+ */
+function decodeBlockCode(label: string | null | undefined): string | null {
+    if (!label) return null;
+    const m = label.match(/^\d+\s+([A-Z]+)\d*$/);
+    if (!m) return null;
+    return BLOCK_CODE_MAP[m[1]] || null;
+}
+
 const BLOCK_LABEL_TIP =
-    'Block label: number = block within case; T\u202f=\u202ftumor, N\u202f=\u202funinvolved, L\u202f=\u202flymph node';
+    'Block label: number = block within case; letter code = tissue region (P=Proximal, D=Distal, M=Margin, RS=Rep. Section, LN=Lymph Node, …)';
 
 
 // ---- NavPanel ----
@@ -1027,8 +1050,9 @@ function SlideItem({ slide, sample, blockLabel, multiPart, selected, onSelectSli
     const mag = slide.magnification || '';
     const sz = fmtMB(slide.file_size_bytes);
     const section = barcodeSection(slide.barcode);
-    const accession = barcodeAccession(slide.barcode);
     const partDesc = multiPart ? abbreviatePartDesc(slide.part_description) : null;
+    // Decoded block region meaning ("Proximal", "Margin", etc.) — shown when block code is known.
+    const blockMeaning = !partDesc ? decodeBlockCode(blockLabel) : null;
 
     // Primary label: block region for H&E, stain name for IHC/special stains.
     const primaryLabel = isHE
@@ -1068,7 +1092,7 @@ function SlideItem({ slide, sample, blockLabel, multiPart, selected, onSelectSli
             title={tooltipLines.join('\n')}
             style={{
                 display: 'flex', alignItems: 'center', gap: 6,
-                padding: '4px 8px 4px 8px', margin: '1px 4px',
+                padding: '5px 8px', margin: '1px 4px',
                 borderRadius: 3, borderLeft,
                 background: bg,
                 cursor: slide.can_serve_tiles ? 'pointer' : 'help',
@@ -1076,32 +1100,32 @@ function SlideItem({ slide, sample, blockLabel, multiPart, selected, onSelectSli
             }}
         >
             <span style={{ width: 8, height: 8, borderRadius: '50%', background: dotColor, flexShrink: 0, display: 'inline-block' }} />
-            {/* LHS: primary label + sub-label (section / block for IHC) + accession */}
+            {/* LHS: primary label + decoded block meaning + section */}
             <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 10, fontWeight: 600, color: C.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: C.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {primaryLabel}
                 </div>
                 {partDesc && (
-                    <div style={{ fontSize: 9, color: C.blue, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontStyle: 'italic' }}>
+                    <div style={{ fontSize: 10, color: C.blue, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontStyle: 'italic' }}>
                         {partDesc}
                     </div>
                 )}
-                {subTokens.length > 0 && (
-                    <div style={{ fontSize: 9, color: C.muted, whiteSpace: 'nowrap' }}>
-                        {subTokens.join(' · ')}
+                {blockMeaning && (
+                    <div style={{ fontSize: 10, color: C.blue, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {blockMeaning}
                     </div>
                 )}
-                {accession && (
-                    <div style={{ fontSize: 9, color: C.muted, whiteSpace: 'nowrap', opacity: 0.7 }}>
-                        {accession}
+                {subTokens.length > 0 && (
+                    <div style={{ fontSize: 10, color: C.muted, whiteSpace: 'nowrap' }}>
+                        {subTokens.join(' · ')}
                     </div>
                 )}
             </div>
             {/* RHS: stain type (H&E slides) / mag / size */}
-            <div style={{ flexShrink: 0, textAlign: 'right', lineHeight: 1.4 }}>
-                {rhsStain && <div style={{ fontSize: 9, fontWeight: 600, color: dotColor }}>{rhsStain}</div>}
-                {mag && <div style={{ fontSize: 9, color: C.muted }}>{mag}</div>}
-                <div style={{ fontSize: 9, color: C.muted }}>{sz}</div>
+            <div style={{ flexShrink: 0, textAlign: 'right', lineHeight: 1.5 }}>
+                {rhsStain && <div style={{ fontSize: 10, fontWeight: 600, color: dotColor }}>{rhsStain}</div>}
+                {mag && <div style={{ fontSize: 10, color: C.muted }}>{mag}</div>}
+                <div style={{ fontSize: 10, color: C.muted }}>{sz}</div>
             </div>
         </div>
     );
@@ -1300,6 +1324,11 @@ function buildPathRows(slide: Slide, sample: Sample, studyId?: string): MetaRow[
         ? `/patient?studyId=${encodeURIComponent(studyId)}&caseId=${encodeURIComponent(sample.sample_id.replace(/-T\d+.*$/i, ''))}&sampleId=${encodeURIComponent(sample.sample_id)}`
         : undefined;
     const accession = barcodeAccession(slide.barcode);
+    // path_dx_title is the formal pathological diagnosis title (may differ from part_description)
+    const pathDxTitle = slide.path_dx_title
+        ? slide.path_dx_title.charAt(0).toUpperCase() + slide.path_dx_title.slice(1).toLowerCase()
+        : null;
+    const partDesc = slide.part_description || null;
     const rows: MetaRow[] = [
         { label: 'Stain', labelTip: 'Staining protocol used for this slide', value: stainBadge ? `${stainBadge} — ${cleanStain(slide.stain_name)}` : cleanStain(slide.stain_name) },
         { label: 'Sample', labelTip: 'Tumor sample identifier', value: sample.sample_id || '—', href: sampleUrl },
@@ -1308,7 +1337,11 @@ function buildPathRows(slide: Slide, sample: Sample, studyId?: string): MetaRow[
     if (sample.oncotree_code) rows.push({ label: 'OncoTree', labelTip: 'OncoTree cancer classification code — click to view on oncotree.mskcc.org', value: sample.oncotree_code, href: oncotreeUrl });
     if (sample.primary_site) rows.push({ label: 'Primary site', value: sample.primary_site });
     if (sample.sample_type) rows.push({ label: 'Sample type', value: sample.sample_type });
-    if (slide.part_description) rows.push({ label: 'Anatomical site', labelTip: 'Pathology part description — which anatomical specimen this slide was cut from', value: slide.part_description });
+    if (partDesc) rows.push({ label: 'Anatomical site', labelTip: 'Pathology part description — which anatomical specimen this slide was cut from', value: partDesc });
+    // Show path_dx_title (formal diagnosis) only when it adds new info beyond part_description
+    if (pathDxTitle && pathDxTitle.toLowerCase() !== (partDesc || '').toLowerCase()) {
+        rows.push({ label: 'Path Dx', labelTip: 'Pathological diagnosis title for this anatomical part', value: pathDxTitle });
+    }
     if (accession) rows.push({ label: 'Accession', labelTip: 'Surgical pathology accession number from the LIS', value: accession });
     const blockLbl = (slide.block_label || '').trim() || (slide.block_number ? String(slide.block_number) : '');
     if (blockLbl) rows.push({ label: 'Block', labelTip: BLOCK_LABEL_TIP, value: blockLbl });
@@ -1317,6 +1350,9 @@ function buildPathRows(slide: Slide, sample: Sample, studyId?: string): MetaRow[
     if (sample.tumor_purity) rows.push({ label: 'Tumor purity', labelTip: 'Estimated fraction of tumor cells in this sample', value: `${sample.tumor_purity}%` });
     if (sample.tmb_score) rows.push({ label: 'TMB', labelTip: 'Tumor mutational burden (mutations per megabase)', value: `${sample.tmb_score} mut/Mb` });
     if (sample.msi_type) rows.push({ label: 'MSI', labelTip: 'Microsatellite instability status', value: sample.msi_type });
+    if (sample.metastatic_site && sample.metastatic_site.toLowerCase() !== 'not applicable') {
+        rows.push({ label: 'Metastatic site', value: sample.metastatic_site });
+    }
     if (sample.oncogenic_mutations) rows.push({ label: 'Mutations', labelTip: 'Oncogenic somatic mutations identified by MSK-IMPACT', value: sample.oncogenic_mutations });
     return rows;
 }
