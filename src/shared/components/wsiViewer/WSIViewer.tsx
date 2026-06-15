@@ -1633,28 +1633,28 @@ function buildPathRows(slide: Slide, sample: Sample, studyId?: string): MetaRow[
 }
 
 /**
- * Render a comma-separated mutations string as individual OncoKB links.
+ * Render a comma-separated mutations string as individual OncoKB links,
+ * one per line so each is clearly a separate clickable item.
  * Each token "GENE Variant" maps to https://www.oncokb.org/gene/GENE/Variant.
  */
 function mutationLinks(mutStr: string): React.ReactNode {
     const muts = mutStr.split(/,\s*/).map(s => s.trim()).filter(Boolean);
     return (
         <>
-            {muts.map((mut, i) => {
+            {muts.map(mut => {
                 const spaceIdx = mut.indexOf(' ');
                 const gene = spaceIdx > 0 ? mut.slice(0, spaceIdx) : mut;
                 const variant = spaceIdx > 0 ? mut.slice(spaceIdx + 1) : '';
                 const href = `https://www.oncokb.org/gene/${encodeURIComponent(gene)}${variant ? '/' + encodeURIComponent(variant) : ''}`;
                 return (
-                    <span key={mut}>
-                        {i > 0 && ', '}
+                    <div key={mut}>
                         <a href={href} target="_blank" rel="noopener noreferrer"
                            style={{ color: C.blue, textDecoration: 'none' }}
                            onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.textDecoration = 'underline'; }}
                            onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.textDecoration = 'none'; }}>
                             {mut}
                         </a>
-                    </span>
+                    </div>
                 );
             })}
         </>
