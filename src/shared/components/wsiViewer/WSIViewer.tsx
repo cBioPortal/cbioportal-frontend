@@ -515,23 +515,31 @@ export default class WSIViewer extends React.Component<Props, {}> {
                 this.writeHashState();
             });
 
-            // Hide the spinner as soon as OSD has its tile source set up — this is
-            // fast (just metadata + 2 rAF).  The grey canvas is covered by a
-            // thumbnail underlay (rendered below) until the first tile is drawn.
-            const elapsed = Date.now() - this.loadingStart;
-            const delay = Math.max(0, WSIViewer.MIN_SPINNER_MS - elapsed);
-            if (this.spinnerTimer !== null) clearTimeout(this.spinnerTimer);
-            this.spinnerTimer = setTimeout(action(() => {
+            // Keep the spinner visible until the first tile image is received from the
+            // server (tile-loaded).  OSD 6 uses WebGL which does not fire tile-drawn,
+            // but tile-loaded fires in all drawer backends as soon as the network
+            // response arrives — which is the earliest signal that the slide is ready.
+            // MIN_SPINNER_MS is still respected.  20s fallback covers tile errors.
+            const hideSpinner = action(() => {
                 if (seq !== this.mountSeq) return;
+                if (this.spinnerTimer !== null) { clearTimeout(this.spinnerTimer); this.spinnerTimer = null; }
                 this.spinnerVisible = false;
-                this.spinnerTimer = null;
-            }), delay);
-
-            // Drop the thumbnail underlay once the first tile is actually on canvas.
-            this.osdViewer.addOnceHandler('tile-drawn', action(() => {
-                if (seq !== this.mountSeq) return;
                 this.tilesReady = true;
-            }));
+            });
+            // Fallback: hide after 20s in case tile-loaded never fires (tile errors,
+            // slow server).  open-failed is handled separately below.
+            if (this.spinnerTimer !== null) clearTimeout(this.spinnerTimer);
+            this.spinnerTimer = setTimeout(hideSpinner, 20_000);
+
+            this.osdViewer.addOnceHandler('tile-loaded', () => {
+                const remaining = Math.max(0, WSIViewer.MIN_SPINNER_MS - (Date.now() - this.loadingStart));
+                if (remaining > 0) {
+                    if (this.spinnerTimer !== null) clearTimeout(this.spinnerTimer);
+                    this.spinnerTimer = setTimeout(hideSpinner, remaining);
+                } else {
+                    hideSpinner();
+                }
+            });
         });
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.osdViewer.addOnceHandler('open-failed', (e: any) => {
@@ -600,23 +608,6 @@ export default class WSIViewer extends React.Component<Props, {}> {
                 {/* OSD viewer */}
                 <div style={{ flex: 1, position: 'relative', background: '#e8e8e8' }}>
                     <div ref={this.viewerContainerRef} style={{ width: '100%', height: '100%' }} />
-                    {/* Thumbnail underlay: covers the grey OSD canvas from the moment the
-                        tile source opens until the first real tile is painted. This prevents
-                        the "grey flash" after the spinner disappears on cold slides. */}
-                    {this.viewerReady && !this.tilesReady && selectedSlide && (
-                        <div style={{
-                            position: 'absolute', inset: 0, zIndex: 5,
-                            pointerEvents: 'none',
-                            background: '#e8e8e8',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        }}>
-                            <img
-                                src={`${this.tileServerBase}/tiles/${selectedSlide.image_id}/thumbnail`}
-                                alt=""
-                                style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', display: 'block' }}
-                            />
-                        </div>
-                    )}
                     {/* Custom Bootstrap-styled OSD nav buttons — always in DOM so OSD can adopt them.
                         OSD wires zoom-in/zoom-out/home handlers onto these elements via the
                         zoomInButton/zoomOutButton/homeButton options in mountOSD. */}
@@ -666,7 +657,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
                             <span style={{ color: C.muted, fontSize: 13 }}>No servable slides for this patient</span>
                         </div>
                     )}
-                    {this.viewerReady && (
+                    {this.tilesReady && (
                         <CoordBar
                             inputX={this.coordInputX}
                             inputY={this.coordInputY}
