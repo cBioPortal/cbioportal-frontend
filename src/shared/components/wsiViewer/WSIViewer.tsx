@@ -802,19 +802,51 @@ function fmtMB(bytes: string | number | null | undefined): string {
 
 /** Common pathology block letter codes → human-readable meaning. */
 const BLOCK_CODE_MAP: Record<string, string> = {
-    A:   'Apical', B:   'Basal', C:   'Central', D:   'Distal',
-    M:   'Margin', N:   'Normal', P:   'Proximal', R:   'Representative',
-    T:   'Tumor',
-    DL:  'Distal Level', ML:  'Mesenteric Level', PL:  'Proximal Level',
-    RS:  'Rep. Section', RM:  'Resection Margin', SM:  'Surgical Margin',
-    CLN: 'Central LN',  LLN: 'Left LN',  LN:  'Lymph Node',
-    MLN: 'Mesenteric LN', RLN: 'Right LN', SLN: 'Sentinel LN',
-    I:   'Inked Margin', INK: 'Inked Margin',
+    // Single-letter tissue region codes
+    A:    'Apical',         B:    'Basal',          C:    'Central',
+    D:    'Distal',         E:    'External',        F:    'Fragment',
+    I:    'Inked Margin',   M:    'Margin',          N:    'Normal',
+    P:    'Proximal',       R:    'Representative',  S:    'Section',
+    T:    'Tumor',          U:    'Uninvolved',
+    // Two-letter anatomical codes
+    AC:   'Anterior/Caudal', BM:  'Bronchial Margin',
+    DL:   'Distal Level',   DM:   'Deep Margin',
+    GU:   'Genitourinary',  ML:   'Mesenteric Level',
+    OM:   'Omental',        PL:   'Proximal Level',
+    RM:   'Resection Margin', RS:  'Rep. Section',
+    SM:   'Surgical Margin', ST:  'Stromal',
+    TU:   'Tumor',
+    // MSK pathology subspecialty/department codes
+    // (block label uses dept code when tissue type is unambiguous within the case)
+    BST:  'Bone/Soft Tissue',
+    BRST: 'Breast',
+    DERM: 'Dermatologic',
+    GI:   'Gastrointestinal',
+    GYN:  'Gynecologic',
+    HEME: 'Hematologic',
+    HN:   'Head & Neck',
+    NEURO:'Neurologic',
+    THOR: 'Thoracic',
+    // Special processing codes
+    ADD:  'Additional Section',
+    FSC:  'Frozen Section',
+    INK:  'Inked Margin',
+    // Lymph node codes — spell out "Lymph Node" in full
+    LN:   'Lymph Node',
+    ALN:  'Axillary Lymph Node',  BLN:  'Bench Lymph Node',
+    CLN:  'Central Lymph Node',   DLN:  'Distal Lymph Node',
+    ILN:  'Inguinal Lymph Node',  LLN:  'Left Lymph Node',
+    MLN:  'Mesenteric Lymph Node', NTLN: 'Non-Tumor Lymph Node',
+    PLN:  'Pelvic Lymph Node',    RLN:  'Right Lymph Node',
+    SLN:  'Sentinel Lymph Node',  SSLN: 'Sub-Site Lymph Node',
+    TLN:  'Thoracic Lymph Node',
+    // Other codes seen in MSK multi-site specimens
+    RBL:  'Right Bowel Lumen',
 };
 
 /**
  * Decode the letter-code portion of a block label (e.g. "11 PL1" → "Proximal Level",
- * "9 M" → "Margin", "16 RLN" → "Right LN"). Returns null when unknown.
+ * "9 M" → "Margin", "16 RLN" → "Right Lymph Node"). Returns null when unknown.
  */
 function decodeBlockCode(label: string | null | undefined): string | null {
     if (!label) return null;
@@ -824,7 +856,7 @@ function decodeBlockCode(label: string | null | undefined): string | null {
 }
 
 const BLOCK_LABEL_TIP =
-    'Block label: number = block within case; letter code = tissue region (P=Proximal, D=Distal, M=Margin, RS=Rep. Section, LN=Lymph Node, …)';
+    'Block label: number = block within case; letter code = tissue region (P=Proximal, D=Distal, M=Margin, RS=Rep. Section, LN=Lymph Node, RLN=Right Lymph Node, …)';
 
 
 // ---- NavPanel ----
