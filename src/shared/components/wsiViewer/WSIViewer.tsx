@@ -401,18 +401,20 @@ export default class WSIViewer extends React.Component<Props, {}> {
     }
 
     /**
-     * Fetch oncogenic somatic mutations from cBioPortal mutations API.
-     * Sets `oncogenic_mutations` on samples where clinical-data didn't provide it,
-     * and always populates `oncogenic_mutation_details` (type, VAF, annotation) for tooltip display.
+     * Fetch somatic mutations from cBioPortal mutations API.
+     * Populates `oncogenic_mutations` (the display list) from ALL mutations returned by the
+     * API — matching what cBioPortal's patient page shows — and sets `oncogenic_mutation_details`
+     * (type, VAF per mutation) for tooltip display.  If the API returns no data, falls back to
+     * whatever `fetchAndMergeClinicalData` already placed in `oncogenic_mutations`.
      */
     private async fetchAndMergeMutations(
         base: string,
         studyId: string,
         sampleIdentifiers: Array<{ studyId: string; sampleId: string }>
     ): Promise<void> {
-        // Declare detail maps here so the finally block can always set details,
+        // Declare maps here so the finally block can always mark details as ready,
         // even when the function returns early due to an error or missing data.
-        const oncogenicBySample = new Map<string, string[]>();
+        const allMutsBySample = new Map<string, Array<{ token: string; vaf: number }>>();
         const detailsBySample = new Map<string, Map<string, MutationDetail>>();
         try {
         // Find the MUTATION_EXTENDED molecular profile for this study
@@ -451,43 +453,34 @@ export default class WSIViewer extends React.Component<Props, {}> {
             tumorRefCount?: number;
         }> = await mutResp.json();
 
-        // Build per-token detail maps for ALL mutations (VAF, type, annotation).
-        // The authoritative oncogenic list comes from CVR_ONCOGENIC_MUTATIONS (clinical data);
-        // driver-filter-based oncogenicBySample is only the fallback when that attribute is absent.
+        // Build per-sample detail maps and mutation lists from ALL returned mutations.
+        // Tokens use "GENE p.Variant" format (OncoKB convention); the API returns
+        // proteinChange without the "p." prefix (e.g. "G13D"), so we normalise here.
         for (const m of mutations) {
-            // DETAILED projection always includes gene object; guard defensively
             const geneSymbol = m.gene?.hugoGeneSymbol;
             if (!geneSymbol) continue;
 
-            const token = `${geneSymbol} ${m.proteinChange}`;
+            const pc = m.proteinChange.startsWith('p.') ? m.proteinChange : `p.${m.proteinChange}`;
+            const token = `${geneSymbol} ${pc}`;
             const total = (m.tumorAltCount ?? 0) + (m.tumorRefCount ?? 0);
+            const vaf = total > 0 ? Math.round(m.tumorAltCount! / total * 100) : 0;
 
-            // Store details for every mutation so tooltips work even when the
-            // oncogenic list comes from the clinical attribute (driverFilter may be N/A).
             if (!detailsBySample.has(m.sampleId)) detailsBySample.set(m.sampleId, new Map());
-            const detail = {
+            const detail: MutationDetail = {
                 token,
                 type: formatMutationType(m.mutationType ?? ''),
-                vaf: total > 0 ? Math.round(m.tumorAltCount! / total * 100) : undefined,
+                vaf: total > 0 ? vaf : undefined,
                 annotation: m.driverFilterAnnotation || undefined,
             };
-            const sampleDetails = detailsBySample.get(m.sampleId)!;
-            sampleDetails.set(token, detail);
-            // CVR_ONCOGENIC_MUTATIONS uses "GENE p.Variant" while the mutations API
-            // returns proteinChange without the "p." prefix (e.g. "G13D" not "p.G13D").
-            // Index both forms so token lookup succeeds regardless of source.
-            if (!m.proteinChange.startsWith('p.')) {
-                sampleDetails.set(`${geneSymbol} p.${m.proteinChange}`, detail);
-            }
+            detailsBySample.get(m.sampleId)!.set(token, detail);
 
-            // Also track driver-filtered oncogenic mutations as a fallback source
-            // when CVR_ONCOGENIC_MUTATIONS clinical attribute is unavailable.
-            const filter = (m.driverFilter ?? '').toLowerCase();
-            const isOncogenic = filter === 'putative_driver' || filter === 'oncogenic' || filter === 'likely oncogenic';
-            if (isOncogenic) {
-                if (!oncogenicBySample.has(m.sampleId)) oncogenicBySample.set(m.sampleId, []);
-                oncogenicBySample.get(m.sampleId)!.push(token);
-            }
+            if (!allMutsBySample.has(m.sampleId)) allMutsBySample.set(m.sampleId, []);
+            allMutsBySample.get(m.sampleId)!.push({ token, vaf });
+        }
+
+        // Sort each sample's list by VAF descending so the most clonal mutations appear first.
+        for (const muts of allMutsBySample.values()) {
+            muts.sort((a, b) => b.vaf - a.vaf);
         }
 
         } catch (e) {
@@ -497,14 +490,16 @@ export default class WSIViewer extends React.Component<Props, {}> {
             // completed and can safely render links (with or without tooltip data).
             action(() => {
                 for (const sample of this.hierarchy!.samples) {
-                    // Only set oncogenic_mutations if clinical-data didn't provide it
-                    if (!sample.oncogenic_mutations) {
-                        const muts = oncogenicBySample.get(sample.sample_id);
-                        if (muts?.length) sample.oncogenic_mutations = muts.join(', ');
+                    const apiMuts = allMutsBySample.get(sample.sample_id);
+                    if (apiMuts?.length) {
+                        // Use the full API list as the source of truth, matching cBioPortal's
+                        // patient page.  CVR_ONCOGENIC_MUTATIONS (set by fetchAndMergeClinicalData)
+                        // may be a curated subset; override it with the complete picture.
+                        sample.oncogenic_mutations = apiMuts.map(m => m.token).join('; ');
                     }
                     if (sample.oncogenic_mutations) {
                         const sampleDetails = detailsBySample.get(sample.sample_id);
-                        const tokens = sample.oncogenic_mutations.split(/[,;]\s*/).map(s => s.trim()).filter(Boolean);
+                        const tokens = sample.oncogenic_mutations.split(/[;,]\s*/).map(s => s.trim()).filter(Boolean);
                         // Build detail list; fall back to token-only entry if API returned no data.
                         sample.oncogenic_mutation_details = tokens.map(t => sampleDetails?.get(t) ?? { token: t });
                     }
@@ -1759,7 +1754,7 @@ function buildSeqRows(sample: Sample, sampleUrl?: string): MetaRow[] {
     // before rendering links, so tooltips are immediately available on first hover.
     if (sample.oncogenic_mutations && sample.oncogenic_mutation_details !== undefined) rows.push({
         label: 'Mutations',
-        labelTip: 'Oncogenic somatic mutations identified by MSK-IMPACT — hover for details, click to view on OncoKB',
+        labelTip: 'Somatic mutations from MSK-IMPACT sequencing — hover for type and VAF, click to view on OncoKB',
         value: mutationLinks(sample.oncogenic_mutations, sample.oncogenic_mutation_details),
     });
     return rows;
