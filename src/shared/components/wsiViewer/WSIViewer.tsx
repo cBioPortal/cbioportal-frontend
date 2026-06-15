@@ -9,6 +9,7 @@ import {
     Sample,
     PatientHierarchy,
     TileMetadata,
+    MutationDetail,
 } from './wsiViewerTypes';
 
 // ---- design tokens (matches iframe viewer) ----
@@ -392,8 +393,8 @@ export default class WSIViewer extends React.Component<Props, {}> {
 
     /**
      * Fetch oncogenic somatic mutations from cBioPortal mutations API.
-     * Only updates `oncogenic_mutations` on samples where the clinical-data
-     * fetch didn't provide it (i.e., no ONCOGENIC_MUTATIONS clinical attribute).
+     * Sets `oncogenic_mutations` on samples where clinical-data didn't provide it,
+     * and always populates `oncogenic_mutation_details` (type, VAF, annotation) for tooltip display.
      */
     private async fetchAndMergeMutations(
         base: string,
@@ -429,26 +430,54 @@ export default class WSIViewer extends React.Component<Props, {}> {
             sampleId: string;
             gene: { hugoGeneSymbol: string };
             proteinChange: string;
+            mutationType?: string;
             driverFilter?: string;
+            driverFilterAnnotation?: string;
+            tumorAltCount?: number;
+            tumorRefCount?: number;
         }> = await mutResp.json();
 
-        // Group oncogenic mutations per sample
-        const byId = new Map<string, string[]>();
+        // Group oncogenic mutations per sample + build per-token detail maps
+        const oncogenicBySample = new Map<string, string[]>();
+        const detailsBySample = new Map<string, Map<string, MutationDetail>>();
+
         for (const m of mutations) {
             const filter = (m.driverFilter ?? '').toLowerCase();
             const isOncogenic = filter === 'putative_driver' || filter === 'oncogenic' || filter === 'likely oncogenic';
             if (!isOncogenic) continue;
-            if (!byId.has(m.sampleId)) byId.set(m.sampleId, []);
-            byId.get(m.sampleId)!.push(`${m.gene.hugoGeneSymbol} ${m.proteinChange}`);
+
+            const token = `${m.gene.hugoGeneSymbol} ${m.proteinChange}`;
+            if (!oncogenicBySample.has(m.sampleId)) oncogenicBySample.set(m.sampleId, []);
+            oncogenicBySample.get(m.sampleId)!.push(token);
+
+            if (!detailsBySample.has(m.sampleId)) detailsBySample.set(m.sampleId, new Map());
+            const total = (m.tumorAltCount ?? 0) + (m.tumorRefCount ?? 0);
+            detailsBySample.get(m.sampleId)!.set(token, {
+                token,
+                type: formatMutationType(m.mutationType ?? ''),
+                vaf: total > 0 ? Math.round(m.tumorAltCount! / total * 100) : undefined,
+                annotation: m.driverFilterAnnotation || undefined,
+            });
         }
-        if (!byId.size) return;
 
         action(() => {
             for (const sample of this.hierarchy!.samples) {
-                // Only update if clinical-data didn't provide oncogenic_mutations
-                if (sample.oncogenic_mutations) continue;
-                const muts = byId.get(sample.sample_id);
-                if (muts?.length) sample.oncogenic_mutations = muts.join(', ');
+                // Only set oncogenic_mutations if clinical-data didn't provide it
+                if (!sample.oncogenic_mutations) {
+                    const muts = oncogenicBySample.get(sample.sample_id);
+                    if (muts?.length) sample.oncogenic_mutations = muts.join(', ');
+                }
+                // Always populate details so tooltips work regardless of data source
+                if (sample.oncogenic_mutations) {
+                    const sampleDetails = detailsBySample.get(sample.sample_id);
+                    if (sampleDetails?.size) {
+                        const tokens = sample.oncogenic_mutations.split(/[,;]\s*/).map(s => s.trim()).filter(Boolean);
+                        const details = tokens.map(t => sampleDetails.get(t) ?? { token: t });
+                        if (details.some(d => d.type || d.vaf != null)) {
+                            sample.oncogenic_mutation_details = details;
+                        }
+                    }
+                }
             }
         })();
     }
@@ -1632,12 +1661,33 @@ function buildPathRows(slide: Slide, sample: Sample, studyId?: string): MetaRow[
 }
 
 /**
- * Render a comma-separated mutations string as individual OncoKB links,
- * one per line so each is clearly a separate clickable item.
- * Each token "GENE Variant" maps to https://www.oncokb.org/gene/GENE/Variant.
+ * Convert cBioPortal mutation type string to a short human-readable label.
+ * e.g. "Missense_Mutation" → "Missense", "Frame_Shift_Del" → "Frameshift del"
  */
-function mutationLinks(mutStr: string): React.ReactNode {
+function formatMutationType(t: string): string {
+    if (!t) return '';
+    const map: Record<string, string> = {
+        Missense_Mutation: 'Missense',
+        Nonsense_Mutation: 'Nonsense',
+        Frame_Shift_Del: 'Frameshift del',
+        Frame_Shift_Ins: 'Frameshift ins',
+        In_Frame_Del: 'In-frame del',
+        In_Frame_Ins: 'In-frame ins',
+        Splice_Site: 'Splice site',
+        Translation_Start_Site: 'Start site',
+        Nonstop_Mutation: 'Nonstop',
+        Silent: 'Silent',
+    };
+    return map[t] ?? t.replace(/_/g, ' ');
+}
+
+/**
+ * Render a semicolon/comma-separated mutations string as individual OncoKB links,
+ * one per line. Tooltip shows mutation type, VAF, and driver annotation when available.
+ */
+function mutationLinks(mutStr: string, details?: MutationDetail[]): React.ReactNode {
     const muts = mutStr.split(/[,;]\s*/).map(s => s.trim()).filter(Boolean);
+    const detailMap = new Map((details ?? []).map(d => [d.token, d]));
     return (
         <>
             {muts.map(mut => {
@@ -1645,9 +1695,16 @@ function mutationLinks(mutStr: string): React.ReactNode {
                 const gene = spaceIdx > 0 ? mut.slice(0, spaceIdx) : mut;
                 const variant = spaceIdx > 0 ? mut.slice(spaceIdx + 1) : '';
                 const href = `https://www.oncokb.org/gene/${encodeURIComponent(gene)}${variant ? '/' + encodeURIComponent(variant) : ''}`;
+                const d = detailMap.get(mut);
+                const tooltipLines = [
+                    d?.type && `Type: ${d.type}`,
+                    d?.vaf != null && `VAF: ${d.vaf}%`,
+                    d?.annotation,
+                ].filter(Boolean) as string[];
                 return (
                     <div key={mut} style={{ marginBottom: 3 }}>
                         <a href={href} target="_blank" rel="noopener noreferrer"
+                           title={tooltipLines.length ? tooltipLines.join('\n') : undefined}
                            style={{ color: C.blue, textDecoration: 'underline' }}>
                             {mut}
                         </a>
@@ -1669,8 +1726,8 @@ function buildSeqRows(sample: Sample, sampleUrl?: string): MetaRow[] {
     }
     if (sample.oncogenic_mutations) rows.push({
         label: 'Mutations',
-        labelTip: 'Oncogenic somatic mutations identified by MSK-IMPACT — click each to view on OncoKB',
-        value: mutationLinks(sample.oncogenic_mutations),
+        labelTip: 'Oncogenic somatic mutations identified by MSK-IMPACT — hover for details, click to view on OncoKB',
+        value: mutationLinks(sample.oncogenic_mutations, sample.oncogenic_mutation_details),
     });
     return rows;
 }

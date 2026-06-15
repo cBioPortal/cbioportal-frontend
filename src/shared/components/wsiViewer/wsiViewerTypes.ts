@@ -32,6 +32,13 @@ export interface Part {
     blocks: Block[];
 }
 
+export interface MutationDetail {
+    token: string;
+    type?: string;      // human-readable mutation type, e.g. "Missense"
+    vaf?: number;       // 0–100 percent
+    annotation?: string; // driverFilterAnnotation, e.g. "KRAS G13D is a hotspot"
+}
+
 export interface Sample {
     sample_id: string;
     cancer_type: string;
@@ -42,6 +49,7 @@ export interface Sample {
     metastatic_site?: string;
     tumor_purity?: string;
     oncogenic_mutations?: string;
+    oncogenic_mutation_details?: MutationDetail[];
     num_oncogenic_mutations?: string;
     tmb_score?: string;
     msi_type?: string;
