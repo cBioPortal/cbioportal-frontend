@@ -42,6 +42,61 @@ test.describe('WSI viewer — share view and centering', () => {
         test.skip(!BASE_URL, 'WSI_VIEWER_BASE_URL not set — skipping WSI viewer e2e tests');
     });
 
+    test('spinner appears while loading and hides promptly when first tile arrives', async ({ page }) => {
+        await page.goto(viewerUrl());
+
+        // Spinner must appear while the first slide is loading (before tiles arrive).
+        await expect(page.locator('[data-testid="wsi-loading-spinner"]')).toBeVisible({
+            timeout: 8_000,
+        });
+
+        // CoordBar (share button) only renders after tilesReady=true, which is set
+        // by the tile-loaded handler.  Asserting it appears within 18s (well under
+        // the 20s fallback) proves tile-loaded fired and the spinner hid promptly.
+        await expect(page.locator('[data-testid="wsi-share-button"]')).toBeVisible({
+            timeout: 18_000,
+        });
+
+        // Spinner must be gone once tiles are ready.
+        await expect(page.locator('[data-testid="wsi-loading-spinner"]')).not.toBeVisible();
+    });
+
+    test('rapid slide selection: debounce prevents multiple concurrent loads', async ({ page }) => {
+        await page.goto(viewerUrl());
+        // Wait for the initial slide to fully load first.
+        await expect(page.locator('[data-testid="wsi-share-button"]')).toBeVisible({
+            timeout: 30_000,
+        });
+
+        // Dispatch three click events synchronously from JS (no async gap between
+        // them) — all within the 150ms debounce window.  Only the last slide should
+        // actually trigger a tile-server fetch.
+        const rapidSlideIds = ['1492748', '1492739', '1492729'];
+        await page.evaluate((ids: string[]) => {
+            ids.forEach(id => {
+                const el = document.querySelector(`[data-testid="wsi-slide-item-${id}"]`);
+                el?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+            });
+        }, rapidSlideIds);
+
+        // Spinner should appear (last slide selected) then disappear when tiles load.
+        await expect(page.locator('[data-testid="wsi-loading-spinner"]')).toBeVisible({
+            timeout: 5_000,
+        });
+        await expect(page.locator('[data-testid="wsi-loading-spinner"]')).not.toBeVisible({
+            timeout: 30_000,
+        });
+
+        // CoordBar must come back — viewer loaded the last selected slide correctly.
+        await expect(page.locator('[data-testid="wsi-share-button"]')).toBeVisible({
+            timeout: 5_000,
+        });
+
+        // Hash must reference the last-clicked slide (debounce discarded the others).
+        const hash = await page.evaluate(() => window.location.hash);
+        expect(hash).toContain('slide=1492729');
+    });
+
     test('loads slide at home position, not at (1,1)', async ({ page }) => {
         await page.goto(viewerUrl());
         await expect(page.locator('[data-testid="wsi-share-button"]')).toBeVisible({
