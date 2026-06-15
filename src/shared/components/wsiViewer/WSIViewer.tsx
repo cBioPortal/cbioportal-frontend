@@ -930,7 +930,7 @@ function CoordBar({ inputX, inputY, cursorPos, mpp, onChangeX, onChangeY, onGo, 
                     value={inputX}
                     placeholder="px"
                     className="form-control input-sm"
-                    style={{ width: 72 }}
+                    style={{ width: 88 }}
                     onChange={e => onChangeX(e.target.value)}
                     onKeyDown={handleKey}
                 />
@@ -940,7 +940,7 @@ function CoordBar({ inputX, inputY, cursorPos, mpp, onChangeX, onChangeY, onGo, 
                     value={inputY}
                     placeholder="px"
                     className="form-control input-sm"
-                    style={{ width: 72 }}
+                    style={{ width: 88 }}
                     onChange={e => onChangeY(e.target.value)}
                     onKeyDown={handleKey}
                 />
