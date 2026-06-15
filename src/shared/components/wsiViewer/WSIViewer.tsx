@@ -1481,7 +1481,10 @@ interface MetaSidebarProps {
 
 function MetaSidebar({ slide, sample, meta, tileServerBase, studyId }: MetaSidebarProps) {
     const thumbSrc = slide ? `${tileServerBase}/tiles/${slide.image_id}/thumbnail` : null;
-    const seqRows = (slide && sample) ? buildSeqRows(sample) : [];
+    const sampleUrl = (studyId && sample?.sample_id)
+        ? `/patient?studyId=${encodeURIComponent(studyId)}&caseId=${encodeURIComponent(sample.sample_id.replace(/-T\d+.*$/i, ''))}&sampleId=${encodeURIComponent(sample.sample_id)}`
+        : undefined;
+    const seqRows = (slide && sample) ? buildSeqRows(sample, sampleUrl) : [];
 
     return (
         <div style={{
@@ -1600,6 +1603,9 @@ function buildPathRows(slide: Slide, sample: Sample, studyId?: string): MetaRow[
     const sampleUrl = (studyId && sample.sample_id)
         ? `/patient?studyId=${encodeURIComponent(studyId)}&caseId=${encodeURIComponent(sample.sample_id.replace(/-T\d+.*$/i, ''))}&sampleId=${encodeURIComponent(sample.sample_id)}`
         : undefined;
+    const cancerTypeUrl = (studyId && (sample.cancer_type_detailed || sample.cancer_type))
+        ? `/results?cancer_study_list=${encodeURIComponent(studyId)}&cancer_type=${encodeURIComponent((sample.cancer_type_detailed || sample.cancer_type || '').toLowerCase().replace(/\s+/g, '_'))}`
+        : undefined;
     const accession = barcodeAccession(slide.barcode);
     // path_dx_title is the formal pathological diagnosis title (may differ from part_description)
     const pathDxTitle = slide.path_dx_title
@@ -1610,7 +1616,7 @@ function buildPathRows(slide: Slide, sample: Sample, studyId?: string): MetaRow[
         { label: 'Stain', labelTip: 'Staining protocol used for this slide', value: stainBadge ? `${stainBadge} — ${cleanStain(slide.stain_name)}` : cleanStain(slide.stain_name) },
         { label: 'Sample', labelTip: 'Tumor sample identifier', value: sample.sample_id || '—', href: sampleUrl },
     ];
-    if (sample.cancer_type_detailed || sample.cancer_type) rows.push({ label: 'Cancer type', value: sample.cancer_type_detailed || sample.cancer_type || '' });
+    if (sample.cancer_type_detailed || sample.cancer_type) rows.push({ label: 'Cancer type', value: sample.cancer_type_detailed || sample.cancer_type || '', href: cancerTypeUrl });
     if (sample.oncotree_code) rows.push({ label: 'OncoTree', labelTip: 'OncoTree cancer classification code — click to view on oncotree.mskcc.org', value: sample.oncotree_code, href: oncotreeUrl });
     if (sample.primary_site) rows.push({ label: 'Primary site', value: sample.primary_site });
     if (sample.sample_type) rows.push({ label: 'Sample type', value: sample.sample_type });
@@ -1626,16 +1632,49 @@ function buildPathRows(slide: Slide, sample: Sample, studyId?: string): MetaRow[
     return rows;
 }
 
+/**
+ * Render a comma-separated mutations string as individual OncoKB links.
+ * Each token "GENE Variant" maps to https://www.oncokb.org/gene/GENE/Variant.
+ */
+function mutationLinks(mutStr: string): React.ReactNode {
+    const muts = mutStr.split(/,\s*/).map(s => s.trim()).filter(Boolean);
+    return (
+        <>
+            {muts.map((mut, i) => {
+                const spaceIdx = mut.indexOf(' ');
+                const gene = spaceIdx > 0 ? mut.slice(0, spaceIdx) : mut;
+                const variant = spaceIdx > 0 ? mut.slice(spaceIdx + 1) : '';
+                const href = `https://www.oncokb.org/gene/${encodeURIComponent(gene)}${variant ? '/' + encodeURIComponent(variant) : ''}`;
+                return (
+                    <span key={mut}>
+                        {i > 0 && ', '}
+                        <a href={href} target="_blank" rel="noopener noreferrer"
+                           style={{ color: C.blue, textDecoration: 'none' }}
+                           onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.textDecoration = 'underline'; }}
+                           onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.textDecoration = 'none'; }}>
+                            {mut}
+                        </a>
+                    </span>
+                );
+            })}
+        </>
+    );
+}
+
 /** Rows derived from MSK-IMPACT sequencing — shown in their own sidebar section. */
-function buildSeqRows(sample: Sample): MetaRow[] {
+function buildSeqRows(sample: Sample, sampleUrl?: string): MetaRow[] {
     const rows: MetaRow[] = [];
     if (sample.tumor_purity) rows.push({ label: 'Tumor purity', labelTip: 'Estimated fraction of tumor cells in this sample', value: `${sample.tumor_purity}%` });
-    if (sample.tmb_score) rows.push({ label: 'TMB', labelTip: 'Tumor mutational burden (mutations per megabase)', value: `${sample.tmb_score} mut/Mb` });
-    if (sample.msi_type) rows.push({ label: 'MSI', labelTip: 'Microsatellite instability status', value: sample.msi_type });
+    if (sample.tmb_score) rows.push({ label: 'TMB', labelTip: 'Tumor mutational burden — click to view mutations in cBioPortal', value: `${sample.tmb_score} mut/Mb`, href: sampleUrl });
+    if (sample.msi_type) rows.push({ label: 'MSI', labelTip: 'Microsatellite instability status — click to view in cBioPortal', value: sample.msi_type, href: sampleUrl });
     if (sample.metastatic_site && sample.metastatic_site.toLowerCase() !== 'not applicable') {
         rows.push({ label: 'Metastatic site', value: sample.metastatic_site });
     }
-    if (sample.oncogenic_mutations) rows.push({ label: 'Mutations', labelTip: 'Oncogenic somatic mutations identified by MSK-IMPACT', value: sample.oncogenic_mutations });
+    if (sample.oncogenic_mutations) rows.push({
+        label: 'Mutations',
+        labelTip: 'Oncogenic somatic mutations identified by MSK-IMPACT — click each to view on OncoKB',
+        value: mutationLinks(sample.oncogenic_mutations),
+    });
     return rows;
 }
 
