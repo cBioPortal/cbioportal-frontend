@@ -1577,9 +1577,10 @@ function MetaSidebar({ slide, sample, meta, tileServerBase, studyId }: MetaSideb
             </SbSection>
 
             {/* MSK-IMPACT Sequencing — only when data is available */}
-            {seqRows.length > 0 && (
+            {(seqRows.length > 0 || (sample?.oncogenic_mutations && sample?.oncogenic_mutation_details !== undefined)) && (
                 <SbSection title="MSK-IMPACT">
-                    <MetaTable rows={seqRows} />
+                    {seqRows.length > 0 && <MetaTable rows={seqRows} />}
+                    {sample && <MutationTable sample={sample} />}
                 </SbSection>
             )}
         </div>
@@ -1707,37 +1708,86 @@ function formatMutationType(t: string): string {
     return map[t] ?? t.replace(/_/g, ' ');
 }
 
+function shortMutationType(type: string | undefined): string {
+    if (!type) return '—';
+    if (type === 'Missense') return 'MS';
+    if (type === 'Nonsense') return 'NS';
+    if (type === 'Frameshift del') return 'FSdel';
+    if (type === 'Frameshift ins') return 'FSins';
+    if (type === 'In-frame del') return 'IFdel';
+    if (type === 'In-frame ins') return 'IFins';
+    if (type === 'Splice site') return 'Splice';
+    if (type === 'Start site') return 'Start';
+    return type.slice(0, 6);
+}
+
 /**
- * Render a semicolon/comma-separated mutations string as individual OncoKB links,
- * one per line. Tooltip shows mutation type, VAF, and driver annotation when available.
+ * Compact table rendering mutations — one row per variant with columns:
+ * Gene (OncoKB link) | Protein change | Type | VAF.
+ * Only rendered after `oncogenic_mutation_details` is populated so that
+ * all cells have data on first paint.
  */
-function mutationLinks(mutStr: string, details?: MutationDetail[]): React.ReactNode {
-    const muts = mutStr.split(/[,;]\s*/).map(s => s.trim()).filter(Boolean);
+function MutationTable({ sample }: { sample: Sample }): React.ReactElement | null {
+    const muts = sample.oncogenic_mutations?.split(/[;,]\s*/).map(s => s.trim()).filter(Boolean) ?? [];
+    const details = sample.oncogenic_mutation_details;
+    if (!muts.length || details === undefined) return null;
+
+    const thStyle: React.CSSProperties = {
+        fontSize: 10, color: C.muted, fontWeight: 600, textAlign: 'left',
+        paddingBottom: 4, userSelect: 'none',
+    };
+    const tdBase: React.CSSProperties = {
+        fontSize: 11, paddingTop: 3, paddingBottom: 3, verticalAlign: 'middle',
+    };
+
     return (
-        <>
-            {muts.map((mut, i) => {
-                const spaceIdx = mut.indexOf(' ');
-                const gene = spaceIdx > 0 ? mut.slice(0, spaceIdx) : mut;
-                const variant = spaceIdx > 0 ? mut.slice(spaceIdx + 1) : '';
-                const href = `https://www.oncokb.org/gene/${encodeURIComponent(gene)}${variant ? '/' + encodeURIComponent(variant) : ''}`;
-                // details[i] corresponds to muts[i] (built from the same token split).
-                const d = details?.[i];
-                const tooltipLines = [
-                    d?.type && `Type: ${d.type}`,
-                    d?.vaf != null && `VAF: ${d.vaf}%`,
-                    d?.annotation,
-                ].filter(Boolean) as string[];
-                return (
-                    <div key={mut} style={{ marginBottom: 3 }}>
-                        <a href={href} target="_blank" rel="noopener noreferrer"
-                           title={tooltipLines.length ? tooltipLines.join('\n') : undefined}
-                           style={{ color: C.blue, textDecoration: 'underline' }}>
-                            {mut}
-                        </a>
-                    </div>
-                );
-            })}
-        </>
+        <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 8, tableLayout: 'fixed' }}>
+            <colgroup>
+                <col style={{ width: '30%' }} />
+                <col style={{ width: '32%' }} />
+                <col style={{ width: '22%' }} />
+                <col style={{ width: '16%' }} />
+            </colgroup>
+            <thead>
+                <tr>
+                    <th style={thStyle}>Gene</th>
+                    <th style={thStyle}>Variant</th>
+                    <th style={thStyle}>Type</th>
+                    <th style={{ ...thStyle, textAlign: 'right' }}>VAF</th>
+                </tr>
+            </thead>
+            <tbody>
+                {muts.map((mut, i) => {
+                    const spaceIdx = mut.indexOf(' ');
+                    const gene = spaceIdx > 0 ? mut.slice(0, spaceIdx) : mut;
+                    const variant = spaceIdx > 0 ? mut.slice(spaceIdx + 1) : '';
+                    const href = `https://www.oncokb.org/gene/${encodeURIComponent(gene)}${variant ? '/' + encodeURIComponent(variant) : ''}`;
+                    const d = details?.[i];
+                    const shortType = shortMutationType(d?.type);
+                    return (
+                        <tr key={mut} style={{ borderTop: `1px solid ${C.border}` }}>
+                            <td style={{ ...tdBase, paddingRight: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                <a href={href} target="_blank" rel="noopener noreferrer"
+                                   style={{ color: C.blue, fontWeight: 600, textDecoration: 'none' }}
+                                   onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.textDecoration = 'underline'; }}
+                                   onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.textDecoration = 'none'; }}>
+                                    {gene}
+                                </a>
+                            </td>
+                            <td style={{ ...tdBase, paddingRight: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'monospace', fontSize: 10.5 }}>
+                                {variant || '—'}
+                            </td>
+                            <td title={d?.type} style={{ ...tdBase, paddingRight: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: C.muted }}>
+                                {shortType}
+                            </td>
+                            <td style={{ ...tdBase, textAlign: 'right', color: C.text, fontVariantNumeric: 'tabular-nums' }}>
+                                {d?.vaf != null ? `${d.vaf}%` : '—'}
+                            </td>
+                        </tr>
+                    );
+                })}
+            </tbody>
+        </table>
     );
 }
 
@@ -1746,17 +1796,12 @@ function buildSeqRows(sample: Sample, sampleUrl?: string): MetaRow[] {
     const rows: MetaRow[] = [];
     if (sample.tumor_purity) rows.push({ label: 'Tumor purity', labelTip: 'Estimated fraction of tumor cells in this sample', value: `${sample.tumor_purity}%` });
     if (sample.tmb_score) rows.push({ label: 'TMB', labelTip: 'Tumor mutational burden — click to view mutations in cBioPortal', value: `${sample.tmb_score} mut/Mb`, href: sampleUrl });
-    if (sample.msi_type) rows.push({ label: 'MSI', labelTip: 'Microsatellite instability status — click to view in cBioPortal', value: sample.msi_type, href: sampleUrl });
+    // MSI status — no external link needed
+    if (sample.msi_type) rows.push({ label: 'MSI', labelTip: 'Microsatellite instability status', value: sample.msi_type });
     if (sample.metastatic_site && sample.metastatic_site.toLowerCase() !== 'not applicable') {
         rows.push({ label: 'Metastatic site', value: sample.metastatic_site });
     }
-    // Wait until oncogenic_mutation_details is populated (by fetchAndMergeMutations)
-    // before rendering links, so tooltips are immediately available on first hover.
-    if (sample.oncogenic_mutations && sample.oncogenic_mutation_details !== undefined) rows.push({
-        label: 'Mutations',
-        labelTip: 'Somatic mutations from MSK-IMPACT sequencing — hover for type and VAF, click to view on OncoKB',
-        value: mutationLinks(sample.oncogenic_mutations, sample.oncogenic_mutation_details),
-    });
+    // Mutations are rendered separately as a MutationTable below the MetaTable.
     return rows;
 }
 
