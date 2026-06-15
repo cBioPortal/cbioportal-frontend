@@ -39,6 +39,13 @@ export interface MutationDetail {
     annotation?: string; // driverFilterAnnotation, e.g. "KRAS G13D is a hotspot"
 }
 
+/** Single discrete copy-number alteration event from MSK-IMPACT. */
+export interface CNADetail {
+    gene: string;
+    /** GISTIC value: -2=DeepDel, -1=ShallowDel, 1=Gain, 2=Amp */
+    cnaValue: number;
+}
+
 export interface Sample {
     sample_id: string;
     cancer_type: string;
@@ -53,6 +60,8 @@ export interface Sample {
     num_oncogenic_mutations?: string;
     tmb_score?: string;
     msi_type?: string;
+    /** Significant CNA events (value ≠ 0) from the study's GISTIC/CNA profile. */
+    cna_alterations?: CNADetail[];
     parts: Part[];
 }
 
