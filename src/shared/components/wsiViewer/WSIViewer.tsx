@@ -341,18 +341,26 @@ export default class WSIViewer extends React.Component<Props, {}> {
         studyId: string,
         sampleIdentifiers: Array<{ studyId: string; sampleId: string }>
     ): Promise<void> {
+        // cBioPortal v7+ uses "identifiers"/"entityId"; older versions used
+        // "sampleIdentifiers"/"sampleId". Try v7 format first.
+        const identifiers = sampleIdentifiers.map(s => ({
+            studyId: s.studyId,
+            entityId: s.sampleId,
+        }));
         const resp = await fetch(
             `${base}/api/clinical-data/fetch?clinicalDataType=SAMPLE&projection=SUMMARY`,
             {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ sampleIdentifiers }),
+                body: JSON.stringify({ identifiers }),
             }
         );
         if (!resp.ok) return;
 
+        const text = await resp.text();
+        if (!text) return;
         const data: Array<{ sampleId: string; clinicalAttributeId: string; value: string }> =
-            await resp.json();
+            JSON.parse(text);
 
         // Build lookup: sampleId → Map<attributeId, value>
         const byId = new Map<string, Map<string, string>>();
@@ -417,7 +425,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
         }));
 
         const mutResp = await fetch(
-            `${base}/api/mutations/fetch?projection=SUMMARY`,
+            `${base}/api/mutations/fetch?projection=DETAILED`,
             {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -428,7 +436,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
 
         const mutations: Array<{
             sampleId: string;
-            gene: { hugoGeneSymbol: string };
+            gene?: { hugoGeneSymbol: string } | null;
             proteinChange: string;
             mutationType?: string;
             driverFilter?: string;
@@ -437,27 +445,38 @@ export default class WSIViewer extends React.Component<Props, {}> {
             tumorRefCount?: number;
         }> = await mutResp.json();
 
-        // Group oncogenic mutations per sample + build per-token detail maps
+        // Build per-token detail maps for ALL mutations (VAF, type, annotation).
+        // The authoritative oncogenic list comes from CVR_ONCOGENIC_MUTATIONS (clinical data);
+        // driver-filter-based oncogenicBySample is only the fallback when that attribute is absent.
         const oncogenicBySample = new Map<string, string[]>();
         const detailsBySample = new Map<string, Map<string, MutationDetail>>();
 
         for (const m of mutations) {
-            const filter = (m.driverFilter ?? '').toLowerCase();
-            const isOncogenic = filter === 'putative_driver' || filter === 'oncogenic' || filter === 'likely oncogenic';
-            if (!isOncogenic) continue;
+            // DETAILED projection always includes gene object; guard defensively
+            const geneSymbol = m.gene?.hugoGeneSymbol;
+            if (!geneSymbol) continue;
 
-            const token = `${m.gene.hugoGeneSymbol} ${m.proteinChange}`;
-            if (!oncogenicBySample.has(m.sampleId)) oncogenicBySample.set(m.sampleId, []);
-            oncogenicBySample.get(m.sampleId)!.push(token);
-
-            if (!detailsBySample.has(m.sampleId)) detailsBySample.set(m.sampleId, new Map());
+            const token = `${geneSymbol} ${m.proteinChange}`;
             const total = (m.tumorAltCount ?? 0) + (m.tumorRefCount ?? 0);
+
+            // Store details for every mutation so tooltips work even when the
+            // oncogenic list comes from the clinical attribute (driverFilter may be N/A).
+            if (!detailsBySample.has(m.sampleId)) detailsBySample.set(m.sampleId, new Map());
             detailsBySample.get(m.sampleId)!.set(token, {
                 token,
                 type: formatMutationType(m.mutationType ?? ''),
                 vaf: total > 0 ? Math.round(m.tumorAltCount! / total * 100) : undefined,
                 annotation: m.driverFilterAnnotation || undefined,
             });
+
+            // Also track driver-filtered oncogenic mutations as a fallback source
+            // when CVR_ONCOGENIC_MUTATIONS clinical attribute is unavailable.
+            const filter = (m.driverFilter ?? '').toLowerCase();
+            const isOncogenic = filter === 'putative_driver' || filter === 'oncogenic' || filter === 'likely oncogenic';
+            if (isOncogenic) {
+                if (!oncogenicBySample.has(m.sampleId)) oncogenicBySample.set(m.sampleId, []);
+                oncogenicBySample.get(m.sampleId)!.push(token);
+            }
         }
 
         action(() => {
@@ -470,13 +489,9 @@ export default class WSIViewer extends React.Component<Props, {}> {
                 // Always populate details so tooltips work regardless of data source
                 if (sample.oncogenic_mutations) {
                     const sampleDetails = detailsBySample.get(sample.sample_id);
-                    if (sampleDetails?.size) {
-                        const tokens = sample.oncogenic_mutations.split(/[,;]\s*/).map(s => s.trim()).filter(Boolean);
-                        const details = tokens.map(t => sampleDetails.get(t) ?? { token: t });
-                        if (details.some(d => d.type || d.vaf != null)) {
-                            sample.oncogenic_mutation_details = details;
-                        }
-                    }
+                    const tokens = sample.oncogenic_mutations.split(/[,;]\s*/).map(s => s.trim()).filter(Boolean);
+                    // Build detail list; fall back to token-only entry if API didn't return details.
+                    sample.oncogenic_mutation_details = tokens.map(t => sampleDetails?.get(t) ?? { token: t });
                 }
             }
         })();
