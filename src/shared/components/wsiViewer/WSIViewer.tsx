@@ -1628,7 +1628,6 @@ function buildPathRows(slide: Slide, sample: Sample, studyId?: string): MetaRow[
     if (accession) rows.push({ label: 'Accession', labelTip: 'Surgical pathology accession number from the LIS', value: accession });
     const blockLbl = (slide.block_label || '').trim() || (slide.block_number ? String(slide.block_number) : '');
     if (blockLbl) rows.push({ label: 'Block', labelTip: BLOCK_LABEL_TIP, value: blockLbl });
-    if (slide.magnification) rows.push({ label: 'Magnification', labelTip: 'Objective lens magnification', value: slide.magnification });
     return rows;
 }
 
