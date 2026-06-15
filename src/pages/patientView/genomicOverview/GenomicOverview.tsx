@@ -18,6 +18,7 @@ import {
     defaultGrch37ReferenceProps,
     defaultGrch38ReferenceProps,
     defaultMutationTrackProps,
+    defaultRefSeqTrackProps,
     defaultSegmentTrackProps,
     generateMutationFeatures,
     generateSegmentFeatures,
@@ -272,9 +273,17 @@ export default class GenomicOverview extends React.Component<
                 },
             };
         } else {
+            const genomeId = isGrch38(this.props.genome || '')
+                ? 'hg38'
+                : 'hg19';
             return {
                 ...coreProps,
-                genome: isGrch38(this.props.genome || '') ? 'hg38' : 'hg19',
+                reference: {
+                    ...(genomeId === 'hg38'
+                        ? defaultGrch38ReferenceProps()
+                        : defaultGrch37ReferenceProps()),
+                    tracks: [defaultRefSeqTrackProps(genomeId)],
+                },
                 showNavigation: true,
                 showSearch: true,
                 showSampleNameButton: true,

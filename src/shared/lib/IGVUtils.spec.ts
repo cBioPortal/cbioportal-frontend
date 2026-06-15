@@ -3,6 +3,7 @@ import { assert } from 'chai';
 import { CopyNumberSeg } from 'cbioportal-ts-api-client';
 import {
     calcIgvTrackHeight,
+    defaultRefSeqTrackProps,
     featuresWithoutFunctions,
     generateSegmentFeatures,
     generateSegmentFileContent,
@@ -272,111 +273,24 @@ describe('IGVUtils', () => {
         });
     });
 
-    describe('getModifiedTrackNames', () => {
-        it('returns an empty array for empty input', () => {
-            assert.equal(getModifiedTrackNames([], []).length, 0);
+    describe('defaultRefSeqTrackProps', () => {
+        it('returns hg19 RefSeq track props with EXPANDED display mode', () => {
+            const props = defaultRefSeqTrackProps('hg19');
+            assert.equal(props.name, 'Refseq Genes');
+            assert.equal(props.format, 'refgene');
+            assert.equal(props.displayMode, 'EXPANDED');
+            assert.include(props.url, 'hg19');
+            assert.include(props.url, 'ncbiRefSeq');
+            assert.isDefined(props.indexURL);
         });
 
-        it('returns newly added track names', () => {
-            const currentTracks = [
-                {
-                    name: 'MUT',
-                    type: 'variant',
-                },
-            ];
-
-            const nextTracks = [
-                {
-                    name: 'CNA',
-                    type: 'seg',
-                    displayMode: 'FILL',
-                    features: [],
-                },
-                {
-                    name: 'MUT',
-                    type: 'variant',
-                },
-            ];
-
-            assert.equal(
-                getModifiedTrackNames(currentTracks, nextTracks)[0],
-                'CNA'
-            );
-        });
-
-        it('returns an empty array if no track has been changed', () => {
-            const currentTracks = [
-                {
-                    name: 'MUT',
-                    type: 'variant',
-                },
-                {
-                    name: 'CNA',
-                    type: 'seg',
-                    displayMode: 'FILL',
-                    features: [],
-                },
-            ];
-
-            const nextTracks = [
-                {
-                    name: 'CNA',
-                    type: 'seg',
-                    displayMode: 'FILL',
-                    features: [],
-                },
-                {
-                    name: 'MUT',
-                    type: 'variant',
-                },
-            ];
-
-            assert.equal(
-                getModifiedTrackNames(currentTracks, nextTracks).length,
-                0
-            );
-        });
-
-        it('returns only modified tracks names', () => {
-            const currentTracks = [
-                {
-                    name: 'CNA',
-                    type: 'seg',
-                    displayMode: 'FILL',
-                    features: [],
-                },
-                {
-                    name: 'MUT',
-                    type: 'variant',
-                },
-            ];
-
-            const nextTracks = [
-                {
-                    name: 'MUT',
-                    type: 'variant',
-                },
-                {
-                    name: 'CNA',
-                    type: 'seg',
-                    displayMode: 'FILL',
-                    features: [
-                        {
-                            patient: 'p1',
-                            sample: 's1',
-                        },
-                    ],
-                },
-            ];
-
-            assert.equal(
-                getModifiedTrackNames(currentTracks, nextTracks).length,
-                1
-            );
-            assert.equal(
-                getModifiedTrackNames(currentTracks, nextTracks)[0],
-                'CNA'
-            );
+        it('returns hg38 RefSeq track props with EXPANDED display mode', () => {
+            const props = defaultRefSeqTrackProps('hg38');
+            assert.equal(props.name, 'Refseq Genes');
+            assert.equal(props.format, 'refgene');
+            assert.equal(props.displayMode, 'EXPANDED');
+            assert.include(props.url, 'hg38');
+            assert.include(props.url, 'ncbiRefSeq');
         });
     });
 });
