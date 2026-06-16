@@ -457,7 +457,7 @@ jobs:
             #
             # with-env.sh resolves CBIOPORTAL_URL via scripts/env_vars.sh
             # (PR-target-branch aware) before exec'ing playwright.
-            ./scripts/with-env.sh pnpm exec playwright test --workers=3 \
+            ./scripts/with-env.sh pnpm exec playwright test --workers=1 \
               --shard="${SHARD_NUM}/${CIRCLE_NODE_TOTAL}" \
               --reporter=list,junit,blob \
               $GREP_ARG
