@@ -160,21 +160,6 @@ div.SelectedStudiesWindow {
         }
     }
 
-    h3 {
-        background-color: #1982b8;
-        border-bottom: 1px solid rgb(17, 116, 167);
-        color: #fff;
-        font: normal normal 500 13px/18px 'Helvetica Neue', Helvetica, Arial,
-            sans-serif;
-        text-transform: uppercase;
-        margin: 0;
-        padding: 10px 15px;
-
-        .selectedCount {
-            float: right;
-        }
-    }
-
     div.cancerStudySelectorBody {
         border-bottom-left-radius: 2px;
         border-bottom-right-radius: 2px;

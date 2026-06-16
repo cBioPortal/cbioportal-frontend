@@ -13,6 +13,7 @@ import {
 } from 'shared/lib/query/textQueryUtils';
 import { FieldProps } from 'shared/components/query/filteredSearch/field/FilterFormField';
 import { ListPhrase } from 'shared/components/query/filteredSearch/Phrase';
+import './ListFormField.scss';
 
 export type CheckboxFilterField = {
     input: typeof FilterCheckbox;
