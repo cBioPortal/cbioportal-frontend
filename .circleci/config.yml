@@ -347,7 +347,7 @@ jobs:
       # .circleci/images/playwright/Dockerfile changes.
       - image: ghcr.io/cbioportal/cbioportal-frontend-playwright-ci:v1.59.1-jammy
     resource_class: large
-    parallelism: 12
+    parallelism: 6
     working_directory: /tmp/repo
     environment:
       PW_DOCKER: '1'
