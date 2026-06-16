@@ -55,7 +55,7 @@ export const DataTypeFilter: FunctionComponent<IDataTypeFilterProps> = props => 
             });
     }
 
-    const titleElement = (
+    const toggleContent = (
         <>
             <span style={{ float: 'left', paddingLeft: 0, marginLeft: 0 }}>
                 {props.buttonText}
@@ -78,7 +78,7 @@ export const DataTypeFilter: FunctionComponent<IDataTypeFilterProps> = props => 
                 <CustomDropdown
                     id="dropdown-study-data-filter"
                     title=""
-                    titleElement={titleElement}
+                    titleElement={toggleContent}
                     buttonClassName="btn btn-default btn-sm"
                     style={{
                         width: 150,
@@ -187,7 +187,7 @@ export const DataTypeFilter: FunctionComponent<IDataTypeFilterProps> = props => 
                                                         }}
                                                         checked={type.checked}
                                                         disabled={isZero}
-                                                        onClick={() => {
+                                                        onChange={() => {
                                                             props.toggleFilter(
                                                                 type.id
                                                             );

@@ -99,7 +99,8 @@ test.describe('study select page', () => {
     });
 
     test.describe('data type filter', () => {
-        const dataTypeFilterBtn = '[data-test=data-type-filter-btn]';
+        const dataTypeFilterBtn =
+            '[data-test=dropdown-data-type-filter] button';
         const dataTypeDropdown = '[data-test=dropdown-data-type-filter]';
         const filterBadge = `${dataTypeDropdown} .oncoprintDropdownCount`;
 
@@ -167,6 +168,11 @@ test.describe('study select page', () => {
                 .locator('input[type=checkbox]')
                 .click();
             await expect(page.locator(filterBadge)).not.toBeVisible();
+            // Close the dropdown so the next test can open it cleanly
+            await page.locator(dataTypeFilterBtn).click();
+            await expect(
+                page.locator(`${dataTypeDropdown} .dropdown-menu`)
+            ).not.toBeVisible();
         });
 
         test('narrows study list to 3 entries when CNA filter is selected', async () => {
