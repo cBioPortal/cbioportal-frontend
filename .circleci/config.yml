@@ -347,7 +347,7 @@ jobs:
       # .circleci/images/playwright/Dockerfile changes.
       - image: ghcr.io/cbioportal/cbioportal-frontend-playwright-ci:v1.59.1-jammy
     resource_class: large
-    parallelism: 2
+    parallelism: 12
     working_directory: /tmp/repo
     environment:
       PW_DOCKER: '1'
@@ -457,7 +457,7 @@ jobs:
             #
             # with-env.sh resolves CBIOPORTAL_URL via scripts/env_vars.sh
             # (PR-target-branch aware) before exec'ing playwright.
-            ./scripts/with-env.sh pnpm exec playwright test --workers=1 \
+            ./scripts/with-env.sh pnpm exec playwright test --workers=3 \
               --shard="${SHARD_NUM}/${CIRCLE_NODE_TOTAL}" \
               --reporter=list,junit,blob \
               $GREP_ARG
