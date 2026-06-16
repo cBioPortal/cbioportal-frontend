@@ -1852,11 +1852,11 @@ function MutationTable({ sample }: { sample: Sample }): React.ReactElement | nul
     return (
         <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 8, tableLayout: 'fixed' }}>
             <colgroup>
-                <col style={{ width: '22%' }} />
-                <col style={{ width: '28%' }} />
+                <col style={{ width: '26%' }} />
+                <col style={{ width: '26%' }} />
                 <col style={{ width: '18%' }} />
                 <col style={{ width: '18%' }} />
-                <col style={{ width: '14%' }} />
+                <col style={{ width: '12%' }} />
             </colgroup>
             <thead>
                 <tr>
