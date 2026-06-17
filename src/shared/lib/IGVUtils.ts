@@ -56,8 +56,37 @@ export function defaultGrch38ReferenceProps() {
         indexURL:
             'https://s3.amazonaws.com/igv.broadinstitute.org/genomes/seq/hg38/hg38.fa.fai',
         cytobandURL:
-            'https://s3.amazonaws.com/igv.broadinstitute.org/annotations/',
+            'https://hgdownload.soe.ucsc.edu/goldenPath/hg38/database/cytoBandIdeo.txt.gz',
     };
+}
+
+export function defaultRefSeqTrackProps(genomeId: 'hg19' | 'hg38') {
+    if (genomeId === 'hg19') {
+        return {
+            name: 'Refseq Genes',
+            format: 'refgene',
+            url:
+                'https://s3.amazonaws.com/igv.org.genomes/hg19/ncbiRefSeq.sorted.txt.gz',
+            indexURL:
+                'https://s3.amazonaws.com/igv.org.genomes/hg19/ncbiRefSeq.sorted.txt.gz.tbi',
+            visibilityWindow: -1,
+            supportsWholeGenome: false,
+            displayMode: 'EXPANDED',
+            order: 1000000,
+        };
+    } else {
+        return {
+            name: 'Refseq Genes',
+            format: 'refgene',
+            url:
+                'https://hgdownload.soe.ucsc.edu/goldenPath/hg38/database/ncbiRefSeq.txt.gz',
+            indexed: false,
+            visibilityWindow: -1,
+            supportsWholeGenome: false,
+            displayMode: 'EXPANDED',
+            order: 1000000,
+        };
+    }
 }
 
 export function defaultSegmentTrackProps() {
