@@ -13,10 +13,6 @@ import {
     CNADetail,
 } from './wsiViewerTypes';
 
-// Hoisted at module scope so the require() is not called on every render.
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const civicLogoSrc: string = require('../../../../rootImages/civic-logo.png');
-
 // ---- design tokens (matches iframe viewer) ----
 const C = {
     blue: '#2986e2',
@@ -2129,7 +2125,7 @@ const OncoKbIcon = ({ oncogenic }: { oncogenic?: string }) => {
 /** CIViC logo image — matches cBioPortal's annotation column CIViC badge. */
 const CivicIcon = () => (
     <img
-        src={civicLogoSrc}
+        src={require('../../../rootImages/civic-logo.png')}
         width={14} height={14}
         style={inlineIconStyle}
         alt="CIViC"
