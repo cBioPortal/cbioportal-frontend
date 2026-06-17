@@ -1,7 +1,6 @@
 import { ChatMessage, MessagePart, StreamCallbacks } from '../store/types';
 
-// TODO: make configurable via server config
-const ASSISTANT_API_URL = 'http://localhost:3001';
+const ASSISTANT_API_URL = 'https://assistant-api.cbioportal.org';
 
 // Convert an internal ChatMessage part into an AI SDK UIMessage part so the
 // server can rebuild the conversation (including prior tool calls and their
