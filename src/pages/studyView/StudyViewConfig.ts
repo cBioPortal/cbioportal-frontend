@@ -84,6 +84,7 @@ export enum ChartTypeEnum {
     PATIENT_TREATMENT_GROUPS_TABLE = 'PATIENT_TREATMENT_GROUPS_TABLE',
     PATIENT_TREATMENT_TARGET_TABLE = 'PATIENT_TREATMENT_TARGET_TABLE',
     CLINICAL_EVENT_TYPE_COUNTS_TABLE = 'CLINICAL_EVENT_TYPE_COUNTS_TABLE',
+    MRNA_VIOLIN_PLOT = 'MRNA_VIOLIN_PLOT',
     NONE = 'NONE',
 }
 
@@ -110,6 +111,7 @@ export enum ChartTypeNameEnum {
     PATIENT_TREATMENT_GROUPS_TABLE = 'table',
     PATIENT_TREATMENT_TARGET_TABLE = 'table',
     CLINICAL_EVENT_TYPE_COUNTS_TABLE = 'table',
+    MRNA_VIOLIN_PLOT = 'mRNA violin plot',
     NONE = 'none',
 }
 
@@ -287,6 +289,11 @@ const studyViewFrontEnd = {
             [ChartTypeEnum.CLINICAL_EVENT_TYPE_COUNTS_TABLE]: {
                 w: 2,
                 h: 2,
+                minW: 2,
+            },
+            [ChartTypeEnum.MRNA_VIOLIN_PLOT]: {
+                w: 2,
+                h: 3,
                 minW: 2,
             },
             [ChartTypeEnum.NONE]: {
