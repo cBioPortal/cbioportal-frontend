@@ -1,0 +1,477 @@
+[      29ms] [ERROR] [WSIViewer] metadata fetch failed TypeError: Failed to fetch
+    at WSIViewer.<anonymous> (http://pllimsksparky3:3001/reactapp/main.app.js:103777:40)
+    at Generator.next (<anonymous>)
+    at asyncGeneratorStep (http://pllimsksparky3:3001/reactapp/main.app.js:103213:28)
+    at _next (http://pllimsksparky3:3001/reactapp/main.app.js:103231:17)
+    at http://pllimsksparky3:3001/reactapp/main.app.js:103236:13
+    at new Promise (<anonymous>)
+    at WSIViewer.<anonymous> (http://pllimsksparky3:3001/reactapp/main.app.js:103228:16)
+    at WSIViewer.mountOSD (http://pllimsksparky3:3001/reactapp/main.app.js:103962:12)
+    at WSIViewer.<anonymous> (http://pllimsksparky3:3001/reactapp/main.app.js:103503:24)
+    at Generator.next (<anonymous>) @ http://pllimsksparky3:3001/reactapp/main.app.js:103783
+[    2014ms] [INFO] [webpack-dev-server] Server started: Hot Module Replacement enabled, Live Reloading enabled, Progress disabled, Overlay disabled. @ http://pllimsksparky3:3001/reactapp/common.bundle.js:55485
+[    2015ms] [LOG] [HMR] Waiting for update signal from WDS... @ http://pllimsksparky3:3001/reactapp/common.bundle.js:54787
+[    2028ms] [INFO] %cDownload the React DevTools for a better development experience: https://fb.me/react-devtools font-weight:bold @ http://pllimsksparky3:3001/reactapp/common.bundle.js:402549
+[    2168ms] [WARNING] The npm package jStat is no longer maintained. Instead use jstat (lowercase). @ http://pllimsksparky3:3001/reactapp/common.bundle.js:233357
+[    2168ms] [WARNING] Visit https://www.npmjs.com/package/jstat for more information. @ http://pllimsksparky3:3001/reactapp/common.bundle.js:233358
+[    2400ms] [WARNING] [webpack-dev-server] Warnings while compiling. @ http://pllimsksparky3:3001/reactapp/common.bundle.js:55489
+[    2400ms] [WARNING] [webpack-dev-server] WARNING in ./src/shared/components/query/quickSearch/QuickSearch.tsx 566:20-43
+  ⚠ ESModulesLinkingWarning: export 'optionGroup' (imported as 'moduleStyles') was not found in './styles.module.scss' (possible exports: default)
+     ╭─[566:19]
+ 564 │     const label = groupData.value + ' more ' + Pluralize(groupData.type, groupData.value) + ' (click to load ' + (groupData.value < SHOW_MORE_SIZE ? groupData.value : SHOW_MORE_SIZE) + ' more)';
+ 565 │     return /*#__PURE__*/ React.createElement("div", {
+ 566 │         className: moduleStyles.optionGroup,
+     ·                    ────────────────────────
+ 567 │         __source: {
+ 568 │             fileName: "/gpfs/mskmind_ess/limr/repos/cbioportal-frontend-option-c/src/shared/components/query/quickSearch/QuickSearch.tsx",
+     ╰────
+ @ http://pllimsksparky3:3001/reactapp/common.bundle.js:55489
+[    2400ms] [WARNING] [webpack-dev-server] WARNING in ./src/shared/components/query/quickSearch/QuickSearch.tsx 574:20-43
+  ⚠ ESModulesLinkingWarning: export 'groupHeader' (imported as 'moduleStyles') was not found in './styles.module.scss' (possible exports: default)
+     ╭─[574:19]
+ 572 │         __self: this
+ 573 │     }, /*#__PURE__*/ React.createElement("div", {
+ 574 │         className: moduleStyles.groupHeader,
+     ·                    ────────────────────────
+ 575 │         __source: {
+ 576 │             fileName: "/gpfs/mskmind_ess/limr/repos/cbioportal-frontend-option-c/src/shared/components/query/quickSearch/QuickSearch.tsx",
+     ╰────
+ @ http://pllimsksparky3:3001/reactapp/common.bundle.js:55489
+[    2400ms] [WARNING] [webpack-dev-server] WARNING in ./src/shared/components/query/quickSearch/QuickSearch.tsx 619:20-45
+  ⚠ ESModulesLinkingWarning: export 'optionWrapper' (imported as 'moduleStyles') was not found in './styles.module.scss' (possible exports: default)
+     ╭─[619:19]
+ 617 │     }
+ 618 │     return /*#__PURE__*/ React.createElement("div", {
+ 619 │         className: moduleStyles.optionWrapper,
+     ·                    ──────────────────────────
+ 620 │         __source: {
+ 621 │             fileName: "/gpfs/mskmind_ess/limr/repos/cbioportal-frontend-option-c/src/shared/components/query/quickSearch/QuickSearch.tsx",
+     ╰────
+ @ http://pllimsksparky3:3001/reactapp/common.bundle.js:55489
+[    2400ms] [WARNING] [webpack-dev-server] WARNING in ./src/shared/components/query/quickSearch/QuickSearch.tsx 627:20-50
+  ⚠ ESModulesLinkingWarning: export 'optionLabelWrapper' (imported as 'moduleStyles') was not found in './styles.module.scss' (possible exports: default)
+     ╭─[627:19]
+ 625 │         __self: this
+ 626 │     }, typeStyle && /*#__PURE__*/ React.createElement("div", {
+ 627 │         className: moduleStyles.optionLabelWrapper,
+     ·                    ───────────────────────────────
+ 628 │         __source: {
+ 629 │             fileName: "/gpfs/mskmind_ess/limr/repos/cbioportal-frontend-option-c/src/shared/components/query/quickSearch/QuickSearch.tsx",
+     ╰────
+ @ http://pllimsksparky3:3001/reactapp/common.bundle.js:55489
+[    2411ms] [LOG] Using localStorage.frontendConfig (overriding window.frontendConfig): {"msk_wsi_annotation_api_url":"http://pllimsksparky3:8081"} @ http://pllimsksparky3:3001/reactapp/main.app.js:13233
+[    2416ms] [ERROR] Warning: Each child in a list should have a unique "key" prop.%s%s See https://fb.me/react-warning-keys for more information.%s 
+
+Check the render method of `Observer`.  
+    in li (at PortalHeader.tsx:150)
+    in Observer (created by PortalHeader)
+    in PortalHeader (at Container.tsx:124)
+    in div (at Container.tsx:123)
+    in div (at Container.tsx:116)
+    in div (at Container.tsx:102)
+    in ErrorBoundary (at Container.tsx:101)
+    in Observer (created by Container)
+    in Container (at appBootstrapper.tsx:315)
+    in Router (at appBootstrapper.tsx:313)
+    in r (at appBootstrapper.tsx:312) @ http://pllimsksparky3:3001/reactapp/common.bundle.js:484999
+[    2706ms] [ERROR] Warning: Each child in a list should have a unique "key" prop.%s%s See https://fb.me/react-warning-keys for more information.%s 
+
+Check the render method of `PatientHeader`.  
+    in span (at clinicalAttributesUtil.js:252)
+    in PatientHeader (at PatientViewPageHeader.tsx:28)
+    in td (at PatientViewPageHeader.tsx:27)
+    in tr (at PatientViewPageHeader.tsx:25)
+    in table (at PatientViewPageHeader.tsx:24)
+    in div (at PatientViewPageHeader.tsx:23)
+    in wrappedComponent (at PatientViewPage.tsx:770)
+    in div (at PatientViewPage.tsx:765)
+    in div (at PatientViewPage.tsx:764)
+    in div (at PatientViewPage.tsx:735)
+    in div (at PageLayout.tsx:31)
+    in main (at PageLayout.tsx:30)
+    in div (at PageLayout.tsx:23)
+    in div (at PageLayout.tsx:22)
+    in PageLayout (created by n)
+    in n (created by inject-with-appStore(PageLayout))
+    in inject-with-appStore(PageLayout) (at PatientViewPage.tsx:724)
+    in Observer (created by PatientViewPageInner)
+    in PatientViewPageInner (created by n)
+    in n (created by inject-with-routing-appStore(PatientViewPageInner))
+    in inject-with-routing-appStore(PatientViewPageInner) (at PatientViewPage.tsx:122)
+    in Observer (created by PatientViewPage)
+    in PatientViewPage (created by n)
+    in n (created by inject-with-routing-appStore(PatientViewPage))
+    in inject-with-routing-appStore(PatientViewPage) (at routes.tsx:131)
+    in Suspense (at routes.tsx:130)
+    in Unknown (at routes.tsx:168)
+    in Unknown (at routes.tsx:217)
+    in Unknown (created by Context.Consumer)
+    in Route (at routes.tsx:459)
+    in Switch (at routes.tsx:328)
+    in Suspense (at routes.tsx:327)
+    in div (at Container.tsx:156)
+    in Else (at Container.tsx:155)
+    in If (at Container.tsx:127)
+    in div (at Container.tsx:102)
+    in ErrorBoundary (at Container.tsx:101)
+    in Observer (created by Container)
+    in Container (at appBootstrapper.tsx:315)
+    in Router (at appBootstrapper.tsx:313)
+    in r (at appBootstrapper.tsx:312) @ http://pllimsksparky3:3001/reactapp/common.bundle.js:484999
+[    2707ms] [ERROR] Warning: A future version of React will block javascript: URLs as a security precaution. Use event handlers instead if you can. If you need to generate unsafe HTML try using dangerouslySetInnerHTML instead. React was passed %s.%s "javascript:void(0)" 
+    in a (at PatientHeader.tsx:116)
+    in span (at PatientHeader.tsx:112)
+    in Trigger (created by ForwardRef(Tooltip))
+    in ForwardRef(Tooltip) (created by Observer)
+    in Observer (created by DefaultTooltip)
+    in DefaultTooltip (at PatientHeader.tsx:104)
+    in div (at PatientHeader.tsx:27)
+    in PatientHeader (at PatientViewPageHeader.tsx:28)
+    in td (at PatientViewPageHeader.tsx:27)
+    in tr (at PatientViewPageHeader.tsx:25)
+    in table (at PatientViewPageHeader.tsx:24)
+    in div (at PatientViewPageHeader.tsx:23)
+    in wrappedComponent (at PatientViewPage.tsx:770)
+    in div (at PatientViewPage.tsx:765)
+    in div (at PatientViewPage.tsx:764)
+    in div (at PatientViewPage.tsx:735)
+    in div (at PageLayout.tsx:31)
+    in main (at PageLayout.tsx:30)
+    in div (at PageLayout.tsx:23)
+    in div (at PageLayout.tsx:22)
+    in PageLayout (created by n)
+    in n (created by inject-with-appStore(PageLayout))
+    in inject-with-appStore(PageLayout) (at PatientViewPage.tsx:724)
+    in Observer (created by PatientViewPageInner)
+    in PatientViewPageInner (created by n)
+    in n (created by inject-with-routing-appStore(PatientViewPageInner))
+    in inject-with-routing-appStore(PatientViewPageInner) (at PatientViewPage.tsx:122)
+    in Observer (created by PatientViewPage)
+    in PatientViewPage (created by n)
+    in n (created by inject-with-routing-appStore(PatientViewPage))
+    in inject-with-routing-appStore(PatientViewPage) (at routes.tsx:131)
+    in Suspense (at routes.tsx:130)
+    in Unknown (at routes.tsx:168)
+    in Unknown (at routes.tsx:217)
+    in Unknown (created by Context.Consumer)
+    in Route (at routes.tsx:459)
+    in Switch (at routes.tsx:328)
+    in Suspense (at routes.tsx:327)
+    in div (at Container.tsx:156)
+    in Else (at Container.tsx:155)
+    in If (at Container.tsx:127)
+    in div (at Container.tsx:102)
+    in ErrorBoundary (at Container.tsx:101)
+    in Observer (created by Container)
+    in Container (at appBootstrapper.tsx:315)
+    in Router (at appBootstrapper.tsx:313)
+    in r (at appBootstrapper.tsx:312) @ http://pllimsksparky3:3001/reactapp/common.bundle.js:377643
+[    2708ms] [ERROR] Warning: Received a `%s` for a string attribute `is`. If this is expected, cast the value to a string.%s boolean 
+    in span (at clinicalAttributesUtil.js:252)
+    in span (at PatientHeader.tsx:112)
+    in Trigger (created by ForwardRef(Tooltip))
+    in ForwardRef(Tooltip) (created by Observer)
+    in Observer (created by DefaultTooltip)
+    in DefaultTooltip (at PatientHeader.tsx:104)
+    in div (at PatientHeader.tsx:27)
+    in PatientHeader (at PatientViewPageHeader.tsx:28)
+    in td (at PatientViewPageHeader.tsx:27)
+    in tr (at PatientViewPageHeader.tsx:25)
+    in table (at PatientViewPageHeader.tsx:24)
+    in div (at PatientViewPageHeader.tsx:23)
+    in wrappedComponent (at PatientViewPage.tsx:770)
+    in div (at PatientViewPage.tsx:765)
+    in div (at PatientViewPage.tsx:764)
+    in div (at PatientViewPage.tsx:735)
+    in div (at PageLayout.tsx:31)
+    in main (at PageLayout.tsx:30)
+    in div (at PageLayout.tsx:23)
+    in div (at PageLayout.tsx:22)
+    in PageLayout (created by n)
+    in n (created by inject-with-appStore(PageLayout))
+    in inject-with-appStore(PageLayout) (at PatientViewPage.tsx:724)
+    in Observer (created by PatientViewPageInner)
+    in PatientViewPageInner (created by n)
+    in n (created by inject-with-routing-appStore(PatientViewPageInner))
+    in inject-with-routing-appStore(PatientViewPageInner) (at PatientViewPage.tsx:122)
+    in Observer (created by PatientViewPage)
+    in PatientViewPage (created by n)
+    in n (created by inject-with-routing-appStore(PatientViewPage))
+    in inject-with-routing-appStore(PatientViewPage) (at routes.tsx:131)
+    in Suspense (at routes.tsx:130)
+    in Unknown (at routes.tsx:168)
+    in Unknown (at routes.tsx:217)
+    in Unknown (created by Context.Consumer)
+    in Route (at routes.tsx:459)
+    in Switch (at routes.tsx:328)
+    in Suspense (at routes.tsx:327)
+    in div (at Container.tsx:156)
+    in Else (at Container.tsx:155)
+    in If (at Container.tsx:127)
+    in div (at Container.tsx:102)
+    in ErrorBoundary (at Container.tsx:101)
+    in Observer (created by Container)
+    in Container (at appBootstrapper.tsx:315)
+    in Router (at appBootstrapper.tsx:313)
+    in r (at appBootstrapper.tsx:312) @ http://pllimsksparky3:3001/reactapp/common.bundle.js:377643
+[    2709ms] [ERROR] Warning: validateDOMNesting(...): %s cannot appear as a child of <%s>.%s%s%s <tr> table   Add a <tbody>, <thead> or <tfoot> to your code to match the DOM tree generated by the browser. 
+    in tr (at PatientViewPageHeader.tsx:25)
+    in table (at PatientViewPageHeader.tsx:24)
+    in div (at PatientViewPageHeader.tsx:23)
+    in wrappedComponent (at PatientViewPage.tsx:770)
+    in div (at PatientViewPage.tsx:765)
+    in div (at PatientViewPage.tsx:764)
+    in div (at PatientViewPage.tsx:735)
+    in div (at PageLayout.tsx:31)
+    in main (at PageLayout.tsx:30)
+    in div (at PageLayout.tsx:23)
+    in div (at PageLayout.tsx:22)
+    in PageLayout (created by n)
+    in n (created by inject-with-appStore(PageLayout))
+    in inject-with-appStore(PageLayout) (at PatientViewPage.tsx:724)
+    in Observer (created by PatientViewPageInner)
+    in PatientViewPageInner (created by n)
+    in n (created by inject-with-routing-appStore(PatientViewPageInner))
+    in inject-with-routing-appStore(PatientViewPageInner) (at PatientViewPage.tsx:122)
+    in Observer (created by PatientViewPage)
+    in PatientViewPage (created by n)
+    in n (created by inject-with-routing-appStore(PatientViewPage))
+    in inject-with-routing-appStore(PatientViewPage) (at routes.tsx:131)
+    in Suspense (at routes.tsx:130)
+    in Unknown (at routes.tsx:168)
+    in Unknown (at routes.tsx:217)
+    in Unknown (created by Context.Consumer)
+    in Route (at routes.tsx:459)
+    in Switch (at routes.tsx:328)
+    in Suspense (at routes.tsx:327)
+    in div (at Container.tsx:156)
+    in Else (at Container.tsx:155)
+    in If (at Container.tsx:127)
+    in div (at Container.tsx:102)
+    in ErrorBoundary (at Container.tsx:101)
+    in Observer (created by Container)
+    in Container (at appBootstrapper.tsx:315)
+    in Router (at appBootstrapper.tsx:313)
+    in r (at appBootstrapper.tsx:312) @ http://pllimsksparky3:3001/reactapp/common.bundle.js:377643
+[    2709ms] [ERROR] Warning: validateDOMNesting(...): %s cannot appear as a child of <%s>.%s%s%s <tr> table   Add a <tbody>, <thead> or <tfoot> to your code to match the DOM tree generated by the browser. 
+    in tr (at PatientViewPageHeader.tsx:44)
+    in table (at PatientViewPageHeader.tsx:24)
+    in div (at PatientViewPageHeader.tsx:23)
+    in wrappedComponent (at PatientViewPage.tsx:770)
+    in div (at PatientViewPage.tsx:765)
+    in div (at PatientViewPage.tsx:764)
+    in div (at PatientViewPage.tsx:735)
+    in div (at PageLayout.tsx:31)
+    in main (at PageLayout.tsx:30)
+    in div (at PageLayout.tsx:23)
+    in div (at PageLayout.tsx:22)
+    in PageLayout (created by n)
+    in n (created by inject-with-appStore(PageLayout))
+    in inject-with-appStore(PageLayout) (at PatientViewPage.tsx:724)
+    in Observer (created by PatientViewPageInner)
+    in PatientViewPageInner (created by n)
+    in n (created by inject-with-routing-appStore(PatientViewPageInner))
+    in inject-with-routing-appStore(PatientViewPageInner) (at PatientViewPage.tsx:122)
+    in Observer (created by PatientViewPage)
+    in PatientViewPage (created by n)
+    in n (created by inject-with-routing-appStore(PatientViewPage))
+    in inject-with-routing-appStore(PatientViewPage) (at routes.tsx:131)
+    in Suspense (at routes.tsx:130)
+    in Unknown (at routes.tsx:168)
+    in Unknown (at routes.tsx:217)
+    in Unknown (created by Context.Consumer)
+    in Route (at routes.tsx:459)
+    in Switch (at routes.tsx:328)
+    in Suspense (at routes.tsx:327)
+    in div (at Container.tsx:156)
+    in Else (at Container.tsx:155)
+    in If (at Container.tsx:127)
+    in div (at Container.tsx:102)
+    in ErrorBoundary (at Container.tsx:101)
+    in Observer (created by Container)
+    in Container (at appBootstrapper.tsx:315)
+    in Router (at appBootstrapper.tsx:313)
+    in r (at appBootstrapper.tsx:312) @ http://pllimsksparky3:3001/reactapp/common.bundle.js:377643
+[    2710ms] [LOG] TABS MOUNT @ http://pllimsksparky3:3001/reactapp/main.app.js:15313
+[    2714ms] [WARNING] Warning: componentWillReceiveProps has been renamed, and is not recommended for use. See https://fb.me/react-unsafe-component-lifecycles for details.
+
+* Move data fetching code or side effects to componentDidUpdate.
+* If you're updating state whenever props change, refactor your code to use memoization techniques or move it to static getDerivedStateFromProps. Learn more at: https://fb.me/react-derived-state
+* Rename componentWillReceiveProps to UNSAFE_componentWillReceiveProps to suppress this warning in non-strict mode. In React 17.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.
+
+Please update the following components: %s MSKTabs @ http://pllimsksparky3:3001/reactapp/common.bundle.js:377643
+[    2970ms] [ERROR] Warning: Each child in a list should have a unique "key" prop. See https://fb.me/react-warning-keys for more information.%s 
+    in Observer (created by SampleSummaryList)
+    in SampleSummaryList (at PatientViewPageHeader.tsx:55)
+    in div (at PatientViewPageHeader.tsx:47)
+    in td (at PatientViewPageHeader.tsx:46)
+    in tr (at PatientViewPageHeader.tsx:44)
+    in table (at PatientViewPageHeader.tsx:24)
+    in div (at PatientViewPageHeader.tsx:23)
+    in wrappedComponent (at PatientViewPage.tsx:770)
+    in div (at PatientViewPage.tsx:765)
+    in div (at PatientViewPage.tsx:764)
+    in div (at PatientViewPage.tsx:735)
+    in div (at PageLayout.tsx:31)
+    in main (at PageLayout.tsx:30)
+    in div (at PageLayout.tsx:23)
+    in div (at PageLayout.tsx:22)
+    in PageLayout (created by n)
+    in n (created by inject-with-appStore(PageLayout))
+    in inject-with-appStore(PageLayout) (at PatientViewPage.tsx:724)
+    in Observer (created by PatientViewPageInner)
+    in PatientViewPageInner (created by n)
+    in n (created by inject-with-routing-appStore(PatientViewPageInner))
+    in inject-with-routing-appStore(PatientViewPageInner) (at PatientViewPage.tsx:122)
+    in Observer (created by PatientViewPage)
+    in PatientViewPage (created by n)
+    in n (created by inject-with-routing-appStore(PatientViewPage))
+    in inject-with-routing-appStore(PatientViewPage) (at routes.tsx:131)
+    in Suspense (at routes.tsx:130)
+    in Unknown (at routes.tsx:168)
+    in Unknown (at routes.tsx:217)
+    in Unknown (created by Context.Consumer)
+    in Route (at routes.tsx:459)
+    in Switch (at routes.tsx:328)
+    in Suspense (at routes.tsx:327)
+    in div (at Container.tsx:156)
+    in Else (at Container.tsx:155)
+    in If (at Container.tsx:127)
+    in div (at Container.tsx:102)
+    in ErrorBoundary (at Container.tsx:101)
+    in Observer (created by Container)
+    in Container (at appBootstrapper.tsx:315)
+    in Router (at appBootstrapper.tsx:313)
+    in r (at appBootstrapper.tsx:312) @ http://pllimsksparky3:3001/reactapp/common.bundle.js:377643
+[    2986ms] [ERROR] Warning: Failed prop type: Invalid prop `condition` of type `object` supplied to `If`, expected `boolean`.
+    in If (at PatientViewPageTabs.tsx:382) @ http://pllimsksparky3:3001/reactapp/common.bundle.js:357065
+[    8273ms] [ERROR] MouseTracker.exitHandler is deprecated. Use MouseTracker.leaveHandler instead. @ http://pllimsksparky3:3001/reactapp/common.bundle.js:310102
+[    8643ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 1 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8643ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 2 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8643ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 3 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8643ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 4 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8643ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 5 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8643ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 6 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8643ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 7 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8643ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 8 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8643ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 9 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8643ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 10 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8643ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 11 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8643ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 12 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8643ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 13 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8643ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 14 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8643ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 15 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8647ms] [WARNING] [.WebGL-0x86c0bae6a00]RENDER WARNING: there is no texture bound to the unit 1 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8647ms] [WARNING] [.WebGL-0x86c0bae6a00]RENDER WARNING: there is no texture bound to the unit 2 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8647ms] [WARNING] [.WebGL-0x86c0bae6a00]RENDER WARNING: there is no texture bound to the unit 3 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8647ms] [WARNING] [.WebGL-0x86c0bae6a00]RENDER WARNING: there is no texture bound to the unit 4 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8647ms] [WARNING] [.WebGL-0x86c0bae6a00]RENDER WARNING: there is no texture bound to the unit 5 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8647ms] [WARNING] [.WebGL-0x86c0bae6a00]RENDER WARNING: there is no texture bound to the unit 6 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8647ms] [WARNING] [.WebGL-0x86c0bae6a00]RENDER WARNING: there is no texture bound to the unit 7 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8647ms] [WARNING] [.WebGL-0x86c0bae6a00]RENDER WARNING: there is no texture bound to the unit 8 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8647ms] [WARNING] [.WebGL-0x86c0bae6a00]RENDER WARNING: there is no texture bound to the unit 9 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8647ms] [WARNING] [.WebGL-0x86c0bae6a00]RENDER WARNING: there is no texture bound to the unit 10 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8647ms] [WARNING] [.WebGL-0x86c0bae6a00]RENDER WARNING: there is no texture bound to the unit 11 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8647ms] [WARNING] [.WebGL-0x86c0bae6a00]RENDER WARNING: there is no texture bound to the unit 12 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8647ms] [WARNING] [.WebGL-0x86c0bae6a00]RENDER WARNING: there is no texture bound to the unit 13 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8647ms] [WARNING] [.WebGL-0x86c0bae6a00]RENDER WARNING: there is no texture bound to the unit 14 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8647ms] [WARNING] [.WebGL-0x86c0bae6a00]RENDER WARNING: there is no texture bound to the unit 15 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8714ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 2 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8714ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 3 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8714ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 4 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8714ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 5 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8714ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 6 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8714ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 7 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8714ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 8 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8714ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 9 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8714ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 10 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8714ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 11 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8714ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 12 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8714ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 13 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8715ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 14 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8715ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 15 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8796ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 6 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8796ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 7 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8796ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 8 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8797ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 9 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8797ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 10 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8797ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 11 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8797ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 12 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8797ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 13 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8797ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 14 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8797ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 15 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8818ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 6 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8818ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 7 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8818ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 8 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8818ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 9 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8818ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 10 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8818ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 11 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8818ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 12 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8818ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 13 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8818ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 14 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8818ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 15 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8901ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 7 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8901ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 8 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8901ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 9 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8901ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 10 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8901ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 11 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8901ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 12 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8901ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 13 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8901ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 14 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8901ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 15 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8929ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 7 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8929ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 8 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8929ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 9 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8929ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 10 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8929ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 11 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8929ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 12 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8929ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 13 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8929ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 14 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8930ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 15 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8959ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 7 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8959ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 8 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8959ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 9 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8959ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 10 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8959ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 11 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8959ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 12 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8959ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 13 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8959ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 14 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    8960ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 15 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    9042ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 8 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    9042ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 9 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    9042ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 10 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    9042ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 11 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    9042ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 12 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    9042ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 13 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    9042ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 14 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    9042ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 15 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    9122ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 9 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    9122ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 10 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    9122ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 11 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    9122ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 12 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    9122ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 13 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    9122ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 14 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    9122ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 15 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    9203ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 10 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    9203ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 11 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    9203ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 12 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    9203ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 13 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    9203ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 14 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    9204ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 15 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    9287ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 11 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    9287ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 12 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    9287ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 13 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    9287ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 14 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    9287ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 15 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    9373ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 12 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    9373ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 13 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    9373ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 14 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    9373ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 15 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    9474ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 13 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    9474ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 14 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    9474ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 15 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    9570ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 14 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    9570ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 15 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[    9662ms] [WARNING] [.WebGL-0x86c0bae4000]RENDER WARNING: there is no texture bound to the unit 15 @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[   68666ms] [ERROR] Access to fetch at 'http://pllimsksparky3:8081/tiles/1492898/thumbnail' from origin 'http://pllimsksparky3:3001' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. If an opaque response serves your needs, set the request's mode to 'no-cors' to fetch the resource with CORS disabled. @ http://pllimsksparky3:3001/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&resourceUrl=http%3A%2F%2Fpllimsksparky3%3A8081%2F%3Fpatient%3DP-0000678%26studyId%3Dcoad_msk_2025%26cbioUrl%3Dhttp%3A%2F%2Fpllimsksparky3%3A8090#wsi:slide=1492807&x=32868&y=22409&z=0.810101:0
+[   68666ms] [ERROR] Failed to load resource: net::ERR_FAILED @ http://pllimsksparky3:8081/tiles/1492898/thumbnail:0
