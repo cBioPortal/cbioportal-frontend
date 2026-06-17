@@ -880,6 +880,12 @@ export class StudySummaryTab extends React.Component<
                     this.store.resetClinicalEventTypeFilter();
                 },
             }),
+            [ChartTypeEnum.MRNA_VIOLIN_PLOT]: () => ({
+                // The chart is self-contained; use selectedSamples as the
+                // promise so ChartContainer always has a valid MobxPromise.
+                promise: this.store.selectedSamples,
+                filters: [],
+            }),
         });
     }
 
