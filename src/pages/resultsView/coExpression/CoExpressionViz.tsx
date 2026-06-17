@@ -150,7 +150,12 @@ export default class CoExpressionViz extends React.Component<
         await: () => [this.coExpressionDataPromise],
         invoke: () => {
             const coexpressions = this.coExpressionDataPromise.result!;
-            const sortedByPvalue = _.sortBy(coexpressions, c => c.pValue);
+
+            const sortedByPvalue = _.sortBy(coexpressions, [
+                c => c.pValue,
+                c => c.geneticEntityName,
+            ]);
+
             const qValues = calculateQValues(sortedByPvalue.map(c => c.pValue));
             qValues.forEach((qValue, index) => {
                 (sortedByPvalue[index] as CoExpressionWithQ).qValue = qValue;

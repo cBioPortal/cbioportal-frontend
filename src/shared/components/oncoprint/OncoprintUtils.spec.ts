@@ -105,6 +105,68 @@ describe('OncoprintUtils', () => {
             // then
             assert.equal(info.sequenced, 1);
         });
+
+        it('counts altered samples that are not profiled for a given gene', () => {
+            // given - SAMPLE1 and SAMPLE2 have alterations (non-empty arrays),
+            // but only SAMPLE1 is profiled for BRCA1
+            // SAMPLE3 and SAMPLE4 are profiled but not altered
+            const dataByCase = {
+                samples: {
+                    SAMPLE1: [{} as any], // has alteration, profiled
+                    SAMPLE2: [{} as any], // has alteration, not profiled
+                    SAMPLE3: [], // no alteration, profiled
+                    SAMPLE4: [], // no alteration, profiled
+                },
+                patients: {},
+            };
+            const sequencedSampleKeysByGene = {
+                BRCA1: ['SAMPLE1', 'SAMPLE3', 'SAMPLE4'],
+            };
+            // when
+            const info = alterationInfoForCaseAggregatedDataByOQLLine(
+                true,
+                { cases: dataByCase, oql: { gene: 'BRCA1' } },
+                sequencedSampleKeysByGene,
+                {}
+            );
+            // then - SAMPLE1 is altered and sequenced, SAMPLE2 is altered but not sequenced
+            // SAMPLE3 and SAMPLE4 are sequenced but not altered
+            assert.equal(info.sequenced, 3);
+            assert.equal(info.alteredAndSequenced, 1);
+            assert.equal(info.altered, 2);
+            assert.equal(info.percent, '33%'); // 1 altered&sequenced / 3 sequenced = 33%
+        });
+
+        it('counts altered patients that are not profiled for a given gene', () => {
+            // given - PATIENT1 and PATIENT2 have alterations (non-empty arrays),
+            // but only PATIENT1 is profiled for TP53
+            // PATIENT3 and PATIENT4 are profiled but not altered
+            const dataByCase = {
+                samples: {},
+                patients: {
+                    PATIENT1: [{} as any], // has alteration, profiled
+                    PATIENT2: [{} as any], // has alteration, not profiled
+                    PATIENT3: [], // no alteration, profiled
+                    PATIENT4: [], // no alteration, profiled
+                },
+            };
+            const sequencedPatientKeysByGene = {
+                TP53: ['PATIENT1', 'PATIENT3', 'PATIENT4'],
+            };
+            // when
+            const info = alterationInfoForCaseAggregatedDataByOQLLine(
+                false,
+                { cases: dataByCase, oql: { gene: 'TP53' } },
+                {},
+                sequencedPatientKeysByGene
+            );
+            // then - PATIENT1 is altered and sequenced, PATIENT2 is altered but not sequenced
+            // PATIENT3 and PATIENT4 are sequenced but not altered
+            assert.equal(info.sequenced, 3);
+            assert.equal(info.alteredAndSequenced, 1);
+            assert.equal(info.altered, 2);
+            assert.equal(info.percent, '33%'); // 1 altered&sequenced / 3 sequenced = 33%
+        });
     });
 
     describe('makeGeneticTrackWith', () => {

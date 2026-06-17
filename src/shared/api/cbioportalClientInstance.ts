@@ -19,6 +19,6 @@ proxyColumnStore(clientColumnStore, 'getSamplesByKeyword');
 proxyColumnStore(clientColumnStore, 'getSampleInStudy');
 proxyColumnStore(clientColumnStore, 'getAllSamplesInStudy');
 proxyColumnStore(clientColumnStore, 'getAllSamplesOfPatientInStudy');
-//proxyColumnStore(clientColumnStore, 'getAllStudies');
+proxyColumnStore(clientColumnStore, 'getAllStudies');
 
 export default client;

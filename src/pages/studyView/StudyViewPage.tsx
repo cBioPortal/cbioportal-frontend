@@ -70,6 +70,10 @@ import { CustomChartData } from 'shared/api/session-service/sessionServiceModels
 import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
 import StudyViewPageSettingsMenu from 'pages/studyView/menu/StudyViewPageSettingsMenu';
+import {
+    shouldShowTempoWarning,
+    TempoAgreement,
+} from 'appShell/App/usageAgreements/TempoAgreement';
 import { Tour } from 'tours';
 import QueryString from 'qs';
 import setWindowVariable from 'shared/lib/setWindowVariable';
@@ -87,6 +91,24 @@ export interface IStudyViewPageProps {
 }
 
 export const MAX_URL_LENGTH = 300000;
+
+@observer
+class StudySpecificAgreements extends React.Component<{
+    store: StudyViewPageStore;
+}> {
+    render() {
+        const { store } = this.props;
+        const shouldShowTempoAgreement =
+            store.queriedPhysicalStudyIds.isComplete &&
+            shouldShowTempoWarning(store.queriedPhysicalStudyIds.result);
+
+        if (!shouldShowTempoAgreement) {
+            return null;
+        }
+
+        return <TempoAgreement />;
+    }
+}
 
 @observer
 export class StudyResultsSummary extends React.Component<
@@ -1151,6 +1173,7 @@ export default class StudyViewPage extends React.Component<
                 hideFooter={true}
                 className={'subhead-dark'}
             >
+                <StudySpecificAgreements store={this.store} />
                 <LoadingIndicator
                     size={'big'}
                     isLoading={this.isLoading}

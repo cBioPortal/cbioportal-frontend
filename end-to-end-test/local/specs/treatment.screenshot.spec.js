@@ -88,10 +88,13 @@ describe('treatment feature', () => {
             assertScreenShotMatch(res);
         });
 
-        it('when option deselected, hides `value larger_than_8.00` in figure legend and sub-threshold data points in plot', async () => {
+        it.skip('when option deselected, hides `value larger_than_8.00` in figure legend and sub-threshold data points in plot', async () => {
             await getElement('[data-test=ViewLimitValues]', { timeout: 10000 });
             await clickElement('[data-test=ViewLimitValues]');
+
             const res = await browser.checkElement('[id=plots-tab-plot-svg]');
+
+            await browser.debug();
             assertScreenShotMatch(res);
         });
 

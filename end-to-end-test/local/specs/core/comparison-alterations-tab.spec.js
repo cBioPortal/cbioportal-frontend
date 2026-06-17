@@ -19,8 +19,8 @@ describe('comparison alterations tab', () => {
     });
 
     it('shows basic counts', async () => {
-        const alteredCount = await selectAlteredCount('ABLIM1');
-        assert.strictEqual(alteredCount, '1 (8.33%)');
+        const alteredCount = await selectAlteredCount('ALK');
+        assert.strictEqual(alteredCount, '2 (18.18%)');
     });
 
     it('shows banner when no results retrieved', async () => {

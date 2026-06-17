@@ -3068,7 +3068,7 @@ export class ResultsViewPageStore extends AnalysisStore
         {
             invoke: async () =>
                 await getClient().getAllStudiesUsingGET({
-                    projection: REQUEST_ARG_ENUM.PROJECTION_SUMMARY,
+                    projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
                 }),
         },
         []
@@ -3238,7 +3238,6 @@ export class ResultsViewPageStore extends AnalysisStore
                     );
                 }
             );
-
             return Promise.all(promises).then((cnaData: any[]) =>
                 _.flattenDeep(cnaData)
             );
@@ -4259,10 +4258,14 @@ export class ResultsViewPageStore extends AnalysisStore
         {
             await: () => [this.studyIds],
             invoke: async () => {
-                return getClient().fetchStudiesUsingPOST({
-                    studyIds: this.studyIds.result!,
+                // we do this because get all studies (detailed projection) will be in cache
+                // for all users since it is the same for everyone
+                const allStudies = await getClient().getAllStudiesUsingGET({
                     projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
                 });
+                return allStudies.filter(study =>
+                    this.studyIds.result!.includes(study.studyId)
+                );
             },
         },
         []
