@@ -288,8 +288,8 @@ test.describe('WSI viewer — share view and centering', () => {
         await expect(page.locator('text=ETV1').first()).toBeVisible();
         await expect(page.locator('text=SOX9').first()).toBeVisible();
 
-        // Variant column should show protein changes (now in a separate cell, not in the link text).
-        await expect(page.locator('text=p.G13D').first()).toBeVisible();
+        // Variant column strips the "p." prefix for space saving.
+        await expect(page.locator('text=G13D').first()).toBeVisible();
 
         // Every link should be a single-gene OncoKB URL.
         const allHrefs = await oncokbLinks.evaluateAll(
