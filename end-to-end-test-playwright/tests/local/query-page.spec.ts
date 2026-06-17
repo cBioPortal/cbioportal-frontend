@@ -13,7 +13,7 @@ test.describe('study select page', () => {
         const searchTextInput = '[data-test=study-search-input]';
         const searchControlsMenu =
             '[data-test=study-search-controls-container]';
-        const referenceGenomeFormSection = '//h5[text()="Reference genome"]';
+        const referenceGenomeFormSection = '//h3[text()="Reference genome"]';
         const hg38StudyEntry = '//span[text()="Study HG38"]';
         const hg38Checkbox = '#input-hg38';
 
@@ -95,6 +95,129 @@ test.describe('study select page', () => {
                     .waitFor({ state: 'attached' });
                 await expect(sharedPage.locator(hg38Checkbox)).toBeChecked();
             });
+        });
+    });
+
+    test.describe('data type filter', () => {
+        const dataTypeFilterBtn =
+            '[data-test=dropdown-data-type-filter] button';
+        const dataTypeDropdown = '[data-test=dropdown-data-type-filter]';
+        const filterBadge = `${dataTypeDropdown} .oncoprintDropdownCount`;
+
+        test.describe.configure({ mode: 'serial' });
+
+        let page: import('@playwright/test').Page;
+
+        test.beforeAll(async ({ browser }) => {
+            page = await browser.newPage();
+            await goToUrlAndSetLocalStorage(page, CBIOPORTAL_URL, true);
+            await page
+                .locator('[data-test=cancerTypeListContainer]')
+                .waitFor({ state: 'attached' });
+            await goToUrlAndSetLocalStorage(page, CBIOPORTAL_URL, true);
+            await page
+                .locator('[data-test=cancerTypeListContainer]')
+                .waitFor({ state: 'attached' });
+            await page.locator(dataTypeFilterBtn).waitFor({ state: 'visible' });
+        });
+
+        test.afterAll(async () => {
+            await page.close();
+        });
+
+        test('opens the dropdown when the button is clicked', async () => {
+            await expect(
+                page.locator(`${dataTypeDropdown} .dropdown-menu`)
+            ).not.toBeVisible();
+            await page.locator(dataTypeFilterBtn).click();
+            await expect(
+                page.locator(`${dataTypeDropdown} .dropdown-menu`)
+            ).toBeVisible();
+        });
+
+        test('shows data type checkboxes in the dropdown', async () => {
+            await expect(
+                page.locator(`${dataTypeDropdown} input[type=checkbox]`).first()
+            ).toBeVisible();
+            await expect(
+                page.locator(`${dataTypeDropdown} label`, {
+                    hasText: 'Mutations',
+                })
+            ).toBeVisible();
+        });
+
+        test('filters studies and shows badge when a data type is selected', async () => {
+            await expect(page.locator(filterBadge)).not.toBeVisible();
+            await page
+                .locator(`${dataTypeDropdown} label`, { hasText: 'Mutations' })
+                .locator('input[type=checkbox]')
+                .click();
+            // Badge format: "N / total" — verify it appears
+            await expect(page.locator(filterBadge)).toBeVisible();
+            const badgeText = await page.locator(filterBadge).textContent();
+            expect(badgeText).toMatch(/^\s*\d+\s*\/\s*\d+\s*$/);
+        });
+
+        test('clears filter and hides badge when data type is unchecked', async () => {
+            // Re-open the dropdown (it stays open after checkbox click)
+            await expect(
+                page.locator(`${dataTypeDropdown} .dropdown-menu`)
+            ).toBeVisible();
+            await page
+                .locator(`${dataTypeDropdown} label`, { hasText: 'Mutations' })
+                .locator('input[type=checkbox]')
+                .click();
+            await expect(page.locator(filterBadge)).not.toBeVisible();
+            // Close the dropdown so the next test can open it cleanly
+            await page.locator(dataTypeFilterBtn).click();
+            await expect(
+                page.locator(`${dataTypeDropdown} .dropdown-menu`)
+            ).not.toBeVisible();
+        });
+
+        test('narrows study list to 3 entries when CNA filter is selected', async () => {
+            // Open the dropdown
+            await page.locator(dataTypeFilterBtn).click();
+            await expect(
+                page.locator(`${dataTypeDropdown} .dropdown-menu`)
+            ).toBeVisible();
+            // Select the CNA filter
+            await page
+                .locator(`${dataTypeDropdown} label`, { hasText: 'CNA' })
+                .locator('input[type=checkbox]')
+                .click();
+            // Close the dropdown by clicking outside
+            await page.locator(dataTypeFilterBtn).click();
+            // Wait for the study list to update
+            await page
+                .locator('[data-test=StudySelect]')
+                .first()
+                .waitFor({ state: 'visible' });
+            const studyCount = await page
+                .locator('[data-test=StudySelect]')
+                .count();
+            expect(studyCount).toBe(3);
+            // Clean up — uncheck CNA filter
+            await page.locator(dataTypeFilterBtn).click();
+            await page
+                .locator(`${dataTypeDropdown} label`, { hasText: 'CNA' })
+                .locator('input[type=checkbox]')
+                .click();
+            await page.locator(dataTypeFilterBtn).click();
+        });
+
+        test('closes the dropdown when clicking outside', async () => {
+            await page.locator(dataTypeFilterBtn).click();
+            await expect(
+                page.locator(`${dataTypeDropdown} .dropdown-menu`)
+            ).toBeVisible();
+            // Click somewhere outside the dropdown
+            await page.locator('[data-test=cancerTypeListContainer]').click({
+                position: { x: 5, y: 5 },
+            });
+            await expect(
+                page.locator(`${dataTypeDropdown} .dropdown-menu`)
+            ).not.toBeVisible();
         });
     });
 });

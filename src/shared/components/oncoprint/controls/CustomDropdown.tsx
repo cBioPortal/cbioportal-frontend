@@ -32,7 +32,7 @@ class CustomMenu extends React.Component<any, {}> {
         return (
             <div
                 className={classNames('dropdown-menu', className)}
-                style={{ ...styles, padding: '6px' }}
+                style={{ padding: '6px', ...styles }}
             >
                 {children}
             </div>
