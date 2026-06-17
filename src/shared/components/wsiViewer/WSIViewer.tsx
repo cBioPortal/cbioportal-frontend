@@ -1000,7 +1000,10 @@ export default class WSIViewer extends React.Component<Props, {}> {
                 zoomOutButton: `${this.navId}-zoom-out`,
                 homeButton: `${this.navId}-home`,
                 showNavigator: true,
-                navigatorPosition: 'BOTTOM_RIGHT',
+                // ABSOLUTE + navigatorBottom offsets the thumbnail above the CoordBar (~40px tall)
+                navigatorPosition: 'ABSOLUTE',
+                navigatorBottom: '48px',
+                navigatorRight: '8px',
                 crossOriginPolicy: 'Anonymous',
                 prefixUrl: '/reactapp/osd-images/',
                 showFullPageControl: false,
