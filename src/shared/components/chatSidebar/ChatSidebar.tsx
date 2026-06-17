@@ -3,6 +3,7 @@ import { observer } from 'mobx-react';
 import { ChatStore } from './store/ChatStore';
 import MessageList from './components/MessageList';
 import ChatComposer from './components/ChatComposer';
+import AccessKeyModal from './components/AccessKeyModal';
 import styles from './ChatSidebar.module.scss';
 
 interface ChatSidebarProps {
@@ -15,6 +16,10 @@ export default class ChatSidebar extends React.Component<ChatSidebarProps> {
         const { store } = this.props;
 
         if (!store.isOpen) return null;
+
+        if (store.needsKey) {
+            return <AccessKeyModal store={store} />;
+        }
 
         return (
             <div className={styles.sidebar}>

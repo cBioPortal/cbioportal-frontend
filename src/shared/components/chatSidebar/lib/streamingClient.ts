@@ -58,21 +58,34 @@ function toUIMessages(messages: ChatMessage[]) {
 export async function streamChat(
     messages: ChatMessage[],
     callbacks: StreamCallbacks,
-    signal: AbortSignal
+    signal: AbortSignal,
+    accessKey: string | null
 ): Promise<void> {
     const uiMessages = toUIMessages(messages);
+
+    const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+    };
+    if (accessKey) {
+        headers['Authorization'] = `Bearer ${accessKey}`;
+    }
 
     let response: Response;
     try {
         response = await fetch(`${ASSISTANT_API_URL}/chat`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers,
             body: JSON.stringify({ messages: uiMessages }),
             signal,
         });
     } catch (err) {
         if (err.name === 'AbortError') return;
         callbacks.onError(err instanceof Error ? err : new Error(String(err)));
+        return;
+    }
+
+    if (response.status === 401) {
+        callbacks.onUnauthorized();
         return;
     }
 

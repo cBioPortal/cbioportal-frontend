@@ -13,6 +13,12 @@ export class ChatStore {
     @observable status: ChatStatus = 'idle';
     @observable errorMessage: string | null = null;
     @observable isOpen: boolean = false;
+    @observable accessKey: string | null = localStorage.getItem(
+        'cbioportal.assistantKey'
+    );
+    @observable needsKey: boolean = !localStorage.getItem(
+        'cbioportal.assistantKey'
+    );
 
     private abortController: AbortController | null = null;
 
@@ -258,6 +264,25 @@ export class ChatStore {
                         });
                     });
                 },
+                onUnauthorized: () => {
+                    runInAction(() => {
+                        this.clearAccessKey();
+                        this.status = 'idle';
+                        this.abortController = null;
+                        this.partIndexMap.clear();
+                        this.pendingToolExecutions = [];
+                        this.clientToolCallsThisTurn = new Set();
+                        const msg = this.messages[
+                            this.currentAssistantMsgIndex
+                        ];
+                        if (msg && msg.parts.length === 0) {
+                            this.messages.splice(
+                                this.currentAssistantMsgIndex,
+                                1
+                            );
+                        }
+                    });
+                },
                 onError: (err: Error) => {
                     runInAction(() => {
                         this.status = 'error';
@@ -279,7 +304,8 @@ export class ChatStore {
                     });
                 },
             },
-            signal
+            signal,
+            this.accessKey
         );
     }
 
@@ -379,6 +405,20 @@ export class ChatStore {
         if (this.status === 'error') {
             this.status = 'idle';
         }
+    }
+
+    @action
+    saveAccessKey(token: string) {
+        localStorage.setItem('cbioportal.assistantKey', token);
+        this.accessKey = token;
+        this.needsKey = false;
+    }
+
+    @action
+    clearAccessKey() {
+        localStorage.removeItem('cbioportal.assistantKey');
+        this.accessKey = null;
+        this.needsKey = true;
     }
 }
 

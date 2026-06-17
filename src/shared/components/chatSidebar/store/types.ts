@@ -61,6 +61,7 @@ export interface StreamCallbacks {
     // produce no output event — the frontend executes them and supplies the
     // result itself.
     onToolOutputAvailable: (toolCallId: string, output: unknown) => void;
+    onUnauthorized: () => void;
     onFinish: () => void;
     onError: (err: Error) => void;
 }
