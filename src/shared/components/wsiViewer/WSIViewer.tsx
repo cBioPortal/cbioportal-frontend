@@ -13,6 +13,10 @@ import {
     CNADetail,
 } from './wsiViewerTypes';
 
+// Hoisted at module scope so the require() is not called on every render.
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const civicLogoSrc: string = require('../../../../rootImages/civic-logo.png');
+
 // ---- design tokens (matches iframe viewer) ----
 const C = {
     blue: '#2986e2',
@@ -179,9 +183,19 @@ export default class WSIViewer extends React.Component<Props, {}> {
     private spinnerTimer: ReturnType<typeof setTimeout> | null = null;
     /** Debounce timer: delays mountOSD so rapid clicks only trigger one fetch */
     private selectSlideDebounce: ReturnType<typeof setTimeout> | null = null;
+    /** Debounce timer for writeHashState — avoids calling replaceState on every animation frame */
+    private writeHashTimer: ReturnType<typeof setTimeout> | null = null;
 
     /** Stable per-instance ID prefix for OSD custom nav button elements */
     private navId = `wsi-nav-${Math.random().toString(36).slice(2, 9)}`;
+
+    // ---- stable callbacks (prevent prop-equality churn on child components) ----
+    private readonly handleFilterChange = action((f: 'all' | 'hne' | 'ihc') => { this.stainFilter = f; });
+    private readonly handleSelectSlide = (slide: Slide, sample: Sample) => this.selectSlide(slide, sample);
+    private readonly handleChangeX = action((v: string) => { this.coordInputX = v; });
+    private readonly handleChangeY = action((v: string) => { this.coordInputY = v; });
+    private readonly handleCopyLink = () => this.copyViewLink();
+    private readonly handleDownload = () => this.downloadView();
 
     constructor(props: Props) {
         super(props);
@@ -195,25 +209,35 @@ export default class WSIViewer extends React.Component<Props, {}> {
      * Hash format: #wsi:slide=<imageId>&x=<px>&y=<py>&z=<zoom>
      * Does not clobber unrelated hash fragments since we namespace with "wsi:".
      */
+    /**
+     * Encode current viewer state into the URL hash so the view can be shared.
+     * Hash format: #wsi:slide=<imageId>&x=<px>&y=<py>&z=<zoom>
+     * Does not clobber unrelated hash fragments since we namespace with "wsi:".
+     * Debounced to 80ms so pan/zoom animations don't hammer replaceState.
+     */
     private writeHashState() {
-        if (typeof window === 'undefined' || !this.osdViewer?.viewport || !this.selectedSlide) return;
-        try {
-            const vp = this.osdViewer.viewport;
-            const center = vp.viewportToImageCoordinates(vp.getCenter());
-            const zoom = vp.getZoom();
-            const params = new URLSearchParams({
-                slide: this.selectedSlide.image_id,
-                x: Math.round(center.x).toString(),
-                y: Math.round(center.y).toString(),
-                z: zoom.toFixed(6),
-            });
-            // Use replaceState so we don't fire a hashchange event (which could
-            // interfere with cBioPortal's own hash-based navigation) and don't
-            // pollute the browser history on every pan/zoom.
-            const url = new URL(window.location.href);
-            url.hash = `wsi:${params.toString()}`;
-            window.history.replaceState(null, '', url.toString());
-        } catch (_) { /* viewport not ready */ }
+        if (this.writeHashTimer !== null) clearTimeout(this.writeHashTimer);
+        this.writeHashTimer = setTimeout(() => {
+            this.writeHashTimer = null;
+            if (typeof window === 'undefined' || !this.osdViewer?.viewport || !this.selectedSlide) return;
+            try {
+                const vp = this.osdViewer.viewport;
+                const center = vp.viewportToImageCoordinates(vp.getCenter());
+                const zoom = vp.getZoom();
+                const params = new URLSearchParams({
+                    slide: this.selectedSlide.image_id,
+                    x: Math.round(center.x).toString(),
+                    y: Math.round(center.y).toString(),
+                    z: zoom.toFixed(6),
+                });
+                // Use replaceState so we don't fire a hashchange event (which could
+                // interfere with cBioPortal's own hash-based navigation) and don't
+                // pollute the browser history on every pan/zoom.
+                const url = new URL(window.location.href);
+                url.hash = `wsi:${params.toString()}`;
+                window.history.replaceState(null, '', url.toString());
+            } catch (_) { /* viewport not ready */ }
+        }, 80);
     }
 
     /** Parse the #wsi:... hash; returns null if not present or malformed. */
@@ -251,6 +275,10 @@ export default class WSIViewer extends React.Component<Props, {}> {
         if (this.selectSlideDebounce !== null) {
             clearTimeout(this.selectSlideDebounce);
             this.selectSlideDebounce = null;
+        }
+        if (this.writeHashTimer !== null) {
+            clearTimeout(this.writeHashTimer);
+            this.writeHashTimer = null;
         }
         this.destroyViewer();
     }
@@ -544,8 +572,6 @@ export default class WSIViewer extends React.Component<Props, {}> {
             `${base}/api/mutations/fetch?projection=DETAILED`,
             { sampleMolecularIdentifiers }
         );
-        if (!mutations) return;
-
         if (!mutations) return;
 
         // Build per-sample detail maps and mutation lists from ALL returned mutations.
@@ -1098,7 +1124,13 @@ export default class WSIViewer extends React.Component<Props, {}> {
                 try {
                     const vpPoint = viewer.viewport.pointFromPixel(event.position);
                     const imgPoint = viewer.viewport.viewportToImageCoordinates(vpPoint);
-                    this.cursorPos = { x: Math.round(imgPoint.x), y: Math.round(imgPoint.y) };
+                    const nx = Math.round(imgPoint.x);
+                    const ny = Math.round(imgPoint.y);
+                    // Only write observable when values actually change to avoid
+                    // triggering MobX reactions on every pixel of mouse movement.
+                    if (!this.cursorPos || this.cursorPos.x !== nx || this.cursorPos.y !== ny) {
+                        this.cursorPos = { x: nx, y: ny };
+                    }
                 } catch (_) { /* ignore during init */ }
             }),
             exitHandler: action(() => { this.cursorPos = null; }),
@@ -1134,8 +1166,8 @@ export default class WSIViewer extends React.Component<Props, {}> {
                     hierarchy={hierarchy}
                     selectedSlide={selectedSlide}
                     stainFilter={stainFilter}
-                    onFilterChange={action((f: 'all'|'hne'|'ihc') => { this.stainFilter = f; })}
-                    onSelectSlide={(slide, sample) => this.selectSlide(slide, sample)}
+                    onFilterChange={this.handleFilterChange}
+                    onSelectSlide={this.handleSelectSlide}
                 />
 
                 {/* OSD viewer */}
@@ -1196,11 +1228,11 @@ export default class WSIViewer extends React.Component<Props, {}> {
                             inputY={this.coordInputY}
                             cursorPos={this.cursorPos}
                             mpp={selectedMeta?.mpp}
-                            onChangeX={action((v: string) => { this.coordInputX = v; })}
-                            onChangeY={action((v: string) => { this.coordInputY = v; })}
+                            onChangeX={this.handleChangeX}
+                            onChangeY={this.handleChangeY}
                             onGo={this.goToCoordinates}
-                            onCopyLink={() => this.copyViewLink()}
-                            onDownload={() => this.downloadView()}
+                            onCopyLink={this.handleCopyLink}
+                            onDownload={this.handleDownload}
                         />
                     )}
                 </div>
@@ -1445,12 +1477,15 @@ interface NavPanelProps {
 }
 
 function NavPanel({ hierarchy, selectedSlide, stainFilter, onFilterChange, onSelectSlide }: NavPanelProps) {
-    const allSlides = hierarchy.samples.flatMap(s => s.parts.flatMap(p => p.blocks.flatMap(b => b.slides)));
-    const counts = {
+    const allSlides = React.useMemo(
+        () => hierarchy.samples.flatMap(s => s.parts.flatMap(p => p.blocks.flatMap(b => b.slides))),
+        [hierarchy]
+    );
+    const counts = React.useMemo(() => ({
         all: allSlides.length,
         hne: allSlides.filter(s => s.is_hne).length,
         ihc: allSlides.filter(s => s.is_ihc).length,
-    };
+    }), [allSlides]);
     const chips: Array<{ key: 'all' | 'hne' | 'ihc'; label: string; color?: string }> = [
         { key: 'all', label: 'All' },
         { key: 'hne', label: '● H&E', color: C.blue },
@@ -1517,7 +1552,10 @@ interface SampleNodeProps {
 function SampleNode({ sample, selectedSlide, stainFilter, onSelectSlide }: SampleNodeProps) {
     const [open, setOpen] = React.useState(true);
 
-    const allSlides = sample.parts.flatMap(p => p.blocks.flatMap(b => b.slides));
+    const allSlides = React.useMemo(
+        () => sample.parts.flatMap(p => p.blocks.flatMap(b => b.slides)),
+        [sample]
+    );
     const totSlides = allSlides.length;
     const servableSlides = allSlides.filter(s => s.can_serve_tiles).length;
 
@@ -1534,29 +1572,36 @@ function SampleNode({ sample, selectedSlide, stainFilter, onSelectSlide }: Sampl
         normalizeBlockLabel(b.block_label, b.block_number);
 
     // Detect multi-part patient (part_description varies → show anatomical site per slide)
-    const allPartDescs = new Set(
-        sample.parts.flatMap(p => p.blocks.flatMap(b =>
-            b.slides.map(sl => sl.part_description || '')
-        )).filter(Boolean)
+    const allPartDescs = React.useMemo(
+        () => new Set(
+            sample.parts.flatMap(p => p.blocks.flatMap(b =>
+                b.slides.map(sl => sl.part_description || '')
+            )).filter(Boolean)
+        ),
+        [sample]
     );
     const multiPart = allPartDescs.size > 1;
 
     // Flatten + sort slides — block label is now the primary label for H&E, not a badge
-    const sortedSlides: Array<{ slide: Slide; blockLabel: string | null }> = [];
-    for (const part of sample.parts) {
-        for (const b of part.blocks) {
-            const lbl = blockId(b);
-            const blockLabel = DUMMY.has(lbl) ? null : lbl;
-            for (const sl of b.slides) sortedSlides.push({ slide: sl, blockLabel });
+    const sortedSlides = React.useMemo(() => {
+        const result: Array<{ slide: Slide; blockLabel: string | null }> = [];
+        for (const part of sample.parts) {
+            for (const b of part.blocks) {
+                const lbl = blockId(b);
+                const blockLabel = DUMMY.has(lbl) ? null : lbl;
+                for (const sl of b.slides) result.push({ slide: sl, blockLabel });
+            }
         }
-    }
-    // Sort purely chronologically by block_number
-    sortedSlides.sort((a, b) => {
-        const na = Number(a.slide.block_number) || 0;
-        const nb = Number(b.slide.block_number) || 0;
-        if (na !== nb) return na - nb;
-        return (a.slide.stain_name || '').localeCompare(b.slide.stain_name || '');
-    });
+        // Sort purely chronologically by block_number
+        result.sort((a, b) => {
+            const na = Number(a.slide.block_number) || 0;
+            const nb = Number(b.slide.block_number) || 0;
+            if (na !== nb) return na - nb;
+            return (a.slide.stain_name || '').localeCompare(b.slide.stain_name || '');
+        });
+        return result;
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [sample]);
 
     return (
         <div style={{ borderBottom: `1px solid ${C.border}` }}>
@@ -1832,7 +1877,15 @@ function MetaSidebar({ slide, sample, meta, tileServerBase, studyId }: MetaSideb
     const sampleUrl = (studyId && sample?.sample_id)
         ? buildSampleUrl(studyId, sample.sample_id)
         : undefined;
-    const seqRows = (slide && sample) ? buildSeqRows(sample, sampleUrl) : [];
+    const seqRows = React.useMemo(
+        () => (slide && sample) ? buildSeqRows(sample, sampleUrl) : [],
+        [slide, sample, sampleUrl]
+    );
+    const wsiRows = React.useMemo(() => meta ? buildWsiRows(slide, meta) : [], [slide, meta]);
+    const pathRows = React.useMemo(
+        () => (slide && sample) ? buildPathRows(slide, sample, studyId) : [],
+        [slide, sample, studyId]
+    );
 
     return (
         <div style={{
@@ -1854,7 +1907,7 @@ function MetaSidebar({ slide, sample, meta, tileServerBase, studyId }: MetaSideb
             {/* Image Properties */}
             <SbSection title="Image Properties">
                 {meta ? (
-                    <MetaTable rows={buildWsiRows(slide, meta)} />
+                    <MetaTable rows={wsiRows} />
                 ) : (
                     <span style={{ color: '#bbb', fontSize: 11 }}>—</span>
                 )}
@@ -1863,7 +1916,7 @@ function MetaSidebar({ slide, sample, meta, tileServerBase, studyId }: MetaSideb
             {/* Pathology */}
             <SbSection title="Pathology">
                 {slide && sample ? (
-                    <MetaTable rows={buildPathRows(slide, sample, studyId)} />
+                    <MetaTable rows={pathRows} />
                 ) : (
                     <span style={{ color: '#bbb', fontSize: 11 }}>—</span>
                 )}
@@ -2007,21 +2060,22 @@ function buildPathRows(slide: Slide, sample: Sample, studyId?: string): MetaRow[
  * Convert cBioPortal mutation type string to a short human-readable label.
  * e.g. "Missense_Mutation" → "Missense", "Frame_Shift_Del" → "Frameshift del"
  */
+const MUTATION_TYPE_MAP: Record<string, string> = {
+    Missense_Mutation: 'Missense',
+    Nonsense_Mutation: 'Nonsense',
+    Frame_Shift_Del: 'Frameshift del',
+    Frame_Shift_Ins: 'Frameshift ins',
+    In_Frame_Del: 'In-frame del',
+    In_Frame_Ins: 'In-frame ins',
+    Splice_Site: 'Splice site',
+    Translation_Start_Site: 'Start site',
+    Nonstop_Mutation: 'Nonstop',
+    Silent: 'Silent',
+};
+
 function formatMutationType(t: string): string {
     if (!t) return '';
-    const map: Record<string, string> = {
-        Missense_Mutation: 'Missense',
-        Nonsense_Mutation: 'Nonsense',
-        Frame_Shift_Del: 'Frameshift del',
-        Frame_Shift_Ins: 'Frameshift ins',
-        In_Frame_Del: 'In-frame del',
-        In_Frame_Ins: 'In-frame ins',
-        Splice_Site: 'Splice site',
-        Translation_Start_Site: 'Start site',
-        Nonstop_Mutation: 'Nonstop',
-        Silent: 'Silent',
-    };
-    return map[t] ?? t.replace(/_/g, ' ');
+    return MUTATION_TYPE_MAP[t] ?? t.replace(/_/g, ' ');
 }
 
 function shortMutationType(type: string | undefined): string {
@@ -2075,7 +2129,7 @@ const OncoKbIcon = ({ oncogenic }: { oncogenic?: string }) => {
 /** CIViC logo image — matches cBioPortal's annotation column CIViC badge. */
 const CivicIcon = () => (
     <img
-        src={require('../../../../rootImages/civic-logo.png')}
+        src={civicLogoSrc}
         width={14} height={14}
         style={inlineIconStyle}
         alt="CIViC"
