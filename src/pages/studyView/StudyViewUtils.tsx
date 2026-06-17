@@ -326,9 +326,9 @@ export const SPECIAL_CHARTS: ChartMetaWithDimensionAndChartType[] = [
     },
     {
         uniqueKey: SpecialChartsUniqueKeyEnum.MRNA_VIOLIN_PLOT,
-        displayName: 'mRNA Expression (10 Genes)',
+        displayName: 'mRNA Expression (ADC Targets)',
         description:
-            'mRNA expression violin plots for TP53, EGFR, KRAS, MYC, PTEN, RB1, CDH1, PIK3CA, BRCA1, BRCA2',
+            'mRNA expression violin plots for ADC targets in trial at MSK. Genes shown depend on availability in this study.',
         chartType: ChartTypeEnum.MRNA_VIOLIN_PLOT,
         dataType: ChartMetaDataTypeEnum.GENOMIC,
         patientAttribute: false,
