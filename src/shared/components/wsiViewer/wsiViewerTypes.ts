@@ -37,6 +37,19 @@ export interface MutationDetail {
     type?: string;      // human-readable mutation type, e.g. "Missense"
     vaf?: number;       // 0–100 percent
     annotation?: string; // driverFilterAnnotation, e.g. "KRAS G13D is a hotspot"
+    cohortFrequency?: number; // fraction 0–1: how often this position mutated in study cohort
+    // OncoKB annotation fields (populated by fetchAndMergeOncoKbAnnotations)
+    oncogenic?: string;      // "Oncogenic" | "Likely Oncogenic" | "Likely Neutral" | "Unknown"
+    mutationEffect?: string; // "Gain-of-function" | "Loss-of-function" | "Unknown"
+    hotspot?: boolean;
+    hasCivic?: boolean;   // true when OncoKB variantExist=true (CIViC DB has an entry)
+    geneSummary?: string;
+    variantSummary?: string;
+    // Fields used internally to build the OncoKB batch request (not displayed)
+    entrezGeneId?: number;
+    consequence?: string;    // e.g. "Missense_Mutation"
+    proteinStart?: number;
+    proteinEnd?: number;
 }
 
 /** Single discrete copy-number alteration event from MSK-IMPACT. */
