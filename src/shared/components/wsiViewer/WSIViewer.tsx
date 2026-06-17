@@ -696,6 +696,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
             hotspot?: boolean;
             geneSummary?: string;
             variantSummary?: string;
+            variantExist?: boolean;
         }>;
         try {
             annotations = await postJson<typeof annotations[0][]>(`${tileOrigin}/api/oncokb/annotate`, items) ?? [];
@@ -718,6 +719,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
                 d.hotspot = ann.hotspot;
                 d.geneSummary = ann.geneSummary;
                 d.variantSummary = ann.variantSummary;
+                d.hasCivic = ann.variantExist === true;
             }
         })();
     }
@@ -2219,11 +2221,13 @@ function MutationTable({ sample }: { sample: Sample }): React.ReactElement | nul
                                        onClick={e => e.stopPropagation()}>
                                         <OncoKbIcon oncogenic={d?.oncogenic} />
                                     </a>
+                                    {d?.hasCivic && (
                                     <a href={civicUrl} target="_blank" rel="noopener noreferrer"
                                        title={`CIViC: ${gene}`}
                                        style={{ marginRight: isHotspot ? 3 : 0, textDecoration: 'none', display: 'inline-block' }}>
                                         <CivicIcon />
                                     </a>
+                                    )}
                                     {isHotspot && (
                                         <a href={`https://www.cancerhotspots.org/#/gene/${encodeURIComponent(gene)}`}
                                            target="_blank" rel="noopener noreferrer"
