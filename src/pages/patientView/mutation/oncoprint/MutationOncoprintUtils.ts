@@ -71,7 +71,22 @@ export function makeMutationHeatmapData(
                     : sample.sampleId;
             const isUncalled =
                 mutation.mutationStatus.toLowerCase() === 'uncalled';
-            if (!isUncalled || mutation.tumorAltCount > 0) {
+            if (isUncalled && mutation.tumorAltCount <= 0) {
+                // Uncalled with no variant reads: mark as not mutated but
+                // keep per-sample read data so the tooltip can show coverage.
+                mutationKeys[mutationId] = true;
+                oncoprintData.push({
+                    profile_data: null,
+                    sample: sample.sampleId,
+                    patient: sample.patientId,
+                    study_id: sample.studyId,
+                    hugo_gene_symbol: '', // not used by us
+                    mutation,
+                    uid,
+                    mutationId,
+                    mutationStatus: MutationStatus.PROFILED_BUT_NOT_MUTATED,
+                });
+            } else if (!isUncalled || mutation.tumorAltCount > 0) {
                 mutationKeys[mutationId] = true;
                 let vafReport = getVariantAlleleFrequency(mutation);
 

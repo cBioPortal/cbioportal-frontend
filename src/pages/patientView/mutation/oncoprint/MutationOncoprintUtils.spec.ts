@@ -1343,8 +1343,8 @@ describe('MutationOncoprintUtils', () => {
         describe('uncalled mutations', () => {
             it('correctly handles called mutation in one sample with uncalled (0 alt reads) in another', () => {
                 // ARID1A X721_splice: called in sample1, uncalled with 0 alt reads in sample2
-                // The uncalled mutation with 0 alt reads should NOT produce a
-                // PROFILED_WITH_READS_BUT_UNCALLED entry (filtered by tumorAltCount > 0)
+                // The uncalled mutation with 0 alt reads should produce a
+                // PROFILED_BUT_NOT_MUTATED entry with its own read counts preserved
                 const result = makeMutationHeatmapData(
                     [makeSample(1), makeSample(2)],
                     [
@@ -1376,14 +1376,18 @@ describe('MutationOncoprintUtils', () => {
                 assert.equal(sample1Data[0].mutation.tumorAltCount, 49);
                 assert.equal(sample1Data[0].mutation.tumorRefCount, 51);
 
-                // sample2 should have PROFILED_BUT_NOT_MUTATED (uncalled with 0 alt reads
-                // is filtered out and goes through the noData path)
+                // sample2 should have PROFILED_BUT_NOT_MUTATED with its own
+                // read counts (from the uncalled mutation entry)
                 const sample2Data = result['sample2'];
                 assert.equal(sample2Data.length, 1);
                 assert.equal(
                     sample2Data[0].mutationStatus,
                     MutationStatus.PROFILED_BUT_NOT_MUTATED
                 );
+                // The mutation object should be the uncalled mutation's own data
+                assert.equal(sample2Data[0].mutation.tumorAltCount, 0);
+                assert.equal(sample2Data[0].mutation.tumorRefCount, 100);
+                assert.equal(sample2Data[0].mutation.sampleId, 'sample2');
             });
 
             it('includes uncalled mutation with positive alt reads as PROFILED_WITH_READS_BUT_UNCALLED', () => {

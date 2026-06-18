@@ -36,10 +36,7 @@ import SampleManager from '../../SampleManager';
 import WindowStore from '../../../../shared/components/window/WindowStore';
 import { generateMutationIdByGeneAndProteinChangeAndEvent } from '../../../../shared/lib/StoreUtils';
 import LabeledCheckbox from '../../../../shared/components/labeledCheckbox/LabeledCheckbox';
-import {
-    mutationTooltip,
-    MutationStatus,
-} from '../PatientViewMutationsTabUtils';
+import { mutationTooltip } from '../PatientViewMutationsTabUtils';
 import Slider from 'react-rangeslider';
 import 'react-rangeslider/lib/index.css';
 import styles from './styles.module.scss';
@@ -459,12 +456,9 @@ export default class MutationOncoprint extends React.Component<
                     hasColumnSpacing: true,
                     tooltip: (data: IMutationOncoprintTrackDatum[]) => {
                         const d = data[0];
-                        // Only use mutation's VAF data when it belongs to this sample
+                        // Use mutation's VAF data only when it belongs to this sample
                         const vafReport =
-                            d.mutationStatus ===
-                                MutationStatus.MUTATED_WITH_VAF ||
-                            d.mutationStatus ===
-                                MutationStatus.PROFILED_WITH_READS_BUT_UNCALLED
+                            d.mutation.sampleId === d.sample
                                 ? getVariantAlleleFrequency(d.mutation)
                                 : null;
                         const tooltipJSX = mutationTooltip(d.mutation, {
@@ -527,12 +521,9 @@ export default class MutationOncoprint extends React.Component<
                     hasColumnSpacing: true,
                     tooltip: (data: IMutationOncoprintTrackDatum[]) => {
                         const d = data[0];
-                        // Only use mutation's VAF data when it belongs to this sample
+                        // Use mutation's VAF data only when it belongs to this sample
                         const vafReport =
-                            d.mutationStatus ===
-                                MutationStatus.MUTATED_WITH_VAF ||
-                            d.mutationStatus ===
-                                MutationStatus.PROFILED_WITH_READS_BUT_UNCALLED
+                            d.mutation.sampleId === d.sample
                                 ? getVariantAlleleFrequency(d.mutation)
                                 : null;
                         const tooltipJSX = mutationTooltip(d.mutation, {
