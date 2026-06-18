@@ -38,9 +38,13 @@ export function mutationTooltip(
                 ).toFixed(2)} (${vafFraction(sampleSpecificInfo.vafReport!)}))`;
                 break;
             case MutationStatus.PROFILED_BUT_NOT_MUTATED:
-                vafExplanation = `Mutation not detected (VAF: ${(
-                    sampleSpecificInfo.vafReport?.vaf || 0
-                ).toFixed(2)} (${vafFraction(sampleSpecificInfo.vafReport!)}))`;
+                if (sampleSpecificInfo.vafReport) {
+                    vafExplanation = `Mutation not detected (VAF: ${sampleSpecificInfo.vafReport.vaf.toFixed(
+                        2
+                    )} (${vafFraction(sampleSpecificInfo.vafReport)}))`;
+                } else {
+                    vafExplanation = `Mutation not detected`;
+                }
                 break;
             case MutationStatus.NOT_PROFILED:
             default:
