@@ -133,10 +133,28 @@ $study-view-table-icon-size: 10px;
 
 .cancerGeneIcon {
     margin-right: 5px;
+    cursor: pointer;
 }
 
 .cancerGeneIcon > img {
     height: $study-view-table-icon-size;
+}
+
+.geneFilterDropdownMenu {
+    min-width: 170px;
+    white-space: nowrap;
+
+    label {
+        display: block;
+        margin: 3px 0;
+        font-weight: normal;
+        cursor: pointer;
+    }
+}
+
+.geneFilterDropdownTitle {
+    margin-bottom: 4px;
+    font-weight: bold;
 }
 
 .gistic,

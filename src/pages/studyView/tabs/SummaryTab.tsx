@@ -473,36 +473,9 @@ export class StudySummaryTab extends React.Component<
                     .filterMutatedGenesTableByCancerGenes,
                 onChangeCancerGeneFilter: this.store
                     .updateMutatedGenesTableByCancerGenesFilter,
-                alterationFilterEnabled: getServerConfig()
-                    .skin_show_settings_menu,
-                filterAlterations: this.store.isGlobalMutationFilterActive,
-            }),
-            [ChartTypeEnum.ONCOTREE2GENES_LLM_TABLE]: () => ({
-                filters: this.store.getGeneFiltersByUniqueKey(
-                    chartMeta.uniqueKey
-                ),
-                promise: this.store.oncotree2GenesTableRowData,
-                onValueSelection: this.store.addGeneFilters,
-                onResetSelection: () =>
-                    this.store.resetGeneFilter(chartMeta.uniqueKey),
-                selectedGenes: this.store.selectedGenes,
-                onGeneSelect: this.store.onCheckGene,
-                id: 'oncotree2genes-llm-table',
-                title: this.store.getChartTitle(
-                    ChartTypeEnum.ONCOTREE2GENES_LLM_TABLE,
-                    props.title
-                ),
-                getData: () =>
-                    getMutatedGenesDownloadData(
-                        this.store.oncotree2GenesTableRowData,
-                        this.store.oncokbCancerGeneFilterEnabled
-                    ),
-                genePanelCache: this.store.genePanelCache,
-                downloadTypes: ['Data'],
-                filterByCancerGenes: this.store
-                    .filterMutatedGenesTableByCancerGenes,
-                onChangeCancerGeneFilter: this.store
-                    .updateMutatedGenesTableByCancerGenesFilter,
+                filterByO2gl: this.store.filterMutatedGenesTableByO2gl,
+                onChangeO2glFilter: this.store
+                    .updateMutatedGenesTableByO2glFilter,
                 alterationFilterEnabled: getServerConfig()
                     .skin_show_settings_menu,
                 filterAlterations: this.store.isGlobalMutationFilterActive,
@@ -566,6 +539,8 @@ export class StudySummaryTab extends React.Component<
                 filterByCancerGenes: this.store.filterSVGenesTableByCancerGenes,
                 onChangeCancerGeneFilter: this.store
                     .updateSVGenesTableByCancerGenesFilter,
+                filterByO2gl: this.store.filterSVGenesTableByO2gl,
+                onChangeO2glFilter: this.store.updateSVGenesTableByO2glFilter,
                 alterationFilterEnabled: getServerConfig()
                     .skin_show_settings_menu,
                 filterAlterations: this.store.isGlobalMutationFilterActive,
@@ -625,6 +600,8 @@ export class StudySummaryTab extends React.Component<
                     .filterCNAGenesTableByCancerGenes,
                 onChangeCancerGeneFilter: this.store
                     .updateCNAGenesTableByCancerGenesFilter,
+                filterByO2gl: this.store.filterCNAGenesTableByO2gl,
+                onChangeO2glFilter: this.store.updateCNAGenesTableByO2glFilter,
                 alterationFilterEnabled: getServerConfig()
                     .skin_show_settings_menu,
                 filterAlterations: this.store.isGlobalAlterationFilterActive,
@@ -926,6 +903,8 @@ export class StudySummaryTab extends React.Component<
             studyViewFilters: this.store.filters,
             analysisGroupsSettings: this.store.analysisGroupsSettings,
             cancerGeneFilterEnabled: this.store.oncokbCancerGeneFilterEnabled,
+            o2glFilterEnabled: this.store.isO2glFilterAvailable,
+            o2glGenes: this.store.o2glFilterGenes,
             setComparisonConfirmationModal: this.store
                 .setComparisonConfirmationModal,
         };

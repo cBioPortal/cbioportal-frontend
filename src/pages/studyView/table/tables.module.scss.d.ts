@@ -13,6 +13,8 @@ declare const styles: {
   readonly "del": string;
   readonly "displayFlex": string;
   readonly "evenRow": string;
+  readonly "geneFilterDropdownMenu": string;
+  readonly "geneFilterDropdownTitle": string;
   readonly "geneSymbol": string;
   readonly "gistic": string;
   readonly "headerColumn": string;

@@ -70,7 +70,6 @@ export enum ChartTypeEnum {
     VIOLIN_PLOT_TABLE = 'VIOLIN_PLOT_TABLE',
     VARIANT_ANNOTATIONS_TABLE = 'VARIANT_ANNOTATIONS_TABLE',
     MUTATED_GENES_TABLE = 'MUTATED_GENES_TABLE',
-    ONCOTREE2GENES_LLM_TABLE = 'ONCOTREE2GENES_LLM_TABLE',
     MUTATION_TYPE_COUNTS_TABLE = 'MUTATION_TYPE_COUNTS_TABLE',
     STRUCTURAL_VARIANT_GENES_TABLE = 'STRUCTURAL_VARIANT_GENES_TABLE',
     STRUCTURAL_VARIANTS_TABLE = 'STRUCTURAL_VARIANTS_TABLE',
@@ -102,7 +101,6 @@ export enum ChartTypeNameEnum {
     CNA_GENES_TABLE = 'table',
     GENOMIC_PROFILES_TABLE = 'table',
     CASE_LIST_TABLE = 'table',
-    ONCOTREE2GENES_LLM_TABLE = 'table',
     SAMPLE_TREATMENTS_TABLE = 'table',
     SAMPLE_TREATMENT_GROUPS_TABLE = 'table',
     SAMPLE_TREATMENT_TARGET_TABLE = 'table',
@@ -134,7 +132,6 @@ const studyViewFrontEnd = {
         DSS_SURVIVAL: 250,
         PFS_SURVIVAL: 250,
         MUTATED_GENES_TABLE: 90,
-        ONCOTREE2GENES_LLM_TABLE: 95,
         STRUCTURAL_VARIANT_GENES_TABLE: 85,
         STRUCTURAL_VARIANTS_TABLE: 85,
         CNA_GENES_TABLE: 80,
@@ -211,11 +208,6 @@ const studyViewFrontEnd = {
                 h: 1,
             },
             [ChartTypeEnum.MUTATED_GENES_TABLE]: {
-                w: 2,
-                h: 2,
-                minW: 2,
-            },
-            [ChartTypeEnum.ONCOTREE2GENES_LLM_TABLE]: {
                 w: 2,
                 h: 2,
                 minW: 2,
@@ -316,7 +308,6 @@ const studyViewFrontEnd = {
 if (/\.mskcc\.org/.test(getBrowserWindow().location.hostname)) {
     Object.assign(studyViewFrontEnd.priority, {
         MUTATED_GENES_TABLE: 940,
-        ONCOTREE2GENES_LLM_TABLE: 935,
         CNA_GENES_TABLE: 930,
         STRUCTURAL_VARIANT_GENES_TABLE: 920,
         'X-VS-Y-FRACTION_GENOME_ALTERED-MUTATION_COUNT': 890,

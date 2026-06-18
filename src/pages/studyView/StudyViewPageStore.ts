@@ -2227,7 +2227,6 @@ export class StudyViewPageStore
                 }
                 break;
             case ChartTypeEnum.MUTATED_GENES_TABLE:
-            case ChartTypeEnum.ONCOTREE2GENES_LLM_TABLE:
                 comparisonId = await this.createMutatedGeneComparisonSession(
                     chartMeta,
                     params.hugoGeneSymbols!,
@@ -2807,6 +2806,35 @@ export class StudyViewPageStore
             this.oncokbCancerGeneFilterEnabled &&
             this._filterCNAGenesTableByCancerGenes
         );
+    }
+
+    @observable private _filterMutatedGenesTableByO2gl: boolean = false;
+    @observable private _filterSVGenesTableByO2gl: boolean = false;
+    @observable private _filterCNAGenesTableByO2gl: boolean = false;
+
+    @action.bound
+    updateMutatedGenesTableByO2glFilter(filtered: boolean): void {
+        this._filterMutatedGenesTableByO2gl = filtered;
+    }
+    @action.bound
+    updateSVGenesTableByO2glFilter(filtered: boolean): void {
+        this._filterSVGenesTableByO2gl = filtered;
+    }
+    @action.bound
+    updateCNAGenesTableByO2glFilter(filtered: boolean): void {
+        this._filterCNAGenesTableByO2gl = filtered;
+    }
+
+    @computed get filterMutatedGenesTableByO2gl(): boolean {
+        return (
+            this.isO2glFilterAvailable && this._filterMutatedGenesTableByO2gl
+        );
+    }
+    @computed get filterSVGenesTableByO2gl(): boolean {
+        return this.isO2glFilterAvailable && this._filterSVGenesTableByO2gl;
+    }
+    @computed get filterCNAGenesTableByO2gl(): boolean {
+        return this.isO2glFilterAvailable && this._filterCNAGenesTableByO2gl;
     }
 
     public get filterComparisonGroups(): StudyViewComparisonGroup[] {
@@ -4075,7 +4103,6 @@ export class StudyViewPageStore
                     this.updateScatterPlotFilterByValues(chartUniqueKey);
                     break;
                 case ChartTypeEnum.MUTATED_GENES_TABLE:
-                case ChartTypeEnum.ONCOTREE2GENES_LLM_TABLE:
                 case ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE:
                 case ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE:
                 case ChartTypeEnum.CNA_GENES_TABLE:
@@ -4167,7 +4194,6 @@ export class StudyViewPageStore
                     )
                 );
             case ChartTypeEnum.MUTATED_GENES_TABLE:
-            case ChartTypeEnum.ONCOTREE2GENES_LLM_TABLE:
             case ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE:
             case ChartTypeEnum.CNA_GENES_TABLE:
                 return this._geneFilterSet.has(chartUniqueKey);
@@ -7731,7 +7757,6 @@ export class StudyViewPageStore
 
             switch (chartUserSettings.chartType) {
                 case ChartTypeEnum.MUTATED_GENES_TABLE:
-                case ChartTypeEnum.ONCOTREE2GENES_LLM_TABLE:
                     this._filterMutatedGenesTableByCancerGenes =
                         chartUserSettings.filterByCancerGenes === undefined
                             ? true
@@ -7896,24 +7921,6 @@ export class StudyViewPageStore
             );
             if (mutatedGeneMeta && mutatedGeneMeta.priority !== 0) {
                 this.changeChartVisibility(mutatedGeneMeta.uniqueKey, true);
-            }
-        }
-        const oncotree2GenesMeta = this.chartMetaSet[
-            ChartTypeEnum.ONCOTREE2GENES_LLM_TABLE
-        ];
-        if (oncotree2GenesMeta) {
-            this.chartsType.set(
-                oncotree2GenesMeta.uniqueKey,
-                ChartTypeEnum.ONCOTREE2GENES_LLM_TABLE
-            );
-            this.chartsDimension.set(
-                oncotree2GenesMeta.uniqueKey,
-                STUDY_VIEW_CONFIG.layout.dimensions[
-                    ChartTypeEnum.ONCOTREE2GENES_LLM_TABLE
-                ]
-            );
-            if (oncotree2GenesMeta.priority !== 0) {
-                this.changeChartVisibility(oncotree2GenesMeta.uniqueKey, true);
             }
         }
         if (!_.isEmpty(this.structuralVariantProfiles.result)) {
@@ -8998,6 +9005,19 @@ export class StudyViewPageStore
         default: [],
     });
 
+    @computed get o2glFilterGenes(): string[] {
+        return Array.from(
+            getO2glGeneSetForCodes(
+                this.oncotreeCodeValues.result,
+                O2GL_GENE_MAP
+            )
+        );
+    }
+
+    @computed get isO2glFilterAvailable(): boolean {
+        return this.o2glFilterGenes.length > 0;
+    }
+
     readonly mutatedGeneTableRowData = remoteData<MultiSelectionTableRow[]>({
         await: () =>
             this.oncokbCancerGeneFilterEnabled
@@ -9047,27 +9067,6 @@ export class StudyViewPageStore
             } else {
                 return [];
             }
-        },
-        onError: () => {},
-        default: [],
-    });
-
-    readonly oncotree2GenesTableRowData = remoteData<MultiSelectionTableRow[]>({
-        await: () => [this.mutatedGeneTableRowData, this.oncotreeCodeValues],
-        invoke: async () => {
-            if (_.isEmpty(this.oncotreeCodeValues.result)) {
-                return [];
-            }
-            const geneSet = getO2glGeneSetForCodes(
-                this.oncotreeCodeValues.result,
-                O2GL_GENE_MAP
-            );
-            if (geneSet.size === 0) {
-                return [];
-            }
-            return this.mutatedGeneTableRowData.result.filter(row =>
-                geneSet.has(row.label)
-            );
         },
         onError: () => {},
         default: [],
@@ -10698,7 +10697,6 @@ export class StudyViewPageStore
         if (this.molecularProfileSampleCountSet.result !== undefined) {
             switch (chartType) {
                 case ChartTypeEnum.MUTATED_GENES_TABLE:
-                case ChartTypeEnum.ONCOTREE2GENES_LLM_TABLE:
                 case ChartTypeEnum.VARIANT_ANNOTATIONS_TABLE:
                 case ChartTypeEnum.MUTATION_TYPE_COUNTS_TABLE: {
                     count = this.molecularProfileSampleCountSet.result[
