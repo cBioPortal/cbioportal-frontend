@@ -4,6 +4,7 @@ import { Link, NavLink } from 'react-router-dom';
 import { If, Then, Else } from 'react-if';
 import { AppStore } from '../../AppStore';
 import { observer } from 'mobx-react';
+import { observable, makeObservable, action } from 'mobx';
 import {
     getcBioPortalLogoUrl,
     getInstituteLogoUrl,
@@ -20,6 +21,35 @@ export default class PortalHeader extends React.Component<
     { appStore: AppStore },
     {}
 > {
+    @observable private datDropdownOpen = false;
+    private _justClosedByRootClose = false;
+
+    constructor(props: { appStore: AppStore }) {
+        super(props);
+        makeObservable(this);
+    }
+
+    @action.bound
+    private handleDatDropdownToggle(
+        isOpen: boolean,
+        _event?: any,
+        eventDetails?: { source: string }
+    ) {
+        // rootCloseEvent="mousedown" prevents the open-then-close race condition,
+        // but when clicking the toggle to close, mousedown fires rootClose (close)
+        // followed by click firing handleClick (reopen). Guard against that reopen.
+        if (!isOpen && eventDetails?.source === 'rootClose') {
+            this._justClosedByRootClose = true;
+            setTimeout(() => {
+                this._justClosedByRootClose = false;
+            }, 0);
+        }
+        if (isOpen && this._justClosedByRootClose) {
+            return;
+        }
+        this.datDropdownOpen = isOpen;
+    }
+
     private tabs() {
         return [
             {
@@ -190,7 +220,18 @@ export default class PortalHeader extends React.Component<
                         <If condition={this.props.appStore.isLoggedIn}>
                             <Then>
                                 <div className="identity">
-                                    <Dropdown id="dat-dropdown">
+                                    <Dropdown
+                                        id="dat-dropdown"
+                                        open={this.datDropdownOpen}
+                                        onToggle={
+                                            this
+                                                .handleDatDropdownToggle
+                                        }
+                                        {...({
+                                            rootCloseEvent:
+                                                'mousedown',
+                                        } as any)}
+                                    >
                                         <Dropdown.Toggle className="btn-sm username">
                                             Logged in as{' '}
                                             {this.props.appStore.userName}

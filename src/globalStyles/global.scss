@@ -29,7 +29,7 @@ body {
 }
 
 // Keyboard focus indicators (visible only for keyboard navigation, not mouse clicks)
-:focus:not(:focus-visible) {
+:focus:not(:focus-visible):not(.dropdown-toggle) {
     outline: none !important;
     box-shadow: none !important;
 }

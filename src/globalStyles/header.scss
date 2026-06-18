@@ -62,7 +62,7 @@ header {
 #rightHeaderContent .username {
     max-width: 150px;
     text-overflow: ellipsis;
-    overflow: hidden;
+    overflow: visible;
     white-space: nowrap;
 }
 
