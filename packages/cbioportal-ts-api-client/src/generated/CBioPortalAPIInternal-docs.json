@@ -5108,6 +5108,9 @@
           },
           "type": "array"
         },
+        "profileType": {
+          "type": "string"
+        },
         "studyViewFilter": {
           "$ref": "#/definitions/StudyViewFilter"
         }
@@ -5180,6 +5183,37 @@
         "qValue",
         "stableId"
       ],
+      "type": "object"
+    },
+    "GenericAssaySelectionFilter": {
+      "properties": {
+        "patientLevel": {
+          "type": "boolean"
+        },
+        "profileType": {
+          "type": "string"
+        },
+        "values": {
+          "items": {
+            "items": {
+              "$ref": "#/definitions/GenericAssaySelectionValue"
+            },
+            "type": "array"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "GenericAssaySelectionValue": {
+      "properties": {
+        "stableId": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
       "type": "object"
     },
     "Geneset": {
@@ -9902,6 +9936,12 @@
         "genericAssayDataFilters": {
           "items": {
             "$ref": "#/definitions/GenericAssayDataFilter"
+          },
+          "type": "array"
+        },
+        "genericAssaySelectionFilters": {
+          "items": {
+            "$ref": "#/definitions/GenericAssaySelectionFilter"
           },
           "type": "array"
         },
