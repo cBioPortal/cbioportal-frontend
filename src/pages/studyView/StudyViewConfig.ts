@@ -127,6 +127,7 @@ const studyViewFrontEnd = {
     priority: {
         CANCER_TYPE: 3000,
         CANCER_TYPE_DETAILED: 2000,
+        MRNA_VIOLIN_PLOT: 1900,
         GENOMIC_PROFILES_SAMPLE_COUNT: 1000,
         CASE_LISTS_SAMPLE_COUNT: 1000,
         OS_SURVIVAL: 400,
@@ -286,7 +287,7 @@ const studyViewFrontEnd = {
             },
             [ChartTypeEnum.MRNA_VIOLIN_PLOT]: {
                 w: 2,
-                h: 3,
+                h: 2,
                 minW: 2,
             },
             [ChartTypeEnum.NONE]: {
