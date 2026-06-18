@@ -86,7 +86,7 @@ export class DataAccessTokensDropdown extends React.Component<
         });
 
         return shownListItems.map(l => {
-            return <li>{l.action}</li>;
+            return <li key={l.id}>{l.action}</li>;
         });
     }
 
