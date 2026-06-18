@@ -289,8 +289,8 @@ export default class MrnaViolinPlotChart extends React.Component<
     @computed get layout() {
         const marginLeft = 68;
         const marginRight = 16;
-        const marginTop = 14;
-        const marginBottom = 36;
+        const marginTop = 38;
+        const marginBottom = 6;
         const svgHeight = this.props.height - TOOLBAR_HEIGHT;
         const plotW = this.props.width - marginLeft - marginRight;
         const plotH = svgHeight - marginTop - marginBottom;
@@ -466,7 +466,7 @@ export default class MrnaViolinPlotChart extends React.Component<
     private renderXAxis(): JSX.Element {
         const range = this.globalValueRange;
         if (!range) return <g />;
-        const { plotW, plotH } = this.layout;
+        const { plotW } = this.layout;
         const nTicks = 5;
         const ticks = Array.from({ length: nTicks }, (_, i) => {
             const val =
@@ -483,7 +483,7 @@ export default class MrnaViolinPlotChart extends React.Component<
                 ? `log₂(${profileName}+1)`
                 : profileName;
         return (
-            <g transform={`translate(0, ${plotH})`}>
+            <g transform={`translate(0, 0)`}>
                 <line
                     x1={0}
                     x2={plotW}
@@ -498,13 +498,13 @@ export default class MrnaViolinPlotChart extends React.Component<
                             x1={0}
                             x2={0}
                             y1={0}
-                            y2={4}
+                            y2={-4}
                             stroke="#aaa"
                             strokeWidth={1}
                         />
                         <text
                             x={0}
-                            y={14}
+                            y={-7}
                             textAnchor="middle"
                             fontSize={9}
                             fill="#555"
@@ -515,7 +515,7 @@ export default class MrnaViolinPlotChart extends React.Component<
                 ))}
                 <text
                     x={plotW / 2}
-                    y={28}
+                    y={-20}
                     textAnchor="middle"
                     fontSize={10}
                     fill="#333"
@@ -546,17 +546,17 @@ export default class MrnaViolinPlotChart extends React.Component<
     }
 
     private renderYLabels(): JSX.Element {
-        const { marginLeft, marginTop, rowH } = this.layout;
+        const { marginTop, rowH } = this.layout;
         return (
             <g>
                 {this.currentGenes.map((gene, i) => (
                     <text
                         key={gene.hugoSymbol}
-                        x={marginLeft - 6}
+                        x={4}
                         y={marginTop + rowH * (i + 0.5) + 4}
-                        textAnchor="end"
+                        textAnchor="start"
                         fontSize={11}
-                        fontStyle="italic"
+                        fontStyle="normal"
                         fill="#333"
                     >
                         {gene.hugoSymbol}
@@ -579,7 +579,7 @@ export default class MrnaViolinPlotChart extends React.Component<
                     bottom: 0,
                     background: '#fff',
                     borderTop: '1px solid #ccc',
-                    zIndex: 100,
+                    zIndex: 2,
                     overflowY: 'auto',
                     padding: '6px 8px',
                 }}
@@ -626,7 +626,7 @@ export default class MrnaViolinPlotChart extends React.Component<
                                     onChange={() => this.toggleGene(symbol)}
                                     style={{ margin: 0 }}
                                 />
-                                <i>{symbol}</i>
+                                <span>{symbol}</span>
                             </label>
                         );
                     })}
@@ -639,132 +639,44 @@ export default class MrnaViolinPlotChart extends React.Component<
         const { width, height } = this.props;
         const { marginLeft, marginTop, svgHeight } = this.layout;
 
-        const toolbar = (
-            <div
-                style={{
-                    height: TOOLBAR_HEIGHT,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 12,
-                    padding: '0 8px',
-                    borderBottom: '1px solid #eee',
-                    fontSize: 11,
-                    flexShrink: 0,
-                    background: '#fff',
-                    position: 'relative',
-                    zIndex: 101,
-                }}
-            >
-                <label
+        const isPending =
+            this.mrnaData.isPending || this.resolvedGenes.isPending;
+        const isError = this.mrnaData.isError;
+        const hasData = !isPending && !isError && !!this.globalValueRange;
+
+        let bodyContent: JSX.Element;
+        if (isPending) {
+            bodyContent = (
+                <div
                     style={{
-                        display: 'inline-flex',
+                        flex: 1,
+                        display: 'flex',
                         alignItems: 'center',
-                        gap: 4,
-                        cursor: this.canLogScale ? 'pointer' : 'not-allowed',
-                        color: this.canLogScale ? '#333' : '#999',
-                        fontWeight: 'normal',
-                        margin: 0,
-                    }}
-                    title={
-                        this.canLogScale
-                            ? 'Toggle between log₂ and linear value axis'
-                            : 'Linear only — data contains negative values'
-                    }
-                >
-                    <input
-                        type="checkbox"
-                        checked={this.logScale && this.canLogScale}
-                        disabled={!this.canLogScale}
-                        onChange={action(
-                            (e: React.ChangeEvent<HTMLInputElement>) => {
-                                this.logScale = e.target.checked;
-                            }
-                        )}
-                        style={{ margin: 0 }}
-                    />
-                    Log scale
-                </label>
-                <button
-                    onClick={action(() => {
-                        this.showGenePicker = !this.showGenePicker;
-                    })}
-                    style={{
-                        fontSize: 11,
-                        padding: '2px 7px',
-                        border: '1px solid #ccc',
-                        borderRadius: 3,
-                        background: this.showGenePicker ? '#e8f0fc' : '#f5f5f5',
-                        cursor: 'pointer',
+                        justifyContent: 'center',
                     }}
                 >
-                    Genes ({this.selectedSymbols.length}) ▾
-                </button>
-            </div>
-        );
-
-        if (this.mrnaData.isPending || this.resolvedGenes.isPending) {
-            return (
-                <div
-                    style={{
-                        height,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        position: 'relative',
-                    }}
-                >
-                    {toolbar}
-                    <div style={{ flex: 1 }}>
-                        <LoadingIndicator
-                            isLoading={true}
-                            center={true}
-                            size={'big'}
-                        />
-                    </div>
-                    {this.showGenePicker && this.renderGenePicker()}
+                    <LoadingIndicator isLoading={true} size={'big'} />
                 </div>
             );
-        }
-
-        if (this.mrnaData.isError || !this.globalValueRange) {
-            return (
+        } else if (isError || !hasData) {
+            bodyContent = (
                 <div
                     style={{
-                        height,
+                        flex: 1,
                         display: 'flex',
-                        flexDirection: 'column',
-                        position: 'relative',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#888',
+                        fontSize: 12,
                     }}
                 >
-                    {toolbar}
-                    <div
-                        style={{
-                            flex: 1,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: '#888',
-                            fontSize: 12,
-                        }}
-                    >
-                        {this.mrnaData.isError
-                            ? 'Error loading mRNA data.'
-                            : 'No mRNA expression data available for this study.'}
-                    </div>
-                    {this.showGenePicker && this.renderGenePicker()}
+                    {isError
+                        ? 'Error loading mRNA data.'
+                        : 'No mRNA expression data available for this study.'}
                 </div>
             );
-        }
-
-        return (
-            <div
-                style={{
-                    height,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    position: 'relative',
-                }}
-            >
-                {toolbar}
+        } else {
+            bodyContent = (
                 <svg
                     width={width}
                     height={svgHeight}
@@ -772,13 +684,91 @@ export default class MrnaViolinPlotChart extends React.Component<
                 >
                     {this.renderYLabels()}
                     <g transform={`translate(${marginLeft}, ${marginTop})`}>
-                        {this.renderRowSeparators()}
                         {this.currentGenes.map((gene, i) =>
                             this.renderGeneRow(gene, i)
                         )}
                         {this.renderXAxis()}
                     </g>
                 </svg>
+            );
+        }
+
+        return (
+            <div
+                style={{
+                    width,
+                    height,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    position: 'relative',
+                    isolation: 'isolate',
+                }}
+            >
+                <div
+                    style={{
+                        height: TOOLBAR_HEIGHT,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 12,
+                        padding: '0 8px',
+                        borderBottom: '1px solid #eee',
+                        fontSize: 11,
+                        flexShrink: 0,
+                        background: '#fff',
+                        position: 'relative',
+                        zIndex: 3,
+                    }}
+                >
+                    <label
+                        style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 4,
+                            cursor: this.canLogScale
+                                ? 'pointer'
+                                : 'not-allowed',
+                            color: this.canLogScale ? '#333' : '#999',
+                            fontWeight: 'normal',
+                            margin: 0,
+                        }}
+                        title={
+                            this.canLogScale
+                                ? 'Toggle between log₂ and linear value axis'
+                                : 'Linear only — data contains negative values'
+                        }
+                    >
+                        <input
+                            type="checkbox"
+                            checked={this.logScale && this.canLogScale}
+                            disabled={!this.canLogScale}
+                            onChange={action(
+                                (e: React.ChangeEvent<HTMLInputElement>) => {
+                                    this.logScale = e.target.checked;
+                                }
+                            )}
+                            style={{ margin: 0 }}
+                        />
+                        Log scale
+                    </label>
+                    <button
+                        onClick={action(() => {
+                            this.showGenePicker = !this.showGenePicker;
+                        })}
+                        style={{
+                            fontSize: 11,
+                            padding: '2px 7px',
+                            border: '1px solid #ccc',
+                            borderRadius: 3,
+                            background: this.showGenePicker
+                                ? '#e8f0fc'
+                                : '#f5f5f5',
+                            cursor: 'pointer',
+                        }}
+                    >
+                        Genes ({this.selectedSymbols.length}) ▾
+                    </button>
+                </div>
+                {bodyContent}
                 {this.showGenePicker && this.renderGenePicker()}
             </div>
         );

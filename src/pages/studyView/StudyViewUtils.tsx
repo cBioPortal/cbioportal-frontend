@@ -334,9 +334,9 @@ export const SPECIAL_CHARTS: ChartMetaWithDimensionAndChartType[] = [
         patientAttribute: false,
         dimension: {
             w: 2,
-            h: 3,
+            h: 2,
         },
-        priority: 5,
+        priority: 100,
         renderWhenDataChange: false,
     },
 ];
