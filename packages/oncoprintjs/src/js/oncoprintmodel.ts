@@ -1708,23 +1708,24 @@ export default class OncoprintModel {
             return null;
         }
 
-        // Next, see if it's in a track
+        // Next, see if it's in a track.
+        // Use linear scan instead of binary search because cell_tops
+        // may not be monotonically ordered relative to the tracks array
+        // during async clustering transitions.
         const tracks = this.getTracks();
         const cell_tops = this.getCellTops() as TrackProp<number>;
-        const nearest_track_index = binarysearch(
-            tracks,
-            y,
-            function(track) {
-                return cell_tops[track];
-            },
-            true
-        );
-        if (nearest_track_index === -1) {
-            return null;
+        let nearest_track: TrackId | undefined;
+        for (let t = 0; t < tracks.length; t++) {
+            const top = cell_tops[tracks[t]];
+            if (
+                y >= top &&
+                y < top + this.getCellHeight(tracks[t])
+            ) {
+                nearest_track = tracks[t];
+                break;
+            }
         }
-        const nearest_track = tracks[nearest_track_index];
-        if (y >= cell_tops[nearest_track] + this.getCellHeight(nearest_track)) {
-            // we know y is past the top of the track (>= cell_tops[nearest_track]), so this checks if y is past the bottom of the track
+        if (nearest_track === undefined) {
             return null;
         }
 
