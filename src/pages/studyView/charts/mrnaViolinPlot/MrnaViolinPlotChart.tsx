@@ -287,17 +287,15 @@ export default class MrnaViolinPlotChart extends React.Component<
     }
 
     @computed get layout() {
-        const marginLeft = 68;
+        const marginLeft = 80;
         const marginRight = 16;
         const marginTop = 38;
         const marginBottom = 6;
         const svgHeight = this.props.height - TOOLBAR_HEIGHT;
         const plotW = this.props.width - marginLeft - marginRight;
         const plotH = svgHeight - marginTop - marginBottom;
-        const rowH =
-            this.currentGenes.length > 0
-                ? plotH / this.currentGenes.length
-                : plotH / DEFAULT_GENE_COUNT;
+        // Always divide by MAX_GENES so row height is consistent regardless of selection count.
+        const rowH = plotH / MAX_GENES;
         return {
             marginLeft,
             marginRight,
@@ -478,10 +476,16 @@ export default class MrnaViolinPlotChart extends React.Component<
         });
         const result = this.mrnaData.result!;
         const profileName = result.profilesUsed[0]?.name ?? 'mRNA Expression';
-        const axisLabel =
+        const rawLabel =
             this.logScale && this.canLogScale
                 ? `log₂(${profileName}+1)`
                 : profileName;
+        // Truncate only when the estimated text width (fontSize 10 ≈ 5.5px/char) exceeds the axis.
+        const maxChars = Math.floor(plotW / 5.5);
+        const isTruncated = rawLabel.length > maxChars;
+        const axisLabel = isTruncated
+            ? rawLabel.slice(0, maxChars - 1) + '…'
+            : rawLabel;
         return (
             <g transform={`translate(0, 0)`}>
                 <line
@@ -489,7 +493,7 @@ export default class MrnaViolinPlotChart extends React.Component<
                     x2={plotW}
                     y1={0}
                     y2={0}
-                    stroke="#aaa"
+                    stroke="black"
                     strokeWidth={1}
                 />
                 {ticks.map(t => (
@@ -499,7 +503,7 @@ export default class MrnaViolinPlotChart extends React.Component<
                             x2={0}
                             y1={0}
                             y2={-4}
-                            stroke="#aaa"
+                            stroke="black"
                             strokeWidth={1}
                         />
                         <text
@@ -507,7 +511,7 @@ export default class MrnaViolinPlotChart extends React.Component<
                             y={-7}
                             textAnchor="middle"
                             fontSize={9}
-                            fill="#555"
+                            fill="black"
                         >
                             {t.val.toFixed(1)}
                         </text>
@@ -518,29 +522,11 @@ export default class MrnaViolinPlotChart extends React.Component<
                     y={-20}
                     textAnchor="middle"
                     fontSize={10}
-                    fill="#333"
+                    fill="black"
                 >
+                    {isTruncated && <title>{rawLabel}</title>}
                     {axisLabel}
                 </text>
-            </g>
-        );
-    }
-
-    private renderRowSeparators(): JSX.Element {
-        const { plotW, rowH } = this.layout;
-        return (
-            <g>
-                {this.currentGenes.map((_, i) => (
-                    <line
-                        key={i}
-                        x1={0}
-                        x2={plotW}
-                        y1={rowH * i}
-                        y2={rowH * i}
-                        stroke="#eee"
-                        strokeWidth={1}
-                    />
-                ))}
             </g>
         );
     }
@@ -552,7 +538,7 @@ export default class MrnaViolinPlotChart extends React.Component<
                 {this.currentGenes.map((gene, i) => (
                     <text
                         key={gene.hugoSymbol}
-                        x={4}
+                        x={10}
                         y={marginTop + rowH * (i + 0.5) + 4}
                         textAnchor="start"
                         fontSize={11}
@@ -637,7 +623,7 @@ export default class MrnaViolinPlotChart extends React.Component<
 
     render() {
         const { width, height } = this.props;
-        const { marginLeft, marginTop, svgHeight } = this.layout;
+        const { marginLeft, marginTop, svgHeight, plotH, rowH } = this.layout;
 
         const isPending =
             this.mrnaData.isPending || this.resolvedGenes.isPending;
@@ -687,6 +673,15 @@ export default class MrnaViolinPlotChart extends React.Component<
                         {this.currentGenes.map((gene, i) =>
                             this.renderGeneRow(gene, i)
                         )}
+                        {/* Y-axis line — height matches the number of active gene rows */}
+                        <line
+                            x1={0}
+                            x2={0}
+                            y1={0}
+                            y2={rowH * this.currentGenes.length}
+                            stroke="black"
+                            strokeWidth={1}
+                        />
                         {this.renderXAxis()}
                     </g>
                 </svg>
@@ -718,6 +713,11 @@ export default class MrnaViolinPlotChart extends React.Component<
                         position: 'relative',
                         zIndex: 3,
                     }}
+                    onClick={action(() => {
+                        // Close picker when clicking anywhere in the toolbar
+                        // (the Genes button stops propagation to handle its own toggle)
+                        this.showGenePicker = false;
+                    })}
                 >
                     <label
                         style={{
@@ -751,7 +751,8 @@ export default class MrnaViolinPlotChart extends React.Component<
                         Log scale
                     </label>
                     <button
-                        onClick={action(() => {
+                        onClick={action((e: React.MouseEvent) => {
+                            e.stopPropagation(); // don't let toolbar's close-handler fire
                             this.showGenePicker = !this.showGenePicker;
                         })}
                         style={{
@@ -769,7 +770,25 @@ export default class MrnaViolinPlotChart extends React.Component<
                     </button>
                 </div>
                 {bodyContent}
-                {this.showGenePicker && this.renderGenePicker()}
+                {this.showGenePicker && (
+                    <>
+                        {/* Invisible overlay to catch outside clicks */}
+                        <div
+                            style={{
+                                position: 'fixed',
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                zIndex: 1,
+                            }}
+                            onClick={action(() => {
+                                this.showGenePicker = false;
+                            })}
+                        />
+                        {this.renderGenePicker()}
+                    </>
+                )}
             </div>
         );
     }
