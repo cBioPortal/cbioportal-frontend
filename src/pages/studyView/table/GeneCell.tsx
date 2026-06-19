@@ -47,6 +47,9 @@ export class GeneCell extends React.Component<IGeneCellProps, {}> {
             marginLeft: 1,
             display: 'inline-flex',
             alignItems: 'center',
+            // collapse the inline baseline gap so nested icons (e.g. MutSig,
+            // which wraps its svg in a tooltip span) center like the others
+            lineHeight: 0,
         };
 
         return (
