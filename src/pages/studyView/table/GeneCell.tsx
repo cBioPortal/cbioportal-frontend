@@ -15,6 +15,8 @@ import { observer } from 'mobx-react';
 import { Else, If, Then } from 'react-if';
 import GisticAnnotation from 'shared/components/annotation/Gistic';
 import MutSigAnnotation from 'shared/components/annotation/MutSig';
+import { OncoKbCancerGeneIcon } from 'pages/studyView/oncokb/OncoKbCancerGeneIcon';
+import { OncoTree2GenesIcon } from 'pages/studyView/oncotree2genes/OncoTree2GenesIcon';
 
 export type IGeneCellProps = {
     tableType: FreqColumnTypeEnum;
@@ -25,6 +27,7 @@ export type IGeneCellProps = {
     oncokbAnnotated: boolean;
     isOncogene: boolean;
     isTumorSuppressorGene: boolean;
+    isO2glGene?: boolean;
     onGeneSelect: (hugoGeneSymbol: string) => void;
 };
 
@@ -81,6 +84,20 @@ export class GeneCell extends React.Component<IGeneCellProps, {}> {
                             text={this.props.hugoGeneSymbol}
                             hideTooltip={this.props.isCancerGene}
                         />
+                        {this.props.isCancerGene && (
+                            <span style={iconStyle}>
+                                <OncoKbCancerGeneIcon
+                                    hugoGeneSymbol={this.props.hugoGeneSymbol}
+                                />
+                            </span>
+                        )}
+                        {this.props.isO2glGene && (
+                            <span style={iconStyle}>
+                                <OncoTree2GenesIcon
+                                    hugoGeneSymbol={this.props.hugoGeneSymbol}
+                                />
+                            </span>
+                        )}
                         <If condition={!_.isUndefined(this.props.qValue)}>
                             <span style={iconStyle}>
                                 <If
