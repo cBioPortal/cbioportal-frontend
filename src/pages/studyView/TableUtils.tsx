@@ -28,7 +28,8 @@ export function getGeneColumnCellOverlaySimple(
     isCancerGene: boolean,
     oncokbAnnotated: boolean,
     isOncogene: boolean,
-    isTumorSuppressorGene: boolean
+    isTumorSuppressorGene: boolean,
+    extraOverlay?: React.ReactNode
 ) {
     return (
         <div
@@ -48,6 +49,7 @@ export function getGeneColumnCellOverlaySimple(
                     isTumorSuppressorGene
                 )}
             </span>
+            {extraOverlay && <span>{extraOverlay}</span>}
             <strong>
                 {geneIsSelected
                     ? `Click gene symbol to remove from query queue`

@@ -10,3 +10,12 @@ export function getOncoTree2GenesLinkout() {
         </a>
     );
 }
+
+export function getOncoTree2GenesGeneOverlay(hugoGeneSymbol: string) {
+    return (
+        <span>
+            {hugoGeneSymbol} is associated with this cancer type by the{' '}
+            {getOncoTree2GenesLinkout()} dataset.
+        </span>
+    );
+}

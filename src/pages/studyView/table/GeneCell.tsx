@@ -17,6 +17,7 @@ import GisticAnnotation from 'shared/components/annotation/Gistic';
 import MutSigAnnotation from 'shared/components/annotation/MutSig';
 import { OncoKbCancerGeneIcon } from 'pages/studyView/oncokb/OncoKbCancerGeneIcon';
 import { OncoTree2GenesIcon } from 'pages/studyView/oncotree2genes/OncoTree2GenesIcon';
+import { getOncoTree2GenesGeneOverlay } from 'pages/studyView/oncotree2genes/OncoTree2GenesUtils';
 
 export type IGeneCellProps = {
     tableType: FreqColumnTypeEnum;
@@ -51,14 +52,21 @@ export class GeneCell extends React.Component<IGeneCellProps, {}> {
             <div className={styles.geneSymbol}>
                 <DefaultTooltip
                     placement="left"
-                    disabled={!this.props.isCancerGene}
+                    disabled={
+                        !this.props.isCancerGene && !this.props.isO2glGene
+                    }
                     overlay={getGeneColumnCellOverlaySimple(
                         this.props.hugoGeneSymbol,
                         geneIsSelected,
                         this.props.isCancerGene,
                         this.props.oncokbAnnotated,
                         this.props.isOncogene,
-                        this.props.isTumorSuppressorGene
+                        this.props.isTumorSuppressorGene,
+                        this.props.isO2glGene
+                            ? getOncoTree2GenesGeneOverlay(
+                                  this.props.hugoGeneSymbol
+                              )
+                            : undefined
                     )}
                     destroyTooltipOnHide={true}
                 >
@@ -82,7 +90,9 @@ export class GeneCell extends React.Component<IGeneCellProps, {}> {
                     >
                         <EllipsisTextTooltip
                             text={this.props.hugoGeneSymbol}
-                            hideTooltip={this.props.isCancerGene}
+                            hideTooltip={
+                                this.props.isCancerGene || this.props.isO2glGene
+                            }
                         />
                         {this.props.isCancerGene && (
                             <span style={iconStyle}>
@@ -93,9 +103,7 @@ export class GeneCell extends React.Component<IGeneCellProps, {}> {
                         )}
                         {this.props.isO2glGene && (
                             <span style={iconStyle}>
-                                <OncoTree2GenesIcon
-                                    hugoGeneSymbol={this.props.hugoGeneSymbol}
-                                />
+                                <OncoTree2GenesIcon />
                             </span>
                         )}
                         <If condition={!_.isUndefined(this.props.qValue)}>
