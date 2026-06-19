@@ -44,6 +44,8 @@ import {
 } from 'pages/studyView/table/GeneFilterDropdown';
 import { getOncoKBCancerGeneListLinkout } from 'pages/studyView/oncokb/OncoKBUtils';
 import { getOncoTree2GenesLinkout } from 'pages/studyView/oncotree2genes/OncoTree2GenesUtils';
+import { OncoKbCancerGeneIcon } from 'pages/studyView/oncokb/OncoKbCancerGeneIcon';
+import { OncoTree2GenesIcon } from 'pages/studyView/oncotree2genes/OncoTree2GenesIcon';
 
 export type MultiSelectionTableRow = OncokbCancerGene & {
     label: string;
@@ -820,7 +822,18 @@ export class MultiSelectionTable extends React.Component<
         const options: IGeneFilterDropdownOption[] = [];
         if (this.props.cancerGeneFilterEnabled) {
             options.push({
-                label: getOncoKBCancerGeneListLinkout(),
+                label: (
+                    <span
+                        style={{ display: 'inline-flex', alignItems: 'center' }}
+                    >
+                        <span
+                            style={{ display: 'inline-flex', marginRight: 5 }}
+                        >
+                            <OncoKbCancerGeneIcon />
+                        </span>
+                        {getOncoKBCancerGeneListLinkout()}
+                    </span>
+                ),
                 checked: this.isFilteredByCancerGeneList,
                 onToggle: checked =>
                     this.props.onChangeCancerGeneFilter(checked),
@@ -832,12 +845,22 @@ export class MultiSelectionTable extends React.Component<
             const geneCount = this.o2glGeneSet.size;
             options.push({
                 label: (
-                    <span>
-                        {getOncoTree2GenesLinkout()}{' '}
-                        <span className={styles.geneFilterDropdownCount}>
-                            ({codeCount} oncotree{' '}
-                            {codeCount === 1 ? 'code' : 'codes'}, {geneCount}{' '}
-                            {geneCount === 1 ? 'gene' : 'genes'})
+                    <span
+                        style={{ display: 'inline-flex', alignItems: 'center' }}
+                    >
+                        <span
+                            style={{ display: 'inline-flex', marginRight: 5 }}
+                        >
+                            <OncoTree2GenesIcon />
+                        </span>
+                        <span>
+                            {getOncoTree2GenesLinkout()}{' '}
+                            <span className={styles.geneFilterDropdownCount}>
+                                ({codeCount} oncotree{' '}
+                                {codeCount === 1 ? 'code' : 'codes'},{' '}
+                                {geneCount} {geneCount === 1 ? 'gene' : 'genes'}
+                                )
+                            </span>
                         </span>
                     </span>
                 ),
