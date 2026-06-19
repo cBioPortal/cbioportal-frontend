@@ -43,8 +43,14 @@ export class GeneFilterDropdown extends React.Component<
     }
 
     private get menu() {
+        // Stop clicks inside the menu from bubbling (through the React portal
+        // tree) to the column header, which would trigger a re-sort by gene
+        // name and discard the user's current sort order.
         return (
-            <div className={styles.geneFilterDropdownMenu}>
+            <div
+                className={styles.geneFilterDropdownMenu}
+                onClick={event => event.stopPropagation()}
+            >
                 <div className={styles.geneFilterDropdownTitle}>
                     Filter genes by:
                 </div>
