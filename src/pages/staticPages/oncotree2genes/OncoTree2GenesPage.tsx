@@ -78,11 +78,7 @@ const OncoTree2GenesPage: React.FunctionComponent<{}> = () => {
                         OncoTree
                     </a>{' '}
                     cancer type codes to the genes most relevant for each cancer
-                    type. cBioPortal uses it as an optional "Filter genes by"
-                    option on the Study View mutation, structural variant, and
-                    CNA tables: selecting it restricts a table to the genes O2GL
-                    associates with the study's cancer type(s). The dataset is
-                    maintained at{' '}
+                    type. Method and dataset is further described at{' '}
                     <a href={REPO_URL} target="_blank">
                         github.com/SuhasiniLulla/OncoTree2Genes-LLM
                     </a>
