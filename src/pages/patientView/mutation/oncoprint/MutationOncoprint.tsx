@@ -456,7 +456,11 @@ export default class MutationOncoprint extends React.Component<
                     hasColumnSpacing: true,
                     tooltip: (data: IMutationOncoprintTrackDatum[]) => {
                         const d = data[0];
-                        const vafReport = getVariantAlleleFrequency(d.mutation);
+                        // Use mutation's VAF data only when it belongs to this sample
+                        const vafReport =
+                            d.mutation.sampleId === d.sample
+                                ? getVariantAlleleFrequency(d.mutation)
+                                : null;
                         const tooltipJSX = mutationTooltip(d.mutation, {
                             sampleId: d.sample!,
                             mutationStatus: d.mutationStatus,
@@ -517,7 +521,11 @@ export default class MutationOncoprint extends React.Component<
                     hasColumnSpacing: true,
                     tooltip: (data: IMutationOncoprintTrackDatum[]) => {
                         const d = data[0];
-                        const vafReport = getVariantAlleleFrequency(d.mutation);
+                        // Use mutation's VAF data only when it belongs to this sample
+                        const vafReport =
+                            d.mutation.sampleId === d.sample
+                                ? getVariantAlleleFrequency(d.mutation)
+                                : null;
                         const tooltipJSX = mutationTooltip(d.mutation, {
                             sampleId: d.sample!,
                             mutationStatus: d.mutationStatus,

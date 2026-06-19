@@ -1337,5 +1337,101 @@ describe('MutationOncoprintUtils', () => {
                 );
             });
         });
+        // Based on real patient IM-GBM-33 in glioma_msk_2018.
+        // Note: makeMutation uses simplified counts (tumorRefCount = 100 - tumorAltCount),
+        // not the actual clinical values. The pattern tested is what matters:
+        // called mutations have positive alt counts, uncalled have 0.
+        describe('uncalled mutations', () => {
+            it('correctly handles called mutation in one sample with uncalled (0 alt reads) in another', () => {
+                // ARID1A X721_splice: called in sample1, uncalled with 0 alt reads in sample2
+                // The uncalled mutation with 0 alt reads should produce a
+                // PROFILED_BUT_NOT_MUTATED entry with its own read counts preserved
+                const result = makeMutationHeatmapData(
+                    [makeSample(1), makeSample(2)],
+                    [
+                        makeMutation(
+                            1,
+                            'ARID1A',
+                            'X721_splice',
+                            49,
+                            ''
+                        ),
+                        makeMutation(
+                            2,
+                            'ARID1A',
+                            'X721_splice',
+                            0,
+                            'uncalled'
+                        ),
+                    ],
+                    makeCoverageInfo([1, 2], []),
+                    MutationOncoprintMode.SAMPLE_TRACKS
+                );
+                // sample1 should have the called mutation
+                const sample1Data = result['sample1'];
+                assert.equal(sample1Data.length, 1);
+                assert.equal(
+                    sample1Data[0].mutationStatus,
+                    MutationStatus.MUTATED_WITH_VAF
+                );
+                assert.equal(sample1Data[0].mutation.tumorAltCount, 49);
+                assert.equal(sample1Data[0].mutation.tumorRefCount, 51);
+
+                // sample2 should have PROFILED_BUT_NOT_MUTATED with its own
+                // read counts (from the uncalled mutation entry)
+                const sample2Data = result['sample2'];
+                assert.equal(sample2Data.length, 1);
+                assert.equal(
+                    sample2Data[0].mutationStatus,
+                    MutationStatus.PROFILED_BUT_NOT_MUTATED
+                );
+                // The mutation object should be the uncalled mutation's own data
+                assert.equal(sample2Data[0].mutation.tumorAltCount, 0);
+                assert.equal(sample2Data[0].mutation.tumorRefCount, 100);
+                assert.equal(sample2Data[0].mutation.sampleId, 'sample2');
+            });
+
+            it('includes uncalled mutation with positive alt reads as PROFILED_WITH_READS_BUT_UNCALLED', () => {
+                // When an uncalled mutation has tumorAltCount > 0, it should be included
+                const result = makeMutationHeatmapData(
+                    [makeSample(1), makeSample(2)],
+                    [
+                        makeMutation(
+                            1,
+                            'ARID1A',
+                            'G960E',
+                            54,
+                            ''
+                        ),
+                        makeMutation(
+                            2,
+                            'ARID1A',
+                            'G960E',
+                            5,
+                            'uncalled'
+                        ),
+                    ],
+                    makeCoverageInfo([1, 2], []),
+                    MutationOncoprintMode.SAMPLE_TRACKS
+                );
+                const sample1Data = result['sample1'];
+                assert.equal(sample1Data.length, 1);
+                assert.equal(
+                    sample1Data[0].mutationStatus,
+                    MutationStatus.MUTATED_WITH_VAF
+                );
+                assert.equal(sample1Data[0].mutation.tumorAltCount, 54);
+
+                const sample2Data = result['sample2'];
+                assert.equal(sample2Data.length, 1);
+                assert.equal(
+                    sample2Data[0].mutationStatus,
+                    MutationStatus.PROFILED_WITH_READS_BUT_UNCALLED
+                );
+                // The datum should have the uncalled mutation's own read counts
+                assert.equal(sample2Data[0].mutation.tumorAltCount, 5);
+                assert.equal(sample2Data[0].mutation.tumorRefCount, 95);
+            });
+        });
     });
 });

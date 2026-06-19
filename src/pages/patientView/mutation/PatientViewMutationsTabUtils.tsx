@@ -33,10 +33,22 @@ export function mutationTooltip(
                 vafExplanation = `Mutated, but we don't have VAF data.`;
                 break;
             case MutationStatus.PROFILED_WITH_READS_BUT_UNCALLED:
+                if (sampleSpecificInfo.vafReport) {
+                    vafExplanation = `Mutation uncalled (VAF: ${sampleSpecificInfo.vafReport.vaf.toFixed(
+                        2
+                    )} (${vafFraction(sampleSpecificInfo.vafReport)}))`;
+                } else {
+                    vafExplanation = `Mutation uncalled`;
+                }
+                break;
             case MutationStatus.PROFILED_BUT_NOT_MUTATED:
-                vafExplanation = `Mutation not detected (VAF: ${(
-                    sampleSpecificInfo.vafReport?.vaf || 0
-                ).toFixed(2)} (${vafFraction(sampleSpecificInfo.vafReport!)}))`;
+                if (sampleSpecificInfo.vafReport) {
+                    vafExplanation = `Mutation not detected (VAF: ${sampleSpecificInfo.vafReport.vaf.toFixed(
+                        2
+                    )} (${vafFraction(sampleSpecificInfo.vafReport)}))`;
+                } else {
+                    vafExplanation = `Mutation not detected`;
+                }
                 break;
             case MutationStatus.NOT_PROFILED:
             default:
