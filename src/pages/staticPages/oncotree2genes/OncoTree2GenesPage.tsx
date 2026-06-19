@@ -3,10 +3,57 @@ import Helmet from 'react-helmet';
 import _ from 'lodash';
 import { PageLayout } from '../../../shared/components/PageLayout/PageLayout';
 import { getClient } from 'shared/api/cbioportalClientInstance';
+import LazyMobXTable, {
+    Column,
+} from 'shared/components/lazyMobXTable/LazyMobXTable';
 
 const O2GL_GENE_MAP: {
     [code: string]: string[];
 } = require('pages/studyView/oncotree2genes/o2gl.json');
+
+interface O2glRow {
+    code: string;
+    name: string;
+    geneCount: number;
+    genes: string[];
+}
+
+class O2glTable extends LazyMobXTable<O2glRow> {}
+
+const COLUMNS: Column<O2glRow>[] = [
+    {
+        name: 'Code',
+        render: r => <span>{r.code}</span>,
+        sortBy: r => r.code,
+        filter: (r, s, up) => r.code.toUpperCase().includes(up || ''),
+        download: r => r.code,
+        width: 90,
+    },
+    {
+        name: 'Cancer type',
+        render: r => <span>{r.name}</span>,
+        sortBy: r => r.name,
+        filter: (r, s, up) => r.name.toUpperCase().includes(up || ''),
+        download: r => r.name,
+        width: 240,
+    },
+    {
+        name: '# genes',
+        align: 'right',
+        render: r => <span>{r.geneCount}</span>,
+        sortBy: r => r.geneCount,
+        download: r => String(r.geneCount),
+        width: 80,
+    },
+    {
+        name: 'Genes',
+        render: r => <span>{r.genes.join(', ')}</span>,
+        sortBy: r => r.genes.join(', '),
+        filter: (r, s, up) =>
+            r.genes.some(g => g.toUpperCase().includes(up || '')),
+        download: r => r.genes.join(' '),
+    },
+];
 const REPO_URL = 'https://github.com/SuhasiniLulla/OncoTree2Genes-LLM';
 const ONCOTREE_BASE =
     'https://inodb.github.io/oncotree/?version=oncotree_latest_stable';
@@ -24,7 +71,6 @@ const OncoTree2GenesPage: React.FunctionComponent<{}> = () => {
     const [codeToName, setCodeToName] = React.useState<{
         [code: string]: string;
     }>({});
-    const [filter, setFilter] = React.useState('');
     const iframeRef = React.useRef<HTMLIFrameElement>(null);
 
     // Push the full annotations to the embedded OncoTree once it signals ready.
@@ -64,21 +110,21 @@ const OncoTree2GenesPage: React.FunctionComponent<{}> = () => {
             .catch(() => {});
     }, []);
 
-    const f = filter.trim().toUpperCase();
-    const rows = Object.keys(O2GL_GENE_MAP)
-        .sort()
-        .map(code => ({
-            code,
-            name: codeToName[code] || '',
-            genes: O2GL_GENE_MAP[code] || [],
-        }))
-        .filter(
-            r =>
-                !f ||
-                r.code.includes(f) ||
-                r.name.toUpperCase().includes(f) ||
-                r.genes.some(g => g.toUpperCase().includes(f))
-        );
+    const data: O2glRow[] = React.useMemo(
+        () =>
+            Object.keys(O2GL_GENE_MAP)
+                .sort()
+                .map(code => {
+                    const genes = O2GL_GENE_MAP[code] || [];
+                    return {
+                        code,
+                        name: codeToName[code] || '',
+                        geneCount: genes.length,
+                        genes,
+                    };
+                }),
+        [codeToName]
+    );
 
     return (
         <PageLayout className={'whiteBackground staticPage'} hideFooter={true}>
@@ -118,37 +164,13 @@ const OncoTree2GenesPage: React.FunctionComponent<{}> = () => {
                         marginBottom: 15,
                     }}
                 />
-                <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Filter by code, cancer type, or gene…"
-                    value={filter}
-                    onChange={e => setFilter(e.target.value)}
-                    style={{ maxWidth: 360, marginBottom: 10 }}
+                <O2glTable
+                    data={data}
+                    columns={COLUMNS}
+                    initialSortColumn="Code"
+                    initialItemsPerPage={50}
+                    showColumnVisibility={false}
                 />
-                <div style={{ color: '#888', marginBottom: 6 }}>
-                    {rows.length} of {Object.keys(O2GL_GENE_MAP).length} codes
-                </div>
-                <table className="table table-striped table-bordered">
-                    <thead>
-                        <tr>
-                            <th style={{ width: 90 }}>Code</th>
-                            <th style={{ width: 230 }}>Cancer type</th>
-                            <th style={{ width: 60 }}># genes</th>
-                            <th>Genes</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {rows.map(r => (
-                            <tr key={r.code}>
-                                <td>{r.code}</td>
-                                <td>{r.name}</td>
-                                <td>{r.genes.length}</td>
-                                <td>{r.genes.join(', ')}</td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
             </div>
         </PageLayout>
     );
