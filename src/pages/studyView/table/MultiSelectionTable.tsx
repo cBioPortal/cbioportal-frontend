@@ -97,7 +97,7 @@ export type BaseMultiSelectionTableProps = {
     filterByO2gl?: boolean;
     onChangeO2glFilter?: (filtered: boolean) => void;
     o2glGenes?: string[];
-    o2glOncotreeCodeCount?: number;
+    o2glOncotreeCodes?: string[];
     alterationFilterEnabled?: boolean;
     filterAlterations?: boolean;
     setOperationsButtonText: string;
@@ -198,6 +198,7 @@ export class MultiSelectionTable extends React.Component<
                                 data.isOncokbTumorSuppressorGene
                             }
                             isO2glGene={this.o2glGeneSet.has(data.label)}
+                            o2glOncotreeCodes={this.props.o2glOncotreeCodes}
                             onGeneSelect={this.props.onGeneSelect!}
                         />
                     );
@@ -874,7 +875,7 @@ export class MultiSelectionTable extends React.Component<
             });
         }
         if (this.props.o2glFilterEnabled) {
-            const codeCount = this.props.o2glOncotreeCodeCount || 0;
+            const codeCount = (this.props.o2glOncotreeCodes || []).length;
             const geneCount = this.o2glGeneSet.size;
             options.push({
                 label: (

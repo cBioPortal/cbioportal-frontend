@@ -905,7 +905,7 @@ export class StudySummaryTab extends React.Component<
             cancerGeneFilterEnabled: this.store.oncokbCancerGeneFilterEnabled,
             o2glFilterEnabled: this.store.isO2glFilterAvailable,
             o2glGenes: this.store.o2glFilterGenes,
-            o2glOncotreeCodeCount: this.store.o2glFilterOncotreeCodeCount,
+            o2glOncotreeCodes: this.store.o2glFilterMatchedOncotreeCodes,
             setComparisonConfirmationModal: this.store
                 .setComparisonConfirmationModal,
         };

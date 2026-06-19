@@ -9014,12 +9014,16 @@ export class StudyViewPageStore
         );
     }
 
-    @computed get o2glFilterOncotreeCodeCount(): number {
+    @computed get o2glFilterMatchedOncotreeCodes(): string[] {
         return _.uniq(
             this.oncotreeCodeValues.result
                 .map(code => code.trim().toUpperCase())
                 .filter(code => O2GL_GENE_MAP[code] !== undefined)
-        ).length;
+        );
+    }
+
+    @computed get o2glFilterOncotreeCodeCount(): number {
+        return this.o2glFilterMatchedOncotreeCodes.length;
     }
 
     @computed get isO2glFilterAvailable(): boolean {

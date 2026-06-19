@@ -12,14 +12,28 @@ export function getOncoTree2GenesLinkout() {
     );
 }
 
-export function getOncoTree2GenesGeneOverlay(hugoGeneSymbol: string) {
+export function getOncoTree2GenesGeneOverlay(
+    hugoGeneSymbol: string,
+    oncotreeCodes?: string[]
+) {
+    const codes = oncotreeCodes || [];
+    let cancerTypeText: React.ReactNode;
+    if (codes.length === 1) {
+        cancerTypeText = <>cancer type {codes[0]}</>;
+    } else if (codes.length > 1) {
+        cancerTypeText = (
+            <>one of the {codes.length} cancer types in this cohort</>
+        );
+    } else {
+        cancerTypeText = <>this cancer type</>;
+    }
     return (
         <span style={{ display: 'flex', alignItems: 'flex-start' }}>
             <span style={{ marginRight: 5, marginTop: 1, flexShrink: 0 }}>
                 <OncoTree2GenesIcon />
             </span>
             <span>
-                {hugoGeneSymbol} is associated with this cancer type by the{' '}
+                {hugoGeneSymbol} is associated with {cancerTypeText} by the{' '}
                 {getOncoTree2GenesLinkout()} dataset.
             </span>
         </span>

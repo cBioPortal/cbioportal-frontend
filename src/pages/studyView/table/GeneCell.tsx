@@ -58,6 +58,7 @@ export type IGeneCellProps = {
     isOncogene: boolean;
     isTumorSuppressorGene: boolean;
     isO2glGene?: boolean;
+    o2glOncotreeCodes?: string[];
     onGeneSelect: (hugoGeneSymbol: string) => void;
 };
 
@@ -78,7 +79,10 @@ export class GeneCell extends React.Component<IGeneCellProps, {}> {
             this.props.isO2glGene || hasQValue ? (
                 <>
                     {this.props.isO2glGene &&
-                        getOncoTree2GenesGeneOverlay(this.props.hugoGeneSymbol)}
+                        getOncoTree2GenesGeneOverlay(
+                            this.props.hugoGeneSymbol,
+                            this.props.o2glOncotreeCodes
+                        )}
                     {hasQValue &&
                         getDriverGeneOverlay(
                             this.props.hugoGeneSymbol,
