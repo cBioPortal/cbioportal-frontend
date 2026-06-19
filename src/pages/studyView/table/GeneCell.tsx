@@ -51,9 +51,9 @@ export class GeneCell extends React.Component<IGeneCellProps, {}> {
             // which wraps its svg in a tooltip span) center like the others
             lineHeight: 0,
             // optically center with the all-caps gene symbol, whose letters
-            // sit in the upper part of the text line box
+            // sit slightly above the text line-box center
             position: 'relative',
-            top: -3,
+            top: -1,
         };
 
         return (
@@ -137,7 +137,7 @@ export class GeneCell extends React.Component<IGeneCellProps, {}> {
                         </If>
 
                         <div
-                            style={{ position: 'relative', top: -3 }}
+                            style={{ position: 'relative', top: -2 }}
                             className={classnames({
                                 [styles.addGeneUI]: true,
                                 [styles.selected]: geneIsSelected,
