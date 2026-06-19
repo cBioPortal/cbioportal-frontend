@@ -182,6 +182,7 @@ export class MultiSelectionTable extends React.Component<
                             cellMargin={cellMargin}
                             dataTest="gene-column-header"
                             options={this.geneFilterDropdownOptions}
+                            menuFooter={this.o2glOncotreeLink}
                         >
                             <span>{columnKey}</span>
                         </GeneFilterDropdown>
@@ -952,6 +953,51 @@ export class MultiSelectionTable extends React.Component<
             });
         }
         return options;
+    }
+
+    // Per oncotree code: the O2GL genes for it and the gene count, for the
+    // OncoTree annotation overlay.
+    @computed get o2glOncotreeAnnotations(): {
+        [code: string]: { value: number; genes: string[] };
+    } {
+        const codeToGenes: { [code: string]: string[] } = {};
+        _.forEach(this.props.o2glGeneOncotreeCodes || {}, (codes, gene) => {
+            codes.forEach(code => {
+                (codeToGenes[code] = codeToGenes[code] || []).push(gene);
+            });
+        });
+        return _.mapValues(codeToGenes, genes => ({
+            value: genes.length,
+            genes: genes.sort(),
+        }));
+    }
+
+    @computed get o2glOncotreeLink(): React.ReactNode {
+        const annotations = this.o2glOncotreeAnnotations;
+        if (!this.props.o2glFilterEnabled || _.isEmpty(annotations)) {
+            return undefined;
+        }
+        const base =
+            'https://inodb.github.io/oncotree/?version=oncotree_latest_stable';
+        const buildUrl = (payload: any) =>
+            `${base}&annotations=${encodeURIComponent(
+                JSON.stringify(payload)
+            )}`;
+        let url = buildUrl(annotations);
+        // keep the URL within a safe length; fall back to gene counts only
+        if (url.length > 8000) {
+            url = buildUrl(_.mapValues(annotations, a => a.value));
+        }
+        return (
+            <a
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-test="o2gl-oncotree-link"
+            >
+                <OncoTree2GenesIcon /> View these genes on OncoTree
+            </a>
+        );
     }
 
     @computed get allSelectedRowsKeysSet() {
