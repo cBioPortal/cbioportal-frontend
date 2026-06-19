@@ -3,6 +3,7 @@ import {
     getOncoKBCancerGeneListLinkout,
     getOncoKBReferenceInfo,
 } from './oncokb/OncoKBUtils';
+import { OncoKbCancerGeneIcon } from './oncokb/OncoKbCancerGeneIcon';
 import styles from './table/tables.module.scss';
 import classnames from 'classnames';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
@@ -36,19 +37,33 @@ export function getGeneColumnCellOverlaySimple(
             style={{
                 display: 'flex',
                 flexDirection: 'column',
+                gap: 3,
                 maxWidth: 300,
                 fontSize: 12,
             }}
         >
-            <span>
-                {getOncoKBReferenceInfo(
-                    hugoGeneSymbol,
-                    isCancerGene,
-                    oncokbAnnotated,
-                    isOncogene,
-                    isTumorSuppressorGene
-                )}
-            </span>
+            {isCancerGene && (
+                <span style={{ display: 'flex', alignItems: 'flex-start' }}>
+                    <span
+                        style={{
+                            marginRight: 5,
+                            marginTop: 1,
+                            flexShrink: 0,
+                        }}
+                    >
+                        <OncoKbCancerGeneIcon hugoGeneSymbol={hugoGeneSymbol} />
+                    </span>
+                    <span>
+                        {getOncoKBReferenceInfo(
+                            hugoGeneSymbol,
+                            isCancerGene,
+                            oncokbAnnotated,
+                            isOncogene,
+                            isTumorSuppressorGene
+                        )}
+                    </span>
+                </span>
+            )}
             {extraOverlay && <span>{extraOverlay}</span>}
             <strong>
                 {geneIsSelected
