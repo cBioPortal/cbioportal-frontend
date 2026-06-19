@@ -39,7 +39,7 @@ const COLUMNS: Column<O2glRow>[] = [
     {
         name: '# genes',
         align: 'right',
-        render: r => <span>{r.geneCount}</span>,
+        render: r => <div style={{ textAlign: 'right' }}>{r.geneCount}</div>,
         sortBy: r => r.geneCount,
         download: r => String(r.geneCount),
         width: 80,
