@@ -173,10 +173,6 @@ export class GeneCell extends React.Component<IGeneCellProps, {}> {
                             <span style={iconStyle}>
                                 <OncoKbCancerGeneIcon
                                     hugoGeneSymbol={this.props.hugoGeneSymbol}
-                                    isOncogene={this.props.isOncogene}
-                                    isTumorSuppressorGene={
-                                        this.props.isTumorSuppressorGene
-                                    }
                                 />
                             </span>
                         )}
