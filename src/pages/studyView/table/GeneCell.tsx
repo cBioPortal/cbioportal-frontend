@@ -50,6 +50,10 @@ export class GeneCell extends React.Component<IGeneCellProps, {}> {
             // collapse the inline baseline gap so nested icons (e.g. MutSig,
             // which wraps its svg in a tooltip span) center like the others
             lineHeight: 0,
+            // optically center with the all-caps gene symbol, whose letters
+            // sit in the upper part of the text line box
+            position: 'relative',
+            top: -3,
         };
 
         return (
@@ -77,7 +81,6 @@ export class GeneCell extends React.Component<IGeneCellProps, {}> {
                     <div
                         data-test="geneNameCell"
                         className={classnames(styles.displayFlex)}
-                        style={{ lineHeight: 1 }}
                         role="button"
                         tabIndex={0}
                         aria-label={`Select gene ${this.props.hugoGeneSymbol}`}
@@ -134,7 +137,7 @@ export class GeneCell extends React.Component<IGeneCellProps, {}> {
                         </If>
 
                         <div
-                            style={{ paddingTop: '3px' }}
+                            style={{ position: 'relative', top: -3 }}
                             className={classnames({
                                 [styles.addGeneUI]: true,
                                 [styles.selected]: geneIsSelected,
