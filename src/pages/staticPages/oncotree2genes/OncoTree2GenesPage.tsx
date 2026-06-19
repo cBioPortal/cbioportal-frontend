@@ -133,7 +133,7 @@ const OncoTree2GenesPage: React.FunctionComponent<{}> = () => {
                     {'cBioPortal for Cancer Genomics::OncoTree2Genes-LLM'}
                 </title>
             </Helmet>
-            <div style={{ padding: '15px 20px', maxWidth: 1100 }}>
+            <div style={{ padding: '15px 20px' }}>
                 <h1>OncoTree2Genes-LLM (O2GL)</h1>
                 <p>
                     OncoTree2Genes-LLM is a large-language-model-generated
