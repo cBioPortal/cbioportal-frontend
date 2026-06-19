@@ -11,25 +11,43 @@ const REPO_URL = 'https://github.com/SuhasiniLulla/OncoTree2Genes-LLM';
 const ONCOTREE_BASE =
     'https://inodb.github.io/oncotree/?version=oncotree_latest_stable';
 
-// All oncotree codes mapped to their gene counts. Kept as counts (not the full
-// gene lists) and base64url-encoded (the viz decodes base64) to keep the
-// annotation URL short; the gene names live in the table below.
-function getOncotreeCountsUrl(): string {
-    const counts: { [code: string]: number } = {};
-    Object.keys(O2GL_GENE_MAP).forEach(code => {
-        counts[code] = (O2GL_GENE_MAP[code] || []).length;
-    });
-    const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(counts))))
-        .replace(/\+/g, '-')
-        .replace(/\//g, '_');
-    return `${ONCOTREE_BASE}&annotations=${encoded}`;
-}
+// Full per-code annotations (gene count + gene list) for the embedded OncoTree.
+// Sent via postMessage so there is no URL-length limit.
+const ONCOTREE_ANNOTATIONS: {
+    [code: string]: { value: number; genes: string[] };
+} = _.mapValues(O2GL_GENE_MAP, genes => ({
+    value: (genes || []).length,
+    genes: genes || [],
+}));
 
 const OncoTree2GenesPage: React.FunctionComponent<{}> = () => {
     const [codeToName, setCodeToName] = React.useState<{
         [code: string]: string;
     }>({});
     const [filter, setFilter] = React.useState('');
+    const iframeRef = React.useRef<HTMLIFrameElement>(null);
+
+    // Push the full annotations to the embedded OncoTree once it signals ready.
+    React.useEffect(() => {
+        function onMessage(event: MessageEvent) {
+            if (
+                event.data &&
+                event.data.type === 'oncotree-ready' &&
+                iframeRef.current &&
+                iframeRef.current.contentWindow
+            ) {
+                iframeRef.current.contentWindow.postMessage(
+                    {
+                        type: 'oncotree-annotations',
+                        annotations: ONCOTREE_ANNOTATIONS,
+                    },
+                    '*'
+                );
+            }
+        }
+        window.addEventListener('message', onMessage);
+        return () => window.removeEventListener('message', onMessage);
+    }, []);
 
     React.useEffect(() => {
         getClient()
@@ -85,14 +103,21 @@ const OncoTree2GenesPage: React.FunctionComponent<{}> = () => {
                     .
                 </p>
                 <p>
-                    The full mapping is {Object.keys(O2GL_GENE_MAP).length}{' '}
-                    OncoTree codes. Browse the per-code gene counts on the
-                    OncoTree:{' '}
-                    <a href={getOncotreeCountsUrl()} target="_blank">
-                        view on OncoTree
-                    </a>
-                    .
+                    The full mapping covers {Object.keys(O2GL_GENE_MAP).length}{' '}
+                    OncoTree codes. Browse the genes on the OncoTree below, or
+                    use the table that follows.
                 </p>
+                <iframe
+                    ref={iframeRef}
+                    src={ONCOTREE_BASE}
+                    title="OncoTree2Genes-LLM on OncoTree"
+                    style={{
+                        width: '100%',
+                        height: 600,
+                        border: '1px solid #ddd',
+                        marginBottom: 15,
+                    }}
+                />
                 <input
                     type="text"
                     className="form-control"
