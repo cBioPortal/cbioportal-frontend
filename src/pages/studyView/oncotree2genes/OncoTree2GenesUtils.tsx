@@ -21,9 +21,7 @@ export function getOncoTree2GenesGeneOverlay(
     if (codes.length === 1) {
         cancerTypeText = <>cancer type {codes[0]}</>;
     } else if (codes.length > 1) {
-        cancerTypeText = (
-            <>one of the {codes.length} cancer types in this cohort</>
-        );
+        cancerTypeText = <>{codes.length} cancer types in this cohort</>;
     } else {
         cancerTypeText = <>this cancer type</>;
     }

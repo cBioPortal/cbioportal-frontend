@@ -9026,6 +9026,19 @@ export class StudyViewPageStore
         return this.o2glFilterMatchedOncotreeCodes.length;
     }
 
+    // Map each O2GL gene to the cohort's oncotree codes that include it, so a
+    // gene tooltip can name its specific cancer type(s) even in a multi-cancer
+    // cohort.
+    @computed get o2glGeneOncotreeCodeMap(): { [gene: string]: string[] } {
+        const map: { [gene: string]: string[] } = {};
+        this.o2glFilterMatchedOncotreeCodes.forEach(code => {
+            (O2GL_GENE_MAP[code] || []).forEach(gene => {
+                (map[gene] = map[gene] || []).push(code);
+            });
+        });
+        return map;
+    }
+
     @computed get isO2glFilterAvailable(): boolean {
         return this.o2glFilterGenes.length > 0;
     }
