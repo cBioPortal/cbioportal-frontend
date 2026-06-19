@@ -409,9 +409,8 @@ export default class MrnaViolinPlotChart extends React.Component<
                 {violinPath && (
                     <path
                         d={violinPath}
-                        fill="#4a90d9"
-                        fillOpacity={0.55}
-                        stroke="#2a6aad"
+                        fill="#2986E2"
+                        stroke="#2986E2"
                         strokeWidth={0.5}
                     />
                 )}
