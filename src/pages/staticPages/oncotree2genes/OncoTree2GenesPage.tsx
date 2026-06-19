@@ -82,6 +82,9 @@ const OncoTree2GenesPage: React.FunctionComponent<{}> = () => {
     const [search, setSearch] = React.useState('');
     const [debouncedSearch, setDebouncedSearch] = React.useState('');
     const [treeReady, setTreeReady] = React.useState(false);
+    const [treeMatchCount, setTreeMatchCount] = React.useState<number | null>(
+        null
+    );
     const iframeRef = React.useRef<HTMLIFrameElement>(null);
 
     // Debounce the search so we don't filter/post on every keystroke.
@@ -90,11 +93,21 @@ const OncoTree2GenesPage: React.FunctionComponent<{}> = () => {
         return () => clearTimeout(t);
     }, [search]);
 
-    // Track when the embedded OncoTree is ready to receive annotations.
+    // Track readiness and the tree's reported search match count.
     React.useEffect(() => {
         function onMessage(event: MessageEvent) {
-            if (event.data && event.data.type === 'oncotree-ready') {
+            if (!event.data) {
+                return;
+            }
+            if (event.data.type === 'oncotree-ready') {
                 setTreeReady(true);
+            }
+            if (event.data.type === 'oncotree-search-result') {
+                setTreeMatchCount(
+                    typeof event.data.count === 'number'
+                        ? event.data.count
+                        : null
+                );
             }
         }
         window.addEventListener('message', onMessage);
@@ -210,6 +223,12 @@ const OncoTree2GenesPage: React.FunctionComponent<{}> = () => {
                 <div style={{ color: '#888', marginBottom: 6 }}>
                     {filteredData.length} of {Object.keys(O2GL_GENE_MAP).length}{' '}
                     codes
+                    {debouncedSearch.trim() && treeMatchCount !== null && (
+                        <span>
+                            {' '}
+                            · {treeMatchCount} cancer types on the tree
+                        </span>
+                    )}
                 </div>
                 <O2glTable
                     data={filteredData}
