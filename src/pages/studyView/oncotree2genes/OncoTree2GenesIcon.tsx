@@ -10,9 +10,10 @@ export const OncoTree2GenesIcon: React.FunctionComponent<{}> = () => (
         <circle cx="5.5" cy="5.5" r="5" fill={ONCOTREE_BLUE} />
         <text
             x="5.5"
-            y="8.6"
+            y="9"
             textAnchor="middle"
-            fontSize="9"
+            dominantBaseline="alphabetic"
+            fontSize="8.5"
             fontWeight="bold"
             fontFamily="Arial, Helvetica, sans-serif"
             fill="#ffffff"
