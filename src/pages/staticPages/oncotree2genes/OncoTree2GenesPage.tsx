@@ -54,8 +54,17 @@ const COLUMNS: Column<O2glRow>[] = [
     },
 ];
 const REPO_URL = 'https://github.com/SuhasiniLulla/OncoTree2Genes-LLM';
-const ONCOTREE_BASE =
-    'https://inodb.github.io/oncotree/?version=oncotree_latest_stable';
+const ONCOTREE_BASE = 'https://inodb.github.io/oncotree/?embed=1';
+
+// Full per-code annotations (gene count + gene list) for the embedded OncoTree,
+// sent once via postMessage; search is driven separately via "oncotree-search".
+const ONCOTREE_ANNOTATIONS: {
+    [code: string]: { value: number; genes: string[] };
+} = {};
+Object.keys(O2GL_GENE_MAP).forEach(code => {
+    const genes = O2GL_GENE_MAP[code] || [];
+    ONCOTREE_ANNOTATIONS[code] = { value: genes.length, genes };
+});
 
 function matchesSearch(r: O2glRow, up: string): boolean {
     return (
@@ -71,8 +80,15 @@ const OncoTree2GenesPage: React.FunctionComponent<{}> = () => {
         [code: string]: string;
     }>({});
     const [search, setSearch] = React.useState('');
+    const [debouncedSearch, setDebouncedSearch] = React.useState('');
     const [treeReady, setTreeReady] = React.useState(false);
     const iframeRef = React.useRef<HTMLIFrameElement>(null);
+
+    // Debounce the search so we don't filter/post on every keystroke.
+    React.useEffect(() => {
+        const t = setTimeout(() => setDebouncedSearch(search), 250);
+        return () => clearTimeout(t);
+    }, [search]);
 
     // Track when the embedded OncoTree is ready to receive annotations.
     React.useEffect(() => {
@@ -116,36 +132,34 @@ const OncoTree2GenesPage: React.FunctionComponent<{}> = () => {
         [codeToName]
     );
 
-    const up = search.trim().toUpperCase();
+    const up = debouncedSearch.trim().toUpperCase();
     const filteredData = React.useMemo(
         () => (up ? data.filter(r => matchesSearch(r, up)) : data),
         [data, up]
     );
 
-    // Annotations for the codes matching the search (full payload when empty).
-    const filteredAnnotations = React.useMemo(() => {
-        const out: {
-            [code: string]: { value: number; genes: string[] };
-        } = {};
-        filteredData.forEach(r => {
-            out[r.code] = { value: r.geneCount, genes: r.genes };
-        });
-        return out;
-    }, [filteredData]);
-
-    // Push the (filtered) annotations whenever the tree is ready or search
-    // changes, so one search box drives both the tree and the table.
+    // Post the full annotations once the tree is ready.
     React.useEffect(() => {
         if (treeReady && iframeRef.current && iframeRef.current.contentWindow) {
             iframeRef.current.contentWindow.postMessage(
                 {
                     type: 'oncotree-annotations',
-                    annotations: filteredAnnotations,
+                    annotations: ONCOTREE_ANNOTATIONS,
                 },
                 '*'
             );
         }
-    }, [treeReady, filteredAnnotations]);
+    }, [treeReady]);
+
+    // Drive the tree's own search from the same (debounced) search box.
+    React.useEffect(() => {
+        if (treeReady && iframeRef.current && iframeRef.current.contentWindow) {
+            iframeRef.current.contentWindow.postMessage(
+                { type: 'oncotree-search', query: debouncedSearch.trim() },
+                '*'
+            );
+        }
+    }, [treeReady, debouncedSearch]);
 
     return (
         <PageLayout className={'whiteBackground staticPage'} hideFooter={true}>
