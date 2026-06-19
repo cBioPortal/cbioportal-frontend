@@ -43,6 +43,7 @@ import {
     IGeneFilterDropdownOption,
 } from 'pages/studyView/table/GeneFilterDropdown';
 import { getOncoKBCancerGeneListLinkout } from 'pages/studyView/oncokb/OncoKBUtils';
+import { getOncoTree2GenesLinkout } from 'pages/studyView/oncotree2genes/OncoTree2GenesUtils';
 
 export type MultiSelectionTableRow = OncokbCancerGene & {
     label: string;
@@ -93,6 +94,7 @@ export type BaseMultiSelectionTableProps = {
     filterByO2gl?: boolean;
     onChangeO2glFilter?: (filtered: boolean) => void;
     o2glGenes?: string[];
+    o2glOncotreeCodeCount?: number;
     alterationFilterEnabled?: boolean;
     filterAlterations?: boolean;
     setOperationsButtonText: string;
@@ -825,8 +827,19 @@ export class MultiSelectionTable extends React.Component<
             });
         }
         if (this.props.o2glFilterEnabled) {
+            const codeCount = this.props.o2glOncotreeCodeCount || 0;
+            const geneCount = this.o2glGeneSet.size;
             options.push({
-                label: <span>OncoTree2Genes-LLM</span>,
+                label: (
+                    <span>
+                        {getOncoTree2GenesLinkout()}{' '}
+                        <span className={styles.geneFilterDropdownCount}>
+                            ({codeCount} oncotree{' '}
+                            {codeCount === 1 ? 'code' : 'codes'}, {geneCount}{' '}
+                            {geneCount === 1 ? 'gene' : 'genes'})
+                        </span>
+                    </span>
+                ),
                 checked: this.isFilteredByO2gl,
                 onToggle: checked =>
                     this.props.onChangeO2glFilter &&
