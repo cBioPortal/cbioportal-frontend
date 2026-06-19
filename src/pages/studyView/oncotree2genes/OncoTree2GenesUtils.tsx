@@ -1,12 +1,17 @@
 import * as React from 'react';
 import { OncoTree2GenesIcon } from 'pages/studyView/oncotree2genes/OncoTree2GenesIcon';
 
-const ONCOTREE2GENES_URL =
-    'https://github.com/SuhasiniLulla/OncoTree2Genes-LLM';
+// Internal method page describing the dataset and listing all codes -> genes.
+const ONCOTREE2GENES_PAGE = '/oncotree2genes';
 
 export function getOncoTree2GenesLinkout() {
     return (
-        <a href={ONCOTREE2GENES_URL} target="_blank">
+        <a
+            href={ONCOTREE2GENES_PAGE}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={event => event.stopPropagation()}
+        >
             OncoTree2Genes-LLM
         </a>
     );

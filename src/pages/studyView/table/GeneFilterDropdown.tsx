@@ -18,7 +18,6 @@ export interface IGeneFilterDropdownProps {
     cellMargin: number;
     options: IGeneFilterDropdownOption[];
     dataTest?: string;
-    menuFooter?: React.ReactNode;
     children?: React.ReactNode;
 }
 
@@ -69,11 +68,6 @@ export class GeneFilterDropdown extends React.Component<
                         {option.label}
                     </LabeledCheckbox>
                 ))}
-                {this.props.menuFooter && (
-                    <div className={styles.geneFilterDropdownFooter}>
-                        {this.props.menuFooter}
-                    </div>
-                )}
             </div>
         );
     }

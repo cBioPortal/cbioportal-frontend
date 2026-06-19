@@ -14,7 +14,6 @@ declare const styles: {
   readonly "displayFlex": string;
   readonly "evenRow": string;
   readonly "geneFilterDropdownCount": string;
-  readonly "geneFilterDropdownFooter": string;
   readonly "geneFilterDropdownMenu": string;
   readonly "geneFilterDropdownTitle": string;
   readonly "geneSymbol": string;
