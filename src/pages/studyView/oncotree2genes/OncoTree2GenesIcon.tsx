@@ -6,13 +6,13 @@ const ONCOTREE_BLUE = '#2e6db4';
 // No own tooltip: the explanation is folded into the shared gene-cell tooltip
 // (see getOncoTree2GenesGeneOverlay) so hovering the cell shows a single tooltip.
 export const OncoTree2GenesIcon: React.FunctionComponent<{}> = () => (
-    <svg width="13" height="13" data-test="o2gl-gene-icon">
-        <circle cx="6.5" cy="6.5" r="6" fill={ONCOTREE_BLUE} />
+    <svg width="11" height="11" data-test="o2gl-gene-icon">
+        <circle cx="5.5" cy="5.5" r="5" fill={ONCOTREE_BLUE} />
         <text
-            x="6.5"
-            y="10"
+            x="5.5"
+            y="8.6"
             textAnchor="middle"
-            fontSize="10"
+            fontSize="9"
             fontWeight="bold"
             fontFamily="Arial, Helvetica, sans-serif"
             fill="#ffffff"

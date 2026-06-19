@@ -44,7 +44,7 @@ export class GeneCell extends React.Component<IGeneCellProps, {}> {
             this.props.hugoGeneSymbol
         );
         const iconStyle: React.CSSProperties = {
-            marginLeft: 2,
+            marginLeft: 1,
             display: 'inline-flex',
             alignItems: 'center',
         };

@@ -10,7 +10,7 @@ export const OncoKbCancerGeneIcon: React.FunctionComponent<{
     <img
         src={ONCOKB_ICON}
         alt={`${hugoGeneSymbol} is in the OncoKB Cancer Gene List`}
-        style={{ height: 12, width: 12, cursor: 'default' }}
+        style={{ height: 11, width: 11, cursor: 'default' }}
         data-test="oncokb-cancer-gene-icon"
     />
 );
