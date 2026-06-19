@@ -64,7 +64,7 @@ export function getGeneColumnCellOverlaySimple(
                     </span>
                 </span>
             )}
-            {extraOverlay && <span>{extraOverlay}</span>}
+            {extraOverlay}
             <strong>
                 {geneIsSelected
                     ? `Click gene symbol to remove from query queue`

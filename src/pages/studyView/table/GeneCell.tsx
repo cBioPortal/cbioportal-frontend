@@ -12,12 +12,38 @@ import {
 } from '../TableUtils';
 import { action, makeObservable, observable } from 'mobx';
 import { observer } from 'mobx-react';
-import { Else, If, Then } from 'react-if';
-import GisticAnnotation from 'shared/components/annotation/Gistic';
-import MutSigAnnotation from 'shared/components/annotation/MutSig';
+import LetterIcon from 'shared/components/cohort/LetterIcon';
 import { OncoKbCancerGeneIcon } from 'pages/studyView/oncokb/OncoKbCancerGeneIcon';
 import { OncoTree2GenesIcon } from 'pages/studyView/oncotree2genes/OncoTree2GenesIcon';
 import { getOncoTree2GenesGeneOverlay } from 'pages/studyView/oncotree2genes/OncoTree2GenesUtils';
+
+// Single-line tooltip entry describing the MutSig/GISTIC driver-gene call,
+// matching the OncoKB/O2GL rows so it can live in the shared gene-cell tooltip.
+function getDriverGeneOverlay(
+    hugoGeneSymbol: string,
+    isMutation: boolean,
+    qValue: number
+) {
+    return (
+        <span style={{ display: 'flex', alignItems: 'flex-start' }}>
+            <span
+                style={{
+                    marginRight: 5,
+                    marginTop: 1,
+                    flexShrink: 0,
+                    lineHeight: 0,
+                }}
+            >
+                <LetterIcon text={isMutation ? 'M' : 'G'} />
+            </span>
+            <span>
+                {hugoGeneSymbol} is a candidate driver gene by{' '}
+                {isMutation ? 'MutSig' : 'GISTIC'} (q-value:{' '}
+                {(qValue || 0).toExponential(3)}).
+            </span>
+        </span>
+    );
+}
 
 export type IGeneCellProps = {
     tableType: FreqColumnTypeEnum;
@@ -43,6 +69,23 @@ export class GeneCell extends React.Component<IGeneCellProps, {}> {
             this.props.selectedGenes,
             this.props.hugoGeneSymbol
         );
+        const isMutation = this.props.tableType === FreqColumnTypeEnum.MUTATION;
+        const hasQValue = !_.isUndefined(this.props.qValue);
+        const extraOverlay =
+            this.props.isO2glGene || hasQValue ? (
+                <>
+                    {this.props.isO2glGene &&
+                        getOncoTree2GenesGeneOverlay(this.props.hugoGeneSymbol)}
+                    {hasQValue &&
+                        getDriverGeneOverlay(
+                            this.props.hugoGeneSymbol,
+                            isMutation,
+                            this.props.qValue
+                        )}
+                </>
+            ) : (
+                undefined
+            );
         const iconStyle: React.CSSProperties = {
             marginLeft: 1,
             display: 'inline-flex',
@@ -61,7 +104,9 @@ export class GeneCell extends React.Component<IGeneCellProps, {}> {
                 <DefaultTooltip
                     placement="left"
                     disabled={
-                        !this.props.isCancerGene && !this.props.isO2glGene
+                        !this.props.isCancerGene &&
+                        !this.props.isO2glGene &&
+                        !hasQValue
                     }
                     overlay={getGeneColumnCellOverlaySimple(
                         this.props.hugoGeneSymbol,
@@ -70,11 +115,7 @@ export class GeneCell extends React.Component<IGeneCellProps, {}> {
                         this.props.oncokbAnnotated,
                         this.props.isOncogene,
                         this.props.isTumorSuppressorGene,
-                        this.props.isO2glGene
-                            ? getOncoTree2GenesGeneOverlay(
-                                  this.props.hugoGeneSymbol
-                              )
-                            : undefined
+                        extraOverlay
                     )}
                     destroyTooltipOnHide={true}
                 >
@@ -114,27 +155,11 @@ export class GeneCell extends React.Component<IGeneCellProps, {}> {
                                 <OncoTree2GenesIcon />
                             </span>
                         )}
-                        <If condition={!_.isUndefined(this.props.qValue)}>
+                        {hasQValue && (
                             <span style={iconStyle}>
-                                <If
-                                    condition={
-                                        this.props.tableType ===
-                                        FreqColumnTypeEnum.MUTATION
-                                    }
-                                >
-                                    <Then>
-                                        <MutSigAnnotation
-                                            qValue={this.props.qValue}
-                                        />
-                                    </Then>
-                                    <Else>
-                                        <GisticAnnotation
-                                            qValue={this.props.qValue}
-                                        />
-                                    </Else>
-                                </If>
+                                <LetterIcon text={isMutation ? 'M' : 'G'} />
                             </span>
-                        </If>
+                        )}
 
                         <div
                             style={{ position: 'relative', top: -2 }}
