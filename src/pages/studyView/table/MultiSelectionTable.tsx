@@ -100,6 +100,7 @@ export type BaseMultiSelectionTableProps = {
     o2glOncotreeCodes?: string[];
     o2glGeneOncotreeCodes?: { [gene: string]: string[] };
     oncotreeCodeColorMap?: { [code: string]: string };
+    oncotreeCodeNameMap?: { [code: string]: string };
     alterationFilterEnabled?: boolean;
     filterAlterations?: boolean;
     setOperationsButtonText: string;
@@ -210,6 +211,7 @@ export class MultiSelectionTable extends React.Component<
                             oncotreeCodeColorMap={
                                 this.props.oncotreeCodeColorMap
                             }
+                            oncotreeCodeNameMap={this.props.oncotreeCodeNameMap}
                             onGeneSelect={this.props.onGeneSelect!}
                         />
                     );

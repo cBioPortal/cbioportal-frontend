@@ -21,6 +21,7 @@ import {
     ClinicalAttribute,
     ClinicalAttributeCount,
     ClinicalAttributeCountFilter,
+    TypeOfCancer,
     ClinicalData,
     ClinicalDataBinFilter,
     ClinicalDataCount,
@@ -9010,18 +9011,33 @@ export class StudyViewPageStore
         default: [],
     });
 
-    // Color per oncotree code, matching how the study view colors clinical
-    // data values, so a gene's O2GL icon can reflect its cancer type.
+    readonly cancerTypes = remoteData<TypeOfCancer[]>({
+        invoke: () => getClient().getAllCancerTypesUsingGET({}),
+        onError: () => {},
+        default: [],
+    });
+
+    // Canonical oncotree color per code (cancerTypeId is the lowercase oncotree
+    // code, e.g. hcc -> MediumSeaGreen), so a gene's O2GL icon reflects its
+    // cancer type.
     @computed get oncotreeCodeColorMap(): { [code: string]: string } {
         const map: { [code: string]: string } = {};
-        getClinicalDataCountWithColorByClinicalDataCount(
-            this.oncotreeCodeCounts.result
-        ).forEach(slice => {
-            map[
-                String(slice.value || '')
-                    .trim()
-                    .toUpperCase()
-            ] = slice.color;
+        this.cancerTypes.result.forEach(ct => {
+            if (ct.dedicatedColor) {
+                map[ct.cancerTypeId.toUpperCase()] = ct.dedicatedColor;
+            }
+        });
+        return map;
+    }
+
+    // Readable cancer type name per oncotree code (e.g. DDLS ->
+    // "Dedifferentiated Liposarcoma") for the gene tooltip.
+    @computed get oncotreeCodeNameMap(): { [code: string]: string } {
+        const map: { [code: string]: string } = {};
+        this.cancerTypes.result.forEach(ct => {
+            if (ct.name) {
+                map[ct.cancerTypeId.toUpperCase()] = ct.name;
+            }
         });
         return map;
     }

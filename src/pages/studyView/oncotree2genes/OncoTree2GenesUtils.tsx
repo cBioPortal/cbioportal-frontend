@@ -15,12 +15,13 @@ export function getOncoTree2GenesLinkout() {
 export function getOncoTree2GenesGeneOverlay(
     hugoGeneSymbol: string,
     oncotreeCodes?: string[],
-    iconColor?: string
+    iconColor?: string,
+    cancerTypeName?: string
 ) {
     const codes = oncotreeCodes || [];
     let cancerTypeText: React.ReactNode;
     if (codes.length === 1) {
-        cancerTypeText = <>cancer type {codes[0]}</>;
+        cancerTypeText = <>cancer type {cancerTypeName || codes[0]}</>;
     } else if (codes.length > 1) {
         cancerTypeText = <>{codes.length} cancer types in this cohort</>;
     } else {

@@ -60,6 +60,7 @@ export type IGeneCellProps = {
     isO2glGene?: boolean;
     o2glOncotreeCodes?: string[];
     oncotreeCodeColorMap?: { [code: string]: string };
+    oncotreeCodeNameMap?: { [code: string]: string };
     onGeneSelect: (hugoGeneSymbol: string) => void;
 };
 
@@ -78,13 +79,18 @@ export class GeneCell extends React.Component<IGeneCellProps, {}> {
         const hasQValue = !_.isUndefined(this.props.qValue);
         // color the O2GL icon by the gene's cancer type when it maps to a
         // single oncotree code; otherwise keep the default OncoTree blue
-        const o2glColor =
+        const singleO2glCode =
             this.props.o2glOncotreeCodes &&
-            this.props.o2glOncotreeCodes.length === 1 &&
-            this.props.oncotreeCodeColorMap
-                ? this.props.oncotreeCodeColorMap[
-                      this.props.o2glOncotreeCodes[0]
-                  ]
+            this.props.o2glOncotreeCodes.length === 1
+                ? this.props.o2glOncotreeCodes[0]
+                : undefined;
+        const o2glColor =
+            singleO2glCode && this.props.oncotreeCodeColorMap
+                ? this.props.oncotreeCodeColorMap[singleO2glCode]
+                : undefined;
+        const o2glCancerTypeName =
+            singleO2glCode && this.props.oncotreeCodeNameMap
+                ? this.props.oncotreeCodeNameMap[singleO2glCode]
                 : undefined;
         const extraOverlay =
             this.props.isO2glGene || hasQValue ? (
@@ -93,7 +99,8 @@ export class GeneCell extends React.Component<IGeneCellProps, {}> {
                         getOncoTree2GenesGeneOverlay(
                             this.props.hugoGeneSymbol,
                             this.props.o2glOncotreeCodes,
-                            o2glColor
+                            o2glColor,
+                            o2glCancerTypeName
                         )}
                     {hasQValue &&
                         getDriverGeneOverlay(
