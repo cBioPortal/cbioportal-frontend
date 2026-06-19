@@ -74,6 +74,7 @@ export class GeneCell extends React.Component<IGeneCellProps, {}> {
                     <div
                         data-test="geneNameCell"
                         className={classnames(styles.displayFlex)}
+                        style={{ lineHeight: 1 }}
                         role="button"
                         tabIndex={0}
                         aria-label={`Select gene ${this.props.hugoGeneSymbol}`}
