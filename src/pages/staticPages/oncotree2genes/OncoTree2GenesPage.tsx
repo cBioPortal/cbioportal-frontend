@@ -1,6 +1,5 @@
 import * as React from 'react';
 import Helmet from 'react-helmet';
-import _ from 'lodash';
 import { PageLayout } from '../../../shared/components/PageLayout/PageLayout';
 import { getClient } from 'shared/api/cbioportalClientInstance';
 import LazyMobXTable, {
@@ -58,37 +57,28 @@ const REPO_URL = 'https://github.com/SuhasiniLulla/OncoTree2Genes-LLM';
 const ONCOTREE_BASE =
     'https://inodb.github.io/oncotree/?version=oncotree_latest_stable';
 
-// Full per-code annotations (gene count + gene list) for the embedded OncoTree.
-// Sent via postMessage so there is no URL-length limit.
-const ONCOTREE_ANNOTATIONS: {
-    [code: string]: { value: number; genes: string[] };
-} = _.mapValues(O2GL_GENE_MAP, genes => ({
-    value: (genes || []).length,
-    genes: genes || [],
-}));
+function matchesSearch(r: O2glRow, up: string): boolean {
+    return (
+        !up ||
+        r.code.toUpperCase().includes(up) ||
+        r.name.toUpperCase().includes(up) ||
+        r.genes.some(g => g.toUpperCase().includes(up))
+    );
+}
 
 const OncoTree2GenesPage: React.FunctionComponent<{}> = () => {
     const [codeToName, setCodeToName] = React.useState<{
         [code: string]: string;
     }>({});
+    const [search, setSearch] = React.useState('');
+    const [treeReady, setTreeReady] = React.useState(false);
     const iframeRef = React.useRef<HTMLIFrameElement>(null);
 
-    // Push the full annotations to the embedded OncoTree once it signals ready.
+    // Track when the embedded OncoTree is ready to receive annotations.
     React.useEffect(() => {
         function onMessage(event: MessageEvent) {
-            if (
-                event.data &&
-                event.data.type === 'oncotree-ready' &&
-                iframeRef.current &&
-                iframeRef.current.contentWindow
-            ) {
-                iframeRef.current.contentWindow.postMessage(
-                    {
-                        type: 'oncotree-annotations',
-                        annotations: ONCOTREE_ANNOTATIONS,
-                    },
-                    '*'
-                );
+            if (event.data && event.data.type === 'oncotree-ready') {
+                setTreeReady(true);
             }
         }
         window.addEventListener('message', onMessage);
@@ -126,6 +116,37 @@ const OncoTree2GenesPage: React.FunctionComponent<{}> = () => {
         [codeToName]
     );
 
+    const up = search.trim().toUpperCase();
+    const filteredData = React.useMemo(
+        () => (up ? data.filter(r => matchesSearch(r, up)) : data),
+        [data, up]
+    );
+
+    // Annotations for the codes matching the search (full payload when empty).
+    const filteredAnnotations = React.useMemo(() => {
+        const out: {
+            [code: string]: { value: number; genes: string[] };
+        } = {};
+        filteredData.forEach(r => {
+            out[r.code] = { value: r.geneCount, genes: r.genes };
+        });
+        return out;
+    }, [filteredData]);
+
+    // Push the (filtered) annotations whenever the tree is ready or search
+    // changes, so one search box drives both the tree and the table.
+    React.useEffect(() => {
+        if (treeReady && iframeRef.current && iframeRef.current.contentWindow) {
+            iframeRef.current.contentWindow.postMessage(
+                {
+                    type: 'oncotree-annotations',
+                    annotations: filteredAnnotations,
+                },
+                '*'
+            );
+        }
+    }, [treeReady, filteredAnnotations]);
+
     return (
         <PageLayout className={'whiteBackground staticPage'} hideFooter={true}>
             <Helmet>
@@ -150,9 +171,17 @@ const OncoTree2GenesPage: React.FunctionComponent<{}> = () => {
                 </p>
                 <p>
                     The full mapping covers {Object.keys(O2GL_GENE_MAP).length}{' '}
-                    OncoTree codes. Browse the genes on the OncoTree below, or
-                    use the table that follows.
+                    OncoTree codes. Search below to highlight matching cancer
+                    types on the tree and filter the table.
                 </p>
+                <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Search by code, cancer type, or gene…"
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    style={{ maxWidth: 420, marginBottom: 12 }}
+                />
                 <iframe
                     ref={iframeRef}
                     src={ONCOTREE_BASE}
@@ -164,11 +193,16 @@ const OncoTree2GenesPage: React.FunctionComponent<{}> = () => {
                         marginBottom: 15,
                     }}
                 />
+                <div style={{ color: '#888', marginBottom: 6 }}>
+                    {filteredData.length} of {Object.keys(O2GL_GENE_MAP).length}{' '}
+                    codes
+                </div>
                 <O2glTable
-                    data={data}
+                    data={filteredData}
                     columns={COLUMNS}
                     initialSortColumn="Code"
                     initialItemsPerPage={50}
+                    showFilter={false}
                     showColumnVisibility={false}
                 />
             </div>
