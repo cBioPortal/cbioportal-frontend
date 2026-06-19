@@ -12,16 +12,17 @@ const ONCOTREE_BASE =
     'https://inodb.github.io/oncotree/?version=oncotree_latest_stable';
 
 // All oncotree codes mapped to their gene counts. Kept as counts (not the full
-// gene lists) so the OncoTree annotation URL stays within browser length limits
-// for every browser; the gene names live in the table below.
+// gene lists) and base64url-encoded (the viz decodes base64) to keep the
+// annotation URL short; the gene names live in the table below.
 function getOncotreeCountsUrl(): string {
     const counts: { [code: string]: number } = {};
     Object.keys(O2GL_GENE_MAP).forEach(code => {
         counts[code] = (O2GL_GENE_MAP[code] || []).length;
     });
-    return `${ONCOTREE_BASE}&annotations=${encodeURIComponent(
-        JSON.stringify(counts)
-    )}`;
+    const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(counts))))
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_');
+    return `${ONCOTREE_BASE}&annotations=${encoded}`;
 }
 
 const OncoTree2GenesPage: React.FunctionComponent<{}> = () => {
