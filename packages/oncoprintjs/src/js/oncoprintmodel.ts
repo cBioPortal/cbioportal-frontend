@@ -1709,20 +1709,41 @@ export default class OncoprintModel {
         }
 
         // Next, see if it's in a track.
-        // Use linear scan instead of binary search because cell_tops
-        // may not be monotonically ordered relative to the tracks array
-        // during async clustering transitions.
+        // Try binary search first for performance, but fall back to linear
+        // scan if the result is invalid. cell_tops may not be monotonically
+        // ordered relative to the tracks array during async clustering
+        // transitions, which causes binary search to return wrong results.
         const tracks = this.getTracks();
         const cell_tops = this.getCellTops() as TrackProp<number>;
         let nearest_track: TrackId | undefined;
-        for (let t = 0; t < tracks.length; t++) {
-            const top = cell_tops[tracks[t]];
+        const nearest_track_index = binarysearch(
+            tracks,
+            y,
+            function(track) {
+                return cell_tops[track];
+            },
+            true
+        );
+        if (nearest_track_index !== -1) {
+            const candidate = tracks[nearest_track_index];
             if (
-                y >= top &&
-                y < top + this.getCellHeight(tracks[t])
+                y >= cell_tops[candidate] &&
+                y < cell_tops[candidate] + this.getCellHeight(candidate)
             ) {
-                nearest_track = tracks[t];
-                break;
+                nearest_track = candidate;
+            }
+        }
+        if (nearest_track === undefined) {
+            // Binary search failed (tracks out of order) - linear fallback
+            for (let t = 0; t < tracks.length; t++) {
+                const top = cell_tops[tracks[t]];
+                if (
+                    y >= top &&
+                    y < top + this.getCellHeight(tracks[t])
+                ) {
+                    nearest_track = tracks[t];
+                    break;
+                }
             }
         }
         if (nearest_track === undefined) {

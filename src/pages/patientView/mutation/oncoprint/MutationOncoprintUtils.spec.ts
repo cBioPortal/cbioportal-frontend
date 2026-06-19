@@ -1337,9 +1337,10 @@ describe('MutationOncoprintUtils', () => {
                 );
             });
         });
-        // Based on real data from patient IM-GBM-33 in glioma_msk_2018:
-        // ARID1A X721_splice: called in sample1 (CSF, alt=49, ref=239), uncalled in sample2 (T, alt=0, ref=586)
-        // ARID1A G960E: called in sample2 (T, alt=54, ref=246), uncalled in sample1 (CSF, alt=0, ref=181)
+        // Based on real patient IM-GBM-33 in glioma_msk_2018.
+        // Note: makeMutation uses simplified counts (tumorRefCount = 100 - tumorAltCount),
+        // not the actual clinical values. The pattern tested is what matters:
+        // called mutations have positive alt counts, uncalled have 0.
         describe('uncalled mutations', () => {
             it('correctly handles called mutation in one sample with uncalled (0 alt reads) in another', () => {
                 // ARID1A X721_splice: called in sample1, uncalled with 0 alt reads in sample2

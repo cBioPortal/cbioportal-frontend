@@ -86,7 +86,7 @@ export function makeMutationHeatmapData(
                     mutationId,
                     mutationStatus: MutationStatus.PROFILED_BUT_NOT_MUTATED,
                 });
-            } else if (!isUncalled || mutation.tumorAltCount > 0) {
+            } else {
                 mutationKeys[mutationId] = true;
                 let vafReport = getVariantAlleleFrequency(mutation);
 
