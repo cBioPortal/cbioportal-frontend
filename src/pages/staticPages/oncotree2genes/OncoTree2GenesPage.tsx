@@ -319,8 +319,9 @@ const OncoTree2GenesPage: React.FunctionComponent<{}> = () => {
                 </p>
                 <p>
                     The full mapping covers {Object.keys(O2GL_GENE_MAP).length}{' '}
-                    OncoTree codes. Search below to highlight matching cancer
-                    types on the tree and filter the table.
+                    OncoTree codes and {Object.keys(GENE_TO_CODES).length}{' '}
+                    genes. Search below to highlight matching cancer types on
+                    the tree and filter the table.
                 </p>
                 <input
                     type="text"
