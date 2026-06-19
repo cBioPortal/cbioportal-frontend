@@ -39,7 +39,10 @@ function getDriverGeneOverlay(
             <span>
                 {hugoGeneSymbol} is a candidate driver gene by{' '}
                 {isMutation ? 'MutSig' : 'GISTIC'} (q-value:{' '}
-                {(qValue || 0).toExponential(3)}).
+                {(qValue || 0).toExponential(3)}).{' '}
+                {isMutation
+                    ? 'MutSig flags genes mutated more often than expected by chance across the study.'
+                    : 'GISTIC flags genes in regions with recurrent copy-number gains or losses across the study.'}
             </span>
         </span>
     );
@@ -162,7 +165,11 @@ export class GeneCell extends React.Component<IGeneCellProps, {}> {
                         )}
 
                         <div
-                            style={{ position: 'relative', top: -2 }}
+                            style={{
+                                position: 'relative',
+                                top: -1,
+                                fontSize: 11,
+                            }}
                             className={classnames({
                                 [styles.addGeneUI]: true,
                                 [styles.selected]: geneIsSelected,
