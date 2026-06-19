@@ -63,6 +63,21 @@ describe('PatientViewMutationsTabUtils', () => {
             assert.notInclude(html, 'not detected');
         });
 
+        it('shows "Mutation uncalled" without VAF when vafReport is null for PROFILED_WITH_READS_BUT_UNCALLED', () => {
+            const mutation = makeMutation('ARID1A', 'G960E');
+            const html = renderToStaticMarkup(
+                mutationTooltip(mutation, {
+                    sampleId: 'Patient-33-CSF',
+                    mutationStatus:
+                        MutationStatus.PROFILED_WITH_READS_BUT_UNCALLED,
+                    vafReport: null,
+                })
+            );
+            assert.include(html, 'Mutation uncalled');
+            assert.notInclude(html, 'VAF:');
+            assert.notInclude(html, 'reads of');
+        });
+
         it('shows "Mutation not detected" with VAF when vafReport is provided for PROFILED_BUT_NOT_MUTATED', () => {
             const mutation = makeMutation('ARID1A', 'X721_splice');
             const vafReport: VAFReport = {
