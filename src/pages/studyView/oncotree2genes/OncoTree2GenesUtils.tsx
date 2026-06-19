@@ -14,7 +14,8 @@ export function getOncoTree2GenesLinkout() {
 
 export function getOncoTree2GenesGeneOverlay(
     hugoGeneSymbol: string,
-    oncotreeCodes?: string[]
+    oncotreeCodes?: string[],
+    iconColor?: string
 ) {
     const codes = oncotreeCodes || [];
     let cancerTypeText: React.ReactNode;
@@ -28,7 +29,7 @@ export function getOncoTree2GenesGeneOverlay(
     return (
         <span style={{ display: 'flex', alignItems: 'flex-start' }}>
             <span style={{ marginRight: 5, marginTop: 1, flexShrink: 0 }}>
-                <OncoTree2GenesIcon />
+                <OncoTree2GenesIcon color={iconColor} />
             </span>
             <span>
                 {hugoGeneSymbol} is associated with {cancerTypeText} by the{' '}

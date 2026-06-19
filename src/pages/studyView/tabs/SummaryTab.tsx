@@ -907,6 +907,7 @@ export class StudySummaryTab extends React.Component<
             o2glGenes: this.store.o2glFilterGenes,
             o2glOncotreeCodes: this.store.o2glFilterMatchedOncotreeCodes,
             o2glGeneOncotreeCodes: this.store.o2glGeneOncotreeCodeMap,
+            oncotreeCodeColorMap: this.store.oncotreeCodeColorMap,
             setComparisonConfirmationModal: this.store
                 .setComparisonConfirmationModal,
         };

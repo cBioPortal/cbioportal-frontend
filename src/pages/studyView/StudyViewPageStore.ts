@@ -8960,7 +8960,7 @@ export class StudyViewPageStore
         },
     }));
 
-    readonly oncotreeCodeValues = remoteData<string[]>({
+    readonly oncotreeCodeCounts = remoteData<ClinicalDataCount[]>({
         await: () => [this.clinicalAttributes, this.selectedSamples],
         invoke: async () => {
             if (!this.hasFilteredSamples) {
@@ -8989,21 +8989,42 @@ export class StudyViewPageStore
             const oncotreeCounts = results.find(
                 item => item.attributeId === ONCOTREE_CODE_ATTRIBUTE_ID
             );
-            if (!oncotreeCounts) {
-                return [];
-            }
-            return oncotreeCounts.counts
+            return oncotreeCounts ? oncotreeCounts.counts : [];
+        },
+        onError: () => {},
+        default: [],
+    });
+
+    readonly oncotreeCodeValues = remoteData<string[]>({
+        await: () => [this.oncotreeCodeCounts],
+        invoke: async () =>
+            this.oncotreeCodeCounts.result
                 .map(count => String(count.value || '').trim())
                 .filter(
                     value =>
                         value.length > 0 &&
                         value.toUpperCase() !== 'NA' &&
                         value.toUpperCase() !== 'N/A'
-                );
-        },
+                ),
         onError: () => {},
         default: [],
     });
+
+    // Color per oncotree code, matching how the study view colors clinical
+    // data values, so a gene's O2GL icon can reflect its cancer type.
+    @computed get oncotreeCodeColorMap(): { [code: string]: string } {
+        const map: { [code: string]: string } = {};
+        getClinicalDataCountWithColorByClinicalDataCount(
+            this.oncotreeCodeCounts.result
+        ).forEach(slice => {
+            map[
+                String(slice.value || '')
+                    .trim()
+                    .toUpperCase()
+            ] = slice.color;
+        });
+        return map;
+    }
 
     @computed get o2glFilterGenes(): string[] {
         return Array.from(
