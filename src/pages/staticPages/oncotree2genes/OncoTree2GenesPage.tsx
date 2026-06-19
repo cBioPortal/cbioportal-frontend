@@ -150,6 +150,11 @@ const OncoTree2GenesPage: React.FunctionComponent<{}> = () => {
         () => (up ? data.filter(r => matchesSearch(r, up)) : data),
         [data, up]
     );
+    const uniqueGeneCount = React.useMemo(() => {
+        const s = new Set<string>();
+        filteredData.forEach(r => r.genes.forEach(g => s.add(g)));
+        return s.size;
+    }, [filteredData]);
 
     // Post the full annotations once the tree is ready.
     React.useEffect(() => {
@@ -222,12 +227,9 @@ const OncoTree2GenesPage: React.FunctionComponent<{}> = () => {
                 />
                 <div style={{ color: '#888', marginBottom: 6 }}>
                     {filteredData.length} of {Object.keys(O2GL_GENE_MAP).length}{' '}
-                    codes
+                    cancer types · {uniqueGeneCount} genes
                     {debouncedSearch.trim() && treeMatchCount !== null && (
-                        <span>
-                            {' '}
-                            · {treeMatchCount} cancer types on the tree
-                        </span>
+                        <span> · {treeMatchCount} matched on the tree</span>
                     )}
                 </div>
                 <O2glTable
