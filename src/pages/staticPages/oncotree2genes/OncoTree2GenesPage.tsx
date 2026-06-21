@@ -89,15 +89,17 @@ const COLUMNS: Column<O2glRow>[] = [
 ];
 const REPO_URL = 'https://github.com/SuhasiniLulla/OncoTree2Genes-LLM';
 const ONCOTREE_BASE = 'https://inodb.github.io/oncotree/?embed=1';
+const ROWS_PER_PAGE = 10;
 
-// Full per-code annotations (gene count + gene list) for the embedded OncoTree,
-// sent once via postMessage; search is driven separately via "oncotree-search".
+// Per-code gene lists for the embedded OncoTree, sent once via postMessage;
+// search is driven separately via "oncotree-search". Only the gene list is
+// sent (no numeric value) so a collapsed parent's badge shows the number of
+// distinct genes across its subtree (union), not a sum.
 const ONCOTREE_ANNOTATIONS: {
-    [code: string]: { value: number; genes: string[] };
+    [code: string]: { genes: string[] };
 } = {};
 Object.keys(O2GL_GENE_MAP).forEach(code => {
-    const genes = O2GL_GENE_MAP[code] || [];
-    ONCOTREE_ANNOTATIONS[code] = { value: genes.length, genes };
+    ONCOTREE_ANNOTATIONS[code] = { genes: O2GL_GENE_MAP[code] || [] };
 });
 
 function matchesSearch(r: O2glRow, up: string): boolean {
@@ -373,7 +375,7 @@ const OncoTree2GenesPage: React.FunctionComponent<{}> = () => {
                     data={filteredData}
                     columns={COLUMNS}
                     initialSortColumn="Code"
-                    initialItemsPerPage={10}
+                    initialItemsPerPage={ROWS_PER_PAGE}
                     showFilter={false}
                     showColumnVisibility={false}
                 />
@@ -386,7 +388,7 @@ const OncoTree2GenesPage: React.FunctionComponent<{}> = () => {
                     data={filteredGeneData}
                     columns={GENE_COLUMNS}
                     initialSortColumn="Gene"
-                    initialItemsPerPage={10}
+                    initialItemsPerPage={ROWS_PER_PAGE}
                     showFilter={false}
                     showColumnVisibility={false}
                 />
