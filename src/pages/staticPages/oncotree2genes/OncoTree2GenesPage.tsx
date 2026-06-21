@@ -359,6 +359,7 @@ const OncoTree2GenesPage: React.FunctionComponent<{}> = () => {
                     ref={iframeRef}
                     src={ONCOTREE_BASE}
                     title="OncoTree2Genes-LLM on OncoTree"
+                    allow="fullscreen"
                     style={{
                         width: '100%',
                         height: 600,
