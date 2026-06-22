@@ -1,5 +1,5 @@
 // Source: end-to-end-test/local/specs/group-color-chooser.spec.js
-import { test, expect, Page } from '../../fixtures';
+import { test, expect, Page, Locator } from '../../fixtures';
 import { goToUrlAndSetLocalStorage } from './helpers';
 import {
     setDropdownOpen,
@@ -40,6 +40,34 @@ const gbGroupColorIconBlue = `[data-test="group-checkboxes"] [data-test="GB"] ${
 
 test.describe.serial('color chooser for groups menu in study view', () => {
     let page: Page;
+
+    // Opens a circle-picker swatch by clicking `icon` (if not already open),
+    // then clicks the swatch. Retries the open+click cycle if the swatch is
+    // briefly detached mid-click due to circle-picker's initial re-render.
+    const selectColorPickerSwatch = async (
+        icon: string | Locator,
+        swatchSel: string
+    ) => {
+        const iconLocator =
+            typeof icon === 'string' ? page.locator(icon) : icon;
+        for (let attempt = 0; attempt < 3; attempt++) {
+            if (!(await page.locator(swatchSel).isVisible())) {
+                await iconLocator.click();
+            }
+            try {
+                await expect(page.locator(swatchSel)).toBeVisible({
+                    timeout: 5000,
+                });
+                await page.locator(swatchSel).click({ timeout: 5000 });
+                return;
+            } catch {
+                if (attempt === 2)
+                    throw new Error(
+                        `Could not click color swatch "${swatchSel}" after 3 attempts`
+                    );
+            }
+        }
+    };
 
     const openGroupsMenu = async () => {
         await setDropdownOpen(
@@ -102,16 +130,14 @@ test.describe.serial('color chooser for groups menu in study view', () => {
     });
 
     test('shows new color in icon when new color is selected', async () => {
-        await setDropdownOpen(page, true, gbGroupColorIcon, colorPickerBlue);
-        await page.locator(colorPickerBlue).click();
+        await selectColorPickerSwatch(gbGroupColorIcon, colorPickerBlue);
         await expect(page.locator(gbGroupColorIconBlue)).toBeAttached();
         const groupGbColorIcon = page.locator(gbGroupColorIconRect);
         expect(await groupGbColorIcon.getAttribute('fill')).toBe('#2986e2');
     });
 
     test('selects no color after pressing same color', async () => {
-        await setDropdownOpen(page, true, gbGroupColorIcon, colorPickerBlue);
-        await page.locator(colorPickerBlue).click();
+        await selectColorPickerSwatch(gbGroupColorIcon, colorPickerBlue);
         await expect(page.locator(gbGroupColorIconEmpty)).toBeAttached();
         const groupGBColorIcon = page.locator(gbGroupColorIconRect);
         expect(await groupGBColorIcon.getAttribute('fill')).toBe('#FFFFFF');
@@ -146,14 +172,11 @@ test.describe.serial('color chooser for groups menu in study view', () => {
             .nth(1)
             .click();
 
-        await setDropdownOpen(page, true, gbGroupColorIcon, colorPickerBlue);
-        await page.locator(colorPickerBlue).click();
+        await selectColorPickerSwatch(gbGroupColorIcon, colorPickerBlue);
         await setDropdownOpen(page, false, gbGroupColorIcon, colorPickerBlue);
 
         const secondColorIcon = page.locator(colorIcon).nth(1);
-        await secondColorIcon.click();
-        await expect(page.locator(colorPickerBlue)).toBeVisible();
-        await page.locator(colorPickerBlue).click();
+        await selectColorPickerSwatch(secondColorIcon, colorPickerBlue);
 
         await expect(page.locator(warningSign)).toBeAttached();
     });
@@ -223,11 +246,10 @@ test.describe.serial('color chooser for groups menu in study view', () => {
             .nth(1)
             .click();
 
-        await page
-            .locator(colorIcon)
-            .nth(1)
-            .click();
-        await page.locator(colorPickerGreen).click();
+        await selectColorPickerSwatch(
+            page.locator(colorIcon).nth(1),
+            colorPickerGreen
+        );
 
         const context = page.context();
         const [comparisonPage] = await Promise.all([
