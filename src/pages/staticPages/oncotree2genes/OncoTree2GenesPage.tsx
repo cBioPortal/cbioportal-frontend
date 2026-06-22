@@ -211,17 +211,27 @@ const OncoTree2GenesPage: React.FunctionComponent<{}> = () => {
                 setTreeReady(true);
             }
             if (event.data.type === 'oncotree-node-click') {
-                const code = (event.data.code || event.data.label || '')
-                    .toString()
-                    .toUpperCase();
-                if (code) {
-                    // toggle: append if new, remove if already selected
-                    setSelectedCodes(prev =>
-                        prev.includes(code)
-                            ? prev.filter(c => c !== code)
-                            : [...prev, code]
-                    );
+                const codes: string[] = (Array.isArray(event.data.codes) &&
+                event.data.codes.length
+                    ? event.data.codes
+                    : [event.data.code || event.data.label]
+                )
+                    .filter(Boolean)
+                    .map((c: any) => c.toString().toUpperCase());
+                if (codes.length === 0) {
+                    return;
                 }
+                const add = event.data.mode === 'add';
+                setSelectedCodes(prev => {
+                    const set = new Set(prev);
+                    // "add" (e.g. expanding a parent) only adds; otherwise toggle
+                    // the group: remove if all already selected, else add all.
+                    const allSelected = codes.every(c => set.has(c));
+                    codes.forEach(c =>
+                        !add && allSelected ? set.delete(c) : set.add(c)
+                    );
+                    return Array.from(set);
+                });
             }
         }
         window.addEventListener('message', onMessage);
