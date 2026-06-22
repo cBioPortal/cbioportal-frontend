@@ -4344,7 +4344,7 @@ describe('StudyViewUtils', () => {
                 assert.equal(
                     downloadData,
                     [
-                        'Entity\tCategory\t# Samples\tFreq',
+                        'Entity\tCategory\t#\tFreq',
                         'Entity A Label\tSubtype A\t4\t40.0%',
                     ].join('\n')
                 );

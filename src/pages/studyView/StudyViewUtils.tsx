@@ -5102,8 +5102,8 @@ export function formatGenericAssayFrequencyTableDownloadData(
     }
 
     const header = showCategoryColumn
-        ? ['Entity', 'Category', '# Samples', 'Freq']
-        : ['Entity', '# Samples', 'Freq'];
+        ? ['Entity', 'Category', '#', 'Freq']
+        : ['Entity', '#', 'Freq'];
     const data = [header.join('\t')];
 
     _.each(rows, record => {

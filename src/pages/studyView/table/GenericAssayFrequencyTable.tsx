@@ -38,7 +38,7 @@ import { TableHeaderCellFilterIcon } from 'pages/studyView/table/TableHeaderCell
 export enum GenericAssayFrequencyTableColumnKey {
     ENTITY = 'Entity',
     CATEGORY = 'Category',
-    COUNT = '# Samples',
+    COUNT = '#',
     FREQ = 'Freq',
 }
 
