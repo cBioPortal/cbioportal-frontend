@@ -329,6 +329,16 @@ const OncoTree2GenesPage: React.FunctionComponent<{}> = () => {
         }
     }, [treeReady, debouncedSearch]);
 
+    // Reflect the current selection on the tree (checkmark on selected codes).
+    React.useEffect(() => {
+        if (treeReady && iframeRef.current && iframeRef.current.contentWindow) {
+            iframeRef.current.contentWindow.postMessage(
+                { type: 'oncotree-selection', codes: selectedCodes },
+                '*'
+            );
+        }
+    }, [treeReady, selectedCodes]);
+
     return (
         <PageLayout className={'whiteBackground staticPage'} hideFooter={true}>
             <Helmet>
