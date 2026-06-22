@@ -371,6 +371,25 @@ const OncoTree2GenesPage: React.FunctionComponent<{}> = () => {
                     </a>
                     .
                 </p>
+                <p
+                    style={{
+                        background: '#fff3cd',
+                        border: '1px solid #ffe69c',
+                        borderRadius: 4,
+                        padding: '8px 12px',
+                    }}
+                >
+                    <strong>Caveat:</strong> these lists were generated to
+                    provide suggested gene names to explore for a given OncoTree
+                    code. They should not be seen as an expert-curated list, but
+                    rather a representation of the relationships the LLM
+                    identified from published literature. Some connections may
+                    be hallucinated — if you spot any, please email{' '}
+                    <a href="mailto:cbioportal@googlegroups.com">
+                        cbioportal@googlegroups.com
+                    </a>
+                    .
+                </p>
                 <p>
                     The full mapping covers {Object.keys(O2GL_GENE_MAP).length}{' '}
                     OncoTree codes and {Object.keys(GENE_TO_CODES).length}{' '}
