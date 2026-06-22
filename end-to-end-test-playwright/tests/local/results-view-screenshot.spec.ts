@@ -2,7 +2,7 @@
 import { expect } from '@playwright/test';
 import { test } from '../../fixtures';
 import { goToUrlAndSetLocalStorage } from './helpers';
-import { expectElementScreenshot } from '../helpers/common';
+import { expectElementScreenshot, waitForIgvRendered } from '../helpers/common';
 
 const CBIOPORTAL_URL = (
     process.env.CBIOPORTAL_URL ?? 'http://localhost:8080'
@@ -72,25 +72,7 @@ test.describe('cnsegments tab', () => {
     test('renders cnsegments tab', async ({ page }) => {
         const url = `${CBIOPORTAL_URL}/results/cnSegments?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=study_es_0&case_set_id=study_es_0_cnaseq&data_priority=0&gene_list=TP53&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=study_es_0_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=study_es_0_mutations&profileFilter=0&tab_index=tab_visualize`;
         await goToUrlAndSetLocalStorage(page, url, true);
-        // The LoadingIndicator uses position:fixed so it doesn't affect layout.
-        // Wait until it is gone (isHidden=false) AND the IGV column container
-        // has a stable non-zero height — that means the tracks have rendered
-        // into their canvases.
-        await page.waitForFunction(
-            () => {
-                if (document.querySelector('[data-test="LoadingIndicator"]'))
-                    return false;
-                const igvCol = document.querySelector('.igv-column-container');
-                if (!igvCol) return false;
-                const h = (igvCol as HTMLElement).getBoundingClientRect()
-                    .height;
-                const last = (window as any).__lastIgvColH;
-                (window as any).__lastIgvColH = h;
-                return h > 0 && last !== undefined && Math.abs(h - last) < 1;
-            },
-            null,
-            { polling: 500, timeout: 60000 }
-        );
+        await waitForIgvRendered(page);
         await expectElementScreenshot(
             page,
             '.cnSegmentsMSKTab',

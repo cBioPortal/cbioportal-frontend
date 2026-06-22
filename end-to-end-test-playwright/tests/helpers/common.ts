@@ -195,6 +195,32 @@ export async function setCheckboxChecked(
     if (isChecked !== checked) await cb.click();
 }
 
+/**
+ * Wait until the IGV column container has rendered and stabilized.
+ * Polls until the LoadingIndicator is gone and the `.igv-column-container`
+ * reports a non-zero height that hasn't changed between two consecutive
+ * 500 ms intervals.
+ */
+export async function waitForIgvRendered(
+    page: Page,
+    timeout = 60000
+): Promise<void> {
+    await page.waitForFunction(
+        () => {
+            if (document.querySelector('[data-test="LoadingIndicator"]'))
+                return false;
+            const igvCol = document.querySelector('.igv-column-container');
+            if (!igvCol) return false;
+            const h = (igvCol as HTMLElement).getBoundingClientRect().height;
+            const last = (window as any).__lastIgvColH;
+            (window as any).__lastIgvColH = h;
+            return h > 0 && last !== undefined && Math.abs(h - last) < 1;
+        },
+        null,
+        { polling: 500, timeout }
+    );
+}
+
 /** Wait for the comparison-tab overlap chart to render. */
 export async function waitForGroupComparisonTabOpen(
     page: Page,
