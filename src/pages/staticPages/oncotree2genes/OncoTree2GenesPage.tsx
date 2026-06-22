@@ -198,11 +198,21 @@ const OncoTree2GenesPage: React.FunctionComponent<{}> = () => {
         return () => clearTimeout(t);
     }, [search]);
 
-    // Track when the embedded OncoTree is ready to receive annotations.
+    // Track readiness, and let clicks on a node in the embedded OncoTree drive
+    // the search (so the tables filter to that cancer type).
     React.useEffect(() => {
         function onMessage(event: MessageEvent) {
-            if (event.data && event.data.type === 'oncotree-ready') {
+            if (!event.data) {
+                return;
+            }
+            if (event.data.type === 'oncotree-ready') {
                 setTreeReady(true);
+            }
+            if (event.data.type === 'oncotree-node-click') {
+                const code = event.data.code || event.data.label || '';
+                if (code) {
+                    setSearch(code);
+                }
             }
         }
         window.addEventListener('message', onMessage);
