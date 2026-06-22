@@ -189,6 +189,8 @@ const OncoTree2GenesPage: React.FunctionComponent<{}> = () => {
     }>({});
     const [search, setSearch] = React.useState('');
     const [debouncedSearch, setDebouncedSearch] = React.useState('');
+    // Codes selected by clicking nodes in the embedded OncoTree.
+    const [selectedCodes, setSelectedCodes] = React.useState<string[]>([]);
     const [treeReady, setTreeReady] = React.useState(false);
     const iframeRef = React.useRef<HTMLIFrameElement>(null);
 
@@ -209,9 +211,16 @@ const OncoTree2GenesPage: React.FunctionComponent<{}> = () => {
                 setTreeReady(true);
             }
             if (event.data.type === 'oncotree-node-click') {
-                const code = event.data.code || event.data.label || '';
+                const code = (event.data.code || event.data.label || '')
+                    .toString()
+                    .toUpperCase();
                 if (code) {
-                    setSearch(code);
+                    // toggle: append if new, remove if already selected
+                    setSelectedCodes(prev =>
+                        prev.includes(code)
+                            ? prev.filter(c => c !== code)
+                            : [...prev, code]
+                    );
                 }
             }
         }
@@ -251,13 +260,20 @@ const OncoTree2GenesPage: React.FunctionComponent<{}> = () => {
     );
 
     const up = debouncedSearch.trim().toUpperCase();
+    const selectedSet = React.useMemo(() => new Set(selectedCodes), [
+        selectedCodes,
+    ]);
     const filteredData = React.useMemo(
         () =>
-            (up ? data.filter(r => matchesSearch(r, up)) : data).map(r => ({
-                ...r,
-                term: up,
-            })),
-        [data, up]
+            data
+                .filter(
+                    r =>
+                        (selectedSet.size === 0 ||
+                            selectedSet.has(r.code.toUpperCase())) &&
+                        (!up || matchesSearch(r, up))
+                )
+                .map(r => ({ ...r, term: up })),
+        [data, up, selectedSet]
     );
     const uniqueGeneCount = React.useMemo(() => {
         const s = new Set<string>();
@@ -277,11 +293,17 @@ const OncoTree2GenesPage: React.FunctionComponent<{}> = () => {
     );
     const filteredGeneData = React.useMemo(
         () =>
-            (up
-                ? geneData.filter(r => geneMatches(r, up, codeToName))
-                : geneData
-            ).map(r => ({ ...r, term: up })),
-        [geneData, up, codeToName]
+            geneData
+                .filter(
+                    r =>
+                        (selectedSet.size === 0 ||
+                            r.codes.some(c =>
+                                selectedSet.has(c.toUpperCase())
+                            )) &&
+                        (!up || geneMatches(r, up, codeToName))
+                )
+                .map(r => ({ ...r, term: up })),
+        [geneData, up, codeToName, selectedSet]
     );
 
     // Post the full annotations once the tree is ready.
@@ -365,6 +387,56 @@ const OncoTree2GenesPage: React.FunctionComponent<{}> = () => {
                         </React.Fragment>
                     ))}
                 </div>
+                {selectedCodes.length > 0 && (
+                    <div style={{ marginBottom: 10 }}>
+                        <span style={{ color: '#888', marginRight: 6 }}>
+                            Selected on tree:
+                        </span>
+                        {selectedCodes.map(code => (
+                            <span
+                                key={code}
+                                style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    backgroundColor: '#eef3fb',
+                                    border: '1px solid #cdddf2',
+                                    borderRadius: 3,
+                                    padding: '1px 6px',
+                                    marginRight: 5,
+                                    fontSize: 13,
+                                }}
+                            >
+                                {code}
+                                <span
+                                    role="button"
+                                    aria-label={`Remove ${code}`}
+                                    onClick={() =>
+                                        setSelectedCodes(prev =>
+                                            prev.filter(c => c !== code)
+                                        )
+                                    }
+                                    style={{
+                                        cursor: 'pointer',
+                                        marginLeft: 5,
+                                        color: '#888',
+                                    }}
+                                >
+                                    ×
+                                </span>
+                            </span>
+                        ))}
+                        <a
+                            href="#"
+                            onClick={e => {
+                                e.preventDefault();
+                                setSelectedCodes([]);
+                            }}
+                            style={{ fontSize: 13, marginLeft: 4 }}
+                        >
+                            clear
+                        </a>
+                    </div>
+                )}
                 <iframe
                     ref={iframeRef}
                     src={ONCOTREE_BASE}
