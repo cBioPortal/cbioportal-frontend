@@ -371,6 +371,17 @@ const OncoTree2GenesPage: React.FunctionComponent<{}> = () => {
                     </a>
                     .
                 </p>
+                <p>
+                    <strong>How it works:</strong> a Google Gemini model
+                    generates, for each OncoTree code, a structured list of
+                    associated genes (with mutation types and
+                    diagnostic/therapeutic relevance). Each gene–cancer-type
+                    association is then validated by querying PubMed via NCBI
+                    E-utilities and having a second LLM check it against the
+                    retrieved abstracts (up to 5 PMIDs per association), and is
+                    cross-referenced against an expert-curated TCGA reference
+                    set.
+                </p>
                 <p
                     style={{
                         background: '#fff3cd',
