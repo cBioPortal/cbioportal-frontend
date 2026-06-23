@@ -639,7 +639,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                         <GenericAssaySelection
                             containerWidth={this.getTabsWidth}
                             molecularProfileOptions={molecularProfileOptions}
-                            submitButtonText={'Add Chart'}
+                            submitButtonText={'Add individual charts'}
                             profileAction={
                                 selectedProfileSupportsFrequencyTable &&
                                 selectedProfileOption &&
@@ -653,7 +653,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                                             )
                                         }
                                     >
-                                        Re-add frequency table
+                                        Show frequency table for all values
                                     </button>
                                 ) : undefined
                             }
