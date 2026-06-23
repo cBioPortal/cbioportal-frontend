@@ -942,7 +942,7 @@ export default class MrnaViolinPlotChart extends React.Component<
                         justifyContent: 'center',
                     }}
                 >
-                    <LoadingIndicator isLoading={true} size={'big'} />
+                    <LoadingIndicator isLoading={true} size={'small'} />
                 </div>
             );
         } else if (isError || !hasData) {
