@@ -166,7 +166,6 @@ export enum SpecialChartsUniqueKeyEnum {
     SAMPLE_TREATMENT_GROUPS = 'SAMPLE_TREATMENT_GROUPS',
     SAMPLE_TREATMENT_TARGET = 'SAMPLE_TREATMENT_TARGET',
     CLINICAL_EVENT_TYPE_COUNTS = 'CLINICAL_EVENT_TYPE_COUNTS',
-    MRNA_VIOLIN_PLOT = 'MRNA_VIOLIN_PLOT',
 }
 
 export type AnalysisGroup = {
@@ -286,21 +285,6 @@ export const SPECIAL_CHARTS: ChartMetaWithDimensionAndChartType[] = [
             h: 2,
         },
         priority: 70,
-        renderWhenDataChange: false,
-    },
-    {
-        uniqueKey: SpecialChartsUniqueKeyEnum.MRNA_VIOLIN_PLOT,
-        displayName: 'mRNA Expression (ADC Targets)',
-        description:
-            'mRNA expression violin plots for ADC targets in trial at MSK. Genes shown depend on availability in this study.',
-        chartType: ChartTypeEnum.MRNA_VIOLIN_PLOT,
-        dataType: ChartMetaDataTypeEnum.GENOMIC,
-        patientAttribute: false,
-        dimension: {
-            w: 2,
-            h: 2,
-        },
-        priority: 100,
         renderWhenDataChange: false,
     },
 ];
@@ -1871,7 +1855,6 @@ export function getChartMetaDataType(uniqueKey: string): ChartMetaDataTypeEnum {
         SpecialChartsUniqueKeyEnum.MUTATION_COUNT,
         SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED,
         SpecialChartsUniqueKeyEnum.GENOMIC_PROFILES_SAMPLE_COUNT,
-        SpecialChartsUniqueKeyEnum.MRNA_VIOLIN_PLOT,
     ];
     return _.includes(GENOMIC_DATA_TYPES, uniqueKey)
         ? ChartMetaDataTypeEnum.GENOMIC
