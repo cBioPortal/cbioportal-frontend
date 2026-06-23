@@ -1,7 +1,7 @@
 import * as React from 'react';
 import _ from 'lodash';
 import classNames from 'classnames';
-import { RootCloseWrapper } from 'react-overlays';
+import RootCloseWrapper from 'react-overlays/lib/RootCloseWrapper';
 import { Dropdown } from 'react-bootstrap';
 import { observer } from 'mobx-react';
 import { action, observable, makeObservable } from 'mobx';
@@ -9,6 +9,7 @@ import { ICON_FILTER_OFF } from 'shared/lib/Colors';
 
 export interface IFilterIconModalProps {
     id: string;
+    label?: string;
     filterIsActive: boolean;
     deactivateFilter: () => void;
     setupFilter: () => void;
@@ -20,11 +21,14 @@ class FilterIcon extends React.Component<any, {}> {
         return (
             <span
                 onClick={this.props.onClickFilter}
+                className={classNames('headerFilterIcon', {
+                    active: this.props.isActive,
+                    open: this.props.isOpen,
+                })}
                 style={{
                     color: this.props.isActive ? '#0000ff' : ICON_FILTER_OFF,
                     display: 'inline-block',
                     cursor: 'pointer',
-                    visibility: 'hidden',
                     marginLeft: 5,
                     marginTop: -1,
                 }}
@@ -39,9 +43,11 @@ class FilterMenu extends React.Component<any, {}> {
     @observable private pullRight: boolean = false;
 
     componentDidUpdate() {
-        const rect = document
-            .getElementById(this.props.id)!
-            .getBoundingClientRect();
+        const element = document.getElementById(this.props.id);
+        if (!element) {
+            return;
+        }
+        const rect = element.getBoundingClientRect();
 
         if (rect.right > window.innerWidth) {
             this.pullRight = true;
@@ -71,7 +77,7 @@ class FilterMenu extends React.Component<any, {}> {
                 }}
             >
                 <div style={{ margin: '6px', marginBottom: '0px' }}>
-                    {this.props.id}
+                    {this.props.label || this.props.id}
 
                     <div style={{ marginTop: '10px' }}>
                         {this.props.menuComponent}
@@ -132,6 +138,7 @@ export default class FilterIconModal extends React.Component<
                     <FilterIcon
                         bsRole="toggle"
                         isActive={this.props.filterIsActive}
+                        isOpen={this.isOpen}
                         onClickFilter={this.onClickFilter}
                     />
                     <FilterMenu
