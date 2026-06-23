@@ -1,16 +1,14 @@
-import { action, computed, makeObservable, observable } from 'mobx';
+import { action, computed, makeObservable, observable, reaction } from 'mobx';
 import { remoteData } from 'cbioportal-frontend-commons';
 import {
     fetchResourceTableTabs,
     fetchResourceTableData,
+    ResourceColumnFilter,
     ResourceTableTab,
     ResourceTableResult,
     ResourceTableRow,
 } from 'shared/api/resourceTableClient';
-import {
-    IResourceTableRow,
-    IResourceTableTab,
-} from 'shared/lib/ResourceTableUtils';
+import { IResourceTableRow, IResourceTableTab } from 'shared/lib/ResourceTableUtils';
 
 const EMPTY_RESULT: ResourceTableResult = {
     tabs: [],
@@ -23,15 +21,23 @@ const EMPTY_RESULT: ResourceTableResult = {
 };
 
 /**
- * Fetches tabs and rows from the resource-table v2 API.
- * Rows are loaded in bulk so the UI can do client-side
- * filtering / sorting / pagination via LazyMobXTable.
+ * Server-side resource table store.
+ * All sorting, filtering, and pagination happens on the backend.
+ * The frontend only displays the returned page of data.
  */
 export class ResourceTableStore {
     @observable studyIds: string[] = [];
     @observable patientIds: string[] = [];
     @observable sampleIds: string[] = [];
     @observable selectedResourceId: string | undefined;
+
+    // Server-side pagination/sort/filter state
+    @observable pageNumber: number = 0;
+    @observable pageSize: number = 25;
+    @observable sortBy: string | undefined;
+    @observable sortDirection: 'asc' | 'desc' = 'asc';
+    @observable searchTerm: string = '';
+    @observable columnFilters: ResourceColumnFilter[] = [];
 
     constructor() {
         makeObservable(this);
@@ -47,11 +53,47 @@ export class ResourceTableStore {
         this.patientIds = patientIds;
         this.sampleIds = sampleIds;
         this.selectedResourceId = undefined;
+        this.pageNumber = 0;
+        this.searchTerm = '';
+        this.columnFilters = [];
     }
 
     @action
     setSelectedResourceId(resourceId: string) {
         this.selectedResourceId = resourceId;
+        this.pageNumber = 0;
+        this.searchTerm = '';
+        this.columnFilters = [];
+    }
+
+    @action
+    setPage(page: number) {
+        this.pageNumber = page;
+    }
+
+    @action
+    setPageSize(size: number) {
+        this.pageSize = size;
+        this.pageNumber = 0;
+    }
+
+    @action
+    setSort(sortBy: string, direction: 'asc' | 'desc') {
+        this.sortBy = sortBy;
+        this.sortDirection = direction;
+        this.pageNumber = 0;
+    }
+
+    @action
+    setSearchTerm(term: string) {
+        this.searchTerm = term;
+        this.pageNumber = 0;
+    }
+
+    @action
+    setColumnFilters(filters: ResourceColumnFilter[]) {
+        this.columnFilters = filters;
+        this.pageNumber = 0;
     }
 
     readonly tabs = remoteData<ResourceTableTab[]>({
@@ -66,12 +108,16 @@ export class ResourceTableStore {
         default: [],
     });
 
+    @computed get activeResourceId(): string | undefined {
+        return (
+            this.selectedResourceId || this.tabs.result?.[0]?.resourceId
+        );
+    }
+
     readonly tableData = remoteData<ResourceTableResult>({
         await: () => [this.tabs],
         invoke: async () => {
-            const resourceId =
-                this.selectedResourceId ||
-                this.tabs.result?.[0]?.resourceId;
+            const resourceId = this.activeResourceId;
             if (!resourceId || this.studyIds.length === 0) {
                 return EMPTY_RESULT;
             }
@@ -80,8 +126,15 @@ export class ResourceTableStore {
                 resourceId,
                 patientIds: this.patientIds,
                 sampleIds: this.sampleIds,
-                pageNumber: 0,
-                pageSize: 100000,
+                pageNumber: this.pageNumber,
+                pageSize: this.pageSize,
+                sortBy: this.sortBy,
+                direction: this.sortDirection,
+                search: this.searchTerm || undefined,
+                filters:
+                    this.columnFilters.length > 0
+                        ? this.columnFilters
+                        : undefined,
             });
         },
         default: EMPTY_RESULT,
@@ -95,6 +148,18 @@ export class ResourceTableStore {
             patientCount: tab.patientCount,
             sampleCount: tab.sampleCount,
         }));
+    }
+
+    @computed get totalRowCount(): number {
+        return this.tableData.result?.totalRowCount || 0;
+    }
+
+    @computed get filteredPatientCount(): number {
+        return this.tableData.result?.filteredPatientCount || 0;
+    }
+
+    @computed get filteredSampleCount(): number {
+        return this.tableData.result?.filteredSampleCount || 0;
     }
 
     @computed get rowsForDisplay(): IResourceTableRow[] {
@@ -114,7 +179,6 @@ export class ResourceTableStore {
                     );
                 }
 
-                // Derived metadata for file-type icons and host display
                 metadata['resource_scope'] = row.resourceType || '';
                 try {
                     const url = new URL(
@@ -131,20 +195,16 @@ export class ResourceTableStore {
                     metadata['file_type'] = 'link';
                 }
 
-                const patientId =
-                    row.patientId || 'Study-wide';
-                const sampleId =
-                    row.sampleId ||
-                    (row.resourceType === 'SAMPLE'
-                        ? 'Sample-level'
-                        : row.resourceType === 'PATIENT'
-                        ? 'Patient-level'
-                        : 'Study-level');
-
                 return {
                     key: `${row.resourceId}::${row.patientId || 'study'}::${row.sampleId || row.resourceType}::${index}`,
-                    patientId,
-                    sampleId,
+                    patientId: row.patientId || 'Study-wide',
+                    sampleId:
+                        row.sampleId ||
+                        (row.resourceType === 'SAMPLE'
+                            ? 'Sample-level'
+                            : row.resourceType === 'PATIENT'
+                            ? 'Patient-level'
+                            : 'Study-level'),
                     resourceType:
                         row.resourceDisplayName || row.resourceId,
                     resourceScope: row.resourceType,
