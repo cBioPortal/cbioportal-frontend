@@ -7783,27 +7783,6 @@ export class StudyViewPageStore
             if (chartMeta && chartMeta.priority !== 0) {
                 this.changeChartVisibility(chartMeta.uniqueKey, true);
             }
-
-            // Show the mRNA violin plot when mRNA expression profiles exist
-            const hasMrnaProfiles = this.molecularProfiles.result.some(
-                p => p.molecularAlterationType === 'MRNA_EXPRESSION'
-            );
-            if (hasMrnaProfiles) {
-                this.chartsType.set(
-                    SpecialChartsUniqueKeyEnum.MRNA_VIOLIN_PLOT,
-                    ChartTypeEnum.MRNA_VIOLIN_PLOT
-                );
-                this.chartsDimension.set(
-                    SpecialChartsUniqueKeyEnum.MRNA_VIOLIN_PLOT,
-                    STUDY_VIEW_CONFIG.layout.dimensions[
-                        ChartTypeEnum.MRNA_VIOLIN_PLOT
-                    ]
-                );
-                this.changeChartVisibility(
-                    SpecialChartsUniqueKeyEnum.MRNA_VIOLIN_PLOT,
-                    true
-                );
-            }
         }
 
         if (this.shouldDisplayPatientTreatments.result) {
