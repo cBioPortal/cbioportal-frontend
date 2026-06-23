@@ -350,7 +350,6 @@ export class ResourceDataTable extends React.Component<
         return this.props.store.tabsForDisplay.map(tab => ({
             id: tab.id,
             label: tab.label,
-            count: tab.totalCount,
         }));
     }
 
