@@ -116,9 +116,14 @@ export async function setSettingsMenuOpen(
 export async function expectOncoprintScreenshot(
     page: Page,
     snapshotName: string,
-    opts: { selector?: string; extraMasks?: string[] } = {}
+    opts: {
+        selector?: string;
+        extraMasks?: string[];
+        clipToLegend?: boolean;
+    } = {}
 ) {
-    const target = page.locator(opts.selector ?? '#oncoprintDiv');
+    const containerSelector = opts.selector ?? '#oncoprintDiv';
+    const target = page.locator(containerSelector);
 
     // If the view-dropdown ended up open from a prior interaction, close it
     // so it doesn't leak into the screenshot (mirrors wdio behavior).
@@ -137,7 +142,6 @@ export async function expectOncoprintScreenshot(
 
     // Park the mouse so tooltips/hovers don't leak in.
     await page.mouse.move(0, 0);
-    await page.waitForTimeout(200);
 
     const maskSelectors = [
         '.qtip',
@@ -154,6 +158,32 @@ export async function expectOncoprintScreenshot(
         ...(opts.extraMasks ?? []),
     ];
     const mask = maskSelectors.map(s => page.locator(s));
+
+    // When clipToLegend is set, clip the screenshot to the actual content
+    // (container top → legend bottom) rather than the full container height.
+    // oncoprintjs sets `min-height` on the container via a setTimeout(0)
+    // callback; that value is non-deterministic at screenshot time and
+    // produces varying amounts of trailing whitespace below the legend.
+    // Anchoring to the legend div's bottom edge gives a stable,
+    // content-accurate height.
+    if (opts.clipToLegend) {
+        const containerBox = await target.boundingBox();
+        const legendDiv = page.locator(
+            `${containerSelector} .oncoprint-legend-div`
+        );
+        const legendBox = await legendDiv.boundingBox();
+
+        if (containerBox && legendBox) {
+            const clip = {
+                x: containerBox.x,
+                y: containerBox.y,
+                width: containerBox.width,
+                height: legendBox.y + legendBox.height - containerBox.y,
+            };
+            await expect(page).toHaveScreenshot(snapshotName, { mask, clip });
+            return;
+        }
+    }
 
     await expect(target).toHaveScreenshot(snapshotName, { mask });
 }

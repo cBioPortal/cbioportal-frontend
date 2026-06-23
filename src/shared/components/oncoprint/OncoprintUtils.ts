@@ -538,7 +538,7 @@ export function getClinicalTrackRuleSetParams(track: ClinicalTrackSpec) {
 // The categorical color palette used internally by oncoprintjs's makeUniqueColorGetter.
 // Duplicated here to allow pre-assigning stable category→color mappings before
 // any lazy render-order color assignment can introduce non-determinism.
-// Source: packages/oncoprintjs/src/js/oncoprintruleset.ts
+// See oncoprintruleset.ts in the oncoprintjs package for the authoritative list.
 const ONCOPRINTJS_CATEGORICAL_PALETTE = [
     '#3366cc',
     '#dc3912',

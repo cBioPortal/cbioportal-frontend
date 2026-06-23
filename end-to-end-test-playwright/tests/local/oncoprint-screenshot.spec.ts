@@ -142,9 +142,19 @@ test.describe('oncoprint', () => {
             await goToUrlAndSetLocalStorage(page, genericArrayUrl, true);
             await waitForOncoprint(page);
             await waitForNetworkQuiet(page);
+            // The categorical tracks (SBS1/SBS9 category) render after the binary
+            // tracks. Waiting for a known categorical legend label ensures React has
+            // fully painted those tracks into the legend before the clip geometry
+            // is measured in expectOncoprintScreenshot.
+            await expect(
+                page
+                    .locator('#oncoprintDiv .oncoprint-legend-div')
+                    .getByText('highly significant')
+            ).toBeAttached({ timeout: 15000 });
             await expectOncoprintScreenshot(
                 page,
-                'oncoprint-generic-assay-categorical-tracks.png'
+                'oncoprint-generic-assay-categorical-tracks.png',
+                { clipToLegend: true }
             );
         });
     });
