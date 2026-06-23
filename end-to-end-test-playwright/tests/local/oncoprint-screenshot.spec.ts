@@ -9,6 +9,7 @@ import {
     waitForOncoprint,
     getNthOncoprintTrackOptionsSelectors,
 } from '../helpers/oncoprint';
+import { waitForNetworkQuiet } from '../helpers/common';
 
 const USER_SETTINGS_QUERY_PARAM = 'userSettingsJson';
 const CBIOPORTAL_URL = (
@@ -140,6 +141,7 @@ test.describe('oncoprint', () => {
         test('shows binary and multiple category tracks', async ({ page }) => {
             await goToUrlAndSetLocalStorage(page, genericArrayUrl, true);
             await waitForOncoprint(page);
+            await waitForNetworkQuiet(page);
             await expectOncoprintScreenshot(
                 page,
                 'oncoprint-generic-assay-categorical-tracks.png'

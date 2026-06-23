@@ -398,6 +398,7 @@ export function getGenericAssayTrackRuleSetParams(
         .filter((d: IGenericAssayHeatmapTrackDatum) => !!d.category)
         .map(d => d.category)
         .uniq()
+        .sort()
         .value();
     categories.forEach((d: string) => {
         if (category_to_color === undefined) {
