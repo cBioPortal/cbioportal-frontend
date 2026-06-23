@@ -542,7 +542,7 @@ export class ResourceDataTable extends React.Component<
 
         return (
             <TabbedTableLayout
-                tabs={this.tabs}
+                tabs={this.tabs.length > 1 ? this.tabs : []}
                 activeTabId={this.activeTabId}
                 onTabClick={this.onTabClick}
                 testId="resource-data-table"
