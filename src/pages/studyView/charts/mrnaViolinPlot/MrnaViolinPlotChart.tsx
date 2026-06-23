@@ -30,11 +30,23 @@ const SCALED_DATATYPE_PRIORITY = [
 
 function pickBestMrnaProfile(profiles: MolecularProfile[]): MolecularProfile {
     for (const dt of SCALED_DATATYPE_PRIORITY) {
-        const m = profiles.find(p => p.datatype === dt);
-        if (m) return m;
+        const matches = profiles.filter(p => p.datatype === dt);
+        if (matches.length > 0) {
+            // Among z-score profiles, prefer "all-sample" z-scores: they are
+            // standardized across the study cohort and stay bounded (~±√n),
+            // which keeps the shared cross-gene axis sane. Diploid/normal-
+            // reference z-scores can explode for genes silent in normal tissue
+            // (e.g. MAGEA4 reaches z > 200), wrecking the shared axis.
+            return (
+                matches.find(p =>
+                    /all[_]?sample/i.test(p.molecularProfileId)
+                ) ?? matches[0]
+            );
+        }
     }
     // Belt-and-suspenders: profile ID pattern fallback (TCGA naming)
     return (
+        profiles.find(p => /all[_]?sample_zscores?$/i.test(p.molecularProfileId)) ??
         profiles.find(p => /zscores?$/i.test(p.molecularProfileId)) ??
         profiles.find(p => /log[\d_]/i.test(p.molecularProfileId)) ??
         profiles[0]
