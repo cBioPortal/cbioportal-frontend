@@ -7831,11 +7831,21 @@ export class StudyViewPageStore
                 this.changeChartVisibility(chartMeta.uniqueKey, true);
             }
 
-            // Show the mRNA violin plot when mRNA expression profiles exist
-            const hasMrnaProfiles = this.molecularProfiles.result.some(
-                p => p.molecularAlterationType === 'MRNA_EXPRESSION'
+            // Show the mRNA violin plot only for a single-study view with a
+            // z-score mRNA profile. The chart plots multiple genes on a shared
+            // axis, which is only meaningful in cohort-comparable units
+            // (z-scores); absolute/log profiles keep each gene's own baseline.
+            // And precalculated z-scores aren't comparable across studies
+            // (each is standardized against its own cohort/reference), so we
+            // restrict to single-study to avoid pooling incomparable values.
+            const isSingleStudy =
+                (this.queriedPhysicalStudyIds.result?.length ?? 0) === 1;
+            const hasMrnaZscoreProfile = this.molecularProfiles.result.some(
+                p =>
+                    p.molecularAlterationType === 'MRNA_EXPRESSION' &&
+                    p.datatype === DataTypeConstants.ZSCORE
             );
-            if (hasMrnaProfiles) {
+            if (isSingleStudy && hasMrnaZscoreProfile) {
                 this.chartsType.set(
                     SpecialChartsUniqueKeyEnum.MRNA_VIOLIN_PLOT,
                     ChartTypeEnum.MRNA_VIOLIN_PLOT
