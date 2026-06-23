@@ -336,7 +336,7 @@ export default class MrnaViolinPlotChart extends React.Component<
         const marginLeft = 80;
         const marginRight = 16;
         const marginTop = 38;
-        const marginBottom = 6;
+        const marginBottom = 9;
         const svgHeight = this.props.height - TOOLBAR_HEIGHT;
         const plotW = this.props.width - marginLeft - marginRight;
         const plotH = svgHeight - marginTop - marginBottom;
@@ -854,7 +854,7 @@ export default class MrnaViolinPlotChart extends React.Component<
                         x={10}
                         y={marginTop + rowH * (i + 0.5) + 4}
                         textAnchor="start"
-                        fontSize={11}
+                        fontSize={13}
                         fontStyle="normal"
                         fill="#333"
                     >
