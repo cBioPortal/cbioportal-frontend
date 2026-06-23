@@ -9,6 +9,7 @@ import _ from 'lodash';
 import { Gene, MolecularProfile } from 'cbioportal-ts-api-client';
 import { DataTypeConstants } from 'shared/constants';
 import { MRNA_TAB_GENE_GROUPS } from 'pages/patientView/mrna/mrnaTabGeneGroups';
+import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
 
 const MSK_TRIAL_GENES: string[] = MRNA_TAB_GENE_GROUPS.find(
     g => g.id === 'msk-trial'
@@ -44,15 +45,30 @@ function gaussianKernel(u: number): number {
     return Math.exp(-0.5 * u * u) / Math.sqrt(2 * Math.PI);
 }
 
+/** Percentile of an ascending-sorted array (nearest-rank). */
+function percentile(sortedAsc: number[], p: number): number {
+    if (sortedAsc.length === 0) return NaN;
+    const i = Math.min(
+        Math.max(Math.floor(p * sortedAsc.length), 0),
+        sortedAsc.length - 1
+    );
+    return sortedAsc[i];
+}
+
 /**
- * Gaussian KDE. Bandwidth = max(Silverman's rule, 5% of data range)
- * so concentrated distributions still produce a visible violin.
+ * Gaussian KDE evaluated over an explicit [min, max] domain. The caller passes
+ * a robust per-gene domain (e.g. 1st–99th percentile) so a few extreme
+ * outliers can't stretch the domain and collapse the violin into a spike.
+ * Bandwidth = max(Silverman's rule, 5% of the domain) so concentrated
+ * distributions still produce a visible violin.
  */
-function computeKDE(data: number[], nPoints: number): Array<[number, number]> {
-    if (data.length < 2) return [];
-    const min = Math.min(...data);
-    const max = Math.max(...data);
-    if (min === max) return [];
+function computeKDE(
+    data: number[],
+    nPoints: number,
+    min: number,
+    max: number
+): Array<[number, number]> {
+    if (data.length < 2 || min === max) return [];
     const mean = data.reduce((s, v) => s + v, 0) / data.length;
     const std = Math.sqrt(
         data.reduce((s, v) => s + (v - mean) ** 2, 0) / data.length
@@ -67,6 +83,12 @@ function computeKDE(data: number[], nPoints: number): Array<[number, number]> {
             (data.length * bw);
         return [x, density] as [number, number];
     });
+}
+
+/** Deterministic pseudo-random jitter in [-1, 1] from an integer index. */
+function jitterFraction(i: number): number {
+    const v = Math.sin(i * 12.9898) * 43758.5453;
+    return (v - Math.floor(v)) * 2 - 1;
 }
 
 interface BoxStats {
@@ -113,6 +135,18 @@ export default class MrnaViolinPlotChart extends React.Component<
     );
     @observable logScale = false;
     @observable showGenePicker = false;
+
+    // Drag-selection state. A drag is locked to a single gene row (track) for
+    // its whole lifetime, so selections can never span across tracks.
+    @observable private dragRowIndex: number | null = null;
+    @observable private dragStartX: number | null = null;
+    @observable private dragCurrentX: number | null = null;
+    // Plot-relative x of the cursor while hovering, for the dashed guide line,
+    // plus the row it is over so the line spans only that one track.
+    @observable private hoverX: number | null = null;
+    @observable private hoverRowIndex: number | null = null;
+
+    private svgRef = React.createRef<SVGSVGElement>();
 
     constructor(props: IMrnaViolinPlotChartProps) {
         super(props);
@@ -330,6 +364,133 @@ export default class MrnaViolinPlotChart extends React.Component<
         return ((clamped - range.min) / (range.max - range.min)) * plotW;
     }
 
+    /**
+     * Profile suffix used as the cross-study key for genomic-data filters
+     * (e.g. "rna_seq_v2_mrna_median_Zscores"). Null until data has loaded.
+     */
+    @computed get profileType(): string | null {
+        const profile = this.mrnaData.result?.profilesUsed[0];
+        return profile ? getSuffixOfMolecularProfile(profile) : null;
+    }
+
+    /** Inverse of xScale: plot pixel x → display-space value. */
+    private xToDisplayValue(px: number): number {
+        const range = this.globalValueRange!;
+        const { plotW } = this.layout;
+        const frac = Math.min(Math.max(px / plotW, 0), 1);
+        return range.min + frac * (range.max - range.min);
+    }
+
+    /** Undo the optional log₂(x+1) display transform to get a raw profile value. */
+    private displayToRaw(displayValue: number): number {
+        return this.logScale && this.canLogScale
+            ? Math.pow(2, displayValue) - 1
+            : displayValue;
+    }
+
+    /** Apply the optional log₂(x+1) display transform to a raw profile value. */
+    private rawToDisplay(rawValue: number): number {
+        return this.logScale && this.canLogScale
+            ? Math.log2(rawValue + 1)
+            : rawValue;
+    }
+
+    /** Plot-relative x of a pointer event, clamped to [0, plotW]. */
+    private clientXToPlotX(clientX: number): number {
+        const svg = this.svgRef.current;
+        const { marginLeft, plotW } = this.layout;
+        if (!svg) return 0;
+        const rect = svg.getBoundingClientRect();
+        const x = clientX - rect.left - marginLeft;
+        return Math.min(Math.max(x, 0), plotW);
+    }
+
+    @action.bound
+    private onRowMouseDown(e: React.MouseEvent, rowIndex: number) {
+        // Left-button drags only; ignore modifier-clicks.
+        if (e.button !== 0) return;
+        e.preventDefault();
+        const x = this.clientXToPlotX(e.clientX);
+        this.dragRowIndex = rowIndex;
+        this.dragStartX = x;
+        this.dragCurrentX = x;
+        window.addEventListener('mousemove', this.onDragMove);
+        window.addEventListener('mouseup', this.onDragEnd);
+    }
+
+    @action.bound
+    private onDragMove(e: MouseEvent) {
+        if (this.dragRowIndex === null) return;
+        // X is clamped to the plot, so the selection stays within this one
+        // track no matter where the cursor wanders vertically.
+        this.dragCurrentX = this.clientXToPlotX(e.clientX);
+    }
+
+    @action.bound
+    private onDragEnd() {
+        window.removeEventListener('mousemove', this.onDragMove);
+        window.removeEventListener('mouseup', this.onDragEnd);
+
+        const rowIndex = this.dragRowIndex;
+        const startX = this.dragStartX;
+        const endX = this.dragCurrentX;
+        this.dragRowIndex = null;
+        this.dragStartX = null;
+        this.dragCurrentX = null;
+
+        if (rowIndex === null || startX === null || endX === null) return;
+        const gene = this.currentGenes[rowIndex];
+        if (!gene || !this.profileType) return;
+
+        const lo = Math.min(startX, endX);
+        const hi = Math.max(startX, endX);
+
+        // Treat a negligible drag as a click → clear this track's selection.
+        if (hi - lo < 3) {
+            this.props.store.updateMrnaViolinSelection(
+                gene.hugoSymbol,
+                this.profileType,
+                null
+            );
+            return;
+        }
+
+        const { plotW } = this.layout;
+        // Open-end the bound when the drag reaches an axis edge, so clipped
+        // outliers beyond the 1st/99th percentile range are still included.
+        const start =
+            lo <= plotW * 0.005
+                ? undefined
+                : this.displayToRaw(this.xToDisplayValue(lo));
+        const end =
+            hi >= plotW * 0.995
+                ? undefined
+                : this.displayToRaw(this.xToDisplayValue(hi));
+
+        this.props.store.updateMrnaViolinSelection(
+            gene.hugoSymbol,
+            this.profileType,
+            { start, end }
+        );
+    }
+
+    @action.bound
+    private onHoverMove(e: React.MouseEvent, rowIndex: number) {
+        this.hoverX = this.clientXToPlotX(e.clientX);
+        this.hoverRowIndex = rowIndex;
+    }
+
+    @action.bound
+    private onHoverLeave() {
+        this.hoverX = null;
+        this.hoverRowIndex = null;
+    }
+
+    componentWillUnmount() {
+        window.removeEventListener('mousemove', this.onDragMove);
+        window.removeEventListener('mouseup', this.onDragEnd);
+    }
+
     @action.bound
     private toggleGene(symbol: string) {
         if (this.selectedSymbols.includes(symbol)) {
@@ -368,36 +529,79 @@ export default class MrnaViolinPlotChart extends React.Component<
             );
         }
 
-        const kdePoints = computeKDE(values, KDE_POINTS);
-        const maxDensity =
-            kdePoints.length > 0 ? Math.max(...kdePoints.map(p => p[1])) : 1;
-
-        let violinPath = '';
-        if (kdePoints.length >= 2 && maxDensity > 0) {
-            const scale = violinHalfH / maxDensity;
-            const upperPts = kdePoints
-                .map(
-                    ([x, d]) =>
-                        `${this.xScale(x).toFixed(1)},${(
-                            centerY -
-                            d * scale
-                        ).toFixed(1)}`
-                )
-                .join(' ');
-            const lowerPts = [...kdePoints]
-                .reverse()
-                .map(
-                    ([x, d]) =>
-                        `${this.xScale(x).toFixed(1)},${(
-                            centerY +
-                            d * scale
-                        ).toFixed(1)}`
-                )
-                .join(' ');
-            violinPath = `M ${upperPts} L ${lowerPts} Z`;
-        }
-
         const box = computeBoxStats(values);
+
+        // Count distinct values to detect near-constant distributions (e.g.
+        // cancer-testis antigens silent in nearly every sample). A KDE can't
+        // meaningfully represent these, so we fall back to a strip plot.
+        const sorted = [...values].sort((a, b) => a - b);
+        let uniqueCount = sorted.length > 0 ? 1 : 0;
+        for (let i = 1; i < sorted.length; i++) {
+            if (sorted[i] !== sorted[i - 1]) uniqueCount++;
+        }
+        const isDegenerate = uniqueCount <= 2 || box.q3 - box.q1 === 0;
+
+        let shape: JSX.Element | null = null;
+        if (isDegenerate) {
+            // Strip plot: draw each sample as a jittered dot. Off-scale
+            // outliers clamp to the plot edge via xScale.
+            shape = (
+                <g>
+                    {values.map((v, i) => (
+                        <circle
+                            key={i}
+                            cx={this.xScale(v)}
+                            cy={centerY + jitterFraction(i) * violinHalfH}
+                            r={1.5}
+                            fill="#1A5DAB"
+                            fillOpacity={0.45}
+                        />
+                    ))}
+                </g>
+            );
+        } else {
+            // Robust per-gene domain: trim to the 1st–99th percentile so a few
+            // extreme values don't blow up the KDE domain.
+            const lo = percentile(sorted, 0.01);
+            const hi = percentile(sorted, 0.99);
+            const trimmed = values.filter(v => v >= lo && v <= hi);
+            const kdePoints = computeKDE(trimmed, KDE_POINTS, lo, hi);
+            const maxDensity =
+                kdePoints.length > 0
+                    ? Math.max(...kdePoints.map(p => p[1]))
+                    : 1;
+
+            if (kdePoints.length >= 2 && maxDensity > 0) {
+                const scale = violinHalfH / maxDensity;
+                const upperPts = kdePoints
+                    .map(
+                        ([x, d]) =>
+                            `${this.xScale(x).toFixed(1)},${(
+                                centerY -
+                                d * scale
+                            ).toFixed(1)}`
+                    )
+                    .join(' ');
+                const lowerPts = [...kdePoints]
+                    .reverse()
+                    .map(
+                        ([x, d]) =>
+                            `${this.xScale(x).toFixed(1)},${(
+                                centerY +
+                                d * scale
+                            ).toFixed(1)}`
+                    )
+                    .join(' ');
+                shape = (
+                    <path
+                        d={`M ${upperPts} L ${lowerPts} Z`}
+                        fill="#D6E6F9"
+                        stroke="#1A5DAB"
+                        strokeWidth={1}
+                    />
+                );
+            }
+        }
         const x1 = this.xScale(box.q1);
         const x3 = this.xScale(box.q3);
         const xMed = this.xScale(box.median);
@@ -406,14 +610,7 @@ export default class MrnaViolinPlotChart extends React.Component<
 
         return (
             <g key={gene.hugoSymbol}>
-                {violinPath && (
-                    <path
-                        d={violinPath}
-                        fill="#2986E2"
-                        stroke="#2986E2"
-                        strokeWidth={0.5}
-                    />
-                )}
+                {shape}
                 <line
                     x1={xWL}
                     x2={xWH}
@@ -457,6 +654,111 @@ export default class MrnaViolinPlotChart extends React.Component<
                     strokeWidth={1.5}
                 />
             </g>
+        );
+    }
+
+    /**
+     * Per-row interaction layer: a transparent capture rect that starts a
+     * drag, the committed selection highlight (read back from the store), and
+     * the live drag rectangle while this row is being dragged.
+     */
+    private renderRowOverlay(
+        gene: { hugoSymbol: string; entrezGeneId: number },
+        rowIndex: number
+    ): JSX.Element {
+        const { rowH, plotW } = this.layout;
+        const bandTop = rowH * rowIndex + 2;
+        const bandH = rowH - 4;
+
+        // Committed selection for this track, mapped raw → display → pixel.
+        let committed: JSX.Element | null = null;
+        const selection = this.profileType
+            ? this.props.store.getMrnaViolinSelection(
+                  gene.hugoSymbol,
+                  this.profileType
+              )
+            : undefined;
+        if (selection) {
+            const xs =
+                selection.start === undefined
+                    ? 0
+                    : this.xScale(this.rawToDisplay(selection.start));
+            const xe =
+                selection.end === undefined
+                    ? plotW
+                    : this.xScale(this.rawToDisplay(selection.end));
+            committed = (
+                <rect
+                    x={Math.min(xs, xe)}
+                    y={bandTop}
+                    width={Math.max(Math.abs(xe - xs), 1)}
+                    height={bandH}
+                    fill="#FFD54F"
+                    fillOpacity={0.3}
+                    stroke="#F5A623"
+                    strokeWidth={1}
+                    pointerEvents="none"
+                />
+            );
+        }
+
+        // Live drag rectangle (only for the row currently being dragged).
+        let dragRect: JSX.Element | null = null;
+        if (
+            this.dragRowIndex === rowIndex &&
+            this.dragStartX !== null &&
+            this.dragCurrentX !== null
+        ) {
+            const lo = Math.min(this.dragStartX, this.dragCurrentX);
+            const hi = Math.max(this.dragStartX, this.dragCurrentX);
+            dragRect = (
+                <rect
+                    x={lo}
+                    y={bandTop}
+                    width={Math.max(hi - lo, 1)}
+                    height={bandH}
+                    fill="#2986E2"
+                    fillOpacity={0.2}
+                    stroke="#2986E2"
+                    strokeWidth={1}
+                    pointerEvents="none"
+                />
+            );
+        }
+
+        return (
+            <g key={`overlay-${gene.hugoSymbol}`}>
+                {committed}
+                {dragRect}
+                <rect
+                    x={0}
+                    y={rowH * rowIndex}
+                    width={plotW}
+                    height={rowH}
+                    fill="transparent"
+                    style={{ cursor: 'default' }}
+                    onMouseDown={e => this.onRowMouseDown(e, rowIndex)}
+                    onMouseMove={e => this.onHoverMove(e, rowIndex)}
+                />
+            </g>
+        );
+    }
+
+    /** Vertical dashed guide line tracking the cursor within the hovered track. */
+    private renderHoverLine(): JSX.Element | null {
+        if (this.hoverX === null || this.hoverRowIndex === null) return null;
+        const { rowH } = this.layout;
+        return (
+            <line
+                x1={this.hoverX}
+                x2={this.hoverX}
+                y1={rowH * this.hoverRowIndex}
+                y2={rowH * (this.hoverRowIndex + 1)}
+                stroke="#000"
+                strokeWidth={2}
+                strokeDasharray="4,3"
+                pointerEvents="none"
+            />
         );
     }
 
@@ -663,9 +965,11 @@ export default class MrnaViolinPlotChart extends React.Component<
         } else {
             bodyContent = (
                 <svg
+                    ref={this.svgRef}
                     width={width}
                     height={svgHeight}
                     style={{ display: 'block' }}
+                    onMouseLeave={this.onHoverLeave}
                 >
                     {this.renderYLabels()}
                     <g transform={`translate(${marginLeft}, ${marginTop})`}>
@@ -682,6 +986,11 @@ export default class MrnaViolinPlotChart extends React.Component<
                             strokeWidth={1}
                         />
                         {this.renderXAxis()}
+                        {/* Drag-selection layer sits on top of the violins. */}
+                        {this.currentGenes.map((gene, i) =>
+                            this.renderRowOverlay(gene, i)
+                        )}
+                        {this.renderHoverLine()}
                     </g>
                 </svg>
             );
@@ -767,6 +1076,9 @@ export default class MrnaViolinPlotChart extends React.Component<
                     >
                         Genes ({this.selectedSymbols.length}) ▾
                     </button>
+                    <span style={{ color: '#999', fontStyle: 'italic' }}>
+                        Drag across a track to filter; click it to clear
+                    </span>
                 </div>
                 {bodyContent}
                 {this.showGenePicker && (

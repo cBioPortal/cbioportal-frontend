@@ -4018,6 +4018,53 @@ export class StudyViewPageStore
         }
     }
 
+    /**
+     * Apply (or clear) a value-range filter for a single gene's molecular
+     * profile, driven by a drag selection on the mRNA violin plot. Unlike
+     * updateGenomicDataFiltersByValues this does not require a registered
+     * gene-specific chart — it owns the GenomicDataFilter directly, keyed by
+     * the same uniqueKey scheme so it round-trips through study-view filters.
+     */
+    @action.bound
+    updateMrnaViolinSelection(
+        hugoGeneSymbol: string,
+        profileType: string,
+        range: { start?: number; end?: number } | null
+    ): void {
+        const uniqueKey = getGenomicChartUniqueKey(hugoGeneSymbol, profileType);
+        if (
+            range &&
+            (range.start !== undefined || range.end !== undefined)
+        ) {
+            trackStudyViewFilterEvent('genomicDataInterval', this);
+            const genomicDataFilter: GenomicDataFilter = {
+                hugoGeneSymbol,
+                profileType,
+                values: [
+                    {
+                        start: range.start,
+                        end: range.end,
+                    } as DataFilterValue,
+                ],
+            };
+            this._genomicDataFilterSet.set(uniqueKey, genomicDataFilter);
+        } else {
+            this._genomicDataFilterSet.delete(uniqueKey);
+        }
+    }
+
+    public getMrnaViolinSelection(
+        hugoGeneSymbol: string,
+        profileType: string
+    ): { start?: number; end?: number } | undefined {
+        const uniqueKey = getGenomicChartUniqueKey(hugoGeneSymbol, profileType);
+        const filter = this._genomicDataFilterSet.get(uniqueKey);
+        const value = filter?.values?.[0];
+        return value
+            ? { start: value.start, end: value.end }
+            : undefined;
+    }
+
     @action.bound
     updateGenericAssayDataFiltersByValues(
         uniqueKey: string,
