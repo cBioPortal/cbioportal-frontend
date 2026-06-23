@@ -398,7 +398,6 @@ export function getGenericAssayTrackRuleSetParams(
         .filter((d: IGenericAssayHeatmapTrackDatum) => !!d.category)
         .map(d => d.category)
         .uniq()
-        .sort()
         .value();
     categories.forEach((d: string) => {
         if (category_to_color === undefined) {
@@ -536,17 +535,103 @@ export function getClinicalTrackRuleSetParams(track: ClinicalTrackSpec) {
     return params;
 }
 
+// The categorical color palette used internally by oncoprintjs's makeUniqueColorGetter.
+// Duplicated here to allow pre-assigning stable category→color mappings before
+// any lazy render-order color assignment can introduce non-determinism.
+// Source: packages/oncoprintjs/src/js/oncoprintruleset.ts
+const ONCOPRINTJS_CATEGORICAL_PALETTE = [
+    '#3366cc',
+    '#dc3912',
+    '#ff9900',
+    '#109618',
+    '#990099',
+    '#0099c6',
+    '#dd4477',
+    '#66aa00',
+    '#b82e2e',
+    '#316395',
+    '#994499',
+    '#22aa99',
+    '#aaaa11',
+    '#6633cc',
+    '#e67300',
+    '#8b0707',
+    '#651067',
+    '#329262',
+    '#5574a6',
+    '#3b3eac',
+    '#b77322',
+    '#16d620',
+    '#b91383',
+    '#f4359e',
+    '#9c5935',
+    '#a9c413',
+    '#2a778d',
+    '#668d1c',
+    '#bea413',
+    '#0c5922',
+    '#743411',
+];
+
 export function getCategoricalTrackRuleSetParams(
-    track: ICategoricalTrackSpec
+    track: ICategoricalTrackSpec,
+    allTracksForProfile: ICategoricalTrackSpec[] = [track]
 ): ICategoricalRuleSetParams {
+    const reservedColors = _.mapValues(
+        RESERVED_CLINICAL_VALUE_COLORS,
+        hexToRGBA
+    );
+
+    // The set of hex colors already claimed by RESERVED_CLINICAL_VALUE_COLORS,
+    // used to skip those entries when iterating through the palette below.
+    const reservedHexSet = new Set(
+        Object.values(RESERVED_CLINICAL_VALUE_COLORS).map(c => c.toLowerCase())
+    );
+
+    // Pre-assign colors for all unique string categories found across ALL tracks
+    // for this molecular profile, sorted alphabetically for determinism.  Without
+    // this, oncoprintjs's CategoricalRuleSet.getSpecificShapesForDatum() assigns
+    // colors lazily in the order columns are first rendered (which varies between
+    // runs) and each track restarts from palette index 0, so sibling tracks end
+    // up sharing colors in the combined legend.
+    const sortedCategories = _(allTracksForProfile)
+        .flatMap(t => t.data.map(d => d.attr_val))
+        .filter((v): v is string => typeof v === 'string')
+        .uniq()
+        .sort()
+        .value();
+
+    const precomputedColors: {
+        [category: string]: [number, number, number, number];
+    } = {};
+    let paletteIndex = 0;
+    for (const category of sortedCategories) {
+        if (category in reservedColors) {
+            continue;
+        }
+        while (
+            paletteIndex < ONCOPRINTJS_CATEGORICAL_PALETTE.length &&
+            reservedHexSet.has(ONCOPRINTJS_CATEGORICAL_PALETTE[paletteIndex])
+        ) {
+            paletteIndex++;
+        }
+        if (paletteIndex < ONCOPRINTJS_CATEGORICAL_PALETTE.length) {
+            precomputedColors[category] = hexToRGBA(
+                ONCOPRINTJS_CATEGORICAL_PALETTE[paletteIndex]
+            );
+            paletteIndex++;
+        }
+        // If paletteIndex reaches the end of the palette (>31 non-reserved
+        // categories), we stop pre-assigning and oncoprintjs will fall back to
+        // its darken-and-reuse mechanism for the overflow categories.  In
+        // practice categorical profiles never approach this limit.
+    }
+
     return {
         type: RuleSetType.CATEGORICAL,
         legend_label: track.molecularProfileName,
         category_key: 'attr_val',
-        category_to_color: _.mapValues(
-            RESERVED_CLINICAL_VALUE_COLORS,
-            hexToRGBA
-        ),
+        category_to_color: Object.assign({}, reservedColors, precomputedColors),
     };
 }
 

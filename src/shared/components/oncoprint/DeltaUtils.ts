@@ -1701,7 +1701,10 @@ export function transitionCategoricalTrack(
     } else if (nextSpec && !prevSpec) {
         // Add track
         const rule_set_params: ICategoricalRuleSetParams = getCategoricalTrackRuleSetParams(
-            nextSpec
+            nextSpec,
+            nextProps.categoricalTracks.filter(
+                t => t.molecularProfileId === nextSpec.molecularProfileId
+            )
         );
         rule_set_params.na_legend_label = nextSpec.naLegendLabel;
         const trackParams: UserTrackSpec<any> = {
