@@ -149,37 +149,38 @@ export class ResourceDataTable extends React.Component<
     }
 
     @computed get rows(): IResourceTableRow[] {
-        return this.props.store.rowsForDisplay;
+        return this.props.store.rowsForDisplay || [];
     }
 
     @computed get metadataKeys() {
         return getResourceTableMetadataKeys(this.rows);
     }
 
-    @computed get filteredRows() {
-        return this.dataStore.sortedFilteredData;
-    }
-
     @computed get matchingPatientCount() {
-        return _.uniq(this.filteredRows.map(row => row.patientId).filter(Boolean))
-            .length;
+        return _.uniq(
+            this.rowsAfterHeaderFilters
+                .map(row => row.patientId)
+                .filter(Boolean)
+        ).length;
     }
 
     @computed get matchingSampleCount() {
         return _.uniq(
-            this.filteredRows
+            this.rowsAfterHeaderFilters
                 .map(row => row.resource?.sampleId)
                 .filter((id): id is string => !!id)
         ).length;
     }
 
     @computed get filteredPatientResourceCounts() {
-        return _.countBy(this.filteredRows, row => row.patientId);
+        return _.countBy(this.rowsAfterHeaderFilters, row => row.patientId);
     }
 
     @computed get filteredSampleResourceCounts() {
         return _.countBy(
-            this.filteredRows.filter(row => !!row.resource?.sampleId),
+            this.rowsAfterHeaderFilters.filter(
+                row => !!row.resource?.sampleId
+            ),
             row => row.resource.sampleId!
         );
     }
