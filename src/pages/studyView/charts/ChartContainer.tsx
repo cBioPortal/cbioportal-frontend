@@ -72,6 +72,7 @@ import {
     SURVIVAL_PLOT_Y_LABEL_TOOLTIP,
 } from 'pages/resultsView/survival/SurvivalUtil';
 import StudyViewViolinPlotTable from 'pages/studyView/charts/violinPlotTable/StudyViewViolinPlotTable';
+import MrnaViolinPlotChart from 'pages/studyView/charts/mrnaViolinPlot/MrnaViolinPlotChart';
 import { PatientSurvival } from 'shared/model/PatientSurvival';
 import ClinicalEventTypeCountTable, {
     ClinicalEventTypeCountColumnKey,
@@ -1536,6 +1537,21 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     );
                 };
                 break;
+            case ChartTypeEnum.MRNA_VIOLIN_PLOT: {
+                return () => (
+                    <MrnaViolinPlotChart
+                        store={this.props.store}
+                        width={getWidthByDimension(
+                            this.props.dimension,
+                            this.borderWidth
+                        )}
+                        height={getHeightByDimension(
+                            this.props.dimension,
+                            this.chartHeaderHeight
+                        )}
+                    />
+                );
+            }
             default:
                 return null;
         }
