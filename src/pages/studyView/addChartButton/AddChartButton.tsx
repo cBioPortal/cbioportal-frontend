@@ -31,8 +31,6 @@ import {
     ChartType,
     ChartDataCountSet,
     GENERIC_ASSAY_FREQUENCY_TABLE_ENTITY_ID,
-    getGenericAssayChartDisplayName,
-    getGenericAssayChartUniqueKey,
     getOptionsByChartMetaDataType,
     getGenericAssayFrequencyTableUniqueKey,
     getGenomicChartUniqueKey,
@@ -57,7 +55,6 @@ import styles from './styles.module.scss';
 import { openSocialAuthWindow } from 'shared/lib/openSocialAuthWindow';
 import { CustomChartData } from 'shared/api/session-service/sessionServiceModels';
 import ReactSelect from 'react-select';
-import { GenericAssayMeta } from 'cbioportal-ts-api-client';
 import { DataTypeConstants } from 'shared/constants';
 import { Else, If, Then } from 'react-if';
 import SaveChartSettingsButton from './SaveChartSettingsButton';
@@ -99,7 +96,6 @@ type GenericAssayProfileSelectionOption = MolecularProfileOption & {
 };
 
 type GenericAssaySelectableChartOption = Omit<ChartOption, 'freq'> & {
-    genericAssayEntityId?: string;
     isFrequencyTable?: boolean;
 };
 
@@ -454,72 +450,19 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
         this.updateInfoMessage(`${option.profileName} frequency table added`);
     }
 
-    private buildGenericAssayCharts(
-        genericAssayType: string,
-        option: GenericAssayProfileSelectionOption,
-        entityMetaByStableId: { [stableId: string]: GenericAssayMeta },
-        entityIds: string[]
-    ): GenericAssayChart[] {
-        return entityIds.map(entityId => ({
-            genericAssayEntityId: entityId,
-            genericAssayType,
-            profileType: option.value,
-            chartKind: 'ENTITY',
-            name: getGenericAssayChartDisplayName(
-                entityId,
-                option.profileName,
-                genericAssayType,
-                entityMetaByStableId
-            ),
-            description: option.description,
-            dataType: option.dataType,
-            patientLevel: option.patientLevel,
-        }));
-    }
-
     private getGenericAssayChartOptions(
-        genericAssayType: string,
         option: GenericAssayProfileSelectionOption,
-        entityMetaByStableId: { [stableId: string]: GenericAssayMeta }
     ): GenericAssaySelectableChartOption[] {
         const allChartTypes = _.fromPairs(this.props.store.chartsType.toJSON());
         const frequencyTableUniqueKey = getGenericAssayFrequencyTableUniqueKey(
             option.value
-        );
-        const entityOptions = _.sortBy(
-            _.keys(entityMetaByStableId).map(
-                entityId => {
-                    const uniqueKey = getGenericAssayChartUniqueKey(
-                        entityId,
-                        option.value
-                    );
-                    return {
-                        label: getGenericAssayChartDisplayName(
-                            entityId,
-                            option.profileName,
-                            genericAssayType,
-                            entityMetaByStableId
-                        ),
-                        key: uniqueKey,
-                        chartType:
-                            allChartTypes[uniqueKey] ||
-                            (option.dataType === DataTypeConstants.LIMITVALUE
-                                ? ChartTypeEnum.BAR_CHART
-                                : ChartTypeEnum.PIE_CHART),
-                        disabled: false,
-                        selected: this.selectedAttrs.includes(uniqueKey),
-                        genericAssayEntityId: entityId,
-                    } as GenericAssaySelectableChartOption;
-                }
-            ),
-            chartOption => chartOption.label.toLowerCase()
         );
 
         if (
             option.dataType !== DataTypeConstants.BINARY &&
             option.dataType !== DataTypeConstants.CATEGORICAL
         ) {
-            return entityOptions;
+            return [];
         }
 
         return [
@@ -533,31 +476,13 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                 selected: this.selectedAttrs.includes(frequencyTableUniqueKey),
                 isFrequencyTable: true,
             },
-            ...entityOptions,
         ];
-    }
-
-    @action.bound
-    private onAddAllGenericAssayValues(
-        genericAssayType: string,
-        option: GenericAssayProfileSelectionOption,
-        entityMetaByStableId: { [stableId: string]: GenericAssayMeta }
-    ) {
-        this.onGenericAssaySubmit(
-            this.buildGenericAssayCharts(
-                genericAssayType,
-                option,
-                entityMetaByStableId,
-                _.keys(entityMetaByStableId)
-            )
-        );
     }
 
     @action.bound
     private onToggleGenericAssayChartOption(
         genericAssayType: string,
         option: GenericAssayProfileSelectionOption,
-        entityMetaByStableId: { [stableId: string]: GenericAssayMeta },
         chartOptionsByKey: { [key: string]: GenericAssaySelectableChartOption },
         key: string
     ) {
@@ -570,49 +495,6 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
         const chartOption = chartOptionsByKey[key];
         if (chartOption.isFrequencyTable) {
             this.onAddGenericAssayFrequencyTable(genericAssayType, option);
-            return;
-        }
-
-        this.onGenericAssaySubmit(
-            this.buildGenericAssayCharts(
-                genericAssayType,
-                option,
-                entityMetaByStableId,
-                [chartOption.genericAssayEntityId!]
-            )
-        );
-    }
-
-    @action.bound
-    private onAddAllGenericAssayChartOptions(
-        genericAssayType: string,
-        option: GenericAssayProfileSelectionOption,
-        entityMetaByStableId: { [stableId: string]: GenericAssayMeta },
-        chartOptions: GenericAssaySelectableChartOption[]
-    ) {
-        const frequencyTableOption = _.find(chartOptions, chartOption =>
-            chartOption.isFrequencyTable
-        );
-        if (
-            frequencyTableOption &&
-            !this.selectedAttrs.includes(frequencyTableOption.key)
-        ) {
-            this.onAddGenericAssayFrequencyTable(genericAssayType, option);
-        }
-
-        const entityIds = chartOptions
-            .filter(chartOption => !chartOption.isFrequencyTable)
-            .map(chartOption => chartOption.genericAssayEntityId!);
-
-        if (!_.isEmpty(entityIds)) {
-            this.onGenericAssaySubmit(
-                this.buildGenericAssayCharts(
-                    genericAssayType,
-                    option,
-                    entityMetaByStableId,
-                    entityIds
-                )
-            );
         }
     }
 
@@ -800,9 +682,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                 ) as GenericAssayProfileSelectionOption | undefined;
                 const chartOptions = selectedProfileOption
                     ? this.getGenericAssayChartOptions(
-                          type,
-                          selectedProfileOption,
-                          entityMap
+                          selectedProfileOption
                       )
                     : [];
                 const chartOptionsByKey = _.keyBy(chartOptions, 'key');
@@ -817,32 +697,18 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                             containerWidth={this.getTabsWidth}
                             molecularProfileOptions={molecularProfileOptions}
                             submitButtonText={'Add charts'}
-                            footerAction={
-                                selectedProfileOption ? (
-                                    <button
-                                        className="btn btn-default btn-sm"
-                                        onClick={() =>
-                                            this.onAddAllGenericAssayValues(
-                                                type,
-                                                selectedProfileOption,
-                                                entityMap
-                                            )
-                                        }
-                                        disabled={
-                                            genericAssayEntityOptions.length ===
-                                            0
-                                        }
-                                    >
-                                        Add all values
-                                    </button>
-                                ) : undefined
-                            }
                             genericAssayType={type}
                             genericAssayEntityOptions={
                                 genericAssayEntityOptions
                             }
                             entityMap={entityMap}
                             onChartSubmit={this.onGenericAssaySubmit}
+                            onFrequencyTableSubmit={option =>
+                                this.onAddGenericAssayFrequencyTable(
+                                    type,
+                                    option
+                                )
+                            }
                             onSelectGenericAssayProfile={profileId =>
                                 this.onSelectGenericAssayProfileByType(
                                     type,
@@ -861,22 +727,11 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                                     this.onToggleGenericAssayChartOption(
                                         type,
                                         selectedProfileOption,
-                                        entityMap,
                                         chartOptionsByKey,
                                         key
                                     )
                                 }
-                                onAddAll={keys =>
-                                    selectedProfileOption &&
-                                    this.onAddAllGenericAssayChartOptions(
-                                        type,
-                                        selectedProfileOption,
-                                        entityMap,
-                                        chartOptions.filter(chartOption =>
-                                            keys.includes(chartOption.key)
-                                        )
-                                    )
-                                }
+                                onAddAll={_.noop}
                                 onClearAll={keys =>
                                     this.onClearAllGenericAssayChartOptions(
                                         keys

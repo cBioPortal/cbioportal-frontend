@@ -16,6 +16,7 @@ import {
     getGenericAssayPropertyOrDefault,
 } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { GenericAssayMeta } from 'cbioportal-ts-api-client';
+import { DataTypeConstants } from 'shared/constants';
 
 export interface IGenericAssaySelectionProps {
     molecularProfileOptions:
@@ -29,7 +30,6 @@ export interface IGenericAssaySelectionProps {
     };
     genericAssayType: string;
     submitButtonText: string;
-    footerAction?: React.ReactNode;
     containerWidth?: number;
     initialGenericAssayEntityIds?: string[];
     allowEmptySubmission?: boolean;
@@ -43,6 +43,11 @@ export interface IGenericAssaySelectionProps {
     onSelectGenericAssayProfile?: (molecularProfileId: string) => void;
     onTrackSubmit?: (data: GenericAssayTrackInfo[]) => void;
     onChartSubmit?: (data: GenericAssayChart[]) => void;
+    onFrequencyTableSubmit?: (
+        option: MolecularProfileOption & {
+            profileName: string;
+        }
+    ) => void;
 }
 
 export type GenericAssayChartType =
@@ -64,6 +69,7 @@ interface ISelectOption {
 }
 
 export const DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING: number = 100;
+export const GENERIC_ASSAY_ADD_ALL_VALUES_OPTION = 'generic_assay_add_all_values';
 
 @observer
 export default class GenericAssaySelection extends React.Component<
@@ -100,13 +106,24 @@ export default class GenericAssaySelection extends React.Component<
     @action.bound
     private onSubmit() {
         if (this.selectedProfileOption !== undefined) {
+            const option = this.selectedProfileOption as MolecularProfileOption & {
+                profileName: string;
+            };
+            const shouldAddFrequencyTable = Boolean(
+                this.props.onFrequencyTableSubmit &&
+                    this._selectedGenericAssayEntityIds.includes(
+                        GENERIC_ASSAY_ADD_ALL_VALUES_OPTION
+                    )
+            );
+            const selectedEntityIds = this._selectedGenericAssayEntityIds.filter(
+                entityId => entityId !== GENERIC_ASSAY_ADD_ALL_VALUES_OPTION
+            );
             // Generic Assay chart submit (StudyView)
-            if (this.props.onChartSubmit) {
-                const option = this
-                    .selectedProfileOption as MolecularProfileOption & {
-                    profileName: string;
-                };
-                const charts = this._selectedGenericAssayEntityIds.map(
+            if (shouldAddFrequencyTable) {
+                this.props.onFrequencyTableSubmit!(option);
+            }
+            if (this.props.onChartSubmit && selectedEntityIds.length > 0) {
+                const charts = selectedEntityIds.map(
                     entityId => {
                         const entityName = GENERIC_ASSAY_CONFIG
                             .genericAssayConfigByType[
@@ -134,14 +151,15 @@ export default class GenericAssaySelection extends React.Component<
                     }
                 );
                 this.props.onChartSubmit(charts);
-                // clear selected entities after submit new charts
+            }
+            if (shouldAddFrequencyTable || selectedEntityIds.length > 0) {
                 this.clearSelectedEntities();
             }
             // Generic Assay track submit (OncoPrint)
             if (this.props.onTrackSubmit) {
                 const option = this.selectedProfileOption as ISelectOption;
                 // select profile if onSelectGenericAssayProfile exists
-                const info: GenericAssayTrackInfo[] = this._selectedGenericAssayEntityIds.map(
+                const info: GenericAssayTrackInfo[] = selectedEntityIds.map(
                     entityId => {
                         return {
                             profileId: option.value,
@@ -200,6 +218,20 @@ export default class GenericAssaySelection extends React.Component<
     }
 
     @computed
+    private get selectedProfileSupportsFrequencyTable() {
+        const option = this.selectedProfileOption as
+            | (MolecularProfileOption & {
+                  profileName: string;
+              })
+            | undefined;
+        return (
+            option !== undefined &&
+            (option.dataType === DataTypeConstants.BINARY ||
+                option.dataType === DataTypeConstants.CATEGORICAL)
+        );
+    }
+
+    @computed
     private get buttonDisabled() {
         // disable button only when we don't allow empty submissions and has zero selected entities
         if (this.props.allowEmptySubmission) {
@@ -213,7 +245,7 @@ export default class GenericAssaySelection extends React.Component<
         [value: string]: ISelectOption;
     } {
         return _.keyBy(
-            this.props.genericAssayEntityOptions,
+            this.genericAssayOptions,
             (option: ISelectOption) => option.value
         );
     }
@@ -263,7 +295,15 @@ export default class GenericAssaySelection extends React.Component<
     @computed get genericAssayOptions() {
         // add select all option only when options have been filtered and has at least one filtered option
         // one generic assay profile usually contains hundreds of options, we don't want user try to add all options without filtering the option
-        let allOptionsInSelectedProfile = this.props.genericAssayEntityOptions;
+        let allOptionsInSelectedProfile = this.selectedProfileSupportsFrequencyTable
+            ? _.concat(
+                  {
+                      value: GENERIC_ASSAY_ADD_ALL_VALUES_OPTION,
+                      label: 'Add all values',
+                  } as ISelectOption,
+                  this.props.genericAssayEntityOptions
+              )
+            : this.props.genericAssayEntityOptions;
         const filteredOptionsLength = this.props.genericAssayEntityOptions.filter(
             option =>
                 doesOptionMatchSearchText(
@@ -295,6 +335,11 @@ export default class GenericAssaySelection extends React.Component<
                 // do not filter out select all option
                 if (option.value === 'select_all_filtered_options') {
                     return true;
+                }
+                if (option.value === GENERIC_ASSAY_ADD_ALL_VALUES_OPTION) {
+                    return !this._selectedGenericAssayEntityIds.includes(
+                        option.value
+                    );
                 }
                 return doesOptionMatchSearchText(
                     this._genericAssaySearchText,
@@ -330,7 +375,10 @@ export default class GenericAssaySelection extends React.Component<
     @computed get filteredGenericAssayOptions() {
         return _.filter(this.genericAssayOptions, option => {
             // filter out select all option
-            if (option.value === 'select_all_filtered_options') {
+            if (
+                option.value === 'select_all_filtered_options' ||
+                option.value === GENERIC_ASSAY_ADD_ALL_VALUES_OPTION
+            ) {
                 return false;
             }
             return doesOptionMatchSearchText(
@@ -344,6 +392,9 @@ export default class GenericAssaySelection extends React.Component<
     filterGenericAssayOption(option: ISelectOption, filterString: string) {
         if (option.value === 'select_all_filtered_options') {
             return true;
+        }
+        if (option.value === GENERIC_ASSAY_ADD_ALL_VALUES_OPTION) {
+            return !this._selectedGenericAssayEntityIds.includes(option.value);
         }
         return (
             doesOptionMatchSearchText(filterString, option) &&
@@ -535,11 +586,6 @@ export default class GenericAssaySelection extends React.Component<
                     </div>
                 )}
                 <div style={{ display: 'flex', marginTop: 12 }}>
-                    {this.props.footerAction && (
-                        <div style={{ marginRight: 10 }}>
-                            {this.props.footerAction}
-                        </div>
-                    )}
                     <button
                         disabled={this.buttonDisabled}
                         className="btn btn-primary btn-sm"
