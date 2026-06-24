@@ -288,21 +288,6 @@ export const SPECIAL_CHARTS: ChartMetaWithDimensionAndChartType[] = [
         priority: 70,
         renderWhenDataChange: false,
     },
-    {
-        uniqueKey: SpecialChartsUniqueKeyEnum.MRNA_VIOLIN_PLOT,
-        displayName: 'mRNA Expression (ADC Targets)',
-        description:
-            'mRNA expression violin plots for ADC targets in trial at MSK. Genes shown depend on availability in this study.',
-        chartType: ChartTypeEnum.MRNA_VIOLIN_PLOT,
-        dataType: ChartMetaDataTypeEnum.GENOMIC,
-        patientAttribute: false,
-        dimension: {
-            w: 2,
-            h: 2,
-        },
-        priority: 100,
-        renderWhenDataChange: false,
-    },
 ];
 
 export const COLORS = [

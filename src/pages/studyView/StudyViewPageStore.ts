@@ -277,6 +277,7 @@ import { isMixedReferenceGenome } from 'shared/lib/referenceGenomeUtils';
 import { Datalabel } from 'shared/lib/DataUtils';
 import PromisePlus from 'shared/lib/PromisePlus';
 import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
+import { MRNA_TAB_GENE_GROUPS } from 'pages/patientView/mrna/mrnaTabGeneGroups';
 import {
     createAlteredGeneComparisonSession,
     doesChartHaveComparisonGroupsLimit,
@@ -7017,33 +7018,54 @@ export class StudyViewPageStore
         newCharts: GenomicChart[],
         loadedfromUserSettings: boolean = false
     ): void {
-        const profileType = newCharts[0].profileType;
-        const genes = newCharts.map(c => c.hugoGeneSymbol);
+        // The per-gene chart name is "GENE: Profile Label"; strip the gene
+        // prefix to recover the bare profile label for the chart title.
+        const profileName =
+            newCharts[0].name?.replace(
+                `${newCharts[0].hugoGeneSymbol}: `,
+                ''
+            ) ?? newCharts[0].profileType;
+        const uniqueKey = this.registerGeneSpecificViolinChart({
+            profileType: newCharts[0].profileType,
+            profileName,
+            genes: newCharts.map(c => c.hugoGeneSymbol),
+            description: newCharts[0].description,
+        });
+
+        if (!loadedfromUserSettings) {
+            this.newlyAddedCharts.push(uniqueKey);
+        }
+    }
+
+    /**
+     * Register a multi-gene violin chart (idempotent by uniqueKey) and make it
+     * visible. Shared by the Add Chart flow and the default auto-added violin.
+     * Returns the chart's uniqueKey.
+     */
+    @action
+    private registerGeneSpecificViolinChart(config: {
+        profileType: string;
+        profileName: string;
+        genes: string[];
+        description?: string;
+        priority?: number;
+    }): string {
+        const { profileType, profileName, genes, description } = config;
         const uniqueKey = getGeneSpecificViolinChartUniqueKey(
             profileType,
             genes
         );
 
-        if (this._geneSpecificViolinChartMap.has(uniqueKey)) {
-            this.changeChartVisibility(uniqueKey, true);
-        } else {
-            // The per-gene chart name is "GENE: Profile Label"; strip the gene
-            // prefix to recover the bare profile label for the chart title.
-            const profileName =
-                newCharts[0].name?.replace(
-                    `${newCharts[0].hugoGeneSymbol}: `,
-                    ''
-                ) ?? profileType;
+        if (!this._geneSpecificViolinChartMap.has(uniqueKey)) {
             const displayName = `${profileName} (${genes.length} genes)`;
-
             const chartMeta: ChartMeta = {
                 uniqueKey,
                 displayName,
-                description: newCharts[0].description || displayName,
+                description: description || displayName,
                 dataType: ChartMetaDataTypeEnum.GENE_SPECIFIC,
                 patientAttribute: false,
                 renderWhenDataChange: false,
-                priority: 0,
+                priority: config.priority ?? 0,
             };
 
             this._geneSpecificCharts.set(uniqueKey, chartMeta);
@@ -7062,12 +7084,9 @@ export class StudyViewPageStore
                     ChartTypeEnum.GENE_SPECIFIC_VIOLIN_PLOT
                 ]
             );
-            this.changeChartVisibility(uniqueKey, true);
         }
-
-        if (!loadedfromUserSettings) {
-            this.newlyAddedCharts.push(uniqueKey);
-        }
+        this.changeChartVisibility(uniqueKey, true);
+        return uniqueKey;
     }
 
     public getGeneSpecificViolinChart(
@@ -7927,35 +7946,41 @@ export class StudyViewPageStore
                 this.changeChartVisibility(chartMeta.uniqueKey, true);
             }
 
-            // Show the mRNA violin plot only for a single-study view with a
-            // z-score mRNA profile. The chart plots multiple genes on a shared
-            // axis, which is only meaningful in cohort-comparable units
-            // (z-scores); absolute/log profiles keep each gene's own baseline.
-            // And precalculated z-scores aren't comparable across studies
-            // (each is standardized against its own cohort/reference), so we
-            // restrict to single-study to avoid pooling incomparable values.
+            // Auto-add a default-configured gene-specific violin only for a
+            // single-study view with a z-score mRNA profile. The chart plots
+            // multiple genes on a shared axis, which is only meaningful in
+            // cohort-comparable units (z-scores); absolute/log profiles keep
+            // each gene's own baseline. And precalculated z-scores aren't
+            // comparable across studies (each is standardized against its own
+            // cohort/reference), so we restrict to single-study to avoid
+            // pooling incomparable values.
             const isSingleStudy =
                 (this.queriedPhysicalStudyIds.result?.length ?? 0) === 1;
-            const hasMrnaZscoreProfile = this.molecularProfiles.result.some(
+            const mrnaZscoreProfiles = this.molecularProfiles.result.filter(
                 p =>
                     p.molecularAlterationType === 'MRNA_EXPRESSION' &&
                     p.datatype === DataTypeConstants.ZSCORE
             );
-            if (isSingleStudy && hasMrnaZscoreProfile) {
-                this.chartsType.set(
-                    SpecialChartsUniqueKeyEnum.MRNA_VIOLIN_PLOT,
-                    ChartTypeEnum.MRNA_VIOLIN_PLOT
-                );
-                this.chartsDimension.set(
-                    SpecialChartsUniqueKeyEnum.MRNA_VIOLIN_PLOT,
-                    STUDY_VIEW_CONFIG.layout.dimensions[
-                        ChartTypeEnum.MRNA_VIOLIN_PLOT
-                    ]
-                );
-                this.changeChartVisibility(
-                    SpecialChartsUniqueKeyEnum.MRNA_VIOLIN_PLOT,
-                    true
-                );
+            if (isSingleStudy && mrnaZscoreProfiles.length > 0) {
+                // Prefer "all-sample" z-scores: bounded across the cohort, so
+                // the shared cross-gene axis stays sane (diploid-reference
+                // z-scores can explode for genes silent in normal tissue).
+                const profile =
+                    mrnaZscoreProfiles.find(p =>
+                        /all[_]?sample/i.test(p.molecularProfileId)
+                    ) ?? mrnaZscoreProfiles[0];
+                const defaultGenes =
+                    MRNA_TAB_GENE_GROUPS.find(g => g.id === 'msk-trial')
+                        ?.genes ?? [];
+                this.registerGeneSpecificViolinChart({
+                    profileType: getSuffixOfMolecularProfile(profile),
+                    profileName: profile.name,
+                    genes: defaultGenes.slice(0, 10),
+                    // Slot just below the genomic-profile/case-list summary
+                    // charts (priority 1000) so the violin lands after them
+                    // rather than at the very top.
+                    priority: 990,
+                });
             }
         }
 
