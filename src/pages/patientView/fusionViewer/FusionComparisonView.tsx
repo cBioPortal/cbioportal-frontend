@@ -1,4 +1,5 @@
 import * as React from 'react';
+import * as _ from 'lodash';
 import { observer } from 'mobx-react';
 import {
     observable,
@@ -85,8 +86,16 @@ export default class FusionComparisonView extends React.Component<
         const anchorGene =
             store.anchor && store.anchor.mode === 'driver'
                 ? store.anchor.key
-                : rows.length
-                ? rows[0].fivePrimeSymbol
+                : rows.length > 0
+                ? (() => {
+                      const geneCounts = _.countBy(
+                          rows,
+                          r => r.fivePrimeSymbol
+                      );
+                      return Object.entries(geneCounts).sort(
+                          (a, b) => b[1] - a[1]
+                      )[0][0];
+                  })()
                 : '';
         const anchorTranscript = this.transcriptForGene(anchorGene);
         const expandedRow = rows.find(
@@ -104,6 +113,18 @@ export default class FusionComparisonView extends React.Component<
                         ? 'Align: junction'
                         : 'Align: coordinate'}
                 </button>
+                {store.alignment === 'coordinate' && (
+                    <span
+                        data-testid="coordinate-coming-soon"
+                        style={{
+                            color: '#888',
+                            marginLeft: 8,
+                            fontSize: '0.85em',
+                        }}
+                    >
+                        coordinate view coming soon
+                    </span>
+                )}
                 {anchorTranscript && (
                     <svg width="100%" viewBox="0 0 1240 168">
                         <AnchorGeneTrackRuler
