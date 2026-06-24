@@ -448,7 +448,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
             ],
             true
         );
-        this.updateInfoMessage(`${option.profileName} frequency table added`);
+        this.updateInfoMessage(`Frequency Table:  added`);
     }
 
     private getGenericAssayChartOptions(
