@@ -14,6 +14,7 @@ import FusionStripList from './components/FusionStripList';
 import FusionRecurrenceTable from './FusionRecurrenceTable';
 import { FusionDiagramSVG } from './FusionDiagramSVG';
 import { TranscriptData } from './data/types';
+import FusionSummaryTableWidget from 'pages/studyView/charts/fusionSummary/FusionSummaryTableWidget';
 import { fetchTranscriptsForGeneWithFallback } from './data/genomeNexusTranscriptService';
 
 export interface FusionComparisonViewProps {
@@ -30,6 +31,15 @@ export default class FusionComparisonView extends React.Component<
     constructor(props: FusionComparisonViewProps) {
         super(props);
         makeObservable(this);
+    }
+
+    @computed get hasFusionAnnotation(): boolean {
+        return this.props.store.allEvents.some(
+            e =>
+                !!e.frameCallMethod &&
+                e.frameCallMethod !== 'NA' &&
+                e.frameCallMethod !== ''
+        );
     }
 
     @computed get genesNeeded(): string[] {
@@ -104,6 +114,11 @@ export default class FusionComparisonView extends React.Component<
 
         return (
             <div>
+                <FusionSummaryTableWidget
+                    store={store}
+                    hasFusionAnnotation={this.hasFusionAnnotation}
+                    onSelectAnchor={a => store.setAnchor(a)}
+                />
                 <FusionRecurrenceTable store={store} />
                 <button
                     data-testid="alignment-toggle"
