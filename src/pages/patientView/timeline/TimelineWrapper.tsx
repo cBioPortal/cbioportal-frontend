@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import _ from 'lodash';
 import { observer } from 'mobx-react-lite';
 import { Sample } from 'cbioportal-ts-api-client';
 import PatientViewMutationsDataStore from '../mutation/PatientViewMutationsDataStore';
@@ -24,6 +23,8 @@ import {
     sortTracks,
 } from 'pages/patientView/timeline/timeline_helpers';
 import { downloadZippedTracks } from './timelineDataUtils';
+import { getServerConfig } from 'config/config';
+import { fetchPathologyTimelineEvents } from './pathologyTimelineUtils';
 
 export interface ISampleMetaDeta {
     color: { [sampleId: string]: string };
@@ -49,75 +50,112 @@ const TimelineWrapper: React.FunctionComponent<ITimelineProps> = observer(
         sampleManager,
         width,
         headerWidth,
+        samples,
     }: ITimelineProps) {
-        const [events, setEvents] = useState<
-            TimelineTrackSpecification[] | null
-        >(null);
-
         const [store, setStore] = useState<TimelineStore | null>(null);
 
         useEffect(() => {
-            const isGenieBpcStudy = window.location.href.includes('genie_bpc');
-            // This patient has hardcoded functionality for showing an image
-            // icon (prototype). TODO: We can replace it once we have generalized
-            // functionality for adding links to a timepoint.
-            const isHtanOhsuPatient =
-                window.location.href.includes('htan_test_2021') &&
-                window.location.href.includes('HTA9_1');
-            const isToxicityPortal = [
-                'triage.cbioportal.mskcc.org',
-                'cbioportal.mskcc.org',
-                'private.cbioportal.mskcc.org',
-            ].includes(window.location.hostname);
+            let cancelled = false;
 
-            const baseConfig: ITimelineConfig = buildBaseConfig(
-                sampleManager,
-                caseMetaData
-            );
+            async function buildTimeline() {
+                let timelineData = data.slice();
+                const tileServerBase = getServerConfig().msk_wsi_tile_server_url;
+                const patientId = samples[0]?.patientId || data[0]?.patientId;
+                const studyId = samples[0]?.studyId || data[0]?.studyId;
 
-            if (isGenieBpcStudy) {
-                configureGenieTimeline(baseConfig);
+                if (
+                    tileServerBase !== null &&
+                    tileServerBase !== undefined &&
+                    patientId &&
+                    studyId
+                ) {
+                    try {
+                        timelineData = timelineData.concat(
+                            await fetchPathologyTimelineEvents(
+                                tileServerBase,
+                                patientId,
+                                studyId,
+                                sampleManager.samples
+                            )
+                        );
+                    } catch (error) {
+                        console.warn(
+                            'Failed to load pathology timeline image counts',
+                            error
+                        );
+                    }
+                }
+
+                const isGenieBpcStudy =
+                    window.location.href.includes('genie_bpc');
+                // This patient has hardcoded functionality for showing an image
+                // icon (prototype). TODO: We can replace it once we have generalized
+                // functionality for adding links to a timepoint.
+                const isHtanOhsuPatient =
+                    window.location.href.includes('htan_test_2021') &&
+                    window.location.href.includes('HTA9_1');
+                const isToxicityPortal = [
+                    'triage.cbioportal.mskcc.org',
+                    'cbioportal.mskcc.org',
+                    'private.cbioportal.mskcc.org',
+                ].includes(window.location.hostname);
+
+                const baseConfig: ITimelineConfig = buildBaseConfig(
+                    sampleManager,
+                    caseMetaData
+                );
+
+                if (isGenieBpcStudy) {
+                    configureGenieTimeline(baseConfig);
+                }
+
+                if (isHtanOhsuPatient) {
+                    const extraData = {
+                        uniquePatientKey: 'SFRBOV8xOmh0YW5fdGVzdF8yMDIx',
+                        studyId: 'htan_test_2021',
+                        patientId: 'HTA9_1',
+                        eventType: 'IMAGING',
+                        attributes: [
+                            {
+                                key: 'linkout',
+                                value:
+                                    'https://minerva-story-htan-ohsu-demo.surge.sh/#s=0#w=0#g=0#m=-1#a=-100_-100#v=0.5_0.5_0.5#o=-100_-100_1_1#p=Q',
+                            },
+                            { key: 'ASSAY_TYPE', value: 'mIHC' },
+                            {
+                                key: 'FILE_FORMAT',
+                                value: 'OME-TIFF',
+                            },
+                        ],
+                        startNumberOfDaysSinceDiagnosis: 25726,
+                    };
+
+                    // @ts-ignore
+                    timelineData.push(extraData);
+
+                    configureHtanOhsuTimeline(baseConfig);
+                }
+
+                if (isToxicityPortal) {
+                    configureTimelineToxicityColors(baseConfig);
+                }
+
+                const trackSpecifications = sortTracks(baseConfig, timelineData);
+
+                configureTracks(trackSpecifications, baseConfig);
+
+                if (!cancelled) {
+                    const store = new TimelineStore(trackSpecifications);
+                    setStore(store);
+                }
             }
 
-            if (isHtanOhsuPatient) {
-                const extraData = {
-                    uniquePatientKey: 'SFRBOV8xOmh0YW5fdGVzdF8yMDIx',
-                    studyId: 'htan_test_2021',
-                    patientId: 'HTA9_1',
-                    eventType: 'IMAGING',
-                    attributes: [
-                        {
-                            key: 'linkout',
-                            value:
-                                'https://minerva-story-htan-ohsu-demo.surge.sh/#s=0#w=0#g=0#m=-1#a=-100_-100#v=0.5_0.5_0.5#o=-100_-100_1_1#p=Q',
-                        },
-                        { key: 'ASSAY_TYPE', value: 'mIHC' },
-                        {
-                            key: 'FILE_FORMAT',
-                            value: 'OME-TIFF',
-                        },
-                    ],
-                    startNumberOfDaysSinceDiagnosis: 25726,
-                };
+            void buildTimeline();
 
-                // @ts-ignore
-                data.push(extraData);
-
-                configureHtanOhsuTimeline(baseConfig);
-            }
-
-            if (isToxicityPortal) {
-                configureTimelineToxicityColors(baseConfig);
-            }
-
-            const trackSpecifications = sortTracks(baseConfig, data);
-
-            configureTracks(trackSpecifications, baseConfig);
-
-            const store = new TimelineStore(trackSpecifications);
-
-            setStore(store);
-        }, []);
+            return () => {
+                cancelled = true;
+            };
+        }, [caseMetaData, data, sampleManager, samples]);
 
         if (store) {
             return (

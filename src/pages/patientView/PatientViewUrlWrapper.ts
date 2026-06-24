@@ -13,6 +13,7 @@ export type PatientViewUrlQuery = {
     studyId: string;
     caseId?: string;
     sampleId?: string;
+    stainFilter?: string;
     resourceUrl?: string;
     genomicEvolutionSettings: {
         showTimeline?: string;
@@ -42,6 +43,7 @@ export default class PatientViewUrlWrapper extends URLWrapper<
             studyId: { isSessionProp: false, isHashedProp: true },
             caseId: { isSessionProp: false, isHashedProp: true },
             sampleId: { isSessionProp: false, isHashedProp: true },
+            stainFilter: { isSessionProp: false },
             resourceUrl: { isSessionProp: false },
             genomicEvolutionSettings: {
                 isSessionProp: false,
