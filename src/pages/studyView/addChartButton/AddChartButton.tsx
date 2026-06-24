@@ -1061,6 +1061,14 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                                                 : 'has been'
                                         } added.`
                                     );
+                                } else if (
+                                    this.props.store.isMultiGeneViolinSelection(
+                                        charts
+                                    )
+                                ) {
+                                    this.updateInfoMessage(
+                                        `Violin chart added (${charts.length} genes)`
+                                    );
                                 } else {
                                     this.updateInfoMessage(
                                         `${charts.length} charts added`

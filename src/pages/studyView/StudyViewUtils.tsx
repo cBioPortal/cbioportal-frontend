@@ -947,6 +947,21 @@ export function splitGenericAssayFrequencyTableRowUniqueKey(uniqueKey: string): 
     };
 }
 
+/**
+ * Unique key for a multi-gene violin chart (one continuous-numeric profile,
+ * several genes on a shared axis). Genes are sorted so the key is stable
+ * regardless of selection order, letting a re-add toggle visibility instead of
+ * creating a duplicate.
+ */
+export function getGeneSpecificViolinChartUniqueKey(
+    profileType: string,
+    hugoGeneSymbols: string[]
+): string {
+    return (
+        [...hugoGeneSymbols].sort().join('_') + '_' + profileType + '_VIOLIN'
+    );
+}
+
 const UNIQUE_KEY_SEPARATOR = ':';
 const CHART_TYPE_SEPARATOR = ';';
 

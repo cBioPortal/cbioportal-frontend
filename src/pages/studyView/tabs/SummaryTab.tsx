@@ -919,6 +919,12 @@ export class StudySummaryTab extends React.Component<
                 promise: this.store.selectedSamples,
                 filters: [],
             }),
+            [ChartTypeEnum.GENE_SPECIFIC_VIOLIN_PLOT]: () => ({
+                // Self-contained like the mRNA violin; selectedSamples just
+                // gives ChartContainer a valid MobxPromise to await.
+                promise: this.store.selectedSamples,
+                filters: [],
+            }),
         });
     }
 

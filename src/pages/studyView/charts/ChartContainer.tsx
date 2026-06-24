@@ -1621,6 +1621,26 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     />
                 );
             }
+            case ChartTypeEnum.GENE_SPECIFIC_VIOLIN_PLOT: {
+                const violinChart = this.props.store.getGeneSpecificViolinChart(
+                    this.props.chartMeta.uniqueKey
+                );
+                return () => (
+                    <MrnaViolinPlotChart
+                        store={this.props.store}
+                        width={getWidthByDimension(
+                            this.props.dimension,
+                            this.borderWidth
+                        )}
+                        height={getHeightByDimension(
+                            this.props.dimension,
+                            this.chartHeaderHeight
+                        )}
+                        genes={violinChart?.genes}
+                        profileType={violinChart?.profileType}
+                    />
+                );
+            }
             default:
                 return null;
         }
