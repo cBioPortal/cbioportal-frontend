@@ -1795,8 +1795,14 @@ export class PatientViewPageStore {
         onResult: defs => {
             // open resources which have `openByDefault` set to true
             if (defs) {
+                const hideLegacyHeTab =
+                    getServerConfig().msk_wsi_tile_server_url !== null &&
+                    getServerConfig().msk_wsi_tile_server_url !== undefined;
                 for (const def of defs)
-                    if (def.openByDefault)
+                    if (
+                        def.openByDefault &&
+                        !(hideLegacyHeTab && def.resourceId === 'HE')
+                    )
                         this.setResourceTabOpen(def.resourceId, true);
             }
         },

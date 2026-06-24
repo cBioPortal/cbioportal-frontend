@@ -30,7 +30,7 @@ const PATIENT_ID = 'P-0000678';
 
 function viewerUrl(hash = ''): string {
     const resourceUrl = encodeURIComponent(
-        `${TILE_SERVER}/?patient=${PATIENT_ID}&studyId=${STUDY_ID}&cbioUrl=${CBIO_URL}`
+        `${TILE_SERVER}/patient/${PATIENT_ID}?studyId=${STUDY_ID}&cbioUrl=${CBIO_URL}`
     );
     const base = `${BASE_URL}/patient/wsiHESlides?studyId=${STUDY_ID}&caseId=${PATIENT_ID}&resourceUrl=${resourceUrl}`;
     return hash ? `${base}${hash}` : base;
@@ -213,6 +213,37 @@ test.describe('WSI viewer — share view and centering', () => {
         expect(Number(params.get('y'))).toBe(3000);
     });
 
+    test('metadata sidebar resizes when dragging the divider', async ({ page }) => {
+        await page.goto(viewerUrl());
+        await expect(page.locator('[data-testid="wsi-share-button"]')).toBeVisible({
+            timeout: 30_000,
+        });
+
+        const sidebar = page.locator('[data-testid="wsi-metadata-sidebar"]');
+        const handle = page.locator('[data-testid="wsi-metadata-resize-handle"]');
+
+        const before = await sidebar.boundingBox();
+        const handleBox = await handle.boundingBox();
+        expect(before).not.toBeNull();
+        expect(handleBox).not.toBeNull();
+
+        await page.mouse.move(
+            handleBox!.x + handleBox!.width / 2,
+            handleBox!.y + handleBox!.height / 2
+        );
+        await page.mouse.down();
+        await page.mouse.move(
+            handleBox!.x + handleBox!.width / 2 - 120,
+            handleBox!.y + handleBox!.height / 2,
+            { steps: 10 }
+        );
+        await page.mouse.up();
+
+        await expect
+            .poll(async () => (await sidebar.boundingBox())?.width ?? 0, { timeout: 5_000 })
+            .toBeGreaterThan((before?.width ?? 0) + 80);
+    });
+
     test('download button triggers a JPEG download named by patient/slide/position', async ({
         page,
     }) => {
@@ -306,5 +337,20 @@ test.describe('WSI viewer — share view and centering', () => {
 
         // Type column should show short abbreviations (MS = Missense, NS = Nonsense, etc.).
         await expect(page.locator('text=MS').first()).toBeVisible();
+    });
+
+    test('matched IMPACT timepoint appears in the sample list and metadata panel', async ({
+        page,
+    }) => {
+        await page.goto(viewerUrl());
+        await expect(page.locator('[data-testid="wsi-share-button"]')).toBeVisible({
+            timeout: 30_000,
+        });
+
+        await expect(page.locator('text=Timepoint: Acq d-418').first()).toBeVisible({
+            timeout: 15_000,
+        });
+        await expect(page.locator('text=Timepoint').last()).toBeVisible();
+        await expect(page.locator('text=Acq d-418').last()).toBeVisible();
     });
 });

@@ -20,10 +20,123 @@ import SampleMarker, {
 import SampleManager from 'pages/patientView/SampleManager';
 import { ISampleMetaDeta } from 'pages/patientView/timeline/TimelineWrapper';
 import { ClinicalEvent } from 'cbioportal-ts-api-client';
-import { getColor } from 'cbioportal-frontend-commons';
+import { getColor, getTextWidth } from 'cbioportal-frontend-commons';
 import ReactMarkdown from 'react-markdown';
 
 const OTHER = 'Other';
+const PATHOLOGY_TRACK_COLORS: Record<string, string> = {
+    'H&E': '#1f77b4',
+    IHC: '#c66a00',
+};
+
+function asTimelineEvents(
+    input: TimelineEvent | TimelineEvent[] | undefined
+): TimelineEvent[] {
+    if (!input) return [];
+    return Array.isArray(input) ? input : [input];
+}
+
+function getPathologyImageCount(event: TimelineEvent): number {
+    const count = getAttributeValue('IMAGE_COUNT', event);
+    return count ? Number(count) || 0 : 0;
+}
+
+function getPathologyTrackColor(
+    track: TimelineTrackSpecification,
+    events: TimelineEvent[]
+): string {
+    const subtype =
+        track.type || getAttributeValue('SUBTYPE', events[0]) || 'H&E';
+    return PATHOLOGY_TRACK_COLORS[subtype] || '#666666';
+}
+
+function renderPathologyCountBadge(
+    events: TimelineEvent[],
+    yCoordinate: number,
+    track: TimelineTrackSpecification
+) {
+    const count = _.sum(events.map(getPathologyImageCount));
+    const label = String(count);
+    const labelWidth = Math.ceil(getTextWidth(label, 'Arial', '10px'));
+    const rectPadding = 4;
+    const rectWidth = Math.max(18, labelWidth + 2 * rectPadding);
+    const rectHeight = 14;
+    const color = getPathologyTrackColor(track, events);
+    const linkout = getAttributeValue('LINKOUT', events[0]);
+
+    const content = (
+        <g transform={`translate(0 ${yCoordinate})`}>
+            <rect
+                x={-rectWidth / 2}
+                y={-rectHeight / 2}
+                width={rectWidth}
+                height={rectHeight}
+                rx={rectHeight / 2}
+                ry={rectHeight / 2}
+                fill={color}
+            />
+            <text
+                x="0"
+                y="0"
+                text-anchor="middle"
+                fill="white"
+                font-size="10px"
+                font-family="Arial"
+                dy=".3em"
+            >
+                {label}
+            </text>
+        </g>
+    );
+
+    if (!linkout) {
+        return content;
+    }
+
+    return (
+        <a href={linkout} target="_blank" onClick={e => e.stopPropagation()}>
+            {content}
+        </a>
+    );
+}
+
+function renderPathologyTooltip(
+    input: TimelineEvent | TimelineEvent[],
+    track: TimelineTrackSpecification
+) {
+    const events = asTimelineEvents(input);
+    if (!events.length) {
+        return null;
+    }
+    const totalCount = _.sum(events.map(getPathologyImageCount));
+    const source = getAttributeValue('WSI_TIMEPOINT_SOURCE', events[0]) || '';
+    return (
+        <div>
+            <div>
+                <strong>{track.type} slides</strong>: {totalCount}
+            </div>
+            {source && <div style={{ marginTop: 4 }}>Timepoint source: {source}</div>}
+            <hr style={{ margin: '5px 0' }} />
+            <table>
+                <tbody>
+                    {events.map(event => (
+                        <tr
+                            key={`${event.event.patientId}-${event.event.startNumberOfDaysSinceDiagnosis}-${getAttributeValue(
+                                'SAMPLE_ID',
+                                event
+                            )}-${track.type}`}
+                        >
+                            <th>SAMPLE ID</th>
+                            <td>{getAttributeValue('SAMPLE_ID', event)}</td>
+                            <th>COUNT</th>
+                            <td>{getPathologyImageCount(event)}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
+}
 
 export function configureHtanOhsuTimeline(baseConfig: ITimelineConfig) {
     baseConfig.trackEventRenderers = baseConfig.trackEventRenderers || [];
@@ -375,6 +488,15 @@ export function buildBaseConfig(
                             }
                         };
                     }
+                },
+            },
+            {
+                trackTypeMatch: /H&E|IHC/i,
+                configureTrack: (cat: TimelineTrackSpecification) => {
+                    cat.renderEvents = (events, yCoordinate) =>
+                        renderPathologyCountBadge(events, yCoordinate, cat);
+                    cat.renderTooltip = events =>
+                        renderPathologyTooltip(events, cat);
                 },
             },
             {

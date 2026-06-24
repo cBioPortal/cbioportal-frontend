@@ -64,6 +64,15 @@ import PatientViewPageHeader from 'pages/patientView/PatientViewPageHeader';
 import { MAX_URL_LENGTH } from 'pages/studyView/studyPageHeader/ActionButtons';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 
+
+function shouldHideLegacyHeResourceTab(resourceId: string): boolean {
+    return (
+        resourceId === 'HE' &&
+        getServerConfig().msk_wsi_tile_server_url !== null &&
+        getServerConfig().msk_wsi_tile_server_url !== undefined
+    );
+}
+
 export interface IPatientViewPageProps {
     routing: any;
     appStore: AppStore;
@@ -441,7 +450,9 @@ export class PatientViewPageInner extends React.Component<
         ],
         render: () => {
             const openDefinitions = this.pageStore.resourceDefinitions.result!.filter(
-                d => this.pageStore.isResourceTabOpen(d.resourceId)
+                d =>
+                    this.pageStore.isResourceTabOpen(d.resourceId) &&
+                    !shouldHideLegacyHeResourceTab(d.resourceId)
             );
             const sorted = _.sortBy(openDefinitions, d => d.priority);
             const resourceDataById = this.pageStore.resourceIdToResourceData
