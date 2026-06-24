@@ -435,7 +435,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
         this.props.store.addGenericAssayFrequencyTableCharts(
             [
                 {
-                    name: `${option.profileName} Frequency Table`,
+                    name: `Frequency Table: ${option.profileName}`,
                     description: option.description,
                     profileType: option.value,
                     genericAssayType,
@@ -504,7 +504,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
 
         return [
             existingFrequencyTableOption || {
-                label: `${option.profileName} Frequency Table`,
+                label: `Frequency Table: ${option.profileName}`,
                 key: frequencyTableUniqueKey,
                 chartType:
                     allChartTypes[frequencyTableUniqueKey] ||

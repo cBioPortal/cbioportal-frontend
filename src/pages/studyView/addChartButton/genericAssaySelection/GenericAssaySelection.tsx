@@ -299,7 +299,7 @@ export default class GenericAssaySelection extends React.Component<
             ? _.concat(
                   {
                       value: GENERIC_ASSAY_ADD_ALL_VALUES_OPTION,
-                      label: 'Add all values',
+                      label: 'Frequency table',
                   } as ISelectOption,
                   this.props.genericAssayEntityOptions
               )
