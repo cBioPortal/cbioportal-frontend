@@ -27,6 +27,8 @@ import IFrameLoader from '../../shared/components/iframeLoader/IFrameLoader';
 import { StudySummaryTab } from 'pages/studyView/tabs/SummaryTab';
 import StudyPageHeader from './studyPageHeader/StudyPageHeader';
 import CNSegments from './tabs/CNSegments';
+import FusionComparisonView from 'pages/patientView/fusionViewer/FusionComparisonView';
+import { FusionCohortStore } from 'pages/patientView/fusionViewer/FusionCohortStore';
 import { getInternalClient } from 'shared/api/cbioportalInternalClientInstance';
 import AddChartButton from './addChartButton/AddChartButton';
 import { sleep } from '../../shared/lib/TimeUtils';
@@ -386,6 +388,12 @@ export default class StudyViewPage extends React.Component<
         }
     }
 
+    @computed get fusionCohortStore(): FusionCohortStore {
+        const s = new FusionCohortStore();
+        s.setStructuralVariants(this.store.structuralVariants.result || []);
+        return s;
+    }
+
     @computed get isLoading() {
         return (
             this.store.queriedSampleIdentifiers.isPending ||
@@ -725,6 +733,25 @@ export default class StudyViewPage extends React.Component<
                                         }
                                     >
                                         <CNSegments store={this.store} />
+                                    </MSKTab>
+                                    <MSKTab
+                                        key={6}
+                                        id={
+                                            StudyViewPageTabKeyEnum.FUSION_COMPARISON
+                                        }
+                                        linkText="SV / Fusion Comparison"
+                                        hide={
+                                            this.store.structuralVariants
+                                                .isPending ||
+                                            _.isEmpty(
+                                                this.store.structuralVariants
+                                                    .result
+                                            )
+                                        }
+                                    >
+                                        <FusionComparisonView
+                                            store={this.fusionCohortStore}
+                                        />
                                     </MSKTab>
                                     <MSKTab
                                         key={4}
