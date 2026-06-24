@@ -2829,6 +2829,12 @@ export class StudyViewPageStore
         ChartUniqueKey,
         { profileType: string; profileName: string; genes: string[] }
     >({}, { deep: false });
+    // Per-chart log-scale state for gene-specific violins, toggled from the
+    // chart-header options menu.
+    @observable private _geneSpecificViolinLogScale = observable.map<
+        ChartUniqueKey,
+        boolean
+    >({}, { deep: false });
     //used in saving generic assay charts
     @observable private _genericAssayChartMap = observable.map<
         ChartUniqueKey,
@@ -7095,6 +7101,18 @@ export class StudyViewPageStore
         | { profileType: string; profileName: string; genes: string[] }
         | undefined {
         return this._geneSpecificViolinChartMap.get(uniqueKey);
+    }
+
+    public isGeneSpecificViolinLogScale(uniqueKey: string): boolean {
+        return !!this._geneSpecificViolinLogScale.get(uniqueKey);
+    }
+
+    @action.bound
+    public toggleGeneSpecificViolinLogScale(uniqueKey: string): void {
+        this._geneSpecificViolinLogScale.set(
+            uniqueKey,
+            !this._geneSpecificViolinLogScale.get(uniqueKey)
+        );
     }
 
     @action.bound

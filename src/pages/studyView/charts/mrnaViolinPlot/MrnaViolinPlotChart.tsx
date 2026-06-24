@@ -142,6 +142,9 @@ export interface IMrnaViolinPlotChartProps {
     // omitted, the chart runs in its original auto-added mRNA mode.
     genes?: string[];
     profileType?: string;
+    // Log scale is controlled by the chart-header options menu (like other
+    // charts), so it comes in as a prop rather than living in the toolbar.
+    logScale?: boolean;
 }
 
 @observer
@@ -153,7 +156,6 @@ export default class MrnaViolinPlotChart extends React.Component<
         0,
         DEFAULT_GENE_COUNT
     );
-    @observable logScale = false;
     @observable showGenePicker = false;
 
     // Drag-selection state. A drag is locked to a single gene row (track) for
@@ -179,6 +181,20 @@ export default class MrnaViolinPlotChart extends React.Component<
     /** Gene-specific mode: fixed gene list + explicit profile, no gene picker. */
     @computed private get isGeneSpecificMode(): boolean {
         return !!this.props.profileType;
+    }
+
+    /** Log scale is driven by the chart-header options menu. */
+    @computed private get logScale(): boolean {
+        return !!this.props.logScale;
+    }
+
+    /**
+     * The toolbar only carries the gene picker, which exists in the legacy
+     * auto-added mRNA mode. Gene-specific mode has no toolbar (log scale moved
+     * to the chart-header menu), so its plot reclaims that vertical space.
+     */
+    @computed private get showToolbar(): boolean {
+        return !this.isGeneSpecificMode;
     }
 
     /** Resolve selected Hugo symbols → Gene objects (entrezGeneId). */
@@ -364,7 +380,8 @@ export default class MrnaViolinPlotChart extends React.Component<
         const marginRight = 16;
         const marginTop = 38;
         const marginBottom = 9;
-        const svgHeight = this.props.height - TOOLBAR_HEIGHT;
+        const svgHeight =
+            this.props.height - (this.showToolbar ? TOOLBAR_HEIGHT : 0);
         const plotW = this.props.width - marginLeft - marginRight;
         const plotH = svgHeight - marginTop - marginBottom;
         // Fixed row height: divide by MAX_GENES so each track is the same size
@@ -1052,58 +1069,27 @@ export default class MrnaViolinPlotChart extends React.Component<
                     isolation: 'isolate',
                 }}
             >
-                <div
-                    style={{
-                        height: TOOLBAR_HEIGHT,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 12,
-                        padding: '0 8px',
-                        borderBottom: '1px solid #eee',
-                        fontSize: 11,
-                        flexShrink: 0,
-                        background: '#fff',
-                        position: 'relative',
-                        zIndex: 3,
-                    }}
-                    onClick={action(() => {
-                        // Close picker when clicking anywhere in the toolbar
-                        // (the Genes button stops propagation to handle its own toggle)
-                        this.showGenePicker = false;
-                    })}
-                >
-                    <label
+                {this.showToolbar && (
+                    <div
                         style={{
-                            display: 'inline-flex',
+                            height: TOOLBAR_HEIGHT,
+                            display: 'flex',
                             alignItems: 'center',
-                            gap: 4,
-                            cursor: this.canLogScale
-                                ? 'pointer'
-                                : 'not-allowed',
-                            color: this.canLogScale ? '#333' : '#999',
-                            fontWeight: 'normal',
-                            margin: 0,
+                            gap: 12,
+                            padding: '0 8px',
+                            borderBottom: '1px solid #eee',
+                            fontSize: 11,
+                            flexShrink: 0,
+                            background: '#fff',
+                            position: 'relative',
+                            zIndex: 3,
                         }}
-                        title={
-                            this.canLogScale
-                                ? 'Toggle between log₂ and linear value axis'
-                                : 'Linear only — data contains negative values'
-                        }
+                        onClick={action(() => {
+                            // Close picker when clicking anywhere in the toolbar
+                            // (the Genes button stops propagation to toggle itself)
+                            this.showGenePicker = false;
+                        })}
                     >
-                        <input
-                            type="checkbox"
-                            checked={this.logScale && this.canLogScale}
-                            disabled={!this.canLogScale}
-                            onChange={action(
-                                (e: React.ChangeEvent<HTMLInputElement>) => {
-                                    this.logScale = e.target.checked;
-                                }
-                            )}
-                            style={{ margin: 0 }}
-                        />
-                        Log scale
-                    </label>
-                    {!this.isGeneSpecificMode && (
                         <button
                             onClick={action((e: React.MouseEvent) => {
                                 e.stopPropagation(); // don't let toolbar's close-handler fire
@@ -1122,11 +1108,8 @@ export default class MrnaViolinPlotChart extends React.Component<
                         >
                             Genes ({this.selectedSymbols.length}) ▾
                         </button>
-                    )}
-                    <span style={{ color: '#999', fontStyle: 'italic' }}>
-                        Drag across a track to filter; click it to clear
-                    </span>
-                </div>
+                    </div>
+                )}
                 {bodyContent}
                 {this.showGenePicker && (
                     <>
