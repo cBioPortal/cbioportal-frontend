@@ -3,7 +3,7 @@ import _ from 'lodash';
 import { inject, Observer, observer } from 'mobx-react';
 import { MSKTab, MSKTabs } from '../../shared/components/MSKTabs/MSKTabs';
 import 'react-toastify/dist/ReactToastify.css';
-import { action, computed, makeObservable, observable } from 'mobx';
+import { action, autorun, computed, makeObservable, observable } from 'mobx';
 import {
     StudyViewPageStore,
     StudyViewPageTabDescriptions,
@@ -249,6 +249,12 @@ export default class StudyViewPage extends React.Component<
                 this.toolbarLeft = $(this.toolbar).position().left;
             }
         }, 500);
+
+        this.fusionStoreDisposer = autorun(() => {
+            this._fusionCohortStore.setStructuralVariants(
+                this.store.structuralVariants.result || []
+            );
+        });
     }
 
     private getFilterJsonFromPostData(): string | undefined {
@@ -388,10 +394,11 @@ export default class StudyViewPage extends React.Component<
         }
     }
 
-    @computed get fusionCohortStore(): FusionCohortStore {
-        const s = new FusionCohortStore();
-        s.setStructuralVariants(this.store.structuralVariants.result || []);
-        return s;
+    private readonly _fusionCohortStore = new FusionCohortStore();
+    private fusionStoreDisposer: (() => void) | undefined;
+
+    get fusionCohortStore(): FusionCohortStore {
+        return this._fusionCohortStore;
     }
 
     @computed get isLoading() {
@@ -1176,6 +1183,9 @@ export default class StudyViewPage extends React.Component<
     componentWillUnmount(): void {
         this.store.destroy();
         clearInterval(this.toolbarLeftUpdater);
+        if (this.fusionStoreDisposer) {
+            this.fusionStoreDisposer();
+        }
     }
 
     render() {
