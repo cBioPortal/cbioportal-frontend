@@ -432,10 +432,12 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
         genericAssayType: string,
         option: GenericAssayProfileSelectionOption
     ) {
+        const frequencyTableName = `Frequency Table: ${option.profileName}`;
+        const uniqueKey = getGenericAssayFrequencyTableUniqueKey(option.value);
         this.props.store.addGenericAssayFrequencyTableCharts(
             [
                 {
-                    name: `Frequency Table: ${option.profileName}`,
+                    name: frequencyTableName,
                     description: option.description,
                     profileType: option.value,
                     genericAssayType,
@@ -449,7 +451,11 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
             true
         );
         this.updateInfoMessage(
-            `Frequency Table: ${option.profileName} added`
+            `${frequencyTableName} ${
+                this.selectedAttrs.includes(uniqueKey)
+                    ? 'is already'
+                    : 'has been'
+            } added`
         );
     }
 
