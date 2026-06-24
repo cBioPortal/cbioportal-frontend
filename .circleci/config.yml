@@ -147,6 +147,22 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
 
 orbs:
   browser-tools: circleci/browser-tools@2.3.1
+commands:
+  skip_if_draft_pr:
+    parameters:
+      job_name:
+        type: string
+    steps:
+      - run:
+          name: Skip << parameters.job_name >> for draft PRs
+          command: |
+            if [ -f package.json ] && [ -f scripts/ci/skip-draft-pr.mjs ]; then
+              REPO_DIR="$PWD"
+            else
+              REPO_DIR="/tmp/repo/cbioportal-frontend"
+            fi
+            cd "$REPO_DIR"
+            node scripts/ci/skip-draft-pr.mjs "<< parameters.job_name >>"
 jobs:
   api_sync_cbioportal:
     <<: *defaults
@@ -156,6 +172,8 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/repo
+      - skip_if_draft_pr:
+          job_name: api_sync_cbioportal
       - restore_cache:
           keys:
             - v12-pnpm-store-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}
@@ -178,6 +196,8 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/repo
+      - skip_if_draft_pr:
+          job_name: api_sync_dependencies
       - restore_cache:
           keys:
             - v12-pnpm-store-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}
@@ -200,6 +220,8 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/repo
+      - skip_if_draft_pr:
+          job_name: typecheck
       - restore_cache:
           keys:
             - v12-pnpm-store-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}
@@ -224,6 +246,8 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/repo
+      - skip_if_draft_pr:
+          job_name: unit_tests_main
       - restore_cache:
           keys:
             - v12-pnpm-store-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}
@@ -254,6 +278,8 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/repo
+      - skip_if_draft_pr:
+          job_name: unit_tests_packages
       - restore_cache:
           keys:
             - v12-pnpm-store-{{ checksum "cbioportal-frontend/pnpm-lock.yaml" }}
@@ -371,6 +397,8 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/repo
+      - skip_if_draft_pr:
+          job_name: remote_e2e_shards
       - run:
           name: Symlink pre-installed http-server into repo node_modules
           command: |
@@ -571,6 +599,8 @@ jobs:
       # set per-step below.
     steps:
       - checkout
+      - skip_if_draft_pr:
+          job_name: remote_e2e
       - run:
           name: Install jq (not present in the Playwright Docker image)
           command: apt-get update && apt-get install -y jq
@@ -765,6 +795,8 @@ jobs:
     resource_class: small
     steps:
       - checkout
+      - skip_if_draft_pr:
+          job_name: analyze_flakes
       - restore_cache:
           keys:
             - flake-analyzer-cache-v1-{{ .Environment.CIRCLE_BUILD_NUM }}
@@ -803,6 +835,8 @@ jobs:
     resource_class: medium
     working_directory: /tmp/repo
     steps:
+      - skip_if_draft_pr:
+          job_name: pull_cbioportal_test_codebase
       - run:
           name: Checkout cbioportal/cbioportal-test
           environment:
@@ -835,6 +869,8 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/repo
+      - skip_if_draft_pr:
+          job_name: build_frontend
       - run:
           name: Compute manifests hash for node_modules cache key
           command: |
@@ -1120,6 +1156,8 @@ jobs:
             nvm alias default 22.18.0
             node -v
             npm -v
+      - skip_if_draft_pr:
+          job_name: e2e_localdb_shards
       - run:
           name: Compute manifests hash for node_modules cache key
           # Mirrors build_frontend's manifests-hash command so we restore
@@ -1409,6 +1447,8 @@ jobs:
       EXPECTED_SHARDS: '12'
     steps:
       - checkout
+      - skip_if_draft_pr:
+          job_name: e2e_localdb_merge
       - run:
           name: Install jq (not present in the Playwright Docker image)
           command: apt-get update && apt-get install -y jq
@@ -1567,6 +1607,7 @@ jobs:
 workflows:
   tests:
     jobs:
+      - pull_cbioportal_test_codebase
       - checkout
       - prettier:
           requires:
@@ -1582,13 +1623,6 @@ workflows:
       - check_incorrect_import_statements:
           requires:
             - checkout
-  tests_non_draft:
-    when:
-      not:
-        equal: [true, << pipeline.pull_request.draft >>]
-    jobs:
-      - pull_cbioportal_test_codebase
-      - checkout
       - build_frontend:
           requires:
             - checkout
