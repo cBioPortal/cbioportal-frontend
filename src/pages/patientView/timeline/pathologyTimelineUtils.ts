@@ -1,0 +1,169 @@
+import { ClinicalEvent, ClinicalDataBySampleId } from 'cbioportal-ts-api-client';
+import SampleManager from 'pages/patientView/SampleManager';
+import { PatientHierarchy } from 'shared/components/wsiViewer/wsiViewerTypes';
+
+const PATHOLOGY_EVENT_TYPE = 'PATHOLOGY';
+
+function getAllowedSampleIds(
+    samples: ClinicalDataBySampleId[]
+): Set<string> {
+    return new Set(samples.map(sample => sample.id).filter(Boolean));
+}
+
+function getSampleClinicalValue(
+    sample: ClinicalDataBySampleId | undefined,
+    clinicalAttributeId: string
+): string | undefined {
+    if (!sample) return undefined;
+    return SampleManager.getClinicalAttributeInSample(
+        sample,
+        clinicalAttributeId
+    )?.value;
+}
+
+function getPathologyCount(
+    hierarchy: PatientHierarchy,
+    sampleId: string,
+    subtype: 'H&E' | 'IHC'
+): number {
+    const sample = hierarchy.samples.find(s => s.sample_id === sampleId);
+    if (!sample) return 0;
+
+    const imageIds = new Set<string>();
+
+    sample.parts.forEach(part => {
+        part.blocks.forEach(block => {
+            block.slides.forEach(slide => {
+                if (!slide.can_serve_tiles || !slide.image_id) {
+                    return;
+                }
+                if (subtype === 'H&E' ? slide.is_hne : slide.is_ihc) {
+                    imageIds.add(slide.image_id);
+                }
+            });
+        });
+    });
+
+    return imageIds.size;
+}
+
+export function hasServableDiagnosticSlides(
+    hierarchy: PatientHierarchy,
+    allowedSampleIds?: Set<string>
+): boolean {
+    return hierarchy.samples.some(sample =>
+        (!allowedSampleIds || allowedSampleIds.has(sample.sample_id)) &&
+        sample.parts.some(part =>
+            part.blocks.some(block =>
+                block.slides.some(
+                    slide =>
+                        slide.can_serve_tiles && (slide.is_hne || slide.is_ihc)
+                )
+            )
+        )
+    );
+}
+
+export function buildPatientHierarchyUrl(
+    tileServerBase: string,
+    patientId: string,
+    studyId: string
+): string {
+    return `${tileServerBase}/patient/${encodeURIComponent(
+        patientId
+    )}?studyId=${encodeURIComponent(studyId)}`;
+}
+
+export function buildPatientWsiTimelineUrl(
+    studyId: string,
+    patientId: string,
+    subtype?: 'H&E' | 'IHC'
+): string {
+    const stainFilter =
+        subtype === 'H&E' ? 'hne' : subtype === 'IHC' ? 'ihc' : undefined;
+    return `/patient/wsiHESlides?studyId=${encodeURIComponent(
+        studyId
+    )}&caseId=${encodeURIComponent(patientId)}${
+        stainFilter ? `&stainFilter=${encodeURIComponent(stainFilter)}` : ''
+    }`;
+}
+
+export function buildPathologyTimelineEvents(
+    hierarchy: PatientHierarchy,
+    samples: ClinicalDataBySampleId[],
+    studyId: string,
+    patientId: string
+): ClinicalEvent[] {
+    const allowedSampleIds = getAllowedSampleIds(samples);
+    const sampleById = new Map(samples.map(sample => [sample.id, sample]));
+    const events: ClinicalEvent[] = [];
+
+    hierarchy.samples.forEach(hierarchySample => {
+        const sampleId = hierarchySample.sample_id;
+        if (!allowedSampleIds.has(sampleId)) return;
+        const sample = sampleById.get(sampleId);
+        if (!sample) return;
+
+        const timepointValue = getSampleClinicalValue(
+            sample,
+            'WSI_TIMEPOINT_DAYS'
+        );
+        if (timepointValue === undefined || timepointValue === '') return;
+
+        const startDays = Number(timepointValue);
+        if (Number.isNaN(startDays)) return;
+
+        const timepointSource =
+            getSampleClinicalValue(sample, 'WSI_TIMEPOINT_SOURCE') || '';
+
+        (['H&E', 'IHC'] as const).forEach(subtype => {
+            const imageCount = getPathologyCount(hierarchy, sampleId, subtype);
+            if (imageCount < 1) return;
+            const linkout = buildPatientWsiTimelineUrl(
+                studyId,
+                patientId,
+                subtype
+            );
+
+            events.push({
+                attributes: [
+                    { key: 'SAMPLE_ID', value: sampleId },
+                    { key: 'SUBTYPE', value: subtype },
+                    { key: 'IMAGE_COUNT', value: String(imageCount) },
+                    { key: 'LINKOUT', value: linkout },
+                    { key: 'WSI_TIMEPOINT_SOURCE', value: timepointSource },
+                ],
+                endNumberOfDaysSinceDiagnosis: startDays,
+                eventType: PATHOLOGY_EVENT_TYPE,
+                patientId,
+                startNumberOfDaysSinceDiagnosis: startDays,
+                studyId,
+                uniquePatientKey: `${studyId}_${patientId}`,
+                uniqueSampleKey: `${studyId}_${sampleId}`,
+            });
+        });
+    });
+
+    return events;
+}
+
+export async function fetchPathologyTimelineEvents(
+    tileServerBase: string | null | undefined,
+    patientId: string,
+    studyId: string,
+    samples: ClinicalDataBySampleId[]
+): Promise<ClinicalEvent[]> {
+    if (tileServerBase === null || tileServerBase === undefined) {
+        return [];
+    }
+
+    const response = await fetch(
+        buildPatientHierarchyUrl(tileServerBase, patientId, studyId)
+    );
+    if (!response.ok) {
+        return [];
+    }
+
+    const hierarchy = (await response.json()) as PatientHierarchy;
+    return buildPathologyTimelineEvents(hierarchy, samples, studyId, patientId);
+}
