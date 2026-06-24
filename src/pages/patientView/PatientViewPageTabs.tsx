@@ -38,8 +38,6 @@ import MutationTableWrapper from './mutation/MutationTableWrapper';
 import { PatientViewPageInner } from 'pages/patientView/PatientViewPage';
 import { Else, If } from 'react-if';
 import { FusionViewerTab } from './fusionViewer/FusionViewerTab';
-import { FusionCohortTab } from './fusionViewer/FusionCohortTab';
-import { DEMO_COHORT_STRUCTURAL_VARIANTS } from './fusionViewer/data/demoCohortSample';
 
 export enum PatientViewPageTabs {
     Summary = 'summary',
@@ -53,7 +51,6 @@ export enum PatientViewPageTabs {
     MutationalSignatures = 'mutationalSignatures',
     PathwayMapper = 'pathways',
     FusionViewer = 'fusionViewer',
-    FusionCohort = 'fusionCohort',
 }
 
 export const PatientViewResourceTabPrefix = 'openResource_';
@@ -731,18 +728,6 @@ export function tabs(
                     pageComponent.patientViewPageStore.studies.result[0]
                         ?.referenceGenome
                 }
-            />
-        </MSKTab>
-    );
-
-    tabs.push(
-        <MSKTab
-            key={91}
-            id={PatientViewPageTabs.FusionCohort}
-            linkText="Fusion Cohort"
-        >
-            <FusionCohortTab
-                structuralVariants={DEMO_COHORT_STRUCTURAL_VARIANTS}
             />
         </MSKTab>
     );
