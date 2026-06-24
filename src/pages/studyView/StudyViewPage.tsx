@@ -328,6 +328,12 @@ export default class StudyViewPage extends React.Component<
             }
         }, 500);
 
+        this.fusionStoreDisposer = autorun(() => {
+            this._fusionCohortStore.setStructuralVariants(
+                this.store.structuralVariants.result || []
+            );
+        });
+
         this.resourceTableStoreDisposer = autorun(() => {
             const samples = this.store.selectedSamples.result;
             if (!samples) return;
@@ -570,10 +576,11 @@ export default class StudyViewPage extends React.Component<
         return true;
     }
 
-    @computed get fusionCohortStore(): FusionCohortStore {
-        const s = new FusionCohortStore();
-        s.setStructuralVariants(this.store.structuralVariants.result || []);
-        return s;
+    private readonly _fusionCohortStore = new FusionCohortStore();
+    private fusionStoreDisposer: (() => void) | undefined;
+
+    get fusionCohortStore(): FusionCohortStore {
+        return this._fusionCohortStore;
     }
 
     @computed get isLoading() {
@@ -1433,6 +1440,9 @@ export default class StudyViewPage extends React.Component<
         }
         if (this.legacyTabRedirectDisposer) {
             this.legacyTabRedirectDisposer();
+        }
+        if (this.fusionStoreDisposer) {
+            this.fusionStoreDisposer();
         }
     }
 
