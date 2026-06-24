@@ -39,10 +39,6 @@
     border-left-color: #5a73b3;
 }
 
-[data-testid='product-strip']:hover .strip-active-outline {
-    opacity: 1;
-}
-
 .notePanel {
     /* Flush caption directly under the diagram (no separate grey box); flows in
        the same scroll so it reads as attached to the bottom of the SVG. */

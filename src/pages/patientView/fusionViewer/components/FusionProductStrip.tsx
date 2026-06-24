@@ -9,6 +9,7 @@ import {
     COLOR_5PRIME,
     COLOR_3PRIME,
     COLOR_BREAKPOINT,
+    COLOR_ACTIVE_OUTLINE,
     FrameStatus,
 } from '../data/types';
 import { splitExonByFivePrimeUtr } from './GeneTrack';
@@ -75,6 +76,7 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
     width,
     onClick,
 }) => {
+    const [hovered, setHovered] = React.useState(false);
     const retained5p = retainedExonsInOrder(transcript5p, breakpoint5p, true);
     const retained3p =
         transcript3p && breakpoint3p !== undefined
@@ -89,6 +91,8 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
             data-testid="product-strip"
             style={{ cursor: onClick ? 'pointer' : 'default' }}
             onClick={onClick}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
         >
             <rect
                 data-testid="strip-active-outline"
@@ -98,11 +102,11 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
                 width={width + 8}
                 height={PH + 18}
                 fill="none"
-                stroke="#e03131"
+                stroke={COLOR_ACTIVE_OUTLINE}
                 strokeWidth={2}
                 strokeDasharray="5 3"
                 rx={3}
-                opacity={0}
+                opacity={hovered ? 1 : 0}
             />
             <text
                 x={x + 4}
@@ -130,6 +134,7 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
                     />
                 );
             })}
+            {/* Half-height UTR treatment is intentionally 5′-only; 3′ retained exons start after the breakpoint and are not purely 5′UTR. */}
             {retained3p.map((_, i) => (
                 <rect
                     key={`3p-${i}`}

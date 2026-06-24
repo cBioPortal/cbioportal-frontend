@@ -135,6 +135,7 @@ export interface FusionEvent {
 export const COLOR_5PRIME = '#5A73B3';
 export const COLOR_3PRIME = '#60187D';
 export const COLOR_BREAKPOINT = '#FF6B6B';
+export const COLOR_ACTIVE_OUTLINE = '#e03131';
 
 /**
  * A domain projected onto one side of a fusion product, with clipping
