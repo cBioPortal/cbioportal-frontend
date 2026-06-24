@@ -16,6 +16,12 @@ import {
     extractPairKeyOptions,
     extractSvTypeOptions,
 } from './data/cohortAggregation';
+import {
+    buildComparisonRows,
+    sortComparisonRows,
+    ComparisonAnchor,
+    ComparisonRow,
+} from './data/comparisonRows';
 
 /**
  * Maximum number of pair rows to show in the cohort matrix.
@@ -40,6 +46,12 @@ export class FusionCohortStore {
 
     /** Active faceted filter (mutations reflect in all computed aggregates). */
     @observable public filter: FusionCohortFilter = defaultCohortFilter();
+
+    /** Anchor gene/pair for comparison alignment. */
+    @observable public anchor: ComparisonAnchor | undefined = undefined;
+
+    /** Alignment mode for the comparison track ruler. */
+    @observable public alignment: 'junction' | 'coordinate' = 'junction';
 
     constructor() {
         makeObservable(this);
@@ -164,5 +176,22 @@ export class FusionCohortStore {
     @action
     public clearFilter(): void {
         this.filter = defaultCohortFilter();
+    }
+
+    @action
+    public setAnchor(a: ComparisonAnchor): void {
+        this.anchor = a;
+    }
+
+    @action
+    public setAlignment(a: 'junction' | 'coordinate'): void {
+        this.alignment = a;
+    }
+
+    @computed
+    public get comparisonRows(): ComparisonRow[] {
+        if (!this.anchor) return [];
+        const rows = buildComparisonRows(this.filteredEvents, this.anchor);
+        return sortComparisonRows(rows);
     }
 }

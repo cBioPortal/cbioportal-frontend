@@ -1,6 +1,7 @@
 import { assert } from 'chai';
 import { FusionCohortStore } from './FusionCohortStore';
 import { FusionEvent } from './data/types';
+import { ComparisonAnchor } from './data/comparisonRows';
 
 // ---------------------------------------------------------------------------
 // Mock adapter — same pattern as FusionViewerStore.spec.ts
@@ -221,6 +222,61 @@ describe('FusionCohortStore', () => {
         it('svTypeOptions contains all distinct callMethod values', () => {
             assert.include(store.svTypeOptions, 'FUSION');
             assert.include(store.svTypeOptions, 'DELETION');
+        });
+    });
+
+    describe('comparison (anchor / alignment / comparisonRows)', () => {
+        it('comparisonRows returns carrier rows for the anchor, sorted by breakpoint', () => {
+            const store = new FusionCohortStore();
+            store.setStructuralVariants([
+                makeEvent({
+                    id: 'a',
+                    tumorId: 'S1',
+                    gene1: {
+                        symbol: 'TMPRSS2',
+                        chromosome: '21',
+                        position: 300,
+                        selectedTranscriptId: '',
+                        siteDescription: '',
+                    },
+                    gene2: {
+                        symbol: 'ERG',
+                        chromosome: '21',
+                        position: 900,
+                        selectedTranscriptId: '',
+                        siteDescription: '',
+                    },
+                }) as any,
+                makeEvent({
+                    id: 'b',
+                    tumorId: 'S2',
+                    gene1: {
+                        symbol: 'TMPRSS2',
+                        chromosome: '21',
+                        position: 100,
+                        selectedTranscriptId: '',
+                        siteDescription: '',
+                    },
+                    gene2: {
+                        symbol: 'ERG',
+                        chromosome: '21',
+                        position: 900,
+                        selectedTranscriptId: '',
+                        siteDescription: '',
+                    },
+                }) as any,
+            ]);
+            store.setAnchor({ mode: 'driver', key: 'TMPRSS2' });
+            const rows = store.comparisonRows;
+            assert.equal(rows.length, 2);
+            assert.equal(rows[0].anchorBreakpoint, 100);
+        });
+
+        it('alignment defaults to junction and is settable', () => {
+            const store = new FusionCohortStore();
+            assert.equal(store.alignment, 'junction');
+            store.setAlignment('coordinate');
+            assert.equal(store.alignment, 'coordinate');
         });
     });
 
