@@ -558,6 +558,9 @@ export default class WSIViewer extends React.Component<Props, {}> {
             const first =
                 fromHash ?? allSlides.find(s => s.slide.is_hne) ?? allSlides[0];
             if (first) {
+                await new Promise<void>(resolve =>
+                    requestAnimationFrame(() => resolve())
+                );
                 await this.selectSlide(first.slide, first.sample);
             }
 
@@ -3953,10 +3956,10 @@ function buildSeqRows(sample: Sample, sampleUrl?: string): MetaRow[] {
 
 /** Labels for discrete CNA values (GISTIC encoding). */
 function cnaLabel(value: number): string {
-    if (value === -2) return 'Deep del';
-    if (value === -1) return 'Shallow del';
-    if (value === 1) return 'Gain';
-    if (value === 2) return 'Amplification';
+    if (value === -2) return 'HOMDEL';
+    if (value === -1) return 'HETLOSS';
+    if (value === 1) return 'GAIN';
+    if (value === 2) return 'AMP';
     return String(value);
 }
 
