@@ -229,9 +229,7 @@ describe('OncoprinterGeneticUtils', () => {
         // Genomic location format (type 3)
         it('parses genomic location format (type 3) without header', () => {
             assert.deepEqual(
-                parseGeneticInput(
-                    'TCGA-01-0001\t17\t7577539\t7577539\tG\tA'
-                ),
+                parseGeneticInput('TCGA-01-0001\t17\t7577539\t7577539\tG\tA'),
                 {
                     parseSuccess: true,
                     result: [
@@ -343,6 +341,28 @@ describe('OncoprinterGeneticUtils', () => {
                 }
             );
         });
+        it('ignores blank lines between entries', () => {
+            assert.deepEqual(
+                parseGeneticInput(
+                    'TCGA-UNALTERED\n\nTCGA-01-0001\t17\t7577539\t7577539\tG\tA\n\t\n'
+                ),
+                {
+                    parseSuccess: true,
+                    result: [
+                        { sampleId: 'TCGA-UNALTERED' },
+                        {
+                            sampleId: 'TCGA-01-0001',
+                            chromosome: '17',
+                            startPosition: 7577539,
+                            endPosition: 7577539,
+                            referenceAllele: 'G',
+                            variantAllele: 'A',
+                        },
+                    ],
+                    error: undefined,
+                }
+            );
+        });
         it('parses genomic location format with Cancer_Type column (7-col header)', () => {
             assert.deepEqual(
                 parseGeneticInput(
@@ -435,7 +455,7 @@ describe('OncoprinterGeneticUtils', () => {
                 referenceAllele: 'G',
                 variantAllele: 'A',
             };
-            const annotation = {
+            const annotation = ({
                 annotation_summary: {
                     transcriptConsequenceSummary: {
                         hugoGeneSymbol: 'TP53',
@@ -445,7 +465,7 @@ describe('OncoprinterGeneticUtils', () => {
                         transcriptId: 'ENST00000269305',
                     },
                 },
-            } as Partial<VariantAnnotation> as VariantAnnotation;
+            } as Partial<VariantAnnotation>) as VariantAnnotation;
 
             const result = genomicLineToType2(line, annotation);
             assert.isNotNull(result);
@@ -463,9 +483,9 @@ describe('OncoprinterGeneticUtils', () => {
                 referenceAllele: 'G',
                 variantAllele: 'A',
             };
-            const annotation = {
+            const annotation = ({
                 annotation_summary: {},
-            } as Partial<VariantAnnotation> as VariantAnnotation;
+            } as Partial<VariantAnnotation>) as VariantAnnotation;
 
             const result = genomicLineToType2(line, annotation);
             assert.isNull(result);

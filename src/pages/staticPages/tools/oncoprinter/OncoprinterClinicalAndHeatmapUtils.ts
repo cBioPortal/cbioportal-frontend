@@ -43,6 +43,21 @@ type OncoprinterHeatmapTrackDatum = Pick<
     'profile_data' | 'uid' | 'na'
 > & { sample: string };
 
+function dedupeTrackDataBySample<
+    T extends { sample: string; uid: string; na?: boolean }
+>(data: T[]) {
+    const deduped: { [sampleId: string]: T } = {};
+
+    for (const datum of data) {
+        const existing = deduped[datum.sample];
+        if (!existing || (!!existing.na && !datum.na)) {
+            deduped[datum.sample] = datum;
+        }
+    }
+
+    return _.values(deduped);
+}
+
 // Output mimics mobxpromise form but thats just because its a nice way to package status and result.
 // This isn't meant to be plugged into mobxpromise machinery i.e. with `await`
 type ParseInputResult<TrackSpecType> =
@@ -328,7 +343,9 @@ export function getClinicalOncoprintData(
             );
         }
     });
-    return clinicalTracks;
+    return _.mapValues(clinicalTracks, trackData =>
+        dedupeTrackDataBySample(trackData)
+    );
 }
 export function getHeatmapOncoprintData(
     attributes: OncoprinterHeatmapTrackSpec[],
@@ -349,7 +366,9 @@ export function getHeatmapOncoprintData(
             );
         }
     });
-    return heatmapTracks;
+    return _.mapValues(heatmapTracks, trackData =>
+        dedupeTrackDataBySample(trackData)
+    );
 }
 
 function makeHeatmapTrackDatum(
@@ -478,7 +497,8 @@ export function getClinicalTracks(
             [value: string]: RGBAColor;
         };
     },
-    excludedSampleIds?: string[]
+    excludedSampleIds?: string[],
+    allSampleIds?: string[]
 ) {
     let attributeToOncoprintData = getClinicalOncoprintData(
         attributes,
@@ -493,7 +513,22 @@ export function getClinicalTracks(
     const ret: ClinicalTrackSpec[] = [];
 
     attributes.map(attr => {
-        const data = attributeToOncoprintData[attr.trackName];
+        let data = attributeToOncoprintData[attr.trackName];
+        if (allSampleIds && allSampleIds.length > 0) {
+            const existingSampleIds = _.keyBy(data, d => d.sample);
+            for (const sampleId of allSampleIds) {
+                if (!existingSampleIds[sampleId]) {
+                    data.push({
+                        sample: sampleId,
+                        attr_id: attr.trackName,
+                        attr_val_counts: {},
+                        attr_val: '',
+                        uid: sampleId,
+                        na: true,
+                    });
+                }
+            }
+        }
         let datatype, category_to_color, numberRange, countsCategoryFills;
         switch (attr.datatype) {
             case ClinicalTrackDataType.STRING:
@@ -564,7 +599,8 @@ export function getClinicalTracks(
 export function getHeatmapTracks(
     attributes: OncoprinterHeatmapTrackSpec[],
     parsedLines: OncoprinterOrderedValuesInputLine[],
-    excludedSampleIds?: string[]
+    excludedSampleIds?: string[],
+    allSampleIds?: string[]
 ) {
     let attributeToOncoprintData = getHeatmapOncoprintData(
         attributes,
@@ -579,7 +615,20 @@ export function getHeatmapTracks(
     const ret: IHeatmapTrackSpec[] = [];
 
     attributes.map(attr => {
-        const data = attributeToOncoprintData[attr.trackName];
+        let data = attributeToOncoprintData[attr.trackName];
+        if (allSampleIds && allSampleIds.length > 0) {
+            const existingSampleIds = _.keyBy(data, d => d.sample);
+            for (const sampleId of allSampleIds) {
+                if (!existingSampleIds[sampleId]) {
+                    data.push({
+                        sample: sampleId,
+                        profile_data: null,
+                        uid: sampleId,
+                        na: true,
+                    });
+                }
+            }
+        }
 
         ret.push({
             key: getHeatmapTrackKey(attr.trackName),

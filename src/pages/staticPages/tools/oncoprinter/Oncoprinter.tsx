@@ -48,6 +48,7 @@ interface IOncoprinterProps {
 
 const DEFAULT_UNKNOWN_COLOR = [255, 255, 255, 1];
 const DEFAULT_MIXED_COLOR = [220, 57, 18, 1];
+const MIN_COLUMN_WIDTH_FOR_WHITESPACE = 3;
 
 @observer
 export default class Oncoprinter extends React.Component<
@@ -356,6 +357,13 @@ export default class Oncoprinter extends React.Component<
 
     @action
     private initializeOncoprint() {
+        const sampleCount = this.props.store.sampleIds.length;
+        const estimatedColumnWidth = this.width / Math.max(sampleCount, 1);
+        if (estimatedColumnWidth < MIN_COLUMN_WIDTH_FOR_WHITESPACE) {
+            // Dense plots render cleaner without inter-column gaps.
+            this.showWhitespaceBetweenColumns = false;
+        }
+
         onMobxPromise(
             this.props.store.alteredSampleIds,
             (alteredUids: string[]) => {

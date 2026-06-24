@@ -633,7 +633,10 @@ export default class OncoprinterStore {
     }
 
     readonly nonAnnotatedGeneticTrackData = remoteData({
-        await: () => [this.hugoGeneSymbolToGene, this.resolvedGeneticInputLines],
+        await: () => [
+            this.hugoGeneSymbolToGene,
+            this.resolvedGeneticInputLines,
+        ],
         invoke: async () => {
             if (this.resolvedGeneticInputLines.result) {
                 return getSampleGeneticTrackData(
@@ -701,7 +704,8 @@ export default class OncoprinterStore {
             result.headers,
             result.data,
             this.userSelectedClinicalTracksColors,
-            this.sampleIdsNotInInputOrder
+            this.sampleIdsNotInInputOrder,
+            this.sampleIds
         );
     }
 
@@ -715,7 +719,8 @@ export default class OncoprinterStore {
         return getHeatmapTracks(
             result.headers,
             result.data,
-            this.sampleIdsNotInInputOrder
+            this.sampleIdsNotInInputOrder,
+            this.sampleIds
         );
     }
 

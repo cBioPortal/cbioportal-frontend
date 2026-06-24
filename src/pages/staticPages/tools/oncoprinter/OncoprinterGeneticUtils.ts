@@ -896,6 +896,9 @@ export function parseGeneticInput(
 
     try {
         const result = lines.map((line, lineIndex) => {
+            if (line.length === 1 && line[0] === '') {
+                return null; // skip blank lines
+            }
             if (
                 lineIndex === 0 &&
                 _.isEqual(lines[0].map(s => s.toLowerCase()).slice(0, 4), [
