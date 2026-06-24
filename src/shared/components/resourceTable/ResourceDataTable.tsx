@@ -595,7 +595,7 @@ export class ResourceDataTable extends React.Component<
                     <LazyMobXTable
                         dataStore={this.dataStore}
                         columns={this.tableColumns}
-                        showCountHeader={true}
+                        showCountHeader={false}
                         showColumnVisibility={true}
                         showFilter={true}
                         showFilterClearButton={true}
@@ -618,37 +618,43 @@ export class ResourceDataTable extends React.Component<
                                     display: 'inline-flex',
                                     alignItems: 'center',
                                     minHeight: 30,
-                                    color: '#666',
-                                    marginLeft: 12,
+                                    fontWeight: 'bold',
+                                    marginLeft: 6,
                                 }}
                             >
-                                {totalRowCount} total &middot;{' '}
-                                {this.matchingPatientCount} patients /{' '}
-                                {this.matchingSampleCount} samples
+                                <span>
+                                    {pageSize} {this.props.resourceLabel} of{' '}
+                                    {totalRowCount}
+                                    {totalPages > 1 && (
+                                        <span style={{ fontWeight: 'normal', color: '#666' }}>
+                                            {' '}(page {currentPage + 1} of {totalPages})
+                                        </span>
+                                    )}
+                                </span>
                             </div>
                         }
                     />
                     {/* Server-side pagination */}
-                    {totalRowCount > pageSize && (
-                        <PaginationControls
-                            currentPage={currentPage}
-                            totalItems={totalRowCount}
-                            itemsPerPage={pageSize}
-                            itemsPerPageOptions={[25, 50, 100]}
-                            showItemsPerPageSelector={true}
-                            showFirstPage={true}
-                            showLastPage={true}
-                            onChangeItemsPerPage={(size: number) => store.setPageSize(size)}
-                            previousPageDisabled={currentPage === 0}
-                            nextPageDisabled={currentPage >= totalPages - 1}
-                            firstPageDisabled={currentPage === 0}
-                            lastPageDisabled={currentPage >= totalPages - 1}
-                            onFirstPageClick={() => store.setPage(0)}
-                            onPreviousPageClick={() => store.setPage(currentPage - 1)}
-                            onNextPageClick={() => store.setPage(currentPage + 1)}
-                            onLastPageClick={() => store.setPage(totalPages - 1)}
-                        />
-                    )}
+                    <PaginationControls
+                        currentPage={currentPage}
+                        totalItems={totalRowCount}
+                        itemsPerPage={pageSize}
+                        itemsPerPageOptions={[25, 50, 100]}
+                        showItemsPerPageSelector={true}
+                        showFirstPage={true}
+                        showLastPage={true}
+                        showMoreButton={false}
+                        textBetweenButtons={`${currentPage + 1} / ${totalPages}`}
+                        onChangeItemsPerPage={(size: number) => store.setPageSize(size)}
+                        previousPageDisabled={currentPage === 0}
+                        nextPageDisabled={currentPage >= totalPages - 1}
+                        firstPageDisabled={currentPage === 0}
+                        lastPageDisabled={currentPage >= totalPages - 1}
+                        onFirstPageClick={() => store.setPage(0)}
+                        onPreviousPageClick={() => store.setPage(currentPage - 1)}
+                        onNextPageClick={() => store.setPage(currentPage + 1)}
+                        onLastPageClick={() => store.setPage(totalPages - 1)}
+                    />
                 </div>
             </TabbedTableLayout>
         );
